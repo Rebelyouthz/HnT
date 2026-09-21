@@ -58,6 +58,12 @@ func _ready() -> void:
 	hc.position = Vector2(0, -30)
 	hurt.add_child(hc)
 	add_child(hurt)
+	if title == "Drone":
+		visual.modulate = Color(0.65, 0.75, 0.9)
+	elif title == "Agent Lin":
+		visual.modulate = Color(0.85, 0.8, 1.05)
+	elif title == "Toll Bot":
+		visual.modulate = Color(0.7, 0.75, 0.7)
 
 
 func _part(pos: Vector2, size: Vector2, color: Color) -> void:
@@ -142,6 +148,11 @@ func _physics_process(delta: float) -> void:
 
 
 func _lane() -> void:
+	if home == "air" or title == "Drone":
+		global_position.y = clampf(global_position.y, 150.0, 360.0)
+		if patrol_max > patrol_min:
+			global_position.x = clampf(global_position.x, patrol_min, patrol_max)
+		return
 	if home == "street":
 		global_position.y = clampf(global_position.y, 430.0, 520.0)
 	else:
@@ -252,6 +263,10 @@ func take_hit(kind: String, from: Node) -> void:
 	elif kind == "snare":
 		dmg = 4
 		snared = 1.1
+	if FamilyProfile.has_cbt("pocket_sand") and kind == "throw":
+		dmg += 8
+	if FamilyProfile.has_cbt("night_eyes") and kind == "snap":
+		dmg += 12
 	if from is Fighter and (from as Fighter).buff_t > 0.0:
 		dmg = int(round(float(dmg) * 1.25))
 	hp = maxi(0, hp - dmg)
@@ -334,7 +349,11 @@ func _die(kind: String, from: Node) -> void:
 	if cop:
 		var rs := get_tree().get_first_node_in_group("run_state")
 		if rs and rs.has_method("add_wanted"):
-			rs.add_wanted(1)
+			var drop := 1
+			if kind == "snap" and rs.has_method("has_card") and rs.has_card("cop_out"):
+				drop = -1
+				Juice.shout("COPED OUT")
+			rs.add_wanted(drop)
 	_drops(from)
 	died.emit()
 	queue_free()

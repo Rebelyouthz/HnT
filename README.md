@@ -1,8 +1,8 @@
 # HnT — Revenge & Therapy
 
-Couch **or solo** brawler for **The Father** and **The Son**. Godot **4.7.2**, GDScript, 60 fps, English only.
+Couch, **solo**, or **remote Host/Join** brawler for **The Father** and **The Son**. Godot **4.7.2**, GDScript, 60 fps, English only.
 
-Playable tonight: **The Basement Clinic** hub, **Dock Street**, then **The Fire Escapes**. Same maps and systems whether you sit one chair or two. Solo spawns fewer enemies so a single body can file the street. Couch 2P keeps the full roster. Drop-in does **not** restock punks.
+Playable tonight: **The Basement Clinic** hub, then **five Raven Wharf acts** — Dock Street, The Fire Escapes, Neon Exchange, Rail Bridge, City Hall (Mayor Raven). Solo spawns fewer enemies. Couch 2P keeps the full roster. Drop-in does **not** restock punks. Remote: The Son Hosts, The Father Joins.
 
 ## Run locally
 
@@ -19,25 +19,60 @@ Headless smoke:
 godot --headless --path . --script res://tests/smoke.gd
 ```
 
+Rooms (needed for room-code Join and the automatic relay). Host will try to start this itself:
+
+```bash
+python3 tools/hnt_rooms.py
+```
+
+Default listen: HTTP `8787`, TCP relay `8789`. Change the URL in Session Settings if the Father is on another PC (point it at the machine running rooms).
+
 ## What is playable (`godot --path .`)
 
-Hub first. Clinic **GO TALK TO THE LANDLORD** starts **solo immediately** — nobody has to plug in P2.
+Hub first. Clinic **GO TALK TO THE LANDLORD** starts **solo immediately**.
 
-**Run tab** is where you pick the chair:
+**Run tab**
 
-- **SOLO** (default) — one body (The Son or The Father on P1). Dock Street 3 punks. Fire Escapes 3 punks.
-- **COUCH 2P** — both bodies, full roster (6 + 6). Shared lives, leash camera, Family Therapy.
+- **SOLO** (default) — one body. 3 punks per act (City Hall 3 + Mayor Raven).
+- **COUCH 2P** — both bodies, 6 punks per act, same device, one Camera2D.
+- **HOST (THE SON)** — one button. Waiting screen: huge **room code**, **IP (backup)**, status **WAITING FOR FATHER**. Cancel Host.
+- **JOIN (THE FATHER)** — paste room code (preferred) or expand **IP (backup)**, **Connect**. Status Connecting… then **Direct** or **Relay**.
 
-Pad **Start** or keyboard **P** drops the empty chair in mid-run. Enemies stay the count you booked.
+Connect pipeline (automatic, no extra taps): same LAN UDP → UPnP/direct (~3 s) → TCP relay through HnT Rooms. Room code is the product. IP is Timmie's backup.
 
-- **Two planes, one Camera2D.** Street Y-band + roof gravity. Leash only when two bodies exist.
-- **The Son:** hold jump in the air = cape stall. L = Cape Guard. O = batwing (mag 3). Jump-kick, dive, slide hitbox, light-light-heavy launcher.
-- **The Father:** `;` near a lamp = web 80–280 px. Jump or `;` again = slingshot. `'` = snare.
-- **SNAP:** sprint a back, vault a head, slide, web-in, or cape-dive. World ×0.22. Confirm with light or SNAP.
-- **Blood Mart** (Dock Street) is a checkpoint shop, then **The Fire Escapes** with a **Roof Vendor** (ammo 4 scrap, card reroll 1 scrap).
-- Shared **3 lives**. Solo downed respawns faster (no partner to slap). Co-op: hold SNAP on the body for the Parenting Slap.
+Pad **Start** or keyboard **P** drops the empty chair in a local run. Enemies stay the count you booked. Remote already has two bodies.
 
-Local 2P and solo. Remote Host/Join is still the next delivery.
+### Acts
+
+1. **Dock Street** — street + roofs, 24/7 Blood Mart, continue to roofs.
+2. **The Fire Escapes** — Vector gaps, Roof Vendor (ammo / card reroll).
+3. **Neon Exchange** — agents + police, wanted ladder, **Pawn & Plate** (tape, pipe, sell pickup).
+4. **Rail Bridge** — street under, roofs on boxcars, drones / toll bots, **Toll Booth** (grenade, spark ammo).
+5. **City Hall** — climbable statues, **Mayor Raven** (street / roof / lights-out). SNAP after stun. No shop.
+
+Wanted 3 = extra patrol. Wanted 5 = heli spotlight.
+
+- **The Son:** hold jump in the air = cape stall. L = Cape Guard. O = batwing (mag 3). Jump-kick, dive, slide, light-light-heavy launcher, light-light-special string.
+- **The Father:** `;` near a lamp = web 80–280 px. Jump or `;` again = slingshot. `'` = snare. Up+shoot with a grenade = a boundary with a timer.
+- **SNAP:** sprint a back, vault a head, slide, web-in, or cape-dive. World ×0.22.
+
+Shared **3 lives**. Solo downed respawns faster. Co-op: hold SNAP on the body for the Parenting Slap.
+
+## Host / Join steps
+
+**The Son (Stockholm)**
+
+1. Run tab → **HOST (THE SON)**.
+2. Text Timmie the 6-character code. Do not explain the IP.
+3. Wait. Status stays **WAITING FOR FATHER** until he connects. Then Dock Street starts with co-op density.
+
+**The Father (Dalarna)**
+
+1. Run tab → **JOIN (THE FATHER)**.
+2. Paste the code. **Connect**.
+3. If Direct fails, relay kicks in by itself. Expand **IP (backup)** only if the code cannot resolve (same LAN, rooms down).
+
+Two Godot windows on one PC: Host, then Join with the same code. LAN should win.
 
 ## Controls
 
@@ -69,18 +104,19 @@ Local 2P and solo. Remote Host/Join is still the next delivery.
 | SNAP | Right stick click |
 | Pause / drop-in | Start |
 
-Phone: on-screen stick left, combat right. Hub tabs hidden in a run.
+On a remote Join, The Father uses **P1** on his machine (keyboard or his pad). The Son stays host-authoritative.
 
 ## Hub
 
-Clinic, Run, Build, Locker, Awards. Clinic + Run start unlocked. Build the Therapy Couch, Wardrobe Cage, Trophy Cabinet to open the rest. Claim Gold/Gems from daily **Today's Coping Goals**, lifetime **Family Progress**, and Awards. Family Profile at `user://family.json`.
+Clinic, Run, Build, Locker, Awards. Clinic + Run start unlocked. Family Profile at `user://family.json`.
 
 ## Layout
 
 ```
-scenes/     hub + Dock Street + Fire Escapes
-src/        actors, camera, combat, juice, world, ui, coop/party.gd
+scenes/     hub + five act scenes
+src/        actors, camera, combat, juice, world, ui, coop, net
 data/       buildings, awards, milestones, CBT, cards, shop, encounters
+tools/      hnt_rooms.py (room codes + TCP relay)
 assets/     audio + icon
 ```
 

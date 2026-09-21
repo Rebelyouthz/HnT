@@ -28,5 +28,50 @@
       {"title": "Beat Cop", "x": 2080, "y": 500, "home": "street", "hp": 48, "pmin": 1900, "pmax": 2280, "cop": true},
       {"title": "Mohawk Bo", "x": 2460, "y": 500, "home": "street", "hp": 70, "pmin": 2280, "pmax": 2680}
     ]
+  },
+  "neon_exchange": {
+    "solo": [
+      {"title": "Agent Lin", "x": 780, "y": 500, "home": "street", "hp": 52, "pmin": 640, "pmax": 980, "cop": true},
+      {"title": "Roof Runner", "x": 1480, "y": 248, "home": "roof", "hp": 36, "pmin": 1320, "pmax": 1720},
+      {"title": "Vest Ollie", "x": 2320, "y": 500, "home": "street", "hp": 64, "pmin": 2140, "pmax": 2560, "armored": true}
+    ],
+    "coop": [
+      {"title": "Bag Snatch", "x": 620, "y": 500, "home": "street", "hp": 40, "pmin": 500, "pmax": 820},
+      {"title": "Agent Lin", "x": 980, "y": 500, "home": "street", "hp": 52, "pmin": 840, "pmax": 1180, "cop": true},
+      {"title": "Roof Runner", "x": 1420, "y": 248, "home": "roof", "hp": 36, "pmin": 1260, "pmax": 1680},
+      {"title": "Beat Cop", "x": 1860, "y": 500, "home": "street", "hp": 48, "pmin": 1680, "pmax": 2100, "cop": true},
+      {"title": "Agent Lin", "x": 2280, "y": 500, "home": "street", "hp": 52, "pmin": 2100, "pmax": 2520, "cop": true},
+      {"title": "Mohawk Bo", "x": 2680, "y": 500, "home": "street", "hp": 70, "pmin": 2520, "pmax": 2920}
+    ]
+  },
+  "rail_bridge": {
+    "solo": [
+      {"title": "Toll Bot", "x": 820, "y": 500, "home": "street", "hp": 80, "pmin": 680, "pmax": 1020, "armored": true},
+      {"title": "Drone", "x": 1540, "y": 210, "home": "air", "hp": 28, "pmin": 1360, "pmax": 1780},
+      {"title": "Roof Runner", "x": 2280, "y": 248, "home": "roof", "hp": 36, "pmin": 2100, "pmax": 2520}
+    ],
+    "coop": [
+      {"title": "Toll Bot", "x": 720, "y": 500, "home": "street", "hp": 80, "pmin": 560, "pmax": 940, "armored": true},
+      {"title": "Drone", "x": 1100, "y": 200, "home": "air", "hp": 28, "pmin": 920, "pmax": 1320},
+      {"title": "Bag Snatch", "x": 1480, "y": 500, "home": "street", "hp": 40, "pmin": 1320, "pmax": 1720},
+      {"title": "Drone", "x": 1860, "y": 190, "home": "air", "hp": 28, "pmin": 1680, "pmax": 2100},
+      {"title": "Toll Bot", "x": 2240, "y": 500, "home": "street", "hp": 80, "pmin": 2060, "pmax": 2480, "armored": true},
+      {"title": "Mohawk Bo", "x": 2680, "y": 500, "home": "street", "hp": 70, "pmin": 2500, "pmax": 2880}
+    ]
+  },
+  "city_hall": {
+    "solo": [
+      {"title": "Hall Guard", "x": 720, "y": 500, "home": "street", "hp": 60, "pmin": 560, "pmax": 920, "armored": true},
+      {"title": "Drone", "x": 1180, "y": 180, "home": "air", "hp": 28, "pmin": 980, "pmax": 1420},
+      {"title": "Hall Guard", "x": 1680, "y": 500, "home": "street", "hp": 60, "pmin": 1500, "pmax": 1880, "armored": true}
+    ],
+    "coop": [
+      {"title": "Hall Guard", "x": 560, "y": 500, "home": "street", "hp": 60, "pmin": 420, "pmax": 760, "armored": true},
+      {"title": "Drone", "x": 880, "y": 170, "home": "air", "hp": 28, "pmin": 720, "pmax": 1100},
+      {"title": "Hall Guard", "x": 1180, "y": 500, "home": "street", "hp": 60, "pmin": 1020, "pmax": 1380, "armored": true},
+      {"title": "Agent Lin", "x": 1480, "y": 500, "home": "street", "hp": 52, "pmin": 1320, "pmax": 1680, "cop": true},
+      {"title": "Drone", "x": 1760, "y": 160, "home": "air", "hp": 28, "pmin": 1580, "pmax": 1980},
+      {"title": "Hall Guard", "x": 1980, "y": 500, "home": "street", "hp": 60, "pmin": 1820, "pmax": 2140, "armored": true}
+    ]
   }
 }

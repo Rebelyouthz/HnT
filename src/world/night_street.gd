@@ -14,25 +14,35 @@ static func parallax(host: Node, map_w: float) -> void:
 		Vector2(980, 40), Vector2(1040, 40), Vector2(1040, 100), Vector2(980, 100)
 	])
 	moon_l.add_child(moon)
+	var fog := ParallaxLayer.new()
+	fog.motion_scale = Vector2(0.07, 0.03)
+	pb.add_child(fog)
+	Blockout.poly(fog, Rect2(-80, 80, map_w + 200.0, 220), Color(0.18, 0.2, 0.28, 0.18), -7)
 	var far := ParallaxLayer.new()
 	far.motion_scale = Vector2(0.15, 0.08)
 	pb.add_child(far)
 	Blockout.poly(far, Rect2(0, 200, map_w, 400), Color(0.11, 0.12, 0.18), -6)
+	Blockout.poly(far, Rect2(240, 120, 90, 280), Color(0.09, 0.1, 0.16), -6)
+	Blockout.poly(far, Rect2(920, 90, 120, 320), Color(0.1, 0.11, 0.17), -6)
+	Blockout.poly(far, Rect2(1680, 110, 80, 300), Color(0.08, 0.1, 0.15), -6)
 	var mid := ParallaxLayer.new()
 	mid.motion_scale = Vector2(0.35, 0.12)
 	pb.add_child(mid)
 	Blockout.poly(mid, Rect2(0, 260, map_w, 360), Color(0.15, 0.1, 0.12), -4)
+	Blockout.poly(mid, Rect2(400, 180, 40, 200), Color(0.22, 0.12, 0.12, 0.5), -4)
 	var near := ParallaxLayer.new()
 	near.motion_scale = Vector2(0.55, 0.2)
 	pb.add_child(near)
 	Blockout.poly(near, Rect2(120, 300, 80, 180), Color(0.2, 0.12, 0.12), -2)
 	Blockout.poly(near, Rect2(980, 280, 70, 200), Color(0.18, 0.11, 0.13), -2)
 	Blockout.poly(near, Rect2(2100, 290, 90, 190), Color(0.16, 0.12, 0.14), -2)
+	Blockout.poly(near, Rect2(1480, 270, 24, 220), Color(0.12, 0.1, 0.1), -2)
 	var fg := ParallaxLayer.new()
 	fg.motion_scale = Vector2(1.15, 0.4)
 	pb.add_child(fg)
 	Blockout.poly(fg, Rect2(-40, 620, 200, 40), Color(0.08, 0.08, 0.1, 0.7), 13)
 	Blockout.poly(fg, Rect2(700, 630, 160, 30), Color(0.09, 0.08, 0.11, 0.65), 13)
+	Blockout.poly(fg, Rect2(1600, 625, 180, 28), Color(0.07, 0.07, 0.09, 0.6), 13)
 
 
 static func tenement(host: Node, rect: Rect2, color: Color) -> void:
@@ -63,8 +73,8 @@ static func rain(host: Node, cx: float) -> void:
 	mat.initial_velocity_max = 320.0
 	mat.color = Color(0.55, 0.62, 0.75, 0.35)
 	rain.process_material = mat
-	rain.amount = 64
-	rain.lifetime = 1.3
+	rain.amount = 88
+	rain.lifetime = 1.35
 	rain.z_index = 12
 	host.add_child(rain)
 	var dust := GPUParticles2D.new()
@@ -102,3 +112,51 @@ static func bounds(host: Node, map_w: float) -> void:
 	var wall_r := Blockout.solid(host, Rect2(map_w, 0, 40, 720), false)
 	wall_l.collision_layer = 1
 	wall_r.collision_layer = 1
+
+
+static func plaque(host: Node, at: Vector2, text: String, color: Color, size: int = 16) -> Label:
+	var lab := Label.new()
+	lab.text = text
+	lab.position = at
+	UiKit.apply_label(lab, size, color)
+	host.add_child(lab)
+	return lab
+
+
+static func neon(host: Node, at: Vector2, text: String, color: Color = Palette.BRICK) -> Label:
+	var lab := plaque(host, at, text, color, 18)
+	var mat := ShaderMaterial.new()
+	mat.shader = preload("res://src/shaders/neon_flicker.gdshader")
+	mat.set_shader_parameter("neon", color)
+	lab.material = mat
+	return lab
+
+
+static func boxcar(host: Node, rect: Rect2) -> void:
+	Blockout.solid(host, Rect2(rect.position.x, rect.position.y, rect.size.x, 22), true)
+	Blockout.poly(host, rect, Color(0.18, 0.16, 0.14), 1)
+	Blockout.poly(host, Rect2(rect.position.x + 10, rect.position.y + 18, 40, 22), Color(0.08, 0.08, 0.09), 1)
+	Blockout.poly(host, Rect2(rect.end.x - 50, rect.position.y + 18, 40, 22), Color(0.08, 0.08, 0.09), 1)
+	Blockout.occluder(host, rect)
+
+
+static func statue(host: Node, top: Vector2, top_y: float) -> void:
+	Blockout.solid(host, Rect2(top.x - 40, top_y, 80, 22), true)
+	Blockout.poly(host, Rect2(top.x - 28, 320, 56, 280), Color(0.22, 0.2, 0.18), 1)
+	Blockout.poly(host, Rect2(top.x - 40, top_y, 80, 22), Color(0.28, 0.24, 0.2), 2)
+	Blockout.occluder(host, Rect2(top.x - 28, 320, 56, 280))
+
+
+static func heli(host: Node, map_w: float) -> Node2D:
+	var n := HeliSweep.new()
+	n.map_w = map_w
+	n.name = "HeliSweep"
+	var glow := Polygon2D.new()
+	glow.color = Color(0.95, 0.92, 0.55, 0.28)
+	glow.polygon = PackedVector2Array([
+		Vector2(-40, -20), Vector2(40, -20), Vector2(180, 520), Vector2(-180, 520)
+	])
+	Blockout.add_glow(glow)
+	n.add_child(glow)
+	host.add_child(n)
+	return n

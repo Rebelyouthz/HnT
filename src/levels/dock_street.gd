@@ -1,277 +1,64 @@
-extends Node2D
+extends RunAct
 
-const MAP_W := 3200.0
 const ROOF_Y := 248.0
 
-var _son: Fighter
-var _dad: Fighter
-var _state: RunState
-var _hud: CanvasLayer
-var _end: Control
+
+func _configure() -> void:
+	map_id = "dock_street"
+	map_w = 3200.0
+	spawn_at = Vector2(220, 490)
+	goal_x = 3000.0
+	check_x = 2920.0
+	check_pos = Vector2(2920, 490)
+	next_id = "fire_escapes"
+	light_preset = "dock_street"
+	toast_title = "DOCK STREET"
+	clear_title = Copy.CLEAR
+	clear_sub = Copy.CLEAR_SUB
+	next_label = Copy.NEXT_MAP
+	gate_sub = Copy.GATE_SUB
+	win_mode = "gate"
 
 
-var _cam: CouchCamera
-var _join_grace := 0
-
-
-func _ready() -> void:
-	add_to_group("dock_world")
-	_state = RunState.new()
-	_state.add_to_group("run_state")
-	_state.checkpoint = Vector2(220, 490)
-	_state.run_failed.connect(_on_fail)
-	_state.gate_reached.connect(_on_gate)
-	add_child(_state)
-	_world()
-	var rig := LightRig.new()
-	rig.preset = "dock_street"
-	add_child(rig)
-	add_child(SnapDirector.new())
-	add_child(DuoDirector.new())
-	add_child(BloodSim.new())
-	Mixer.play_music("res://assets/audio/music_street.wav")
-
-	var party: Dictionary = Party.spawn(self, Vector2(220, 490))
-	_son = party.get("son") as Fighter
-	_dad = party.get("dad") as Fighter
-	for row in Party.encounters("dock_street"):
-		Party.spawn_row(self, row, _state.hp_mul())
-
-	_cam = CouchCamera.new()
-	_cam.limit_right = int(MAP_W)
-	_cam.targets = _targets()
-	add_child(_cam)
-
-	var hud_script := preload("res://src/ui/run_hud.gd")
-	_hud = hud_script.new()
-	add_child(_hud)
-	_hud.bind(_son, _dad, _state)
-
-	if DisplayServer.is_touchscreen_available():
-		add_child(preload("res://src/ui/touch_hud.gd").new())
-	_state.need_cards.connect(_cards)
-	PadRouter.drop_in.connect(_on_dropin)
-	var mart := BloodMart.new()
-	mart.global_position = Vector2(3040, 490)
-	add_child(mart)
-	if App.is_solo_density():
-		Juice.toast("quest", "SOLO SESSION", Copy.SOLO_HINT)
-	else:
-		Juice.toast("quest", "COUCH SESSION", Copy.COUCH_HINT)
-
-
-func _targets() -> Array[Node2D]:
-	var t: Array[Node2D] = []
-	if _son:
-		t.append(_son)
-	if _dad:
-		t.append(_dad)
-	return t
-
-
-func _process(_delta: float) -> void:
-	if _join_grace > 0:
-		_join_grace -= 1
-	if _state.failed or _state.cleared or _state.gated:
-		return
-	if _dad == null and Input.is_action_just_pressed("p2_pause"):
-		_on_dropin(-1)
-		return
-	var lead_x := -9999.0
-	for f in [_son, _dad]:
-		if f and is_instance_valid(f):
-			lead_x = maxf(lead_x, f.global_position.x)
-	if lead_x > 2920.0:
-		_state.mark_checkpoint(Vector2(2920, 490))
-	if Party.all_past(3000.0):
-		_state.reach_gate()
-
-
-func _world() -> void:
-	var sky := Blockout.poly(self, Rect2(0, 0, MAP_W, 720), Color(0.07, 0.08, 0.13), -8)
+func build_world() -> void:
+	var sky := Blockout.poly(self, Rect2(0, 0, map_w, 720), Color(0.07, 0.08, 0.13), -8)
 	sky.z_index = -8
-	NightStreet.parallax(self, MAP_W)
-	NightStreet.wet_floor(self, MAP_W)
-
+	NightStreet.parallax(self, map_w)
+	NightStreet.wet_floor(self, map_w)
 	NightStreet.tenement(self, Rect2(80, 160, 220, 280), Color(0.14, 0.1, 0.12))
 	NightStreet.tenement(self, Rect2(420, 90, 260, 160), Color(0.16, 0.11, 0.13))
 	NightStreet.tenement(self, Rect2(860, 70, 300, 180), Color(0.13, 0.1, 0.14))
 	NightStreet.tenement(self, Rect2(1480, 60, 340, 190), Color(0.15, 0.1, 0.12))
 	NightStreet.tenement(self, Rect2(2480, 80, 280, 170), Color(0.14, 0.11, 0.13))
 	NightStreet.tenement(self, Rect2(2920, 140, 220, 290), Color(0.12, 0.16, 0.14))
-
 	Blockout.solid(self, Rect2(400, ROOF_Y, 840, 22), true)
 	Blockout.poly(self, Rect2(400, ROOF_Y, 840, 22), Color(0.22, 0.18, 0.2), 2)
 	Blockout.solid(self, Rect2(1420, ROOF_Y, 580, 22), true)
 	Blockout.poly(self, Rect2(1420, ROOF_Y, 580, 22), Color(0.22, 0.18, 0.2), 2)
 	Blockout.solid(self, Rect2(2480, ROOF_Y, 440, 22), true)
 	Blockout.poly(self, Rect2(2480, ROOF_Y, 440, 22), Color(0.22, 0.18, 0.2), 2)
-
 	var wall := Blockout.solid(self, Rect2(1234, 140, 18, 110), false)
 	wall.add_to_group("metal")
 	Blockout.poly(self, Rect2(1234, 140, 18, 110), Color(0.3, 0.22, 0.2), 3)
-
-	_fire_escape(480.0)
-	_fire_escape(1920.0)
-	_fire_escape(2520.0)
-
+	fire_escape(480.0)
+	fire_escape(1920.0)
+	fire_escape(2520.0)
 	var c1 := VaultCrate.new()
 	c1.global_position = Vector2(640, 500)
 	add_child(c1)
 	var c2 := VaultCrate.new()
 	c2.global_position = Vector2(2320, 500)
 	add_child(c2)
-
-	_anchor(Vector2(640, 88))
-	_anchor(Vector2(1320, 64))
-	_anchor(Vector2(1760, 84))
-	_anchor(Vector2(2680, 90))
-
-	NightStreet.bounds(self, MAP_W)
-
-	var sign := Label.new()
-	sign.text = "DOCK STREET  ·  RAVEN WHARF"
-	sign.position = Vector2(140, 150)
-	UiKit.apply_label(sign, 22, Palette.EDGE)
-	add_child(sign)
-	var neon := Label.new()
-	neon.text = "HIRING  ·  WE LIE ABOUT THAT"
-	neon.position = Vector2(900, 178)
-	UiKit.apply_label(neon, 18, Palette.BRICK)
-	add_child(neon)
-	Blockout.add_glow(neon)
-	var mart := Label.new()
-	mart.text = "24/7 BLOOD MART"
-	mart.position = Vector2(2940, 168)
-	UiKit.apply_label(mart, 20, Palette.READY)
-	add_child(mart)
-	var gap := Label.new()
-	gap.text = "GAP  ·  GLIDE OR WEB"
-	gap.position = Vector2(1258, 210)
-	UiKit.apply_label(gap, 14, Palette.MUTED)
-	add_child(gap)
-
+	anchor(Vector2(640, 88))
+	anchor(Vector2(1320, 64))
+	anchor(Vector2(1760, 84))
+	anchor(Vector2(2680, 90))
+	NightStreet.bounds(self, map_w)
+	NightStreet.plaque(self, Vector2(140, 150), "DOCK STREET  ·  RAVEN WHARF", Palette.EDGE, 22)
+	NightStreet.neon(self, Vector2(900, 178), "HIRING  ·  WE LIE ABOUT THAT", Palette.BRICK)
+	NightStreet.plaque(self, Vector2(2940, 168), "24/7 BLOOD MART", Palette.READY, 20)
+	NightStreet.plaque(self, Vector2(1258, 210), "GAP  ·  GLIDE OR WEB", Palette.MUTED, 14)
 	NightStreet.rain(self, 1600.0)
-
-
-func _fire_escape(at_x: float) -> void:
-	var fe := FireEscape.new()
-	fe.configure(at_x, ROOF_Y, 500.0)
-	add_child(fe)
-
-
-func _anchor(at: Vector2) -> void:
-	var a := WebAnchor.new()
-	a.position = at
-	add_child(a)
-
-
-func _cards() -> void:
-	if get_node_or_null("CardPick"):
-		return
-	var pick := CardPick.new()
-	pick.name = "CardPick"
-	if _state.level_ups >= 2 or _state.card_reroll:
-		var pool: Array = []
-		var table: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/cards.json"))
-		for c in table:
-			if not bool(c.get("fixed", false)) and not _state.cards.has(c["id"]):
-				pool.append(c["id"])
-		pool.shuffle()
-		pick.ids = pool.slice(0, 3)
-		_state.card_reroll = false
-	add_child(pick)
-	pick.picked.connect(func(id: String) -> void:
-		_state.take_card(id)
-	)
-
-
-func _on_dropin(device: int) -> void:
-	if _son != null and _dad != null:
-		return
-	var near := Vector2(220, 490)
-	if _son:
-		near = _son.global_position
-	elif _dad:
-		near = _dad.global_position
-	var born := Party.join_missing(self, near)
-	if born == null:
-		return
-	if born.role == "son":
-		_son = born
-	else:
-		_dad = born
-	_cam.targets = _targets()
-	_hud.bind(_son, _dad, _state)
-	_join_grace = 18
-	var who := "PAD %d" % (device + 1) if device >= 0 else "KEYBOARD"
-	Juice.unlock_logo("DROP-IN", "%s sat down. Punks were not restocked." % who)
-	Juice.pulse_shake(4.0)
-
-
-func _on_fail() -> void:
-	FamilyProfile.mark_run_finished(false)
-	_banner(Copy.FAIL, "Shared lives. Solo or not, three stamps and you are out.", false, false)
-
-
-func _on_gate() -> void:
-	Juice.toast("quest", "CHECKPOINT", "Blood Mart. Roofs next if you are still pretending to cope.")
-	_banner(Copy.CLEAR, Copy.GATE_SUB, true, true)
-
-
-func _banner(title: String, sub: String, win: bool, gate: bool = false) -> void:
-	if _end and is_instance_valid(_end):
-		return
-	get_tree().paused = true
-	var layer := CanvasLayer.new()
-	layer.layer = 40
-	layer.process_mode = Node.PROCESS_MODE_ALWAYS
-	add_child(layer)
-	_end = Control.new()
-	_end.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_end.process_mode = Node.PROCESS_MODE_ALWAYS
-	layer.add_child(_end)
-	var dim := ColorRect.new()
-	dim.color = Color(0, 0, 0, 0.72)
-	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_end.add_child(dim)
-	var col := VBoxContainer.new()
-	col.position = Vector2(360, 180)
-	col.add_theme_constant_override("separation", 12)
-	_end.add_child(col)
-	var t := Label.new()
-	t.text = title
-	UiKit.apply_label(t, 32, Palette.LEMON if win else Palette.BRICK)
-	col.add_child(t)
-	var s := Label.new()
-	s.text = sub
-	s.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	s.custom_minimum_size = Vector2(560, 0)
-	UiKit.apply_label(s, 16, Palette.TEXT)
-	col.add_child(s)
-	if gate:
-		var nxt := UiKit.button(Copy.NEXT_MAP, Vector2(320, 52))
-		nxt.process_mode = Node.PROCESS_MODE_ALWAYS
-		nxt.pressed.connect(func() -> void:
-			App.carry_to_fire_escapes(_state)
-		)
-		col.add_child(nxt)
-		nxt.grab_focus()
-	var b := UiKit.button("BACK TO THE CLINIC", Vector2(280, 48))
-	b.process_mode = Node.PROCESS_MODE_ALWAYS
-	b.pressed.connect(func() -> void:
-		get_tree().paused = false
-		if win:
-			FamilyProfile.mark_run_finished(true)
-			if App.is_solo_density():
-				FamilyProfile.mark_solo_clear()
-			FamilyProfile.push_log("DOCK STREET", "You filed the street. The therapist sent an invoice anyway.")
-		Mixer.play_music("res://assets/audio/music_clinic.wav")
-		App.back_to_hub("awards" if win else "clinic")
-	)
-	col.add_child(b)
-	if not gate:
-		b.grab_focus()
-	Juice.pulse_shake(8.0 if win else 5.0)
-	if win:
-		Juice.unlock_logo(title, sub)
+	var mart := BloodMart.new()
+	mart.global_position = Vector2(3040, 490)
+	add_child(mart)

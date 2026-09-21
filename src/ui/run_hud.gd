@@ -13,6 +13,7 @@ var _steam_a: ColorRect
 var _steam_b: ColorRect
 var _scrap: Label
 var _wanted: Label
+var _act: Label
 var _pause: Control
 var son: Fighter
 var father: Fighter
@@ -60,6 +61,13 @@ func _ready() -> void:
 	_wanted.position = Vector2(820, 8)
 	UiKit.apply_label(_wanted, 13, Palette.BRICK)
 	add_child(_wanted)
+
+	_act = Label.new()
+	_act.position = Vector2(500, 32)
+	_act.size = Vector2(280, 20)
+	_act.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	UiKit.apply_label(_act, 12, Palette.MUTED)
+	add_child(_act)
 
 	_combo = Label.new()
 	_combo.position = Vector2(560, 36)
@@ -149,6 +157,9 @@ func _process(_delta: float) -> void:
 		for i in 5:
 			w += "I" if i < state.wanted else "."
 		_wanted.text = "" if state.wanted == 0 else "WANTED  " + w
+		_act.text = str(App.current_map).replace("_", " ").to_upper()
+		if App.remote_coop:
+			_act.text += "  ·  " + (NetSession.path_name if NetSession.path_name != "" else "REMOTE")
 	_hint.text = _prompt_line()
 	if _join_grace > 0:
 		return
@@ -231,6 +242,8 @@ func _toggle_pause() -> void:
 			{"name": "SCRAP", "value": str(state.scrap), "color": Palette.EDGE},
 			{"name": "XP", "value": str(state.xp), "color": Palette.LEMON},
 			{"name": "WANTED", "value": str(state.wanted), "color": Palette.BRICK},
-			{"name": "MODE", "value": "COUCH" if App.density_coop else "SOLO", "color": Palette.TEXT}
+			{"name": "CARDS", "value": str(state.cards.size()), "color": Palette.TEXT},
+			{"name": "ACT", "value": str(App.current_map).replace("_", " ").to_upper(), "color": Palette.LEMON},
+			{"name": "MODE", "value": ("REMOTE" if App.remote_coop else ("COUCH" if App.density_coop else "SOLO")), "color": Palette.TEXT}
 		]))
 	r.grab_focus()

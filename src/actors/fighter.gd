@@ -65,6 +65,13 @@ var guard: Node2D
 var string_n := 0
 var string_ttl := 0.0
 var lights_clean := 0
+var net_driven := false
+var puppeted := false
+var net_report := false
+var snap_pos := Vector2.ZERO
+var snap_hop := 0.0
+var tape_t := 0.0
+var grenades := 0
 
 signal died
 signal hit_landed(kind: String, global_pos: Vector2)
@@ -99,6 +106,7 @@ func _ready() -> void:
 		ammo = 3
 	else:
 		ammo = 6
+	snap_pos = global_position
 	hit_landed.connect(_on_hit_landed)
 
 
@@ -158,6 +166,13 @@ func _part(pos: Vector2, size: Vector2, color: Color) -> void:
 
 func _physics_process(delta: float) -> void:
 	_tick_meters(delta)
+	if puppeted:
+		if snap_pos != Vector2.ZERO:
+			global_position = global_position.lerp(snap_pos, 0.4)
+		visual.position.y = lerpf(visual.position.y, snap_hop, 0.4)
+		if downed:
+			_process_downed(delta)
+		return
 	if downed:
 		_process_downed(delta)
 		return
@@ -221,7 +236,12 @@ func _tick_meters(delta: float) -> void:
 			regen *= 1.15
 		steam = minf(STEAM_MAX, steam + regen * delta)
 	blocking = _pressed("block") and steam > 2.0 and not downed
-	block_low = blocking and PadRouter.stick(prefix).y > 0.4
+	if tape_t > 0.0:
+		tape_t -= delta
+		armored = true
+		if tape_t <= 0.0:
+			armored = charge_frames >= 18
+	block_low = blocking and _stick().y > 0.4
 	if blocking:
 		steam = maxf(0.0, steam - 8.0 * delta)
 		steam_lock = 0.15
@@ -239,7 +259,7 @@ func _tick_meters(delta: float) -> void:
 func _process_street(delta: float) -> void:
 	motion_mode = MOTION_MODE_FLOATING
 	gliding = false
-	var stick := PadRouter.stick(prefix)
+	var stick := _stick()
 	var x := stick.x
 	var y := stick.y
 	if dashing:
@@ -297,7 +317,7 @@ func _process_street(delta: float) -> void:
 func _process_roof(delta: float) -> void:
 	motion_mode = MOTION_MODE_GROUNDED
 	visual.position.y = 0.0
-	var stick := PadRouter.stick(prefix)
+	var stick := _stick()
 	var x := stick.x
 	var y := stick.y
 	if wall_run > 0.0:
@@ -355,7 +375,7 @@ func _process_roof(delta: float) -> void:
 func _process_climb(delta: float) -> void:
 	motion_mode = MOTION_MODE_FLOATING
 	collision_mask = 0
-	var y := PadRouter.stick(prefix).y
+	var y := _stick().y
 	if absf(y) < 0.15:
 		y = -1.0 if (ladder and global_position.y > ladder.top_y + 8.0) else 1.0
 	velocity = Vector2.ZERO
@@ -382,7 +402,7 @@ func _process_web(delta: float) -> void:
 		return
 	collision_mask = 1
 	visual.position.y = 0.0
-	var x := PadRouter.stick(prefix).x
+	var x := _stick().x
 	velocity.y += GRAV * 0.62 * delta
 	var to_me: Vector2 = global_position - web_anchor.global_position
 	var dist := to_me.length()
@@ -404,7 +424,7 @@ func _process_web(delta: float) -> void:
 
 
 func _process_downed(delta: float) -> void:
-	velocity.x = PadRouter.stick(prefix).x * 40.0
+	velocity.x = _stick().x * 40.0
 	velocity.y = 0.0
 	if plane == "street":
 		motion_mode = MOTION_MODE_FLOATING
@@ -432,7 +452,7 @@ func _process_downed(delta: float) -> void:
 
 
 func _combat() -> void:
-	var y := PadRouter.stick(prefix).y
+	var y := _stick().y
 	if snap_ready and (_just("light") or _just("snap")):
 		return
 	if attack_cd == 0 and _just("dash") and not dashing:
@@ -445,6 +465,11 @@ func _combat() -> void:
 	if _just("throw"):
 		_throw()
 	if _just("special"):
+		if string_n >= 2:
+			_attack("gut-punch", false)
+			string_n = 0
+			Juice.shout("STRING")
+			return
 		_special()
 	if _just("shoot"):
 		_shoot()
@@ -476,6 +501,10 @@ func _dash() -> void:
 	dashing = true
 	dash_frames = 10
 	invuln = 8
+	var blitz := get_tree().get_first_node_in_group("run_state")
+	if blitz and blitz.has_method("has_card") and blitz.has_card("family_blitz"):
+		invuln = 12
+		dash_frames = 12
 	velocity.x = float(facing) * 420.0
 	Juice.play("res://assets/audio/dash.wav")
 
@@ -489,12 +518,15 @@ func _slide() -> void:
 	dashing = false
 	Juice.play("res://assets/audio/dash.wav")
 	_spawn_hit("slide", Vector2(52, 28), 0.22, Vector2(24 * facing, -12))
+	var rs := get_tree().get_first_node_in_group("run_state")
+	if rs and rs.has_method("has_card") and rs.has_card("family_blitz"):
+		_spawn_hit("slide", Vector2(64, 30), 0.18, Vector2(40 * facing, -10))
 
 
 func _try_vault() -> void:
 	if vaulting:
 		return
-	var x := PadRouter.stick(prefix).x
+	var x := _stick().x
 	if absf(x) < 0.5:
 		return
 	for n in get_tree().get_nodes_in_group("vaults"):
@@ -585,9 +617,20 @@ func _dive() -> void:
 func _on_hit_landed(kind: String, _global_pos: Vector2) -> void:
 	if kind == "light" or kind == "jump-kick" or kind == "gut-punch" or kind == "slide":
 		attack_cd = mini(attack_cd, 7)
+	var rs := get_tree().get_first_node_in_group("run_state")
+	if rs and rs.has_method("has_card") and rs.has_card("steam_tax") and (kind == "heavy" or kind == "launcher"):
+		steam = minf(STEAM_MAX, steam + 8.0)
 
 
 func _shoot() -> void:
+	if grenades > 0 and _stick().y < -0.35:
+		grenades -= 1
+		attack_cd = 16
+		_spawn_hit("finish", Vector2(90, 70), 0.2, Vector2(50 * facing, -30))
+		Juice.kill_burst(global_position + Vector2(float(facing) * 40.0, -20.0), "finish")
+		Juice.shout("BOUNDARY")
+		Juice.pulse_shake(7.0)
+		return
 	if ammo <= 0 or attack_cd > 0:
 		return
 	ammo -= 1
@@ -866,6 +909,9 @@ func _face(x: float) -> void:
 
 
 func _spend(n: float) -> bool:
+	var rs := get_tree().get_first_node_in_group("run_state")
+	if rs and rs.has_method("has_card") and rs.has_card("steam_tax") and n <= 12.0:
+		return true
 	if steam < n:
 		return false
 	steam -= n
@@ -874,15 +920,27 @@ func _spend(n: float) -> bool:
 
 
 func _pressed(action: String) -> bool:
+	if net_driven:
+		return NetSession.held(action)
 	return Input.is_action_pressed(StringName(str(prefix) + action))
 
 
 func _just(action: String) -> bool:
+	if net_driven:
+		return NetSession.tapped(action)
 	return Input.is_action_just_pressed(StringName(str(prefix) + action))
 
 
 func _released(action: String) -> bool:
+	if net_driven:
+		return NetSession.released(action)
 	return Input.is_action_just_released(StringName(str(prefix) + action))
+
+
+func _stick() -> Vector2:
+	if net_driven:
+		return NetSession.stick
+	return PadRouter.stick(prefix)
 
 
 func _throw() -> void:

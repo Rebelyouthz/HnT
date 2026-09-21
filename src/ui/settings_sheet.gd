@@ -49,6 +49,14 @@ func _ready() -> void:
 		FamilyProfile.save()
 	)
 	col.add_child(pin)
+	var rooms := LineEdit.new()
+	rooms.placeholder_text = "Rooms URL (default http://127.0.0.1:8787)"
+	rooms.text = str(FamilyProfile.data.get("rooms_url", "http://127.0.0.1:8787"))
+	rooms.text_changed.connect(func(t: String) -> void:
+		FamilyProfile.data["rooms_url"] = t.strip_edges()
+		FamilyProfile.save()
+	)
+	col.add_child(rooms)
 	var map := Label.new()
 	map.text = "\n".join(PadRouter.map_lines())
 	map.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

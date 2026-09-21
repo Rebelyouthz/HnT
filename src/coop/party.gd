@@ -61,7 +61,7 @@ static func make_father(at: Vector2, prefix: StringName = &"p2_") -> Fighter:
 static func spawn(host: Node, origin: Vector2) -> Dictionary:
 	var son: Fighter = null
 	var dad: Fighter = null
-	if App.couch:
+	if App.two_bodies():
 		son = make_son(origin)
 		dad = make_father(origin + Vector2(80, 10))
 		host.add_child(son)
@@ -126,6 +126,18 @@ static func spawn_row(host: Node, row: Dictionary, hp_mul: float) -> Punk:
 			p.armored = true
 		"Beat Cop":
 			p.speed = 44.0
+		"Agent Lin":
+			p.speed = 54.0
+			p.cop = true
+		"Drone":
+			p.speed = 62.0
+			p.home = "air"
+		"Toll Bot":
+			p.speed = 24.0
+			p.armored = true
+		"Hall Guard":
+			p.speed = 30.0
+			p.armored = true
 		_:
 			p.speed = 48.0
 	p.global_position = Vector2(float(row.get("x", 800.0)), float(row.get("y", 500.0)))

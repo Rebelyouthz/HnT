@@ -86,7 +86,11 @@ func _defaults() -> Dictionary:
 		"vol_vo": 1.0,
 		"vol_music": 0.72,
 		"difficulty": "night_class",
-		"solo_clears": 0
+		"solo_clears": 0,
+		"city_clears": 0,
+		"raven_kills": 0,
+		"remote_clears": 0,
+		"rooms_url": "http://127.0.0.1:8787"
 	}
 
 
@@ -185,6 +189,24 @@ func mark_solo_clear() -> void:
 	data["solo_clears"] = int(data.get("solo_clears", 0)) + 1
 	save()
 	Juice.toast("achievement", "I DIDN'T NEED HIM", "One chair. Same street. Filed anyway.")
+
+
+func mark_city_clear() -> void:
+	data["city_clears"] = int(data.get("city_clears", 0)) + 1
+	save()
+	Juice.toast("quest", "CITY HALL", "The landlord lost. The invoice won.")
+
+
+func mark_raven() -> void:
+	data["raven_kills"] = int(data.get("raven_kills", 0)) + 1
+	save()
+	Juice.toast("achievement", "THE LANDLORD HAD THROWING STARS", "Cape down. Election over.")
+
+
+func mark_remote_clear() -> void:
+	data["remote_clears"] = int(data.get("remote_clears", 0)) + 1
+	save()
+	Juice.toast("achievement", "LONG DISTANCE PARENTING", "Two cities. One camera.")
 
 
 func mark_heavy() -> void:

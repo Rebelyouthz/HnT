@@ -4,6 +4,10 @@ extends Control
 func _ready() -> void:
 	custom_minimum_size = Vector2(56, 56)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var tw := create_tween().set_loops()
+	tw.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_property(self, "modulate", Color(1.08, 1.04, 0.92, 1.0), 0.9)
+	tw.tween_property(self, "modulate", Color.WHITE, 0.9)
 
 
 func _draw() -> void:

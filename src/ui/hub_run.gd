@@ -64,13 +64,14 @@ func _ready() -> void:
 	col.add_child(_go)
 
 	var net := HBoxContainer.new()
+	net.add_theme_constant_override("separation", 8)
 	var host := UiKit.button(Copy.HOST, Vector2(240, 48))
 	var join := UiKit.button(Copy.JOIN, Vector2(240, 48))
 	host.pressed.connect(func() -> void:
-		Juice.claim_burst(get_viewport_rect().size * 0.5, Copy.HOST_HINT, 0, 0)
+		get_tree().root.add_child(preload("res://src/ui/host_wait.gd").new())
 	)
 	join.pressed.connect(func() -> void:
-		Juice.claim_burst(get_viewport_rect().size * 0.5, Copy.HOST_HINT, 0, 0)
+		get_tree().root.add_child(preload("res://src/ui/join_sheet.gd").new())
 	)
 	net.add_child(host)
 	net.add_child(join)
@@ -121,7 +122,10 @@ func _count_rows() -> Array:
 		{"name": "SOLO PUNKS", "value": str(Party.count_for("dock_street", false)), "color": Palette.LEMON},
 		{"name": "COUCH PUNKS", "value": str(Party.count_for("dock_street", true)), "color": Palette.BRICK},
 		{"name": "MAP 2 SOLO", "value": str(Party.count_for("fire_escapes", false)), "color": Palette.EDGE},
-		{"name": "MAP 2 COUCH", "value": str(Party.count_for("fire_escapes", true)), "color": Palette.BRICK}
+		{"name": "MAP 3 SOLO", "value": str(Party.count_for("neon_exchange", false)), "color": Palette.LEMON},
+		{"name": "MAP 4 SOLO", "value": str(Party.count_for("rail_bridge", false)), "color": Palette.EDGE},
+		{"name": "HALL SOLO", "value": str(Party.count_for("city_hall", false)), "color": Palette.BRICK},
+		{"name": "COUCH EACH", "value": str(Party.count_for("dock_street", true)), "color": Palette.TEXT}
 	]
 
 
@@ -129,4 +133,4 @@ func _refresh_copy() -> void:
 	if _go:
 		_go.text = Copy.GO_COUCH if App.couch else Copy.GO_SOLO
 	if _hint:
-		_hint.text = (Copy.COUCH_HINT if App.couch else Copy.SOLO_HINT) + "  " + Copy.JOIN_HINT + "  P1 keyboard, P2 pad or arrows after join. Light is a red flash. Heavy is the conversation."
+		_hint.text = (Copy.COUCH_HINT if App.couch else Copy.SOLO_HINT) + "  " + Copy.JOIN_HINT + "  " + Copy.REMOTE_HINT

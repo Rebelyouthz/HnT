@@ -178,7 +178,10 @@ func _show_tab(id: String) -> void:
 		_:
 			page = preload("res://src/ui/hub_awards.gd").new()
 	page.set_anchors_preset(Control.PRESET_FULL_RECT)
+	page.modulate.a = 0.0
 	_content.add_child(page)
+	var tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(page, "modulate:a", 1.0, 0.18)
 	if page.has_signal("need_refresh"):
 		page.need_refresh.connect(_after_page)
 	_refresh_tab_locks()

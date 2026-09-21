@@ -32,6 +32,14 @@ static func button(text: String, min_size: Vector2 = Vector2(120, 44)) -> Button
 	b.add_theme_stylebox_override("pressed", panel(Palette.BRICK, Palette.LEMON))
 	b.add_theme_stylebox_override("focus", panel(Palette.PANEL_2, Palette.LEMON))
 	b.add_theme_stylebox_override("disabled", panel(Palette.PANEL, Palette.LOCK))
+	b.resized.connect(func() -> void:
+		b.pivot_offset = b.size * 0.5
+	)
+	b.pressed.connect(func() -> void:
+		var tw := b.create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tw.tween_property(b, "scale", Vector2(1.05, 1.05), 0.07)
+		tw.tween_property(b, "scale", Vector2.ONE, 0.1)
+	)
 	return b
 
 

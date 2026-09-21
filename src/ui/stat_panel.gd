@@ -38,12 +38,14 @@ static func kit_rows(role: String) -> Array:
 			{"name": "STEAM", "value": "100", "color": Palette.LEMON},
 			{"name": "SPEED", "value": "180", "color": Palette.EDGE},
 			{"name": "SPECIAL", "value": "WEB 80–280", "color": Palette.TEXT},
-			{"name": "AMMO", "value": "SNARE 6", "color": Palette.READY}
+			{"name": "AMMO", "value": "SNARE 6", "color": Palette.READY},
+			{"name": "THROW", "value": "POCKET SAND", "color": Palette.MUTED}
 		]
 	return [
 		{"name": "HP", "value": "92", "color": Palette.BRICK},
 		{"name": "STEAM", "value": "100", "color": Palette.LEMON},
 		{"name": "SPEED", "value": "230", "color": Palette.EDGE},
 		{"name": "SPECIAL", "value": "CAPE GUARD", "color": Palette.TEXT},
-		{"name": "AMMO", "value": "BATWING 3", "color": Palette.READY}
+		{"name": "AMMO", "value": "BATWING 3", "color": Palette.READY},
+		{"name": "AIR", "value": "GLIDE · DIVE · WALL-RUN", "color": Palette.MUTED}
 	]

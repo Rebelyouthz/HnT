@@ -38,5 +38,29 @@
     "need": { "solo_clears": 1 },
     "gold": 25,
     "gems": 2
+  },
+  {
+    "id": "wharf_tourist",
+    "title": "FIVE ACTS, ONE INVOICE",
+    "blurb": "File City Hall. Mayor Raven still wants a quote for the rubble.",
+    "need": { "city_clears": 1 },
+    "gold": 60,
+    "gems": 4
+  },
+  {
+    "id": "raven_down",
+    "title": "THE LANDLORD HAD THROWING STARS",
+    "blurb": "Put Mayor Raven on the floor. Keep the cape. Lose the election.",
+    "need": { "raven_kills": 1 },
+    "gold": 50,
+    "gems": 4
+  },
+  {
+    "id": "host_night",
+    "title": "LONG DISTANCE PARENTING",
+    "blurb": "Finish a remote Host/Join run. Stockholm can still hear Dalarna shout.",
+    "need": { "remote_clears": 1 },
+    "gold": 35,
+    "gems": 3
   }
 ]

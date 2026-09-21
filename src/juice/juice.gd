@@ -151,10 +151,16 @@ func register_hit(kind: String, global_pos: Vector2, dmg: int) -> void:
 		popup_number(global_pos + Vector2(0, -80), str(dmg), Color(1.0, 0.55, 0.2))
 	if combo == 5:
 		shout("NICE")
+	elif combo == 8:
+		shout("RANK B")
 	elif combo == 10:
 		shout("HOLY HELL, %s" % FamilyProfile.son_name())
+	elif combo == 15:
+		shout("RANK A")
 	elif combo == 20:
 		shout("FAMILY POLICY")
+	elif combo == 30:
+		shout("RANK S")
 	elif combo == 40:
 		shout("THE THERAPIST IS CRYING")
 

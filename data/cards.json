@@ -46,5 +46,23 @@
     "name": "PENDULUM POLITICS",
     "blurb": "A web-slam kill leaves a lamp. The Son can grab it. Solo: you still get the lamp.",
     "fixed": false
+  },
+  {
+    "id": "cop_out",
+    "name": "COP OUT",
+    "blurb": "SNAP on a cop refunds one Wanted stamp. The paperwork files itself.",
+    "fixed": false
+  },
+  {
+    "id": "steam_tax",
+    "name": "STEAM TAX",
+    "blurb": "Lights cost 0 Steam. Heavies refund 8. The clinic calls it a loophole.",
+    "fixed": false
+  },
+  {
+    "id": "family_blitz",
+    "name": "FAMILY BLITZ",
+    "blurb": "Dash i-frames +4. Slide hits twice. SoR4 called; it wants its meter back.",
+    "fixed": false
   }
 ]
