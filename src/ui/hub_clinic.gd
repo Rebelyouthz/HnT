@@ -30,7 +30,7 @@ func _ready() -> void:
 	head_row.add_child(event)
 	col.add_child(head_row)
 	var sub := Label.new()
-	sub.text = Copy.BUILD_HINT
+	sub.text = Copy.CLINIC_NIGHT
 	UiKit.apply_label(sub, 14, Palette.MUTED)
 	col.add_child(sub)
 

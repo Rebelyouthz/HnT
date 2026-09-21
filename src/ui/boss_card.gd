@@ -22,11 +22,15 @@ func _ready() -> void:
 
 func flash(title: String, sub: String, accent: Color, full: bool) -> void:
 	_shown_for = title
-	Juice.play("res://assets/audio/sting_boss.wav")
-	if full:
-		Mixer.play_music("res://assets/audio/music_boss.wav")
-	Juice.pulse_shake(9.0 if full else 5.0)
-	Juice.freeze_frames(5 if full else 3)
+	var finale := title.to_lower().contains("family plan") or title.to_lower().contains("director")
+	if finale:
+		Juice.play("res://assets/audio/sting_finale.wav")
+	else:
+		Juice.play("res://assets/audio/sting_boss.wav")
+		if full:
+			Mixer.play_music("res://assets/audio/music_boss.wav")
+	Juice.pulse_shake(11.0 if finale else (9.0 if full else 5.0))
+	Juice.freeze_frames(8 if finale else (5 if full else 3))
 	var dim := ColorRect.new()
 	dim.color = Color(0, 0, 0, 0.55)
 	dim.position = Vector2.ZERO
@@ -75,7 +79,10 @@ func flash(title: String, sub: String, accent: Color, full: bool) -> void:
 	UiKit.apply_label(sub_l, 18, accent)
 	add_child(sub_l)
 	var tag := Label.new()
-	tag.text = "MINI" if not full else "BOSS"
+	if finale:
+		tag.text = "FINALE"
+	else:
+		tag.text = "MINI" if not full else "BOSS"
 	tag.position = Vector2(520, 210)
 	UiKit.apply_label(tag, 14, Palette.EDGE)
 	add_child(tag)

@@ -134,8 +134,24 @@ func _paint_film() -> void:
 	_who.text = StoryBook.who_name(who) if who != "" else "THE STREET"
 	_caption.text = str(d.get("text", ""))
 	_caption.modulate.a = 0.0
+	_tint_speakers(who)
 	var tw := create_tween()
 	tw.tween_property(_caption, "modulate:a", 1.0, 0.16)
+
+
+func _tint_speakers(who: String) -> void:
+	if who == "father":
+		_sil_a.modulate = Color(1.35, 1.1, 1.05)
+		_sil_b.modulate = Color(0.32, 0.32, 0.34, 0.5)
+		_who.add_theme_color_override("font_color", Palette.BRICK)
+	elif who == "son":
+		_sil_a.modulate = Color(0.32, 0.32, 0.34, 0.5)
+		_sil_b.modulate = Color(1.25, 1.28, 0.85)
+		_who.add_theme_color_override("font_color", Palette.LEMON)
+	else:
+		_sil_a.modulate = Color(1, 1, 1)
+		_sil_b.modulate = Color(1, 1, 1)
+		_who.add_theme_color_override("font_color", Palette.EDGE)
 
 
 func _advance() -> void:

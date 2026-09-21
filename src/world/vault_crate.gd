@@ -48,6 +48,10 @@ func smash() -> void:
 	host.add_child(orb)
 	Juice.kill_burst(global_position, "heavy")
 	Juice.shout("CRATE")
+	var rs := get_tree().get_first_node_in_group("run_state")
+	if rs and rs.has_method("add_points"):
+		rs.add_points(Juice.last_hitter, 24, "crate")
+	Rarity.juice("uncommon", "CRATE")
 	var hud := get_tree().get_first_node_in_group("mission_hud")
 	if hud and hud.has_method("complete_side"):
 		hud.complete_side()

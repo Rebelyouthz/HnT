@@ -26,7 +26,7 @@ func _ready() -> void:
 	UiKit.apply_label(h, 26, Palette.LEMON)
 	col.add_child(h)
 	var s := Label.new()
-	s.text = "Starts now. Intro films the first time. Gates play a story film. Versus is Father vs Son. Drop-in does not restock the street."
+	s.text = "Starts now. Intro films the first time. Gates play a story film (PAUSE skips the beat). Versus is Father vs Son. Drop-in does not restock the street."
 	s.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	UiKit.apply_label(s, 15, Palette.MUTED)
 	col.add_child(s)

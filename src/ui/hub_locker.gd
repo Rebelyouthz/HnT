@@ -141,6 +141,7 @@ func _row(item: Dictionary) -> Control:
 		var up := UiKit.button("UP  %dG" % up_cost, Vector2(150, 36))
 		up.pressed.connect(func() -> void:
 			if FamilyProfile.try_upgrade_gear(id):
+				Rarity.juice(rarity, str(item.get("title", "")))
 				Juice.unlock_logo("UPGRADED", "%s is meaner. The clinic noticed." % str(item.get("title", "")))
 				need_refresh.emit()
 			else:

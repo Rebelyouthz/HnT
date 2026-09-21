@@ -29,12 +29,19 @@ func _ready() -> void:
 			p.color = Color(0.45, 0.32, 0.2)
 			p.polygon = PackedVector2Array([Vector2(-20, -4), Vector2(20, -4), Vector2(20, 4), Vector2(-20, 4)])
 	add_child(p)
+	p.color = Rarity.color(Rarity.of_pickup(kind))
 	body_entered.connect(_grab)
 
 
 func _grab(b: Node) -> void:
 	if b is Fighter:
-		(b as Fighter).equip_pickup(kind)
+		var f: Fighter = b
+		f.equip_pickup(kind)
+		var rarity := Rarity.of_pickup(kind)
 		Juice.play("res://assets/audio/shop.wav")
-		Juice.popup_number(global_position, kind.to_upper(), Palette.EDGE)
+		Juice.popup_number(global_position, "%s  %s" % [kind.to_upper(), Rarity.label(rarity)], Rarity.color(rarity))
+		Rarity.juice(rarity, kind.to_upper())
+		var rs := get_tree().get_first_node_in_group("run_state")
+		if rs and rs.has_method("add_points"):
+			rs.add_points(f.role, 16 + Rarity.rank(rarity) * 8, "pickup")
 		queue_free()

@@ -65,8 +65,10 @@ func _make_top() -> Control:
 	row.add_theme_constant_override("separation", 12)
 	bar.add_child(row)
 
-	var avatar := UiKit.button("", Vector2(200, 56))
-	avatar.text = "%s\nTHE SON\n%s\nTHE FATHER" % [FamilyProfile.son_name(), FamilyProfile.father_name()]
+	var avatar := UiKit.button("", Vector2(220, 56))
+	avatar.text = "%s  LV %d\nTHE SON\n%s\nTHE FATHER" % [
+		FamilyProfile.son_name(), int(FamilyProfile.data.get("account_level", 1)), FamilyProfile.father_name()
+	]
 	avatar.pressed.connect(_open_intake)
 	row.add_child(avatar)
 

@@ -105,6 +105,9 @@ func _ready() -> void:
 		Juice.unlock_logo(headline, sub)
 	_tween_xp(float(grant.get("xp", 0)), int(grant.get("dings", 0)))
 	Juice.toast("reward", "PINBALL", "%s %06d  ·  %s %06d" % [son_n, son_s, dad_n, dad_s])
+	if state and state.score_total > 0 and state.score_total == int(FamilyProfile.data.get("high_score", 0)):
+		Juice.unlock_logo("HIGH TABLE", "The clipboard wrote it in gold ink.")
+		Juice.shout("HIGH TABLE")
 
 
 func _winner(son_s: int, dad_s: int, son_n: String, dad_n: String) -> String:

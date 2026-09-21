@@ -64,6 +64,9 @@ func _initialize() -> void:
 	if Copy.NEXT_FLOOR != "THE PROCESSING FLOOR":
 		push_error("missing next floor copy")
 		failed += 1
+	if Copy.CLINIC_NIGHT.find("Processing Floor") < 0:
+		push_error("missing clinic night copy")
+		failed += 1
 	var app := get_root().get_node("App")
 	if app.couch != false:
 		push_error("App.couch must default false so hub GO starts solo")
@@ -160,6 +163,12 @@ func _initialize() -> void:
 	failed += _contains("res://src/app/rarity.gd", "legendary")
 	failed += _contains("res://src/actors/family_plan.gd", "ARMOR STRIPPED")
 	failed += _contains("res://src/ui/act_film.gd", "_advance_hard")
+	failed += _contains("res://src/ui/act_film.gd", "_tint_speakers")
+	failed += _contains("res://src/ui/boss_card.gd", "sting_finale")
+	failed += _contains("res://src/ui/run_hud.gd", "TABLE")
+	failed += _contains("res://src/app/rarity.gd", "func buy(")
+	failed += _contains("res://src/world/street_shop.gd", "Rarity.buy")
+	failed += _contains("res://src/world/weapon_pickup.gd", "of_pickup")
 	failed += _contains("res://src/net/net_session.gd", "extra")
 	failed += _contains("res://src/juice/juice.gd", "func cash_out(")
 	failed += _contains("res://src/juice/juice.gd", "func toast(")

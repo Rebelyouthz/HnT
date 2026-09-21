@@ -11,6 +11,7 @@ var _cam: CouchCamera
 var _hud: CanvasLayer
 var _round_lab: Label
 var _score: Label
+var _hp: Label
 var map_w := 1400.0
 
 
@@ -69,6 +70,12 @@ func _ready() -> void:
 	_score.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	UiKit.apply_label(_score, 16, Palette.EDGE)
 	_hud.add_child(_score)
+	_hp = Label.new()
+	_hp.position = Vector2(400, 80)
+	_hp.size = Vector2(480, 24)
+	_hp.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	UiKit.apply_label(_hp, 14, Palette.TEXT)
+	_hud.add_child(_hp)
 	var hint := Label.new()
 	hint.position = Vector2(40, 668)
 	hint.size = Vector2(1200, 40)
@@ -98,6 +105,8 @@ func _paint() -> void:
 	_score.text = "%s  %d   ·   %d  %s" % [
 		FamilyProfile.son_name(), _wins["son"], _wins["father"], FamilyProfile.father_name()
 	]
+	if _son and is_instance_valid(_son) and _dad and is_instance_valid(_dad) and _hp:
+		_hp.text = "HP %d / %d    ·    HP %d / %d" % [_son.hp, _son.max_hp, _dad.hp, _dad.max_hp]
 
 
 func _clash() -> void:
@@ -152,7 +161,15 @@ func _reset() -> void:
 
 func _end(winner: String) -> void:
 	FamilyProfile.mark_vs()
+	var son_w := int(_wins["son"])
+	var dad_w := int(_wins["father"])
+	var grant := FamilyProfile.grant_account_xp(50 + (son_w + dad_w) * 18)
 	Juice.unlock_logo("THERAPY MATCH", "%s filed the other one." % StoryBook.who_name(winner))
+	Juice.toast("reward", "PINBALL", "%s %d  ·  %s %d  ·  +%d XP" % [
+		FamilyProfile.son_name(), son_w, FamilyProfile.father_name(), dad_w, int(grant.get("gained", 0))
+	])
+	if int(grant.get("dings", 0)) > 0:
+		Juice.unlock_logo("ACCOUNT LEVEL UP", "Growth. Billed. Even in Versus.")
 	get_tree().paused = true
 	var layer := CanvasLayer.new()
 	layer.layer = 40
@@ -163,15 +180,23 @@ func _end(winner: String) -> void:
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	dim.process_mode = Node.PROCESS_MODE_ALWAYS
 	layer.add_child(dim)
+	var col := VBoxContainer.new()
+	col.position = Vector2(280, 140)
+	col.add_theme_constant_override("separation", 12)
+	col.process_mode = Node.PROCESS_MODE_ALWAYS
+	layer.add_child(col)
 	var t := Label.new()
-	t.position = Vector2(200, 220)
-	t.size = Vector2(880, 60)
+	t.size = Vector2(720, 60)
 	t.text = "WINNER  ·  %s" % StoryBook.who_name(winner)
 	t.process_mode = Node.PROCESS_MODE_ALWAYS
 	UiKit.apply_label(t, 36, Palette.LEMON if winner == "son" else Palette.BRICK)
-	layer.add_child(t)
+	col.add_child(t)
+	col.add_child(StatPanel.new([
+		{"name": FamilyProfile.son_name(), "value": str(son_w), "color": Palette.LEMON},
+		{"name": FamilyProfile.father_name(), "value": str(dad_w), "color": Palette.BRICK},
+		{"name": "ACCOUNT", "value": "LV %d  +%d XP" % [int(grant.get("level", 1)), int(grant.get("gained", 0))], "color": Palette.EDGE}
+	]))
 	var b := UiKit.button("BACK TO THE CLINIC", Vector2(280, 48))
-	b.position = Vector2(500, 360)
 	b.process_mode = Node.PROCESS_MODE_ALWAYS
 	b.pressed.connect(func() -> void:
 		get_tree().paused = false
@@ -179,5 +204,5 @@ func _end(winner: String) -> void:
 		Mixer.play_music("res://assets/audio/music_clinic.wav")
 		App.back_to_hub("awards")
 	)
-	layer.add_child(b)
+	col.add_child(b)
 	b.grab_focus()

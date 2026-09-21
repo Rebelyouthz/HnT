@@ -30,8 +30,11 @@ func _open(b: Node) -> void:
 		rs.add_scrap(8)
 	if rs and rs.has_method("add_xp"):
 		rs.add_xp(22)
+	if rs and rs.has_method("add_points"):
+		rs.add_points((b as Fighter).role, 80, "chest")
+	Rarity.juice("rare", "COPING CHEST")
 	Juice.unlock_logo("COPING CHEST", "Halls of Torment called. It wants its loot table back.")
-	Juice.toast("reward", "CHEST", "Scrap, XP, and a worse personality.")
+	Juice.toast("reward", "CHEST  ·  RARE", "Scrap, XP, and a worse personality.")
 	Juice.play("res://assets/audio/chest.wav")
 	if rs and rs.has_signal("need_cards"):
 		rs.emit_signal("need_cards")

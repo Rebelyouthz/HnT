@@ -30,7 +30,7 @@ func _process(_delta: float) -> void:
 	for n in get_overlapping_bodies():
 		if n is Fighter:
 			var f: Fighter = n
-			_hint.text = "SPECIAL  BANDAGE 8 SCRAP  ·  DOWN+SPECIAL THERMOS 6"
+			_hint.text = "SPECIAL  BANDAGE 8 UNCOMMON  ·  DOWN+SPECIAL THERMOS 6 COMMON"
 			_hint.modulate = Color(1.15, 1.2, 0.7)
 			if f._just("special"):
 				var y := PadRouter.stick(f.prefix).y
@@ -50,15 +50,16 @@ func _buy(rs: Node, f: Fighter, item: String) -> void:
 	if int(rs.scrap) < cost:
 		Juice.shout("THE FRIDGE DOES NOT RUN ON IOUS")
 		return
+	Juice.last_hitter = f.role
 	rs.scrap -= cost
 	rs.scrap_changed.emit()
 	if rs.has_method("note_shop"):
 		rs.note_shop()
 	if item == "bandage":
 		f.bandage += 1
-		Juice.shout(str(info["line"]))
 	else:
 		f.steam = Fighter.STEAM_MAX
-		Juice.shout(str(info["line"]))
+	Juice.shout(str(info["line"]))
 	Juice.play("res://assets/audio/shop.wav")
 	Juice.claim_burst(Vector2(640, 200), str(info["line"]), 0, 0)
+	Rarity.buy("24/7", info)

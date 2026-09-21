@@ -83,11 +83,11 @@ Wanted 3 = extra patrol. Wanted 5 = heli spotlight. Seed encounters stay **solo 
 
 ## Pinball, results, death
 
-Everything scores. Father vs Son on the same run (HUD bottom). After every act and on death: results sheet with table scores, winner line, **account XP bar**, toasts. Death still grants XP. High table lives on the Family Profile.
+Everything scores. Father vs Son on the same run (HUD bottom, pause overlay). After every act and on death: results sheet with table scores, winner line, **account XP bar**, toasts, HIGH TABLE if you beat the fridge. Death still grants XP. High table lives on the Family Profile. Versus ends with the same XP bar energy.
 
 ## Avatar / rarity
 
-Locker is clothes / hats / shoes. Every piece has stats and three upgrades. **Common → Uncommon → Rare → Epic → Legendary** on cards, gear, CBT, awards, shop. Colored borders. Legendary juice.
+Locker is clothes / hats / shoes. Every piece has stats and three upgrades. **Common → Uncommon → Rare → Epic → Legendary** on cards, gear, CBT, awards, shop, pickups, crates. Colored borders. Legendary juice. Pause shows the pinball table.
 
 ## Options / Reset
 

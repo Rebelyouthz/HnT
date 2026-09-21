@@ -156,8 +156,9 @@ func _award(a: Dictionary) -> Control:
 			return
 		claimed.append(a["id"])
 		FamilyProfile.grant(int(a["gold"]), int(a["gems"]), Copy.HEALTHY)
+		Rarity.juice(rarity, str(a["title"]))
 		Juice.claim_burst(get_viewport_rect().size * 0.5, Copy.HEALTHY, int(a["gold"]), int(a["gems"]))
-		Juice.toast("achievement", str(a["title"]), Copy.HEALTHY)
+		Juice.toast("achievement", "%s  ·  %s" % [str(a["title"]), Rarity.label(rarity)], Copy.HEALTHY)
 		need_refresh.emit()
 	)
 	row.add_child(btn)

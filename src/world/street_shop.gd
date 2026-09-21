@@ -48,7 +48,12 @@ func _ready() -> void:
 		var bits: PackedStringArray = []
 		for item in _items:
 			if table.has(item):
-				bits.append("%s %d" % [str(item).replace("_", " ").to_upper(), int(table[item]["scrap"])])
+				var row: Dictionary = table[item]
+				bits.append("%s %d %s" % [
+					str(item).replace("_", " ").to_upper(),
+					int(row["scrap"]),
+					Rarity.label(str(row.get("rarity", "common")))
+				])
 		hint = "SPECIAL  " + "  ·  ".join(bits)
 
 
@@ -90,18 +95,20 @@ func _buy(rs: Node, f: Fighter, item: String) -> void:
 		if f.pickup == "":
 			Juice.shout("NOTHING TO PAWN BUT THE BITTERNESS")
 			return
+		Juice.last_hitter = f.role
 		rs.scrap += 5
 		rs.scrap_changed.emit()
 		f.pickup = ""
 		if rs.has_method("note_shop"):
 			rs.note_shop()
 		Juice.shout(str(info["line"]))
-		Juice.toast("reward", title, str(info["line"]))
+		Rarity.buy(title, info)
 		Juice.play("res://assets/audio/shop.wav")
 		return
 	if int(rs.scrap) < cost:
 		Juice.shout("THE TILL DOES NOT TAKE PROMISES")
 		return
+	Juice.last_hitter = f.role
 	rs.scrap -= cost
 	rs.scrap_changed.emit()
 	if rs.has_method("note_shop"):
@@ -128,4 +135,4 @@ func _buy(rs: Node, f: Fighter, item: String) -> void:
 	Juice.shout(str(info["line"]))
 	Juice.play("res://assets/audio/shop.wav")
 	Juice.claim_burst(Vector2(640, 180), str(info["line"]), 0, 0)
-	Juice.toast("reward", title, str(info["line"]))
+	Rarity.buy(title, info)

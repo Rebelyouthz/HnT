@@ -64,3 +64,19 @@ static func juice(raw: String, title: String) -> void:
 		Juice.play("res://assets/audio/card.wav")
 	elif r == "rare":
 		Juice.play("res://assets/audio/card.wav")
+
+
+static func buy(title: String, info: Dictionary) -> void:
+	var r := normalize(str(info.get("rarity", "common")))
+	juice(r, title)
+	Juice.toast("reward", "%s  ·  %s" % [title, label(r)], str(info.get("line", "")))
+
+
+static func of_pickup(kind: String) -> String:
+	match kind:
+		"pistol":
+			return "rare"
+		"knife", "board":
+			return "uncommon"
+		_:
+			return "common"

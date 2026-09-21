@@ -129,6 +129,7 @@ func has_card(id: String) -> bool:
 
 func note_shop() -> void:
 	shops_used += 1
+	add_points(Juice.last_hitter, 12, "shop")
 
 
 func request_reroll() -> void:

@@ -373,8 +373,8 @@ func _toggle_pause() -> void:
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	layer.add_child(dim)
 	var col := VBoxContainer.new()
-	col.position = Vector2(480, 200)
-	col.add_theme_constant_override("separation", 12)
+	col.position = Vector2(440, 88)
+	col.add_theme_constant_override("separation", 10)
 	layer.add_child(col)
 	var t := Label.new()
 	t.text = Copy.PAUSE
@@ -394,7 +394,12 @@ func _toggle_pause() -> void:
 	)
 	col.add_child(end)
 	if state:
+		var son_n := FamilyProfile.son_name()
+		var dad_n := FamilyProfile.father_name()
 		col.add_child(StatPanel.new([
+			{"name": son_n, "value": "%06d" % state.score_son, "color": Palette.LEMON},
+			{"name": dad_n, "value": "%06d" % state.score_dad, "color": Palette.BRICK},
+			{"name": "TABLE", "value": "%06d" % state.score_total, "color": Palette.EDGE},
 			{"name": "LIVES", "value": str(state.lives), "color": Palette.READY},
 			{"name": "SCRAP", "value": str(state.scrap), "color": Palette.EDGE},
 			{"name": "XP", "value": str(state.xp), "color": Palette.LEMON},
@@ -402,6 +407,18 @@ func _toggle_pause() -> void:
 			{"name": "CARDS", "value": str(state.cards.size()), "color": Palette.TEXT},
 			{"name": "COMBO", "value": str(Juice.combo), "color": Palette.EDGE},
 			{"name": "ACT", "value": str(App.current_map).replace("_", " ").to_upper(), "color": Palette.LEMON},
-			{"name": "MODE", "value": ("REMOTE" if App.remote_coop else ("COUCH" if App.density_coop else "SOLO")), "color": Palette.TEXT}
+			{"name": "MODE", "value": ("REMOTE" if App.remote_coop else ("COUCH" if App.density_coop else "SOLO")), "color": Palette.TEXT},
+			{"name": "ACCOUNT", "value": "LV %d" % int(FamilyProfile.data.get("account_level", 1)), "color": Palette.TEXT}
 		]))
+		var lead := Label.new()
+		if state.score_son == state.score_dad:
+			lead.text = "TIE on the table. The clinic bills you both."
+		elif state.score_son > state.score_dad:
+			lead.text = "%s is winning the night. %s will workshop that." % [son_n, dad_n]
+		else:
+			lead.text = "%s is winning the night. The tutoring license winced." % dad_n
+		lead.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		lead.custom_minimum_size = Vector2(400, 0)
+		UiKit.apply_label(lead, 13, Palette.MUTED)
+		col.add_child(lead)
 	r.grab_focus()

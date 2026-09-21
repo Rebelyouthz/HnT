@@ -43,7 +43,7 @@ func _process(_delta: float) -> void:
 	for n in get_overlapping_bodies():
 		if n is Fighter:
 			var f: Fighter = n
-			_hint.text = "SPECIAL AMMO 4  ·  DOWN+SPECIAL REROLL 1"
+			_hint.text = "SPECIAL AMMO 4 COMMON  ·  DOWN+SPECIAL REROLL 1 UNCOMMON"
 			_hint.modulate = Color(1.2, 1.15, 0.7)
 			if f._just("special"):
 				var y := PadRouter.stick(f.prefix).y
@@ -65,6 +65,7 @@ func _buy(rs: Node, f: Fighter, item: String) -> void:
 	if int(rs.scrap) < cost:
 		Juice.shout("HE DOES NOT TAKE PROMISES")
 		return
+	Juice.last_hitter = f.role
 	rs.scrap -= cost
 	rs.scrap_changed.emit()
 	if rs.has_method("note_shop"):
@@ -72,11 +73,10 @@ func _buy(rs: Node, f: Fighter, item: String) -> void:
 	if item == "ammo":
 		var cap := 3 if f.role == "son" else 6
 		f.ammo = cap
-		Juice.shout(str(info["line"]))
 	else:
 		if rs.has_method("request_reroll"):
 			rs.request_reroll()
-		Juice.shout(str(info["line"]))
+	Juice.shout(str(info["line"]))
 	Juice.play("res://assets/audio/shop.wav")
 	Juice.claim_burst(Vector2(640, 180), str(info["line"]), 0, 0)
-	Juice.toast("reward", "ROOF TIP", str(info["line"]))
+	Rarity.buy("ROOF TIP", info)

@@ -44,6 +44,7 @@ const GROUNDED := "GROUNDED"
 const DAILY := "TODAY'S COPING GOALS"
 const LIFE := "FAMILY PROGRESS"
 const BUILD_HINT := "Upgrade the furniture. Unlock the menus. Pretend that's healing."
+const CLINIC_NIGHT := "Ten acts. Films between them. Processing Floor last. Pretend that's a treatment plan."
 
 const SOLO := "SOLO"
 const COUCH := "COUCH 2P"
