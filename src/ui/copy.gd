@@ -32,6 +32,19 @@ const DAILY := "TODAY'S COPING GOALS"
 const LIFE := "FAMILY PROGRESS"
 const BUILD_HINT := "Upgrade the furniture. Unlock the menus. Pretend that's healing."
 
+const SOLO := "SOLO"
+const COUCH := "COUCH 2P"
+const GO_SOLO := "GO ALONE"
+const GO_COUCH := "GO TOGETHER"
+const JOIN_HINT := "Pad Start or keyboard P sits the other role down. Enemies do not multiply."
+const SOLO_HINT := "One body. Fewer punks. Same street. Nobody has to wait."
+const COUCH_HINT := "Two bodies. Full roster. Shared lives. The leash is the relationship."
+const FIRE_CLEAR := "FIRE ESCAPES FILED"
+const FIRE_SUB := "Roofs filed. The vendor still wants a tip."
+const NEXT_MAP := "THE FIRE ESCAPES"
+const GATE_SUB := "Blood Mart is a checkpoint, not a personality. Roofs are next."
+const CLINIC_PLAY_SUB := "Starts solo. Couch 2P lives on the Run tab. No one has to plug in."
+
 static func come_on(father: String, son: String, who: String) -> String:
 	if who == "father":
 		return "COME ON, %s" % father

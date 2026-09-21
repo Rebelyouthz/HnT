@@ -1,0 +1,50 @@
+[
+  {
+    "id": "head_trampoline",
+    "name": "HEAD TRAMPOLINE",
+    "blurb": "Air heavy bounces them 80 px and refunds a jump. Kill on the bounce is always blunt.",
+    "fixed": true
+  },
+  {
+    "id": "family_discount",
+    "name": "FAMILY DISCOUNT",
+    "blurb": "Your hits refill the partner's Steam. Shared combo lives if only one of you eats dirt.",
+    "fixed": true
+  },
+  {
+    "id": "office_rage",
+    "name": "OFFICE RAGE",
+    "blurb": "Lights apply Staple bleed. Staple-kills explode paper. Lights still flash red until then.",
+    "fixed": true
+  },
+  {
+    "id": "quiet_lunch",
+    "name": "QUIET LUNCH",
+    "blurb": "SNAP on a back restores 8 HP. Missed SNAP is your problem.",
+    "fixed": false
+  },
+  {
+    "id": "double_slap",
+    "name": "DOUBLE SLAP",
+    "blurb": "A Parenting Slap heals both 20% and they hit meaner for 2 seconds. Will be abused.",
+    "fixed": false
+  },
+  {
+    "id": "ricochet_policy",
+    "name": "RICOCHET POLICY",
+    "blurb": "Batwings bounce +1 off metal. Neon that is hit is a conversation.",
+    "fixed": false
+  },
+  {
+    "id": "tutoring",
+    "name": "TUTORING",
+    "blurb": "Every 8th light without eating dirt: the next shot fires twice. Homework.",
+    "fixed": false
+  },
+  {
+    "id": "pendulum_politics",
+    "name": "PENDULUM POLITICS",
+    "blurb": "A web-slam kill leaves a lamp. The Son can grab it. Solo: you still get the lamp.",
+    "fixed": false
+  }
+]

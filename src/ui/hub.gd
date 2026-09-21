@@ -11,11 +11,13 @@ var _log_bang: Control
 var _tab_bangs: Dictionary = {}
 var _current := "clinic"
 var _modal: Control
+var _safe: MarginContainer
 
 
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	FamilyProfile._roll_daily()
+	Mixer.play_music("res://assets/audio/music_clinic.wav")
 	_build_chrome()
 	var start_tab := App.pending_tab if App.pending_tab in TABS else "clinic"
 	App.pending_tab = "clinic"
@@ -37,10 +39,16 @@ func _build_chrome() -> void:
 	night.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(night)
 
+	_safe = MarginContainer.new()
+	_safe.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(_safe)
+	_apply_safe()
+
 	var root := VBoxContainer.new()
-	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	root.add_theme_constant_override("separation", 0)
-	add_child(root)
+	_safe.add_child(root)
 
 	root.add_child(_make_top())
 	_content = Control.new()
@@ -56,18 +64,15 @@ func _make_top() -> Control:
 	row.add_theme_constant_override("separation", 12)
 	bar.add_child(row)
 
-	var avatar := UiKit.button("", Vector2(160, 52))
-	avatar.text = "%s\nTHE FATHER" % FamilyProfile.father_name()
+	var avatar := UiKit.button("", Vector2(200, 56))
+	avatar.text = "%s\nTHE SON\n%s\nTHE FATHER" % [FamilyProfile.son_name(), FamilyProfile.father_name()]
 	avatar.pressed.connect(_open_intake)
 	row.add_child(avatar)
 
 	var logo_box := VBoxContainer.new()
 	logo_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var logo := TextureRect.new()
-	logo.texture = load("res://icon.svg")
-	logo.custom_minimum_size = Vector2(48, 48)
-	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	var logo := LogoMark.new()
+	logo.custom_minimum_size = Vector2(56, 56)
 	var title := Label.new()
 	title.text = "%s  ·  %s" % [Copy.LOGO, Copy.SUB]
 	UiKit.apply_label(title, 22, Palette.LEMON)
@@ -103,6 +108,9 @@ func _make_top() -> Control:
 	_log_bang.position = Vector2(56, -4)
 	log_wrap.add_child(_log_bang)
 	row.add_child(log_wrap)
+	var gear := UiKit.button("SET", Vector2(64, 52))
+	gear.pressed.connect(_open_settings)
+	row.add_child(gear)
 
 	_refresh_pills()
 	return bar
@@ -176,6 +184,7 @@ func _show_tab(id: String) -> void:
 	_refresh_tab_locks()
 	_refresh_pills()
 	Juice.play("res://assets/audio/ui_click.wav")
+	_focus_page(page)
 
 
 func _after_page() -> void:
@@ -205,7 +214,7 @@ func _refresh_tab_locks() -> void:
 			if btn:
 				wrap = child
 				var unlocked := FamilyProfile.tab_unlocked(id)
-				btn.disabled = not unlocked
+				btn.disabled = false
 				if unlocked:
 					btn.text = _tab_title(id)
 				else:
@@ -290,6 +299,49 @@ func _open_intake() -> void:
 		_show_tab(_current)
 	)
 	col.add_child(go)
+	go.grab_focus()
+
+
+func _open_settings() -> void:
+	_clear_modal()
+	var sheet := preload("res://src/ui/settings_sheet.gd").new()
+	sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(sheet)
+	_modal = sheet
+	sheet.closed.connect(_clear_modal)
+
+
+func _focus_page(page: Node) -> void:
+	var btn := _first_button(page)
+	if btn:
+		btn.grab_focus()
+
+
+func _first_button(n: Node) -> Button:
+	if n is Button and (n as Button).visible and not (n as Button).disabled:
+		return n
+	for c in n.get_children():
+		var b := _first_button(c)
+		if b:
+			return b
+	return null
+
+
+func _apply_safe() -> void:
+	if _safe == null:
+		return
+	var safe: Rect2i = DisplayServer.get_display_safe_area()
+	var win := DisplayServer.window_get_size()
+	if win.x <= 0:
+		_safe.add_theme_constant_override("margin_left", 8)
+		_safe.add_theme_constant_override("margin_top", 4)
+		_safe.add_theme_constant_override("margin_right", 8)
+		_safe.add_theme_constant_override("margin_bottom", 8)
+		return
+	_safe.add_theme_constant_override("margin_left", maxi(8, safe.position.x))
+	_safe.add_theme_constant_override("margin_top", maxi(4, safe.position.y))
+	_safe.add_theme_constant_override("margin_right", maxi(8, win.x - safe.end.x))
+	_safe.add_theme_constant_override("margin_bottom", maxi(8, win.y - safe.end.y))
 
 
 func _modal_text(title: String, body: String) -> void:

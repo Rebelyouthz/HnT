@@ -42,8 +42,12 @@ func _physics_process(delta: float) -> void:
 
 
 func _on_body(b: Node) -> void:
-	if b is Punk:
+	if b is Punk and owner_role != "enemy":
 		_hit_punk(b as Punk)
+		return
+	if b is Fighter and owner_role == "enemy":
+		(b as Fighter).take_hit("light", self)
+		queue_free()
 		return
 	if b.is_in_group("metal") and ricochet_left > 0:
 		vel.x *= -1.0

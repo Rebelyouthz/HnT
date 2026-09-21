@@ -30,5 +30,13 @@
     "need": { "runs": 3 },
     "gold": 40,
     "gems": 3
+  },
+  {
+    "id": "solo_night",
+    "title": "I DIDN'T NEED HIM",
+    "blurb": "File a map with one body. The couch is a lifestyle, not a requirement.",
+    "need": { "solo_clears": 1 },
+    "gold": 25,
+    "gems": 2
   }
 ]

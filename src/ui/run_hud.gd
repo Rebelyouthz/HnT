@@ -11,10 +11,13 @@ var _snap_a: Label
 var _snap_b: Label
 var _steam_a: ColorRect
 var _steam_b: ColorRect
+var _scrap: Label
+var _wanted: Label
 var _pause: Control
 var son: Fighter
 var father: Fighter
 var state: RunState
+var _join_grace := 0
 
 
 func _ready() -> void:
@@ -40,11 +43,23 @@ func _ready() -> void:
 	_steam_b = _bar(Vector2(1048, 78), Palette.BRICK)
 
 	_lives = Label.new()
-	_lives.position = Vector2(520, 8)
+	_lives.position = Vector2(500, 8)
 	_lives.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_lives.size = Vector2(240, 24)
+	_lives.size = Vector2(280, 24)
 	UiKit.apply_label(_lives, 16, Palette.TEXT)
 	add_child(_lives)
+
+	_scrap = Label.new()
+	_scrap.position = Vector2(500, 56)
+	_scrap.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_scrap.size = Vector2(280, 20)
+	UiKit.apply_label(_scrap, 14, Palette.EDGE)
+	add_child(_scrap)
+
+	_wanted = Label.new()
+	_wanted.position = Vector2(820, 8)
+	UiKit.apply_label(_wanted, 13, Palette.BRICK)
+	add_child(_wanted)
 
 	_combo = Label.new()
 	_combo.position = Vector2(560, 36)
@@ -68,7 +83,7 @@ func _ready() -> void:
 	_hint.size = Vector2(1250, 44)
 	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	UiKit.apply_label(_hint, 13, Palette.MUTED)
-	_hint.text = "SON  WASD  SPACE jump/glide  J light  K heavy  L cape  O batwing  SHIFT dash  F SNAP  ·  DAD  arrows  CTRL jump  . / ; web  ' snare  ALT dash  N SNAP"
+	_hint.text = _prompt_line()
 	add_child(_hint)
 
 
@@ -97,27 +112,28 @@ func _snap_lab() -> Label:
 
 
 func bind(p_son: Fighter, p_dad: Fighter, p_state: RunState = null) -> void:
+	var joining := (p_dad != null and father == null) or (p_son != null and son == null)
 	son = p_son
 	father = p_dad
 	state = p_state
+	if joining:
+		_join_grace = 18
+
+
+func _prompt_line() -> String:
+	if son == null or father == null:
+		return PadRouter.p1_prompt() + "  ·  " + Copy.JOIN_HINT
+	return PadRouter.p1_prompt() + "  ·  " + PadRouter.p2_prompt()
 
 
 func _process(_delta: float) -> void:
+	if _join_grace > 0:
+		_join_grace -= 1
 	_fps.text = "FPS %d" % int(Engine.get_frames_per_second())
-	if son:
-		var kit := "BATWING %d" % son.ammo
-		_son.text = "%s\nTHE SON   HP %d  STEAM %d  %s" % [
-			FamilyProfile.son_name(), son.hp, int(son.steam), kit
-		]
-		_steam_a.size.x = 220.0 * (son.steam / Fighter.STEAM_MAX)
-		_place_snap(_snap_a, son)
-	if father:
-		var kit := "WEB SHOT %d" % father.ammo
-		_dad.text = "%s\nTHE FATHER   HP %d  STEAM %d  %s" % [
-			FamilyProfile.father_name(), father.hp, int(father.steam), kit
-		]
-		_steam_b.size.x = 220.0 * (father.steam / Fighter.STEAM_MAX)
-		_place_snap(_snap_b, father)
+	var left: Fighter = son if son else father
+	var right: Fighter = father if son else null
+	_paint_fighter(_son, _steam_a, _snap_a, left, left != null and left.role == "son")
+	_paint_fighter(_dad, _steam_b, _snap_b, right, false)
 	var life_n := 3
 	if state:
 		life_n = state.lives
@@ -127,8 +143,37 @@ func _process(_delta: float) -> void:
 	_lives.text = "LIVES  " + stamps
 	_combo.text = "" if Juice.combo < 2 else "%d HIT" % Juice.combo
 	_call.text = Juice.callout
-	if Input.is_action_just_pressed("p1_pause") or Input.is_action_just_pressed("p2_pause"):
+	if state:
+		_scrap.text = "SCRAP  %d   XP  %d" % [state.scrap, state.xp]
+		var w := ""
+		for i in 5:
+			w += "I" if i < state.wanted else "."
+		_wanted.text = "" if state.wanted == 0 else "WANTED  " + w
+	_hint.text = _prompt_line()
+	if _join_grace > 0:
+		return
+	if Input.is_action_just_pressed("p1_pause"):
 		_toggle_pause()
+	elif Input.is_action_just_pressed("p2_pause") and father != null and son != null:
+		_toggle_pause()
+
+
+func _paint_fighter(lab: Label, bar: ColorRect, snap: Label, f: Fighter, lemon_slot: bool) -> void:
+	if f == null or not is_instance_valid(f):
+		lab.text = ""
+		bar.size.x = 0
+		snap.visible = false
+		return
+	var kit := ("BATWING %d" % f.ammo) if f.role == "son" else ("WEB SHOT %d" % f.ammo)
+	var title := FamilyProfile.son_name() if f.role == "son" else FamilyProfile.father_name()
+	var role := "THE SON" if f.role == "son" else "THE FATHER"
+	lab.text = "%s\n%s   HP %d  STEAM %d  %s" % [title, role, f.hp, int(f.steam), kit]
+	if lemon_slot:
+		lab.add_theme_color_override("font_color", Palette.LEMON)
+	else:
+		lab.add_theme_color_override("font_color", Palette.BRICK)
+	bar.size.x = 220.0 * (f.steam / Fighter.STEAM_MAX)
+	_place_snap(snap, f)
 
 
 func _place_snap(lab: Label, f: Fighter) -> void:
@@ -175,7 +220,17 @@ func _toggle_pause() -> void:
 	end.process_mode = Node.PROCESS_MODE_ALWAYS
 	end.pressed.connect(func() -> void:
 		get_tree().paused = false
-		FamilyProfile.mark_run_finished()
+		FamilyProfile.mark_run_finished(false)
+		Mixer.play_music("res://assets/audio/music_clinic.wav")
 		App.back_to_hub("awards")
 	)
 	col.add_child(end)
+	if state:
+		col.add_child(StatPanel.new([
+			{"name": "LIVES", "value": str(state.lives), "color": Palette.READY},
+			{"name": "SCRAP", "value": str(state.scrap), "color": Palette.EDGE},
+			{"name": "XP", "value": str(state.xp), "color": Palette.LEMON},
+			{"name": "WANTED", "value": str(state.wanted), "color": Palette.BRICK},
+			{"name": "MODE", "value": "COUCH" if App.density_coop else "SOLO", "color": Palette.TEXT}
+		]))
+	r.grab_focus()

@@ -1,0 +1,14 @@
+{
+  "fist.none.street.light": { "blood": false, "flash": "red", "hitstop": 1, "shake": 0 },
+  "fist.none.street.heavy": { "blood": true, "flash": "white_red", "hitstop": 4, "shake": 3 },
+  "fist.none.street.special": { "blood": true, "flash": "white_red", "hitstop": 6, "shake": 5 },
+  "fist.none.street.snap": { "blood": true, "flash": "chrome", "hitstop": 8, "shake": 8 },
+  "fist.none.street.web-slam": { "blood": true, "flash": "white_red", "hitstop": 7, "shake": 9 },
+  "fist.none.street.jump-kick": { "blood": false, "flash": "red", "hitstop": 2, "shake": 1 },
+  "fist.none.street.dive": { "blood": true, "flash": "white_red", "hitstop": 5, "shake": 4 },
+  "fist.none.street.slide": { "blood": false, "flash": "red", "hitstop": 2, "shake": 2 },
+  "fist.none.street.launcher": { "blood": true, "flash": "white_red", "hitstop": 5, "shake": 4 },
+  "blade.none.street.heavy": { "blood": true, "spray": "arterial", "hitstop": 6, "shake": 4 },
+  "gun.none.street.kill": { "blood": true, "spray": "exit", "hitstop": 3, "shake": 7 },
+  "fallback": { "blood": true, "flash": "white_red", "hitstop": 4, "shake": 3 }
+}

@@ -78,7 +78,15 @@ func _defaults() -> Dictionary:
 			}
 		],
 		"cbt": [],
-		"seen": {"clinic": true, "run": true, "build": false, "locker": false, "awards": false}
+		"seen": {"clinic": true, "run": true, "build": false, "locker": false, "awards": false},
+		"pin": "",
+		"less_gore": false,
+		"vol_master": 1.0,
+		"vol_sfx": 1.0,
+		"vol_vo": 1.0,
+		"vol_music": 0.72,
+		"difficulty": "night_class",
+		"solo_clears": 0
 	}
 
 
@@ -165,12 +173,18 @@ func grant(gold: int, gems: int, line: String) -> void:
 	save()
 
 
-func mark_run_finished() -> void:
+func mark_run_finished(ok: bool = true) -> void:
 	data["runs"] = int(data["runs"]) + 1
-	data["lifetime_points"] = int(data["lifetime_points"]) + 2
-	data["rep"] = int(data["rep"]) + 1
+	data["lifetime_points"] = int(data["lifetime_points"]) + (2 if ok else 1)
+	data["rep"] = int(data["rep"]) + (1 if ok else 0)
 	_bump_daily("run")
 	save()
+
+
+func mark_solo_clear() -> void:
+	data["solo_clears"] = int(data.get("solo_clears", 0)) + 1
+	save()
+	Juice.toast("achievement", "I DIDN'T NEED HIM", "One chair. Same street. Filed anyway.")
 
 
 func mark_heavy() -> void:
@@ -217,4 +231,23 @@ func unread_log_count() -> int:
 func mark_log_read() -> void:
 	for item in data["log"]:
 		item["unread"] = false
+	_bump_daily("log")
+	save()
+
+
+func has_cbt(id: String) -> bool:
+	return (data["cbt"] as Array).has(id)
+
+
+func less_gore() -> bool:
+	return bool(data.get("less_gore", false))
+
+
+func push_log(title: String, body: String) -> void:
+	(data["log"] as Array).push_front({
+		"id": "n%d" % Time.get_ticks_msec(),
+		"title": title,
+		"body": body,
+		"unread": true
+	})
 	save()

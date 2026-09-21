@@ -17,8 +17,10 @@ buses/default_bus_layout="res://default_bus_layout.tres"
 [autoload]
 
 Boot="*res://src/app/boot.gd"
+PadRouter="*res://src/input/pad_router.gd"
 FamilyProfile="*res://src/app/family_profile.gd"
 Juice="*res://src/juice/juice.gd"
+Mixer="*res://src/audio/mixer.gd"
 App="*res://src/app/app.gd"
 
 [display]

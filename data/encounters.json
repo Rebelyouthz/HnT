@@ -1,0 +1,32 @@
+{
+  "dock_street": {
+    "solo": [
+      {"title": "Bag Snatch", "x": 800, "y": 500, "home": "street", "hp": 40, "pmin": 720, "pmax": 980},
+      {"title": "Roof Runner", "x": 1620, "y": 248, "home": "roof", "hp": 36, "pmin": 1480, "pmax": 1880},
+      {"title": "Mohawk Bo", "x": 2240, "y": 500, "home": "street", "hp": 70, "pmin": 2040, "pmax": 2480}
+    ],
+    "coop": [
+      {"title": "Bag Snatch", "x": 800, "y": 500, "home": "street", "hp": 40, "pmin": 720, "pmax": 980},
+      {"title": "Bag Snatch", "x": 1120, "y": 500, "home": "street", "hp": 40, "pmin": 1000, "pmax": 1280},
+      {"title": "Roof Runner", "x": 1620, "y": 248, "home": "roof", "hp": 36, "pmin": 1480, "pmax": 1880},
+      {"title": "Beat Cop", "x": 1880, "y": 500, "home": "street", "hp": 48, "pmin": 1700, "pmax": 2100, "cop": true},
+      {"title": "Mohawk Bo", "x": 2240, "y": 500, "home": "street", "hp": 70, "pmin": 2040, "pmax": 2480},
+      {"title": "Bag Snatch", "x": 2720, "y": 500, "home": "street", "hp": 40, "pmin": 2560, "pmax": 2920}
+    ]
+  },
+  "fire_escapes": {
+    "solo": [
+      {"title": "Roof Runner", "x": 720, "y": 248, "home": "roof", "hp": 36, "pmin": 560, "pmax": 920},
+      {"title": "Roof Runner", "x": 1580, "y": 208, "home": "roof", "hp": 36, "pmin": 1420, "pmax": 1780},
+      {"title": "Bag Snatch", "x": 2140, "y": 500, "home": "street", "hp": 40, "pmin": 1980, "pmax": 2320}
+    ],
+    "coop": [
+      {"title": "Roof Runner", "x": 640, "y": 248, "home": "roof", "hp": 36, "pmin": 480, "pmax": 860},
+      {"title": "Roof Runner", "x": 980, "y": 248, "home": "roof", "hp": 36, "pmin": 860, "pmax": 1180},
+      {"title": "Vest Ollie", "x": 1340, "y": 500, "home": "street", "hp": 64, "pmin": 1180, "pmax": 1560, "armored": true},
+      {"title": "Roof Runner", "x": 1720, "y": 208, "home": "roof", "hp": 36, "pmin": 1560, "pmax": 1980},
+      {"title": "Beat Cop", "x": 2080, "y": 500, "home": "street", "hp": 48, "pmin": 1900, "pmax": 2280, "cop": true},
+      {"title": "Mohawk Bo", "x": 2460, "y": 500, "home": "street", "hp": 70, "pmin": 2280, "pmax": 2680}
+    ]
+  }
+}

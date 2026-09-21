@@ -54,6 +54,17 @@ var visual: Node2D
 var squash_root: Node2D
 var cape: Polygon2D
 var ears: Polygon2D
+var blocking := false
+var block_low := false
+var pickup := ""
+var bandage := 0
+var extra_jump := 0
+var buff_t := 0.0
+var staple_ready := false
+var guard: Node2D
+var string_n := 0
+var string_ttl := 0.0
+var lights_clean := 0
 
 signal died
 signal hit_landed(kind: String, global_pos: Vector2)
@@ -61,7 +72,11 @@ signal downed_changed
 
 
 func _ready() -> void:
+	if FamilyProfile.has_cbt("thick_skin"):
+		max_hp += 12
 	hp = max_hp
+	if FamilyProfile.has_cbt("bandage_pocket"):
+		bandage = 1
 	collision_layer = 2
 	collision_mask = 1
 	motion_mode = MOTION_MODE_FLOATING
@@ -84,6 +99,7 @@ func _ready() -> void:
 		ammo = 3
 	else:
 		ammo = 6
+	hit_landed.connect(_on_hit_landed)
 
 
 func _build_body() -> void:
@@ -120,6 +136,15 @@ func _build_body() -> void:
 
 
 func _part(pos: Vector2, size: Vector2, color: Color) -> void:
+	var outline_c := Palette.BRICK if role == "father" else Palette.LEMON
+	var o := Polygon2D.new()
+	o.color = outline_c
+	var op := pos - Vector2(2, 2)
+	var os := size + Vector2(4, 4)
+	o.polygon = PackedVector2Array([
+		op, op + Vector2(os.x, 0), op + os, op + Vector2(0, os.y)
+	])
+	squash_root.add_child(o)
 	var p := Polygon2D.new()
 	p.color = color
 	p.polygon = PackedVector2Array([
@@ -191,7 +216,22 @@ func _tick_meters(delta: float) -> void:
 	if steam_lock > 0.0:
 		steam_lock -= delta
 	else:
-		steam = minf(STEAM_MAX, steam + 22.0 * delta)
+		var regen := 22.0
+		if FamilyProfile.has_cbt("second_lungs"):
+			regen *= 1.15
+		steam = minf(STEAM_MAX, steam + regen * delta)
+	blocking = _pressed("block") and steam > 2.0 and not downed
+	block_low = blocking and PadRouter.stick(prefix).y > 0.4
+	if blocking:
+		steam = maxf(0.0, steam - 8.0 * delta)
+		steam_lock = 0.15
+	if buff_t > 0.0:
+		buff_t -= delta
+	if string_ttl > 0.0:
+		string_ttl -= delta
+		if string_ttl <= 0.0:
+			string_n = 0
+	_update_guard()
 	armored = charge_frames >= 18
 	_update_web_line()
 
@@ -199,8 +239,9 @@ func _tick_meters(delta: float) -> void:
 func _process_street(delta: float) -> void:
 	motion_mode = MOTION_MODE_FLOATING
 	gliding = false
-	var x := Input.get_axis(prefix + "left", prefix + "right")
-	var y := Input.get_axis(prefix + "up", prefix + "down")
+	var stick := PadRouter.stick(prefix)
+	var x := stick.x
+	var y := stick.y
 	if dashing:
 		velocity.x = float(facing) * 420.0
 		velocity.y = 0.0
@@ -220,6 +261,12 @@ func _process_street(delta: float) -> void:
 		hop = -1.0
 		jump_buf = 0
 		coyote = 0
+		Juice.play("res://assets/audio/jump.wav")
+	elif jump_buf > 0 and extra_jump > 0 and hop < -8.0:
+		hop_v = JUMP * 0.8
+		jump_buf = 0
+		extra_jump -= 1
+		Juice.play("res://assets/audio/jump.wav")
 	if hop < 0.0 or hop_v != 0.0:
 		var g := GRAV
 		if hop_v > 0.0:
@@ -250,8 +297,9 @@ func _process_street(delta: float) -> void:
 func _process_roof(delta: float) -> void:
 	motion_mode = MOTION_MODE_GROUNDED
 	visual.position.y = 0.0
-	var x := Input.get_axis(prefix + "left", prefix + "right")
-	var y := Input.get_axis(prefix + "up", prefix + "down")
+	var stick := PadRouter.stick(prefix)
+	var x := stick.x
+	var y := stick.y
 	if wall_run > 0.0:
 		velocity = Vector2(float(facing) * 330.0, -50.0)
 		move_and_slide()
@@ -281,6 +329,12 @@ func _process_roof(delta: float) -> void:
 		velocity.y = JUMP
 		jump_buf = 0
 		coyote = 0
+		Juice.play("res://assets/audio/jump.wav")
+	elif jump_buf > 0 and extra_jump > 0 and not is_on_floor():
+		velocity.y = JUMP * 0.85
+		jump_buf = 0
+		extra_jump -= 1
+		Juice.play("res://assets/audio/jump.wav")
 	if dashing:
 		velocity.x = float(facing) * 400.0
 	else:
@@ -301,7 +355,7 @@ func _process_roof(delta: float) -> void:
 func _process_climb(delta: float) -> void:
 	motion_mode = MOTION_MODE_FLOATING
 	collision_mask = 0
-	var y := Input.get_axis(prefix + "up", prefix + "down")
+	var y := PadRouter.stick(prefix).y
 	if absf(y) < 0.15:
 		y = -1.0 if (ladder and global_position.y > ladder.top_y + 8.0) else 1.0
 	velocity = Vector2.ZERO
@@ -328,7 +382,7 @@ func _process_web(delta: float) -> void:
 		return
 	collision_mask = 1
 	visual.position.y = 0.0
-	var x := Input.get_axis(prefix + "left", prefix + "right")
+	var x := PadRouter.stick(prefix).x
 	velocity.y += GRAV * 0.62 * delta
 	var to_me: Vector2 = global_position - web_anchor.global_position
 	var dist := to_me.length()
@@ -350,7 +404,7 @@ func _process_web(delta: float) -> void:
 
 
 func _process_downed(delta: float) -> void:
-	velocity.x = Input.get_axis(prefix + "left", prefix + "right") * 40.0
+	velocity.x = PadRouter.stick(prefix).x * 40.0
 	velocity.y = 0.0
 	if plane == "street":
 		motion_mode = MOTION_MODE_FLOATING
@@ -378,7 +432,9 @@ func _process_downed(delta: float) -> void:
 
 
 func _combat() -> void:
-	var y := Input.get_axis(prefix + "up", prefix + "down")
+	var y := PadRouter.stick(prefix).y
+	if snap_ready and (_just("light") or _just("snap")):
+		return
 	if attack_cd == 0 and _just("dash") and not dashing:
 		if y > 0.45 and plane == "street":
 			_slide()
@@ -386,18 +442,32 @@ func _combat() -> void:
 			_dash()
 	if _street_grounded() or (plane == "roof" and is_on_floor()):
 		_try_vault()
+	if _just("throw"):
+		_throw()
 	if _just("special"):
 		_special()
 	if _just("shoot"):
 		_shoot()
+	var charge_need := 20
+	if FamilyProfile.has_cbt("heavy_wrist"):
+		charge_need = 16
+	var airborne := hop < -16.0 or (plane == "roof" and not is_on_floor())
 	if _pressed("heavy"):
 		charge_frames += 1
-		if charge_frames >= 45:
+		if charge_frames >= charge_need + 25:
 			_attack("heavy", true)
 	elif charge_frames > 0:
-		_attack("heavy", charge_frames >= 20)
+		if airborne:
+			_dive()
+		elif string_n >= 2:
+			_attack("launcher", true)
+		else:
+			_attack("heavy", charge_frames >= charge_need)
 	elif attack_cd == 0 and _just("light"):
-		_attack("light", false)
+		if airborne:
+			_attack("jump-kick", false)
+		else:
+			_attack("light", false)
 
 
 func _dash() -> void:
@@ -407,6 +477,7 @@ func _dash() -> void:
 	dash_frames = 10
 	invuln = 8
 	velocity.x = float(facing) * 420.0
+	Juice.play("res://assets/audio/dash.wav")
 
 
 func _slide() -> void:
@@ -416,12 +487,14 @@ func _slide() -> void:
 	slide_frames = 16
 	invuln = 6
 	dashing = false
+	Juice.play("res://assets/audio/dash.wav")
+	_spawn_hit("slide", Vector2(52, 28), 0.22, Vector2(24 * facing, -12))
 
 
 func _try_vault() -> void:
 	if vaulting:
 		return
-	var x := Input.get_axis(prefix + "left", prefix + "right")
+	var x := PadRouter.stick(prefix).x
 	if absf(x) < 0.5:
 		return
 	for n in get_tree().get_nodes_in_group("vaults"):
@@ -463,36 +536,82 @@ func _special() -> void:
 			cape.visible = true
 
 
+func _attack(kind: String, charged: bool) -> void:
+	if attack_cd > 0 and kind == "heavy" and not charged:
+		charge_frames = 0
+		return
+	if (kind == "heavy" or kind == "launcher") and charged and not _spend(12.0):
+		charge_frames = 0
+		return
+	charge_frames = 0
+	attack_cd = 14 if kind == "light" or kind == "jump-kick" else 24
+	var size := Vector2(46, 40) if kind == "light" or kind == "jump-kick" else Vector2(66, 44)
+	if kind == "light":
+		string_n += 1
+		string_ttl = 0.4
+		lights_clean += 1
+		if string_n >= 3:
+			kind = "gut-punch"
+			size = Vector2(54, 42)
+			attack_cd = 12
+	elif kind == "jump-kick":
+		size = Vector2(50, 36)
+	elif kind == "launcher":
+		size = Vector2(72, 52)
+		string_n = 0
+	if pickup == "pipe":
+		size += Vector2(18, 6)
+	elif pickup == "knife":
+		size += Vector2(10, 0)
+		if kind == "light" or kind == "gut-punch":
+			kind = "blade"
+	if charged and kind == "heavy":
+		size = Vector2(78, 50)
+	_spawn_hit(kind, size, 0.12 if kind == "light" or kind == "jump-kick" or kind == "gut-punch" else 0.2, Vector2(36 * facing, -34 + hop))
+
+
+func _dive() -> void:
+	charge_frames = 0
+	if attack_cd > 0:
+		return
+	attack_cd = 20
+	if plane == "street":
+		hop_v = 520.0
+	else:
+		velocity.y = 520.0
+	_spawn_hit("dive", Vector2(58, 44), 0.24, Vector2(20 * facing, -18 + hop))
+
+
+func _on_hit_landed(kind: String, _global_pos: Vector2) -> void:
+	if kind == "light" or kind == "jump-kick" or kind == "gut-punch" or kind == "slide":
+		attack_cd = mini(attack_cd, 7)
+
+
 func _shoot() -> void:
 	if ammo <= 0 or attack_cd > 0:
 		return
 	ammo -= 1
 	ammo_cd = 2.4
 	attack_cd = 12
+	_fire_shot()
+	var rs := get_tree().get_first_node_in_group("run_state")
+	if rs and rs.has_method("has_card") and rs.has_card("tutoring") and lights_clean > 0 and lights_clean % 8 == 0:
+		_fire_shot(Vector2(0, -12))
+		Juice.shout("TUTORING")
+
+
+func _fire_shot(extra := Vector2.ZERO) -> void:
 	var shot := KitShot.new()
 	shot.kind = "shuriken" if role == "son" else "snare"
 	shot.ricochet_left = 1 if role == "son" else 0
+	var rs := get_tree().get_first_node_in_group("run_state")
+	if rs and rs.has_method("has_card") and rs.has_card("ricochet_policy") and role == "son":
+		shot.ricochet_left += 1
 	shot.owner_role = role
 	shot.vel = Vector2(float(facing) * (520.0 if role == "son" else 380.0), 0.0)
-	shot.global_position = global_position + Vector2(float(facing) * 28.0, -42.0 + hop)
-	var host := get_parent()
-	host.add_child(shot)
-
-
-func _attack(kind: String, charged: bool) -> void:
-	if attack_cd > 0 and kind == "heavy" and not charged:
-		charge_frames = 0
-		return
-	if kind == "heavy" and charged and not _spend(12.0):
-		charge_frames = 0
-		return
-	charge_frames = 0
-	attack_cd = 14 if kind == "light" else 24
-	var size := Vector2(46, 40) if kind == "light" else Vector2(66, 44)
-	if charged:
-		size = Vector2(78, 50)
-		kind = "heavy"
-	_spawn_hit(kind, size, 0.12 if kind == "light" else 0.2, Vector2(36 * facing, -34 + hop))
+	shot.global_position = global_position + Vector2(float(facing) * 28.0, -42.0 + hop) + extra
+	Juice.play("res://assets/audio/shuriken.wav" if role == "son" else "res://assets/audio/web.wav")
+	get_parent().add_child(shot)
 
 
 func _spawn_hit(kind: String, size: Vector2, life: float, offset: Vector2) -> void:
@@ -535,6 +654,22 @@ func _spawn_hit(kind: String, size: Vector2, life: float, offset: Vector2) -> vo
 func take_hit(kind: String, from: Node) -> void:
 	if downed or invuln > 0:
 		return
+	if blocking and kind != "throw" and kind != "snap":
+		var chip := maxi(1, int(round(6 * 0.1)))
+		if kind == "heavy":
+			chip = 2
+		steam = maxf(0.0, steam - 12.0)
+		hp = maxi(0, hp - chip)
+		Juice.play("res://assets/audio/block.wav")
+		Juice.flash_red(visual, 1)
+		if steam <= 0.0:
+			blocking = false
+			invuln = 0
+		else:
+			return
+		if hp <= 0:
+			_go_down()
+			return
 	if armored and kind == "light":
 		Juice.flash_red(visual, 1)
 		return
@@ -549,11 +684,17 @@ func take_hit(kind: String, from: Node) -> void:
 		dmg = 16
 	elif kind == "snap" or kind == "special":
 		dmg = 18
+	if buff_t > 0.0:
+		dmg = int(round(float(dmg) * 0.85))
 	hp = maxi(0, hp - dmg)
+	var rs := get_tree().get_first_node_in_group("run_state")
+	if rs and rs.has_method("has_card") and rs.has_card("family_discount"):
+		Juice.keep_combo()
 	if kind == "light":
 		Juice.flash_red(visual, 2)
 		Juice.hitstop(1)
 		Juice.play("res://assets/audio/hit_light.wav")
+		lights_clean = 0
 	else:
 		Juice.flash_white_red(visual)
 		Juice.hitstop(4)
@@ -562,6 +703,10 @@ func take_hit(kind: String, from: Node) -> void:
 	if from is Node2D:
 		var dir := signf(global_position.x - (from as Node2D).global_position.x)
 		global_position.x += dir * (6.0 if kind == "light" else 16.0)
+	if hp <= int(round(float(max_hp) * 0.3)) and bandage > 0:
+		bandage -= 1
+		hp = mini(max_hp, hp + int(round(float(max_hp) * 0.3)))
+		Juice.shout("BANDAGE")
 	if hp <= 0:
 		_go_down()
 
@@ -570,6 +715,12 @@ func _go_down() -> void:
 	downed = true
 	hp = 0
 	bleed = 12.0
+	var ally := false
+	for n in get_tree().get_nodes_in_group("players"):
+		if n != self and n is Fighter and not (n as Fighter).downed:
+			ally = true
+	if not ally:
+		bleed = 0.85
 	web_anchor = null
 	died.emit()
 	downed_changed.emit()
@@ -584,6 +735,17 @@ func _revived() -> void:
 	Juice.pulse_shake(10.0)
 	Juice.freeze_frames(6)
 	Juice.hitstop(10)
+	Juice.play("res://assets/audio/slap.wav")
+	if ResourceLoader.exists("res://assets/audio/vo_grounded.wav"):
+		Mixer.play_vo("res://assets/audio/vo_grounded.wav")
+	var rs := get_tree().get_first_node_in_group("run_state")
+	if rs and rs.has_method("has_card") and rs.has_card("double_slap"):
+		hp = mini(max_hp, hp + int(round(float(max_hp) * 0.2)))
+		buff_t = 2.0
+		for n in get_tree().get_nodes_in_group("players"):
+			if n is Fighter and n != self:
+				(n as Fighter).hp = mini((n as Fighter).max_hp, (n as Fighter).hp + int(round(float((n as Fighter).max_hp) * 0.2)))
+				(n as Fighter).buff_t = 2.0
 	downed_changed.emit()
 
 
@@ -608,6 +770,7 @@ func _attach_web(a: WebAnchor) -> void:
 	hop = 0.0
 	hop_v = 0.0
 	web_line.visible = true
+	Juice.play("res://assets/audio/web.wav")
 
 
 func _release_web(sling: bool) -> void:
@@ -720,3 +883,40 @@ func _just(action: String) -> bool:
 
 func _released(action: String) -> bool:
 	return Input.is_action_just_released(StringName(str(prefix) + action))
+
+
+func _throw() -> void:
+	if attack_cd > 0:
+		return
+	attack_cd = 18
+	Juice.play("res://assets/audio/throw.wav")
+	for n in get_tree().get_nodes_in_group("enemies"):
+		if not (n is Punk):
+			continue
+		var e: Punk = n
+		var dx := e.global_position.x - global_position.x
+		if signf(dx) != float(facing) and absf(dx) > 8.0:
+			continue
+		if absf(dx) > 54.0 or absf(e.global_position.y - global_position.y) > 50.0:
+			continue
+		e.take_hit("throw", self)
+		e.global_position.x += float(facing) * 86.0
+		Juice.shout("DISARMED")
+		return
+
+
+func equip_pickup(kind: String) -> void:
+	pickup = kind
+	Juice.shout(kind.to_upper())
+
+
+func _update_guard() -> void:
+	if guard == null:
+		guard = Polygon2D.new()
+		guard.color = Color(0.85, 0.9, 1.0, 0.0)
+		guard.polygon = PackedVector2Array([
+			Vector2(10, -70), Vector2(28, -40), Vector2(22, -8), Vector2(8, -12)
+		])
+		visual.add_child(guard)
+	guard.modulate.a = 0.85 if blocking else 0.0
+	guard.scale.y = 0.55 if block_low else 1.0

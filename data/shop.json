@@ -1,0 +1,6 @@
+{
+  "bandage": { "scrap": 8, "line": "THAT'S A FEELING YOU CAN WRAP" },
+  "thermos": { "scrap": 6, "line": "STEAM, BILLED AS COFFEE" },
+  "ammo": { "scrap": 4, "line": "SHARP FEELINGS, LOOSE COUNT" },
+  "reroll": { "scrap": 1, "line": "THE UNIVERSE OFFERS A SECOND OPINION" }
+}

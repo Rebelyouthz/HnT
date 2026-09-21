@@ -3,12 +3,18 @@ extends SceneTree
 func _initialize() -> void:
 	var failed := 0
 	failed += _check_json("res://data/buildings.json", 9)
-	failed += _check_json("res://data/awards.json", 4)
+	failed += _check_json("res://data/awards.json", 5)
 	failed += _check_json("res://data/cbt.json", 6)
+	failed += _check_json("res://data/cards.json", 8)
 	var miles: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/milestones.json"))
 	if typeof(miles) != TYPE_DICTIONARY or not miles.has("daily") or (miles["daily"] as Array).size() != 3:
 		push_error("milestones.json invalid")
 		failed += 1
+	var shop: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/shop.json"))
+	if typeof(shop) != TYPE_DICTIONARY or not (shop as Dictionary).has("ammo") or not (shop as Dictionary).has("reroll"):
+		push_error("shop.json missing roof vendor items")
+		failed += 1
+	failed += _encounters()
 	var fp := get_root().get_node("FamilyProfile")
 	if fp.tab_unlocked("clinic") == false or fp.tab_unlocked("run") == false:
 		push_error("Clinic and Run must start unlocked")
@@ -21,19 +27,44 @@ func _initialize() -> void:
 	if Copy.CLEAR != "DOCK STREET FILED":
 		push_error("missing clear copy")
 		failed += 1
+	if Copy.GO_SOLO != "GO ALONE" or Copy.FIRE_CLEAR != "FIRE ESCAPES FILED":
+		push_error("missing solo/fire copy")
+		failed += 1
+	var app := get_root().get_node("App")
+	if app.couch != false:
+		push_error("App.couch must default false so hub GO starts solo")
+		failed += 1
+	if app.density_coop != false:
+		push_error("density must default solo")
+		failed += 1
 	failed += _exists("res://src/combat/snap_director.gd")
 	failed += _exists("res://src/world/web_anchor.gd")
 	failed += _exists("res://src/world/fire_escape.gd")
 	failed += _exists("res://src/world/light_rig.gd")
 	failed += _exists("res://src/world/vault_crate.gd")
 	failed += _exists("res://src/shaders/wet_asphalt.gdshader")
+	failed += _exists("res://src/coop/party.gd")
+	failed += _exists("res://src/levels/fire_escapes.gd")
+	failed += _exists("res://src/world/roof_vendor.gd")
+	failed += _exists("res://src/ui/stat_panel.gd")
+	failed += _exists("res://src/input/pad_router.gd")
+	failed += _exists("res://scenes/levels/fire_escapes.tscn")
 	failed += _contains("res://src/combat/snap_director.gd", "WORLD_SCALE := 0.22")
 	failed += _contains("res://src/actors/fighter.gd", "STEAM_MAX := 100.0")
 	failed += _contains("res://src/actors/fighter.gd", "JUMP_HEIGHT")
+	failed += _contains("res://src/actors/fighter.gd", "jump-kick")
 	failed += _contains("res://src/world/web_anchor.gd", "MIN_LEN := 80.0")
 	failed += _contains("res://src/world/web_anchor.gd", "MAX_LEN := 280.0")
 	failed += _contains("res://src/world/light_rig.gd", "MAX_POINT := 3")
 	failed += _contains("res://src/levels/dock_street.gd", "ROOF_Y := 248.0")
+	failed += _contains("res://src/levels/dock_street.gd", "Party.encounters")
+	failed += _contains("res://src/levels/dock_street.gd", "Party.all_past")
+	failed += _contains("res://src/app/app.gd", "var couch: bool = false")
+	failed += _contains("res://src/juice/juice.gd", "func toast(")
+	failed += _contains("res://src/juice/juice.gd", "func unlock_logo(")
+	failed += _contains("res://src/input/pad_router.gd", "drop_in.emit(device)")
+	failed += _contains("res://src/ui/hub_run.gd", "Copy.GO_SOLO")
+	failed += _contains("res://src/ui/hub_clinic.gd", "App.couch = false")
 	var boot := get_root().get_node_or_null("Boot")
 	if boot:
 		boot._enter_tree()
@@ -49,6 +80,36 @@ func _initialize() -> void:
 	else:
 		print("SMOKE OK")
 		quit(0)
+
+
+func _encounters() -> int:
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/encounters.json"))
+	if typeof(parsed) != TYPE_DICTIONARY:
+		push_error("encounters.json missing")
+		return 1
+	var n := 0
+	n += _map_counts(parsed, "dock_street", 3, 6)
+	n += _map_counts(parsed, "fire_escapes", 3, 6)
+	return n
+
+
+func _map_counts(parsed: Variant, map_id: String, solo_n: int, coop_n: int) -> int:
+	var row: Variant = (parsed as Dictionary).get(map_id, {})
+	if typeof(row) != TYPE_DICTIONARY:
+		push_error("%s missing in encounters" % map_id)
+		return 1
+	var solo: Variant = (row as Dictionary).get("solo", [])
+	var coop: Variant = (row as Dictionary).get("coop", [])
+	if typeof(solo) != TYPE_ARRAY or (solo as Array).size() != solo_n:
+		push_error("%s solo expected %d" % [map_id, solo_n])
+		return 1
+	if typeof(coop) != TYPE_ARRAY or (coop as Array).size() != coop_n:
+		push_error("%s coop expected %d" % [map_id, coop_n])
+		return 1
+	if solo_n >= coop_n:
+		push_error("%s solo is not thinner than coop" % map_id)
+		return 1
+	return 0
 
 
 func _check_json(path: String, n: int) -> int:

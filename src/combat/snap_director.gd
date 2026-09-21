@@ -14,20 +14,26 @@ var open := false
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	add_to_group("snap_director")
+	process_physics_priority = 20
 
 
 func window_sec() -> float:
+	var w := NIGHT_CLASS
 	match App.difficulty:
 		"open_house":
-			return OPEN_HOUSE
+			w = OPEN_HOUSE
 		"finals":
-			return FINALS
+			w = FINALS
 		_:
-			return NIGHT_CLASS
+			w = NIGHT_CLASS
+	if FamilyProfile.has_cbt("crown"):
+		w += 0.04
+	return w
 
 
-func _process(_delta: float) -> void:
-	if open and is_instance_valid(active) and active._just("snap"):
+func _physics_process(_delta: float) -> void:
+	_try_finish()
+	if open and is_instance_valid(active) and (active._just("snap") or active._just("light")):
 		_execute()
 		return
 	if open:
@@ -39,6 +45,23 @@ func _process(_delta: float) -> void:
 			var v := _candidate(f)
 			if v:
 				_open(f, v)
+				return
+
+
+func _try_finish() -> void:
+	for n in get_tree().get_nodes_in_group("players"):
+		if not (n is Fighter):
+			continue
+		var f: Fighter = n
+		if f.downed:
+			continue
+		if not (f._just("heavy") or f._just("snap")):
+			continue
+		for e in get_tree().get_nodes_in_group("enemies"):
+			if e is Punk and (e as Punk).crush and f.global_position.distance_to((e as Node2D).global_position) < 70.0:
+				(e as Punk).take_hit("finish", f)
+				Juice.play("res://assets/audio/finish.wav")
+				Juice.shout("FINISH")
 				return
 
 
@@ -93,6 +116,9 @@ func _execute() -> void:
 	f.global_position.x = e.global_position.x - float(f.facing) * 22.0
 	if e.has_method("take_hit"):
 		e.take_hit("snap", f)
+	var rs := get_tree().get_first_node_in_group("run_state")
+	if rs and rs.has_method("has_card") and rs.has_card("quiet_lunch"):
+		f.hp = mini(f.max_hp, f.hp + 8)
 	Juice.snap_bang((e as Node2D).global_position)
 	FamilyProfile.mark_snap()
 

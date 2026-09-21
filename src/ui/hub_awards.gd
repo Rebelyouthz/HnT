@@ -74,6 +74,7 @@ func _chest(kind: String, chest: Dictionary, value: int) -> Button:
 		claimed.append(at)
 		FamilyProfile.grant(int(chest["gold"]), int(chest["gems"]), str(chest["line"]))
 		Juice.claim_burst(get_viewport_rect().size * 0.5, str(chest["line"]), int(chest["gold"]), int(chest["gems"]))
+		Juice.toast("quest" if kind == "daily" else "challenge", str(chest["line"]), "CLAIMED. THE CLIPBOARD NOTICED.")
 		need_refresh.emit()
 	)
 	return b
@@ -118,6 +119,7 @@ func _award(a: Dictionary) -> Control:
 		claimed.append(a["id"])
 		FamilyProfile.grant(int(a["gold"]), int(a["gems"]), Copy.HEALTHY)
 		Juice.claim_burst(get_viewport_rect().size * 0.5, Copy.HEALTHY, int(a["gold"]), int(a["gems"]))
+		Juice.toast("achievement", str(a["title"]), Copy.HEALTHY)
 		need_refresh.emit()
 	)
 	row.add_child(btn)
