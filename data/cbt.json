@@ -1,0 +1,8 @@
+[
+  { "id": "thick_skin", "trunk": "BODY", "name": "THICK SKIN", "blurb": "+12 max HP both. Feelings bounce.", "gold": 40, "rep": 1 },
+  { "id": "second_lungs", "trunk": "BODY", "name": "SECOND LUNGS", "blurb": "Steam regen +15%. Breathe like a brochure.", "gold": 45, "rep": 2 },
+  { "id": "bandage_pocket", "trunk": "BODY", "name": "BANDAGE POCKET", "blurb": "Start a run with 1 Bandage. That's not enabling.", "gold": 50, "rep": 2 },
+  { "id": "disarm_habit", "trunk": "STREET", "name": "DISARM HABIT", "blurb": "Weapons drop 20% more. Sharing is caring.", "gold": 40, "rep": 1 },
+  { "id": "heavy_wrist", "trunk": "STREET", "name": "HEAVY WRIST", "blurb": "Charge-heavy 4 frames faster. Commit.", "gold": 55, "rep": 3 },
+  { "id": "crown", "trunk": "SHOW", "name": "CROWN", "blurb": "SNAP window +40 ms. Timing is a love language.", "gold": 50, "rep": 2 }
+]

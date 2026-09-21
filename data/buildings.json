@@ -1,0 +1,56 @@
+[
+  {
+    "id": "front_desk",
+    "name": "FRONT DESK",
+    "blurb": "Intake forms, PINs, the fake smile. Profile lives here.",
+    "unlocks": "Profile"
+  },
+  {
+    "id": "street_map",
+    "name": "STREET MAP",
+    "blurb": "A corkboard of alleys. Unlocks the Run tab so you can actually go outside.",
+    "unlocks": "Run"
+  },
+  {
+    "id": "therapy_couch",
+    "name": "THERAPY COUCH",
+    "blurb": "Stained. Expensive. This is the CBT Tree, billed as growth.",
+    "unlocks": "Build"
+  },
+  {
+    "id": "wardrobe_cage",
+    "name": "WARDROBE CAGE",
+    "blurb": "Headbands, polos, a cape that is not a license.",
+    "unlocks": "Locker"
+  },
+  {
+    "id": "trophy_cabinet",
+    "name": "TROPHY CABINET",
+    "blurb": "Awards you have to claim. Growth is not automatic. Neither is Gold.",
+    "unlocks": "Awards"
+  },
+  {
+    "id": "mail_slot",
+    "name": "MAIL SLOT",
+    "blurb": "The Session Log. Gifts, threats, invoices from the therapist.",
+    "unlocks": "Log"
+  },
+  {
+    "id": "bulletin_board",
+    "name": "BULLETIN BOARD",
+    "blurb": "Daily coping goals. Check a box. Open a chest. Call it progress.",
+    "unlocks": "Daily"
+  },
+  {
+    "id": "compare_mirrors",
+    "name": "COMPARE MIRRORS",
+    "blurb": "Build Compare. Split-screen menus only. Nobody splits the street.",
+    "unlocks": "Compare"
+  },
+  {
+    "id": "blood_fridge",
+    "name": "BLOOD FRIDGE",
+    "blurb": "Between-run snacks. Gold goes in. Bandages come out. Science.",
+    "unlocks": "Supplies"
+  }
+]

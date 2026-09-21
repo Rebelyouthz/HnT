@@ -1,0 +1,12 @@
+{
+  "daily": [
+    { "at": 1, "gold": 8, "gems": 0, "line": "CHECK-IN COMPLETE" },
+    { "at": 3, "gold": 16, "gems": 1, "line": "THAT'S HEALTHY" },
+    { "at": 5, "gold": 30, "gems": 2, "line": "GROWTH UNLOCKED" }
+  ],
+  "lifetime": [
+    { "at": 2, "gold": 12, "gems": 1, "line": "FAMILY DISCOUNT" },
+    { "at": 6, "gold": 24, "gems": 2, "line": "LINKEDIN MANTRA" },
+    { "at": 12, "gold": 50, "gems": 4, "line": "THE THERAPIST IS CRYING" }
+  ]
+}

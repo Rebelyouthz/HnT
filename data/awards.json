@@ -1,0 +1,34 @@
+[
+  {
+    "id": "intake",
+    "title": "INTAKE FORM",
+    "blurb": "Finish one Dock Street session. The clipboard is watching.",
+    "need": { "runs": 1 },
+    "gold": 20,
+    "gems": 1
+  },
+  {
+    "id": "heavy_feelings",
+    "title": "EMOTIONAL SUPPORT DECAP",
+    "blurb": "Land a heavy. Light hits are just a red feeling.",
+    "need": { "heavies": 1 },
+    "gold": 15,
+    "gems": 1
+  },
+  {
+    "id": "interior",
+    "title": "IKEA FOR TRAUMA",
+    "blurb": "Build or upgrade any clinic furniture once.",
+    "need": { "buildings_tapped": 1 },
+    "gold": 15,
+    "gems": 2
+  },
+  {
+    "id": "repeat_offender",
+    "title": "THE THERAPIST IS CRYING",
+    "blurb": "Three runs. That is a pattern. We bill for patterns.",
+    "need": { "runs": 3 },
+    "gold": 40,
+    "gems": 3
+  }
+]
