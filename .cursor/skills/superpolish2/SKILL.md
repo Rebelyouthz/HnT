@@ -6,8 +6,8 @@ description: >
   performance, then two visual polish rounds with a second bug hunt between them.
   Makes the thing BIGGER, not just prettier. Mandatory when Timmie says
   superpolish, superpolera, polish, polera, superpolish2, gör den bättre, juice,
-  dopamin, or names an HnT screen, menu, or system to take next. HnT only — never
-  Waterdrop, Pixi, React, npm, or TCC/card work.
+  dopamin, hub, menus, base camp, milestones, or names an HnT screen, menu, or
+  system to take next. HnT only — never Waterdrop, Pixi, React, npm, or TCC/card work.
 ---
 
 # Superpolish2 — HnT (Godot 4.7.2)
@@ -26,7 +26,7 @@ Contract: `docs/game-plan.md`. Juice code lives in `src/juice/` (one shared syst
 
 ## When to use
 
-Load and follow this skill whenever Timmie says **superpolish**, **superpolera**, **polish**, **polera**, **superpolish2**, **gör den bättre**, **juice**, **dopamin**, or names a screen, menu, or system in HnT to take next (HUD, pause, Profile, Build Compare, The Basement Clinic, Raven Wharf, SNAP, Parenting Slap, CBT Tree, blood, camera, lighting, cards, shops, and the rest).
+Load and follow this skill whenever Timmie says **superpolish**, **superpolera**, **polish**, **polera**, **superpolish2**, **gör den bättre**, **juice**, **dopamin**, or names a screen, menu, or system in HnT to take next (hub, Clinic, base camp, tabs, milestones, chests, HUD, pause, Profile, Build Compare, The Basement Clinic, Raven Wharf, SNAP, Parenting Slap, CBT Tree, blood, camera, lighting, cards, shops).
 
 **When not to use:** Waterdrop Survivor, Pixi.js, React menus, npm card/TCC work, or any other repo. Tiny copy tweaks that are not a named system. Do not treat this skill as a license to redesign something Timmie is already happy with.
 
@@ -40,7 +40,7 @@ If the game-dev **router** does not fire, pick these yourself. Read the matching
 | Lighting + shadows | `godot-shaders` + `shader-programming`. Scene lights: `CanvasModulate`, `DirectionalLight2D`, `PointLight2D`, `LightOccluder2D` (game plan §10.1) |
 | Shaders | `godot-shaders` + `shader-programming` (red-flash, hit-white, wet asphalt, outlines) |
 | Camera | `camera-systems` (one `Camera2D` couch cam; shake is an **added offset**, shared budget = max not sum) |
-| Menus / HUD | `game-ui-ux` + `godot-ui-control` (Control nodes, Theme, bottom tabs in hub only) |
+| Menus / HUD | `game-ui-ux` + `godot-ui-control` (Control nodes, Theme, **AvZ-style hub**, bottom tabs only between runs) |
 | Juice | `game-feel` + this skill. Implement in `src/juice/`, never a second copy |
 | Character | `create-game-assets`. Bodies built **in parts** (head, torso, arms, legs as child sprites) so gore can detach |
 | Audio | `audio-design` + `godot-audio`. **ElevenLabs MCP** generates music, SFX, and English VO (`sound-effects`, `text-to-speech`, `music`, creative studio). `setup-api-key` if the key is missing. Audio-design is the playbook; MCP is the generator |
@@ -48,6 +48,14 @@ If the game-dev **router** does not fire, pick these yourself. Read the matching
 | Input when touching controls | `input-systems` |
 
 English only: plans, UI, VO, copy, commit messages, and this skill's output.
+
+## Humor (menus especially)
+
+Write like **Rick and Morty**: nihilistic family sitcom, therapy as a paid scam that still kind of works, punchlines after a claim, a chest, or a corpse. Everyone is awful. The Father hypes himself with LinkedIn mantras. The Son is late for tutoring. Captions undercut the UI.
+
+**Do ship:** mean one-liners, fake-clinical labels, achievement names that sound like interdimensional cable titles, claim toasts that joke about growth.
+
+**Do not ship:** quotes from the show, portal guns, pickles, Meeseeks, Adult Swim marks, copying the cartoon's art. Humor is the feeling. The pictures are Huntdown / Dan the Man / Raven Wharf.
 
 ## Eight stages (keep this order)
 
@@ -69,13 +77,14 @@ Log bugs. Fix them now or mark them explicitly out of scope with a reason.
 
 Search and name **real** shipped games. The benchmark is the **best game in the genre of the thing you are polishing**, not a generic "indie look."
 
-Starting set for HnT (steal feel and rules, not art):
+Starting set for HnT (steal feel and rules, not art unless noted):
 
 - Combat / co-op street: **Huntdown**, **Streets of Rage 4**, **Double Dragon** (arcade)
 - Parkour / roofs: **Vector**
 - SNAP windows: **Johnny Trigger**
 - In-run cards / Rep tree: **Vampire Survivors**, **20 Minutes Till Dawn**, **Halls of Torment**, **Skul: The Hero Slayer**
-- Mobile HUD / silhouette: **Dan the Man**
+- In-run graphics / silhouette / phone HUD: **Dan the Man** (Halfbrick). Steal readable headband bodies and combat-button layout. Make it **a bit prettier**. Do **not** steal the weak physics — HnT keeps coyote, web, mix, hitstop.
+- **Hub / between-run menus:** **Aliens vs Zombies: Invasion** (Gamegears Limited). Layout, tab chrome, base-camp buildings that unlock menus, resource bar, chests on rails, `!` badges. Not the UFO/zombie fantasy and not the IAP.
 - Mix / finishers: **Mortal Kombat** (mix, not 2.5D fighter movement)
 
 Name the games in the report. Do not research Hearthstone, Gwent, or Pokémon TCG unless Timmie explicitly asked for a card-battler (he did not; HnT level-up cards are Vampire Survivors-style rule changers, not a TCG).
@@ -86,9 +95,9 @@ State the gap vs the named benchmark in one paragraph. Propose extras **above** 
 
 ### 4. Deepen and expand
 
-More to **do**, **earn**, and **return**. Interlocking systems. Real progression (Scrap, Run XP / cards, Rep, Gold, CBT Tree, wanted ladder, shops) — not a reskin of a button.
+More to **do**, **earn**, and **return**. Interlocking systems. Real progression (Scrap, Run XP / cards, Rep, Gold, Gems, CBT Tree, wanted ladder, shops, **daily + lifetime milestone tracks**) — not a reskin of a button.
 
-Then add **this game's twist**. HnT twist: *Revenge & Therapy*, The Father and The Son on one couch camera, black comedy / therapy jargon, **Raven Wharf**, Parenting Slap, SNAP, web + cape. A competent clone of Huntdown or SoR4 is failure.
+Then add **this game's twist**. HnT twist: *Revenge & Therapy*, The Father and The Son on one couch camera, **Rick and Morty humor**, **Raven Wharf**, Parenting Slap, SNAP, web + cape. A competent clone of Huntdown, SoR4, or AvZ is failure.
 
 ### 5. Code + performance
 
@@ -102,33 +111,118 @@ Godot cost centers (translate the lesson; do not paste Pixi/React/SVG-filter not
 - Light budget: at most **4** shadowed `PointLight2D` in view; extra glow is Add-blend sprites
 - Allocations in `_process` / `_physics_process` (no `get_node` every frame; pool blood drops, numbers, bullets)
 - Renderer: **Mobile** on phone, **Forward+** on PC
+- Hub UI: Control nodes + Theme, not a second World2D full of lights
 
 ### 6. Visual polish round one
 
-Light, shadow, material, depth. Easing with **overshoot** (`Tween` back/out, not linear fades). Every action audible **and** visible. Menus must already look like a product, not a debug overlay.
+Light, shadow, material, depth. Easing with **overshoot** (`Tween` back/out, not linear fades). Every action audible **and** visible. Menus must already look like a **shipped mobile game**, not a debug overlay.
 
 Use `AnimationPlayer` for gameplay events, `AnimatedSprite2D` for pictures, `GPUParticles2D` for mist/sparks, authored sprite sheets for arterial spray and finishers.
 
 ### 7. Bug hunt again
 
-Play **what you just built**. All viewports. Pads + touch + mouse. Tests again. Confirm Family Profile backup is intact and the live save still loads.
+Play **what you just built**. All viewports. Pads + touch + mouse. Tests again. Confirm Family Profile backup is intact and the live save still loads. Tap every locked tab, every `!`, every claim.
 
 ### 8. Visual polish round two
 
 This is the pass that stops looking **built** and starts looking **finished**. Second juice pass, second light pass, second sound pass. Not leftovers from stage 6.
 
+## Hub menus (Aliens vs Zombies: Invasion layout)
+
+Between runs, maps, awards, shops, and "where everything lives" is a **typical mobile-game hub**, not a pause sheet and not a Dan the Man title card.
+
+**Layout reference:** *Aliens vs Zombies: Invasion* (Gamegears Limited). Steal structure. Reskin to **The Basement Clinic** — illegal family therapist, dark noir, strong accents.
+
+**In-run look reference:** *Dan the Man* — silhouette, headbands, phone combat HUD. Prettier pixels. Better physics (ours).
+
+### Chrome
+
+- **Bottom tab bar** on every hub screen. Hidden in a run. Pause does not become the hub.
+- **Top resource pills:** Gold, Gems, Rep. Fat, readable, always the same slots.
+- **Logo** (hand-built HnT mark + wordmark) on hub chrome. Keep it updated. Not emoji, not a raw generate. Clinic stamp energy (bruise-heart, staple, headband) — still sharp.
+- **Session Log** (mail/inbox) icon top-right, next to settings. Gifts, patch notes, unclaimed awards land here.
+- **Profile** = avatar top-left (display name + role subtitle). Full Profile / PIN / pads open from there.
+- Safe area / notch on iPhone 16. Tabs sit above home indicator.
+
+### Tabs (unlock by building)
+
+Default hub view is the **Clinic** camp (2D, tap buildings). Tabs that are not unlocked yet show a **lock** plus copy, not a dead button.
+
+| Tab | Building that unlocks it | What it is |
+| --- | --- | --- |
+| **Clinic** | Always on (the camp) | Tap buildings. Upgrade. This *is* the home screen |
+| **Run** | **Street Map** on the wall | Maps, difficulty, Host / Join, start Raven Wharf |
+| **Build** | **Therapy Couch** | CBT Tree, relic slot, **Build Compare** (split-screen menu only) |
+| **Locker** | **Wardrobe Cage** | Cosmetics, weapon unlocks |
+| **Awards** | **Trophy Cabinet** | Achievements you **claim**, plus milestone tracks |
+
+Slice: **Clinic + Run** start unlocked so you can fight tonight. Couch / Cage / Cabinet sit in the camp as buildable (cheap first levels). Locked tabs still exist in the bar so the unlock is visible.
+
+### Buildings unlock functions
+
+Each building is a tap target on the camp. Upgrade level is a number on the roof. Examples (invent more in the same voice, do not clone AvZ cannons):
+
+- **Front Desk** — Family Profile, PIN, Transfer Code
+- **Street Map** — Run tab
+- **Therapy Couch** — CBT Tree
+- **Compare Mirrors** — Build Compare
+- **Wardrobe Cage** — Locker
+- **Trophy Cabinet** — Awards
+- **Mail Slot** — Session Log
+- **Bulletin Board** — Daily Sessions track
+- **Blood Fridge** — between-run Gold sink / supplies (not in-run Scrap shops)
+
+A building that is ready to build or collect shows a `!` over the sprite.
+
+### Dark theme, strong color
+
+Dark clinic chrome: near-black panels, thin gold/brick edges, **not** muddy grey and **not** so dark that type dies. High-contrast labels. Accents: **brick** (The Father), **lemon** (The Son), **gold** (claims), **ready green** only on claimable chests. Selected tab is a bright material change, not opacity 0.4.
+
+### `!` badges (new stuff)
+
+Hand-built bang badge (not emoji). Red disc + white `!`. Sits on:
+
+- Bottom tabs (unclaimed awards, new unlock, new map)
+- Session Log (unread)
+- Camp buildings (upgrade done, chest ready)
+- Daily / lifetime tracks (claim waiting)
+
+Clear the badge when the player **opens and sees** or **claims**. Never leave a lying `!`.
+
+### Milestone lines + chests
+
+Mobile-game rails. Meter fills. Chests sit on the line. Tap to open when filled. **Claim** is required — never silent grant. Shared juice burst; Gold/Gems fly to the top pills (~700 ms).
+
+Two tracks on Awards (and a compact strip on the Clinic home):
+
+1. **Today's Coping Goals** (daily, 24h reset) — short rail, 3–5 chests. Fill by finishing listed chores (1 run, 1 claim, 1 log open, etc.).
+2. **Family Progress** (lifetime) — long rail keyed to Rep, clears, slap, Family Therapy. Bigger chests.
+
+Awards list is the same pattern as achievements in those games: icon, sarcastic title, progress, **CLAIM** for Gold and/or Gems (sometimes a card into the pool).
+
+### Home-screen extras (invent in this style)
+
+On Clinic, besides buildings:
+
+- Compact daily rail + `!` if a chest is ready
+- **Play** sticky button that jumps to Run (still AvZ "go fight" energy)
+- Event stamp (wanted, live modifier) if one is on
+- Logo, resources, log, avatar as above
+
+Copy examples (English, Rick and Morty humor — write more, do not repeat these forever): `TODAY'S COPING GOALS`, `THAT'S HEALTHY`, `COME BACK AFTER YOU BUILD THE COUCH`, `NOBODY WROTE. SHOCKING.`, `GROWTH UNLOCKED`, `EMOTIONAL SUPPORT DECAP`, `THE THERAPIST IS CRYING`. Insert display names when copy talks to a person.
+
 ## Juice checklist
 
-Port the contract to Godot. Shared implementation: `src/juice/` (hitstop, shake offset, freeze frames, bitmap numbers, flash, one reward-burst). Game plan §10.2 is the event table (light / heavy / special / SNAP / kills / finisher / slap / level-up).
+Port the contract to Godot. Shared implementation: `src/juice/` (hitstop, shake offset, freeze frames, bitmap numbers, flash, one reward-burst). Game plan §10.2 is the combat event table. Hub claims use the **same** burst, never a second copy.
 
-- Nothing changes a number silently (HP, Steam, Scrap, Rep, Gold, combo, lives, wanted).
-- Every claim, click, purchase, unlock, pickup, and level-up: **sound + motion + a visible statement**.
-- Show the reward; do not only grant it. One shared burst system — **never a second copy**. Grep first.
+- Nothing changes a number silently (HP, Steam, Scrap, Rep, Gold, Gems, combo, lives, wanted, milestone meters).
+- Every claim, click, purchase, unlock, pickup, chest, and level-up: **sound + motion + a visible statement**.
+- Show the reward; do not only grant it.
 - Hold long enough to read (~700 ms).
 - Only the actionable thing moves.
 - State is a change of **material** (shader, modulate, stylebox, light energy), not an opacity fade to 0.4.
 - Escalate toward the payoff.
-- Sound is part of the pass. Ceremonial moments get their own sound: SNAP, Execute / FINISH, Parenting Slap (`GROUNDED`), Family Therapy, level-up cards, shop buy. Generate with ElevenLabs MCP; mix on Godot buses (Master, sfx, vo, music; duck music on VO).
+- Sound is part of the pass. Ceremonial moments get their own sound: SNAP, Execute / FINISH, Parenting Slap (`GROUNDED`), Family Therapy, level-up cards, shop buy, **chest open**, **daily claim**. Generate with ElevenLabs MCP; mix on Godot buses (Master, sfx, vo, music; duck music on VO).
 - Light hits: **red flash only**, 2 frames, no particle. Brutality is the reward for heavy / SNAP / finisher.
 - Combo callouts at 5 / 10 / 20 / 40. Bitmap font, not system emoji. Display names where copy talks to a person.
 
@@ -146,11 +240,11 @@ Screenshot. **Read the PNG.** Never report visuals from a git diff, a scene tree
 
 ## Art rules
 
-- **No emoji.** Icons are hand-built stamps, staples, cape, web, heart stamps — Godot `TextureRect` / SVG / pixel sprites, not emoji fonts and not a React `GameIcon` unless that node exists here (it does not).
+- **No emoji.** Icons are hand-built stamps, staples, cape, web, heart stamps, lock, bang-badge, chests, logo — Godot `TextureRect` / SVG / pixel sprites.
 - Generated images (ElevenLabs `creative_generate_image` or similar) are **references to hand-code against**. Clean in Aseprite or Pixelorama. Never ship a raw generate as the game sprite.
 - References live in **this** repo (`assets/`, `docs/game-plan.md`). Do not pull Waterdrop `referens bilder` or `timmi\waterdroppixi` paths.
 - Sharp, crisp, light and shadow. Characters ~72 px tall. Colored outline + silhouette (The Son lemon, The Father brick).
-- Menus look like finished product. This is Godot **Control** / **Node2D**, not a canvas-in-browser rectangle.
+- Menus look like a finished **mobile product**. Godot **Control** / **Node2D**, not a canvas-in-browser rectangle.
 
 ## Blood / gore (quality bar)
 
@@ -168,6 +262,7 @@ Do **not** copy any Waterdrop three.js / broken 2.1 blood simulator as code — 
 - Rank H20 (HnT account is Family Profile + **Rep** + CBT Tree)
 - npm / SVG-filter performance notes as copy-paste; translate the lesson to Godot
 - "Canvas menus" as the menu stack
+- AvZ IAP, timers-to-pay, crystal gacha. Steal **layout**, not the cash shop.
 
 ## Non-negotiables
 
@@ -180,18 +275,20 @@ Do **not** copy any Waterdrop three.js / broken 2.1 blood simulator as code — 
 - 60 fps hard. Godot **4.7.2** GDScript. Repo `timmie-dev/HnT`.
 - One `Camera2D` in a run. Split-screen only in **Build Compare**.
 - Shared lives, Parenting Slap, fail for both.
+- Hub is AvZ-structure + Rick and Morty copy + Clinic theme.
 
 ## What done means
 
 - Bugs found before work are fixed or explicitly out of scope.
 - Real games named; gap stated.
 - The thing is measurably **BIGGER**.
-- It carries HnT theme and humour.
+- It carries HnT theme and **Rick and Morty humor**.
 - Performance measured (fps / profiler), not guessed.
-- Sound + visible feedback on every meaningful action.
+- Sound + visible feedback on every meaningful action, including **CLAIM**.
 - All three viewports screenshotted; PNGs looked at.
 - Godot tests run, or an explicit "no harness yet" with scene-play notes.
 - Second visual polish after the second bug hunt.
+- Hub: logo, `!` badges that tell the truth, daily + lifetime chest rails, buildings that unlock tabs.
 - The report is true, including what you did **not** do.
 
 ## Scope honesty
