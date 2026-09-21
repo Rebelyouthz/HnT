@@ -37,6 +37,8 @@ func bind(id: String) -> void:
 
 
 func _paint() -> void:
+	if _main == null or _side == null:
+		return
 	var row := StoryBook.act(map_id)
 	var main := str(row.get("main", ""))
 	var side := str(row.get("side", ""))

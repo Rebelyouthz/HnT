@@ -20,7 +20,7 @@ var _comic_wrap: Control
 func _ready() -> void:
 	var sky := ColorRect.new()
 	sky.color = Color(0.04, 0.045, 0.07)
-	sky.set_anchors_preset(Control.PRESET_FULL_RECT)
+	sky.position = Vector2.ZERO
 	sky.size = Vector2(1280, 720)
 	add_child(sky)
 	_film = StoryBook.all().get("intro", {})

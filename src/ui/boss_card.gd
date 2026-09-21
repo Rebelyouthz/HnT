@@ -29,17 +29,18 @@ func flash(title: String, sub: String, accent: Color, full: bool) -> void:
 	Juice.freeze_frames(5 if full else 3)
 	var dim := ColorRect.new()
 	dim.color = Color(0, 0, 0, 0.55)
-	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.position = Vector2.ZERO
+	dim.size = Vector2(1280, 720)
 	add_child(dim)
 	var top := ColorRect.new()
 	top.color = Color(0, 0, 0, 0.92)
-	top.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	top.offset_bottom = 70
+	top.position = Vector2.ZERO
+	top.size = Vector2(1280, 70)
 	add_child(top)
 	var bot := ColorRect.new()
 	bot.color = Color(0, 0, 0, 0.92)
-	bot.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	bot.offset_top = -70
+	bot.position = Vector2(0, 650)
+	bot.size = Vector2(1280, 70)
 	add_child(bot)
 	var portrait := ColorRect.new()
 	portrait.color = accent

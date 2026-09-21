@@ -261,8 +261,8 @@ func _boot_story() -> void:
 	add_child(_talk)
 	_missions = MissionHud.new()
 	_missions.add_to_group("mission_hud")
-	_missions.bind(map_id)
 	add_child(_missions)
+	_missions.bind(map_id)
 	var row := StoryBook.act(map_id)
 	if row.is_empty():
 		return
