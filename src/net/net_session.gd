@@ -292,19 +292,23 @@ func _on_peer_out(_id: int) -> void:
 		Juice.toast("challenge", "FATHER DROPPED", "The other chair went dark.")
 
 
-func broadcast_begin(map_id: String) -> void:
+func broadcast_begin(map_id: String, extra: Dictionary = {}) -> void:
+	if extra.is_empty():
+		extra = App.begin_extra()
 	if is_host() and _peer:
-		net_begin.rpc(map_id)
+		net_begin.rpc(map_id, extra)
 	if is_host() and _tcp:
-		_pipe_send({"t": "begin", "map": map_id})
+		_pipe_send({"t": "begin", "map": map_id, "extra": extra})
 	if is_host():
+		App.apply_begin_extra(extra)
 		App.enter_map(map_id)
 
 
 @rpc("authority", "call_remote", "reliable")
-func net_begin(map_id: String) -> void:
+func net_begin(map_id: String, extra: Dictionary = {}) -> void:
 	App.remote_coop = true
 	App.density_coop = true
+	App.apply_begin_extra(extra)
 	App.enter_map(map_id)
 
 
@@ -590,7 +594,10 @@ func _poll_tcp() -> void:
 			"snap":
 				_apply_snap(d)
 			"begin":
-				net_begin(str(d.get("map", "dock_street")))
+				var extra: Variant = d.get("extra", {})
+				if typeof(extra) != TYPE_DICTIONARY:
+					extra = {}
+				net_begin(str(d.get("map", "dock_street")), extra)
 
 
 func _on_relay_peer() -> void:

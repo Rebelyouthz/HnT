@@ -3,9 +3,13 @@ extends SceneTree
 func _initialize() -> void:
 	var failed := 0
 	failed += _check_json("res://data/buildings.json", 9)
-	failed += _check_json("res://data/awards.json", 15)
-	failed += _check_json("res://data/cbt.json", 10)
-	failed += _check_json("res://data/cards.json", 16)
+	failed += _check_json("res://data/awards.json", 20)
+	failed += _check_json("res://data/cbt.json", 12)
+	failed += _check_json("res://data/cards.json", 18)
+	var gear: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/gear.json"))
+	if typeof(gear) != TYPE_DICTIONARY or ((gear as Dictionary).get("items", []) as Array).size() < 12:
+		push_error("gear.json missing items")
+		failed += 1
 	var miles: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/milestones.json"))
 	if typeof(miles) != TYPE_DICTIONARY or not miles.has("daily") or (miles["daily"] as Array).size() != 3:
 		push_error("milestones.json invalid")
@@ -51,6 +55,15 @@ func _initialize() -> void:
 	if Copy.PLAY_INTRO != "PLAY INTRO":
 		push_error("missing play intro copy")
 		failed += 1
+	if Copy.OPTIONS != "OPTIONS" or Copy.RESET != "RESET PROGRESS":
+		push_error("missing options/reset copy")
+		failed += 1
+	if Copy.FLOOR_CLEAR != "PROCESSING FLOOR FILED" or Copy.SKIP_BRIDGES != "SKIP INTER-ACT FILMS":
+		push_error("missing floor/film copy")
+		failed += 1
+	if Copy.NEXT_FLOOR != "THE PROCESSING FLOOR":
+		push_error("missing next floor copy")
+		failed += 1
 	var app := get_root().get_node("App")
 	if app.couch != false:
 		push_error("App.couch must default false so hub GO starts solo")
@@ -89,6 +102,16 @@ func _initialize() -> void:
 	failed += _exists("res://src/survive/horde.gd")
 	failed += _exists("res://src/survive/xp_gem.gd")
 	failed += _exists("res://src/vs/versus_arena.gd")
+	failed += _exists("res://src/ui/act_film.gd")
+	failed += _exists("res://src/levels/processing_floor.gd")
+	failed += _exists("res://src/actors/family_plan.gd")
+	failed += _exists("res://src/ui/results_sheet.gd")
+	failed += _exists("res://src/app/rarity.gd")
+	failed += _exists("res://src/app/gear_book.gd")
+	failed += _exists("res://data/gear.json")
+	failed += _exists("res://scenes/levels/act_film.tscn")
+	failed += _exists("res://scenes/levels/processing_floor.tscn")
+	failed += _exists("res://assets/audio/music_finale.wav")
 	failed += _exists("res://data/story.json")
 	failed += _exists("res://scenes/levels/invoice_pier.tscn")
 	failed += _exists("res://scenes/levels/intake_lot.tscn")
@@ -118,8 +141,11 @@ func _initialize() -> void:
 	failed += _contains("res://src/app/app.gd", "var couch: bool = false")
 	failed += _contains("res://src/app/app.gd", "neon_exchange")
 	failed += _contains("res://src/app/app.gd", "invoice_pier")
+	failed += _contains("res://src/app/app.gd", "processing_floor")
+	failed += _contains("res://src/app/app.gd", "act_film")
 	failed += _contains("res://src/app/app.gd", "intake_lot")
 	failed += _contains("res://src/app/app.gd", "func start_versus")
+	failed += _contains("res://src/app/app.gd", "film_kind")
 	failed += _contains("res://src/world/night_street.gd", "theme: String = \"dock\"")
 	failed += _contains("res://src/levels/run_act.gd", "BossCard.present")
 	failed += _contains("res://src/levels/invoice_pier.gd", "INVOICE PIER")
@@ -127,6 +153,14 @@ func _initialize() -> void:
 	failed += _contains("res://src/actors/fighter.gd", "var vs_mode")
 	failed += _contains("res://src/ui/hub_run.gd", "Copy.PLAY_INTRO")
 	failed += _contains("res://src/ui/copy.gd", "SKIP THIS FEELING")
+	failed += _contains("res://src/ui/copy.gd", "RESET PROGRESS")
+	failed += _contains("res://src/ui/settings_sheet.gd", "RESET")
+	failed += _contains("res://src/app/family_profile.gd", "func reset_progress")
+	failed += _contains("res://src/coop/run_state.gd", "score_son")
+	failed += _contains("res://src/app/rarity.gd", "legendary")
+	failed += _contains("res://src/actors/family_plan.gd", "ARMOR STRIPPED")
+	failed += _contains("res://src/ui/act_film.gd", "_advance_hard")
+	failed += _contains("res://src/net/net_session.gd", "extra")
 	failed += _contains("res://src/juice/juice.gd", "func cash_out(")
 	failed += _contains("res://src/juice/juice.gd", "func toast(")
 	failed += _contains("res://src/juice/juice.gd", "func unlock_logo(")
@@ -141,6 +175,10 @@ func _initialize() -> void:
 	failed += _contains("res://src/net/net_session.gd", "GAME_PORT := 24567")
 	failed += _contains("res://src/ui/copy.gd", "WAITING FOR FATHER")
 	failed += _contains("res://src/actors/mayor_raven.gd", "PHASE 3")
+	failed += _contains("res://data/story.json", "dock_street->intake_lot")
+	failed += _contains("res://data/story.json", "invoice_pier->processing_floor")
+	failed += _contains("res://data/cards.json", "invoice_void")
+	failed += _contains("res://data/cards.json", "legendary")
 	var boot := get_root().get_node_or_null("Boot")
 	if boot:
 		boot._enter_tree()
@@ -177,6 +215,7 @@ func _encounters() -> int:
 	n += _map_counts(parsed, "intake_lot", 3, 6)
 	n += _map_counts(parsed, "group_circle", 3, 6)
 	n += _map_counts(parsed, "waiting_room", 3, 6)
+	n += _map_counts(parsed, "processing_floor", 3, 6)
 	return n
 
 

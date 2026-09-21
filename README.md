@@ -2,9 +2,9 @@
 
 Couch, **solo**, or **remote Host/Join** brawler for **The Father** and **The Son**. Godot **4.7.2**, GDScript, 60 fps, English only.
 
-The Basement Clinic billed them for family therapy they never attended. Mayor Raven holds the eviction **and** the invoice. They collect coping evidence so the clinic does not seize the apartment or the Son's tutoring license.
+The Basement Clinic billed them for family therapy they never attended. Mayor Raven holds the eviction **and** the invoice. They collect coping evidence so the clinic does not seize the apartment or the Son's tutoring license. The night is one plot: **story films between every act**, then a late-act climax on **The Processing Floor**.
 
-Playable tonight: hub, **intro film + comic + tutorial + second film**, **nine campaign maps** (six brawl acts + three survivor hours woven between the first three brawl acts), **Versus**, Host/Join. Solo spawns fewer enemies. Couch 2P keeps the full roster. Drop-in does **not** restock punks.
+Playable tonight: hub, **intro film + comic + tutorial + second film**, **ten campaign maps** (six brawl acts + three survivor hours + Invoice Pier + Processing Floor), **Versus**, Host/Join, **Options + Reset**, pinball scores, avatar gear. Solo spawns fewer enemies. Couch 2P keeps the full roster. Drop-in does **not** restock punks.
 
 ## Run locally
 
@@ -27,47 +27,71 @@ Rooms (needed for room-code Join and the automatic relay). Host will try to star
 python3 tools/hnt_rooms.py
 ```
 
-Default listen: HTTP `8787`, TCP relay `8789`. Change the URL in Session Settings if the Father is on another PC.
+Default listen: HTTP `8787`, TCP relay `8789`. Change the URL in **Options** if the Father is on another PC.
 
-## How to start intro / tutorial
+## How to see the inter-act films
 
-**First GO** (Clinic **GO TALK TO THE LANDLORD** or Run **GO ALONE** / **GO TOGETHER**) plays intake if `intro_done` is false in `user://family.json`:
+Play a campaign run (**GO ALONE** / **GO TOGETHER** / Host). Clear an act (miniboss then boss). On the results sheet tap the **NEXT** button (or the named next act).
 
-1. **Film 1** — letterbox, silhouettes, the invoice.
-2. **Comic** — three panels slam in.
-3. **Tutorial Alley** — parkour ledge, pistol pickup, punch the dummy, walk right.
-4. **Film 2** — then **Dock Street**.
+The game hops to a letterbox **act film** (SoR4 comic-between-stages):
 
-**PAUSE** skips the current beat. **LIGHT / JUMP** advances a line.
+1. **Chapter card** — act title.
+2. **Lines** — The Father and The Son keep the plot moving.
+3. Then the next map loads.
 
-Replay anytime: Run tab **PLAY INTRO**. Remote Host/Join skips intake and starts Dock Street so Stockholm does not wait through a movie.
+**PAUSE** skips the current beat (chapter card, or the rest of the film). **LIGHT / JUMP** advances a line. Same as the intro.
 
-## How to start Versus
+Remote Host/Join: both peers see the film. The host still advances; the guest gets `film_from` / `film_next` with the begin packet.
 
-Run tab **VERSUS**. Mortal Kombat-style **best of three**, The Father vs The Son, same kits, one camera.
+**Options → SKIP INTER-ACT FILMS** jumps the night straight to the next map. Intro films still play the first time unless you already filed intake.
 
-- Keyboard: P1 WASD/JKL vs P2 arrows / `.` `/`
-- One pad: keyboard P1, pad P2. Two pads: pad 0 / pad 1.
-- Round splash, banter, finishers **GROUNDED** (Father) and **YOU'RE FIRED** (Son).
-- **PAUSE** exits to the clinic.
+Replay intro anytime: Run tab **PLAY INTRO**.
 
-## Campaign order (9 maps)
+## How the final boss starts
 
-Brawl acts mix **parkour / gun / brawl** stretches (plaques). Every act: **miniboss**, later content, **boss** with portrait + name + sting + boss music. Parallax is **multi-layer and themed** on every map.
+1. File **City Hall** (Mayor Raven). Film to **Invoice Pier**.
+2. File **Invoice Pier** (Usher Prime, then Dr. Splint). Film to **The Processing Floor**.
+3. Bandage desk at the start (24/7 Blood Mart). Mini **Adjuster Prime**. Then **The Family Plan** / Director Binder.
 
-1. **Dock Street** — Collector Gant. Then a coping hour.
-2. **The Intake Lot** (survivor) — flooded car park, magnet chips, elite pack, Lot Hydra. **Not** a Vampire Survivors meadow.
-3. **The Fire Escapes** — Lease Hawk on the high ledge.
-4. **Group Circle** (survivor) — courtyard share. The Facilitator.
-5. **Neon Exchange** — Agent Prime. Pawn & Plate.
-6. **The Waiting Room** (survivor) — fluorescent forever. Number 88.
-7. **Rail Bridge** — Conductor 9. Toll Booth.
-8. **City Hall** — Deputy Raven, then **Mayor Raven**. Continues.
-9. **Invoice Pier** — distinct annex: water, cranes, chapel. Usher Prime, then **Dr. Splint**. Not a Dock Street palette-swap.
+The Family Plan is the late-act climax, not a Mayor palette-swap:
 
-Survivor hours: Halls of Torment bar — density curve, pickup magnet, XP gems, elite packs, coping chests, extra level-up cards (`COPING MAGNET`, `ORBIT FORM`, `DRIP FEED`, `VACUUM HOUR`). Solo thinner spawn + slower horde. Co-op denser.
+- **Strip armor first.** Four plates. Lights go *CLINK*. Heavies strip plates. SNAP is denied until the suit is a receipt.
+- After **ARMOR STRIPPED**, a long pattern fight: X-slash, horizontal sweep, triple slam, invoice rain, then frenzy.
+- Portrait + boss sting, then **finale music** when the plates are gone.
+- Dedicated **boss HP bar** (armor count while plated).
+- **FILE ALIVE:** SNAP while stunned for extra gold (Huntdown take-alive). Still have to finish him.
+- Pre-fight film on the way in. **Ending film** after the results **WATCH THE ENDING** button (or auto after the floor files).
 
-Wanted 3 = extra patrol. Wanted 5 = heli spotlight. Unchanged on brawl maps: seed encounters stay **solo 3 / coop 6**.
+## Campaign order (10 maps)
+
+Brawl acts mix **parkour / gun / brawl**. Every act: **miniboss**, later content, **boss** with portrait + name + sting + boss music. Parallax is **multi-layer and themed**.
+
+1. **Dock Street** — Collector Gant. Film.
+2. **The Intake Lot** (survivor) — Lot Hydra.
+3. **The Fire Escapes** — Lease Hawk.
+4. **Group Circle** (survivor) — The Facilitator.
+5. **Neon Exchange** — Agent Prime.
+6. **The Waiting Room** (survivor) — Number 88.
+7. **Rail Bridge** — Conductor 9.
+8. **City Hall** — Deputy Raven, then **Mayor Raven**.
+9. **Invoice Pier** — Usher Prime, then **Dr. Splint**.
+10. **The Processing Floor** — Adjuster Prime, then **The Family Plan**. Ending film.
+
+Survivor hours: Halls of Torment bar. Solo thinner spawn + slower horde. Co-op denser.
+
+Wanted 3 = extra patrol. Wanted 5 = heli spotlight. Seed encounters stay **solo 3 / coop 6**, including the new floor.
+
+## Pinball, results, death
+
+Everything scores. Father vs Son on the same run (HUD bottom). After every act and on death: results sheet with table scores, winner line, **account XP bar**, toasts. Death still grants XP. High table lives on the Family Profile.
+
+## Avatar / rarity
+
+Locker is clothes / hats / shoes. Every piece has stats and three upgrades. **Common → Uncommon → Rare → Epic → Legendary** on cards, gear, CBT, awards, shop. Colored borders. Legendary juice.
+
+## Options / Reset
+
+Hub **OPTIONS**: volumes, gore, PIN, rooms URL, skip films, **RESET PROGRESS**. Reset asks confirm (**THIS IS GROWTH**), writes `user://family.json.bak` first, then wipes.
 
 ## Host / Join
 
@@ -75,7 +99,7 @@ Wanted 3 = extra patrol. Wanted 5 = heli spotlight. Unchanged on brawl maps: see
 
 **The Father (Dalarna):** **JOIN (THE FATHER)** → paste code → **Connect**. Direct, then automatic relay.
 
-Connect pipeline: LAN UDP → UPnP/direct (~3 s) → TCP relay. Room code is the product.
+Connect pipeline: LAN UDP → UPnP/direct (~3 s) → TCP relay. Room code is the product. Ports unchanged: game `24567`, rooms HTTP `8787`, relay `8789`.
 
 ## Controls
 
@@ -109,8 +133,6 @@ Connect pipeline: LAN UDP → UPnP/direct (~3 s) → TCP relay. Room code is the
 
 On a remote Join, The Father uses **P1** on his machine. The Son stays host-authoritative.
 
-New pickups: **board**, **pistol** (six shots) in gun stretches, plus pipe / knife.
-
 ## Hub
 
 Clinic, Run, Build, Locker, Awards. Family Profile at `user://family.json`.
@@ -118,9 +140,9 @@ Clinic, Run, Build, Locker, Awards. Family Profile at `user://family.json`.
 ## Layout
 
 ```
-scenes/     hub + intro, tutorial, nine acts, versus
+scenes/     hub + intro, tutorial, ten acts, films, versus
 src/        actors, story, survive, vs, juice, world, ui, coop, net
-data/       story, buildings, awards, CBT, cards, shop, encounters
+data/       story, gear, buildings, awards, CBT, cards, shop, encounters
 tools/      hnt_rooms.py, synth_story.py
 assets/     audio + icon
 ```

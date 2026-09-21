@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://hnt_floor"]
+
+[ext_resource type="Script" path="res://src/levels/processing_floor.gd" id="1"]
+
+[node name="ProcessingFloor" type="Node2D"]
+script = ExtResource("1")

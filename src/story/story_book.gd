@@ -34,3 +34,47 @@ static func who_name(who: String) -> String:
 	if who == "son":
 		return FamilyProfile.son_name()
 	return "THE STREET"
+
+
+static func bridge_key(from_id: String, to_id: String) -> String:
+	return "%s->%s" % [from_id, to_id]
+
+
+static func has_bridge(from_id: String, to_id: String) -> bool:
+	return not bridge(from_id, to_id).is_empty()
+
+
+static func bridge(from_id: String, to_id: String) -> Dictionary:
+	var row: Variant = all().get("bridges", {})
+	if typeof(row) != TYPE_DICTIONARY:
+		return {}
+	var item: Variant = (row as Dictionary).get(bridge_key(from_id, to_id), {})
+	if typeof(item) != TYPE_DICTIONARY:
+		return {}
+	return item
+
+
+static func ending() -> Dictionary:
+	var row: Variant = all().get("ending", {})
+	if typeof(row) != TYPE_DICTIONARY:
+		return {}
+	return row
+
+
+static func chapter_card(kind: String, from_id: String, to_id: String) -> Dictionary:
+	if kind == "ending":
+		var e := ending()
+		return {"title": str(e.get("title", "EPILOGUE")), "sub": str(e.get("sub", ""))}
+	var b := bridge(from_id, to_id)
+	return {
+		"title": str(b.get("title", str(b.get("chapter", "NEXT SESSION")))),
+		"sub": str(b.get("sub", ""))
+	}
+
+
+static func film_lines(kind: String, from_id: String, to_id: String) -> Array:
+	if kind == "ending":
+		var v: Variant = ending().get("lines", [])
+		return v if typeof(v) == TYPE_ARRAY else []
+	var v2: Variant = bridge(from_id, to_id).get("lines", [])
+	return v2 if typeof(v2) == TYPE_ARRAY else []

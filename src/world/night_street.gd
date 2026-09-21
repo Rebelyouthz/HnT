@@ -151,6 +151,14 @@ static func _theme_pal(theme: String) -> Dictionary:
 				"mist": Color(0.16, 0.18, 0.22, 0.14), "fg": Color(0.07, 0.07, 0.09, 0.7),
 				"water": Color(0.1, 0.12, 0.14, 0.35)
 			}
+		"processing":
+			return {
+				"sky": Color(0.05, 0.04, 0.06, 0.96), "moon": Color(0.79, 0.64, 0.15, 0.75),
+				"fog": Color(0.18, 0.12, 0.08, 0.22), "far": Color(0.1, 0.08, 0.09),
+				"far_b": Color(0.16, 0.12, 0.08), "mid": Color(0.14, 0.1, 0.09),
+				"mist": Color(0.2, 0.12, 0.08, 0.18), "fg": Color(0.06, 0.05, 0.05, 0.75),
+				"water": Color(0.12, 0.08, 0.06, 0.4)
+			}
 		_:
 			return {
 				"sky": Color(0.06, 0.07, 0.12, 0.9), "moon": Color(0.78, 0.82, 0.92, 0.85),
@@ -174,6 +182,9 @@ static func _skyline(far: Node, map_w: float, color: Color, theme: String) -> vo
 		elif theme == "waiting":
 			Blockout.poly(far, Rect2(x, 120, 70, 260), color, -6)
 			Blockout.poly(far, Rect2(x + 12, 140, 14, 18), Color(0.9, 0.92, 0.7, 0.35), -5)
+		elif theme == "processing":
+			Blockout.poly(far, Rect2(x, 100, 50, 280), color, -6)
+			Blockout.poly(far, Rect2(x + 8, 120, 18, 22), Color(0.79, 0.64, 0.15, 0.35), -5)
 		elif theme == "rail":
 			Blockout.poly(far, Rect2(x, 160, 140, 40), color, -6)
 		else:
@@ -198,6 +209,10 @@ static func _mid_props(mid: Node, map_w: float, theme: String, pal: Dictionary) 
 		"waiting":
 			for i in 8:
 				Blockout.poly(mid, Rect2(80.0 + i * 140.0, 340, 50, 70), Color(0.2, 0.2, 0.22), -4)
+		"processing":
+			for i in 7:
+				Blockout.poly(mid, Rect2(90.0 + i * 160.0, 280, 40, 180), Color(0.22, 0.16, 0.12), -4)
+				Blockout.poly(mid, Rect2(96.0 + i * 160.0, 300, 18, 14), Color(0.79, 0.64, 0.15, 0.4), -3)
 		"hall":
 			Blockout.poly(mid, Rect2(400, 180, 40, 200), Color(0.28, 0.22, 0.16, 0.55), -4)
 		_:

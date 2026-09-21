@@ -4,6 +4,7 @@ var trauma := 0.0
 var combo := 0
 var combo_ttl := 0.0
 var combo_peak := 0
+var last_hitter := "son"
 var callout := ""
 var _callout_t := 0.0
 var _base_scale := 1.0
@@ -354,6 +355,8 @@ func cash_out() -> void:
 		rs.add_scrap(scrap_n)
 	if rs and rs.has_method("add_xp") and xp_n > 0:
 		rs.add_xp(xp_n)
+	if rs and rs.has_method("add_points"):
+		rs.add_points(last_hitter, n * 6, "bank")
 	FamilyProfile.mark_combo_bank(n)
 	shout("BANKED  +%d SCRAP" % scrap_n)
 	popup_number(Vector2(640, 200), "CASH OUT x%d" % n, Palette.EDGE)

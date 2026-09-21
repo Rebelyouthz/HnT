@@ -3,120 +3,220 @@
     "id": "intake",
     "title": "INTAKE FORM",
     "blurb": "Finish one Dock Street session. The clipboard is watching.",
-    "need": { "runs": 1 },
+    "need": {
+      "runs": 1
+    },
     "gold": 20,
-    "gems": 1
+    "gems": 1,
+    "rarity": "common"
   },
   {
     "id": "heavy_feelings",
     "title": "EMOTIONAL SUPPORT DECAP",
     "blurb": "Land a heavy. Light hits are just a red feeling.",
-    "need": { "heavies": 1 },
+    "need": {
+      "heavies": 1
+    },
     "gold": 15,
-    "gems": 1
+    "gems": 1,
+    "rarity": "uncommon"
   },
   {
     "id": "interior",
     "title": "IKEA FOR TRAUMA",
     "blurb": "Build or upgrade any clinic furniture once.",
-    "need": { "buildings_tapped": 1 },
+    "need": {
+      "buildings_tapped": 1
+    },
     "gold": 15,
-    "gems": 2
+    "gems": 2,
+    "rarity": "common"
   },
   {
     "id": "repeat_offender",
     "title": "THE THERAPIST IS CRYING",
     "blurb": "Three runs. That is a pattern. We bill for patterns.",
-    "need": { "runs": 3 },
+    "need": {
+      "runs": 3
+    },
     "gold": 40,
-    "gems": 3
+    "gems": 3,
+    "rarity": "rare"
   },
   {
     "id": "solo_night",
     "title": "I DIDN'T NEED HIM",
     "blurb": "File a map with one body. The couch is a lifestyle, not a requirement.",
-    "need": { "solo_clears": 1 },
+    "need": {
+      "solo_clears": 1
+    },
     "gold": 25,
-    "gems": 2
+    "gems": 2,
+    "rarity": "uncommon"
   },
   {
     "id": "wharf_tourist",
     "title": "FIVE ACTS, ONE INVOICE",
     "blurb": "File City Hall. Mayor Raven still wants a quote for the rubble.",
-    "need": { "city_clears": 1 },
+    "need": {
+      "city_clears": 1
+    },
     "gold": 60,
-    "gems": 4
+    "gems": 4,
+    "rarity": "epic"
   },
   {
     "id": "raven_down",
     "title": "THE LANDLORD HAD THROWING STARS",
     "blurb": "Put Mayor Raven on the floor. Keep the cape. Lose the election.",
-    "need": { "raven_kills": 1 },
+    "need": {
+      "raven_kills": 1
+    },
     "gold": 50,
-    "gems": 4
+    "gems": 4,
+    "rarity": "rare"
   },
   {
     "id": "host_night",
     "title": "LONG DISTANCE PARENTING",
     "blurb": "Finish a remote Host/Join run. Stockholm can still hear Dalarna shout.",
-    "need": { "remote_clears": 1 },
+    "need": {
+      "remote_clears": 1
+    },
     "gold": 35,
-    "gems": 3
+    "gems": 3,
+    "rarity": "rare"
   },
   {
     "id": "combo_banker",
     "title": "WE LET THE TIMER DIE",
     "blurb": "Cash out a combo of 5+. Streets of Rage called it a bonus. We call it billing.",
-    "need": { "combo_banks": 1 },
+    "need": {
+      "combo_banks": 1
+    },
     "gold": 20,
-    "gems": 1
+    "gems": 1,
+    "rarity": "uncommon"
   },
   {
     "id": "intro_filed",
     "title": "TWO FILMS, ONE DUMMY",
     "blurb": "Sit through intake: film, comic, tutorial, sequel. Then Dock Street.",
-    "need": { "intro_done": true },
+    "need": {
+      "intro_done": true
+    },
     "gold": 15,
-    "gems": 1
+    "gems": 1,
+    "rarity": "common"
   },
   {
     "id": "vs_champ",
     "title": "GROUNDED / YOU'RE FIRED",
     "blurb": "Win a Versus match. Best of three. The dishes remain theoretical.",
-    "need": { "vs_wins": 1 },
+    "need": {
+      "vs_wins": 1
+    },
     "gold": 30,
-    "gems": 2
+    "gems": 2,
+    "rarity": "rare"
   },
   {
     "id": "annex_clear",
     "title": "THE BILL WALKS",
     "blurb": "File Invoice Pier. Dr. Splint is a receipt. The copay is a chapel.",
-    "need": { "annex_clears": 1 },
+    "need": {
+      "annex_clears": 1
+    },
     "gold": 70,
-    "gems": 5
+    "gems": 5,
+    "rarity": "epic"
   },
   {
     "id": "three_hours",
     "title": "THREE COPING HOURS",
     "blurb": "Survive all three horde hours. Magnet, elites, vacuum. Not a meadow.",
-    "need": { "survive_clears": 3 },
+    "need": {
+      "survive_clears": 3
+    },
     "gold": 55,
-    "gems": 4
+    "gems": 4,
+    "rarity": "epic"
   },
   {
     "id": "side_hustle",
     "title": "SIDE HUSTLE",
     "blurb": "File three side missions. The clipboard notices extra credit.",
-    "need": { "sides_filed": 3 },
+    "need": {
+      "sides_filed": 3
+    },
     "gold": 25,
-    "gems": 2
+    "gems": 2,
+    "rarity": "uncommon"
   },
   {
     "id": "first_hour",
     "title": "WE HELD THE LOT",
     "blurb": "File one coping hour. Solo thinner. Co-op denser. Same magnet.",
-    "need": { "survive_clears": 1 },
+    "need": {
+      "survive_clears": 1
+    },
     "gold": 30,
-    "gems": 2
+    "gems": 2,
+    "rarity": "uncommon"
+  },
+  {
+    "id": "director_down",
+    "title": "THE FAMILY PLAN",
+    "blurb": "File Director Binder. Armor first. Patterns after. The fridge stays.",
+    "need": {
+      "family_plan_kills": 1
+    },
+    "gold": 90,
+    "gems": 6,
+    "rarity": "legendary"
+  },
+  {
+    "id": "file_alive",
+    "title": "FILE ALIVE",
+    "blurb": "SNAP the Director while stunned. Extra gold. Huntdown called it a bounty.",
+    "need": {
+      "file_alives": 1
+    },
+    "gold": 40,
+    "gems": 3,
+    "rarity": "epic"
+  },
+  {
+    "id": "ending_night",
+    "title": "THE FRIDGE STAYS",
+    "blurb": "Watch the ending film. Homework over. The clipboard is a corpse.",
+    "need": {
+      "ending_seen": 1
+    },
+    "gold": 50,
+    "gems": 4,
+    "rarity": "legendary"
+  },
+  {
+    "id": "table_ten",
+    "title": "PINBALL NIGHT",
+    "blurb": "Put 10,000 on the table in one run. Father vs Son. The clinic bills the winner.",
+    "need": {
+      "high_score": 10000
+    },
+    "gold": 45,
+    "gems": 3,
+    "rarity": "rare"
+  },
+  {
+    "id": "void_card",
+    "title": "LEGENDARY FEELING",
+    "blurb": "Install a legendary rule. The clipboard blushed.",
+    "need": {
+      "legendary_takes": 1
+    },
+    "gold": 35,
+    "gems": 3,
+    "rarity": "legendary"
   }
 ]

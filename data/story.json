@@ -19,6 +19,113 @@
       {"who": "", "text": "DOCK STREET IS STILL HIRING. THEY LIE ABOUT THAT."}
     ]
   },
+  "bridges": {
+    "dock_street->intake_lot": {
+      "chapter": "CHAPTER 2",
+      "title": "THE INTAKE LOT",
+      "sub": "Coping hour. The magnet is the love language.",
+      "lines": [
+        {"who": "son", "text": "We filed Dock Street. The lot is the waiting list with teeth."},
+        {"who": "father", "text": "I validate parking. Then I park on the feeling."},
+        {"who": "", "text": "EIGHTY-EIGHT SECONDS. ELITES AT THIRTY-TWO. NOBODY GETS A TICKET OUT."}
+      ]
+    },
+    "intake_lot->fire_escapes": {
+      "chapter": "CHAPTER 3",
+      "title": "THE FIRE ESCAPES",
+      "sub": "Roofs after the lot. Gaps with opinions.",
+      "lines": [
+        {"who": "father", "text": "My knees filed a complaint. The roofs did not stamp it."},
+        {"who": "son", "text": "Glide. Don't speech. The vendor already priced your name."},
+        {"who": "", "text": "VERTICAL ALIBI. THE STREET STILL BITES UNDER THE POETRY."}
+      ]
+    },
+    "fire_escapes->group_circle": {
+      "chapter": "CHAPTER 4",
+      "title": "GROUP CIRCLE",
+      "sub": "Share. Bite. Bill.",
+      "lines": [
+        {"who": "son", "text": "They're going to pass a stick. Don't take it."},
+        {"who": "father", "text": "I pass. That's growth. That's also a kidney stone."},
+        {"who": "", "text": "THE FACILITATOR HEARS YOU. THEN HE BILLS YOU."}
+      ]
+    },
+    "group_circle->neon_exchange": {
+      "chapter": "CHAPTER 5",
+      "title": "NEON EXCHANGE",
+      "sub": "Agents tax the smile. Pawn keeps the plate.",
+      "lines": [
+        {"who": "father", "text": "I smiled in 2009. I'm still paying interest."},
+        {"who": "son", "text": "Cash the feelings before they pawn your pulse."},
+        {"who": "", "text": "WARRANT LIGHT. BOARD OR PISTOL. SHARING IS A WEAPON."}
+      ]
+    },
+    "neon_exchange->waiting_room": {
+      "chapter": "CHAPTER 6",
+      "title": "THE WAITING ROOM",
+      "sub": "Fluorescent forever. Don't sit.",
+      "lines": [
+        {"who": "son", "text": "We're number 88. There is no 87. That's the bit."},
+        {"who": "father", "text": "I brought a magazine from 1994. It's still angry."},
+        {"who": "", "text": "SITTING IS HOW THEY WIN. THE MAGNET DOES NOT SIT."}
+      ]
+    },
+    "waiting_room->rail_bridge": {
+      "chapter": "CHAPTER 7",
+      "title": "RAIL BRIDGE",
+      "sub": "Pay the toll in personality.",
+      "lines": [
+        {"who": "father", "text": "Bots don't blink. I respect the work ethic."},
+        {"who": "son", "text": "You blinked in 2011 and called it a sabbatical."},
+        {"who": "", "text": "BOXCARS ARE ROOFS. THE RECEIPT IS A GRENADE."}
+      ]
+    },
+    "rail_bridge->city_hall": {
+      "chapter": "CHAPTER 8",
+      "title": "CITY HALL",
+      "sub": "The landlord has throwing stars.",
+      "lines": [
+        {"who": "son", "text": "Deputy first. Mayor later. That's called pacing."},
+        {"who": "father", "text": "I don't pace. I loom. If I lose, we get a note on the door."},
+        {"who": "", "text": "STATUES CLIMB. RAVEN DOES NOT SHARE THE MORTGAGE."}
+      ]
+    },
+    "city_hall->invoice_pier": {
+      "chapter": "CHAPTER 9",
+      "title": "INVOICE PIER",
+      "sub": "The annex. Not Dock Street with a cold.",
+      "lines": [
+        {"who": "son", "text": "Mayor's a receipt. The original invoice walked to the water."},
+        {"who": "father", "text": "I hate chapels. I hate being right. I can web a crane."},
+        {"who": "", "text": "DR. SPLINT HAS THE CLIPBOARD. THE COPAY IS A NAVE."}
+      ]
+    },
+    "invoice_pier->processing_floor": {
+      "chapter": "CHAPTER 10",
+      "title": "THE PROCESSING FLOOR",
+      "sub": "Late act. Strip the suit. Then the body.",
+      "lines": [
+        {"who": "son", "text": "Splint was middle management. The Director wears the bill."},
+        {"who": "father", "text": "If it's huge, I web the knee. If it has plates, I eat the plates."},
+        {"who": "son", "text": "Bandage first. That's enabling. Do it anyway."},
+        {"who": "father", "text": "FILE ALIVE if it stuns. Extra gold. Huntdown called it a bounty. We call it parenting."},
+        {"who": "", "text": "THE FAMILY PLAN IS NOT THE MAYOR. THE FAMILY PLAN IS THE NIGHT."}
+      ]
+    }
+  },
+  "ending": {
+    "chapter": "EPILOGUE",
+    "title": "THE FRIDGE STAYS",
+    "sub": "The invoice is a corpse. Homework is over.",
+    "lines": [
+      {"who": "", "text": "THE PROCESSING FLOOR GOES DARK. THE CLIPBOARD STOPS TICKING."},
+      {"who": "son", "text": "Tutoring license: still mine. Apartment: still a crime scene with a lease."},
+      {"who": "father", "text": "I networked. In the basement. With a billing mech. LinkedIn can wait."},
+      {"who": "son", "text": "We skipped twelve sessions. We filed the Director. That's not growth. That's a refund."},
+      {"who": "father", "text": "Come on. The fridge stays. I believe in us. Briefly."},
+      {"who": "", "text": "RAVEN WHARF KEEPS THE LIGHTS ON. THE BASEMENT CLINIC DOES NOT. END OF NIGHT."}
+    ]
+  },
   "acts": {
     "tutorial_alley": {
       "title": "TUTORIAL ALLEY",
@@ -178,6 +285,23 @@
       ],
       "miniboss": {"title": "Usher Prime", "x": 1680, "y": 500, "home": "street", "hp": 120, "pmin": 1500, "pmax": 1860, "sub": "SILENCE IN THE NAVE"},
       "boss": {"title": "Dr. Splint", "x": 2920, "y": 500, "home": "street", "hp": 220, "pmin": 2720, "pmax": 3180, "sub": "THE BILL WALKS"}
+    },
+    "processing_floor": {
+      "title": "THE PROCESSING FLOOR",
+      "main": "Strip Director Binder's armor. Survive the patterns. File The Family Plan. Then go home.",
+      "side": "Buy the bandage. SNAP him ALIVE when he stuns for extra gold.",
+      "talk": [
+        {"at": 0, "lines": [
+          {"who": "son", "text": "This is the late act. Not the Mayor again. The suit comes off first."},
+          {"who": "father", "text": "I brought a personality and a web. He brought four plates."}
+        ]},
+        {"at": 900, "lines": [
+          {"who": "father", "text": "Lights bounce. Heavies strip. I have been waiting my whole unemployment for this sentence."},
+          {"who": "son", "text": "If you SNAP too early I will bill you myself."}
+        ]}
+      ],
+      "miniboss": {"title": "Adjuster Prime", "x": 1480, "y": 500, "home": "street", "hp": 140, "pmin": 1280, "pmax": 1680, "sub": "CLAIMS DENIED IN PERSON"},
+      "boss": {"kind": "family_plan", "title": "The Family Plan", "sub": "DIRECTOR BINDER · BILLING MECH"}
     }
   }
 }

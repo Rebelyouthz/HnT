@@ -1,17 +1,66 @@
 {
-  "bandage": { "scrap": 8, "line": "THAT'S A FEELING YOU CAN WRAP" },
-  "thermos": { "scrap": 6, "line": "STEAM, BILLED AS COFFEE" },
-  "ammo": { "scrap": 4, "line": "SHARP FEELINGS, LOOSE COUNT" },
-  "reroll": { "scrap": 1, "line": "THE UNIVERSE OFFERS A SECOND OPINION" },
-  "armor_tape": { "scrap": 9, "line": "TAPE IS NOT ARMOR. TAPE IS A LIFESTYLE." },
-  "pipe_kit": { "scrap": 7, "line": "PRE-OWNED CONSEQUENCES" },
-  "sell_pickup": { "scrap": 0, "line": "THEY BOUGHT YOUR BAD DECISION BACK" },
-  "grenade": { "scrap": 10, "line": "A BOUNDARY WITH A TIMER" },
-  "spark_ammo": { "scrap": 6, "line": "MORE SHOTS. SAME TUTORING." },
+  "bandage": {
+    "scrap": 8,
+    "line": "THAT'S A FEELING YOU CAN WRAP",
+    "rarity": "uncommon"
+  },
+  "thermos": {
+    "scrap": 6,
+    "line": "STEAM, BILLED AS COFFEE",
+    "rarity": "common"
+  },
+  "ammo": {
+    "scrap": 4,
+    "line": "SHARP FEELINGS, LOOSE COUNT",
+    "rarity": "common"
+  },
+  "reroll": {
+    "scrap": 1,
+    "line": "THE UNIVERSE OFFERS A SECOND OPINION",
+    "rarity": "uncommon"
+  },
+  "armor_tape": {
+    "scrap": 9,
+    "line": "TAPE IS NOT ARMOR. TAPE IS A LIFESTYLE.",
+    "rarity": "rare"
+  },
+  "pipe_kit": {
+    "scrap": 7,
+    "line": "PRE-OWNED CONSEQUENCES",
+    "rarity": "uncommon"
+  },
+  "sell_pickup": {
+    "scrap": 0,
+    "line": "THEY BOUGHT YOUR BAD DECISION BACK",
+    "rarity": "common"
+  },
+  "grenade": {
+    "scrap": 10,
+    "line": "A BOUNDARY WITH A TIMER",
+    "rarity": "rare"
+  },
+  "spark_ammo": {
+    "scrap": 6,
+    "line": "MORE SHOTS. SAME TUTORING.",
+    "rarity": "uncommon"
+  },
   "catalogs": {
-    "blood_mart": ["bandage", "thermos"],
-    "roof_vendor": ["ammo", "reroll"],
-    "pawn_plate": ["armor_tape", "pipe_kit", "sell_pickup"],
-    "toll_booth": ["grenade", "spark_ammo"]
+    "blood_mart": [
+      "bandage",
+      "thermos"
+    ],
+    "roof_vendor": [
+      "ammo",
+      "reroll"
+    ],
+    "pawn_plate": [
+      "armor_tape",
+      "pipe_kit",
+      "sell_pickup"
+    ],
+    "toll_booth": [
+      "grenade",
+      "spark_ammo"
+    ]
   }
 }

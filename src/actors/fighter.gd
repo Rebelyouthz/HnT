@@ -98,6 +98,13 @@ func _ready() -> void:
 	floor_snap_length = 8.0
 	_build_body()
 	_apply_locker()
+	var bonus := FamilyProfile.gear_stat_bonus(role)
+	max_hp += int(bonus.get("hp", 0))
+	if FamilyProfile.has_cbt("wardrobe_stats"):
+		max_hp += 4
+	hp = max_hp
+	speed += float(int(bonus.get("speed", 0))) * 1.6
+	steam = mini(STEAM_MAX, steam + float(int(bonus.get("steam", 0))))
 	_shadow = Polygon2D.new()
 	_shadow.color = Color(0.02, 0.02, 0.04, 0.45)
 	_shadow.polygon = PackedVector2Array([
@@ -181,19 +188,40 @@ func _part(pos: Vector2, size: Vector2, color: Color) -> void:
 
 
 func _apply_locker() -> void:
-	var look := FamilyProfile.costume_for(role)
-	if look == "night_tutor" and cape:
+	var clothes := FamilyProfile.equipped_id(role, "clothes")
+	var spec := GearBook.item(clothes)
+	if not spec.is_empty():
+		var tint: Variant = spec.get("tint", [])
+		if typeof(tint) == TYPE_ARRAY and (tint as Array).size() >= 3:
+			accent = Color(float(tint[0]), float(tint[1]), float(tint[2]))
+	if (clothes == "night_tutor" or clothes == "void_cape") and cape:
 		cape.visible = true
 		cape.color = Color(0.07, 0.07, 0.1, 0.96)
 		if ears:
 			ears.visible = true
-	if look == "pink_slip":
+	if clothes == "pink_slip" or clothes == "eviction_polo":
 		_slip = Polygon2D.new()
-		_slip.color = Color(0.86, 0.32, 0.52, 0.92)
+		_slip.color = Color(0.86, 0.32, 0.52, 0.92) if clothes == "pink_slip" else Palette.BRICK
 		_slip.polygon = PackedVector2Array([
 			Vector2(-12, -40), Vector2(12, -40), Vector2(12, -24), Vector2(-12, -24)
 		])
 		squash_root.add_child(_slip)
+	var hat := FamilyProfile.equipped_id(role, "hat")
+	if hat != "" and hat != "headband":
+		var brim := Polygon2D.new()
+		brim.color = Rarity.color(str(GearBook.item(hat).get("rarity", "common")))
+		brim.polygon = PackedVector2Array([
+			Vector2(-18, -78), Vector2(18, -78), Vector2(14, -70), Vector2(-14, -70)
+		])
+		squash_root.add_child(brim)
+	var shoes := FamilyProfile.equipped_id(role, "shoes")
+	if shoes == "gold_wingtips":
+		var tip := Polygon2D.new()
+		tip.color = Palette.EDGE
+		tip.polygon = PackedVector2Array([
+			Vector2(-16, 10), Vector2(16, 10), Vector2(12, 16), Vector2(-12, 16)
+		])
+		squash_root.add_child(tip)
 
 
 func _physics_process(delta: float) -> void:

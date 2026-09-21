@@ -26,7 +26,7 @@ var _son: Fighter
 var _dad: Fighter
 var _state: RunState
 var _hud: CanvasLayer
-var _end: Control
+var _end: Node
 var _cam: CouchCamera
 var _join_grace := 0
 var _wanted_cop := false
@@ -206,6 +206,8 @@ func _on_wanted() -> void:
 
 func _on_fail() -> void:
 	FamilyProfile.mark_run_finished(false)
+	if _state:
+		FamilyProfile.note_score(_state.score_total)
 	_banner(Copy.FAIL, fail_sub, false, false)
 
 
@@ -217,6 +219,10 @@ func _on_gate() -> void:
 			FamilyProfile.mark_city_clear()
 		"intake_lot", "group_circle", "waiting_room":
 			FamilyProfile.mark_survive(map_id)
+		"invoice_pier":
+			FamilyProfile.mark_annex()
+	if _state:
+		FamilyProfile.note_score(_state.score_total)
 	Juice.toast("quest", "CHECKPOINT", gate_sub)
 	_banner(clear_title, gate_sub, true, true)
 
@@ -229,12 +235,16 @@ func _on_clear() -> void:
 		FamilyProfile.mark_city_clear()
 	if map_id == "invoice_pier":
 		FamilyProfile.mark_annex()
+	if map_id == "processing_floor":
+		FamilyProfile.mark_family_plan()
 	if map_id in ["intake_lot", "group_circle", "waiting_room"]:
 		FamilyProfile.mark_survive(map_id)
 	if App.remote_coop:
 		FamilyProfile.mark_remote_clear()
 	if _missions:
 		_missions.complete_main()
+	if _state:
+		FamilyProfile.note_score(_state.score_total)
 	FamilyProfile.push_log(clear_title, clear_sub)
 	_banner(clear_title, clear_sub, true, false)
 
@@ -269,7 +279,7 @@ func _boot_story() -> void:
 	if not bool(row.get("survive", false)) and not _skip_story_boss:
 		_spawn_story_unit(true)
 		var boss: Variant = row.get("boss", {})
-		if typeof(boss) == TYPE_DICTIONARY and str((boss as Dictionary).get("kind", "")) != "mayor_raven":
+		if typeof(boss) == TYPE_DICTIONARY and str((boss as Dictionary).get("kind", "")) not in ["mayor_raven", "family_plan"]:
 			_spawn_story_unit(false)
 	var talks: Variant = row.get("talk", [])
 	if typeof(talks) == TYPE_ARRAY and (talks as Array).size() > 0:
@@ -286,7 +296,7 @@ func _spawn_story_unit(mini: bool) -> void:
 	if typeof(spec) != TYPE_DICTIONARY or spec.is_empty():
 		return
 	var d: Dictionary = spec
-	if str(d.get("kind", "")) == "mayor_raven":
+	if str(d.get("kind", "")) in ["mayor_raven", "family_plan"]:
 		return
 	var cam := get_viewport().get_camera_2d() if is_inside_tree() else null
 	var x := float(d.get("x", spawn_at.x + 800.0))
@@ -355,69 +365,27 @@ func _tick_boss_intro(lead_x: float) -> void:
 			sub = "LANDLORD · NINJA · INVOICE"
 			full = true
 			accent = Color(0.12, 0.1, 0.14)
+		elif n is FamilyPlan:
+			title = "The Family Plan"
+			sub = "DIRECTOR BINDER · BILLING MECH"
+			full = true
+			accent = Palette.EDGE
 		BossCard.present(self, title, sub, accent, full)
 
 
 func _banner(title: String, sub: String, win: bool, gate: bool) -> void:
 	if _end and is_instance_valid(_end):
 		return
-	get_tree().paused = true
-	var layer := CanvasLayer.new()
-	layer.layer = 40
-	layer.process_mode = Node.PROCESS_MODE_ALWAYS
-	add_child(layer)
-	_end = Control.new()
-	_end.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_end.process_mode = Node.PROCESS_MODE_ALWAYS
-	layer.add_child(_end)
-	var dim := ColorRect.new()
-	dim.color = Color(0, 0, 0, 0.72)
-	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_end.add_child(dim)
-	var col := VBoxContainer.new()
-	col.position = Vector2(360, 180)
-	col.add_theme_constant_override("separation", 12)
-	_end.add_child(col)
-	var t := Label.new()
-	t.text = title
-	UiKit.apply_label(t, 32, Palette.LEMON if win else Palette.BRICK)
-	col.add_child(t)
-	var s := Label.new()
-	s.text = sub
-	s.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	s.custom_minimum_size = Vector2(560, 0)
-	UiKit.apply_label(s, 16, Palette.TEXT)
-	col.add_child(s)
-	if gate and next_id != "":
-		var nxt := UiKit.button(next_label, Vector2(320, 52))
-		nxt.process_mode = Node.PROCESS_MODE_ALWAYS
-		nxt.pressed.connect(func() -> void:
-			App.advance(next_id, _state)
-		)
-		col.add_child(nxt)
-		nxt.grab_focus()
-	var b := UiKit.button("BACK TO THE CLINIC", Vector2(280, 48))
-	b.process_mode = Node.PROCESS_MODE_ALWAYS
-	b.pressed.connect(func() -> void:
-		get_tree().paused = false
-		if win and not gate:
-			pass
-		elif win and gate:
-			FamilyProfile.mark_run_finished(true)
-			if App.is_solo_density():
-				FamilyProfile.mark_solo_clear()
-			FamilyProfile.push_log(clear_title, clear_sub)
-		Mixer.play_music("res://assets/audio/music_clinic.wav")
-		if App.remote_coop:
-			NetSession.shutdown()
-		App.back_to_hub("awards" if win else "clinic")
-	)
-	col.add_child(b)
-	if not gate:
-		b.grab_focus()
-	Juice.pulse_shake(8.0 if win else 5.0)
-	if win:
-		Juice.unlock_logo(title, sub)
+	var sheet := ResultsSheet.new()
+	sheet.headline = title
+	sheet.sub = sub
+	sheet.win = win
+	sheet.gate = gate
+	sheet.next_id = next_id
+	sheet.next_label = next_label if next_label != "" else Copy.NEXT_MAP
+	sheet.state = _state
+	add_child(sheet)
+	_end = sheet
 
 
 func fire_escape(at_x: float, top_y: float = 248.0, bottom: float = 500.0) -> void:

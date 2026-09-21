@@ -14,8 +14,8 @@ func _ready() -> void:
 	card.set_anchors_preset(Control.PRESET_CENTER)
 	card.offset_left = -320
 	card.offset_right = 320
-	card.offset_top = -240
-	card.offset_bottom = 240
+	card.offset_top = -280
+	card.offset_bottom = 280
 	add_child(card)
 	var sc := ScrollContainer.new()
 	sc.custom_minimum_size = Vector2(620, 460)
@@ -24,11 +24,11 @@ func _ready() -> void:
 	col.add_theme_constant_override("separation", 10)
 	sc.add_child(col)
 	var h := Label.new()
-	h.text = "SESSION SETTINGS"
+	h.text = Copy.OPTIONS
 	UiKit.apply_label(h, 22, Palette.LEMON)
 	col.add_child(h)
 	var sub := Label.new()
-	sub.text = "Volumes, gore, PIN, rooms URL. Host/Join ports do not live here. The map is the other chair."
+	sub.text = "Volumes, gore, PIN, rooms URL, films. Reset writes a backup first. Host/Join ports do not live here."
 	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	UiKit.apply_label(sub, 13, Palette.MUTED)
 	col.add_child(sub)
@@ -68,6 +68,18 @@ func _ready() -> void:
 	map.custom_minimum_size = Vector2(580, 0)
 	UiKit.apply_label(map, 13, Palette.TEXT)
 	col.add_child(map)
+	var films := CheckButton.new()
+	films.text = Copy.SKIP_BRIDGES
+	films.button_pressed = bool(FamilyProfile.data.get("skip_films", false))
+	films.toggled.connect(func(on: bool) -> void:
+		FamilyProfile.data["skip_films"] = on
+		FamilyProfile.save()
+	)
+	col.add_child(films)
+	var reset := UiKit.button(Copy.RESET, Vector2(240, 48))
+	reset.add_theme_stylebox_override("normal", UiKit.panel(Palette.BRICK, Palette.LEMON))
+	reset.pressed.connect(_confirm_reset)
+	col.add_child(reset)
 	var close := UiKit.button("CLOSE", Vector2(140, 44))
 	close.pressed.connect(func() -> void:
 		closed.emit()
@@ -104,3 +116,49 @@ func _vol(title: String, key: String) -> Control:
 	row.add_child(s)
 	row.add_child(pct)
 	return row
+
+
+func _confirm_reset() -> void:
+	var wrap := ColorRect.new()
+	wrap.color = Color(0, 0, 0, 0.82)
+	wrap.set_anchors_preset(Control.PRESET_FULL_RECT)
+	wrap.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(wrap)
+	var card := PanelContainer.new()
+	card.add_theme_stylebox_override("panel", UiKit.panel(Palette.PANEL, Palette.BRICK))
+	card.set_anchors_preset(Control.PRESET_CENTER)
+	card.offset_left = -280
+	card.offset_right = 280
+	card.offset_top = -160
+	card.offset_bottom = 160
+	wrap.add_child(card)
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 10)
+	card.add_child(col)
+	var h := Label.new()
+	h.text = Copy.RESET
+	UiKit.apply_label(h, 22, Palette.BRICK)
+	col.add_child(h)
+	var b := Label.new()
+	b.text = Copy.RESET_BLURB
+	b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	b.custom_minimum_size = Vector2(520, 0)
+	UiKit.apply_label(b, 14, Palette.TEXT)
+	col.add_child(b)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	var yes := UiKit.button(Copy.RESET_CONFIRM, Vector2(220, 48))
+	yes.add_theme_stylebox_override("normal", UiKit.panel(Palette.BRICK, Palette.LEMON))
+	yes.pressed.connect(func() -> void:
+		FamilyProfile.reset_progress()
+		Juice.unlock_logo("WIPED", "Backup at user://family.json.bak. The night starts over.")
+		need_refresh.emit()
+		closed.emit()
+		queue_free()
+	)
+	var no := UiKit.button(Copy.RESET_NEVER, Vector2(200, 48))
+	no.pressed.connect(wrap.queue_free)
+	row.add_child(yes)
+	row.add_child(no)
+	col.add_child(row)
+	no.grab_focus()

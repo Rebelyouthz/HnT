@@ -8,6 +8,7 @@ func _configure() -> void:
 	map_w = 3400.0
 	spawn_at = Vector2(200, 490)
 	goal_x = 99999.0
+	next_id = "processing_floor"
 	check_x = 2500.0
 	check_pos = Vector2(2500, 490)
 	light_preset = "invoice_pier"
@@ -15,6 +16,8 @@ func _configure() -> void:
 	toast_body = "The annex. Cranes. Chapel. Dr. Splint has the original invoice."
 	clear_title = Copy.PIER_CLEAR
 	clear_sub = Copy.PIER_SUB
+	next_label = Copy.NEXT_FLOOR
+	gate_sub = Copy.GATE_FLOOR
 	win_mode = "boss"
 
 

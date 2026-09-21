@@ -58,7 +58,7 @@ func _ready() -> void:
 	note.size = Vector2(920, 48)
 	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	note.text = "World is slow. Enemies are not paused. Die in the menu. That's the bit. Yellow border is the special. Skip banks nothing."
+	note.text = "World is slow. Enemies are not paused. Die in the menu. That's the bit. Border is rarity. Legendary shouts. Skip banks nothing."
 	UiKit.apply_label(note, 14, Palette.MUTED)
 	add_child(note)
 	_focus_middle()
@@ -84,34 +84,28 @@ func _focus_middle() -> void:
 
 
 func _border_for(rarity: String, mid: bool) -> Color:
-	match rarity:
-		"special":
-			return Palette.LEMON
-		"rare":
-			return Palette.EDGE
-		_:
-			return Palette.MUTED if not mid else Palette.EDGE
+	var c := Rarity.color(rarity)
+	if Rarity.normalize(rarity) == "common" and not mid:
+		return Palette.MUTED
+	return c
 
 
 func _card(info: Dictionary, mid: bool) -> Control:
-	var rarity := str(info.get("rarity", "common"))
+	var rarity := Rarity.normalize(str(info.get("rarity", "common")))
 	var wrap := PanelContainer.new()
 	wrap.custom_minimum_size = Vector2(360, 270)
-	wrap.add_theme_stylebox_override("panel", UiKit.panel(
-		Palette.PANEL_2 if rarity == "special" else (Palette.PANEL if not mid else Palette.PANEL_2),
-		_border_for(rarity, mid)
-	))
+	wrap.add_theme_stylebox_override("panel", UiKit.panel(Rarity.fill(rarity), _border_for(rarity, mid)))
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 6)
 	wrap.add_child(col)
 	var head := HBoxContainer.new()
 	var stamp := StampMark.new()
-	stamp.accent = Palette.LEMON if rarity == "special" else (Palette.EDGE if rarity == "rare" else Palette.MUTED)
+	stamp.accent = Rarity.color(rarity)
 	head.add_child(stamp)
 	var t := Label.new()
 	t.text = str(info.get("name", "?"))
 	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	UiKit.apply_label(t, 18, Palette.LEMON)
+	UiKit.apply_label(t, 18, Rarity.color(rarity) if Rarity.rank(rarity) >= 2 else Palette.LEMON)
 	head.add_child(t)
 	col.add_child(head)
 	var b := Label.new()
@@ -122,7 +116,7 @@ func _card(info: Dictionary, mid: bool) -> Control:
 	col.add_child(b)
 	col.add_child(StatPanel.new([
 		{"name": "TAG", "value": str(info.get("tag", "RULE")), "color": Palette.LEMON},
-		{"name": "RARITY", "value": rarity.to_upper(), "color": _border_for(rarity, true)},
+		{"name": "RARITY", "value": Rarity.label(rarity), "color": Rarity.color(rarity)},
 		{"name": "IF YOU TAKE IT", "value": "RULE STAYS THE RUN", "color": Palette.READY}
 	]))
 	var go := UiKit.button("TAKE IT", Vector2(160, 44))
@@ -133,6 +127,10 @@ func _card(info: Dictionary, mid: bool) -> Control:
 	col.add_child(go)
 	if mid:
 		UiKit.pulse_ready(go)
+	if Rarity.rank(rarity) >= 3:
+		wrap.scale = Vector2(0.92, 0.92)
+		var tw := wrap.create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tw.tween_property(wrap, "scale", Vector2.ONE, 0.22)
 	return wrap
 
 

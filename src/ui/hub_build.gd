@@ -32,15 +32,16 @@ func _ready() -> void:
 
 
 func _node_row(node: Dictionary) -> Control:
+	var rarity := Rarity.normalize(str(node.get("rarity", "common")))
 	var row := PanelContainer.new()
-	row.add_theme_stylebox_override("panel", UiKit.panel())
+	row.add_theme_stylebox_override("panel", UiKit.panel(Rarity.fill(rarity), Rarity.color(rarity)))
 	var box := HBoxContainer.new()
 	row.add_child(box)
 	var txt := VBoxContainer.new()
 	txt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var t := Label.new()
-	t.text = "%s  ·  %s" % [node["trunk"], node["name"]]
-	UiKit.apply_label(t, 16, Palette.LEMON)
+	t.text = "%s  ·  %s  ·  %s" % [node["trunk"], node["name"], Rarity.label(rarity)]
+	UiKit.apply_label(t, 16, Rarity.color(rarity))
 	var b := Label.new()
 	b.text = str(node["blurb"])
 	b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -75,6 +76,7 @@ func _node_row(node: Dictionary) -> Control:
 		owned.append(node["id"])
 		FamilyProfile.save()
 		Juice.claim_burst(get_viewport_rect().size * 0.5, "COPING MECHANISM INSTALLED", 0, 0)
+		Rarity.juice(str(node.get("rarity", "common")), str(node["name"]))
 		Juice.toast("reward", str(node["name"]), "COPING MECHANISM INSTALLED")
 		need_refresh.emit()
 	)

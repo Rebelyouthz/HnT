@@ -1,12 +1,110 @@
 [
-  { "id": "thick_skin", "trunk": "BODY", "name": "THICK SKIN", "blurb": "+12 max HP both. Feelings bounce.", "gold": 40, "rep": 1 },
-  { "id": "second_lungs", "trunk": "BODY", "name": "SECOND LUNGS", "blurb": "Steam regen +15%. Breathe like a brochure.", "gold": 45, "rep": 2 },
-  { "id": "bandage_pocket", "trunk": "BODY", "name": "BANDAGE POCKET", "blurb": "Start a run with 1 Bandage. That's not enabling.", "gold": 50, "rep": 2 },
-  { "id": "disarm_habit", "trunk": "STREET", "name": "DISARM HABIT", "blurb": "Weapons drop 20% more. Sharing is caring.", "gold": 40, "rep": 1 },
-  { "id": "heavy_wrist", "trunk": "STREET", "name": "HEAVY WRIST", "blurb": "Charge-heavy 4 frames faster. Commit.", "gold": 55, "rep": 3 },
-  { "id": "crown", "trunk": "SHOW", "name": "CROWN", "blurb": "SNAP window +40 ms. Timing is a love language.", "gold": 50, "rep": 2 },
-  { "id": "pocket_sand", "trunk": "STREET", "name": "POCKET SAND", "blurb": "Throws chip 8 extra. Also humiliating.", "gold": 45, "rep": 2 },
-  { "id": "night_eyes", "trunk": "SHOW", "name": "NIGHT EYES", "blurb": "SNAP in shadow +12 damage. Huntdown seasoning.", "gold": 55, "rep": 3 },
-  { "id": "long_commute", "trunk": "STREET", "name": "LONG COMMUTE", "blurb": "Magnet radius +40. Insights come to you. That's not entitlement.", "gold": 50, "rep": 2 },
-  { "id": "group_rate", "trunk": "SHOW", "name": "GROUP RATE", "blurb": "Survive XP gems pay +2. The circle still hates you.", "gold": 50, "rep": 3 }
+  {
+    "id": "thick_skin",
+    "trunk": "BODY",
+    "name": "THICK SKIN",
+    "blurb": "+12 max HP both. Feelings bounce.",
+    "gold": 40,
+    "rep": 1,
+    "rarity": "common"
+  },
+  {
+    "id": "second_lungs",
+    "trunk": "BODY",
+    "name": "SECOND LUNGS",
+    "blurb": "Steam regen +15%. Breathe like a brochure.",
+    "gold": 45,
+    "rep": 2,
+    "rarity": "uncommon"
+  },
+  {
+    "id": "bandage_pocket",
+    "trunk": "BODY",
+    "name": "BANDAGE POCKET",
+    "blurb": "Start a run with 1 Bandage. That's not enabling.",
+    "gold": 50,
+    "rep": 2,
+    "rarity": "rare"
+  },
+  {
+    "id": "disarm_habit",
+    "trunk": "STREET",
+    "name": "DISARM HABIT",
+    "blurb": "Weapons drop 20% more. Sharing is caring.",
+    "gold": 40,
+    "rep": 1,
+    "rarity": "common"
+  },
+  {
+    "id": "heavy_wrist",
+    "trunk": "STREET",
+    "name": "HEAVY WRIST",
+    "blurb": "Charge-heavy 4 frames faster. Commit.",
+    "gold": 55,
+    "rep": 3,
+    "rarity": "rare"
+  },
+  {
+    "id": "crown",
+    "trunk": "SHOW",
+    "name": "CROWN",
+    "blurb": "SNAP window +40 ms. Timing is a love language.",
+    "gold": 50,
+    "rep": 2,
+    "rarity": "uncommon"
+  },
+  {
+    "id": "pocket_sand",
+    "trunk": "STREET",
+    "name": "POCKET SAND",
+    "blurb": "Throws chip 8 extra. Also humiliating.",
+    "gold": 45,
+    "rep": 2,
+    "rarity": "uncommon"
+  },
+  {
+    "id": "night_eyes",
+    "trunk": "SHOW",
+    "name": "NIGHT EYES",
+    "blurb": "SNAP in shadow +12 damage. Huntdown seasoning.",
+    "gold": 55,
+    "rep": 3,
+    "rarity": "rare"
+  },
+  {
+    "id": "long_commute",
+    "trunk": "STREET",
+    "name": "LONG COMMUTE",
+    "blurb": "Magnet radius +40. Insights come to you. That's not entitlement.",
+    "gold": 50,
+    "rep": 2,
+    "rarity": "uncommon"
+  },
+  {
+    "id": "group_rate",
+    "trunk": "SHOW",
+    "name": "GROUP RATE",
+    "blurb": "Survive XP gems pay +2. The circle still hates you.",
+    "gold": 50,
+    "rep": 3,
+    "rarity": "rare"
+  },
+  {
+    "id": "pinball_brain",
+    "trunk": "SHOW",
+    "name": "PINBALL BRAIN",
+    "blurb": "Account XP from tables +20%. Everything is a score. That's healthy.",
+    "gold": 60,
+    "rep": 4,
+    "rarity": "epic"
+  },
+  {
+    "id": "wardrobe_stats",
+    "trunk": "BODY",
+    "name": "WARDROBE STATS",
+    "blurb": "Gear HP bonus +4. Clothes are feelings with numbers.",
+    "gold": 55,
+    "rep": 3,
+    "rarity": "rare"
+  }
 ]

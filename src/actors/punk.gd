@@ -301,6 +301,8 @@ func take_hit(kind: String, from: Node) -> void:
 		dmg += 12
 	if from is Fighter and (from as Fighter).buff_t > 0.0:
 		dmg = int(round(float(dmg) * 1.25))
+	if from is Fighter:
+		dmg += int(FamilyProfile.gear_stat_bonus((from as Fighter).role).get("dmg", 0))
 	hp = maxi(0, hp - dmg)
 	if kind == "light":
 		var rs := get_tree().get_first_node_in_group("run_state")
@@ -331,6 +333,18 @@ func take_hit(kind: String, from: Node) -> void:
 			Juice.register_hit(kind, global_position, dmg)
 	if from is Fighter:
 		var rs := get_tree().get_first_node_in_group("run_state")
+		if rs and rs.has_method("add_points"):
+			var pts := 12
+			if kind == "heavy" or kind == "launcher":
+				pts = 28
+			elif kind == "snap":
+				pts = 90
+			elif kind == "web-slam" or kind == "finish":
+				pts = 40
+			if rs.has_method("has_card") and rs.has_card("open_tab"):
+				pts += 4
+			rs.add_points((from as Fighter).role, pts, kind)
+			Juice.last_hitter = (from as Fighter).role
 		if rs and rs.has_method("has_card") and rs.has_card("family_discount"):
 			for n in get_tree().get_nodes_in_group("players"):
 				if n is Fighter and n != from:
@@ -386,6 +400,10 @@ func _die(kind: String, from: Node) -> void:
 				drop = -1
 				Juice.shout("COPED OUT")
 			rs.add_wanted(drop)
+	if from is Fighter:
+		var rs := get_tree().get_first_node_in_group("run_state")
+		if rs and rs.has_method("add_points"):
+			rs.add_points((from as Fighter).role, 100 if title != "Bag Snatch" else 70, "kill")
 	_drops(from)
 	died.emit()
 	queue_free()

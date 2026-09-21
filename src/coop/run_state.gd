@@ -14,8 +14,12 @@ var level_ups: int = 0
 var shops_used: int = 0
 var card_reroll: bool = false
 var rerolls: int = 0
+var score_son: int = 0
+var score_dad: int = 0
+var score_total: int = 0
 
 signal lives_changed
+signal points_changed
 signal run_failed
 signal run_cleared
 signal gate_reached
@@ -56,9 +60,22 @@ func clear_run() -> void:
 	run_cleared.emit()
 
 
+func add_points(role: String, n: int, _why: String = "") -> void:
+	if n <= 0:
+		return
+	if role == "father":
+		score_dad += n
+	else:
+		score_son += n
+	score_total += n
+	points_changed.emit()
+	Juice.last_hitter = role
+
+
 func add_scrap(n: int) -> void:
 	scrap += n
 	scrap_changed.emit()
+	add_points(Juice.last_hitter, n * 4, "scrap")
 
 
 func add_xp(n: int) -> void:
@@ -90,8 +107,19 @@ func take_card(id: String) -> void:
 		return
 	if not cards.has(id):
 		cards.append(id)
+	var rarity := "common"
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/cards.json"))
+	if typeof(parsed) == TYPE_ARRAY:
+		for c in parsed:
+			if typeof(c) == TYPE_DICTIONARY and str((c as Dictionary).get("id", "")) == id:
+				rarity = str((c as Dictionary).get("rarity", "common"))
+				break
+	Rarity.juice(rarity, id.replace("_", " ").to_upper())
+	if Rarity.normalize(rarity) == "legendary":
+		FamilyProfile.mark_legendary()
 	Juice.shout(id.replace("_", " ").to_upper())
-	Juice.toast("reward", "RULE INSTALLED", id.replace("_", " ").to_upper())
+	Juice.toast("reward", "RULE INSTALLED", "%s  ·  %s" % [id.replace("_", " ").to_upper(), Rarity.label(rarity)])
+	add_points(Juice.last_hitter, 40 + Rarity.rank(rarity) * 25, "card")
 	SurviveMods.apply(id)
 
 
@@ -128,7 +156,10 @@ func pack() -> Dictionary:
 		"cards": cards.duplicate(),
 		"level_ups": level_ups,
 		"shops_used": shops_used,
-		"rerolls": rerolls
+		"rerolls": rerolls,
+		"score_son": score_son,
+		"score_dad": score_dad,
+		"score_total": score_total
 	}
 
 
@@ -141,6 +172,9 @@ func unpack(d: Dictionary) -> void:
 	level_ups = int(d.get("level_ups", level_ups))
 	shops_used = int(d.get("shops_used", shops_used))
 	rerolls = int(d.get("rerolls", rerolls))
+	score_son = int(d.get("score_son", score_son))
+	score_dad = int(d.get("score_dad", score_dad))
+	score_total = int(d.get("score_total", score_total))
 	gated = false
 	cleared = false
 	failed = false

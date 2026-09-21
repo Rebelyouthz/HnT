@@ -16,10 +16,14 @@ var force_intro: bool = false
 var run_bag: Dictionary = {}
 var map_index: int = 0
 var current_map: String = "dock_street"
+var film_from: String = ""
+var film_next: String = ""
+var film_kind: String = ""
 
 const SCENES := {
 	"intro_flow": "res://scenes/levels/intro_flow.tscn",
 	"tutorial_alley": "res://scenes/levels/tutorial_alley.tscn",
+	"act_film": "res://scenes/levels/act_film.tscn",
 	"dock_street": "res://scenes/levels/dock_street.tscn",
 	"intake_lot": "res://scenes/levels/intake_lot.tscn",
 	"fire_escapes": "res://scenes/levels/fire_escapes.tscn",
@@ -29,12 +33,14 @@ const SCENES := {
 	"rail_bridge": "res://scenes/levels/rail_bridge.tscn",
 	"city_hall": "res://scenes/levels/city_hall.tscn",
 	"invoice_pier": "res://scenes/levels/invoice_pier.tscn",
+	"processing_floor": "res://scenes/levels/processing_floor.tscn",
 	"versus": "res://scenes/levels/versus.tscn"
 }
 
 const ORDER := [
 	"dock_street", "intake_lot", "fire_escapes", "group_circle",
-	"neon_exchange", "waiting_room", "rail_bridge", "city_hall", "invoice_pier"
+	"neon_exchange", "waiting_room", "rail_bridge", "city_hall",
+	"invoice_pier", "processing_floor"
 ]
 
 
@@ -45,6 +51,9 @@ func start_run() -> void:
 	run_bag = {}
 	map_index = 0
 	current_map = "dock_street"
+	film_from = ""
+	film_next = ""
+	film_kind = ""
 	last_run_ok = false
 	if remote_coop:
 		enter_map("dock_street")
@@ -79,12 +88,49 @@ func enter_map(map_id: String) -> void:
 	get_tree().change_scene_to_file(path)
 
 
+func begin_extra() -> Dictionary:
+	return {
+		"film_from": film_from,
+		"film_next": film_next,
+		"film_kind": film_kind,
+		"run_bag": run_bag.duplicate(true)
+	}
+
+
+func apply_begin_extra(d: Dictionary) -> void:
+	film_from = str(d.get("film_from", film_from))
+	film_next = str(d.get("film_next", film_next))
+	film_kind = str(d.get("film_kind", film_kind))
+	var bag: Variant = d.get("run_bag", {})
+	if typeof(bag) == TYPE_DICTIONARY:
+		run_bag = (bag as Dictionary).duplicate(true)
+
+
 func advance(next_id: String, state: RunState) -> void:
 	run_bag = state.pack()
 	get_tree().paused = false
-	if has_node("/root/NetSession") and NetSession.active():
-		NetSession.broadcast_begin(next_id)
-	enter_map(next_id)
+	film_from = current_map
+	film_next = next_id
+	if next_id == "ending":
+		film_kind = "ending"
+		film_next = "hub"
+		_hop("act_film")
+		return
+	film_kind = "bridge"
+	var hop := next_id
+	var skip := bool(FamilyProfile.data.get("skip_films", false))
+	if not skip and StoryBook.has_bridge(film_from, next_id):
+		hop = "act_film"
+	else:
+		film_kind = ""
+	_hop(hop)
+
+
+func _hop(map_id: String) -> void:
+	if has_node("/root/NetSession") and NetSession.active() and NetSession.is_host():
+		NetSession.broadcast_begin(map_id, begin_extra())
+		return
+	enter_map(map_id)
 
 
 func carry_to_fire_escapes(state: RunState) -> void:
@@ -96,6 +142,9 @@ func back_to_hub(tab: String = "clinic") -> void:
 	run_bag = {}
 	remote_coop = false
 	versus = false
+	film_from = ""
+	film_next = ""
+	film_kind = ""
 	get_tree().change_scene_to_file("res://scenes/ui/hub.tscn")
 
 

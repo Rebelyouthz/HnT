@@ -19,6 +19,10 @@ var _hp_b: HBoxContainer
 var _scrap: Label
 var _wanted: Label
 var _act: Label
+var _score: Label
+var _boss_wrap: Control
+var _boss_fill: ColorRect
+var _boss_lab: Label
 var _pause: Control
 var son: Fighter
 var father: Fighter
@@ -76,6 +80,33 @@ func _ready() -> void:
 	_act.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	UiKit.apply_label(_act, 12, Palette.MUTED)
 	add_child(_act)
+
+	_score = Label.new()
+	_score.position = Vector2(360, 688)
+	_score.size = Vector2(560, 22)
+	_score.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	UiKit.apply_label(_score, 14, Palette.EDGE)
+	add_child(_score)
+
+	_boss_wrap = Control.new()
+	_boss_wrap.position = Vector2(280, 52)
+	_boss_wrap.visible = false
+	add_child(_boss_wrap)
+	var bb := ColorRect.new()
+	bb.size = Vector2(720, 14)
+	bb.color = Color(0, 0, 0, 0.7)
+	_boss_wrap.add_child(bb)
+	_boss_fill = ColorRect.new()
+	_boss_fill.position = Vector2(2, 2)
+	_boss_fill.size = Vector2(716, 10)
+	_boss_fill.color = Palette.BRICK
+	_boss_wrap.add_child(_boss_fill)
+	_boss_lab = Label.new()
+	_boss_lab.position = Vector2(0, -20)
+	_boss_lab.size = Vector2(720, 20)
+	_boss_lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	UiKit.apply_label(_boss_lab, 13, Palette.LEMON)
+	_boss_wrap.add_child(_boss_lab)
 
 	_combo = Label.new()
 	_combo.position = Vector2(12, 98)
@@ -208,6 +239,10 @@ func _process(delta: float) -> void:
 			_act.text += "  ·  %ds" % int(horde.left())
 		if App.remote_coop:
 			_act.text += "  ·  " + (NetSession.path_name if NetSession.path_name != "" else "REMOTE")
+		_score.text = "%s %06d   ·   %s %06d" % [
+			FamilyProfile.son_name(), state.score_son, FamilyProfile.father_name(), state.score_dad
+		]
+		_paint_boss()
 	_hint.text = _prompt_line()
 	if _join_grace > 0:
 		return
@@ -215,6 +250,39 @@ func _process(delta: float) -> void:
 		_toggle_pause()
 	elif Input.is_action_just_pressed("p2_pause") and father != null and son != null:
 		_toggle_pause()
+
+
+func _paint_boss() -> void:
+	if _boss_wrap == null:
+		return
+	var best: Node2D = null
+	var best_hp := 0
+	var best_max := 1
+	var best_name := ""
+	var plates := -1
+	for n in get_tree().get_nodes_in_group("act_boss"):
+		if not is_instance_valid(n):
+			continue
+		if n is Punk:
+			var p: Punk = n
+			if p.hp > best_hp:
+				best = p
+				best_hp = p.hp
+				best_max = maxi(p.max_hp, 1)
+				best_name = p.title
+				if p is FamilyPlan:
+					plates = (p as FamilyPlan).plates
+	if best == null:
+		_boss_wrap.visible = false
+		return
+	_boss_wrap.visible = true
+	var frac := clampf(float(best_hp) / float(best_max), 0.0, 1.0)
+	_boss_fill.size.x = 716.0 * frac
+	_boss_fill.color = Palette.EDGE if plates > 0 else (Palette.BRICK if frac < 0.33 else Palette.LEMON)
+	if plates >= 0:
+		_boss_lab.text = "%s  ·  ARMOR %d  ·  %d" % [best_name.to_upper(), plates, best_hp]
+	else:
+		_boss_lab.text = "%s  ·  %d / %d" % [best_name.to_upper(), best_hp, best_max]
 
 
 func _paint_fighter(lab: Label, bar: ColorRect, pips: HBoxContainer, snap: Label, f: Fighter, lemon_slot: bool) -> void:

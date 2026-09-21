@@ -98,7 +98,22 @@ func _defaults() -> Dictionary:
 		"vs_wins": 0,
 		"annex_clears": 0,
 		"survive_clears": 0,
-		"sides_filed": 0
+		"sides_filed": 0,
+		"skip_films": false,
+		"account_xp": 0,
+		"account_level": 1,
+		"high_score": 0,
+		"ending_seen": false,
+		"family_plan_kills": 0,
+		"file_alives": 0,
+		"legendary_takes": 0,
+		"gear_upgrades": 0,
+		"owned_gear": ["hoodie_lemon", "polo_navy", "headband", "parkour_kicks", "loafer_web"],
+		"gear_levels": {},
+		"loadout": {
+			"son": {"clothes": "hoodie_lemon", "hat": "headband", "shoes": "parkour_kicks"},
+			"father": {"clothes": "polo_navy", "hat": "headband", "shoes": "loafer_web"}
+		}
 	}
 
 
@@ -110,6 +125,10 @@ func _migrate() -> void:
 	for id in BUILDINGS:
 		if not data["buildings"].has(id):
 			data["buildings"][id] = 1 if id in ["front_desk", "street_map"] else 0
+	if str(data.get("costume_son", "default")) == "night_tutor":
+		_wear("son", "clothes", "night_tutor")
+	if str(data.get("costume_father", "default")) == "pink_slip":
+		_wear("father", "clothes", "pink_slip")
 
 
 func father_name() -> String:
@@ -274,8 +293,160 @@ func less_gore() -> bool:
 
 
 func costume_for(role: String) -> String:
-	var key := "costume_son" if role == "son" else "costume_father"
-	return str(data.get(key, "default"))
+	return equipped_id(role, "clothes")
+
+
+func equipped_id(role: String, slot: String) -> String:
+	var loadout: Dictionary = data.get("loadout", {})
+	var row: Variant = loadout.get(role, {})
+	if typeof(row) != TYPE_DICTIONARY:
+		return ""
+	return str((row as Dictionary).get(slot, ""))
+
+
+func owns_gear(id: String) -> bool:
+	var owned: Array = data.get("owned_gear", [])
+	return owned.has(id)
+
+
+func gear_level(id: String) -> int:
+	var lv: Dictionary = data.get("gear_levels", {})
+	return int(lv.get(id, 0))
+
+
+func gear_stat_bonus(role: String) -> Dictionary:
+	var out := {"hp": 0, "dmg": 0, "steam": 0, "speed": 0}
+	for slot in ["clothes", "hat", "shoes"]:
+		var spec := GearBook.item(equipped_id(role, slot))
+		if spec.is_empty():
+			continue
+		var st: Variant = spec.get("stats", {})
+		var lvl := gear_level(str(spec.get("id", "")))
+		if typeof(st) != TYPE_DICTIONARY:
+			continue
+		for k in out.keys():
+			out[k] = int(out[k]) + int((st as Dictionary).get(k, 0)) + lvl
+	return out
+
+
+func try_buy_gear(id: String) -> bool:
+	var spec := GearBook.item(id)
+	if spec.is_empty() or owns_gear(id):
+		return false
+	if int(data.get("gold", 0)) < int(spec.get("gold", 0)):
+		return false
+	if int(data.get("rep", 0)) < int(spec.get("rep", 0)):
+		return false
+	data["gold"] = int(data["gold"]) - int(spec.get("gold", 0))
+	(data["owned_gear"] as Array).append(id)
+	save()
+	return true
+
+
+func try_upgrade_gear(id: String) -> bool:
+	if not owns_gear(id):
+		return false
+	var spec := GearBook.item(id)
+	var lvl := gear_level(id)
+	if lvl >= 3:
+		return false
+	var cost := int(spec.get("upgrade", 20)) * (lvl + 1)
+	if int(data.get("gold", 0)) < cost:
+		return false
+	data["gold"] = int(data["gold"]) - cost
+	var lv: Dictionary = data.get("gear_levels", {})
+	lv[id] = lvl + 1
+	data["gear_levels"] = lv
+	data["gear_upgrades"] = int(data.get("gear_upgrades", 0)) + 1
+	save()
+	return true
+
+
+func wear_slot(role: String, slot: String, id: String) -> bool:
+	if not owns_gear(id):
+		return false
+	var spec := GearBook.item(id)
+	var who := str(spec.get("role", "any"))
+	if who != "any" and who != role:
+		return false
+	_wear(role, slot, id)
+	save()
+	return true
+
+
+func _wear(role: String, slot: String, id: String) -> void:
+	var loadout: Dictionary = data.get("loadout", {})
+	var row: Dictionary = loadout.get(role, {})
+	row[slot] = id
+	loadout[role] = row
+	data["loadout"] = loadout
+	if slot == "clothes":
+		if role == "son":
+			data["costume_son"] = id
+		else:
+			data["costume_father"] = id
+
+
+func account_need() -> int:
+	return 100 + int(data.get("account_level", 1)) * 50
+
+
+func grant_account_xp(n: int) -> Dictionary:
+	var gained := maxi(0, n)
+	if has_cbt("pinball_brain"):
+		gained = int(round(float(gained) * 1.2))
+	data["account_xp"] = int(data.get("account_xp", 0)) + gained
+	var dings := 0
+	while int(data["account_xp"]) >= account_need():
+		data["account_xp"] = int(data["account_xp"]) - account_need()
+		data["account_level"] = int(data.get("account_level", 1)) + 1
+		data["gold"] = int(data.get("gold", 0)) + 8
+		dings += 1
+	save()
+	return {
+		"gained": gained,
+		"xp": int(data["account_xp"]),
+		"need": account_need(),
+		"level": int(data["account_level"]),
+		"dings": dings
+	}
+
+
+func note_score(total: int) -> void:
+	if total > int(data.get("high_score", 0)):
+		data["high_score"] = total
+		save()
+
+
+func reset_progress() -> void:
+	var stamp := Time.get_datetime_string_from_system().replace(":", "-").replace("T", "_")
+	backup_to("user://family.json.bak")
+	backup_to("user://family-%s.bak.json" % stamp)
+	data = _defaults()
+	save()
+	Juice.toast("challenge", "PROGRESS WIPED", "Backup kept. The fridge does not remember you.")
+
+
+func mark_ending() -> void:
+	data["ending_seen"] = true
+	data["rep"] = int(data.get("rep", 0)) + 2
+	save()
+	Juice.toast("achievement", "THE FRIDGE STAYS", "Homework over. The clipboard is a corpse.")
+
+
+func mark_family_plan() -> void:
+	data["family_plan_kills"] = int(data.get("family_plan_kills", 0)) + 1
+	save()
+
+
+func mark_file_alive() -> void:
+	data["file_alives"] = int(data.get("file_alives", 0)) + 1
+	save()
+
+
+func mark_legendary() -> void:
+	data["legendary_takes"] = int(data.get("legendary_takes", 0)) + 1
+	save()
 
 
 func costume_unlocked(id: String) -> bool:

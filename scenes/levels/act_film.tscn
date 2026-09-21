@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://hnt_act_film"]
+
+[ext_resource type="Script" path="res://src/ui/act_film.gd" id="1"]
+
+[node name="ActFilm" type="Node2D"]
+script = ExtResource("1")

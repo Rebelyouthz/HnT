@@ -107,6 +107,13 @@ func _ready() -> void:
 			_glow(Vector2(420, 90), Color(0.8, 0.88, 0.9, 0.4))
 			_glow(Vector2(1040, 80), Color(0.7, 0.95, 0.8, 0.4))
 			_glow(Vector2(1660, 100), Color(0.9, 0.85, 0.65, 0.4))
+		"processing_floor":
+			_lamp(Vector2(420, 110), Color(0.95, 0.78, 0.32), 1.3)
+			_lamp(Vector2(1320, 80), Color(0.9, 0.4, 0.22), 1.25)
+			_lamp(Vector2(2320, 120), Color(0.79, 0.64, 0.15), 1.35)
+			_glow(Vector2(420, 120), Color(0.95, 0.72, 0.28, 0.5))
+			_glow(Vector2(1320, 90), Color(0.9, 0.35, 0.18, 0.45))
+			_glow(Vector2(2320, 130), Color(0.79, 0.6, 0.12, 0.55))
 		_:
 			_lamp(Vector2(640, 160), Color(1.0, 0.82, 0.48), 1.35)
 			_lamp(Vector2(1760, 140), Color(0.95, 0.55, 0.32), 1.2)

@@ -109,7 +109,7 @@ func _make_top() -> Control:
 	_log_bang.position = Vector2(56, -4)
 	log_wrap.add_child(_log_bang)
 	row.add_child(log_wrap)
-	var gear := UiKit.button("SET", Vector2(64, 52))
+	var gear := UiKit.button(Copy.OPTIONS, Vector2(96, 52))
 	gear.pressed.connect(_open_settings)
 	row.add_child(gear)
 
@@ -325,6 +325,8 @@ func _open_settings() -> void:
 	add_child(sheet)
 	_modal = sheet
 	sheet.closed.connect(_clear_modal)
+	if sheet.has_signal("need_refresh"):
+		sheet.need_refresh.connect(_after_page)
 
 
 func _focus_page(page: Node) -> void:

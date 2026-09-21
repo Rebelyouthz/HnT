@@ -30,6 +30,7 @@ func _ready() -> void:
 	UiKit.apply_label(h, 20, Palette.LEMON)
 	head.add_child(h)
 	col.add_child(head)
+	col.add_child(_recap())
 
 	var awards: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/awards.json"))
 	for a in awards:
@@ -111,9 +112,12 @@ func _award(a: Dictionary) -> Control:
 			ok = false
 	var claimed: Array = FamilyProfile.data["awards_claimed"]
 	var already: bool = claimed.has(a["id"])
+	var rarity := Rarity.normalize(str(a.get("rarity", "common")))
 	var card := PanelContainer.new()
-	var edge := Palette.READY if ok and not already else Palette.EDGE
-	card.add_theme_stylebox_override("panel", UiKit.panel(Palette.PANEL, edge))
+	var edge := Rarity.color(rarity)
+	if ok and not already:
+		edge = Palette.READY
+	card.add_theme_stylebox_override("panel", UiKit.panel(Rarity.fill(rarity), edge))
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
 	card.add_child(row)
@@ -123,8 +127,8 @@ func _award(a: Dictionary) -> Control:
 	var txt := VBoxContainer.new()
 	txt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var t := Label.new()
-	t.text = str(a["title"])
-	UiKit.apply_label(t, 16, Palette.LEMON)
+	t.text = "%s  ·  %s" % [str(a["title"]), Rarity.label(str(a.get("rarity", "common")))]
+	UiKit.apply_label(t, 16, Rarity.color(str(a.get("rarity", "common"))))
 	var b := Label.new()
 	b.text = str(a["blurb"])
 	b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -158,3 +162,34 @@ func _award(a: Dictionary) -> Control:
 	)
 	row.add_child(btn)
 	return card
+
+
+func _recap() -> Control:
+	var box := PanelContainer.new()
+	box.add_theme_stylebox_override("panel", UiKit.panel(Palette.PANEL_2, Palette.EDGE))
+	var v := VBoxContainer.new()
+	box.add_child(v)
+	var t := Label.new()
+	t.text = "NIGHT RECAP"
+	UiKit.apply_label(t, 16, Palette.LEMON)
+	v.add_child(t)
+	var lines := [
+		"Account LV %d  ·  High table %06d" % [int(FamilyProfile.data.get("account_level", 1)), int(FamilyProfile.data.get("high_score", 0))],
+		"Intro %s  ·  Ending %s" % [
+			"FILED" if bool(FamilyProfile.data.get("intro_done", false)) else "UNSEEN",
+			"FILED" if bool(FamilyProfile.data.get("ending_seen", false)) else "UNSEEN"
+		],
+		"Director Binder %d  ·  FILE ALIVE %d  ·  Legendary cards %d" % [
+			int(FamilyProfile.data.get("family_plan_kills", 0)),
+			int(FamilyProfile.data.get("file_alives", 0)),
+			int(FamilyProfile.data.get("legendary_takes", 0))
+		],
+		"Films sit between every act. PAUSE skips the beat. OPTIONS can skip films."
+	]
+	for line in lines:
+		var l := Label.new()
+		l.text = line
+		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		UiKit.apply_label(l, 13, Palette.TEXT)
+		v.add_child(l)
+	return box

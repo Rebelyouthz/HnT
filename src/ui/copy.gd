@@ -93,6 +93,18 @@ const GATE_WAIT := "Fluorescent forever. Don't sit."
 const GATE_FIRE := "Roofs after the lot. Gaps with opinions."
 const GATE_NEON := "Agents after the circle. Smile for the warrant."
 const GATE_BRIDGE := "Boxcars are roofs. The street still bites."
+const OPTIONS := "OPTIONS"
+const RESET := "RESET PROGRESS"
+const RESET_CONFIRM := "THIS IS GROWTH"
+const RESET_NEVER := "NEVER MIND"
+const RESET_BLURB := "Wipes the Family Profile. Writes a backup first. The fridge does not remember you. Host/Join ports stay."
+const SKIP_BRIDGES := "SKIP INTER-ACT FILMS"
+const FLOOR_CLEAR := "PROCESSING FLOOR FILED"
+const FLOOR_SUB := "Director Binder is a receipt. The Family Plan is a corpse. The fridge stays."
+const NEXT_FLOOR := "THE PROCESSING FLOOR"
+const GATE_FLOOR := "Late act. Strip the armor. Then the patterns. Then go home."
+const NEXT_ENDING := "WATCH THE ENDING"
+const GATE_ENDING := "The night closes. Pause still skips a beat."
 
 
 static func come_on(father: String, son: String, who: String) -> String:
