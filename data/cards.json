@@ -3,66 +3,96 @@
     "id": "head_trampoline",
     "name": "HEAD TRAMPOLINE",
     "blurb": "Air heavy bounces them 80 px and refunds a jump. Kill on the bounce is always blunt.",
-    "fixed": true
+    "fixed": true,
+    "rarity": "special",
+    "tag": "AIR"
   },
   {
     "id": "family_discount",
     "name": "FAMILY DISCOUNT",
     "blurb": "Your hits refill the partner's Steam. Shared combo lives if only one of you eats dirt.",
-    "fixed": true
+    "fixed": true,
+    "rarity": "special",
+    "tag": "COOP"
   },
   {
     "id": "office_rage",
     "name": "OFFICE RAGE",
     "blurb": "Lights apply Staple bleed. Staple-kills explode paper. Lights still flash red until then.",
-    "fixed": true
+    "fixed": true,
+    "rarity": "special",
+    "tag": "BLEED"
   },
   {
     "id": "quiet_lunch",
     "name": "QUIET LUNCH",
     "blurb": "SNAP on a back restores 8 HP. Missed SNAP is your problem.",
-    "fixed": false
+    "fixed": false,
+    "rarity": "rare",
+    "tag": "SNAP"
   },
   {
     "id": "double_slap",
     "name": "DOUBLE SLAP",
     "blurb": "A Parenting Slap heals both 20% and they hit meaner for 2 seconds. Will be abused.",
-    "fixed": false
+    "fixed": false,
+    "rarity": "rare",
+    "tag": "REVIVE"
   },
   {
     "id": "ricochet_policy",
     "name": "RICOCHET POLICY",
     "blurb": "Batwings bounce +1 off metal. Neon that is hit is a conversation.",
-    "fixed": false
+    "fixed": false,
+    "rarity": "common",
+    "tag": "SHOT"
   },
   {
     "id": "tutoring",
     "name": "TUTORING",
     "blurb": "Every 8th light without eating dirt: the next shot fires twice. Homework.",
-    "fixed": false
+    "fixed": false,
+    "rarity": "common",
+    "tag": "STRING"
   },
   {
     "id": "pendulum_politics",
     "name": "PENDULUM POLITICS",
     "blurb": "A web-slam kill leaves a lamp. The Son can grab it. Solo: you still get the lamp.",
-    "fixed": false
+    "fixed": false,
+    "rarity": "rare",
+    "tag": "WEB"
   },
   {
     "id": "cop_out",
     "name": "COP OUT",
     "blurb": "SNAP on a cop refunds one Wanted stamp. The paperwork files itself.",
-    "fixed": false
+    "fixed": false,
+    "rarity": "common",
+    "tag": "WANTED"
   },
   {
     "id": "steam_tax",
     "name": "STEAM TAX",
     "blurb": "Lights cost 0 Steam. Heavies refund 8. The clinic calls it a loophole.",
-    "fixed": false
+    "fixed": false,
+    "rarity": "rare",
+    "tag": "STEAM"
   },
   {
     "id": "family_blitz",
     "name": "FAMILY BLITZ",
     "blurb": "Dash i-frames +4. Slide hits twice. SoR4 called; it wants its meter back.",
-    "fixed": false
+    "fixed": false,
+    "rarity": "rare",
+    "tag": "DASH"
+  },
+  {
+    "id": "street_credit",
+    "name": "STREET CREDIT",
+    "blurb": "Combo cash-out pays double Scrap. Let the timer die on purpose. That's the bit.",
+    "fixed": false,
+    "rarity": "special",
+    "tag": "BANK"
   }
 ]

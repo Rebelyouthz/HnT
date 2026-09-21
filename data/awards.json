@@ -62,5 +62,13 @@
     "need": { "remote_clears": 1 },
     "gold": 35,
     "gems": 3
+  },
+  {
+    "id": "combo_banker",
+    "title": "WE LET THE TIMER DIE",
+    "blurb": "Cash out a combo of 5+. Streets of Rage called it a bonus. We call it billing.",
+    "need": { "combo_banks": 1 },
+    "gold": 20,
+    "gems": 1
   }
 ]

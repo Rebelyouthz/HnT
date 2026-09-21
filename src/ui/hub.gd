@@ -12,6 +12,7 @@ var _tab_bangs: Dictionary = {}
 var _current := "clinic"
 var _modal: Control
 var _safe: MarginContainer
+var _pill_vals := {"gold": "", "gems": "", "rep": ""}
 
 
 func _ready() -> void:
@@ -197,16 +198,28 @@ func _after_page() -> void:
 
 
 func _refresh_pills() -> void:
-	_set_pill(_gold_pill, str(FamilyProfile.data["gold"]))
-	_set_pill(_gems_pill, str(FamilyProfile.data["gems"]))
-	_set_pill(_rep_pill, str(FamilyProfile.data["rep"]))
+	_set_pill(_gold_pill, str(FamilyProfile.data["gold"]), "gold")
+	_set_pill(_gems_pill, str(FamilyProfile.data["gems"]), "gems")
+	_set_pill(_rep_pill, str(FamilyProfile.data["rep"]), "rep")
 	_log_bang.visible = FamilyProfile.unread_log_count() > 0
+	if _log_bang.visible:
+		if not _log_bang.has_meta("pulsing"):
+			_log_bang.set_meta("pulsing", true)
+			UiKit.pulse_ready(_log_bang)
+	else:
+		_log_bang.remove_meta("pulsing")
+		_log_bang.scale = Vector2.ONE
 
 
-func _set_pill(pill: Node, value: String) -> void:
+func _set_pill(pill: Node, value: String, key: String) -> void:
 	var v := pill.find_child("Value", true, false)
 	if v:
 		v.text = value
+	if _pill_vals.get(key, "") != value and _pill_vals[key] != "":
+		var tw := pill.create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tw.tween_property(pill, "scale", Vector2(1.12, 1.12), 0.1)
+		tw.tween_property(pill, "scale", Vector2.ONE, 0.14)
+	_pill_vals[key] = value
 
 
 func _refresh_tab_locks() -> void:

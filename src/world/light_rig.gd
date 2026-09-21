@@ -5,6 +5,7 @@ const MAX_POINT := 3
 
 static var _radial: Texture2D
 var preset := "dock_street"
+var _flicker := 0.0
 
 
 static func radial_tex() -> Texture2D:
@@ -87,6 +88,32 @@ func _ready() -> void:
 			_glow(Vector2(3040, 188), Color(0.5, 0.9, 0.65, 0.45))
 
 
+func _process(delta: float) -> void:
+	_flicker += delta
+	for c in get_children():
+		if c is PointLight2D:
+			var p := c as PointLight2D
+			if not p.has_meta("base_e"):
+				p.set_meta("base_e", p.energy)
+			p.energy = float(p.get_meta("base_e")) * (0.9 + 0.1 * sin(_flicker * 6.4 + p.position.x * 0.008))
+
+
+func tint_at(world: Vector2) -> Color:
+	var best := Color.WHITE
+	var best_d := 320.0
+	for c in get_children():
+		if not (c is PointLight2D):
+			continue
+		var p := c as PointLight2D
+		var d := p.global_position.distance_to(world)
+		if d >= best_d:
+			continue
+		best_d = d
+		var t := 1.0 - d / 320.0
+		best = Color.WHITE.lerp(p.color, t * 0.42)
+	return best
+
+
 func blackout() -> void:
 	var night := get_node_or_null("Night") as CanvasModulate
 	if night:
@@ -97,6 +124,7 @@ func blackout() -> void:
 		elif c is PointLight2D:
 			(c as PointLight2D).energy = 0.12
 			(c as PointLight2D).color = Color(0.9, 0.25, 0.2)
+			(c as PointLight2D).set_meta("base_e", 0.12)
 
 
 func _lamp(at: Vector2, color: Color, energy: float) -> void:

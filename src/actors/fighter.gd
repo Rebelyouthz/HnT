@@ -72,6 +72,9 @@ var snap_pos := Vector2.ZERO
 var snap_hop := 0.0
 var tape_t := 0.0
 var grenades := 0
+var _shadow: Polygon2D
+var _slip: Polygon2D
+var _breath := 0.0
 
 signal died
 signal hit_landed(kind: String, global_pos: Vector2)
@@ -89,6 +92,14 @@ func _ready() -> void:
 	motion_mode = MOTION_MODE_FLOATING
 	floor_snap_length = 8.0
 	_build_body()
+	_apply_locker()
+	_shadow = Polygon2D.new()
+	_shadow.color = Color(0.02, 0.02, 0.04, 0.45)
+	_shadow.polygon = PackedVector2Array([
+		Vector2(-20, 2), Vector2(20, 2), Vector2(12, 10), Vector2(-12, 10)
+	])
+	_shadow.z_index = -1
+	add_child(_shadow)
 	var cap := CollisionShape2D.new()
 	var shape := CapsuleShape2D.new()
 	shape.radius = 14
@@ -164,6 +175,22 @@ func _part(pos: Vector2, size: Vector2, color: Color) -> void:
 	squash_root.add_child(p)
 
 
+func _apply_locker() -> void:
+	var look := FamilyProfile.costume_for(role)
+	if look == "night_tutor" and cape:
+		cape.visible = true
+		cape.color = Color(0.07, 0.07, 0.1, 0.96)
+		if ears:
+			ears.visible = true
+	if look == "pink_slip":
+		_slip = Polygon2D.new()
+		_slip.color = Color(0.86, 0.32, 0.52, 0.92)
+		_slip.polygon = PackedVector2Array([
+			Vector2(-12, -40), Vector2(12, -40), Vector2(12, -24), Vector2(-12, -24)
+		])
+		squash_root.add_child(_slip)
+
+
 func _physics_process(delta: float) -> void:
 	_tick_meters(delta)
 	if puppeted:
@@ -193,9 +220,9 @@ func _physics_process(delta: float) -> void:
 		_process_street(delta)
 	_combat()
 	if cape:
-		cape.visible = gliding or cape_guard > 0.0
+		cape.visible = gliding or cape_guard > 0.0 or FamilyProfile.costume_for(role) == "night_tutor"
 	if ears:
-		ears.visible = gliding or cape_guard > 0.0
+		ears.visible = gliding or cape_guard > 0.0 or FamilyProfile.costume_for(role) == "night_tutor"
 
 
 func _tick_meters(delta: float) -> void:
@@ -254,6 +281,17 @@ func _tick_meters(delta: float) -> void:
 	_update_guard()
 	armored = charge_frames >= 18
 	_update_web_line()
+	_apply_lamp()
+	_breath += delta * 6.0
+	if squash_root:
+		if _street_grounded() and attack_cd == 0 and not dashing and not sliding:
+			squash_root.position.y = 1.6 * sin(_breath)
+		else:
+			squash_root.position.y = 0.0
+	if _shadow:
+		var air := absf(hop) if plane == "street" else maxf(0.0, -minf(velocity.y, 0.0))
+		_shadow.scale.x = 1.1 - clampf(air / 200.0, 0.0, 0.5)
+		_shadow.modulate.a = 0.7 - clampf(air / 240.0, 0.0, 0.5)
 
 
 func _process_street(delta: float) -> void:
@@ -304,6 +342,7 @@ func _process_street(delta: float) -> void:
 			hop = 0.0
 			hop_v = 0.0
 			Juice.squash(squash_root, facing)
+			Juice.land_puff(global_position)
 	visual.position.y = hop
 	move_and_slide()
 	global_position.y = clampf(global_position.y, STREET_MIN, STREET_MAX)
@@ -344,6 +383,7 @@ func _process_roof(delta: float) -> void:
 		coyote = COYOTE
 		if hop_v != 0.0:
 			Juice.squash(squash_root, facing)
+			Juice.land_puff(global_position)
 		hop_v = 0.0
 	if jump_buf > 0 and coyote > 0:
 		velocity.y = JUMP
@@ -533,6 +573,8 @@ func _try_vault() -> void:
 		if n is VaultCrate and (n as VaultCrate).covers(global_position):
 			vaulting = true
 			invuln = 10
+			(n as VaultCrate).smash()
+			Juice.keep_combo()
 			if plane == "street":
 				hop_v = -420.0
 				hop = -1.0
@@ -733,6 +775,8 @@ func take_hit(kind: String, from: Node) -> void:
 	var rs := get_tree().get_first_node_in_group("run_state")
 	if rs and rs.has_method("has_card") and rs.has_card("family_discount"):
 		Juice.keep_combo()
+	else:
+		Juice.break_combo()
 	if kind == "light":
 		Juice.flash_red(visual, 2)
 		Juice.hitstop(1)
@@ -978,3 +1022,11 @@ func _update_guard() -> void:
 		visual.add_child(guard)
 	guard.modulate.a = 0.85 if blocking else 0.0
 	guard.scale.y = 0.55 if block_low else 1.0
+
+
+func _apply_lamp() -> void:
+	if squash_root == null:
+		return
+	var rig := get_tree().get_first_node_in_group("light_rig")
+	if rig and rig.has_method("tint_at"):
+		squash_root.modulate = rig.tint_at(global_position)

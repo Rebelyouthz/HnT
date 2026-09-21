@@ -7,6 +7,7 @@ var phase := 1
 var stun := 0.0
 var heavies_eaten := 0
 var eyes: Array[Polygon2D] = []
+var _cape: Polygon2D
 
 
 func _ready() -> void:
@@ -29,6 +30,7 @@ func _cape() -> void:
 		Vector2(-22, -48), Vector2(22, -48), Vector2(36, 8), Vector2(-36, 8)
 	])
 	visual.add_child(cape)
+	_cape = cape
 	for ox in [-8.0, 8.0]:
 		var e := Polygon2D.new()
 		e.color = Color(0.95, 0.2, 0.15, 0.95)
@@ -45,9 +47,11 @@ func _physics_process(delta: float) -> void:
 		stun -= delta
 		velocity = Vector2.ZERO
 		move_and_slide()
-		visual.modulate = Color(0.7, 0.85, 1.0)
+		_alert = Color(0.7, 0.85, 1.0)
+		_mix_mod()
+		_flap()
 		return
-	visual.modulate = Color.WHITE
+	_alert = Color.WHITE
 	var ratio := float(hp) / float(maxi(max_hp, 1))
 	if phase == 1 and ratio <= 0.66:
 		_phase(2)
@@ -59,6 +63,7 @@ func _physics_process(delta: float) -> void:
 	elif phase == 1:
 		home = "street"
 	super._physics_process(delta)
+	_flap()
 	if phase == 3:
 		for e in eyes:
 			e.modulate.a = 0.65 + 0.35 * sin(Time.get_ticks_msec() * 0.012)
@@ -81,6 +86,15 @@ func _phase(n: int) -> void:
 		Juice.shout("LIGHTS OUT")
 		Juice.unlock_logo("PHASE 3", "Muzzle flashes and his eyes. SNAP when he stuns.")
 		Juice.pulse_shake(10.0)
+
+
+func _flap() -> void:
+	if _cape == null:
+		return
+	var w := 6.0 * sin(Time.get_ticks_msec() * 0.008)
+	_cape.polygon = PackedVector2Array([
+		Vector2(-22, -48), Vector2(22, -48), Vector2(36 + w, 8), Vector2(-36 - w, 8)
+	])
 
 
 func take_hit(kind: String, from: Node) -> void:

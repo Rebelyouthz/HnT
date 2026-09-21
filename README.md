@@ -110,6 +110,18 @@ On a remote Join, The Father uses **P1** on his machine (keyboard or his pad). T
 
 Clinic, Run, Build, Locker, Awards. Clinic + Run start unlocked. Family Profile at `user://family.json`.
 
+## Visual / feel (superpolish2 leftover)
+
+Eight-stage pass on **existing** systems. Host/Join pipeline and solo 3 / coop 6 counts did not move.
+
+**Menus.** Clinic `!` only when you can afford the build. PLAY and CLAIM pulse. Awards show progress X/Y and a clinic stamp. Locker WEAR / LOCK (Night Tutor + Pink-Slip at Rep 8). CBT owned rows go green; buyable rows lemon. Run tab lists all five acts. Session settings print volume percents. Host room code breathes. Join CONNECT pulses. Shop prompts list prices and brighten when you stand in them.
+
+**Cards / combo.** Vampire Survivors chrome: rarity border, synergy tag, SKIP, REROLL if you bought a second opinion. Streets of Rage 4 cash-out: let the combo bar die at 5+ and Scrap/XP bank; getting hit drops the combo unless Family Discount. STREET CREDIT doubles the bank. Destroyed crates and scrap orbs keep the combo.
+
+**Run.** HP pips. Combo rank + cash-out bar. SNAP and DOWN blink (Huntdown). HOLD when the slap is in range. Contact shadows, idle bob, land dust. Bodies tint toward the nearest lamp. Lamps flicker. Extra hanging-sign parallax. Wet asphalt brighter. Blood stretches with velocity, tints under neon, extra pump on a kill. Mayor cape flaps. Heli bobs. Vault crates smash for scrap.
+
+Host/Join steps and encounter counts: same as above.
+
 ## Layout
 
 ```

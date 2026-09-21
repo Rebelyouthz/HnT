@@ -11,4 +11,4 @@ func _process(delta: float) -> void:
 		_dir = -1.0
 	elif position.x < 80.0:
 		_dir = 1.0
-	position.y = 40.0
+	position.y = 40.0 + 7.0 * sin(Time.get_ticks_msec() * 0.004)

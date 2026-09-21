@@ -13,6 +13,7 @@ var cards: Array = []
 var level_ups: int = 0
 var shops_used: int = 0
 var card_reroll: bool = false
+var rerolls: int = 0
 
 signal lives_changed
 signal run_failed
@@ -77,6 +78,10 @@ func add_wanted(n: int) -> void:
 
 
 func take_card(id: String) -> void:
+	if id == "" or id == "skip":
+		Juice.shout("SKIPPED")
+		Juice.toast("reward", Copy.SKIP, "No rule. Same street. Cowardice is also a build.")
+		return
 	if not cards.has(id):
 		cards.append(id)
 	Juice.shout(id.replace("_", " ").to_upper())
@@ -92,6 +97,7 @@ func note_shop() -> void:
 
 
 func request_reroll() -> void:
+	rerolls += 1
 	card_reroll = true
 	need_cards.emit()
 
@@ -114,7 +120,8 @@ func pack() -> Dictionary:
 		"wanted": wanted,
 		"cards": cards.duplicate(),
 		"level_ups": level_ups,
-		"shops_used": shops_used
+		"shops_used": shops_used,
+		"rerolls": rerolls
 	}
 
 
@@ -126,6 +133,7 @@ func unpack(d: Dictionary) -> void:
 	cards = (d.get("cards", []) as Array).duplicate()
 	level_ups = int(d.get("level_ups", level_ups))
 	shops_used = int(d.get("shops_used", shops_used))
+	rerolls = int(d.get("rerolls", rerolls))
 	gated = false
 	cleared = false
 	failed = false

@@ -83,3 +83,20 @@ static func pill(title: String, value: String, accent: Color) -> HBoxContainer:
 	box.add_child(inner)
 	row.add_child(box)
 	return row
+
+
+static func pulse_ready(b: Control) -> void:
+	b.pivot_offset = b.custom_minimum_size * 0.5
+	var tw := b.create_tween().set_loops()
+	tw.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_property(b, "scale", Vector2(1.07, 1.07), 0.42)
+	tw.tween_property(b, "scale", Vector2.ONE, 0.42)
+
+
+static func pop_in(n: Control) -> void:
+	n.pivot_offset = n.size * 0.5
+	n.scale = Vector2(0.86, 0.86)
+	n.modulate.a = 0.0
+	var tw := n.create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(n, "scale", Vector2.ONE, 0.18)
+	tw.parallel().tween_property(n, "modulate:a", 1.0, 0.14)

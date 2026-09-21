@@ -90,7 +90,10 @@ func _defaults() -> Dictionary:
 		"city_clears": 0,
 		"raven_kills": 0,
 		"remote_clears": 0,
-		"rooms_url": "http://127.0.0.1:8787"
+		"rooms_url": "http://127.0.0.1:8787",
+		"costume_son": "default",
+		"costume_father": "default",
+		"combo_banks": 0
 	}
 
 
@@ -263,6 +266,35 @@ func has_cbt(id: String) -> bool:
 
 func less_gore() -> bool:
 	return bool(data.get("less_gore", false))
+
+
+func costume_for(role: String) -> String:
+	var key := "costume_son" if role == "son" else "costume_father"
+	return str(data.get(key, "default"))
+
+
+func costume_unlocked(id: String) -> bool:
+	if id == "default":
+		return true
+	return int(data.get("rep", 0)) >= 8
+
+
+func wear_costume(role: String, id: String) -> bool:
+	if not costume_unlocked(id):
+		return false
+	if role == "son":
+		data["costume_son"] = id
+	else:
+		data["costume_father"] = id
+	save()
+	return true
+
+
+func mark_combo_bank(hits: int) -> void:
+	data["combo_banks"] = int(data.get("combo_banks", 0)) + 1
+	if hits >= 20:
+		data["lifetime_points"] = int(data.get("lifetime_points", 0)) + 1
+	save()
 
 
 func push_log(title: String, body: String) -> void:

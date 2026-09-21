@@ -59,6 +59,10 @@ func _spot(info: Dictionary) -> Control:
 	var b := UiKit.button("BUILD %d" % cost if lvl == 0 else "UPGRADE %d" % cost, Vector2(180, 32))
 	if int(FamilyProfile.data["gold"]) < cost:
 		b.disabled = true
+	else:
+		b.add_theme_stylebox_override("normal", UiKit.panel(Palette.PANEL_2, Palette.READY if lvl == 0 else Palette.EDGE))
+		if lvl == 0:
+			UiKit.pulse_ready(b)
 	b.pressed.connect(func() -> void:
 		if FamilyProfile.try_build(id):
 			Juice.play("res://assets/audio/chest.wav")
@@ -68,7 +72,8 @@ func _spot(info: Dictionary) -> Control:
 			Juice.claim_burst(get_viewport_rect().size * 0.5, "THE CLINIC DOES NOT RUN ON IOUS", 0, 0)
 	)
 	col.add_child(b)
-	if lvl == 0:
+	var can_pay := int(FamilyProfile.data["gold"]) >= cost
+	if can_pay and (lvl == 0 or lvl < 4):
 		var bang := UiKit.bang()
 		bang.position = Vector2(182, 4)
 		wrap.add_child(bang)

@@ -32,6 +32,9 @@ func _ready() -> void:
 	stamp.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	UiKit.apply_label(stamp, 14, Palette.EDGE)
 	col.add_child(stamp)
+	var mark := LogoMark.new()
+	mark.custom_minimum_size = Vector2(56, 56)
+	col.add_child(mark)
 	_status = Label.new()
 	_status.text = Copy.WAITING
 	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -39,6 +42,7 @@ func _ready() -> void:
 	col.add_child(_status)
 	_code = Label.new()
 	_code.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_code.pivot_offset = Vector2(160, 28)
 	UiKit.apply_label(_code, 56, Palette.TEXT)
 	col.add_child(_code)
 	var share := Label.new()
@@ -76,6 +80,9 @@ func _process(delta: float) -> void:
 	_t += delta
 	var dots := int(_t * 3.0) % 4
 	_spin.text = "·".repeat(dots + 1)
+	var pulse := 1.0 + 0.06 * sin(_t * 4.0)
+	_code.scale = Vector2(pulse, pulse)
+	_status.modulate = Color(1, 1, 1, 0.72 + 0.28 * absf(sin(_t * 2.2)))
 
 
 func _paint() -> void:

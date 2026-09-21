@@ -44,6 +44,12 @@ func _ready() -> void:
 	var table: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/shop.json"))
 	var cats: Dictionary = table.get("catalogs", {})
 	_items = cats.get(catalog, [])
+	if not _items.is_empty():
+		var bits: PackedStringArray = []
+		for item in _items:
+			if table.has(item):
+				bits.append("%s %d" % [str(item).replace("_", " ").to_upper(), int(table[item]["scrap"])])
+		hint = "SPECIAL  " + "  ·  ".join(bits)
 
 
 func _process(_delta: float) -> void:
@@ -54,11 +60,13 @@ func _process(_delta: float) -> void:
 		if n is Fighter:
 			var f: Fighter = n
 			_hint.text = hint
+			_hint.modulate = Color(1.2, 1.15, 0.7)
 			if f._just("special"):
 				var y := f._stick().y
 				_pick(rs, f, y)
 			return
 	_hint.text = idle
+	_hint.modulate = Color.WHITE
 
 
 func _pick(rs: Node, f: Fighter, y: float) -> void:

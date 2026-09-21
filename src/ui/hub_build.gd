@@ -55,8 +55,16 @@ func _node_row(node: Dictionary) -> Control:
 	txt.add_child(stats)
 	box.add_child(txt)
 	var owned: Array = FamilyProfile.data["cbt"]
+	var can_buy := not owned.has(node["id"]) and int(FamilyProfile.data["gold"]) >= int(node["gold"]) and int(FamilyProfile.data["rep"]) >= int(node["rep"])
+	if owned.has(node["id"]):
+		row.add_theme_stylebox_override("panel", UiKit.panel(Palette.PANEL, Palette.READY))
+	elif can_buy:
+		row.add_theme_stylebox_override("panel", UiKit.panel(Palette.PANEL, Palette.LEMON))
 	var buy := UiKit.button("OWNED" if owned.has(node["id"]) else "%d GOLD" % int(node["gold"]), Vector2(140, 40))
 	buy.disabled = owned.has(node["id"]) or int(FamilyProfile.data["gold"]) < int(node["gold"]) or int(FamilyProfile.data["rep"]) < int(node["rep"])
+	if can_buy:
+		buy.add_theme_stylebox_override("normal", UiKit.panel(Palette.READY, Palette.LEMON))
+		UiKit.pulse_ready(buy)
 	buy.pressed.connect(func() -> void:
 		if owned.has(node["id"]):
 			return

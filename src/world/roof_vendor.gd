@@ -44,6 +44,7 @@ func _process(_delta: float) -> void:
 		if n is Fighter:
 			var f: Fighter = n
 			_hint.text = "SPECIAL AMMO 4  ·  DOWN+SPECIAL REROLL 1"
+			_hint.modulate = Color(1.2, 1.15, 0.7)
 			if f._just("special"):
 				var y := PadRouter.stick(f.prefix).y
 				if y > 0.4:
@@ -52,6 +53,7 @@ func _process(_delta: float) -> void:
 					_buy(rs, f, "ammo")
 			return
 	_hint.text = "ROOF VENDOR  ·  SHARP OPINIONS"
+	_hint.modulate = Color.WHITE
 
 
 func _buy(rs: Node, f: Fighter, item: String) -> void:

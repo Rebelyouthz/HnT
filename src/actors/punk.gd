@@ -21,6 +21,8 @@ var staples := 0
 var staple_cd := 0.0
 var guarding := false
 var guard_low := false
+var _alert := Color.WHITE
+var _bob := 0.0
 signal died
 signal finish_ready
 
@@ -98,22 +100,25 @@ func _physics_process(delta: float) -> void:
 		snared -= delta
 		velocity = Vector2.ZERO
 		move_and_slide()
+		_mix_mod()
 		return
 	if recover > 0.0:
 		recover -= delta
 		velocity.x = move_toward(velocity.x, 0.0, 200.0 * delta)
 		move_and_slide()
 		_lane()
+		_mix_mod()
 		return
 	if telegraph > 0.0:
 		telegraph -= delta
-		visual.modulate = Color(1.0, 0.55, 0.2)
+		_alert = Color(1.0, 0.55, 0.2)
 		velocity.x = 0
 		move_and_slide()
 		if telegraph <= 0.0:
-			visual.modulate = Color.WHITE
+			_alert = Color.WHITE
 			_swing()
 		_lane()
+		_mix_mod()
 		return
 	var players := get_tree().get_nodes_in_group("players")
 	var t: Node2D = null
@@ -145,6 +150,10 @@ func _physics_process(delta: float) -> void:
 	velocity.y = 0
 	move_and_slide()
 	_lane()
+	_bob += delta * 4.8
+	if visual:
+		visual.position.y = 1.3 * sin(_bob)
+	_mix_mod()
 
 
 func _lane() -> void:
@@ -177,11 +186,11 @@ func _maybe_guard(f: Fighter) -> bool:
 	guarding = true
 	guard_low = f.sliding or PadRouter.stick(f.prefix).y > 0.45
 	recover = 0.48
-	visual.modulate = Color(0.7, 0.78, 1.0)
+	_alert = Color(0.7, 0.78, 1.0)
 	get_tree().create_timer(0.48).timeout.connect(func() -> void:
 		if is_instance_valid(self):
 			guarding = false
-			visual.modulate = Color.WHITE
+			_alert = Color.WHITE
 	)
 	return true
 
@@ -216,6 +225,16 @@ func _shuriken() -> void:
 	shot.vel = Vector2(float(facing) * 380.0, 0.0)
 	shot.global_position = global_position + Vector2(float(facing) * 20.0, -40.0)
 	get_parent().add_child(shot)
+
+
+func _mix_mod() -> void:
+	if visual == null:
+		return
+	var lamp := Color.WHITE
+	var rig := get_tree().get_first_node_in_group("light_rig")
+	if rig and rig.has_method("tint_at"):
+		lamp = rig.tint_at(global_position)
+	visual.modulate = _alert * lamp
 
 
 func take_hit(kind: String, from: Node) -> void:

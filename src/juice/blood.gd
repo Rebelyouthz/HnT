@@ -55,6 +55,13 @@ func spray(at: Vector2, kind: String, dir: float) -> void:
 		node.visible = true
 		node.global_position = at + Vector2(0, -28)
 		node.modulate.a = 1.0
+		node.scale = Vector2.ONE
+		node.rotation = 0.0
+		var tint := Color(0.55, 0.05, 0.08, 0.92)
+		var rig := get_tree().get_first_node_in_group("light_rig")
+		if rig and rig.has_method("tint_at"):
+			tint = tint.lerp(rig.tint_at(at), 0.4)
+		node.color = tint
 		launched += 1
 		if launched >= n:
 			break
@@ -69,6 +76,9 @@ func pump(at: Vector2, dir: float) -> void:
 	)
 	get_tree().create_timer(0.16, true, false, true).timeout.connect(func() -> void:
 		spray(at + Vector2(dir * 4.0, 8.0), "blade", dir)
+	)
+	get_tree().create_timer(0.28, true, false, true).timeout.connect(func() -> void:
+		spray(at + Vector2(dir * 10.0, 2.0), "finish", dir)
 	)
 
 
@@ -87,11 +97,16 @@ func _process(delta: float) -> void:
 		drop["vel"].y += 980.0 * delta
 		var node: Polygon2D = drop["node"]
 		node.global_position += drop["vel"] * delta
+		var spd: float = drop["vel"].length()
+		node.rotation = drop["vel"].angle()
+		node.scale = Vector2(1.0 + spd / 260.0, 0.65)
 		if node.global_position.y >= 520.0 or drop["life"] <= 0.0:
 			_stain(node.global_position)
-			if randf() < 0.22:
+			if randf() < 0.28:
 				_drip(node.global_position)
 			node.visible = false
+			node.scale = Vector2.ONE
+			node.rotation = 0.0
 			drop["active"] = false
 
 

@@ -37,6 +37,8 @@ func _ready() -> void:
 	col.add_child(_daily_strip())
 
 	var play := UiKit.button(Copy.PLAY, Vector2(320, 52))
+	play.add_theme_stylebox_override("normal", UiKit.panel(Palette.BRICK, Palette.LEMON))
+	UiKit.pulse_ready(play)
 	play.pressed.connect(func() -> void:
 		App.couch = false
 		App.start_run()
@@ -107,6 +109,7 @@ func _chest_btn(kind: String, chest: Dictionary, value: int) -> Button:
 		b.text = "CHEST %d" % at
 	else:
 		b.add_theme_stylebox_override("normal", UiKit.panel(Palette.READY, Palette.LEMON))
+		UiKit.pulse_ready(b)
 	b.pressed.connect(func() -> void:
 		if already or value < at:
 			return

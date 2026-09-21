@@ -60,13 +60,23 @@ func _ready() -> void:
 	col.add_child(_counts)
 
 	_go = UiKit.button(Copy.GO_SOLO if not App.couch else Copy.GO_COUCH, Vector2(360, 56))
+	_go.add_theme_stylebox_override("normal", UiKit.panel(Palette.BRICK, Palette.LEMON))
+	UiKit.pulse_ready(_go)
 	_go.pressed.connect(App.start_run)
 	col.add_child(_go)
+
+	var acts := Label.new()
+	acts.text = "1 DOCK STREET  ·  2 FIRE ESCAPES  ·  3 NEON EXCHANGE  ·  4 RAIL BRIDGE  ·  5 CITY HALL"
+	acts.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	UiKit.apply_label(acts, 12, Palette.MUTED)
+	col.add_child(acts)
 
 	var net := HBoxContainer.new()
 	net.add_theme_constant_override("separation", 8)
 	var host := UiKit.button(Copy.HOST, Vector2(240, 48))
 	var join := UiKit.button(Copy.JOIN, Vector2(240, 48))
+	host.add_theme_stylebox_override("normal", UiKit.panel(Palette.PANEL_2, Palette.LEMON))
+	join.add_theme_stylebox_override("normal", UiKit.panel(Palette.PANEL_2, Palette.BRICK))
 	host.pressed.connect(func() -> void:
 		get_tree().root.add_child(preload("res://src/ui/host_wait.gd").new())
 	)
@@ -125,7 +135,10 @@ func _count_rows() -> Array:
 		{"name": "MAP 3 SOLO", "value": str(Party.count_for("neon_exchange", false)), "color": Palette.LEMON},
 		{"name": "MAP 4 SOLO", "value": str(Party.count_for("rail_bridge", false)), "color": Palette.EDGE},
 		{"name": "HALL SOLO", "value": str(Party.count_for("city_hall", false)), "color": Palette.BRICK},
-		{"name": "COUCH EACH", "value": str(Party.count_for("dock_street", true)), "color": Palette.TEXT}
+		{"name": "COUCH EACH", "value": str(Party.count_for("dock_street", true)), "color": Palette.TEXT},
+		{"name": "ACTS", "value": "5", "color": Palette.READY},
+		{"name": "HOST", "value": "SON", "color": Palette.LEMON},
+		{"name": "JOIN", "value": "FATHER", "color": Palette.BRICK}
 	]
 
 

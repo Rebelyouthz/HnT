@@ -43,6 +43,7 @@ func _ready() -> void:
 	_code.max_length = 8
 	_code.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_code.add_theme_font_size_override("font_size", 28)
+	_code.add_theme_color_override("font_color", Palette.LEMON)
 	col.add_child(_code)
 	var tog := UiKit.button("SHOW IP BACKUP", Vector2(220, 40))
 	col.add_child(tog)
@@ -62,6 +63,8 @@ func _ready() -> void:
 		tog.text = "HIDE IP BACKUP" if _ip_wrap.visible else "SHOW IP BACKUP"
 	)
 	_connect = UiKit.button(Copy.CONNECT, Vector2(280, 56))
+	_connect.add_theme_stylebox_override("normal", UiKit.panel(Palette.BRICK, Palette.LEMON))
+	UiKit.pulse_ready(_connect)
 	_connect.pressed.connect(_go)
 	col.add_child(_connect)
 	_status = Label.new()

@@ -23,6 +23,8 @@ func _btn(text: String, pos: Vector2, size: Vector2, action: String) -> void:
 	b.position = pos
 	b.size = size
 	b.add_theme_font_size_override("font_size", 16)
+	b.add_theme_stylebox_override("normal", UiKit.panel(Palette.PANEL_2, Palette.EDGE))
+	b.add_theme_stylebox_override("pressed", UiKit.panel(Palette.BRICK, Palette.LEMON))
 	b.button_down.connect(func() -> void:
 		_tap(action, true)
 	)

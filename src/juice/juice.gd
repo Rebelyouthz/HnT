@@ -3,6 +3,7 @@ extends Node
 var trauma := 0.0
 var combo := 0
 var combo_ttl := 0.0
+var combo_peak := 0
 var callout := ""
 var _callout_t := 0.0
 var _base_scale := 1.0
@@ -13,6 +14,7 @@ var _sfx: AudioStreamPlayer
 
 const DECAY := 1.35
 const MAX_OFFSET := Vector2(12, 8)
+const COMBO_WINDOW := 1.55
 
 
 func _ready() -> void:
@@ -42,7 +44,7 @@ func _combo_clock(delta: float) -> void:
 	# Combo lives in world time so SNAP does not eat the meter.
 	combo_ttl -= delta
 	if combo_ttl <= 0.0:
-		combo = 0
+		cash_out()
 
 
 func add_trauma(amount: float) -> void:
@@ -140,7 +142,8 @@ func play(stream_path: String) -> void:
 
 func register_hit(kind: String, global_pos: Vector2, dmg: int) -> void:
 	combo += 1
-	combo_ttl = 1.55
+	combo_peak = maxi(combo_peak, combo)
+	combo_ttl = COMBO_WINDOW
 	if kind == "light":
 		popup_number(global_pos + Vector2(0, -80), str(dmg), Palette.TEXT)
 	elif kind == "snap":
@@ -294,7 +297,94 @@ func _fly_chip(from: Vector2, to: Vector2, color: Color) -> void:
 
 
 func keep_combo() -> void:
-	combo_ttl = maxf(combo_ttl, 1.1)
+	if combo > 0:
+		combo_ttl = maxf(combo_ttl, 1.1)
+
+
+func combo_frac() -> float:
+	if combo < 2:
+		return 0.0
+	return clampf(combo_ttl / COMBO_WINDOW, 0.0, 1.0)
+
+
+func combo_rank() -> String:
+	if combo >= 40:
+		return "S+"
+	if combo >= 30:
+		return "S"
+	if combo >= 20:
+		return "A"
+	if combo >= 15:
+		return "B"
+	if combo >= 8:
+		return "C"
+	if combo >= 5:
+		return "D"
+	if combo >= 2:
+		return "HIT"
+	return ""
+
+
+func break_combo() -> void:
+	if combo < 2:
+		combo = 0
+		combo_ttl = 0.0
+		combo_peak = 0
+		return
+	shout("DROPPED")
+	popup_number(Vector2(640, 220), "COMBO DEAD", Palette.BRICK)
+	combo = 0
+	combo_ttl = 0.0
+	combo_peak = 0
+
+
+func cash_out() -> void:
+	var n := combo
+	combo = 0
+	combo_ttl = 0.0
+	if n < 5:
+		combo_peak = 0
+		return
+	var scrap_n := maxi(1, n / 4)
+	var xp_n := n / 6
+	var rs := get_tree().get_first_node_in_group("run_state")
+	if rs and rs.has_method("has_card") and rs.has_card("street_credit"):
+		scrap_n *= 2
+	if rs and rs.has_method("add_scrap"):
+		rs.add_scrap(scrap_n)
+	if rs and rs.has_method("add_xp") and xp_n > 0:
+		rs.add_xp(xp_n)
+	FamilyProfile.mark_combo_bank(n)
+	shout("BANKED  +%d SCRAP" % scrap_n)
+	popup_number(Vector2(640, 200), "CASH OUT x%d" % n, Palette.EDGE)
+	play("res://assets/audio/claim.wav")
+	combo_peak = 0
+
+
+func land_puff(global_pos: Vector2) -> void:
+	var p := CPUParticles2D.new()
+	p.global_position = global_pos
+	p.emitting = true
+	p.one_shot = true
+	p.explosiveness = 0.95
+	p.amount = 8
+	p.lifetime = 0.28
+	p.direction = Vector2(0, -1)
+	p.spread = 80.0
+	p.gravity = Vector2(0, 240)
+	p.initial_velocity_min = 30.0
+	p.initial_velocity_max = 90.0
+	p.scale_amount_min = 1.2
+	p.scale_amount_max = 2.4
+	p.color = Color(0.55, 0.52, 0.48, 0.7)
+	var host := get_tree().get_first_node_in_group("dock_world")
+	if host:
+		host.add_child(p)
+	else:
+		add_child(p)
+	await get_tree().create_timer(0.4, true, false, true).timeout
+	if is_instance_valid(p):
+		p.queue_free()
 
 
 func toast(kind: String, title: String, body: String) -> void:
@@ -314,10 +404,18 @@ func toast(kind: String, title: String, body: String) -> void:
 			accent = Palette.EDGE
 	wrap.add_theme_stylebox_override("panel", UiKit.panel(Palette.PANEL, accent))
 	wrap.position = Vector2(860, 86 + _overlay.get_child_count() * 8)
-	wrap.size = Vector2(400, 72)
+	wrap.size = Vector2(400, 80)
 	_overlay.add_child(wrap)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	wrap.add_child(row)
+	var stamp := StampMark.new()
+	stamp.accent = accent
+	stamp.custom_minimum_size = Vector2(28, 28)
+	row.add_child(stamp)
 	var col := VBoxContainer.new()
-	wrap.add_child(col)
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(col)
 	var k := Label.new()
 	k.text = kind.to_upper()
 	UiKit.apply_label(k, 11, accent)
@@ -359,11 +457,17 @@ func unlock_logo(title: String, sub: String) -> void:
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 8)
 	card.add_child(col)
+	var brand := HBoxContainer.new()
+	brand.alignment = BoxContainer.ALIGNMENT_CENTER
+	var mark := LogoMark.new()
+	mark.custom_minimum_size = Vector2(48, 48)
+	brand.add_child(mark)
 	var stamp := Label.new()
 	stamp.text = "UNLOCKED"
 	stamp.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	UiKit.apply_label(stamp, 13, Palette.EDGE)
-	col.add_child(stamp)
+	brand.add_child(stamp)
+	col.add_child(brand)
 	var t := Label.new()
 	t.text = title
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

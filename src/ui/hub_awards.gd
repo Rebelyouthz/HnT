@@ -21,10 +21,15 @@ func _ready() -> void:
 	col.add_child(_section(Copy.DAILY, "daily", int(FamilyProfile.data["daily_progress"]), 5))
 	col.add_child(_section(Copy.LIFE, "lifetime", int(FamilyProfile.data["lifetime_points"]), 12))
 
+	var head := HBoxContainer.new()
+	var stamp := StampMark.new()
+	stamp.accent = Palette.LEMON
+	head.add_child(stamp)
 	var h := Label.new()
 	h.text = "AWARDS  ·  CLAIM OR IT DID NOT HAPPEN"
 	UiKit.apply_label(h, 20, Palette.LEMON)
-	col.add_child(h)
+	head.add_child(h)
+	col.add_child(head)
 
 	var awards: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/awards.json"))
 	for a in awards:
@@ -40,6 +45,10 @@ func _section(title: String, kind: String, value: int, maxv: int) -> Control:
 	t.text = "%s  ·  %d / %d" % [title, value, maxv]
 	UiKit.apply_label(t, 16, Palette.LEMON)
 	v.add_child(t)
+	v.add_child(StatPanel.new([
+		{"name": "FILLED", "value": "%d / %d" % [value, maxv], "color": Palette.READY},
+		{"name": "LEFT", "value": str(maxi(0, maxv - value)), "color": Palette.MUTED}
+	]))
 	var bar := ProgressBar.new()
 	bar.max_value = maxv
 	bar.value = value
@@ -54,10 +63,12 @@ func _section(title: String, kind: String, value: int, maxv: int) -> Control:
 	return box
 
 
-func _chest(kind: String, chest: Dictionary, value: int) -> Button:
+func _chest(kind: String, chest: Dictionary, value: int) -> Control:
 	var key := "daily_claimed" if kind == "daily" else "lifetime_claimed"
 	var claimed: Array = FamilyProfile.data[key]
 	var at := int(chest["at"])
+	var wrap := Control.new()
+	wrap.custom_minimum_size = Vector2(128, 48)
 	var b := UiKit.button("CHEST %d" % at, Vector2(120, 40))
 	var already := claimed.has(at)
 	var ready := value >= at and not already
@@ -68,6 +79,7 @@ func _chest(kind: String, chest: Dictionary, value: int) -> Button:
 		b.disabled = true
 	else:
 		b.add_theme_stylebox_override("normal", UiKit.panel(Palette.READY, Palette.LEMON))
+		UiKit.pulse_ready(b)
 	b.pressed.connect(func() -> void:
 		if already or value < at:
 			return
@@ -77,21 +89,37 @@ func _chest(kind: String, chest: Dictionary, value: int) -> Button:
 		Juice.toast("quest" if kind == "daily" else "challenge", str(chest["line"]), "CLAIMED. THE CLIPBOARD NOTICED.")
 		need_refresh.emit()
 	)
-	return b
+	wrap.add_child(b)
+	if ready:
+		var bang := UiKit.bang()
+		bang.position = Vector2(100, -6)
+		wrap.add_child(bang)
+	return wrap
 
 
 func _award(a: Dictionary) -> Control:
 	var need: Dictionary = a["need"]
+	var have := 0
+	var want := 0
 	var ok := true
 	for k in need.keys():
-		if int(FamilyProfile.data.get(k, 0)) < int(need[k]):
+		var n := int(need[k])
+		var got := int(FamilyProfile.data.get(k, 0))
+		want += n
+		have += mini(got, n)
+		if got < n:
 			ok = false
 	var claimed: Array = FamilyProfile.data["awards_claimed"]
 	var already: bool = claimed.has(a["id"])
 	var card := PanelContainer.new()
-	card.add_theme_stylebox_override("panel", UiKit.panel())
+	var edge := Palette.READY if ok and not already else Palette.EDGE
+	card.add_theme_stylebox_override("panel", UiKit.panel(Palette.PANEL, edge))
 	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
 	card.add_child(row)
+	var stamp := StampMark.new()
+	stamp.accent = Palette.LEMON if already else (Palette.READY if ok else Palette.BADGE)
+	row.add_child(stamp)
 	var txt := VBoxContainer.new()
 	txt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var t := Label.new()
@@ -103,8 +131,13 @@ func _award(a: Dictionary) -> Control:
 	UiKit.apply_label(b, 13, Palette.TEXT)
 	txt.add_child(t)
 	txt.add_child(b)
+	txt.add_child(StatPanel.new([
+		{"name": "PROGRESS", "value": "%d / %d" % [have, maxi(want, 1)], "color": Palette.READY if ok else Palette.MUTED},
+		{"name": "GOLD", "value": str(int(a["gold"])), "color": Palette.EDGE},
+		{"name": "GEMS", "value": str(int(a["gems"])), "color": Palette.LEMON}
+	]))
 	row.add_child(txt)
-	var btn := UiKit.button(Copy.CLAIM, Vector2(120, 40))
+	var btn := UiKit.button(Copy.CLAIM, Vector2(120, 44))
 	if already:
 		btn.text = Copy.CLAIMED
 		btn.disabled = true
@@ -113,6 +146,7 @@ func _award(a: Dictionary) -> Control:
 		btn.text = "NOT YET"
 	else:
 		btn.add_theme_stylebox_override("normal", UiKit.panel(Palette.READY, Palette.LEMON))
+		UiKit.pulse_ready(btn)
 	btn.pressed.connect(func() -> void:
 		if already or not ok:
 			return

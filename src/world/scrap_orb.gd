@@ -28,6 +28,7 @@ func _eat(b: Node) -> void:
 		var rs := get_tree().get_first_node_in_group("run_state")
 		if rs and rs.has_method("add_scrap"):
 			rs.add_scrap(amount)
+		Juice.keep_combo()
 		Juice.popup_number(global_position, "+%d SCRAP" % amount, Palette.EDGE)
 		Juice.play("res://assets/audio/ui_click.wav")
 		queue_free()

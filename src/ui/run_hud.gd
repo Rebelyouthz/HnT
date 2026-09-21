@@ -6,11 +6,16 @@ var _dad: Label
 var _lives: Label
 var _call: Label
 var _combo: Label
+var _rank: Label
+var _combo_bg: ColorRect
+var _combo_fill: ColorRect
 var _hint: Label
 var _snap_a: Label
 var _snap_b: Label
 var _steam_a: ColorRect
 var _steam_b: ColorRect
+var _hp_a: HBoxContainer
+var _hp_b: HBoxContainer
 var _scrap: Label
 var _wanted: Label
 var _act: Label
@@ -19,6 +24,7 @@ var son: Fighter
 var father: Fighter
 var state: RunState
 var _join_grace := 0
+var _blink_t := 0.0
 
 
 func _ready() -> void:
@@ -33,7 +39,8 @@ func _ready() -> void:
 	_son.position = Vector2(12, 28)
 	UiKit.apply_label(_son, 15, Palette.LEMON)
 	add_child(_son)
-	_steam_a = _bar(Vector2(12, 78), Palette.LEMON)
+	_hp_a = _pips_row(Vector2(12, 68), Palette.LEMON)
+	_steam_a = _bar(Vector2(12, 84), Palette.LEMON)
 
 	_dad = Label.new()
 	_dad.position = Vector2(900, 28)
@@ -41,7 +48,8 @@ func _ready() -> void:
 	_dad.size = Vector2(368, 48)
 	UiKit.apply_label(_dad, 15, Palette.BRICK)
 	add_child(_dad)
-	_steam_b = _bar(Vector2(1048, 78), Palette.BRICK)
+	_hp_b = _pips_row(Vector2(1048, 68), Palette.BRICK)
+	_steam_b = _bar(Vector2(1048, 84), Palette.BRICK)
 
 	_lives = Label.new()
 	_lives.position = Vector2(500, 8)
@@ -70,14 +78,26 @@ func _ready() -> void:
 	add_child(_act)
 
 	_combo = Label.new()
-	_combo.position = Vector2(560, 36)
-	_combo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_combo.size = Vector2(160, 24)
-	UiKit.apply_label(_combo, 18, Palette.EDGE)
+	_combo.position = Vector2(12, 98)
+	UiKit.apply_label(_combo, 20, Palette.EDGE)
 	add_child(_combo)
+	_rank = Label.new()
+	_rank.position = Vector2(12, 120)
+	UiKit.apply_label(_rank, 13, Palette.LEMON)
+	add_child(_rank)
+	_combo_bg = ColorRect.new()
+	_combo_bg.position = Vector2(12, 142)
+	_combo_bg.size = Vector2(180, 6)
+	_combo_bg.color = Color(0, 0, 0, 0.55)
+	add_child(_combo_bg)
+	_combo_fill = ColorRect.new()
+	_combo_fill.position = Vector2(12, 142)
+	_combo_fill.size = Vector2(180, 6)
+	_combo_fill.color = Palette.LEMON
+	add_child(_combo_fill)
 
 	_call = Label.new()
-	_call.position = Vector2(280, 90)
+	_call.position = Vector2(280, 96)
 	_call.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_call.size = Vector2(720, 40)
 	UiKit.apply_label(_call, 26, Palette.LEMON)
@@ -93,6 +113,19 @@ func _ready() -> void:
 	UiKit.apply_label(_hint, 13, Palette.MUTED)
 	_hint.text = _prompt_line()
 	add_child(_hint)
+
+
+func _pips_row(pos: Vector2, color: Color) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.position = pos
+	row.add_theme_constant_override("separation", 3)
+	for i in 8:
+		var pip := ColorRect.new()
+		pip.custom_minimum_size = Vector2(24, 8)
+		pip.color = color
+		row.add_child(pip)
+	add_child(row)
+	return row
 
 
 func _bar(pos: Vector2, color: Color) -> ColorRect:
@@ -114,6 +147,7 @@ func _snap_lab() -> Label:
 	l.text = "SNAP"
 	l.visible = false
 	l.process_mode = Node.PROCESS_MODE_ALWAYS
+	l.z_index = -1
 	UiKit.apply_label(l, 22, Color(0.86, 0.92, 1.0))
 	add_child(l)
 	return l
@@ -134,14 +168,15 @@ func _prompt_line() -> String:
 	return PadRouter.p1_prompt() + "  ·  " + PadRouter.p2_prompt()
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if _join_grace > 0:
 		_join_grace -= 1
+	_blink_t += delta
 	_fps.text = "FPS %d" % int(Engine.get_frames_per_second())
 	var left: Fighter = son if son else father
 	var right: Fighter = father if son else null
-	_paint_fighter(_son, _steam_a, _snap_a, left, left != null and left.role == "son")
-	_paint_fighter(_dad, _steam_b, _snap_b, right, false)
+	_paint_fighter(_son, _steam_a, _hp_a, _snap_a, left, left != null and left.role == "son")
+	_paint_fighter(_dad, _steam_b, _hp_b, _snap_b, right, false)
 	var life_n := 3
 	if state:
 		life_n = state.lives
@@ -149,7 +184,17 @@ func _process(_delta: float) -> void:
 	for i in 3:
 		stamps += "[  ] " if i < life_n else "[x] "
 	_lives.text = "LIVES  " + stamps
-	_combo.text = "" if Juice.combo < 2 else "%d HIT" % Juice.combo
+	if Juice.combo < 2:
+		_combo.text = ""
+		_rank.text = ""
+		_combo_fill.size.x = 0
+		_combo_bg.visible = false
+	else:
+		_combo.text = "%d HIT" % Juice.combo
+		_rank.text = Juice.combo_rank() + "  ·  CASH OUT IF THE BAR DIES"
+		_combo_bg.visible = true
+		_combo_fill.size.x = 180.0 * Juice.combo_frac()
+		_combo_fill.color = Palette.LEMON if Juice.combo_frac() > 0.35 else Palette.BRICK
 	_call.text = Juice.callout
 	if state:
 		_scrap.text = "SCRAP  %d   XP  %d" % [state.scrap, state.xp]
@@ -169,27 +214,52 @@ func _process(_delta: float) -> void:
 		_toggle_pause()
 
 
-func _paint_fighter(lab: Label, bar: ColorRect, snap: Label, f: Fighter, lemon_slot: bool) -> void:
+func _paint_fighter(lab: Label, bar: ColorRect, pips: HBoxContainer, snap: Label, f: Fighter, lemon_slot: bool) -> void:
 	if f == null or not is_instance_valid(f):
 		lab.text = ""
 		bar.size.x = 0
 		snap.visible = false
+		for pip in pips.get_children():
+			(pip as ColorRect).color = Color(0.12, 0.12, 0.14, 0.6)
 		return
 	var kit := ("BATWING %d" % f.ammo) if f.role == "son" else ("WEB SHOT %d" % f.ammo)
 	var title := FamilyProfile.son_name() if f.role == "son" else FamilyProfile.father_name()
 	var role := "THE SON" if f.role == "son" else "THE FATHER"
-	lab.text = "%s\n%s   HP %d  STEAM %d  %s" % [title, role, f.hp, int(f.steam), kit]
+	lab.text = "%s\n%s   STEAM %d  %s" % [title, role, int(f.steam), kit]
 	if lemon_slot:
 		lab.add_theme_color_override("font_color", Palette.LEMON)
 	else:
 		lab.add_theme_color_override("font_color", Palette.BRICK)
 	bar.size.x = 220.0 * (f.steam / Fighter.STEAM_MAX)
+	_paint_pips(pips, f, lemon_slot)
 	_place_snap(snap, f)
 
 
+func _paint_pips(row: HBoxContainer, f: Fighter, lemon_slot: bool) -> void:
+	var filled := int(round((float(f.hp) / float(maxi(f.max_hp, 1))) * 8.0))
+	var on := Palette.LEMON if lemon_slot else Palette.BRICK
+	var i := 0
+	for pip in row.get_children():
+		var r := pip as ColorRect
+		if i < filled:
+			r.color = on if f.hp > int(float(f.max_hp) * 0.3) else Palette.BADGE
+		else:
+			r.color = Color(0.12, 0.12, 0.14, 0.65)
+		i += 1
+
+
 func _place_snap(lab: Label, f: Fighter) -> void:
-	lab.visible = f.snap_ready and not f.downed
-	if not lab.visible:
+	var ally_near := _ally_holding(f)
+	if f.downed:
+		lab.visible = true
+		lab.text = "HOLD" if ally_near else "DOWN"
+		lab.modulate.a = 0.4 + 0.6 * absf(sin(_blink_t * 8.0))
+	elif f.snap_ready:
+		lab.visible = true
+		lab.text = "SNAP"
+		lab.modulate.a = 0.45 + 0.55 * absf(sin(_blink_t * 7.0))
+	else:
+		lab.visible = false
 		return
 	var cam := get_viewport().get_camera_2d()
 	var gp := f.global_position + Vector2(0, -110)
@@ -197,6 +267,22 @@ func _place_snap(lab: Label, f: Fighter) -> void:
 		lab.position = cam.get_screen_transform() * gp + Vector2(-28, 0)
 	else:
 		lab.position = gp
+
+
+func _ally_holding(f: Fighter) -> bool:
+	if not f.downed:
+		return false
+	for n in get_tree().get_nodes_in_group("players"):
+		if n == f or not (n is Fighter):
+			continue
+		var other: Fighter = n
+		if other.downed:
+			continue
+		if other.global_position.distance_to(f.global_position) > 58.0:
+			continue
+		if other._pressed("snap"):
+			return true
+	return false
 
 
 func _toggle_pause() -> void:
@@ -216,7 +302,7 @@ func _toggle_pause() -> void:
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	layer.add_child(dim)
 	var col := VBoxContainer.new()
-	col.position = Vector2(480, 220)
+	col.position = Vector2(480, 200)
 	col.add_theme_constant_override("separation", 12)
 	layer.add_child(col)
 	var t := Label.new()
@@ -243,6 +329,7 @@ func _toggle_pause() -> void:
 			{"name": "XP", "value": str(state.xp), "color": Palette.LEMON},
 			{"name": "WANTED", "value": str(state.wanted), "color": Palette.BRICK},
 			{"name": "CARDS", "value": str(state.cards.size()), "color": Palette.TEXT},
+			{"name": "COMBO", "value": str(Juice.combo), "color": Palette.EDGE},
 			{"name": "ACT", "value": str(App.current_map).replace("_", " ").to_upper(), "color": Palette.LEMON},
 			{"name": "MODE", "value": ("REMOTE" if App.remote_coop else ("COUCH" if App.density_coop else "SOLO")), "color": Palette.TEXT}
 		]))

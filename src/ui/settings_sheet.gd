@@ -27,6 +27,11 @@ func _ready() -> void:
 	h.text = "SESSION SETTINGS"
 	UiKit.apply_label(h, 22, Palette.LEMON)
 	col.add_child(h)
+	var sub := Label.new()
+	sub.text = "Volumes, gore, PIN, rooms URL. Host/Join ports do not live here. The map is the other chair."
+	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	UiKit.apply_label(sub, 13, Palette.MUTED)
+	col.add_child(sub)
 	col.add_child(_vol("MASTER", "vol_master"))
 	col.add_child(_vol("SFX", "vol_sfx"))
 	col.add_child(_vol("MUSIC", "vol_music"))
@@ -84,11 +89,18 @@ func _vol(title: String, key: String) -> Control:
 	s.step = 0.05
 	s.value = float(FamilyProfile.data.get(key, 1.0))
 	s.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var pct := Label.new()
+	pct.custom_minimum_size = Vector2(48, 0)
+	pct.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	UiKit.apply_label(pct, 14, Palette.TEXT)
+	pct.text = "%d%%" % int(round(s.value * 100.0))
 	s.value_changed.connect(func(v: float) -> void:
 		FamilyProfile.data[key] = v
 		FamilyProfile.save()
 		Mixer.apply_volumes()
+		pct.text = "%d%%" % int(round(v * 100.0))
 	)
 	row.add_child(l)
 	row.add_child(s)
+	row.add_child(pct)
 	return row
