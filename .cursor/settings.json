@@ -1,0 +1,58 @@
+{
+  "plugins": {
+    "awesome-gamedev-agent-skills/gamedev": {
+      "enabled": true
+    },
+    "awesome-gamedev-agent-skills/router": {
+      "enabled": true
+    },
+    "awesome-gamedev-agent-skills/godot": {
+      "enabled": true
+    },
+    "awesome-gamedev-agent-skills/disciplines": {
+      "enabled": true
+    },
+    "awesome-gamedev-agent-skills/genres": {
+      "enabled": true
+    },
+    "awesome-gamedev-agent-skills/web-engines": {
+      "enabled": true
+    },
+    "elevenlabs": {
+      "enabled": true
+    },
+    "wonder": {
+      "enabled": true
+    },
+    "descript": {
+      "enabled": true
+    },
+    "mobbin": {
+      "enabled": true
+    },
+    "gmail": {
+      "enabled": true
+    },
+    "google-calendar": {
+      "enabled": true
+    },
+    "google-drive": {
+      "enabled": true
+    },
+    "coderabbit": {
+      "enabled": true
+    },
+    "docs-canvas": {
+      "enabled": true
+    },
+    "pr-review-canvas": {
+      "enabled": true
+    },
+    "superdesign": {
+      "enabled": true
+    },
+    "app-builder": {
+      "enabled": true
+    }
+  }
+}
