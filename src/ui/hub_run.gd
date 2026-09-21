@@ -55,7 +55,7 @@ func _ready() -> void:
 	col.add_child(net)
 
 	var hint := Label.new()
-	hint.text = "P1 keyboard. P2 pad. Esc pauses. J light (red flash). K heavy (the real conversation)."
+	hint.text = "P1 keyboard, P2 pad or arrows. Light is a red flash. Heavy is the conversation. Roofs need a fire escape, a cape, or a web — the jump is too honest."
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	UiKit.apply_label(hint, 14, Palette.TEXT)
 	col.add_child(hint)

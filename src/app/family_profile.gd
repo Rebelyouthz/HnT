@@ -60,6 +60,7 @@ func _defaults() -> Dictionary:
 		"runs": 0,
 		"heavies": 0,
 		"lights": 0,
+		"snaps": 0,
 		"buildings_tapped": 0,
 		"buildings": b,
 		"awards_claimed": [],
@@ -179,6 +180,11 @@ func mark_heavy() -> void:
 
 func mark_light() -> void:
 	data["lights"] = int(data["lights"]) + 1
+	save()
+
+
+func mark_snap() -> void:
+	data["snaps"] = int(data.get("snaps", 0)) + 1
 	save()
 
 

@@ -1,14 +1,25 @@
 extends Node
 
-var shake_amp := 0.0
+var trauma := 0.0
+var combo := 0
+var combo_ttl := 0.0
+var callout := ""
+var _callout_t := 0.0
+var _base_scale := 1.0
+var _hitstop_depth := 0
+var _noise_t := 0.0
 var _overlay: CanvasLayer
 var _sfx: AudioStreamPlayer
+
+const DECAY := 1.35
+const MAX_OFFSET := Vector2(12, 8)
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_overlay = CanvasLayer.new()
 	_overlay.layer = 80
+	_overlay.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(_overlay)
 	_sfx = AudioStreamPlayer.new()
 	_sfx.bus = "sfx"
@@ -16,29 +27,78 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	shake_amp = move_toward(shake_amp, 0.0, 28.0 * delta)
+	if trauma > 0.0:
+		trauma = maxf(trauma - DECAY * delta, 0.0)
+	_noise_t += delta * 30.0
+	if combo > 0:
+		_combo_clock(delta)
+	if _callout_t > 0.0:
+		_callout_t -= delta
+		if _callout_t <= 0.0:
+			callout = ""
+
+
+func _combo_clock(delta: float) -> void:
+	# Combo lives in world time so SNAP does not eat the meter.
+	combo_ttl -= delta
+	if combo_ttl <= 0.0:
+		combo = 0
+
+
+func add_trauma(amount: float) -> void:
+	trauma = clampf(trauma + amount, 0.0, 1.0)
 
 
 func shake_offset() -> Vector2:
-	if shake_amp <= 0.05:
+	var shake := trauma * trauma
+	if shake <= 0.002:
 		return Vector2.ZERO
-	return Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)) * shake_amp
+	return Vector2(
+		MAX_OFFSET.x * shake * sin(_noise_t * 1.7),
+		MAX_OFFSET.y * shake * sin(_noise_t * 2.3)
+	)
 
 
 func pulse_shake(px: float) -> void:
-	shake_amp = maxf(shake_amp, px)
+	add_trauma(clampf(px / 12.0, 0.08, 1.0))
+
+
+func set_world_scale(s: float) -> void:
+	_base_scale = s
+	_apply_scale()
+
+
+func _apply_scale() -> void:
+	if _hitstop_depth > 0:
+		return
+	Engine.time_scale = _base_scale
 
 
 func hitstop(frames: int) -> void:
 	if frames <= 0:
 		return
-	var sec := frames / 60.0
+	_hitstop_depth += 1
 	Engine.time_scale = 0.08
-	await get_tree().create_timer(sec, true, false, true).timeout
-	Engine.time_scale = 1.0
+	await get_tree().create_timer(frames / 60.0, true, false, true).timeout
+	_hitstop_depth = maxi(0, _hitstop_depth - 1)
+	if _hitstop_depth == 0:
+		Engine.time_scale = _base_scale
+
+
+func freeze_frames(frames: int) -> void:
+	if frames <= 0:
+		return
+	_hitstop_depth += 1
+	Engine.time_scale = 0.02
+	await get_tree().create_timer(frames / 60.0, true, false, true).timeout
+	_hitstop_depth = maxi(0, _hitstop_depth - 1)
+	if _hitstop_depth == 0:
+		Engine.time_scale = _base_scale
 
 
 func flash_red(node: CanvasItem, frames: int = 2) -> void:
+	if node == null:
+		return
 	var original := node.modulate
 	node.modulate = Color(1.0, 0.22, 0.18, 1.0)
 	await get_tree().create_timer(frames / 60.0, true, false, true).timeout
@@ -46,11 +106,100 @@ func flash_red(node: CanvasItem, frames: int = 2) -> void:
 		node.modulate = original
 
 
+func flash_white_red(node: CanvasItem) -> void:
+	if node == null:
+		return
+	var original := node.modulate
+	node.modulate = Color(1.0, 1.0, 1.0, 1.0)
+	await get_tree().create_timer(1.0 / 60.0, true, false, true).timeout
+	if is_instance_valid(node):
+		node.modulate = Color(1.0, 0.28, 0.2, 1.0)
+	await get_tree().create_timer(3.0 / 60.0, true, false, true).timeout
+	if is_instance_valid(node):
+		node.modulate = original
+
+
+func squash(node: Node2D, facing: int) -> void:
+	if node == null:
+		return
+	node.scale = Vector2(1.28 * float(facing), 0.7)
+	var tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.set_ignore_time_scale(true)
+	tw.tween_property(node, "scale", Vector2(float(facing), 1.0), 0.16)
+
+
 func play(stream_path: String) -> void:
 	if ResourceLoader.exists(stream_path):
 		_sfx.stream = load(stream_path)
 		_sfx.pitch_scale = randf_range(0.94, 1.06)
 		_sfx.play()
+
+
+func register_hit(kind: String, global_pos: Vector2, dmg: int) -> void:
+	combo += 1
+	combo_ttl = 1.55
+	if kind == "light":
+		popup_number(global_pos + Vector2(0, -80), str(dmg), Palette.TEXT)
+	elif kind == "snap":
+		popup_number(global_pos + Vector2(0, -86), "SNAP", Color(0.86, 0.92, 1.0))
+	elif kind == "web-slam":
+		popup_number(global_pos + Vector2(0, -86), "OFFICE", Color(1.0, 0.55, 0.2))
+	else:
+		popup_number(global_pos + Vector2(0, -80), str(dmg), Color(1.0, 0.55, 0.2))
+	if combo == 5:
+		shout("NICE")
+	elif combo == 10:
+		shout("HOLY HELL")
+	elif combo == 20:
+		shout("FAMILY POLICY")
+	elif combo == 40:
+		shout("THE THERAPIST IS CRYING")
+
+
+func shout(line: String) -> void:
+	callout = line
+	_callout_t = 1.35
+
+
+func snap_bang(global_pos: Vector2) -> void:
+	pulse_shake(8.0)
+	register_hit("snap", global_pos, 0)
+	kill_burst(global_pos, "snap")
+	await freeze_frames(4)
+	await hitstop(8)
+
+
+func kill_burst(global_pos: Vector2, kind: String) -> void:
+	if kind == "light":
+		return
+	var p := CPUParticles2D.new()
+	p.global_position = global_pos + Vector2(0, -30)
+	p.emitting = true
+	p.one_shot = true
+	p.explosiveness = 0.92
+	p.amount = 16
+	p.lifetime = 0.38
+	p.direction = Vector2(0, -1)
+	p.spread = 55.0
+	p.gravity = Vector2(0, 420)
+	p.initial_velocity_min = 70.0
+	p.initial_velocity_max = 190.0
+	p.scale_amount_min = 1.5
+	p.scale_amount_max = 3.2
+	if kind == "snap":
+		p.color = Color(0.9, 0.92, 1.0)
+	elif kind == "web-slam":
+		p.color = Color(0.55, 0.55, 0.62)
+	else:
+		p.color = Palette.BRICK
+	var host := get_tree().get_first_node_in_group("dock_world")
+	if host:
+		host.add_child(p)
+	else:
+		add_child(p)
+	await get_tree().create_timer(0.55, true, false, true).timeout
+	if is_instance_valid(p):
+		p.queue_free()
 
 
 func popup_number(global_pos: Vector2, text: String, color: Color) -> void:
@@ -61,12 +210,13 @@ func popup_number(global_pos: Vector2, text: String, color: Color) -> void:
 	var lab := Label.new()
 	lab.text = text
 	lab.modulate = color
-	lab.position = screen + Vector2(-20, -40)
+	lab.position = screen + Vector2(-22, -40)
 	lab.add_theme_font_size_override("font_size", 22)
 	lab.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
 	lab.add_theme_constant_override("outline_size", 6)
 	_overlay.add_child(lab)
 	var tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.set_ignore_time_scale(true)
 	tw.tween_property(lab, "position:y", lab.position.y - 42.0, 0.45)
 	tw.parallel().tween_property(lab, "modulate:a", 0.0, 0.55).set_delay(0.25)
 	tw.finished.connect(lab.queue_free)
@@ -77,6 +227,7 @@ func claim_burst(from: Vector2, line: String, gold: int, gems: int) -> void:
 	var wrap := Control.new()
 	wrap.set_anchors_preset(Control.PRESET_FULL_RECT)
 	wrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	wrap.process_mode = Node.PROCESS_MODE_ALWAYS
 	_overlay.add_child(wrap)
 	var lab := Label.new()
 	lab.text = line
@@ -102,6 +253,7 @@ func claim_burst(from: Vector2, line: String, gold: int, gems: int) -> void:
 	extra.add_theme_color_override("font_color", Palette.EDGE)
 	wrap.add_child(extra)
 	var tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.set_ignore_time_scale(true)
 	tw.tween_property(lab, "scale", Vector2(1.12, 1.12), 0.18)
 	tw.tween_interval(0.52)
 	tw.tween_property(wrap, "modulate:a", 0.0, 0.2)

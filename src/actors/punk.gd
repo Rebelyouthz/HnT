@@ -1,20 +1,30 @@
 class_name Punk
 extends CharacterBody2D
 
-var hp := 40
+@export var hp := 40
+@export var title := "Bag Snatch"
+@export var home := "street"
+@export var patrol_min := 0.0
+@export var patrol_max := 0.0
+@export var speed := 42.0
+
+var facing := -1
+var snared := 0.0
 var visual: Node2D
 signal died
 
 
 func _ready() -> void:
+	add_to_group("enemies")
 	collision_layer = 4
 	collision_mask = 1
 	motion_mode = MOTION_MODE_FLOATING
 	visual = Node2D.new()
 	add_child(visual)
-	_part(Vector2(-16, -68), Vector2(32, 16), Color(0.75, 0.2, 0.55))
+	var band := Color(0.75, 0.2, 0.55) if home == "street" else Color(0.18, 0.18, 0.22)
+	_part(Vector2(-16, -68), Vector2(32, 16), band)
 	_part(Vector2(-14, -52), Vector2(28, 20), Palette.TEXT.darkened(0.25))
-	_part(Vector2(-18, -32), Vector2(36, 32), Color(0.25, 0.22, 0.3))
+	_part(Vector2(-18, -32), Vector2(36, 32), Color(0.25, 0.22, 0.3) if home == "street" else Color(0.14, 0.14, 0.18))
 	_part(Vector2(-14, 0), Vector2(12, 24), Color(0.12, 0.1, 0.14))
 	_part(Vector2(2, 0), Vector2(12, 24), Color(0.12, 0.1, 0.14))
 	var cap := CollisionShape2D.new()
@@ -46,35 +56,78 @@ func _part(pos: Vector2, size: Vector2, color: Color) -> void:
 	visual.add_child(p)
 
 
-func _physics_process(_delta: float) -> void:
-	var players := get_tree().get_nodes_in_group("players")
-	if players.is_empty():
+func _physics_process(delta: float) -> void:
+	if snared > 0.0:
+		snared -= delta
+		velocity = Vector2.ZERO
+		move_and_slide()
 		return
-	var t: Node2D = players[0]
-	var d := t.global_position.x - global_position.x
-	velocity.x = clampf(d, -1.0, 1.0) * 40.0
+	var players := get_tree().get_nodes_in_group("players")
+	var t: Node2D = null
+	var best := 9999.0
+	for n in players:
+		if n is Fighter and not (n as Fighter).downed:
+			var d: float = absf((n as Node2D).global_position.x - global_position.x)
+			var same: bool = absf((n as Node2D).global_position.y - global_position.y) < 90.0
+			if same and d < best:
+				best = d
+				t = n
+	if t == null:
+		velocity.x = 0
+	else:
+		var d := t.global_position.x - global_position.x
+		facing = 1 if d > 0.0 else -1
+		visual.scale.x = float(facing)
+		velocity.x = clampf(d, -1.0, 1.0) * speed
 	velocity.y = 0
 	move_and_slide()
-	global_position.y = clampf(global_position.y, 430.0, 520.0)
+	if home == "street":
+		global_position.y = clampf(global_position.y, 430.0, 520.0)
+	else:
+		if patrol_max > patrol_min:
+			global_position.x = clampf(global_position.x, patrol_min, patrol_max)
+		global_position.y = 248.0
 
 
 func take_hit(kind: String, from: Node) -> void:
-	var dmg := 8 if kind == "light" else 22
+	var dmg := 8
+	if kind == "heavy":
+		dmg = 22
+	elif kind == "snap":
+		dmg = 48
+	elif kind == "special":
+		dmg = 18
+	elif kind == "web-slam":
+		dmg = 28
+	elif kind == "snare":
+		dmg = 4
+		snared = 1.1
 	hp = maxi(0, hp - dmg)
-	Juice.flash_red(visual, 2 if kind == "light" else 5)
 	if kind == "light":
+		Juice.flash_red(visual, 2)
 		Juice.hitstop(1)
-		Juice.popup_number(global_position + Vector2(0, -80), str(dmg), Palette.TEXT)
 		Juice.play("res://assets/audio/hit_light.wav")
 		FamilyProfile.mark_light()
+		Juice.register_hit("light", global_position, dmg)
 	else:
-		Juice.hitstop(4)
-		Juice.pulse_shake(3.0)
-		Juice.popup_number(global_position + Vector2(0, -80), str(dmg), Color(1.0, 0.5, 0.15))
+		Juice.flash_white_red(visual)
+		if kind == "snap":
+			Juice.pulse_shake(8.0)
+		elif kind == "web-slam":
+			Juice.pulse_shake(9.0)
+			Juice.hitstop(7)
+		else:
+			Juice.hitstop(4)
+			Juice.pulse_shake(3.0)
 		Juice.play("res://assets/audio/hit_heavy.wav")
 		FamilyProfile.mark_heavy()
-	var dir := signf(global_position.x - from.global_position.x)
-	global_position.x += dir * (8.0 if kind == "light" else 18.0)
+		if kind != "snap":
+			Juice.register_hit(kind, global_position, dmg)
+	if from is Node2D:
+		var dir := signf(global_position.x - (from as Node2D).global_position.x)
+		global_position.x += dir * (8.0 if kind == "light" else 20.0)
 	if hp <= 0:
+		if kind != "light" and kind != "snap":
+			Juice.kill_burst(global_position, kind)
 		died.emit()
 		queue_free()

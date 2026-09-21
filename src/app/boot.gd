@@ -1,6 +1,6 @@
 extends Node
 
-func _ready() -> void:
+func _enter_tree() -> void:
 	_bind_keyboard()
 	_act("p2_left", [KEY_LEFT])
 	_act("p2_right", [KEY_RIGHT])
@@ -9,6 +9,12 @@ func _ready() -> void:
 	_act("p2_jump", [KEY_CTRL])
 	_act("p2_light", [KEY_PERIOD])
 	_act("p2_heavy", [KEY_SLASH])
+	_act("p2_special", [KEY_SEMICOLON])
+	_act("p2_shoot", [KEY_APOSTROPHE])
+	_act("p2_block", [KEY_BRACKETLEFT])
+	_act("p2_throw", [KEY_BRACKETRIGHT])
+	_act("p2_dash", [KEY_ALT])
+	_act("p2_snap", [KEY_N])
 	_act("p2_pause", [KEY_P])
 	_bind_pads()
 
@@ -43,7 +49,8 @@ func _bind_pads() -> void:
 	_joy_axis("p1_right", JOY_AXIS_LEFT_X, 1.0, 0)
 	_joy_axis("p1_up", JOY_AXIS_LEFT_Y, -1.0, 0)
 	_joy_axis("p1_down", JOY_AXIS_LEFT_Y, 1.0, 0)
-	_joy_btn("p1_dash", JOY_BUTTON_RIGHT_STICK, 0)
+	_joy_axis("p1_dash", JOY_AXIS_TRIGGER_RIGHT, 1.0, 0)
+	_joy_axis("p1_throw", JOY_AXIS_TRIGGER_LEFT, 1.0, 0)
 	_joy_btn("p1_snap", JOY_BUTTON_RIGHT_STICK, 0)
 	_joy_btn("p1_pause", JOY_BUTTON_START, 0)
 
@@ -57,7 +64,8 @@ func _bind_pads() -> void:
 	_joy_axis("p2_right", JOY_AXIS_LEFT_X, 1.0, 1)
 	_joy_axis("p2_up", JOY_AXIS_LEFT_Y, -1.0, 1)
 	_joy_axis("p2_down", JOY_AXIS_LEFT_Y, 1.0, 1)
-	_joy_btn("p2_dash", JOY_BUTTON_RIGHT_STICK, 1)
+	_joy_axis("p2_dash", JOY_AXIS_TRIGGER_RIGHT, 1.0, 1)
+	_joy_axis("p2_throw", JOY_AXIS_TRIGGER_LEFT, 1.0, 1)
 	_joy_btn("p2_snap", JOY_BUTTON_RIGHT_STICK, 1)
 	_joy_btn("p2_pause", JOY_BUTTON_START, 1)
 	_joy_btn("p2_dropin", JOY_BUTTON_START, 1)

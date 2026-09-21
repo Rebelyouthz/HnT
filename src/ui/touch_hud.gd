@@ -5,11 +5,16 @@ func _ready() -> void:
 	if not DisplayServer.is_touchscreen_available():
 		queue_free()
 		return
-	_btn("LEFT", Vector2(24, 560), Vector2(110, 90), "p1_left")
-	_btn("RIGHT", Vector2(150, 560), Vector2(110, 90), "p1_right")
-	_btn("JUMP", Vector2(980, 560), Vector2(120, 80), "p1_jump")
-	_btn("LIGHT", Vector2(1120, 500), Vector2(120, 80), "p1_light")
-	_btn("HEAVY", Vector2(1120, 600), Vector2(120, 80), "p1_heavy")
+	_btn("LEFT", Vector2(24, 560), Vector2(100, 80), "p1_left")
+	_btn("RIGHT", Vector2(140, 560), Vector2(100, 80), "p1_right")
+	_btn("UP", Vector2(82, 470), Vector2(100, 70), "p1_up")
+	_btn("JUMP", Vector2(860, 560), Vector2(100, 80), "p1_jump")
+	_btn("LIGHT", Vector2(980, 500), Vector2(100, 70), "p1_light")
+	_btn("HEAVY", Vector2(1100, 500), Vector2(100, 70), "p1_heavy")
+	_btn("CAPE", Vector2(980, 590), Vector2(100, 70), "p1_special")
+	_btn("SHOT", Vector2(1100, 590), Vector2(100, 70), "p1_shoot")
+	_btn("SNAP", Vector2(1220, 540), Vector2(50, 110), "p1_snap")
+	_btn("DASH", Vector2(24, 470), Vector2(100, 70), "p1_dash")
 
 
 func _btn(text: String, pos: Vector2, size: Vector2, action: String) -> void:
@@ -17,7 +22,7 @@ func _btn(text: String, pos: Vector2, size: Vector2, action: String) -> void:
 	b.text = text
 	b.position = pos
 	b.size = size
-	b.add_theme_font_size_override("font_size", 18)
+	b.add_theme_font_size_override("font_size", 16)
 	b.button_down.connect(func() -> void:
 		_tap(action, true)
 	)

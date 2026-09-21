@@ -2,7 +2,7 @@
 
 Couch co-op brawler for **The Father** and **The Son**. Godot **4.7.2**, GDScript, 60 fps, English only.
 
-This repo slice is playable: **The Basement Clinic** hub (Aliens vs Zombies: Invasion layout — bottom tabs, buildings unlock menus, daily/lifetime chests, `!` badges) and a **Dock Street** stub (two bodies, leash camera, light = red flash, heavy = hitstop).
+Playable tonight: **The Basement Clinic** hub (Aliens vs Zombies: Invasion layout) and **Dock Street / Raven Wharf Act 1** — street + roofs on one camera, local 2P.
 
 ## Run locally
 
@@ -10,7 +10,7 @@ This repo slice is playable: **The Basement Clinic** hub (Aliens vs Zombies: Inv
 2. Open this folder in the editor, or from a terminal:
 
 ```bash
-godot --path . 
+godot --path .
 ```
 
 Headless smoke:
@@ -19,32 +19,47 @@ Headless smoke:
 godot --headless --path . --script res://tests/smoke.gd
 ```
 
+## What is playable (`godot --path .`)
+
+Hub first. **Run → GO TALK TO THE LANDLORD** loads Dock Street.
+
+- **Two bodies, one Camera2D.** The Son (P1) and The Father (P2). Leash at 70% of the screen. Shake is camera offset, max not sum.
+- **Street plane:** beat-em-up Y-band. Jump is ~80 px — it will not reach the roofs.
+- **Roof plane:** real gravity. Fire escapes climb. Vault crates on the street. A gap that needs **cape glide** or **web**.
+- **The Son:** hold jump in the air = cape stall. L = Cape Guard. O = batwing shuriken (mag 3, one ricochet off metal).
+- **The Father:** ; near a lamp/beam = web pendulum (80–280 px). Jump or ; again = slingshot. ' = web snare.
+- **SNAP:** sprint a back, vault a head, slide, web-in, or cape-dive. World ×0.22, press **F** / **N**. Miss and you are in their face.
+- **Juice:** light = red flash. Heavy = white+red and hitstop. SNAP = freeze + `SNAP` number.
+- **Steam** on both. Shared **3 lives**. Hold SNAP on a downed partner for the Parenting Slap. Reach **24/7 Blood Mart** together to file the street.
+- Night lights: `CanvasModulate` + moon + three shadowed lamps. No emoji in the HUD.
+
+Local 2P only. Remote Host/Join is still the next delivery.
+
 ## Controls
 
 | Action | The Son (P1) | The Father (P2) |
 | --- | --- | --- |
 | Move | A/D, W/S | Arrows |
-| Jump | Space | Ctrl |
+| Jump / glide | Space (hold in air) | Ctrl |
 | Light | J | `.` |
-| Heavy | K | `/` |
+| Heavy (hold to charge) | K | `/` |
+| Special (cape / web) | L | `;` |
+| Shoot (batwing / snare) | O | `'` |
+| Dash / slide (down+dash) | Shift | Alt |
+| SNAP / revive | F | N |
 | Pause | Esc | P or Start |
 
-Pad: Xbox layout on device 0 (P1 extras) and device 1 (P2). Phone: on-screen buttons.
+Pad: Xbox layout, device 0 and 1. Dash = RT, SNAP = stick click. Phone: on-screen buttons.
 
-## What this slice is
+## Hub
 
-- Hub tabs: Clinic, Run, Build, Locker, Awards. Clinic + Run start unlocked. Build the Therapy Couch, Wardrobe Cage, Trophy Cabinet to open the rest.
-- Claim Gold/Gems from daily **Today's Coping Goals**, lifetime **Family Progress**, and Awards. Nothing grants silently.
-- Family Profile at `user://family.json`. Name both characters on first launch.
-- Dock Street: walk, jump, street-band depth, punch Bag Snatch. End Session from pause to count a run.
-
-Not in yet: SNAP, web, cape, full Raven Wharf, remote Host/Join, ElevenLabs banks. Those follow this vertical slice.
+Clinic, Run, Build, Locker, Awards. Clinic + Run start unlocked. Build the Therapy Couch, Wardrobe Cage, Trophy Cabinet to open the rest. Claim Gold/Gems from daily **Today's Coping Goals**, lifetime **Family Progress**, and Awards. Family Profile at `user://family.json`.
 
 ## Layout
 
 ```
 scenes/     hub + Dock Street
-src/        GDScript (actors, camera, juice, ui)
+src/        actors, camera, combat, juice, world, ui
 data/       buildings, awards, milestones, CBT JSON
 assets/     audio + icon
 ```

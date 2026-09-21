@@ -10,21 +10,54 @@ extends CharacterBody2D
 
 const GRAV := 2400.0
 const JUMP := -620.0
+const FALL_MUL := 1.65
 const COYOTE := 6
 const BUFFER := 8
 const STREET_MIN := 430.0
 const STREET_MAX := 520.0
+const STEAM_MAX := 100.0
+const JUMP_HEIGHT := (620.0 * 620.0) / (2.0 * 2400.0)
 
 var hp: int
+var steam: float = STEAM_MAX
+var steam_lock := 0.0
+var ammo: int = 3
+var ammo_cd := 0.0
 var facing := 1
 var hop := 0.0
 var hop_v := 0.0
 var coyote := 0
 var jump_buf := 0
 var attack_cd := 0
+var invuln := 0
+var plane := "street"
+var gliding := false
+var vaulting := false
+var sliding := false
+var dashing := false
+var web_incoming := false
+var snap_ready := false
+var downed := false
+var armored := false
+var charge_frames := 0
+var dash_frames := 0
+var slide_frames := 0
+var wall_run := 0.0
+var cape_guard := 0.0
+var web_length := 160.0
+var web_anchor: WebAnchor
+var ladder: FireEscape
+var bleed := 0.0
+var revive_hold := 0.0
+var web_line: Line2D
 var visual: Node2D
+var squash_root: Node2D
+var cape: Polygon2D
+var ears: Polygon2D
+
 signal died
 signal hit_landed(kind: String, global_pos: Vector2)
+signal downed_changed
 
 
 func _ready() -> void:
@@ -32,6 +65,7 @@ func _ready() -> void:
 	collision_layer = 2
 	collision_mask = 1
 	motion_mode = MOTION_MODE_FLOATING
+	floor_snap_length = 8.0
 	_build_body()
 	var cap := CollisionShape2D.new()
 	var shape := CapsuleShape2D.new()
@@ -40,20 +74,49 @@ func _ready() -> void:
 	cap.shape = shape
 	cap.position = Vector2(0, -32)
 	add_child(cap)
+	web_line = Line2D.new()
+	web_line.width = 2.0
+	web_line.default_color = Color(0.85, 0.9, 1.0, 0.9)
+	web_line.visible = false
+	web_line.z_index = 8
+	add_child(web_line)
+	if role == "son":
+		ammo = 3
+	else:
+		ammo = 6
 
 
 func _build_body() -> void:
 	visual = Node2D.new()
 	visual.name = "Visual"
 	add_child(visual)
+	squash_root = Node2D.new()
+	squash_root.name = "Squash"
+	visual.add_child(squash_root)
 	var outline := Palette.BRICK if role == "father" else Palette.LEMON
-	_part(Vector2(-16, -72), Vector2(32, 14), outline) # headband
-	_part(Vector2(-14, -60), Vector2(28, 18), Palette.TEXT.darkened(0.15)) # head
-	_part(Vector2(-18, -42), Vector2(36, 28), accent) # torso
-	_part(Vector2(-28, -38), Vector2(10, 24), accent.darkened(0.2)) # arm L
-	_part(Vector2(18, -38), Vector2(10, 24), accent.darkened(0.2)) # arm R
-	_part(Vector2(-16, -14), Vector2(12, 28), Color(0.15, 0.14, 0.18)) # leg L
-	_part(Vector2(4, -14), Vector2(12, 28), Color(0.15, 0.14, 0.18)) # leg R
+	_part(Vector2(-16, -72), Vector2(32, 14), outline)
+	_part(Vector2(-14, -60), Vector2(28, 18), Palette.TEXT.darkened(0.15))
+	if role == "son":
+		ears = Polygon2D.new()
+		ears.color = Color(0.12, 0.12, 0.14)
+		ears.polygon = PackedVector2Array([
+			Vector2(-14, -86), Vector2(-6, -72), Vector2(-18, -72),
+			Vector2(14, -86), Vector2(18, -72), Vector2(6, -72)
+		])
+		ears.visible = false
+		squash_root.add_child(ears)
+		cape = Polygon2D.new()
+		cape.color = Color(0.1, 0.1, 0.12, 0.92)
+		cape.polygon = PackedVector2Array([
+			Vector2(-8, -48), Vector2(8, -48), Vector2(18, -6), Vector2(-18, -6)
+		])
+		cape.visible = false
+		squash_root.add_child(cape)
+	_part(Vector2(-18, -42), Vector2(36, 28), accent)
+	_part(Vector2(-28, -38), Vector2(10, 24), accent.darkened(0.2))
+	_part(Vector2(18, -38), Vector2(10, 24), accent.darkened(0.2))
+	_part(Vector2(-16, -14), Vector2(12, 28), Color(0.15, 0.14, 0.18))
+	_part(Vector2(4, -14), Vector2(12, 28), Color(0.15, 0.14, 0.18))
 
 
 func _part(pos: Vector2, size: Vector2, color: Color) -> void:
@@ -65,50 +128,586 @@ func _part(pos: Vector2, size: Vector2, color: Color) -> void:
 		pos + size,
 		pos + Vector2(0, size.y)
 	])
-	visual.add_child(p)
+	squash_root.add_child(p)
 
 
 func _physics_process(delta: float) -> void:
+	_tick_meters(delta)
+	if downed:
+		_process_downed(delta)
+		return
+	if _pressed("jump"):
+		jump_buf = BUFFER
+	ladder = _find_ladder()
+	if plane == "climb":
+		_process_climb(delta)
+		_combat()
+		return
+	if web_anchor != null:
+		_process_web(delta)
+		_combat()
+		return
+	if plane == "roof":
+		_process_roof(delta)
+	else:
+		_process_street(delta)
+	_combat()
+	if cape:
+		cape.visible = gliding or cape_guard > 0.0
+	if ears:
+		ears.visible = gliding or cape_guard > 0.0
+
+
+func _tick_meters(delta: float) -> void:
 	if attack_cd > 0:
 		attack_cd -= 1
-	if hop >= 0.0:
-		coyote = COYOTE if coyote < COYOTE else coyote
+	if invuln > 0:
+		invuln -= 1
 	if coyote > 0:
 		coyote -= 1
 	if jump_buf > 0:
 		jump_buf -= 1
-	if _pressed("jump"):
-		jump_buf = BUFFER
+	if dash_frames > 0:
+		dash_frames -= 1
+		if dash_frames == 0:
+			dashing = false
+	if slide_frames > 0:
+		slide_frames -= 1
+		if slide_frames == 0:
+			sliding = false
+	if wall_run > 0.0:
+		wall_run -= delta
+	if cape_guard > 0.0:
+		cape_guard -= delta
+	if web_incoming:
+		web_incoming = absf(velocity.x) > 220.0
+	if ammo_cd > 0.0:
+		ammo_cd -= delta
+		if ammo_cd <= 0.0:
+			var cap := 3 if role == "son" else 6
+			if ammo < cap:
+				ammo += 1
+				ammo_cd = 2.4 if ammo < cap else 0.0
+	if steam_lock > 0.0:
+		steam_lock -= delta
+	else:
+		steam = minf(STEAM_MAX, steam + 22.0 * delta)
+	armored = charge_frames >= 18
+	_update_web_line()
 
+
+func _process_street(delta: float) -> void:
+	motion_mode = MOTION_MODE_FLOATING
+	gliding = false
 	var x := Input.get_axis(prefix + "left", prefix + "right")
 	var y := Input.get_axis(prefix + "up", prefix + "down")
-	velocity.x = x * speed
-	if hop >= -1.0 and hop_v == 0.0:
-		velocity.y = y * depth_speed
-	else:
+	if dashing:
+		velocity.x = float(facing) * 420.0
 		velocity.y = 0.0
-	if jump_buf > 0 and coyote > 0 and hop >= -1.0:
+	elif sliding:
+		velocity.x = float(facing) * 360.0
+		velocity.y = 0.0
+	else:
+		velocity.x = x * speed
+		if _street_grounded():
+			velocity.y = y * depth_speed
+		else:
+			velocity.y = 0.0
+	if _street_grounded():
+		coyote = COYOTE
+	if jump_buf > 0 and coyote > 0:
 		hop_v = JUMP
 		hop = -1.0
 		jump_buf = 0
 		coyote = 0
 	if hop < 0.0 or hop_v != 0.0:
-		hop_v += GRAV * delta
+		var g := GRAV
+		if hop_v > 0.0:
+			g *= FALL_MUL
+		if role == "son" and hop < 0.0 and _pressed("jump") and hop_v > -80.0:
+			gliding = true
+			g = GRAV * 0.22
+			hop_v = minf(hop_v, 90.0)
+			velocity.x = move_toward(velocity.x, float(facing) * speed * 1.05, 600.0 * delta)
+		if _released("jump") and hop_v < 0.0:
+			hop_v *= 0.45
+		hop_v += g * delta
 		hop += hop_v * delta
 		if hop >= 0.0:
 			hop = 0.0
 			hop_v = 0.0
+			Juice.squash(squash_root, facing)
 	visual.position.y = hop
 	move_and_slide()
 	global_position.y = clampf(global_position.y, STREET_MIN, STREET_MAX)
+	_face(x)
+	if ladder and y < -0.45:
+		_start_climb()
+	elif ladder and y > 0.45 and plane == "street":
+		pass
+
+
+func _process_roof(delta: float) -> void:
+	motion_mode = MOTION_MODE_GROUNDED
+	visual.position.y = 0.0
+	var x := Input.get_axis(prefix + "left", prefix + "right")
+	var y := Input.get_axis(prefix + "up", prefix + "down")
+	if wall_run > 0.0:
+		velocity = Vector2(float(facing) * 330.0, -50.0)
+		move_and_slide()
+		_face(x)
+		return
+	if not is_on_floor():
+		var g := GRAV
+		if velocity.y > 0.0:
+			g *= FALL_MUL
+		if role == "son" and _pressed("jump") and velocity.y > -90.0:
+			gliding = true
+			g = GRAV * 0.18
+			velocity.y = minf(velocity.y, 10.0)
+			velocity.x = move_toward(velocity.x, float(facing) * speed * 1.08, 700.0 * delta)
+		else:
+			gliding = false
+		if _released("jump") and velocity.y < 0.0:
+			velocity.y *= 0.5
+		velocity.y += g * delta
+	else:
+		gliding = false
+		coyote = COYOTE
+		if hop_v != 0.0:
+			Juice.squash(squash_root, facing)
+		hop_v = 0.0
+	if jump_buf > 0 and coyote > 0:
+		velocity.y = JUMP
+		jump_buf = 0
+		coyote = 0
+	if dashing:
+		velocity.x = float(facing) * 400.0
+	else:
+		velocity.x = x * speed
+	if is_on_wall() and jump_buf > 0 and role == "son":
+		wall_run = 0.42
+		jump_buf = 0
+	move_and_slide()
+	_face(x)
+	if global_position.y >= STREET_MIN - 6.0:
+		_enter_street()
+		return
+	if ladder and y > 0.4:
+		_start_climb()
+	_try_land_roof()
+
+
+func _process_climb(delta: float) -> void:
+	motion_mode = MOTION_MODE_FLOATING
+	collision_mask = 0
+	var y := Input.get_axis(prefix + "up", prefix + "down")
+	if absf(y) < 0.15:
+		y = -1.0 if (ladder and global_position.y > ladder.top_y + 8.0) else 1.0
+	velocity = Vector2.ZERO
+	if ladder:
+		global_position.x = move_toward(global_position.x, ladder.climb_x, 240.0 * delta)
+		global_position.y += y * 190.0 * delta
+		if global_position.y <= ladder.top_y + 2.0 and y < 0.0:
+			global_position.y = ladder.top_y
+			_enter_roof()
+			return
+		if global_position.y >= ladder.bottom_y - 2.0 and y > 0.0:
+			global_position.y = clampf(ladder.bottom_y, STREET_MIN, STREET_MAX)
+			_enter_street()
+			return
+	else:
+		_enter_street()
+	visual.position.y = 0.0
+	_face(0.0)
+
+
+func _process_web(delta: float) -> void:
+	if web_anchor == null or not is_instance_valid(web_anchor):
+		_release_web(false)
+		return
+	collision_mask = 1
+	visual.position.y = 0.0
+	var x := Input.get_axis(prefix + "left", prefix + "right")
+	velocity.y += GRAV * 0.62 * delta
+	var to_me: Vector2 = global_position - web_anchor.global_position
+	var dist := to_me.length()
+	if dist > 4.0:
+		var tangent := Vector2(-to_me.y, to_me.x).normalized()
+		velocity += tangent * x * 280.0 * delta
+		if dist > web_length:
+			var n := to_me / dist
+			global_position = web_anchor.global_position + n * web_length
+			velocity -= n * velocity.dot(n)
+	move_and_slide()
+	if jump_buf > 0 or _just("special"):
+		_release_web(true)
+		jump_buf = 0
+	_try_land_roof()
+	if global_position.y >= STREET_MIN and plane != "street":
+		_enter_street()
+	_face(x)
+
+
+func _process_downed(delta: float) -> void:
+	velocity.x = Input.get_axis(prefix + "left", prefix + "right") * 40.0
+	velocity.y = 0.0
+	if plane == "street":
+		motion_mode = MOTION_MODE_FLOATING
+		move_and_slide()
+		global_position.y = clampf(global_position.y, STREET_MIN, STREET_MAX)
+	else:
+		move_and_slide()
+	bleed -= delta
+	revive_hold = 0.0
+	for n in get_tree().get_nodes_in_group("players"):
+		if n == self or not (n is Fighter):
+			continue
+		var other: Fighter = n
+		if other.downed:
+			continue
+		if other.global_position.distance_to(global_position) > 58.0:
+			continue
+		if other._pressed("snap"):
+			revive_hold += delta
+			if revive_hold >= 1.15:
+				_revived()
+			return
+	if bleed <= 0.0:
+		_life_lost()
+
+
+func _combat() -> void:
+	var y := Input.get_axis(prefix + "up", prefix + "down")
+	if attack_cd == 0 and _just("dash") and not dashing:
+		if y > 0.45 and plane == "street":
+			_slide()
+		else:
+			_dash()
+	if _street_grounded() or (plane == "roof" and is_on_floor()):
+		_try_vault()
+	if _just("special"):
+		_special()
+	if _just("shoot"):
+		_shoot()
+	if _pressed("heavy"):
+		charge_frames += 1
+		if charge_frames >= 45:
+			_attack("heavy", true)
+	elif charge_frames > 0:
+		_attack("heavy", charge_frames >= 20)
+	elif attack_cd == 0 and _just("light"):
+		_attack("light", false)
+
+
+func _dash() -> void:
+	if not _spend(18.0):
+		return
+	dashing = true
+	dash_frames = 10
+	invuln = 8
+	velocity.x = float(facing) * 420.0
+
+
+func _slide() -> void:
+	if not _spend(18.0):
+		return
+	sliding = true
+	slide_frames = 16
+	invuln = 6
+	dashing = false
+
+
+func _try_vault() -> void:
+	if vaulting:
+		return
+	var x := Input.get_axis(prefix + "left", prefix + "right")
+	if absf(x) < 0.5:
+		return
+	for n in get_tree().get_nodes_in_group("vaults"):
+		if n is VaultCrate and (n as VaultCrate).covers(global_position):
+			vaulting = true
+			invuln = 10
+			if plane == "street":
+				hop_v = -420.0
+				hop = -1.0
+			else:
+				velocity.y = -360.0
+			velocity.x = signf(x) * 340.0
+			get_tree().create_timer(0.26).timeout.connect(func() -> void:
+				vaulting = false
+			)
+			return
+
+
+func _special() -> void:
+	if role == "father":
+		if web_anchor != null:
+			_release_web(true)
+			return
+		var a := WebAnchor.nearest_in_cone(global_position + Vector2(0, -40), facing, self)
+		if a:
+			_attach_web(a)
+			return
+		if not _spend(35.0):
+			return
+		_spawn_hit("special", Vector2(78, 44), 0.22, Vector2(44 * facing, -34))
+		attack_cd = 22
+	else:
+		if not _spend(35.0):
+			return
+		cape_guard = 0.4
+		_spawn_hit("special", Vector2(86, 52), 0.4, Vector2(36 * facing, -36))
+		attack_cd = 18
+		if cape:
+			cape.visible = true
+
+
+func _shoot() -> void:
+	if ammo <= 0 or attack_cd > 0:
+		return
+	ammo -= 1
+	ammo_cd = 2.4
+	attack_cd = 12
+	var shot := KitShot.new()
+	shot.kind = "shuriken" if role == "son" else "snare"
+	shot.ricochet_left = 1 if role == "son" else 0
+	shot.owner_role = role
+	shot.vel = Vector2(float(facing) * (520.0 if role == "son" else 380.0), 0.0)
+	shot.global_position = global_position + Vector2(float(facing) * 28.0, -42.0 + hop)
+	var host := get_parent()
+	host.add_child(shot)
+
+
+func _attack(kind: String, charged: bool) -> void:
+	if attack_cd > 0 and kind == "heavy" and not charged:
+		charge_frames = 0
+		return
+	if kind == "heavy" and charged and not _spend(12.0):
+		charge_frames = 0
+		return
+	charge_frames = 0
+	attack_cd = 14 if kind == "light" else 24
+	var size := Vector2(46, 40) if kind == "light" else Vector2(66, 44)
+	if charged:
+		size = Vector2(78, 50)
+		kind = "heavy"
+	_spawn_hit(kind, size, 0.12 if kind == "light" else 0.2, Vector2(36 * facing, -34 + hop))
+
+
+func _spawn_hit(kind: String, size: Vector2, life: float, offset: Vector2) -> void:
+	var box := Area2D.new()
+	box.collision_layer = 8
+	box.collision_mask = 4
+	box.monitoring = true
+	var cs := CollisionShape2D.new()
+	var r := RectangleShape2D.new()
+	r.size = size
+	cs.shape = r
+	box.position = offset
+	box.add_child(cs)
+	add_child(box)
+	var hits: Array[Node] = []
+	var land := func(node: Node) -> void:
+		if node in hits:
+			return
+		hits.append(node)
+		var victim: Node = node
+		if node is Area2D:
+			victim = (node as Area2D).get_parent()
+		if victim and victim.has_method("take_hit"):
+			var hit_kind := kind
+			if web_incoming:
+				hit_kind = "web-slam"
+			victim.take_hit(hit_kind, self)
+			hit_landed.emit(hit_kind, (node as Node2D).global_position)
+	box.area_entered.connect(func(a: Area2D) -> void:
+		land.call(a)
+	)
+	box.body_entered.connect(func(b: Node) -> void:
+		land.call(b)
+	)
+	await get_tree().create_timer(life).timeout
+	if is_instance_valid(box):
+		box.queue_free()
+
+
+func take_hit(kind: String, from: Node) -> void:
+	if downed or invuln > 0:
+		return
+	if armored and kind == "light":
+		Juice.flash_red(visual, 1)
+		return
+	if web_anchor:
+		_release_web(false)
+	if gliding:
+		gliding = false
+		hop_v = 280.0
+		velocity.y = 280.0
+	var dmg := 6
+	if kind == "heavy":
+		dmg = 16
+	elif kind == "snap" or kind == "special":
+		dmg = 18
+	hp = maxi(0, hp - dmg)
+	if kind == "light":
+		Juice.flash_red(visual, 2)
+		Juice.hitstop(1)
+		Juice.play("res://assets/audio/hit_light.wav")
+	else:
+		Juice.flash_white_red(visual)
+		Juice.hitstop(4)
+		Juice.pulse_shake(3.0)
+		Juice.play("res://assets/audio/hit_heavy.wav")
+	if from is Node2D:
+		var dir := signf(global_position.x - (from as Node2D).global_position.x)
+		global_position.x += dir * (6.0 if kind == "light" else 16.0)
+	if hp <= 0:
+		_go_down()
+
+
+func _go_down() -> void:
+	downed = true
+	hp = 0
+	bleed = 12.0
+	web_anchor = null
+	died.emit()
+	downed_changed.emit()
+
+
+func _revived() -> void:
+	downed = false
+	hp = int(round(float(max_hp) * 0.4))
+	bleed = 0.0
+	invuln = 40
+	Juice.shout("GROUNDED")
+	Juice.pulse_shake(10.0)
+	Juice.freeze_frames(6)
+	Juice.hitstop(10)
+	downed_changed.emit()
+
+
+func _life_lost() -> void:
+	var rs := get_tree().get_first_node_in_group("run_state")
+	if rs and rs.has_method("spend_life"):
+		rs.spend_life()
+		if rs.failed:
+			return
+		global_position = rs.checkpoint
+	downed = false
+	hp = int(round(float(max_hp) * 0.6))
+	_enter_street()
+	downed_changed.emit()
+
+
+func _attach_web(a: WebAnchor) -> void:
+	web_anchor = a
+	web_length = clampf(global_position.distance_to(a.global_position), WebAnchor.MIN_LEN, WebAnchor.MAX_LEN)
+	plane = "air"
+	motion_mode = MOTION_MODE_FLOATING
+	hop = 0.0
+	hop_v = 0.0
+	web_line.visible = true
+
+
+func _release_web(sling: bool) -> void:
+	if sling:
+		velocity *= 1.35
+		web_incoming = absf(velocity.x) + absf(velocity.y) > 280.0
+		invuln = 8
+	web_anchor = null
+	web_line.visible = false
+	if global_position.y < STREET_MIN - 20.0:
+		plane = "roof"
+		motion_mode = MOTION_MODE_GROUNDED
+	else:
+		_enter_street()
+
+
+func _update_web_line() -> void:
+	if web_anchor == null or not is_instance_valid(web_anchor):
+		if web_line:
+			web_line.visible = false
+		return
+	web_line.visible = true
+	var from := to_local(web_anchor.global_position)
+	var to := Vector2(0, -40)
+	var pts := PackedVector2Array()
+	for i in 8:
+		var t := float(i) / 7.0
+		var p := from.lerp(to, t)
+		p.y += sin(t * PI) * 10.0
+		pts.append(p)
+	web_line.points = pts
+
+
+func _start_climb() -> void:
+	if ladder == null:
+		return
+	plane = "climb"
+	hop = 0.0
+	hop_v = 0.0
+	web_anchor = null
+	collision_mask = 0
+
+
+func _enter_roof() -> void:
+	plane = "roof"
+	collision_mask = 1
+	motion_mode = MOTION_MODE_GROUNDED
+	hop = 0.0
+	hop_v = 0.0
+	visual.position.y = 0.0
+	velocity.y = 0.0
+	web_anchor = null
+
+
+func _enter_street() -> void:
+	plane = "street"
+	collision_mask = 1
+	motion_mode = MOTION_MODE_FLOATING
+	visual.position.y = hop
+	global_position.y = clampf(global_position.y, STREET_MIN, STREET_MAX)
+	web_anchor = null
+
+
+func _try_land_roof() -> void:
+	for n in get_tree().get_nodes_in_group("roof_solids"):
+		if not n.has_meta("rect"):
+			continue
+		var r: Rect2 = n.get_meta("rect")
+		if global_position.x < r.position.x or global_position.x > r.end.x:
+			continue
+		if global_position.y >= r.position.y - 10.0 and global_position.y <= r.position.y + 20.0:
+			if velocity.y >= -40.0:
+				global_position.y = r.position.y
+				_enter_roof()
+				return
+
+
+func _find_ladder() -> FireEscape:
+	for n in get_tree().get_nodes_in_group("ladders"):
+		if n is FireEscape and (n as FireEscape).covers(global_position):
+			return n
+	return null
+
+
+func _street_grounded() -> bool:
+	return hop >= -1.0 and hop_v == 0.0
+
+
+func _face(x: float) -> void:
 	if absf(x) > 0.1:
 		facing = 1 if x > 0.0 else -1
 		visual.scale.x = float(facing)
 
-	if attack_cd == 0 and _just("light"):
-		_attack("light")
-	elif attack_cd == 0 and _just("heavy"):
-		_attack("heavy")
+
+func _spend(n: float) -> bool:
+	if steam < n:
+		return false
+	steam -= n
+	steam_lock = 0.4
+	return true
 
 
 func _pressed(action: String) -> bool:
@@ -119,54 +718,5 @@ func _just(action: String) -> bool:
 	return Input.is_action_just_pressed(StringName(str(prefix) + action))
 
 
-func _attack(kind: String) -> void:
-	attack_cd = 14 if kind == "light" else 22
-	var box := Area2D.new()
-	box.collision_layer = 8
-	box.collision_mask = 4
-	box.monitoring = true
-	var cs := CollisionShape2D.new()
-	var r := RectangleShape2D.new()
-	r.size = Vector2(46 if kind == "light" else 62, 40)
-	cs.shape = r
-	box.position = Vector2(36 * facing, -34 + hop)
-	box.add_child(cs)
-	add_child(box)
-	var hits: Array[Node] = []
-	box.area_entered.connect(func(a: Area2D) -> void:
-		if a in hits:
-			return
-		hits.append(a)
-		var victim := a.get_parent()
-		if victim and victim.has_method("take_hit"):
-			victim.take_hit(kind, self)
-			hit_landed.emit(kind, a.global_position)
-	)
-	box.body_entered.connect(func(b: Node) -> void:
-		if b in hits:
-			return
-		hits.append(b)
-		if b.has_method("take_hit"):
-			b.take_hit(kind, self)
-			hit_landed.emit(kind, b.global_position)
-	)
-	await get_tree().create_timer(0.12 if kind == "light" else 0.18).timeout
-	if is_instance_valid(box):
-		box.queue_free()
-
-
-func take_hit(kind: String, _from: Node) -> void:
-	var dmg := 6 if kind == "light" else 16
-	hp = maxi(0, hp - dmg)
-	Juice.flash_red(visual, 2 if kind == "light" else 4)
-	if kind == "light":
-		Juice.hitstop(1)
-		Juice.popup_number(global_position + Vector2(0, -80), str(dmg), Palette.TEXT)
-		Juice.play("res://assets/audio/hit_light.wav")
-	else:
-		Juice.hitstop(4)
-		Juice.pulse_shake(3.0)
-		Juice.popup_number(global_position + Vector2(0, -80), str(dmg), Color(1.0, 0.55, 0.2))
-		Juice.play("res://assets/audio/hit_heavy.wav")
-	if hp <= 0:
-		died.emit()
+func _released(action: String) -> bool:
+	return Input.is_action_just_released(StringName(str(prefix) + action))

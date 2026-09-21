@@ -2,20 +2,25 @@ class_name CouchCamera
 extends Camera2D
 
 var targets: Array[Node2D] = []
-var _base := Vector2.ZERO
+var _look := 0.0
+var _nag_cd := 0.0
 
 
 func _ready() -> void:
 	enabled = true
-	position_smoothing_enabled = true
-	position_smoothing_speed = 8.0
+	make_current()
+	position_smoothing_enabled = false
+	process_physics_priority = -40
 	limit_top = 0
 	limit_bottom = 720
 	limit_left = 0
 	limit_right = 3200
+	ignore_rotation = true
 
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
+	if _nag_cd > 0.0:
+		_nag_cd -= delta
 	var living: Array[Node2D] = []
 	for t in targets:
 		if is_instance_valid(t):
@@ -24,19 +29,52 @@ func _physics_process(_delta: float) -> void:
 		offset = Juice.shake_offset()
 		return
 	var mid := Vector2.ZERO
+	var face_sum := 0.0
 	for t in living:
 		mid += t.global_position
+		if t is Fighter:
+			face_sum += float((t as Fighter).facing)
 	mid /= float(living.size())
-	mid.x += 80.0
-	_base = mid
-	global_position = mid
+	var look_target := 90.0 * clampf(face_sum / float(living.size()), -1.0, 1.0)
+	var look_t := 1.0 - exp(-6.0 * delta)
+	_look = lerpf(_look, look_target, look_t)
+	mid.x += _look
 	if living.size() == 2:
-		var dist := absf(living[0].global_position.x - living[1].global_position.x)
-		var max_sep := get_viewport_rect().size.x * 0.7
-		if dist > max_sep:
-			var left := living[0] if living[0].global_position.x < living[1].global_position.x else living[1]
-			var right := living[1] if left == living[0] else living[0]
-			var center := (left.global_position.x + right.global_position.x) * 0.5
-			if right.global_position.x > center + max_sep * 0.5:
-				right.global_position.x = center + max_sep * 0.5
+		_leash(living)
+	var follow := 1.0 - exp(-8.0 * delta)
+	var desired := mid
+	desired.x = clampf(desired.x, limit_left + 640.0, limit_right - 640.0)
+	desired.y = clampf(desired.y, 360.0, 420.0)
+	# Vertical lerp ~0.12 toward the pair so roofs and street share one frame.
+	var y_t := 1.0 - exp(-7.5 * delta)
+	global_position.x = lerpf(global_position.x, desired.x, follow)
+	global_position.y = lerpf(global_position.y, desired.y, y_t)
 	offset = Juice.shake_offset()
+
+
+func _leash(living: Array[Node2D]) -> void:
+	var dist := absf(living[0].global_position.x - living[1].global_position.x)
+	var max_sep := get_viewport_rect().size.x * 0.7
+	if dist <= max_sep:
+		return
+	var left := living[0] if living[0].global_position.x < living[1].global_position.x else living[1]
+	var right := living[1] if left == living[0] else living[0]
+	var center := (left.global_position.x + right.global_position.x) * 0.5
+	var cap := max_sep * 0.5
+	if right.global_position.x > center + cap:
+		right.global_position.x = center + cap
+	if left.global_position.x < center - cap:
+		left.global_position.x = center - cap
+	if _nag_cd <= 0.0:
+		_nag_cd = 2.2
+		var laggard: Node2D = left
+		if living[0] is Fighter and living[1] is Fighter:
+			var a: Fighter = living[0]
+			var b: Fighter = living[1]
+			laggard = a if a.global_position.x < b.global_position.x else b
+			var leader: Fighter = b if laggard == a else a
+			if leader.plane == "roof" and (laggard as Fighter).plane != "roof":
+				Juice.shout(Copy.come_on(FamilyProfile.father_name(), FamilyProfile.son_name(), "son"))
+			else:
+				var who := "father" if (laggard as Fighter).role == "father" else "son"
+				Juice.shout(Copy.come_on(FamilyProfile.father_name(), FamilyProfile.son_name(), who))
