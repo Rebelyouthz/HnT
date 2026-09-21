@@ -2,54 +2,296 @@ class_name NightStreet
 extends Object
 
 
-static func parallax(host: Node, map_w: float) -> void:
+static func parallax(host: Node, map_w: float, theme: String = "dock") -> void:
+	var pal := _theme_pal(theme)
 	var pb := ParallaxBackground.new()
+	pb.name = "Parallax"
 	host.add_child(pb)
+	var sky_l := ParallaxLayer.new()
+	sky_l.motion_scale = Vector2(0.02, 0.02)
+	pb.add_child(sky_l)
+	Blockout.poly(sky_l, Rect2(-200, -40, map_w + 600.0, 280), pal["sky"], -9)
 	var moon_l := ParallaxLayer.new()
 	moon_l.motion_scale = Vector2(0.05, 0.04)
 	pb.add_child(moon_l)
 	var moon := Polygon2D.new()
-	moon.color = Color(0.78, 0.82, 0.92, 0.85)
+	moon.color = pal["moon"]
 	moon.polygon = PackedVector2Array([
-		Vector2(980, 40), Vector2(1040, 40), Vector2(1040, 100), Vector2(980, 100)
+		Vector2(980, 36), Vector2(1050, 36), Vector2(1050, 106), Vector2(980, 106)
 	])
+	Blockout.add_glow(moon)
 	moon_l.add_child(moon)
+	if theme == "pier" or theme == "lot":
+		var moon2 := Polygon2D.new()
+		moon2.color = pal["moon"].darkened(0.25)
+		moon2.polygon = PackedVector2Array([
+			Vector2(420, 50), Vector2(460, 50), Vector2(460, 88), Vector2(420, 88)
+		])
+		moon_l.add_child(moon2)
+	var stars := ParallaxLayer.new()
+	stars.motion_scale = Vector2(0.06, 0.03)
+	pb.add_child(stars)
+	for i in 18:
+		Blockout.poly(stars, Rect2(80.0 + i * 90.0, 20 + (i % 5) * 14, 3, 3), Color(0.85, 0.88, 0.95, 0.45), -8)
 	var fog := ParallaxLayer.new()
-	fog.motion_scale = Vector2(0.07, 0.03)
+	fog.motion_scale = Vector2(0.08, 0.03)
 	pb.add_child(fog)
-	Blockout.poly(fog, Rect2(-80, 80, map_w + 200.0, 220), Color(0.18, 0.2, 0.28, 0.18), -7)
+	Blockout.poly(fog, Rect2(-80, 70, map_w + 240.0, 240), pal["fog"], -7)
 	var far := ParallaxLayer.new()
-	far.motion_scale = Vector2(0.15, 0.08)
+	far.motion_scale = Vector2(0.16, 0.08)
 	pb.add_child(far)
-	Blockout.poly(far, Rect2(0, 200, map_w, 400), Color(0.11, 0.12, 0.18), -6)
-	Blockout.poly(far, Rect2(240, 120, 90, 280), Color(0.09, 0.1, 0.16), -6)
-	Blockout.poly(far, Rect2(920, 90, 120, 320), Color(0.1, 0.11, 0.17), -6)
-	Blockout.poly(far, Rect2(1680, 110, 80, 300), Color(0.08, 0.1, 0.15), -6)
+	Blockout.poly(far, Rect2(0, 190, map_w, 420), pal["far"], -6)
+	_skyline(far, map_w, pal["far_b"], theme)
 	var mid := ParallaxLayer.new()
-	mid.motion_scale = Vector2(0.35, 0.12)
+	mid.motion_scale = Vector2(0.34, 0.12)
 	pb.add_child(mid)
-	Blockout.poly(mid, Rect2(0, 260, map_w, 360), Color(0.15, 0.1, 0.12), -4)
-	Blockout.poly(mid, Rect2(400, 180, 40, 200), Color(0.22, 0.12, 0.12, 0.5), -4)
+	Blockout.poly(mid, Rect2(0, 250, map_w, 380), pal["mid"], -4)
+	_mid_props(mid, map_w, theme, pal)
 	var near := ParallaxLayer.new()
 	near.motion_scale = Vector2(0.55, 0.2)
 	pb.add_child(near)
-	Blockout.poly(near, Rect2(120, 300, 80, 180), Color(0.2, 0.12, 0.12), -2)
-	Blockout.poly(near, Rect2(980, 280, 70, 200), Color(0.18, 0.11, 0.13), -2)
-	Blockout.poly(near, Rect2(2100, 290, 90, 190), Color(0.16, 0.12, 0.14), -2)
-	Blockout.poly(near, Rect2(1480, 270, 24, 220), Color(0.12, 0.1, 0.1), -2)
+	_near_props(near, map_w, theme, pal)
 	var hung := ParallaxLayer.new()
 	hung.motion_scale = Vector2(0.78, 0.22)
 	pb.add_child(hung)
-	Blockout.poly(hung, Rect2(180, 210, 70, 18), Color(0.28, 0.18, 0.14, 0.85), -1)
-	Blockout.poly(hung, Rect2(860, 190, 54, 16), Color(0.2, 0.16, 0.18, 0.8), -1)
-	Blockout.poly(hung, Rect2(1720, 200, 80, 20), Color(0.32, 0.2, 0.14, 0.82), -1)
-	Blockout.poly(hung, Rect2(2480, 185, 48, 14), Color(0.18, 0.2, 0.22, 0.75), -1)
+	_hung_props(hung, map_w, theme, pal)
+	var mist := ParallaxLayer.new()
+	mist.motion_scale = Vector2(0.92, 0.18)
+	pb.add_child(mist)
+	Blockout.poly(mist, Rect2(-60, 480, map_w + 200.0, 80), pal["mist"], 4)
 	var fg := ParallaxLayer.new()
-	fg.motion_scale = Vector2(1.15, 0.4)
+	fg.motion_scale = Vector2(1.18, 0.42)
 	pb.add_child(fg)
-	Blockout.poly(fg, Rect2(-40, 620, 200, 40), Color(0.08, 0.08, 0.1, 0.7), 13)
-	Blockout.poly(fg, Rect2(700, 630, 160, 30), Color(0.09, 0.08, 0.11, 0.65), 13)
-	Blockout.poly(fg, Rect2(1600, 625, 180, 28), Color(0.07, 0.07, 0.09, 0.6), 13)
+	Blockout.poly(fg, Rect2(-40, 620, 220, 44), pal["fg"], 13)
+	Blockout.poly(fg, Rect2(map_w * 0.35, 628, 180, 32), pal["fg"], 13)
+	Blockout.poly(fg, Rect2(map_w * 0.7, 622, 200, 36), pal["fg"], 13)
+	if theme == "pier" or theme == "lot":
+		Blockout.poly(fg, Rect2(80, 640, map_w, 30), pal["water"], 13)
+
+
+static func _theme_pal(theme: String) -> Dictionary:
+	match theme:
+		"roofs":
+			return {
+				"sky": Color(0.05, 0.06, 0.11, 0.9), "moon": Color(0.86, 0.72, 0.48, 0.9),
+				"fog": Color(0.22, 0.16, 0.14, 0.2), "far": Color(0.1, 0.08, 0.12),
+				"far_b": Color(0.12, 0.09, 0.11), "mid": Color(0.18, 0.1, 0.1),
+				"mist": Color(0.2, 0.12, 0.1, 0.16), "fg": Color(0.08, 0.06, 0.07, 0.7),
+				"water": Color(0.08, 0.1, 0.12, 0.4)
+			}
+		"neon":
+			return {
+				"sky": Color(0.08, 0.04, 0.12, 0.92), "moon": Color(0.95, 0.4, 0.75, 0.8),
+				"fog": Color(0.4, 0.12, 0.32, 0.16), "far": Color(0.12, 0.06, 0.16),
+				"far_b": Color(0.18, 0.06, 0.14), "mid": Color(0.16, 0.07, 0.14),
+				"mist": Color(0.35, 0.1, 0.28, 0.14), "fg": Color(0.1, 0.04, 0.1, 0.7),
+				"water": Color(0.12, 0.06, 0.14, 0.4)
+			}
+		"rail":
+			return {
+				"sky": Color(0.05, 0.06, 0.08, 0.92), "moon": Color(0.7, 0.82, 0.9, 0.85),
+				"fog": Color(0.16, 0.18, 0.2, 0.2), "far": Color(0.09, 0.1, 0.12),
+				"far_b": Color(0.12, 0.12, 0.1), "mid": Color(0.14, 0.13, 0.11),
+				"mist": Color(0.14, 0.16, 0.16, 0.16), "fg": Color(0.07, 0.07, 0.08, 0.7),
+				"water": Color(0.08, 0.09, 0.1, 0.4)
+			}
+		"hall":
+			return {
+				"sky": Color(0.06, 0.06, 0.09, 0.92), "moon": Color(0.92, 0.86, 0.62, 0.88),
+				"fog": Color(0.2, 0.18, 0.14, 0.18), "far": Color(0.12, 0.11, 0.1),
+				"far_b": Color(0.16, 0.14, 0.1), "mid": Color(0.15, 0.13, 0.11),
+				"mist": Color(0.18, 0.16, 0.12, 0.14), "fg": Color(0.08, 0.07, 0.06, 0.7),
+				"water": Color(0.1, 0.09, 0.08, 0.4)
+			}
+		"pier":
+			return {
+				"sky": Color(0.04, 0.08, 0.07, 0.95), "moon": Color(0.55, 0.92, 0.62, 0.8),
+				"fog": Color(0.12, 0.28, 0.22, 0.22), "far": Color(0.06, 0.12, 0.11),
+				"far_b": Color(0.08, 0.16, 0.14), "mid": Color(0.08, 0.14, 0.12),
+				"mist": Color(0.1, 0.22, 0.18, 0.22), "fg": Color(0.04, 0.08, 0.07, 0.75),
+				"water": Color(0.08, 0.22, 0.2, 0.55)
+			}
+		"lot":
+			return {
+				"sky": Color(0.07, 0.05, 0.04, 0.94), "moon": Color(0.95, 0.62, 0.28, 0.85),
+				"fog": Color(0.28, 0.16, 0.08, 0.18), "far": Color(0.12, 0.09, 0.07),
+				"far_b": Color(0.16, 0.1, 0.06), "mid": Color(0.14, 0.1, 0.07),
+				"mist": Color(0.22, 0.12, 0.06, 0.16), "fg": Color(0.08, 0.06, 0.04, 0.7),
+				"water": Color(0.12, 0.1, 0.08, 0.45)
+			}
+		"circle":
+			return {
+				"sky": Color(0.07, 0.07, 0.1, 0.92), "moon": Color(0.92, 0.84, 0.55, 0.88),
+				"fog": Color(0.18, 0.22, 0.16, 0.16), "far": Color(0.1, 0.13, 0.11),
+				"far_b": Color(0.12, 0.16, 0.12), "mid": Color(0.13, 0.16, 0.12),
+				"mist": Color(0.16, 0.2, 0.14, 0.14), "fg": Color(0.07, 0.09, 0.07, 0.7),
+				"water": Color(0.12, 0.18, 0.16, 0.4)
+			}
+		"waiting":
+			return {
+				"sky": Color(0.1, 0.11, 0.12, 0.95), "moon": Color(0.85, 0.9, 0.92, 0.5),
+				"fog": Color(0.22, 0.24, 0.24, 0.2), "far": Color(0.14, 0.15, 0.16),
+				"far_b": Color(0.18, 0.19, 0.18), "mid": Color(0.16, 0.17, 0.18),
+				"mist": Color(0.2, 0.22, 0.22, 0.12), "fg": Color(0.1, 0.1, 0.11, 0.7),
+				"water": Color(0.12, 0.14, 0.14, 0.3)
+			}
+		"versus":
+			return {
+				"sky": Color(0.1, 0.04, 0.06, 0.95), "moon": Color(0.95, 0.3, 0.28, 0.85),
+				"fog": Color(0.32, 0.08, 0.1, 0.18), "far": Color(0.12, 0.05, 0.08),
+				"far_b": Color(0.18, 0.06, 0.08), "mid": Color(0.16, 0.06, 0.08),
+				"mist": Color(0.28, 0.08, 0.1, 0.14), "fg": Color(0.08, 0.04, 0.05, 0.7),
+				"water": Color(0.12, 0.05, 0.06, 0.4)
+			}
+		"tutorial":
+			return {
+				"sky": Color(0.06, 0.07, 0.11, 0.9), "moon": Color(0.8, 0.82, 0.9, 0.8),
+				"fog": Color(0.18, 0.2, 0.26, 0.16), "far": Color(0.1, 0.11, 0.16),
+				"far_b": Color(0.12, 0.12, 0.16), "mid": Color(0.14, 0.11, 0.13),
+				"mist": Color(0.16, 0.18, 0.22, 0.14), "fg": Color(0.07, 0.07, 0.09, 0.7),
+				"water": Color(0.1, 0.12, 0.14, 0.35)
+			}
+		_:
+			return {
+				"sky": Color(0.06, 0.07, 0.12, 0.9), "moon": Color(0.78, 0.82, 0.92, 0.85),
+				"fog": Color(0.18, 0.2, 0.28, 0.18), "far": Color(0.11, 0.12, 0.18),
+				"far_b": Color(0.09, 0.1, 0.16), "mid": Color(0.15, 0.1, 0.12),
+				"mist": Color(0.16, 0.18, 0.24, 0.14), "fg": Color(0.08, 0.08, 0.1, 0.7),
+				"water": Color(0.1, 0.12, 0.16, 0.4)
+			}
+
+
+static func _skyline(far: Node, map_w: float, color: Color, theme: String) -> void:
+	var i := 0
+	var x := 80.0
+	while x < map_w:
+		var h := 160.0 + (i % 4) * 50.0
+		if theme == "pier":
+			Blockout.poly(far, Rect2(x, 80, 18, 340), color.lightened(0.05), -6)
+			Blockout.poly(far, Rect2(x + 18, 140, 90, 16), color, -6)
+		elif theme == "lot":
+			Blockout.poly(far, Rect2(x, 200, 110, 140), color, -6)
+		elif theme == "waiting":
+			Blockout.poly(far, Rect2(x, 120, 70, 260), color, -6)
+			Blockout.poly(far, Rect2(x + 12, 140, 14, 18), Color(0.9, 0.92, 0.7, 0.35), -5)
+		elif theme == "rail":
+			Blockout.poly(far, Rect2(x, 160, 140, 40), color, -6)
+		else:
+			Blockout.poly(far, Rect2(x, 320.0 - h, 70 + (i % 3) * 20, h), color, -6)
+		x += 160.0
+		i += 1
+
+
+static func _mid_props(mid: Node, map_w: float, theme: String, pal: Dictionary) -> void:
+	match theme:
+		"pier":
+			Blockout.poly(mid, Rect2(200, 220, 14, 260), pal["far_b"], -4)
+			Blockout.poly(mid, Rect2(200, 220, 180, 14), pal["far_b"], -4)
+			Blockout.poly(mid, Rect2(900, 180, 16, 300), pal["far_b"], -4)
+			Blockout.poly(mid, Rect2(900, 180, 220, 12), pal["far_b"], -4)
+			Blockout.poly(mid, Rect2(0, 500, map_w, 80), pal["water"], -3)
+		"lot":
+			for i in 6:
+				Blockout.poly(mid, Rect2(120.0 + i * 180.0, 360, 90, 40), Color(0.18, 0.12, 0.1), -4)
+		"circle":
+			Blockout.poly(mid, Rect2(map_w * 0.4, 300, 180, 80), Color(0.16, 0.2, 0.16), -4)
+		"waiting":
+			for i in 8:
+				Blockout.poly(mid, Rect2(80.0 + i * 140.0, 340, 50, 70), Color(0.2, 0.2, 0.22), -4)
+		"hall":
+			Blockout.poly(mid, Rect2(400, 180, 40, 200), Color(0.28, 0.22, 0.16, 0.55), -4)
+		_:
+			Blockout.poly(mid, Rect2(400, 180, 40, 200), Color(0.22, 0.12, 0.12, 0.5), -4)
+
+
+static func _near_props(near: Node, map_w: float, theme: String, pal: Dictionary) -> void:
+	var cols: Array = [pal["mid"], pal["far_b"], pal["far"]]
+	for i in 5:
+		var x := 80.0 + i * (map_w / 5.0)
+		Blockout.poly(near, Rect2(x, 280, 70 + (i % 3) * 12, 190), cols[i % 3], -2)
+	if theme == "neon":
+		Blockout.poly(near, Rect2(600, 240, 90, 18), Color(0.95, 0.3, 0.7, 0.7), -1)
+		Blockout.poly(near, Rect2(1500, 220, 110, 18), Color(0.3, 0.85, 0.95, 0.7), -1)
+	if theme == "pier":
+		Blockout.poly(near, Rect2(40, 520, map_w, 40), Color(0.12, 0.1, 0.08, 0.8), -1)
+
+
+static func _hung_props(hung: Node, map_w: float, theme: String, pal: Dictionary) -> void:
+	var n := 5
+	for i in n:
+		var x := 160.0 + i * (map_w / float(n))
+		var c := Color(0.28, 0.18, 0.14, 0.85)
+		if theme == "neon":
+			c = Color(0.9, 0.25, 0.55, 0.8) if i % 2 == 0 else Color(0.25, 0.8, 0.9, 0.8)
+		elif theme == "pier":
+			c = Color(0.18, 0.32, 0.24, 0.85)
+		elif theme == "lot":
+			c = Color(0.55, 0.32, 0.12, 0.8)
+		Blockout.poly(hung, Rect2(x, 190 + (i % 3) * 8, 64, 16), c, -1)
+
+
+static func section(host: Node, at: Vector2, kind: String) -> void:
+	var label := "BRAWL"
+	var color := Palette.BRICK
+	match kind:
+		"parkour":
+			label = "PARKOUR"
+			color = Palette.LEMON
+		"gun":
+			label = "GUN"
+			color = Palette.EDGE
+		_:
+			label = "BRAWL"
+			color = Palette.BRICK
+	plaque(host, at, label, color, 16)
+
+
+static func crane(host: Node, at: Vector2, h: float = 320.0) -> void:
+	Blockout.solid(host, Rect2(at.x, at.y, 18, h), false)
+	Blockout.poly(host, Rect2(at.x, at.y, 18, h), Color(0.28, 0.32, 0.22), 2)
+	Blockout.solid(host, Rect2(at.x, at.y, 220, 16), true)
+	Blockout.poly(host, Rect2(at.x, at.y, 220, 16), Color(0.32, 0.36, 0.24), 3)
+	Blockout.occluder(host, Rect2(at.x, at.y, 18, h))
+	anchor_if(host, Vector2(at.x + 110, at.y - 20))
+
+
+static func anchor_if(host: Node, at: Vector2) -> void:
+	if host.has_method("anchor"):
+		host.anchor(at)
+	else:
+		var a := WebAnchor.new()
+		a.position = at
+		host.add_child(a)
+
+
+static func chapel(host: Node, rect: Rect2) -> void:
+	Blockout.poly(host, rect, Color(0.16, 0.18, 0.16), -1)
+	Blockout.occluder(host, rect)
+	var peak := Polygon2D.new()
+	peak.color = Color(0.12, 0.14, 0.12)
+	peak.polygon = PackedVector2Array([
+		rect.position + Vector2(0, 40),
+		rect.position + Vector2(rect.size.x * 0.5, -70),
+		rect.position + Vector2(rect.size.x, 40)
+	])
+	host.add_child(peak)
+	var door := Blockout.poly(host, Rect2(rect.position.x + rect.size.x * 0.4, rect.end.y - 90, 48, 90), Color(0.08, 0.07, 0.07), 1)
+	door.z_index = 1
+	var win := Blockout.poly(host, Rect2(rect.position.x + 36, rect.position.y + 50, 22, 48), Color(0.35, 0.85, 0.55, 0.55), 1)
+	Blockout.add_glow(win)
+
+
+static func car(host: Node, at: Vector2, color: Color) -> void:
+	Blockout.solid(host, Rect2(at.x, at.y - 36, 110, 22), true)
+	Blockout.poly(host, Rect2(at.x, at.y - 36, 110, 36), color, 2)
+	Blockout.poly(host, Rect2(at.x + 18, at.y - 58, 70, 24), color.darkened(0.15), 2)
+	Blockout.occluder(host, Rect2(at.x, at.y - 36, 110, 36))
+
+
+static func water_band(host: Node, map_w: float, y: float = 560.0) -> void:
+	var w := Blockout.poly(host, Rect2(0, y, map_w, 160), Color(0.07, 0.16, 0.15, 0.85), 1)
+	w.z_index = 1
+	Blockout.poly(host, Rect2(0, y, map_w, 18), Color(0.18, 0.32, 0.28, 0.55), 2)
 
 
 static func tenement(host: Node, rect: Rect2, color: Color) -> void:

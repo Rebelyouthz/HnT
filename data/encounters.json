@@ -73,5 +73,65 @@
       {"title": "Drone", "x": 1760, "y": 160, "home": "air", "hp": 28, "pmin": 1580, "pmax": 1980},
       {"title": "Hall Guard", "x": 1980, "y": 500, "home": "street", "hp": 60, "pmin": 1820, "pmax": 2140, "armored": true}
     ]
+  },
+  "intake_lot": {
+    "solo": [
+      {"title": "Coping Imp", "x": 640, "y": 500, "home": "street", "hp": 34, "pmin": 500, "pmax": 860},
+      {"title": "Clipboard", "x": 1080, "y": 210, "home": "air", "hp": 26, "pmin": 900, "pmax": 1280},
+      {"title": "Valet", "x": 1540, "y": 500, "home": "street", "hp": 44, "pmin": 1380, "pmax": 1760}
+    ],
+    "coop": [
+      {"title": "Coping Imp", "x": 520, "y": 500, "home": "street", "hp": 34, "pmin": 400, "pmax": 720},
+      {"title": "Valet", "x": 780, "y": 500, "home": "street", "hp": 44, "pmin": 640, "pmax": 980},
+      {"title": "Clipboard", "x": 1040, "y": 200, "home": "air", "hp": 26, "pmin": 860, "pmax": 1240},
+      {"title": "Coping Imp", "x": 1320, "y": 500, "home": "street", "hp": 34, "pmin": 1180, "pmax": 1520},
+      {"title": "Clipboard", "x": 1560, "y": 190, "home": "air", "hp": 26, "pmin": 1400, "pmax": 1740},
+      {"title": "Valet", "x": 1780, "y": 500, "home": "street", "hp": 44, "pmin": 1640, "pmax": 1940}
+    ]
+  },
+  "group_circle": {
+    "solo": [
+      {"title": "Coping Imp", "x": 620, "y": 500, "home": "street", "hp": 34, "pmin": 480, "pmax": 840},
+      {"title": "Roof Runner", "x": 1180, "y": 228, "home": "roof", "hp": 36, "pmin": 1020, "pmax": 1420},
+      {"title": "Coping Imp", "x": 1560, "y": 500, "home": "street", "hp": 34, "pmin": 1400, "pmax": 1760}
+    ],
+    "coop": [
+      {"title": "Coping Imp", "x": 480, "y": 500, "home": "street", "hp": 34, "pmin": 360, "pmax": 680},
+      {"title": "Bag Snatch", "x": 760, "y": 500, "home": "street", "hp": 40, "pmin": 620, "pmax": 940},
+      {"title": "Roof Runner", "x": 1120, "y": 228, "home": "roof", "hp": 36, "pmin": 980, "pmax": 1340},
+      {"title": "Coping Imp", "x": 1360, "y": 500, "home": "street", "hp": 34, "pmin": 1220, "pmax": 1560},
+      {"title": "Clipboard", "x": 1540, "y": 200, "home": "air", "hp": 26, "pmin": 1380, "pmax": 1720},
+      {"title": "Vest Ollie", "x": 1720, "y": 500, "home": "street", "hp": 64, "pmin": 1580, "pmax": 1860, "armored": true}
+    ]
+  },
+  "waiting_room": {
+    "solo": [
+      {"title": "Invoice Clerk", "x": 640, "y": 500, "home": "street", "hp": 42, "pmin": 500, "pmax": 860},
+      {"title": "Clipboard", "x": 1100, "y": 210, "home": "air", "hp": 26, "pmin": 940, "pmax": 1300},
+      {"title": "Coping Imp", "x": 1520, "y": 500, "home": "street", "hp": 34, "pmin": 1360, "pmax": 1740}
+    ],
+    "coop": [
+      {"title": "Invoice Clerk", "x": 500, "y": 500, "home": "street", "hp": 42, "pmin": 380, "pmax": 700},
+      {"title": "Coping Imp", "x": 780, "y": 500, "home": "street", "hp": 34, "pmin": 640, "pmax": 980},
+      {"title": "Clipboard", "x": 1040, "y": 190, "home": "air", "hp": 26, "pmin": 880, "pmax": 1240},
+      {"title": "Invoice Clerk", "x": 1300, "y": 500, "home": "street", "hp": 42, "pmin": 1160, "pmax": 1500},
+      {"title": "Clipboard", "x": 1540, "y": 180, "home": "air", "hp": 26, "pmin": 1380, "pmax": 1720},
+      {"title": "Chapel Usher", "x": 1740, "y": 500, "home": "street", "hp": 70, "pmin": 1600, "pmax": 1880, "armored": true}
+    ]
+  },
+  "invoice_pier": {
+    "solo": [
+      {"title": "Invoice Clerk", "x": 720, "y": 500, "home": "street", "hp": 42, "pmin": 560, "pmax": 980},
+      {"title": "Pier Gull", "x": 2100, "y": 180, "home": "air", "hp": 30, "pmin": 1880, "pmax": 2360},
+      {"title": "Chapel Usher", "x": 2520, "y": 500, "home": "street", "hp": 70, "pmin": 2340, "pmax": 2760, "armored": true}
+    ],
+    "coop": [
+      {"title": "Invoice Clerk", "x": 560, "y": 500, "home": "street", "hp": 42, "pmin": 420, "pmax": 780},
+      {"title": "Coping Imp", "x": 980, "y": 500, "home": "street", "hp": 34, "pmin": 840, "pmax": 1180},
+      {"title": "Pier Gull", "x": 1480, "y": 190, "home": "air", "hp": 30, "pmin": 1280, "pmax": 1720},
+      {"title": "Invoice Clerk", "x": 1860, "y": 500, "home": "street", "hp": 42, "pmin": 1680, "pmax": 2100},
+      {"title": "Pier Gull", "x": 2240, "y": 170, "home": "air", "hp": 30, "pmin": 2040, "pmax": 2480},
+      {"title": "Chapel Usher", "x": 2680, "y": 500, "home": "street", "hp": 70, "pmin": 2500, "pmax": 2920, "armored": true}
+    ]
   }
 }

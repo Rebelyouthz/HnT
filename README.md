@@ -2,7 +2,9 @@
 
 Couch, **solo**, or **remote Host/Join** brawler for **The Father** and **The Son**. Godot **4.7.2**, GDScript, 60 fps, English only.
 
-Playable tonight: **The Basement Clinic** hub, then **five Raven Wharf acts** — Dock Street, The Fire Escapes, Neon Exchange, Rail Bridge, City Hall (Mayor Raven). Solo spawns fewer enemies. Couch 2P keeps the full roster. Drop-in does **not** restock punks. Remote: The Son Hosts, The Father Joins.
+The Basement Clinic billed them for family therapy they never attended. Mayor Raven holds the eviction **and** the invoice. They collect coping evidence so the clinic does not seize the apartment or the Son's tutoring license.
+
+Playable tonight: hub, **intro film + comic + tutorial + second film**, **nine campaign maps** (six brawl acts + three survivor hours woven between the first three brawl acts), **Versus**, Host/Join. Solo spawns fewer enemies. Couch 2P keeps the full roster. Drop-in does **not** restock punks.
 
 ## Run locally
 
@@ -25,54 +27,55 @@ Rooms (needed for room-code Join and the automatic relay). Host will try to star
 python3 tools/hnt_rooms.py
 ```
 
-Default listen: HTTP `8787`, TCP relay `8789`. Change the URL in Session Settings if the Father is on another PC (point it at the machine running rooms).
+Default listen: HTTP `8787`, TCP relay `8789`. Change the URL in Session Settings if the Father is on another PC.
 
-## What is playable (`godot --path .`)
+## How to start intro / tutorial
 
-Hub first. Clinic **GO TALK TO THE LANDLORD** starts **solo immediately**.
+**First GO** (Clinic **GO TALK TO THE LANDLORD** or Run **GO ALONE** / **GO TOGETHER**) plays intake if `intro_done` is false in `user://family.json`:
 
-**Run tab**
+1. **Film 1** — letterbox, silhouettes, the invoice.
+2. **Comic** — three panels slam in.
+3. **Tutorial Alley** — parkour ledge, pistol pickup, punch the dummy, walk right.
+4. **Film 2** — then **Dock Street**.
 
-- **SOLO** (default) — one body. 3 punks per act (City Hall 3 + Mayor Raven).
-- **COUCH 2P** — both bodies, 6 punks per act, same device, one Camera2D.
-- **HOST (THE SON)** — one button. Waiting screen: huge **room code**, **IP (backup)**, status **WAITING FOR FATHER**. Cancel Host.
-- **JOIN (THE FATHER)** — paste room code (preferred) or expand **IP (backup)**, **Connect**. Status Connecting… then **Direct** or **Relay**.
+**PAUSE** skips the current beat. **LIGHT / JUMP** advances a line.
 
-Connect pipeline (automatic, no extra taps): same LAN UDP → UPnP/direct (~3 s) → TCP relay through HnT Rooms. Room code is the product. IP is Timmie's backup.
+Replay anytime: Run tab **PLAY INTRO**. Remote Host/Join skips intake and starts Dock Street so Stockholm does not wait through a movie.
 
-Pad **Start** or keyboard **P** drops the empty chair in a local run. Enemies stay the count you booked. Remote already has two bodies.
+## How to start Versus
 
-### Acts
+Run tab **VERSUS**. Mortal Kombat-style **best of three**, The Father vs The Son, same kits, one camera.
 
-1. **Dock Street** — street + roofs, 24/7 Blood Mart, continue to roofs.
-2. **The Fire Escapes** — Vector gaps, Roof Vendor (ammo / card reroll).
-3. **Neon Exchange** — agents + police, wanted ladder, **Pawn & Plate** (tape, pipe, sell pickup).
-4. **Rail Bridge** — street under, roofs on boxcars, drones / toll bots, **Toll Booth** (grenade, spark ammo).
-5. **City Hall** — climbable statues, **Mayor Raven** (street / roof / lights-out). SNAP after stun. No shop.
+- Keyboard: P1 WASD/JKL vs P2 arrows / `.` `/`
+- One pad: keyboard P1, pad P2. Two pads: pad 0 / pad 1.
+- Round splash, banter, finishers **GROUNDED** (Father) and **YOU'RE FIRED** (Son).
+- **PAUSE** exits to the clinic.
 
-Wanted 3 = extra patrol. Wanted 5 = heli spotlight.
+## Campaign order (9 maps)
 
-- **The Son:** hold jump in the air = cape stall. L = Cape Guard. O = batwing (mag 3). Jump-kick, dive, slide, light-light-heavy launcher, light-light-special string.
-- **The Father:** `;` near a lamp = web 80–280 px. Jump or `;` again = slingshot. `'` = snare. Up+shoot with a grenade = a boundary with a timer.
-- **SNAP:** sprint a back, vault a head, slide, web-in, or cape-dive. World ×0.22.
+Brawl acts mix **parkour / gun / brawl** stretches (plaques). Every act: **miniboss**, later content, **boss** with portrait + name + sting + boss music. Parallax is **multi-layer and themed** on every map.
 
-Shared **3 lives**. Solo downed respawns faster. Co-op: hold SNAP on the body for the Parenting Slap.
+1. **Dock Street** — Collector Gant. Then a coping hour.
+2. **The Intake Lot** (survivor) — flooded car park, magnet chips, elite pack, Lot Hydra. **Not** a Vampire Survivors meadow.
+3. **The Fire Escapes** — Lease Hawk on the high ledge.
+4. **Group Circle** (survivor) — courtyard share. The Facilitator.
+5. **Neon Exchange** — Agent Prime. Pawn & Plate.
+6. **The Waiting Room** (survivor) — fluorescent forever. Number 88.
+7. **Rail Bridge** — Conductor 9. Toll Booth.
+8. **City Hall** — Deputy Raven, then **Mayor Raven**. Continues.
+9. **Invoice Pier** — distinct annex: water, cranes, chapel. Usher Prime, then **Dr. Splint**. Not a Dock Street palette-swap.
 
-## Host / Join steps
+Survivor hours: Halls of Torment bar — density curve, pickup magnet, XP gems, elite packs, coping chests, extra level-up cards (`COPING MAGNET`, `ORBIT FORM`, `DRIP FEED`, `VACUUM HOUR`). Solo thinner spawn + slower horde. Co-op denser.
 
-**The Son (Stockholm)**
+Wanted 3 = extra patrol. Wanted 5 = heli spotlight. Unchanged on brawl maps: seed encounters stay **solo 3 / coop 6**.
 
-1. Run tab → **HOST (THE SON)**.
-2. Text Timmie the 6-character code. Do not explain the IP.
-3. Wait. Status stays **WAITING FOR FATHER** until he connects. Then Dock Street starts with co-op density.
+## Host / Join
 
-**The Father (Dalarna)**
+**The Son (Stockholm):** Run tab → **HOST (THE SON)** → text the 6-character code.
 
-1. Run tab → **JOIN (THE FATHER)**.
-2. Paste the code. **Connect**.
-3. If Direct fails, relay kicks in by itself. Expand **IP (backup)** only if the code cannot resolve (same LAN, rooms down).
+**The Father (Dalarna):** **JOIN (THE FATHER)** → paste code → **Connect**. Direct, then automatic relay.
 
-Two Godot windows on one PC: Host, then Join with the same code. LAN should win.
+Connect pipeline: LAN UDP → UPnP/direct (~3 s) → TCP relay. Room code is the product.
 
 ## Controls
 
@@ -88,7 +91,7 @@ Two Godot windows on one PC: Host, then Join with the same code. LAN should win.
 | SNAP / revive | F | N |
 | Pause | Esc | P or Start (P also joins if the chair is empty) |
 
-**Pad (Xbox layout).** 0 pads: keyboard. 1 pad: that pad is P2 (The Father) once he exists; P1 stays keyboard. 2 pads: pad 0 The Son, pad 1 The Father.
+**Pad (Xbox layout).** 0 pads: keyboard. 1 pad: that pad is P2 once he exists; P1 stays keyboard. 2 pads: pad 0 The Son, pad 1 The Father.
 
 | Action | Button |
 | --- | --- |
@@ -104,34 +107,24 @@ Two Godot windows on one PC: Host, then Join with the same code. LAN should win.
 | SNAP | Right stick click |
 | Pause / drop-in | Start |
 
-On a remote Join, The Father uses **P1** on his machine (keyboard or his pad). The Son stays host-authoritative.
+On a remote Join, The Father uses **P1** on his machine. The Son stays host-authoritative.
+
+New pickups: **board**, **pistol** (six shots) in gun stretches, plus pipe / knife.
 
 ## Hub
 
-Clinic, Run, Build, Locker, Awards. Clinic + Run start unlocked. Family Profile at `user://family.json`.
-
-## Visual / feel (superpolish2 leftover)
-
-Eight-stage pass on **existing** systems. Host/Join pipeline and solo 3 / coop 6 counts did not move.
-
-**Menus.** Clinic `!` only when you can afford the build. PLAY and CLAIM pulse. Awards show progress X/Y and a clinic stamp. Locker WEAR / LOCK (Night Tutor + Pink-Slip at Rep 8). CBT owned rows go green; buyable rows lemon. Run tab lists all five acts. Session settings print volume percents. Host room code breathes. Join CONNECT pulses. Shop prompts list prices and brighten when you stand in them.
-
-**Cards / combo.** Vampire Survivors chrome: rarity border, synergy tag, SKIP, REROLL if you bought a second opinion. Streets of Rage 4 cash-out: let the combo bar die at 5+ and Scrap/XP bank; getting hit drops the combo unless Family Discount. STREET CREDIT doubles the bank. Destroyed crates and scrap orbs keep the combo.
-
-**Run.** HP pips. Combo rank + cash-out bar. SNAP and DOWN blink (Huntdown). HOLD when the slap is in range. Contact shadows, idle bob, land dust. Bodies tint toward the nearest lamp. Lamps flicker. Extra hanging-sign parallax. Wet asphalt brighter. Blood stretches with velocity, tints under neon, extra pump on a kill. Mayor cape flaps. Heli bobs. Vault crates smash for scrap.
-
-Host/Join steps and encounter counts: same as above.
+Clinic, Run, Build, Locker, Awards. Family Profile at `user://family.json`.
 
 ## Layout
 
 ```
-scenes/     hub + five act scenes
-src/        actors, camera, combat, juice, world, ui, coop, net
-data/       buildings, awards, milestones, CBT, cards, shop, encounters
-tools/      hnt_rooms.py (room codes + TCP relay)
+scenes/     hub + intro, tutorial, nine acts, versus
+src/        actors, story, survive, vs, juice, world, ui, coop, net
+data/       story, buildings, awards, CBT, cards, shop, encounters
+tools/      hnt_rooms.py, synth_story.py
 assets/     audio + icon
 ```
 
-Encounter counts live in `data/encounters.json`. Recount from that file, not from memory.
+Encounter counts live in `data/encounters.json`. Recount from that file.
 
 Contract: Project game plan. Superpolish2 lives in `.cursor/skills/superpolish2/`.

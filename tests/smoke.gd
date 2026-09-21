@@ -3,9 +3,9 @@ extends SceneTree
 func _initialize() -> void:
 	var failed := 0
 	failed += _check_json("res://data/buildings.json", 9)
-	failed += _check_json("res://data/awards.json", 9)
-	failed += _check_json("res://data/cbt.json", 8)
-	failed += _check_json("res://data/cards.json", 12)
+	failed += _check_json("res://data/awards.json", 15)
+	failed += _check_json("res://data/cbt.json", 10)
+	failed += _check_json("res://data/cards.json", 16)
 	var miles: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/milestones.json"))
 	if typeof(miles) != TYPE_DICTIONARY or not miles.has("daily") or (miles["daily"] as Array).size() != 3:
 		push_error("milestones.json invalid")
@@ -39,6 +39,18 @@ func _initialize() -> void:
 	if Copy.HALL_CLEAR != "CITY HALL FILED":
 		push_error("missing city hall copy")
 		failed += 1
+	if Copy.SKIP_FILM != "PAUSE SKIPS  ·  LIGHT ADVANCES":
+		push_error("missing skip film copy")
+		failed += 1
+	if Copy.VERSUS != "VERSUS" or Copy.FIRED != "YOU'RE FIRED":
+		push_error("missing versus copy")
+		failed += 1
+	if Copy.PIER_CLEAR != "INVOICE PIER FILED" or Copy.LOT_CLEAR != "INTAKE LOT FILED":
+		push_error("missing pier/lot copy")
+		failed += 1
+	if Copy.PLAY_INTRO != "PLAY INTRO":
+		push_error("missing play intro copy")
+		failed += 1
 	var app := get_root().get_node("App")
 	if app.couch != false:
 		push_error("App.couch must default false so hub GO starts solo")
@@ -62,6 +74,26 @@ func _initialize() -> void:
 	failed += _exists("res://src/world/roof_vendor.gd")
 	failed += _exists("res://src/world/street_shop.gd")
 	failed += _exists("res://src/actors/mayor_raven.gd")
+	failed += _exists("res://src/actors/act_boss.gd")
+	failed += _exists("res://src/story/talk.gd")
+	failed += _exists("res://src/story/mission_hud.gd")
+	failed += _exists("res://src/story/story_book.gd")
+	failed += _exists("res://src/ui/boss_card.gd")
+	failed += _exists("res://src/ui/intro_flow.gd")
+	failed += _exists("res://src/levels/tutorial_alley.gd")
+	failed += _exists("res://src/levels/invoice_pier.gd")
+	failed += _exists("res://src/levels/intake_lot.gd")
+	failed += _exists("res://src/levels/group_circle.gd")
+	failed += _exists("res://src/levels/waiting_room.gd")
+	failed += _exists("res://src/levels/survive_act.gd")
+	failed += _exists("res://src/survive/horde.gd")
+	failed += _exists("res://src/survive/xp_gem.gd")
+	failed += _exists("res://src/vs/versus_arena.gd")
+	failed += _exists("res://data/story.json")
+	failed += _exists("res://scenes/levels/invoice_pier.tscn")
+	failed += _exists("res://scenes/levels/intake_lot.tscn")
+	failed += _exists("res://scenes/levels/versus.tscn")
+	failed += _exists("res://scenes/levels/intro_flow.tscn")
 	failed += _exists("res://src/net/net_session.gd")
 	failed += _exists("res://src/ui/host_wait.gd")
 	failed += _exists("res://src/ui/stamp_mark.gd")
@@ -85,10 +117,19 @@ func _initialize() -> void:
 	failed += _contains("res://src/levels/run_act.gd", "Party.all_past")
 	failed += _contains("res://src/app/app.gd", "var couch: bool = false")
 	failed += _contains("res://src/app/app.gd", "neon_exchange")
+	failed += _contains("res://src/app/app.gd", "invoice_pier")
+	failed += _contains("res://src/app/app.gd", "intake_lot")
+	failed += _contains("res://src/app/app.gd", "func start_versus")
+	failed += _contains("res://src/world/night_street.gd", "theme: String = \"dock\"")
+	failed += _contains("res://src/levels/run_act.gd", "BossCard.present")
+	failed += _contains("res://src/levels/invoice_pier.gd", "INVOICE PIER")
+	failed += _contains("res://src/levels/survive_act.gd", "Horde.new")
+	failed += _contains("res://src/actors/fighter.gd", "var vs_mode")
+	failed += _contains("res://src/ui/hub_run.gd", "Copy.PLAY_INTRO")
+	failed += _contains("res://src/ui/copy.gd", "SKIP THIS FEELING")
 	failed += _contains("res://src/juice/juice.gd", "func cash_out(")
 	failed += _contains("res://src/juice/juice.gd", "func toast(")
 	failed += _contains("res://src/juice/juice.gd", "func unlock_logo(")
-	failed += _contains("res://src/ui/copy.gd", "SKIP THIS FEELING")
 	failed += _contains("res://src/ui/hub_locker.gd", "Copy.WEAR")
 	failed += _contains("res://src/combat/card_pick.gd", "Copy.SKIP")
 	failed += _contains("res://src/world/light_rig.gd", "func tint_at")
@@ -132,6 +173,10 @@ func _encounters() -> int:
 	n += _map_counts(parsed, "neon_exchange", 3, 6)
 	n += _map_counts(parsed, "rail_bridge", 3, 6)
 	n += _map_counts(parsed, "city_hall", 3, 6)
+	n += _map_counts(parsed, "invoice_pier", 3, 6)
+	n += _map_counts(parsed, "intake_lot", 3, 6)
+	n += _map_counts(parsed, "group_circle", 3, 6)
+	n += _map_counts(parsed, "waiting_room", 3, 6)
 	return n
 
 

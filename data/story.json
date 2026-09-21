@@ -1,0 +1,183 @@
+{
+  "reason": "The Basement Clinic billed them for family therapy they never attended. Mayor Raven holds the eviction AND the invoice. They collect coping evidence — violence as homework — so the clinic does not seize the apartment or the Son's tutoring license.",
+  "intro": {
+    "film1": [
+      {"who": "", "text": "RAVEN WHARF. NIGHT. THE BASEMENT CLINIC STILL HAS THE LIGHTS ON."},
+      {"who": "son", "text": "They billed us for a session we skipped. That's not a metaphor."},
+      {"who": "father", "text": "I was networking. In the alley. With my feelings."},
+      {"who": "", "text": "MAYOR RAVEN HOLDS THE EVICTION. AND THE INVOICE. SAME CLIPBOARD."}
+    ],
+    "comics": [
+      {"title": "PAST DUE", "text": "FAMILY THERAPY × 12. NOBODY SAT DOWN. THE COUCH STILL CHARGED RENT."},
+      {"title": "THE FATHER", "text": "I DIDN'T EVEN TAKE OFF MY SHOES."},
+      {"title": "THE SON", "text": "YOU NEVER DO. THAT'S THE INVOICE."}
+    ],
+    "film2": [
+      {"who": "", "text": "HOMEWORK: COLLECT COPING EVIDENCE. FILE IT IN BLOOD."},
+      {"who": "son", "text": "If we file this, I keep the tutoring license. You keep the fridge."},
+      {"who": "father", "text": "That's called a parenting win. Come on."},
+      {"who": "", "text": "DOCK STREET IS STILL HIRING. THEY LIE ABOUT THAT."}
+    ]
+  },
+  "acts": {
+    "tutorial_alley": {
+      "title": "TUTORIAL ALLEY",
+      "main": "Learn the three languages: jump, gun, punch. Then lie about growth.",
+      "side": "Hit the dummy like it billed you.",
+      "talk": [
+        {"at": 0, "lines": [
+          {"who": "son", "text": "Jump. Punch. Don't make it a personality."},
+          {"who": "father", "text": "I have a personality. It's unemployed."}
+        ]}
+      ]
+    },
+    "dock_street": {
+      "title": "DOCK STREET",
+      "main": "Pull the first stack of coping evidence off Dock Street before the clinic posts it on the door.",
+      "side": "Smash a crate. That's a feeling with a lid.",
+      "talk": [
+        {"at": 0, "lines": [
+          {"who": "father", "text": "If anyone asks, this is homework."},
+          {"who": "son", "text": "If anyone asks, you're the assignment."}
+        ]},
+        {"at": 1100, "lines": [
+          {"who": "son", "text": "Roofs. Gaps. Try not to make a speech."},
+          {"who": "father", "text": "I was going to say I believe in us."}
+        ]},
+        {"at": 2100, "lines": [
+          {"who": "father", "text": "Gun stretch. I brought a personality and three bullets."},
+          {"who": "son", "text": "Two of those are imaginary."}
+        ]}
+      ],
+      "miniboss": {"title": "Shift Lead", "x": 1380, "y": 500, "home": "street", "hp": 96, "pmin": 1200, "pmax": 1560, "sub": "CLOCKED IN FOREVER"},
+      "boss": {"title": "Collector Gant", "x": 2780, "y": 500, "home": "street", "hp": 160, "pmin": 2600, "pmax": 3000, "sub": "INVOICES WITH KNUCKLES"}
+    },
+    "intake_lot": {
+      "title": "THE INTAKE LOT",
+      "survive": true,
+      "main": "Hold the flooded car park for a coping hour. Elites come in packs. The magnet is the love language.",
+      "side": "Vacuum eight experience chips. The clinic calls them insights.",
+      "talk": [
+        {"at": 0, "lines": [
+          {"who": "son", "text": "This is the waiting list. It bites."},
+          {"who": "father", "text": "I validate the horde. Then I park on it."}
+        ]}
+      ],
+      "miniboss": {"title": "Clamp King", "x": 1100, "y": 500, "home": "street", "hp": 110, "sub": "VALET OF THE DAMNED"},
+      "boss": {"title": "Lot Hydra", "x": 1800, "y": 500, "home": "street", "hp": 180, "sub": "THREE BOOTS, ONE TICKET"}
+    },
+    "fire_escapes": {
+      "title": "THE FIRE ESCAPES",
+      "main": "Cross the roofs and file a vertical alibi before the vendor sells your name.",
+      "side": "Buy a second opinion. Or steal the silence.",
+      "talk": [
+        {"at": 0, "lines": [
+          {"who": "son", "text": "Gaps. Glide. If you fall, make it a joke."},
+          {"who": "father", "text": "My joints already filed a complaint."}
+        ]},
+        {"at": 1600, "lines": [
+          {"who": "father", "text": "Street still bites under the poetry."},
+          {"who": "son", "text": "That's the brawl section. Try punching it."}
+        ]}
+      ],
+      "miniboss": {"title": "Pipe Widow", "x": 1180, "y": 248, "home": "roof", "hp": 88, "pmin": 1000, "pmax": 1400, "sub": "RENT WITH TEETH"},
+      "boss": {"title": "Lease Hawk", "x": 2480, "y": 208, "home": "roof", "hp": 150, "pmin": 2320, "pmax": 2680, "sub": "SIGNATURES IN THE WIND"}
+    },
+    "group_circle": {
+      "title": "GROUP CIRCLE",
+      "survive": true,
+      "main": "Survive the courtyard share. Nobody passes the talking stick. Everybody brings a chair.",
+      "side": "Let the magnet do the processing.",
+      "talk": [
+        {"at": 0, "lines": [
+          {"who": "father", "text": "I pass. That's growth."},
+          {"who": "son", "text": "You pass like a kidney stone."}
+        ]}
+      ],
+      "miniboss": {"title": "Share Chair", "x": 1000, "y": 500, "home": "street", "hp": 108, "sub": "SITS ON THE FEELING"},
+      "boss": {"title": "The Facilitator", "x": 1700, "y": 500, "home": "street", "hp": 175, "sub": "WE HEAR YOU. WE BILL YOU."}
+    },
+    "neon_exchange": {
+      "title": "NEON EXCHANGE",
+      "main": "Cash the feelings before the agents pawn your pulse.",
+      "side": "Pick up a board or a pistol. Sharing is a weapon.",
+      "talk": [
+        {"at": 0, "lines": [
+          {"who": "son", "text": "Smile. Agents tax that."},
+          {"who": "father", "text": "I smiled in 2009. I'm still paying interest."}
+        ]},
+        {"at": 1700, "lines": [
+          {"who": "father", "text": "Pawn & Plate. Sell the pipe, keep the wound."},
+          {"who": "son", "text": "That's the mission statement."}
+        ]}
+      ],
+      "miniboss": {"title": "Badge Broker", "x": 1240, "y": 500, "home": "street", "hp": 100, "pmin": 1080, "pmax": 1420, "sub": "LICENSED TO BILL"},
+      "boss": {"title": "Agent Prime", "x": 2580, "y": 500, "home": "street", "hp": 165, "pmin": 2420, "pmax": 2760, "sub": "SMILE FOR THE WARRANT"}
+    },
+    "waiting_room": {
+      "title": "THE WAITING ROOM",
+      "survive": true,
+      "main": "Hold the fluorescent forever-room. Numbers skip you on purpose.",
+      "side": "Don't sit. Sitting is how they win.",
+      "talk": [
+        {"at": 0, "lines": [
+          {"who": "son", "text": "We're number 88. There is no 87."},
+          {"who": "father", "text": "I brought a magazine from 1994. It's still angry."}
+        ]}
+      ],
+      "miniboss": {"title": "Ticket Machine", "x": 980, "y": 500, "home": "street", "hp": 112, "sub": "NOW SERVING PAIN"},
+      "boss": {"title": "Number 88", "x": 1680, "y": 500, "home": "street", "hp": 188, "sub": "YOUR NUMBER NEVER COMES"}
+    },
+    "rail_bridge": {
+      "title": "RAIL BRIDGE",
+      "main": "Pay the toll in personality. Keep a grenade as a receipt.",
+      "side": "Ride a boxcar roof. The street still bites.",
+      "talk": [
+        {"at": 0, "lines": [
+          {"who": "father", "text": "Bots don't blink. I respect the work ethic."},
+          {"who": "son", "text": "You blinked in 2011 and called it a sabbatical."}
+        ]}
+      ],
+      "miniboss": {"title": "Boxcar Brute", "x": 1320, "y": 500, "home": "street", "hp": 120, "pmin": 1160, "pmax": 1520, "sub": "FREIGHT WITH FISTS"},
+      "boss": {"title": "Conductor 9", "x": 2520, "y": 500, "home": "street", "hp": 170, "pmin": 2360, "pmax": 2720, "sub": "ALL ABOARD THE CONSEQUENCES"}
+    },
+    "city_hall": {
+      "title": "CITY HALL",
+      "main": "Climb the statues. The landlord has throwing stars and a mortgage on your name.",
+      "side": "Put the Deputy on the floor. Then the Mayor.",
+      "talk": [
+        {"at": 0, "lines": [
+          {"who": "son", "text": "Deputy first. Mayor later. That's called pacing."},
+          {"who": "father", "text": "I don't pace. I loom."}
+        ]},
+        {"at": 900, "lines": [
+          {"who": "father", "text": "If I lose, we get a nice note on the door."},
+          {"who": "son", "text": "If you win, we still get the invoice."}
+        ]}
+      ],
+      "miniboss": {"title": "Deputy Raven", "x": 880, "y": 500, "home": "street", "hp": 110, "pmin": 720, "pmax": 1080, "sub": "STARRED AND STAMPED"},
+      "boss": {"kind": "mayor_raven", "title": "Mayor Raven", "sub": "LANDLORD · NINJA · INVOICE"}
+    },
+    "invoice_pier": {
+      "title": "INVOICE PIER",
+      "main": "Walk the flooded annex. File the original invoice on Dr. Splint's desk. Or his ribs.",
+      "side": "Crack a chapel crate. That's the copay.",
+      "talk": [
+        {"at": 0, "lines": [
+          {"who": "son", "text": "This is not Dock Street with a cold. This is the annex."},
+          {"who": "father", "text": "I hate water. I hate chapels. I hate being right."}
+        ]},
+        {"at": 1500, "lines": [
+          {"who": "father", "text": "Cranes. I can web that. I can also drown with style."},
+          {"who": "son", "text": "Parkour first. Therapy never."}
+        ]},
+        {"at": 2400, "lines": [
+          {"who": "son", "text": "Chapel doors. Ushers. Don't tip."},
+          {"who": "father", "text": "I was going to tithe a punch."}
+        ]}
+      ],
+      "miniboss": {"title": "Usher Prime", "x": 1680, "y": 500, "home": "street", "hp": 120, "pmin": 1500, "pmax": 1860, "sub": "SILENCE IN THE NAVE"},
+      "boss": {"title": "Dr. Splint", "x": 2920, "y": 500, "home": "street", "hp": 220, "pmin": 2720, "pmax": 3180, "sub": "THE BILL WALKS"}
+    }
+  }
+}

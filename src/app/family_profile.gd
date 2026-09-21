@@ -93,7 +93,12 @@ func _defaults() -> Dictionary:
 		"rooms_url": "http://127.0.0.1:8787",
 		"costume_son": "default",
 		"costume_father": "default",
-		"combo_banks": 0
+		"combo_banks": 0,
+		"intro_done": false,
+		"vs_wins": 0,
+		"annex_clears": 0,
+		"survive_clears": 0,
+		"sides_filed": 0
 	}
 
 
@@ -294,6 +299,35 @@ func mark_combo_bank(hits: int) -> void:
 	data["combo_banks"] = int(data.get("combo_banks", 0)) + 1
 	if hits >= 20:
 		data["lifetime_points"] = int(data.get("lifetime_points", 0)) + 1
+	save()
+
+
+func mark_intro() -> void:
+	data["intro_done"] = true
+	save()
+	Juice.toast("achievement", "INTAKE FILMED", "Two films, three panels, one dummy. Homework starts.")
+
+
+func mark_vs() -> void:
+	data["vs_wins"] = int(data.get("vs_wins", 0)) + 1
+	save()
+	Juice.toast("achievement", "THERAPY MATCH", "Someone got GROUNDED. Someone got fired.")
+
+
+func mark_annex() -> void:
+	data["annex_clears"] = int(data.get("annex_clears", 0)) + 1
+	save()
+	Juice.toast("quest", "INVOICE PIER", "Dr. Splint filed. The bill did not die. It just moved.")
+
+
+func mark_survive(map_id: String) -> void:
+	data["survive_clears"] = int(data.get("survive_clears", 0)) + 1
+	save()
+	Juice.toast("achievement", "COPING HOUR", "%s held. The magnet still wants a tip." % map_id.replace("_", " ").to_upper())
+
+
+func mark_side() -> void:
+	data["sides_filed"] = int(data.get("sides_filed", 0)) + 1
 	save()
 
 

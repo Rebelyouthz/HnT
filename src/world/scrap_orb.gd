@@ -23,6 +23,19 @@ func _ready() -> void:
 	tw.tween_property(self, "scale", Vector2.ONE, 0.12)
 
 
+func _physics_process(delta: float) -> void:
+	var best: Fighter = null
+	var best_d := 9999.0
+	for n in get_tree().get_nodes_in_group("players"):
+		if n is Fighter and not (n as Fighter).downed:
+			var d: float = global_position.distance_to((n as Node2D).global_position)
+			if d < best_d and d < (n as Fighter).magnet_r:
+				best_d = d
+				best = n
+	if best:
+		global_position = global_position.move_toward(best.global_position + Vector2(0, -16), (380.0 + best.magnet_r) * delta)
+
+
 func _eat(b: Node) -> void:
 	if b is Fighter:
 		var rs := get_tree().get_first_node_in_group("run_state")

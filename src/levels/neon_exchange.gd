@@ -10,21 +10,21 @@ func _configure() -> void:
 	goal_x = 2780.0
 	check_x = 2600.0
 	check_pos = Vector2(2600, 490)
-	next_id = "rail_bridge"
+	next_id = "waiting_room"
 	light_preset = "neon_exchange"
 	toast_title = "NEON EXCHANGE"
-	toast_body = "Agents. Police. A wanted ladder with a pawn shop at the end."
+	toast_body = "Agents. Police. Mini with a badge. Pawn at the end."
 	clear_title = Copy.NEON_CLEAR
 	clear_sub = Copy.NEON_SUB
-	next_label = Copy.NEXT_BRIDGE
-	gate_sub = Copy.BRIDGE_GATE
-	win_mode = "gate"
+	next_label = Copy.NEXT_WAIT
+	gate_sub = Copy.GATE_WAIT
+	win_mode = "boss"
 
 
 func build_world() -> void:
 	var sky := Blockout.poly(self, Rect2(0, 0, map_w, 720), Color(0.08, 0.05, 0.12), -8)
 	sky.z_index = -8
-	NightStreet.parallax(self, map_w)
+	NightStreet.parallax(self, map_w, "neon")
 	NightStreet.wet_floor(self, map_w)
 	NightStreet.tenement(self, Rect2(60, 80, 240, 240), Color(0.18, 0.08, 0.16))
 	NightStreet.tenement(self, Rect2(420, 40, 280, 200), Color(0.12, 0.1, 0.2))
@@ -45,12 +45,23 @@ func build_world() -> void:
 	var crate := VaultCrate.new()
 	crate.global_position = Vector2(980, 500)
 	add_child(crate)
+	var board := WeaponPickup.new()
+	board.kind = "board"
+	board.global_position = Vector2(720, 500)
+	add_child(board)
+	var pistol := WeaponPickup.new()
+	pistol.kind = "pistol"
+	pistol.global_position = Vector2(1320, ROOF_Y)
+	add_child(pistol)
 	anchor(Vector2(520, 70))
 	anchor(Vector2(1280, 56))
 	anchor(Vector2(2040, 48))
 	anchor(Vector2(2660, 80))
 	NightStreet.bounds(self, map_w)
 	NightStreet.neon(self, Vector2(120, 140), "NEON EXCHANGE  ·  CASH ONLY FEELINGS")
+	NightStreet.section(self, Vector2(380, 180), "brawl")
+	NightStreet.section(self, Vector2(1100, 180), "parkour")
+	NightStreet.section(self, Vector2(1880, 170), "gun")
 	NightStreet.neon(self, Vector2(760, 168), "AGENTS INSIDE  ·  SMILE")
 	NightStreet.neon(self, Vector2(1680, 150), "PAWN & PLATE")
 	NightStreet.plaque(self, Vector2(2520, 180), "SELL YOUR PIPE. KEEP THE WOUND.", Palette.MUTED, 13)

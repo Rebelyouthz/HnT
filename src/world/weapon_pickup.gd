@@ -15,12 +15,19 @@ func _ready() -> void:
 	cs.shape = r
 	add_child(cs)
 	var p := Polygon2D.new()
-	if kind == "knife":
-		p.color = Color(0.82, 0.84, 0.9)
-		p.polygon = PackedVector2Array([Vector2(-16, -3), Vector2(16, 0), Vector2(-16, 3)])
-	else:
-		p.color = Color(0.45, 0.32, 0.2)
-		p.polygon = PackedVector2Array([Vector2(-20, -4), Vector2(20, -4), Vector2(20, 4), Vector2(-20, 4)])
+	match kind:
+		"knife":
+			p.color = Color(0.82, 0.84, 0.9)
+			p.polygon = PackedVector2Array([Vector2(-16, -3), Vector2(16, 0), Vector2(-16, 3)])
+		"pistol":
+			p.color = Color(0.22, 0.22, 0.24)
+			p.polygon = PackedVector2Array([Vector2(-14, -6), Vector2(16, -4), Vector2(16, 4), Vector2(-10, 6), Vector2(-18, 2)])
+		"board":
+			p.color = Color(0.55, 0.38, 0.18)
+			p.polygon = PackedVector2Array([Vector2(-24, -5), Vector2(24, -5), Vector2(24, 5), Vector2(-24, 5)])
+		_:
+			p.color = Color(0.45, 0.32, 0.2)
+			p.polygon = PackedVector2Array([Vector2(-20, -4), Vector2(20, -4), Vector2(20, 4), Vector2(-20, 4)])
 	add_child(p)
 	body_entered.connect(_grab)
 

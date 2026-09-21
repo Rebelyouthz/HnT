@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://hnt_tut"]
+
+[ext_resource type="Script" path="res://src/levels/tutorial_alley.gd" id="1"]
+
+[node name="TutorialAlley" type="Node2D"]
+script = ExtResource("1")

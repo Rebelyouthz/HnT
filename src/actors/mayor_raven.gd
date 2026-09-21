@@ -18,8 +18,10 @@ func _ready() -> void:
 	armored = true
 	cop = false
 	super._ready()
+	add_to_group("act_boss")
 	max_hp = 240
 	hp = 240
+	set_meta("introed", false)
 	_build_cape()
 
 

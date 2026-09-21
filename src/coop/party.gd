@@ -138,6 +138,21 @@ static func spawn_row(host: Node, row: Dictionary, hp_mul: float) -> Punk:
 		"Hall Guard":
 			p.speed = 30.0
 			p.armored = true
+		"Coping Imp":
+			p.speed = 58.0
+		"Clipboard":
+			p.speed = 50.0
+			p.home = "air"
+		"Invoice Clerk":
+			p.speed = 40.0
+		"Pier Gull":
+			p.speed = 64.0
+			p.home = "air"
+		"Chapel Usher":
+			p.speed = 28.0
+			p.armored = true
+		"Valet":
+			p.speed = 46.0
 		_:
 			p.speed = 48.0
 	p.global_position = Vector2(float(row.get("x", 800.0)), float(row.get("y", 500.0)))

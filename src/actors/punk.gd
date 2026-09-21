@@ -66,6 +66,16 @@ func _ready() -> void:
 		visual.modulate = Color(0.85, 0.8, 1.05)
 	elif title == "Toll Bot":
 		visual.modulate = Color(0.7, 0.75, 0.7)
+	elif title == "Coping Imp":
+		visual.modulate = Color(0.55, 0.9, 0.62)
+	elif title == "Clipboard":
+		visual.modulate = Color(0.85, 0.86, 0.7)
+	elif title == "Invoice Clerk":
+		visual.modulate = Color(0.7, 0.88, 0.72)
+	elif title == "Pier Gull":
+		visual.modulate = Color(0.78, 0.82, 0.8)
+	elif title == "Chapel Usher":
+		visual.modulate = Color(0.35, 0.42, 0.32)
 
 
 func _part(pos: Vector2, size: Vector2, color: Color) -> void:
@@ -143,6 +153,9 @@ func _physics_process(delta: float) -> void:
 				_start_telegraph()
 				velocity.x = 0
 		elif title == "Roof Runner" and absf(d) > 90.0 and absf(d) < 260.0 and randf() < 0.012:
+			_shuriken()
+			velocity.x = 0
+		elif title in ["Invoice Clerk", "Coping Imp", "Badge Broker"] and absf(d) > 90.0 and absf(d) < 280.0 and randf() < 0.014:
 			_shuriken()
 			velocity.x = 0
 		else:
@@ -393,6 +406,10 @@ func _drops(from: Node) -> void:
 	if randf() < chance:
 		var drop := WeaponPickup.new()
 		drop.kind = "knife" if title == "Bag Snatch" else "pipe"
+		if title == "Invoice Clerk":
+			drop.kind = "pistol"
+		elif title == "Chapel Usher" or title == "Shift Lead":
+			drop.kind = "board"
 		drop.global_position = global_position + Vector2(12, -8)
 		host.add_child(drop)
 	if from is Fighter and rs and rs.has_method("has_card") and rs.has_card("head_trampoline"):

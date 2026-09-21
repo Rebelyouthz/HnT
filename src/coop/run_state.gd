@@ -70,6 +70,12 @@ func add_xp(n: int) -> void:
 	elif level_ups == 1 and xp >= 160:
 		level_ups = 2
 		need_cards.emit()
+	elif level_ups == 2 and xp >= 260:
+		level_ups = 3
+		need_cards.emit()
+	elif level_ups == 3 and xp >= 380:
+		level_ups = 4
+		need_cards.emit()
 
 
 func add_wanted(n: int) -> void:
@@ -86,6 +92,7 @@ func take_card(id: String) -> void:
 		cards.append(id)
 	Juice.shout(id.replace("_", " ").to_upper())
 	Juice.toast("reward", "RULE INSTALLED", id.replace("_", " ").to_upper())
+	SurviveMods.apply(id)
 
 
 func has_card(id: String) -> bool:

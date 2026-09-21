@@ -203,6 +203,9 @@ func _process(delta: float) -> void:
 			w += "I" if i < state.wanted else "."
 		_wanted.text = "" if state.wanted == 0 else "WANTED  " + w
 		_act.text = str(App.current_map).replace("_", " ").to_upper()
+		var horde := get_tree().get_first_node_in_group("horde")
+		if horde and horde.has_method("left"):
+			_act.text += "  ·  %ds" % int(horde.left())
 		if App.remote_coop:
 			_act.text += "  ·  " + (NetSession.path_name if NetSession.path_name != "" else "REMOTE")
 	_hint.text = _prompt_line()

@@ -75,6 +75,9 @@ var grenades := 0
 var _shadow: Polygon2D
 var _slip: Polygon2D
 var _breath := 0.0
+var vs_mode := false
+var magnet_r := 72.0
+var pistol_shots := 0
 
 signal died
 signal hit_landed(kind: String, global_pos: Vector2)
@@ -87,6 +90,8 @@ func _ready() -> void:
 	hp = max_hp
 	if FamilyProfile.has_cbt("bandage_pocket"):
 		bandage = 1
+	if FamilyProfile.has_cbt("long_commute"):
+		magnet_r += 40.0
 	collision_layer = 2
 	collision_mask = 1
 	motion_mode = MOTION_MODE_FLOATING
@@ -472,6 +477,8 @@ func _process_downed(delta: float) -> void:
 		global_position.y = clampf(global_position.y, STREET_MIN, STREET_MAX)
 	else:
 		move_and_slide()
+	if vs_mode:
+		return
 	bleed -= delta
 	revive_hold = 0.0
 	for n in get_tree().get_nodes_in_group("players"):
@@ -633,12 +640,17 @@ func _attack(kind: String, charged: bool) -> void:
 	elif kind == "launcher":
 		size = Vector2(72, 52)
 		string_n = 0
-	if pickup == "pipe":
-		size += Vector2(18, 6)
+	if pickup == "pipe" or pickup == "board":
+		size += Vector2(18, 6) if pickup == "pipe" else Vector2(24, 8)
 	elif pickup == "knife":
 		size += Vector2(10, 0)
 		if kind == "light" or kind == "gut-punch":
 			kind = "blade"
+	elif pickup == "pistol" and (kind == "light" or kind == "gut-punch") and pistol_shots > 0:
+		pistol_shots -= 1
+		_fire_shot()
+		if pistol_shots <= 0:
+			pickup = ""
 	if charged and kind == "heavy":
 		size = Vector2(78, 50)
 	_spawn_hit(kind, size, 0.12 if kind == "light" or kind == "jump-kick" or kind == "gut-punch" else 0.2, Vector2(36 * facing, -34 + hop))
@@ -702,7 +714,7 @@ func _fire_shot(extra := Vector2.ZERO) -> void:
 func _spawn_hit(kind: String, size: Vector2, life: float, offset: Vector2) -> void:
 	var box := Area2D.new()
 	box.collision_layer = 8
-	box.collision_mask = 4
+	box.collision_mask = 6 if vs_mode else 4
 	box.monitoring = true
 	var cs := CollisionShape2D.new()
 	var r := RectangleShape2D.new()
@@ -719,6 +731,10 @@ func _spawn_hit(kind: String, size: Vector2, life: float, offset: Vector2) -> vo
 		var victim: Node = node
 		if node is Area2D:
 			victim = (node as Area2D).get_parent()
+		if victim == self:
+			return
+		if victim is Fighter and not vs_mode:
+			return
 		if victim and victim.has_method("take_hit"):
 			var hit_kind := kind
 			if web_incoming:
@@ -992,6 +1008,20 @@ func _throw() -> void:
 		return
 	attack_cd = 18
 	Juice.play("res://assets/audio/throw.wav")
+	if vs_mode:
+		for n in get_tree().get_nodes_in_group("players"):
+			if n == self or not (n is Fighter):
+				continue
+			var e: Fighter = n
+			var dx := e.global_position.x - global_position.x
+			if signf(dx) != float(facing) and absf(dx) > 8.0:
+				continue
+			if absf(dx) > 54.0 or absf(e.global_position.y - global_position.y) > 50.0:
+				continue
+			e.take_hit("throw", self)
+			e.global_position.x += float(facing) * 86.0
+			Juice.shout("DISARMED")
+			return
 	for n in get_tree().get_nodes_in_group("enemies"):
 		if not (n is Punk):
 			continue
@@ -1009,6 +1039,9 @@ func _throw() -> void:
 
 func equip_pickup(kind: String) -> void:
 	pickup = kind
+	if kind == "pistol":
+		pistol_shots = 6
+		ammo = maxi(ammo, 3)
 	Juice.shout(kind.to_upper())
 
 

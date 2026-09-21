@@ -12,21 +12,21 @@ func _configure() -> void:
 	goal_x = 2620.0
 	check_x = 2400.0
 	check_pos = Vector2(2400, 208)
-	next_id = "neon_exchange"
+	next_id = "group_circle"
 	light_preset = "fire_escapes"
 	toast_title = "FIRE ESCAPES"
-	toast_body = "Roofs. Gaps. A man selling opinions."
+	toast_body = "Roofs. Gaps. A man selling opinions. Mini on the pipe."
 	clear_title = Copy.FIRE_CLEAR
 	clear_sub = Copy.FIRE_SUB
-	next_label = Copy.NEXT_NEON
-	gate_sub = Copy.NEON_GATE
-	win_mode = "gate"
+	next_label = Copy.NEXT_CIRCLE
+	gate_sub = Copy.GATE_CIRCLE
+	win_mode = "boss"
 
 
 func build_world() -> void:
 	var sky := Blockout.poly(self, Rect2(0, 0, map_w, 720), Color(0.06, 0.07, 0.12), -8)
 	sky.z_index = -8
-	NightStreet.parallax(self, map_w)
+	NightStreet.parallax(self, map_w, "roofs")
 	NightStreet.wet_floor(self, map_w)
 	NightStreet.tenement(self, Rect2(40, 40, 280, 210), Color(0.13, 0.1, 0.12))
 	NightStreet.tenement(self, Rect2(420, 20, 300, 190), Color(0.15, 0.1, 0.13))
@@ -57,6 +57,10 @@ func build_world() -> void:
 	var c2 := VaultCrate.new()
 	c2.global_position = Vector2(1680, 500)
 	add_child(c2)
+	var pistol := WeaponPickup.new()
+	pistol.kind = "pistol"
+	pistol.global_position = Vector2(1500, HIGH_Y)
+	add_child(pistol)
 	anchor(Vector2(480, 64))
 	anchor(Vector2(980, 48))
 	anchor(Vector2(1500, 40))
@@ -64,6 +68,9 @@ func build_world() -> void:
 	anchor(Vector2(2580, 44))
 	NightStreet.bounds(self, map_w)
 	NightStreet.plaque(self, Vector2(80, 110), "THE FIRE ESCAPES  ·  RAVEN WHARF", Palette.EDGE, 20)
+	NightStreet.section(self, Vector2(80, 150), "parkour")
+	NightStreet.section(self, Vector2(1480, 140), "gun")
+	NightStreet.section(self, Vector2(1680, 430), "brawl")
 	NightStreet.plaque(self, Vector2(530, 210), "GAP  ·  GLIDE, WEB, OR FALL AND JOKE ABOUT IT", Palette.MUTED, 13)
 	NightStreet.plaque(self, Vector2(1320, 170), "HIGH LEDGE  ·  WALL-RUN THE PIPE", Palette.MUTED, 13)
 	NightStreet.neon(self, Vector2(2380, 120), "ROOF VENDOR  ·  AMMO AND A SECOND OPINION")

@@ -94,5 +94,37 @@
     "fixed": false,
     "rarity": "special",
     "tag": "BANK"
+  },
+  {
+    "id": "coping_magnet",
+    "name": "COPING MAGNET",
+    "blurb": "Pickup vacuum radius +110. Halls of Torment called it a trait. We call it enabling.",
+    "fixed": false,
+    "rarity": "rare",
+    "tag": "MAGNET"
+  },
+  {
+    "id": "orbit_form",
+    "name": "ORBIT FORM",
+    "blurb": "Two blades orbit you and chip. Not a meadow. Still illegal in group.",
+    "fixed": false,
+    "rarity": "special",
+    "tag": "ORBIT"
+  },
+  {
+    "id": "drip_feed",
+    "name": "DRIP FEED",
+    "blurb": "Aura ticks light on anything in hugging distance. The clinic calls it presence.",
+    "fixed": false,
+    "rarity": "rare",
+    "tag": "AURA"
+  },
+  {
+    "id": "vacuum_hour",
+    "name": "VACUUM HOUR",
+    "blurb": "One huge magnet pulse. Every chip remembers your name. Then it forgets again.",
+    "fixed": false,
+    "rarity": "special",
+    "tag": "VACUUM"
   }
 ]

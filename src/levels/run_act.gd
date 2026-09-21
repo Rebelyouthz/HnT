@@ -32,6 +32,12 @@ var _join_grace := 0
 var _wanted_cop := false
 var _heli: Node2D
 var _rig: LightRig
+var _talk: Talk
+var _missions: MissionHud
+var _talked: Dictionary = {}
+var _mini_down := false
+var _boss_down := false
+var _skip_story_boss := false
 
 
 func _configure() -> void:
@@ -91,6 +97,7 @@ func _ready() -> void:
 	if body == "":
 		body = Copy.COUCH_HINT if App.density_coop else Copy.SOLO_HINT
 	Juice.toast("quest", toast_title, body)
+	_boot_story()
 
 
 func _targets() -> Array[Node2D]:
@@ -110,15 +117,23 @@ func _process(_delta: float) -> void:
 	if _dad == null and Input.is_action_just_pressed("p2_pause") and not App.remote_coop:
 		_on_dropin(-1)
 		return
-	if win_mode == "boss":
-		return
 	var lead_x := -9999.0
 	for f in [_son, _dad]:
 		if f and is_instance_valid(f):
 			lead_x = maxf(lead_x, f.global_position.x)
+	_tick_talk(lead_x)
+	_tick_boss_intro(lead_x)
 	if check_x > 0.0 and lead_x > check_x:
 		_state.mark_checkpoint(check_pos if check_pos != Vector2.ZERO else Vector2(check_x, spawn_at.y))
-	if Party.all_past(goal_x):
+	if win_mode == "boss":
+		return
+	if _boss_down and next_id != "":
+		_state.reach_gate()
+		return
+	if _boss_down:
+		_state.clear_run()
+		return
+	if Party.all_past(goal_x) and _boss_down:
 		if next_id != "":
 			_state.reach_gate()
 		else:
@@ -195,6 +210,13 @@ func _on_fail() -> void:
 
 
 func _on_gate() -> void:
+	if _missions:
+		_missions.complete_main()
+	match map_id:
+		"city_hall":
+			FamilyProfile.mark_city_clear()
+		"intake_lot", "group_circle", "waiting_room":
+			FamilyProfile.mark_survive(map_id)
 	Juice.toast("quest", "CHECKPOINT", gate_sub)
 	_banner(clear_title, gate_sub, true, true)
 
@@ -205,14 +227,135 @@ func _on_clear() -> void:
 		FamilyProfile.mark_solo_clear()
 	if map_id == "city_hall":
 		FamilyProfile.mark_city_clear()
+	if map_id == "invoice_pier":
+		FamilyProfile.mark_annex()
+	if map_id in ["intake_lot", "group_circle", "waiting_room"]:
+		FamilyProfile.mark_survive(map_id)
 	if App.remote_coop:
 		FamilyProfile.mark_remote_clear()
+	if _missions:
+		_missions.complete_main()
 	FamilyProfile.push_log(clear_title, clear_sub)
 	_banner(clear_title, clear_sub, true, false)
 
 
 func finish_boss() -> void:
-	_state.clear_run()
+	if _boss_down:
+		return
+	_boss_down = true
+	if _missions:
+		_missions.complete_main()
+	if next_id != "":
+		_state.reach_gate()
+	else:
+		_state.clear_run()
+
+
+func on_mini_down() -> void:
+	_mini_down = true
+	Juice.toast("quest", "LATER CONTENT", "Mini filed. The rest of the act still wants a conversation.")
+
+
+func _boot_story() -> void:
+	_talk = Talk.new()
+	add_child(_talk)
+	_missions = MissionHud.new()
+	_missions.add_to_group("mission_hud")
+	_missions.bind(map_id)
+	add_child(_missions)
+	var row := StoryBook.act(map_id)
+	if row.is_empty():
+		return
+	if not bool(row.get("survive", false)) and not _skip_story_boss:
+		_spawn_story_unit(true)
+		var boss: Variant = row.get("boss", {})
+		if typeof(boss) == TYPE_DICTIONARY and str((boss as Dictionary).get("kind", "")) != "mayor_raven":
+			_spawn_story_unit(false)
+	var talks: Variant = row.get("talk", [])
+	if typeof(talks) == TYPE_ARRAY and (talks as Array).size() > 0:
+		var first: Variant = (talks as Array)[0]
+		if typeof(first) == TYPE_DICTIONARY and float((first as Dictionary).get("at", 0)) <= 0.0:
+			_talked[0] = true
+			_talk.play((first as Dictionary).get("lines", []) as Array)
+
+
+func _spawn_story_unit(mini: bool) -> void:
+	var row := StoryBook.act(map_id)
+	var key := "miniboss" if mini else "boss"
+	var spec: Variant = row.get(key, {})
+	if typeof(spec) != TYPE_DICTIONARY or spec.is_empty():
+		return
+	var d: Dictionary = spec
+	if str(d.get("kind", "")) == "mayor_raven":
+		return
+	var cam := get_viewport().get_camera_2d() if is_inside_tree() else null
+	var x := float(d.get("x", spawn_at.x + 800.0))
+	if StoryBook.is_survive(map_id) and cam:
+		x = cam.global_position.x + (280.0 if mini else 340.0)
+	var unit := ActBoss.new()
+	unit.title = str(d.get("title", "Named Problem"))
+	unit.display = unit.title
+	unit.is_mini = mini
+	unit.sub = str(d.get("sub", ""))
+	unit.home = str(d.get("home", "street"))
+	unit.hp = int(round(float(d.get("hp", 100)) * _state.hp_mul()))
+	unit.patrol_min = float(d.get("pmin", x - 160.0))
+	unit.patrol_max = float(d.get("pmax", x + 160.0))
+	unit.speed = 34.0 if not mini else 40.0
+	unit.armored = not mini
+	unit.global_position = Vector2(x, float(d.get("y", 500.0)))
+	unit.accent = Palette.EDGE if mini else Palette.BRICK
+	add_child(unit)
+
+
+func _tick_talk(lead_x: float) -> void:
+	if _talk and _talk.busy():
+		return
+	var talks: Variant = StoryBook.act(map_id).get("talk", [])
+	if typeof(talks) != TYPE_ARRAY:
+		return
+	var idx := 0
+	for item in talks:
+		idx += 1
+		if typeof(item) != TYPE_DICTIONARY:
+			continue
+		var at := float((item as Dictionary).get("at", 0))
+		if at <= 0.0:
+			continue
+		if _talked.get(idx, false):
+			continue
+		if lead_x >= at:
+			_talked[idx] = true
+			_talk.play((item as Dictionary).get("lines", []) as Array)
+			return
+
+
+func _tick_boss_intro(lead_x: float) -> void:
+	for n in get_tree().get_nodes_in_group("act_boss"):
+		if not (n is Node2D) or not is_instance_valid(n):
+			continue
+		if bool(n.get_meta("introed", false)):
+			continue
+		var boss := n as Node2D
+		if absf(boss.global_position.x - lead_x) > 320.0:
+			continue
+		n.set_meta("introed", true)
+		var title := "BOSS"
+		var sub := ""
+		var full := true
+		var accent := Palette.BRICK
+		if n is ActBoss:
+			var ab: ActBoss = n
+			title = ab.title
+			sub = ab.sub
+			full = not ab.is_mini
+			accent = ab.accent
+		elif n is MayorRaven:
+			title = "Mayor Raven"
+			sub = "LANDLORD · NINJA · INVOICE"
+			full = true
+			accent = Color(0.12, 0.1, 0.14)
+		BossCard.present(self, title, sub, accent, full)
 
 
 func _banner(title: String, sub: String, win: bool, gate: bool) -> void:

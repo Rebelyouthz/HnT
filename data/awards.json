@@ -70,5 +70,53 @@
     "need": { "combo_banks": 1 },
     "gold": 20,
     "gems": 1
+  },
+  {
+    "id": "intro_filed",
+    "title": "TWO FILMS, ONE DUMMY",
+    "blurb": "Sit through intake: film, comic, tutorial, sequel. Then Dock Street.",
+    "need": { "intro_done": true },
+    "gold": 15,
+    "gems": 1
+  },
+  {
+    "id": "vs_champ",
+    "title": "GROUNDED / YOU'RE FIRED",
+    "blurb": "Win a Versus match. Best of three. The dishes remain theoretical.",
+    "need": { "vs_wins": 1 },
+    "gold": 30,
+    "gems": 2
+  },
+  {
+    "id": "annex_clear",
+    "title": "THE BILL WALKS",
+    "blurb": "File Invoice Pier. Dr. Splint is a receipt. The copay is a chapel.",
+    "need": { "annex_clears": 1 },
+    "gold": 70,
+    "gems": 5
+  },
+  {
+    "id": "three_hours",
+    "title": "THREE COPING HOURS",
+    "blurb": "Survive all three horde hours. Magnet, elites, vacuum. Not a meadow.",
+    "need": { "survive_clears": 3 },
+    "gold": 55,
+    "gems": 4
+  },
+  {
+    "id": "side_hustle",
+    "title": "SIDE HUSTLE",
+    "blurb": "File three side missions. The clipboard notices extra credit.",
+    "need": { "sides_filed": 3 },
+    "gold": 25,
+    "gems": 2
+  },
+  {
+    "id": "first_hour",
+    "title": "WE HELD THE LOT",
+    "blurb": "File one coping hour. Solo thinner. Co-op denser. Same magnet.",
+    "need": { "survive_clears": 1 },
+    "gold": 30,
+    "gems": 2
   }
 ]

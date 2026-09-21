@@ -10,7 +10,7 @@ var owner_role := "son"
 
 func _ready() -> void:
 	collision_layer = 8
-	collision_mask = 5
+	collision_mask = 7
 	monitoring = true
 	var cs := CollisionShape2D.new()
 	var c := CircleShape2D.new()
@@ -45,9 +45,16 @@ func _on_body(b: Node) -> void:
 	if b is Punk and owner_role != "enemy":
 		_hit_punk(b as Punk)
 		return
-	if b is Fighter and owner_role == "enemy":
-		(b as Fighter).take_hit("light", self)
-		queue_free()
+	if b is Fighter:
+		var f: Fighter = b
+		if owner_role == "enemy":
+			f.take_hit("light", self)
+			queue_free()
+			return
+		if f.vs_mode and f.role != owner_role:
+			f.take_hit("light", self)
+			queue_free()
+			return
 		return
 	if b.is_in_group("metal") and ricochet_left > 0:
 		vel.x *= -1.0

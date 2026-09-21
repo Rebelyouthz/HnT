@@ -26,7 +26,7 @@ func _ready() -> void:
 	UiKit.apply_label(h, 26, Palette.LEMON)
 	col.add_child(h)
 	var s := Label.new()
-	s.text = "Starts now. The other chair is optional. Drop-in does not restock the street."
+	s.text = "Starts now. Intro films the first time. Versus is Father vs Son. Drop-in does not restock the street."
 	s.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	UiKit.apply_label(s, 15, Palette.MUTED)
 	col.add_child(s)
@@ -65,8 +65,19 @@ func _ready() -> void:
 	_go.pressed.connect(App.start_run)
 	col.add_child(_go)
 
+	var extra := HBoxContainer.new()
+	extra.add_theme_constant_override("separation", 8)
+	var intro_b := UiKit.button(Copy.PLAY_INTRO, Vector2(200, 48))
+	intro_b.pressed.connect(App.play_intro)
+	var vs_b := UiKit.button(Copy.VERSUS, Vector2(200, 48))
+	vs_b.add_theme_stylebox_override("normal", UiKit.panel(Palette.BRICK, Palette.LEMON))
+	vs_b.pressed.connect(App.start_versus)
+	extra.add_child(intro_b)
+	extra.add_child(vs_b)
+	col.add_child(extra)
+
 	var acts := Label.new()
-	acts.text = "1 DOCK STREET  ·  2 FIRE ESCAPES  ·  3 NEON EXCHANGE  ·  4 RAIL BRIDGE  ·  5 CITY HALL"
+	acts.text = "1 DOCK  ·  HOUR: LOT  ·  2 ROOFS  ·  HOUR: CIRCLE  ·  3 NEON  ·  HOUR: WAITING  ·  4 RAIL  ·  5 HALL  ·  6 PIER"
 	acts.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	UiKit.apply_label(acts, 12, Palette.MUTED)
 	col.add_child(acts)
@@ -135,8 +146,11 @@ func _count_rows() -> Array:
 		{"name": "MAP 3 SOLO", "value": str(Party.count_for("neon_exchange", false)), "color": Palette.LEMON},
 		{"name": "MAP 4 SOLO", "value": str(Party.count_for("rail_bridge", false)), "color": Palette.EDGE},
 		{"name": "HALL SOLO", "value": str(Party.count_for("city_hall", false)), "color": Palette.BRICK},
+		{"name": "PIER SOLO", "value": str(Party.count_for("invoice_pier", false)), "color": Palette.READY},
+		{"name": "LOT SOLO", "value": str(Party.count_for("intake_lot", false)), "color": Palette.LEMON},
 		{"name": "COUCH EACH", "value": str(Party.count_for("dock_street", true)), "color": Palette.TEXT},
-		{"name": "ACTS", "value": "5", "color": Palette.READY},
+		{"name": "ACTS", "value": "9", "color": Palette.READY},
+		{"name": "HOURS", "value": "3", "color": Palette.EDGE},
 		{"name": "HOST", "value": "SON", "color": Palette.LEMON},
 		{"name": "JOIN", "value": "FATHER", "color": Palette.BRICK}
 	]

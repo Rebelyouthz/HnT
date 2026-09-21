@@ -48,4 +48,7 @@ func smash() -> void:
 	host.add_child(orb)
 	Juice.kill_burst(global_position, "heavy")
 	Juice.shout("CRATE")
+	var hud := get_tree().get_first_node_in_group("mission_hud")
+	if hud and hud.has_method("complete_side"):
+		hud.complete_side()
 	queue_free()
