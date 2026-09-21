@@ -20,10 +20,10 @@ func _ready() -> void:
 	super._ready()
 	max_hp = 240
 	hp = 240
-	_cape()
+	_build_cape()
 
 
-func _cape() -> void:
+func _build_cape() -> void:
 	var cape := Polygon2D.new()
 	cape.color = Color(0.08, 0.08, 0.1, 0.95)
 	cape.polygon = PackedVector2Array([
