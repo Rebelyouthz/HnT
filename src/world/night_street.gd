@@ -583,3 +583,85 @@ static func heli(host: Node, map_w: float) -> Node2D:
 	n.add_child(glow)
 	host.add_child(n)
 	return n
+
+
+static func pixel_tenement(host: Node, rect: Rect2) -> void:
+	var brick := SpriteBook.tile("brick")
+	var win := SpriteBook.tile("brick_window")
+	if brick == null:
+		return
+	var tw := brick.get_width()
+	var th := brick.get_height()
+	var y := rect.position.y
+	var row := 0
+	while y < rect.end.y - 8.0:
+		var x := rect.position.x
+		var col := 0
+		while x < rect.end.x - 8.0:
+			var s := Sprite2D.new()
+			s.texture = win if win != null and row % 2 == 0 and col % 2 == 1 else brick
+			s.centered = false
+			s.position = Vector2(x, y)
+			s.z_index = 0
+			s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			host.add_child(s)
+			x += float(tw)
+			col += 1
+		y += float(th)
+		row += 1
+
+
+static func pixel_dock(host: Node, map_w: float) -> void:
+	var cobble := SpriteBook.tile("cobble")
+	var wet := SpriteBook.tile("cobble_wet")
+	var plank := SpriteBook.tile("plank")
+	var water := SpriteBook.tile("water")
+	if cobble == null:
+		return
+	var tw := cobble.get_width()
+	var th := cobble.get_height()
+	var x := 0.0
+	var n := 0
+	while x < map_w:
+		var s := Sprite2D.new()
+		s.texture = wet if wet != null and n % 4 == 2 else cobble
+		s.centered = false
+		s.position = Vector2(x, 430.0)
+		s.z_index = 0
+		s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		host.add_child(s)
+		var s2 := Sprite2D.new()
+		s2.texture = cobble
+		s2.centered = false
+		s2.position = Vector2(x, 430.0 + float(th))
+		s2.z_index = 0
+		s2.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		host.add_child(s2)
+		x += float(tw)
+		n += 1
+	if water:
+		x = 0.0
+		while x < 300.0:
+			var w := Sprite2D.new()
+			w.texture = water
+			w.centered = false
+			w.position = Vector2(x, 560.0)
+			w.z_index = 1
+			w.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			host.add_child(w)
+			x += float(water.get_width())
+		if plank:
+			x = 0.0
+			while x < 300.0:
+				var p := Sprite2D.new()
+				p.texture = plank
+				p.centered = false
+				p.position = Vector2(x, 500.0)
+				p.z_index = 1
+				p.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+				host.add_child(p)
+				x += float(plank.get_width())
+	for lx in [420.0, 900.0, 1480.0, 2100.0, 2680.0]:
+		SpriteBook.stamp(host, "lamp", Vector2(lx, 500.0), 3)
+	SpriteBook.stamp(host, "awning", Vector2(1100.0, 430.0), 3)
+	SpriteBook.stamp(host, "crane", Vector2(180.0, 240.0), -5)

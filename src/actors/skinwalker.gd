@@ -22,6 +22,7 @@ var _gape_open := false
 var _phase_cd := 0.8
 var _form_hold := 1.0
 var _help_said := false
+var _anim: AnimatedSprite2D
 
 
 func _ready() -> void:
@@ -38,6 +39,7 @@ func _ready() -> void:
 	_hide_crown()
 	_paint_form(Shape.DOG)
 	shape = Shape.DOG
+	_mount_sprite()
 
 
 func _hide_crown() -> void:
@@ -102,6 +104,36 @@ func _paint_form(next: Shape) -> void:
 	_form_hold = 0.0
 	visual.modulate = Color(1, 1, 1, 1)
 	_base_mod = visual.modulate
+	_sync_sprite()
+
+
+func _mount_sprite() -> void:
+	if not SpriteBook.has_who("skinwalker"):
+		return
+	var old := visual.get_node_or_null("Anim")
+	if old:
+		old.queue_free()
+	_anim = SpriteBook.make_anim("skinwalker")
+	visual.add_child(_anim)
+	_sync_sprite()
+
+
+func _sync_sprite() -> void:
+	if _anim == null or _anim.sprite_frames == null:
+		return
+	SpriteBook.hide_polys(visual)
+	var clip := "dog"
+	match shape:
+		Shape.DOG:
+			clip = "dog"
+		Shape.CRAWL:
+			clip = "crawl"
+		Shape.WALK, Shape.STOOP:
+			clip = "walk"
+		Shape.LUNGE, Shape.BURST:
+			clip = "gape"
+	if _anim.sprite_frames.has_animation(clip) and _anim.animation != clip:
+		_anim.play(clip)
 
 
 func _paint_dog() -> void:

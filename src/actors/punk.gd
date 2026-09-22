@@ -23,6 +23,8 @@ var guarding := false
 var guard_low := false
 var _alert := Color.WHITE
 var _bob := 0.0
+var _hurt_t := 0.0
+var _anim: AnimatedSprite2D
 var stomp_hits := 0
 var _base_mod := Color.WHITE
 var _brain: Polygon2D
@@ -78,6 +80,8 @@ func _ready() -> void:
 	_walk = speed
 	KitBook.apply(self)
 	_dress_vehicle()
+	if _wants_sprite():
+		_mount_sprite()
 	if title == "Drone":
 		visual.modulate = Color(0.65, 0.75, 0.9)
 	elif title == "Agent Lin":
@@ -194,6 +198,38 @@ func _part(pos: Vector2, size: Vector2, color: Color) -> void:
 		pos, pos + Vector2(size.x, 0), pos + size, pos + Vector2(0, size.y)
 	])
 	visual.add_child(p)
+
+
+func _wants_sprite() -> bool:
+	if title == "Number 87" or title == "Skinwalker":
+		return false
+	if cop or vehicle != "":
+		return false
+	if home == "air" or title == "Drone":
+		return false
+	return SpriteBook.has_who("punk")
+
+
+func _mount_sprite() -> void:
+	SpriteBook.hide_polys(visual)
+	_anim = SpriteBook.make_anim("punk")
+	visual.add_child(_anim)
+
+
+func _tick_sprite() -> void:
+	if _anim == null or _anim.sprite_frames == null:
+		return
+	var clip := "idle"
+	if _hurt_t > 0.0:
+		clip = "hurt"
+	elif telegraph > 0.0 or recover > 0.0:
+		clip = "attack"
+	elif absf(velocity.x) > 8.0:
+		clip = "walk"
+	if not _anim.sprite_frames.has_animation(clip):
+		return
+	if _anim.animation != clip:
+		_anim.play(clip)
 
 
 func _fling(delta: float) -> void:
@@ -314,9 +350,12 @@ func _physics_process(delta: float) -> void:
 	_lane()
 	_canal()
 	_bob += delta * 4.8
-	if visual:
+	if visual and _anim == null:
 		visual.position.y = 1.3 * sin(_bob)
+	if _hurt_t > 0.0:
+		_hurt_t -= delta
 	_mix_mod()
+	_tick_sprite()
 
 
 func _lane() -> void:
@@ -505,6 +544,7 @@ func _mix_mod() -> void:
 
 
 func take_hit(kind: String, from: Node) -> void:
+	_hurt_t = 0.28
 	if telegraph > 0.0 and from is Fighter and (kind == "heavy" or kind == "roundhouse" or kind == "blade" or kind == "special"):
 		if get_tree().get_first_node_in_group("chase_crash") == null:
 			_clash(from as Fighter)

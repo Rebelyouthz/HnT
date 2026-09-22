@@ -82,6 +82,10 @@ var trick_boost := 1.0
 var trick_t := 0.0
 var stumble_t := 0.0
 var ducking := false
+var _anim: AnimatedSprite2D
+var anim_atk := ""
+var _hurt_t := 0.0
+var _atk_t := 0.0
 var parkour_lock := 0.0
 var stomp_n := 0
 var stomp_cd := 0.0
@@ -196,6 +200,82 @@ func _build_body() -> void:
 	_part(Vector2(18, -38), Vector2(10, 24), accent.darkened(0.2))
 	_part(Vector2(-16, -14), Vector2(12, 28), Color(0.15, 0.14, 0.18))
 	_part(Vector2(4, -14), Vector2(12, 28), Color(0.15, 0.14, 0.18))
+	_mount_sprite()
+
+
+func _mount_sprite() -> void:
+	if role != "father" or not SpriteBook.has_who("father"):
+		return
+	SpriteBook.hide_polys(squash_root)
+	_anim = SpriteBook.make_anim("father")
+	squash_root.add_child(_anim)
+
+
+func _sprite_clip(kind: String) -> String:
+	match kind:
+		"light":
+			if string_n <= 1:
+				return "jab"
+			if string_n == 2:
+				return "cross"
+			return "gut"
+		"gut-punch":
+			return "gut"
+		"jump-kick":
+			return "side_kick" if absf(_stick().x) > 0.55 else "front_kick"
+		"roundhouse":
+			return "roundhouse"
+		"uppercut", "air-upper":
+			return "uppercut"
+		"air-mix":
+			return "air_mix"
+		"heavy", "launcher":
+			return "heavy"
+		"snap", "special":
+			return "snap"
+		"slide":
+			return "duck"
+		"dive":
+			return "jump"
+		_:
+			return "jab"
+
+
+func _tick_sprite() -> void:
+	if _anim == null or _anim.sprite_frames == null:
+		return
+	var clip := "idle"
+	if downed:
+		clip = "hurt"
+	elif anim_atk != "" and _atk_t > 0.0:
+		clip = anim_atk
+	elif snap_ready:
+		clip = "snap"
+	elif _hurt_t > 0.0:
+		clip = "hurt"
+	elif ducking:
+		clip = "duck"
+	elif hop < -8.0 or (plane == "roof" and not is_on_floor()) or gliding:
+		clip = "jump"
+	elif dashing or parkour_lock > 0.0 or absf(velocity.x) > 260.0:
+		clip = "parkour_run"
+	elif sliding:
+		clip = "duck"
+	elif absf(velocity.x) > 18.0:
+		clip = "walk"
+	if not _anim.sprite_frames.has_animation(clip):
+		if clip == "side_kick" and _anim.sprite_frames.has_animation("front_kick"):
+			clip = "front_kick"
+		elif clip == "air_mix" and _anim.sprite_frames.has_animation("jump"):
+			clip = "jump"
+		elif _anim.sprite_frames.has_animation("idle"):
+			clip = "idle"
+		else:
+			return
+	if _anim.animation != clip:
+		_anim.play(clip)
+	elif not _anim.is_playing() and _anim.sprite_frames.get_animation_loop(clip):
+		_anim.play(clip)
 
 
 func _part(pos: Vector2, size: Vector2, color: Color) -> void:
@@ -382,9 +462,18 @@ func _tick_meters(delta: float) -> void:
 	_update_web_line()
 	_apply_lamp()
 	_breath += delta * 6.0
+	if _hurt_t > 0.0:
+		_hurt_t -= delta
+	if _atk_t > 0.0:
+		_atk_t -= delta
+	else:
+		anim_atk = ""
 	ducking = _street_grounded() and _pressed("duck") and not dashing and not sliding
 	if squash_root:
-		if ducking:
+		if _anim:
+			squash_root.scale = Vector2.ONE
+			squash_root.position.y = 0.0
+		elif ducking:
 			squash_root.scale.y = 0.62
 			squash_root.position.y = 14.0
 			squash_root.scale.x = 1.0
@@ -407,6 +496,7 @@ func _tick_meters(delta: float) -> void:
 		var hurt := clampf(1.0 - float(hp) / float(maxi(max_hp, 1)), 0.0, 1.0)
 		if hurt > 0.35:
 			squash_root.modulate = squash_root.modulate.lerp(Color(0.85, 0.45, 0.4), hurt * 0.35)
+	_tick_sprite()
 	if _shadow:
 		var air := absf(hop) if plane == "street" else maxf(0.0, -minf(velocity.y, 0.0))
 		_shadow.scale.x = 1.1 - clampf(air / 200.0, 0.0, 0.5)
@@ -744,6 +834,8 @@ func _slide() -> void:
 	slide_frames = 16
 	invuln = 6
 	dashing = false
+	anim_atk = "duck"
+	_atk_t = 0.42
 	KitSfx.hit(role, "slide")
 	Juice.shout(Copy.SLIDE)
 	FamilyProfile.mark_slide()
@@ -895,6 +987,8 @@ func _attack(kind: String, charged: bool) -> void:
 		size = Vector2(78, 50)
 	if kind != "light" and kind != "gut-punch":
 		KitSfx.hit(role, kind)
+	anim_atk = _sprite_clip(kind)
+	_atk_t = 0.48 if kind == "light" or kind == "gut-punch" or kind == "jump-kick" else 0.72
 	var life := 0.12 if kind == "light" or kind == "jump-kick" or kind == "gut-punch" else 0.2
 	_spawn_hit(kind, size, life, Vector2(36 * facing, -34 + hop))
 
@@ -904,6 +998,8 @@ func _dive() -> void:
 	if attack_cd > 0:
 		return
 	attack_cd = 20
+	anim_atk = "jump"
+	_atk_t = 0.55
 	if plane == "street":
 		hop_v = 520.0
 	else:
@@ -1089,6 +1185,7 @@ func take_hit(kind: String, from: Node) -> void:
 	if buff_t > 0.0:
 		dmg = int(round(float(dmg) * 0.85))
 	hp = maxi(0, hp - dmg)
+	_hurt_t = 0.32
 	var rs := get_tree().get_first_node_in_group("run_state")
 	if rs and rs.has_method("has_card") and rs.has_card("family_discount"):
 		Juice.keep_combo()

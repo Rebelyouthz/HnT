@@ -226,9 +226,21 @@ scenes/     hub + intro, tutorial, fourteen acts, films, versus
 src/        actors, story, survive, vs, juice, world, ui, coop, net
 data/       story, kits, gear, buildings, awards, CBT, cards, shop, encounters, cosmetics, dojo, research, tricks, dopamine
 tools/      hnt_rooms.py, synth_story.py, synth_kit.py
-assets/     audio + icon
+assets/     audio + icon + pixel sprites (Father, Dock Street, collector punk, skinwalker)
 ```
 
 Encounter counts live in `data/encounters.json`. Recount from that file.
+
+## Sprites
+
+Timmie does not draw. Sheets live in `assets/sprites/`. **The Father** is an unemployed-dad casual: worn grey hoodie, grey sweatpants, sneakers — not a polo. `AnimatedSprite2D` on the existing fighter (Son stays the blockout body). Clips are 8–12 frames (never fewer than 6): idle, walk, parkour run, jump, duck, hurt, jab, cross, gut, heavy, front kick, side kick, roundhouse, uppercut, air mix, SNAP. Hitboxes, Host/Join, 3/6, crash, towers, parachute stay.
+
+**Dock Street** is the only map with pixel tiles and smash/parkour props. Other maps stay blockout. Street punks use one collector-punk sheet. Skinwalker sheet is wired on Waiting Room if the frames load.
+
+Re-slice after new atlases:
+
+```bash
+python3 tools/slice_sprites.py
+```
 
 Contract: Project game plan. Superpolish2 lives in `.cursor/skills/superpolish2/`.

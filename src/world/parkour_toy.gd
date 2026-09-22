@@ -148,6 +148,15 @@ func _ready() -> void:
 			Vector2(-28, 8), Vector2(28, 8), Vector2(22, 20), Vector2(-22, 20)
 		])
 	add_child(poly)
+	var tex := SpriteBook.prop(kind)
+	if tex:
+		poly.visible = false
+		var s := Sprite2D.new()
+		s.texture = tex
+		s.centered = false
+		s.position = Vector2(-float(tex.get_width()) * 0.5, -float(tex.get_height()) + 20.0)
+		s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		add_child(s)
 
 
 func _process(delta: float) -> void:

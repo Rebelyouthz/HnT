@@ -113,6 +113,9 @@ func _execute() -> void:
 		return
 	f.invuln = 18
 	f.snap_ready = false
+	f.anim_atk = "snap"
+	f._atk_t = 0.7
+	f.attack_cd = maxi(f.attack_cd, 16)
 	f.global_position.x = e.global_position.x - float(f.facing) * 22.0
 	var dual := false
 	for n in get_tree().get_nodes_in_group("players"):

@@ -93,6 +93,24 @@ func _ready() -> void:
 		Vector2(-22, -38), Vector2(22, -38), Vector2(22, -32), Vector2(-22, -32)
 	])
 	add_child(strap)
+	_mount_sprite()
+
+
+func _mount_sprite() -> void:
+	var tex := SpriteBook.prop(kind)
+	if tex == null:
+		return
+	if _box:
+		_box.visible = false
+	for c in get_children():
+		if c is Polygon2D:
+			(c as CanvasItem).visible = false
+	var s := Sprite2D.new()
+	s.texture = tex
+	s.centered = false
+	s.position = Vector2(-float(tex.get_width()) * 0.5, -float(tex.get_height()))
+	s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	add_child(s)
 
 
 func take_hit(hit: String, from: Node) -> void:
