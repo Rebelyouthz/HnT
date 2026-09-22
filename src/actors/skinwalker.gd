@@ -22,7 +22,6 @@ var _gape_open := false
 var _phase_cd := 0.8
 var _form_hold := 1.0
 var _help_said := false
-var _anim: AnimatedSprite2D
 
 
 func _ready() -> void:

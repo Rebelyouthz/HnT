@@ -18,7 +18,7 @@ ART = Path(
     )
 )
 OUT = ROOT / "assets" / "sprites"
-SHEETS = OUT / "sheets"
+SHEETS = ROOT / "tools" / "sprite_src"
 CANVAS = 96
 
 
@@ -254,9 +254,12 @@ def slice_who(src: Path, dest: Path, anchor: str) -> int:
 
 def copy_sheet(name: str) -> Path:
     src = ART / name
+    if not src.exists():
+        src = SHEETS / name
     SHEETS.mkdir(parents=True, exist_ok=True)
     dst = SHEETS / name
-    shutil.copy2(src, dst)
+    if src.exists() and src.resolve() != dst.resolve():
+        shutil.copy2(src, dst)
     return dst
 
 

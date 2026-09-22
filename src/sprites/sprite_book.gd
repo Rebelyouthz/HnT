@@ -17,7 +17,7 @@ const LOOP := {
 
 
 static func has_who(who: String) -> bool:
-	return DirAccess.dir_exists("res://assets/sprites/%s" % who)
+	return FileAccess.file_exists("res://assets/sprites/%s/idle/00.png" % who) or FileAccess.file_exists("res://assets/sprites/%s/dog/00.png" % who)
 
 
 static func frames(who: String) -> SpriteFrames:
