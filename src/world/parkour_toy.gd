@@ -64,7 +64,7 @@ func _ready() -> void:
 	lab.size = Vector2(140, 20)
 	lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lab.text = kind.to_upper()
-	UiKit.apply_label(lab, 11, Palette.MUTED)
+	UiKit.apply_label(lab, 13, Palette.LEMON if kind in ["pad", "escape", "drop"] else Palette.MUTED)
 	add_child(lab)
 
 

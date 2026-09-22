@@ -28,7 +28,7 @@ func _ready() -> void:
 	UiKit.apply_label(h, 22, Palette.LEMON)
 	col.add_child(h)
 	var sub := Label.new()
-	sub.text = "Volumes, gore, PIN, rooms URL, films. Reset writes a backup first. Host/Join ports do not live here."
+	sub.text = "Volumes, gore, PIN, rooms URL, films. Fourteen acts. Raven Grid crash is the boss intro. Reset writes a backup first. Host/Join ports do not live here."
 	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	UiKit.apply_label(sub, 13, Palette.MUTED)
 	col.add_child(sub)

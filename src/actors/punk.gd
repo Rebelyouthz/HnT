@@ -239,6 +239,12 @@ func _physics_process(delta: float) -> void:
 			else:
 				_start_telegraph()
 				velocity.x = 0
+		elif str(kit.get("attack", "")) == "gun" and absf(d) > 90.0 and absf(d) < 300.0 and randf() < 0.016:
+			_shuriken()
+			velocity.x = 0
+		elif str(kit.get("attack", "")) == "grenade" and absf(d) > 80.0 and absf(d) < 320.0 and randf() < 0.012:
+			_lob()
+			velocity.x = 0
 		elif title == "Roof Runner" and absf(d) > 90.0 and absf(d) < 260.0 and randf() < 0.012:
 			_shuriken()
 			velocity.x = 0
@@ -272,6 +278,8 @@ func _lane() -> void:
 
 
 func _canal() -> void:
+	if home == "air":
+		return
 	var act := get_tree().get_first_node_in_group("run_act")
 	if act == null or not act.has_meta("canal"):
 		return
@@ -314,13 +322,29 @@ func _maybe_guard(f: Fighter) -> bool:
 
 
 func _start_telegraph() -> void:
+	var atk := str(kit.get("attack", "light"))
+	var t := 0.25
+	match atk:
+		"light", "blade", "slide":
+			t = 0.14
+		"gun":
+			t = 0.2
+		"grenade":
+			t = 0.36
+		"roundhouse", "jump-kick":
+			t = 0.3
+		"heavy":
+			t = 0.32
+		"ram":
+			t = 0.08
+		_:
+			t = 0.22
 	match App.difficulty:
 		"open_house":
-			telegraph = 0.38
+			t *= 1.45
 		"finals":
-			telegraph = 0.16
-		_:
-			telegraph = 0.25
+			t *= 0.7
+	telegraph = t
 
 
 func _ram_hit(f: Fighter) -> void:

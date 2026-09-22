@@ -34,7 +34,7 @@ func _spot(info: Dictionary) -> Control:
 	var id := str(info["id"])
 	var lvl := FamilyProfile.building_level(id)
 	var wrap := PanelContainer.new()
-	wrap.custom_minimum_size = Vector2(210, 148)
+	wrap.custom_minimum_size = Vector2(178, 148)
 	wrap.add_theme_stylebox_override("panel", UiKit.panel(Palette.PANEL if lvl > 0 else Palette.PANEL_2, Palette.EDGE if lvl > 0 else Palette.LOCK))
 	var col := VBoxContainer.new()
 	wrap.add_child(col)
@@ -57,7 +57,7 @@ func _spot(info: Dictionary) -> Control:
 	UiKit.apply_label(blurb, 11, Palette.TEXT)
 	col.add_child(blurb)
 	var cost := FamilyProfile.build_cost(id)
-	var b := UiKit.button("BUILD %d" % cost if lvl == 0 else "UPGRADE %d" % cost, Vector2(180, 32))
+	var b := UiKit.button("BUILD %d" % cost if lvl == 0 else "UPGRADE %d" % cost, Vector2(154, 32))
 	if int(FamilyProfile.data["gold"]) < cost:
 		b.disabled = true
 	else:
@@ -75,7 +75,7 @@ func _spot(info: Dictionary) -> Control:
 	)
 	col.add_child(b)
 	if lvl > 0 and id in SHEETS:
-		var open := UiKit.button(Copy.OPEN_CAMP, Vector2(180, 32))
+		var open := UiKit.button(Copy.OPEN_CAMP, Vector2(154, 32))
 		open.add_theme_stylebox_override("normal", UiKit.panel(Palette.BRICK, Palette.LEMON))
 		if id == "patrol_desk" and FamilyProfile.patrol_ready():
 			UiKit.pulse_ready(open)

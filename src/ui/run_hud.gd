@@ -390,6 +390,9 @@ func _ally_holding(f: Fighter) -> bool:
 
 
 func _toggle_pause() -> void:
+	if get_tree().get_first_node_in_group("chase_crash"):
+		Juice.shout("WATCH THE CRASH")
+		return
 	if _pause and is_instance_valid(_pause):
 		_pause.queue_free()
 		_pause = null
@@ -420,6 +423,7 @@ func _toggle_pause() -> void:
 	var end := UiKit.button("END SESSION", Vector2(220, 48))
 	end.process_mode = Node.PROCESS_MODE_ALWAYS
 	end.pressed.connect(func() -> void:
+		Juice.restore_time()
 		get_tree().paused = false
 		FamilyProfile.mark_run_finished(false)
 		Mixer.play_music("res://assets/audio/music_clinic.wav")
@@ -437,6 +441,7 @@ func _toggle_pause() -> void:
 			{"name": "SCRAP", "value": str(state.scrap), "color": Palette.EDGE},
 			{"name": "XP", "value": str(state.xp), "color": Palette.LEMON},
 			{"name": "WANTED", "value": str(state.wanted), "color": Palette.BRICK},
+			{"name": "HEAT", "value": str(state.heat), "color": Palette.BRICK},
 			{"name": "CARDS", "value": str(state.cards.size()), "color": Palette.TEXT},
 			{"name": "COMBO", "value": str(Juice.combo), "color": Palette.EDGE},
 			{"name": "ACT", "value": str(App.current_map).replace("_", " ").to_upper(), "color": Palette.LEMON},

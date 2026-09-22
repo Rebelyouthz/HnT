@@ -152,6 +152,8 @@ func _count_rows() -> Array:
 		{"name": "COUCH EACH", "value": str(Party.count_for("dock_street", true)), "color": Palette.TEXT},
 		{"name": "ORCHARD SOLO", "value": str(Party.count_for("copay_orchard", false)), "color": Palette.EDGE},
 		{"name": "GRID SOLO", "value": str(Party.count_for("raven_grid", false)), "color": Palette.LEMON},
+		{"name": "SLEET SOLO", "value": str(Party.count_for("sleet_hour", false)), "color": Palette.TEXT},
+		{"name": "LEDGER SOLO", "value": str(Party.count_for("ledger_dive", false)), "color": Palette.READY},
 		{"name": "ACTS", "value": "14", "color": Palette.READY},
 		{"name": "HOURS", "value": "5", "color": Palette.EDGE},
 		{"name": "HOST", "value": "SON", "color": Palette.LEMON},

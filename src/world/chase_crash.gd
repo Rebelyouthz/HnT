@@ -180,8 +180,9 @@ func _new_angle_crash() -> void:
 	van.seat_keep()
 	Juice.pulse_shake(12.0)
 	Juice.freeze_frames(7)
+	Juice.sparks(van.global_position)
 	Juice.shout("CRASH")
-	Mixer.play_sfx("res://assets/audio/finish.wav" if ResourceLoader.exists("res://assets/audio/finish.wav") else "res://assets/audio/hit_heavy.wav", 0.72)
+	Mixer.play_sfx("res://assets/audio/van.wav" if ResourceLoader.exists("res://assets/audio/van.wav") else "res://assets/audio/finish.wav", 0.7)
 	_spawn_junk(8)
 	_kill_near_side()
 	await get_tree().create_timer(0.55, true, false, true).timeout

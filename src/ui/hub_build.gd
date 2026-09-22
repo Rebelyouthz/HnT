@@ -17,7 +17,7 @@ func _ready() -> void:
 	UiKit.apply_label(h, 24, Palette.LEMON)
 	col.add_child(h)
 	var s := Label.new()
-	s.text = "Cognitive Behavioral whatever. Gold in, violence out. Compare is split-screen menus only."
+	s.text = "Cognitive Behavioral whatever. Gold in, violence out. Fourteen acts. Raven Grid crash is the boss intro. Compare is split-screen menus only."
 	s.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	UiKit.apply_label(s, 14, Palette.MUTED)
 	col.add_child(s)
