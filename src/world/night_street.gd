@@ -665,3 +665,53 @@ static func pixel_dock(host: Node, map_w: float) -> void:
 		SpriteBook.stamp(host, "lamp", Vector2(lx, 500.0), 3)
 	SpriteBook.stamp(host, "awning", Vector2(1100.0, 430.0), 3)
 	SpriteBook.stamp(host, "crane", Vector2(180.0, 240.0), -5)
+
+
+static func pixel_lot(host: Node, map_w: float) -> void:
+	var asphalt := SpriteBook.tile("asphalt")
+	var wet := SpriteBook.tile("asphalt_wet")
+	if asphalt == null:
+		return
+	var tw := asphalt.get_width()
+	var th := asphalt.get_height()
+	var x := 0.0
+	var n := 0
+	while x < map_w:
+		var s := Sprite2D.new()
+		s.texture = wet if wet != null and n % 5 == 2 else asphalt
+		s.centered = false
+		s.position = Vector2(x, 430.0)
+		s.z_index = 0
+		s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		host.add_child(s)
+		var s2 := Sprite2D.new()
+		s2.texture = asphalt
+		s2.centered = false
+		s2.position = Vector2(x, 430.0 + float(th))
+		s2.z_index = 0
+		s2.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		host.add_child(s2)
+		x += float(tw)
+		n += 1
+	var stall := SpriteBook.tile("stall")
+	if stall:
+		for i in 7:
+			var st := Sprite2D.new()
+			st.texture = stall
+			st.centered = false
+			st.position = Vector2(80.0 + float(i) * 260.0, 470.0)
+			st.z_index = 1
+			st.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			host.add_child(st)
+	var xs: Array[float] = [415.0, 875.0, 1335.0, 1735.0]
+	var kinds: Array[String] = ["sedan", "hatchback", "van", "sedan"]
+	for i in xs.size():
+		SpriteBook.stamp(host, kinds[i], Vector2(xs[i], 500.0), 4)
+	for lx in [200.0, 700.0, 1100.0, 1500.0, 1880.0]:
+		SpriteBook.stamp(host, "sodium_lamp", Vector2(lx, 500.0), 3)
+	SpriteBook.stamp(host, "ticket_booth", Vector2(120.0, 500.0), 3)
+	SpriteBook.stamp(host, "cone", Vector2(500.0, 500.0), 3)
+	SpriteBook.stamp(host, "cone", Vector2(1040.0, 500.0), 3)
+	SpriteBook.stamp(host, "barrier", Vector2(1480.0, 500.0), 3)
+	SpriteBook.stamp(host, "drum", Vector2(900.0, 500.0), 3)
+	SpriteBook.stamp(host, "fence", Vector2(48.0, 500.0), 3)

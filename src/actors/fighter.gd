@@ -204,10 +204,10 @@ func _build_body() -> void:
 
 
 func _mount_sprite() -> void:
-	if role != "father" or not SpriteBook.has_who("father"):
+	if not SpriteBook.has_who(role):
 		return
 	SpriteBook.hide_polys(squash_root)
-	_anim = SpriteBook.make_anim("father")
+	_anim = SpriteBook.make_anim(role)
 	squash_root.add_child(_anim)
 
 

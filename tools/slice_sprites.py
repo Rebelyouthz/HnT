@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import shutil
+import sys
 from pathlib import Path
 
 from PIL import Image
@@ -126,12 +127,12 @@ def _is_chroma(p: tuple, bg: tuple[int, int, int], strict: bool = False) -> bool
     limit = 48 if strict else 68
     if dist < limit:
         return True
-    hot_magenta = r > 200 and b > 180 and g < 90
+    hot_magenta = r > 170 and g < 130 and b > 100 and r > g + 30
     if hot_magenta:
         return True
     if strict:
         return False
-    magenta = r > 110 and b > 90 and g < 95 and (r > g + 30) and (b > g + 15)
+    magenta = r > 100 and b > 80 and g < 100 and (r > g + 25) and (b > g + 10)
     return bool(magenta)
 
 
@@ -271,16 +272,32 @@ def save_named(frames: list[Image.Image], dest_dir: Path, names: list[str]) -> N
         print("  prop %s" % names[i])
 
 
-def slice_named(src: Path, dest_dir: Path, names: list[str], mode: str) -> None:
+def slice_named(
+    src: Path,
+    dest_dir: Path,
+    names: list[str],
+    mode: str,
+    cols: int = 0,
+    rows: int = 0,
+) -> None:
     im = Image.open(src).convert("RGBA")
     bg = _bg(im)
-    cells = grid(im)
+    if cols >= 2 and rows >= 2:
+        rows_b, cols_b = _equal(im.size[0], im.size[1], cols, rows)
+        cells = [(x0, y0, x1, y1) for y0, y1 in rows_b for x0, x1 in cols_b]
+    else:
+        cells = grid(im)
     frames: list[Image.Image] = []
+    forced = cols >= 2 and rows >= 2
     for box in cells:
         raw = chroma_cell(im, box, bg, strict=mode == "tile")
-        if _bbox(raw) is None or _opaque_frac(raw) < 0.06:
+        empty = _bbox(raw) is None or _opaque_frac(raw) < (0.02 if forced else 0.06)
+        if empty and not forced:
             continue
-        if mode == "tile":
+        if empty:
+            size = 64 if mode in ("tile", "icon") else 96
+            frames.append(Image.new("RGBA", (size, size), (0, 0, 0, 0)))
+        elif mode in ("tile", "icon"):
             frames.append(fit_tile(raw, 64))
         else:
             frames.append(fit_feet(raw, 96))
@@ -380,34 +397,147 @@ TOY_NAMES = [
     "crane",
 ]
 
+SON = {
+    "idle": ("son-idle-stand.png", "feet"),
+    "walk": ("son-walk-jog.png", "feet"),
+    "parkour_run": ("son-parkour-run.png", "feet"),
+    "jump": ("son-jump-arc.png", "cell"),
+    "duck": ("son-duck-crouch.png", "feet"),
+    "hurt": ("son-hurt-recoil.png", "feet"),
+    "jab": ("son-jab-punch.png", "feet"),
+    "cross": ("son-cross-punch.png", "feet"),
+    "gut": ("son-gut-punch.png", "feet"),
+    "heavy": ("son-heavy-haymaker.png", "feet"),
+    "front_kick": ("son-front-kick.png", "feet"),
+    "side_kick": ("son-side-kick.png", "feet"),
+    "roundhouse": ("son-roundhouse.png", "feet"),
+    "uppercut": ("son-uppercut.png", "cell"),
+    "air_mix": ("son-air-mix.png", "cell"),
+    "snap": ("son-snap-flash.png", "feet"),
+}
 
-def main() -> None:
-    if not ART.is_dir():
-        raise SystemExit("missing art dir %s" % ART)
-    if OUT.exists():
-        for child in ("father", "punk", "dock", "skinwalker"):
-            p = OUT / child
-            if p.exists():
-                shutil.rmtree(p)
-    SHEETS.mkdir(parents=True, exist_ok=True)
+LOT_TILE_NAMES = [
+    "asphalt",
+    "asphalt_wet",
+    "stall",
+    "lot_curb",
+    "chain",
+    "puddle",
+    "oil",
+    "hatch",
+    "cone_tile",
+    "bumper",
+    "sodium_tile",
+    "lot_roof",
+]
+
+LOT_PROP_NAMES = [
+    "sedan",
+    "hatchback",
+    "van",
+    "cone",
+    "sodium_lamp",
+    "ticket_booth",
+    "barrier",
+    "lot_cart",
+    "lot_dumpster",
+    "lot_crate",
+    "fence",
+    "drum",
+]
+
+HUB_NAMES = [
+    "pawn_shop",
+    "radio_tower",
+    "blood_fridge",
+    "dojo",
+    "workshop",
+    "streak_locker",
+    "trophy_cabinet",
+]
+
+
+def _wipe(name: str) -> None:
+    p = OUT / name
+    if p.exists():
+        shutil.rmtree(p)
+
+
+def slice_father() -> None:
     for clip, (name, anchor) in FATHER.items():
         src = copy_sheet(name)
         n = slice_who(src, OUT / "father" / clip, anchor)
         if n < 6:
             raise SystemExit("father/%s has %d frames" % (clip, n))
+
+
+def slice_punk() -> None:
     for clip, name in PUNK.items():
         src = copy_sheet(name)
         n = slice_who(src, OUT / "punk" / clip, "feet")
         if n < 6:
             raise SystemExit("punk/%s has %d frames" % (clip, n))
+
+
+def slice_dock() -> None:
     tiles = copy_sheet("dock-tiles.png")
     slice_named(tiles, OUT / "dock" / "tiles", TILE_NAMES, "tile")
     props = copy_sheet("dock-props.png")
     slice_named(props, OUT / "dock" / "props", PROP_NAMES, "prop")
     toys = copy_sheet("dock-toys.png")
     slice_named(toys, OUT / "dock" / "toys", TOY_NAMES, "prop")
-    skin = copy_sheet("skinwalker-sheet.png")
-    split_skinwalker(skin)
+
+
+def slice_son() -> None:
+    for clip, (name, anchor) in SON.items():
+        src = copy_sheet(name)
+        n = slice_who(src, OUT / "son" / clip, anchor)
+        if n < 6:
+            raise SystemExit("son/%s has %d frames" % (clip, n))
+
+
+def slice_lot() -> None:
+    tiles = copy_sheet("lot-tiles.png")
+    slice_named(tiles, OUT / "lot" / "tiles", LOT_TILE_NAMES, "tile", 4, 3)
+    props = copy_sheet("lot-props.png")
+    slice_named(props, OUT / "lot" / "props", LOT_PROP_NAMES, "prop", 4, 3)
+
+
+def slice_hub() -> None:
+    src = copy_sheet("clinic-hub-icons.png")
+    slice_named(src, OUT / "hub", HUB_NAMES, "icon", 4, 2)
+
+
+def main() -> None:
+    if not ART.is_dir():
+        raise SystemExit("missing art dir %s" % ART)
+    args = [a.lower() for a in sys.argv[1:]] or ["all"]
+    unknown = [a for a in args if a not in ("all", "father", "punk", "dock", "skinwalker", "son", "lot", "hub")]
+    if unknown:
+        raise SystemExit("unknown who: %s" % " ".join(unknown))
+    if "all" in args:
+        args = ["father", "punk", "dock", "skinwalker", "son", "lot", "hub"]
+        for child in args:
+            _wipe(child)
+    else:
+        for child in args:
+            _wipe(child)
+    SHEETS.mkdir(parents=True, exist_ok=True)
+    if "father" in args:
+        slice_father()
+    if "punk" in args:
+        slice_punk()
+    if "dock" in args:
+        slice_dock()
+    if "skinwalker" in args:
+        skin = copy_sheet("skinwalker-sheet.png")
+        split_skinwalker(skin)
+    if "son" in args:
+        slice_son()
+    if "lot" in args:
+        slice_lot()
+    if "hub" in args:
+        slice_hub()
     print("done")
 
 

@@ -1,7 +1,7 @@
 class_name SpriteBook
 extends Object
 
-## Pixel sheets for Father, Dock Street, collector punk, skinwalker.
+## Pixel sheets for Father, Son, Dock Street, Intake Lot, hub icons, punk, skinwalker.
 
 static var _frames: Dictionary = {}
 static var _tex: Dictionary = {}
@@ -108,11 +108,21 @@ static func prop(kind: String) -> Texture2D:
 	var a := tex("res://assets/sprites/dock/props/%s.png" % kind)
 	if a:
 		return a
-	return tex("res://assets/sprites/dock/toys/%s.png" % kind)
+	a = tex("res://assets/sprites/dock/toys/%s.png" % kind)
+	if a:
+		return a
+	return tex("res://assets/sprites/lot/props/%s.png" % kind)
 
 
 static func tile(kind: String) -> Texture2D:
-	return tex("res://assets/sprites/dock/tiles/%s.png" % kind)
+	var a := tex("res://assets/sprites/dock/tiles/%s.png" % kind)
+	if a:
+		return a
+	return tex("res://assets/sprites/lot/tiles/%s.png" % kind)
+
+
+static func icon(id: String) -> Texture2D:
+	return tex("res://assets/sprites/hub/%s.png" % id)
 
 
 static func stamp(host: Node, kind: String, at: Vector2, z: int = 2) -> Sprite2D:

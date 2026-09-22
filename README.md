@@ -226,21 +226,23 @@ scenes/     hub + intro, tutorial, fourteen acts, films, versus
 src/        actors, story, survive, vs, juice, world, ui, coop, net
 data/       story, kits, gear, buildings, awards, CBT, cards, shop, encounters, cosmetics, dojo, research, tricks, dopamine
 tools/      hnt_rooms.py, synth_story.py, synth_kit.py
-assets/     audio + icon + pixel sprites (Father, Dock Street, collector punk, skinwalker)
+assets/     audio + icon + pixel sprites (Father, Son, Dock Street, Intake Lot, hub, punk, skinwalker)
 ```
 
 Encounter counts live in `data/encounters.json`. Recount from that file.
 
 ## Sprites
 
-Timmie does not draw. Sheets live in `assets/sprites/`. **The Father** is an unemployed-dad casual: worn grey hoodie, grey sweatpants, sneakers — not a polo. `AnimatedSprite2D` on the existing fighter (Son stays the blockout body). Clips are 8–12 frames (never fewer than 6): idle, walk, parkour run, jump, duck, hurt, jab, cross, gut, heavy, front kick, side kick, roundhouse, uppercut, air mix, SNAP. Hitboxes, Host/Join, 3/6, crash, towers, parachute stay.
+Timmie does not draw. Sheets live in `assets/sprites/`. **The Father** is an unemployed-dad casual: worn grey hoodie, grey sweatpants, sneakers — not a polo. **The Son** is ~18, athletic casual: dark tee, open zip layer, black joggers, worn sneakers — not Dad's hoodie, not a costume. `AnimatedSprite2D` on the existing fighter for both. Clips are 8–12 frames (never fewer than 6): idle, walk, parkour run, jump, duck, hurt, jab, cross, gut, heavy, front kick, side kick, roundhouse, uppercut, air mix, SNAP. Hitboxes, Host/Join, 3/6, crash, towers, parachute stay.
 
-**Dock Street** is the only map with pixel tiles and smash/parkour props. Other maps stay blockout. Street punks use one collector-punk sheet. Skinwalker sheet is wired on Waiting Room if the frames load.
+**Dock Street** and **Intake Lot** have pixel tiles and props. Other maps stay blockout. Clinic hub cards show building icons (pawn, radio, fridge, dojo, workshop, locker, awards) when those PNGs exist. Street punks use one collector-punk sheet. Skinwalker sheet is wired on Waiting Room if the frames load.
 
 Re-slice after new atlases (sources in `tools/sprite_src/`):
 
 ```bash
 python3 tools/slice_sprites.py
+python3 tools/slice_sprites.py son
+python3 tools/slice_sprites.py lot hub
 ```
 
 Contract: Project game plan. Superpolish2 lives in `.cursor/skills/superpolish2/`.

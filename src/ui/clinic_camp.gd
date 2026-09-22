@@ -51,6 +51,14 @@ func _spot(info: Dictionary) -> Control:
 	title.text = str(info["name"])
 	UiKit.apply_label(title, 14, Palette.LEMON if lvl > 0 else Palette.MUTED)
 	col.add_child(title)
+	var portrait := SpriteBook.icon(id)
+	if portrait:
+		var pic := TextureRect.new()
+		pic.texture = portrait
+		pic.custom_minimum_size = Vector2(48, 48)
+		pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		pic.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		col.add_child(pic)
 	var blurb := Label.new()
 	blurb.text = str(info["blurb"])
 	blurb.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

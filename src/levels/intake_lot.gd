@@ -46,6 +46,7 @@ func build_world() -> void:
 	add_child(pistol)
 	anchor(Vector2(580, 60))
 	anchor(Vector2(1400, 70))
+	NightStreet.pixel_lot(self, map_w)
 	NightStreet.bounds(self, map_w)
 	NightStreet.plaque(self, Vector2(60, 120), "THE INTAKE LOT  ·  COPING HOUR", Palette.EDGE, 20)
 	NightStreet.section(self, Vector2(340, 160), "parkour")
