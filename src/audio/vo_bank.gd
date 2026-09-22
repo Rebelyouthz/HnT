@@ -126,6 +126,14 @@ static func summit_son() -> void:
 	_play("res://assets/audio/vo_son_summit.wav", "res://assets/audio/vo_son_kong.wav")
 
 
+static func dad_skinwalker() -> void:
+	_play("res://assets/audio/vo_dad_skinwalker.wav", "res://assets/audio/vo_dad_level.wav")
+
+
+static func son_skinwalker() -> void:
+	_play("res://assets/audio/vo_son_skinwalker.wav", "res://assets/audio/vo_son_kong.wav")
+
+
 static func _play(prefer: String, fallback: String) -> void:
 	for path in [prefer.get_basename() + ".mp3", prefer, fallback.get_basename() + ".mp3", fallback]:
 		if ResourceLoader.exists(path):

@@ -63,11 +63,12 @@
     "neon_exchange->waiting_room": {
       "chapter": "CHAPTER 6",
       "title": "THE WAITING ROOM",
-      "sub": "Fluorescent forever. Don't sit.",
+      "sub": "Fluorescent forever. Don't sit. The dog was already here.",
       "lines": [
-        {"who": "son", "text": "We're number 88. There is no 87. That's the bit."},
-        {"who": "father", "text": "I brought a magazine from 1994. It's still angry."},
-        {"who": "", "text": "SITTING IS HOW THEY WIN. THE MAGNET DOES NOT SIT."}
+        {"who": "son", "text": "Is that a skinwalker?"},
+        {"who": "father", "text": "THAT is a skinwalker."},
+        {"who": "son", "text": "I asked a hundred times. Those photos were trash. This one isn't."},
+        {"who": "", "text": "THEY WERE NOT ALWAYS THIS VISIBLE. THE SKIPPED SESSION TORE THE WAITING LIST. FILE IT."}
       ]
     },
     "waiting_room->rail_bridge": {
@@ -264,15 +265,15 @@
     "waiting_room": {
       "title": "THE WAITING ROOM",
       "survive": true,
-      "main": "Hold the fluorescent forever-room. Numbers skip you on purpose.",
-      "side": "Don't sit. Sitting is how they win.",
+      "main": "Hold the fluorescent forever-room. Number 87 is already sitting. Unmask it. FILE it. Numbers skip you on purpose.",
+      "side": "Don't sit. The dog was already here. That's how they win.",
       "talk": [
         {"at": 0, "lines": [
           {"who": "son", "text": "We're number 88. There is no 87."},
-          {"who": "father", "text": "I brought a magazine from 1994. It's still angry."}
+          {"who": "father", "text": "Then why is that dog already on the chair."}
         ]}
       ],
-      "miniboss": {"title": "Ticket Machine", "x": 980, "y": 500, "home": "street", "hp": 112, "sub": "NOW SERVING PAIN"},
+      "miniboss": {"kind": "skinwalker", "title": "Skinwalker", "x": 980, "y": 500, "home": "street", "hp": 128, "pmin": 820, "pmax": 1180, "sub": "ALREADY SITTING"},
       "boss": {"title": "Number 88", "x": 1680, "y": 500, "home": "street", "hp": 188, "sub": "YOUR NUMBER NEVER COMES"}
     },
     "rail_bridge": {

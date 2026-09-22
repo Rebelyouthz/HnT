@@ -62,5 +62,13 @@
     "need": { "secrets_found": 99 },
     "rarity": "rare",
     "gold": 18
+  },
+  {
+    "id": "polaroid_walker",
+    "title": "THAT, FILED",
+    "blurb": "The fridge kept the photo Dad finally named. Pale. Thin. Already sitting.",
+    "need": { "skinwalkers_filed": 1 },
+    "rarity": "epic",
+    "gold": 22
   }
 ]

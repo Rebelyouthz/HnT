@@ -43,7 +43,7 @@ The game hops to a letterbox **act film** (SoR4 comic-between-stages):
 
 Remote Host/Join: both peers see the film. The host still advances; the guest gets `film_from` / `film_next` with the begin packet.
 
-**Options → SKIP INTER-ACT FILMS** jumps the night straight to the next map. Intro films still play the first time unless you already filed intake.
+**Options → SKIP INTER-ACT FILMS** jumps the night straight to the next map. Intro films still play the first time unless you already filed intake. The campaign parachute and the skinwalker film still play.
 
 Replay intro anytime: Run tab **PLAY INTRO**.
 
@@ -72,7 +72,7 @@ Brawl acts mix **parkour / gun / brawl**. Every act: **miniboss**, later content
 3. **The Fire Escapes** — Lease Hawk.
 4. **Group Circle** (survivor) — The Facilitator.
 5. **Neon Exchange** — Agent Prime.
-6. **The Waiting Room** (survivor) — Number 88.
+6. **The Waiting Room** (survivor) — Skinwalker miniboss (already sitting), then Number 88.
 7. **Rail Bridge** — Conductor 9.
 8. **City Hall** — Deputy Raven, then **Mayor Raven**.
 9. **Copay Orchard** (brawl, farm/lake/forest/fields) — Scarecrow Ken, then Combine Brute.
@@ -97,6 +97,14 @@ Pack **lunch** (buy at Blood Mart / street shop, loot a fridge, or find a unique
 3. Or, after the Combine is down, walk to the **Wellness Shuttle** at orchard **x ≈ 3320** and tap **SPECIAL**. That files orchard gold / results; **NEXT** still starts the fall.
 
 The craft fails like the van. Long fall. **SPECIAL** toggles first person (visor). Mid-air hand slap (cling when green; **SHUTTLE RIP** lengthens the window). Host hops Join into Sleet with `broadcast_begin`. You land in **Sleet Hour**, a survivor hour. **PAUSE** shouts **WATCH THE FALL** and does not skip.
+
+### How the skinwalker film starts
+
+1. File **Neon Exchange** (Badge Broker, then Agent Prime).
+2. On the results sheet tap **NEXT** (The Waiting Room). The game hops to the **skinwalker film** — human and a clinic dog first, then the slip. **SKIP INTER-ACT FILMS** does not skip it.
+3. **LIGHT / JUMP** advances a beat. **PAUSE** shouts **WATCH THE SLIP** and does not skip.
+
+Dad still says the word because the son asked a hundred times with trash photos. In the Waiting Room the dog is already sitting. Get close, hit it, or wait for the elite pack. Unmask. Fight the shapeshift set. **FILE** it. Number 88 still closes the hour.
 
 ### How the Raven Grid chase starts (and ends)
 

@@ -273,5 +273,15 @@
     "tier": "light", "armor": "none", "style": "martial", "attack": "slide",
     "block": 0.1, "hp": 34, "speed": 76, "weapon": "kick",
     "blurb": "First slide of the night. Low sweep. Jump it or eat the asphalt."
+  },
+  "Number 87": {
+    "tier": "medium", "armor": "none", "style": "brawl", "attack": "light",
+    "block": 0.06, "hp": 128, "speed": 22, "weapon": "fist",
+    "blurb": "Already sitting. Practiced pet. The form is a lie."
+  },
+  "Skinwalker": {
+    "tier": "miniboss", "armor": "none", "style": "brawl", "attack": "heavy",
+    "block": 0.12, "hp": 128, "speed": 40, "weapon": "fist",
+    "blurb": "Walk, stoop, crawl backward, lunge, learned burst. Unmask the gape. FILE it."
   }
 }

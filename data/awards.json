@@ -526,5 +526,16 @@
     "gold": 40,
     "gems": 3,
     "rarity": "epic"
+  },
+  {
+    "id": "that_walker",
+    "title": "THAT IS A SKINWALKER",
+    "blurb": "File the thing that was already sitting. A hundred trash photos. This one wasn't.",
+    "need": {
+      "skinwalkers_filed": 1
+    },
+    "gold": 32,
+    "gems": 2,
+    "rarity": "rare"
   }
 ]

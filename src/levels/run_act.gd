@@ -488,6 +488,9 @@ func _spawn_story_unit(mini: bool) -> void:
 	var d: Dictionary = spec
 	if str(d.get("kind", "")) in ["mayor_raven", "family_plan"]:
 		return
+	if str(d.get("kind", "")) == "skinwalker":
+		_spawn_skinwalker(d, mini)
+		return
 	var cam := get_viewport().get_camera_2d() if is_inside_tree() else null
 	var x := float(d.get("x", spawn_at.x + 800.0))
 	if StoryBook.is_survive(map_id) and cam:
@@ -506,6 +509,38 @@ func _spawn_story_unit(mini: bool) -> void:
 	unit.global_position = Vector2(x, float(d.get("y", 500.0)))
 	unit.accent = Palette.EDGE if mini else Palette.BRICK
 	add_child(unit)
+
+
+func _spawn_skinwalker(d: Dictionary, mini: bool) -> void:
+	var existing := get_tree().get_first_node_in_group("skinwalker")
+	if existing and existing.has_method("wake"):
+		var was_awake := false
+		if existing is Skinwalker:
+			was_awake = (existing as Skinwalker)._woke
+		existing.wake()
+		if existing is Skinwalker and not was_awake:
+			var sw: Skinwalker = existing
+			sw.hp = int(round(float(d.get("hp", 128)) * _state.hp_mul()))
+			sw.max_hp = sw.hp
+		return
+	var cam := get_viewport().get_camera_2d() if is_inside_tree() else null
+	var x := float(d.get("x", spawn_at.x + 800.0))
+	if StoryBook.is_survive(map_id) and cam:
+		x = cam.global_position.x + (280.0 if mini else 340.0)
+	var unit := Skinwalker.new()
+	unit.title = str(d.get("title", "Skinwalker"))
+	unit.display = unit.title
+	unit.is_mini = mini
+	unit.sub = str(d.get("sub", "THAT"))
+	unit.home = str(d.get("home", "street"))
+	unit.patrol_min = float(d.get("pmin", x - 180.0))
+	unit.patrol_max = float(d.get("pmax", x + 180.0))
+	unit.global_position = Vector2(x, float(d.get("y", 500.0)))
+	unit.dormant = false
+	add_child(unit)
+	unit.hp = int(round(float(d.get("hp", 128)) * _state.hp_mul()))
+	unit.max_hp = unit.hp
+	unit.wake()
 
 
 func _tick_talk(lead_x: float) -> void:

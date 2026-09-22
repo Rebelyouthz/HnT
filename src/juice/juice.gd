@@ -861,3 +861,91 @@ func hood(at: Vector2) -> void:
 func siren() -> void:
 	play("res://assets/audio/siren.wav" if ResourceLoader.exists("res://assets/audio/siren.wav") else "res://assets/audio/heat_up.wav")
 
+
+func phase_flicker(node: CanvasItem) -> void:
+	if node == null:
+		return
+	var original := node.modulate
+	node.modulate = Color(original.r, original.g, original.b, 0.12)
+	play("res://assets/audio/sfx_phase.wav" if ResourceLoader.exists("res://assets/audio/sfx_phase.wav") else "res://assets/audio/dash.wav")
+	get_tree().create_timer(0.06, true, false, true).timeout.connect(func() -> void:
+		if is_instance_valid(node):
+			node.modulate = Color(original.r * 1.15, original.g * 1.1, original.b * 0.85, 1.0)
+	)
+	get_tree().create_timer(0.14, true, false, true).timeout.connect(func() -> void:
+		if is_instance_valid(node):
+			node.modulate = original
+	)
+
+
+func yellow_stare(at: Vector2) -> void:
+	pulse_shake(3.5)
+	popup_number(at + Vector2(0, -56), "STARE", Color(0.95, 0.86, 0.12))
+	var p := CPUParticles2D.new()
+	p.global_position = at + Vector2(0, -70)
+	p.emitting = true
+	p.one_shot = true
+	p.explosiveness = 0.9
+	p.amount = 10
+	p.lifetime = 0.32
+	p.direction = Vector2(0, -1)
+	p.spread = 40.0
+	p.initial_velocity_min = 40.0
+	p.initial_velocity_max = 110.0
+	p.color = Color(0.95, 0.86, 0.12, 0.9)
+	var host := get_tree().get_first_node_in_group("dock_world")
+	if host:
+		host.add_child(p)
+	else:
+		add_child(p)
+	get_tree().create_timer(0.45, true, false, true).timeout.connect(func() -> void:
+		if is_instance_valid(p):
+			p.queue_free()
+	)
+
+
+func gape(at: Vector2) -> void:
+	pulse_shake(5.0)
+	popup_number(at + Vector2(0, -44), "GAPE", Color(0.55, 0.12, 0.14))
+	play("res://assets/audio/sfx_gape.wav" if ResourceLoader.exists("res://assets/audio/sfx_gape.wav") else "res://assets/audio/hit_heavy.wav")
+	var p := CPUParticles2D.new()
+	p.global_position = at + Vector2(0, -40)
+	p.emitting = true
+	p.one_shot = true
+	p.explosiveness = 0.95
+	p.amount = 14
+	p.lifetime = 0.28
+	p.direction = Vector2(0, 1)
+	p.spread = 30.0
+	p.initial_velocity_min = 20.0
+	p.initial_velocity_max = 70.0
+	p.color = Color(0.28, 0.06, 0.08, 0.9)
+	var host := get_tree().get_first_node_in_group("dock_world")
+	if host:
+		host.add_child(p)
+	else:
+		add_child(p)
+	get_tree().create_timer(0.42, true, false, true).timeout.connect(func() -> void:
+		if is_instance_valid(p):
+			p.queue_free()
+	)
+
+
+func whistle(at: Vector2) -> void:
+	play("res://assets/audio/sfx_whistle.wav" if ResourceLoader.exists("res://assets/audio/sfx_whistle.wav") else "res://assets/audio/ui_click.wav")
+	popup_number(at + Vector2(0, -36), "WHISTLE", Palette.MUTED)
+
+
+func help_call(at: Vector2) -> void:
+	play("res://assets/audio/sfx_help_call.wav" if ResourceLoader.exists("res://assets/audio/sfx_help_call.wav") else "res://assets/audio/vo_son.wav")
+	popup_number(at + Vector2(0, -48), "HELP", Color(0.78, 0.72, 0.62))
+	pulse_shake(2.5)
+
+
+func slip(at: Vector2) -> void:
+	pulse_shake(7.0)
+	freeze_frames(3)
+	play("res://assets/audio/sfx_phase.wav" if ResourceLoader.exists("res://assets/audio/sfx_phase.wav") else "res://assets/audio/sting_boss.wav")
+	popup_number(at + Vector2(0, -70), Copy.THAT_WALKER, Color(0.95, 0.86, 0.12))
+	kill_burst(at, "heavy")
+

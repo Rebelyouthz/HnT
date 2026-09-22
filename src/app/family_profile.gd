@@ -106,6 +106,8 @@ func _defaults() -> Dictionary:
 		"survive_clears": 0,
 		"sides_filed": 0,
 		"skip_films": false,
+		"skinwalkers_filed": 0,
+		"unmasks": 0,
 		"account_xp": 0,
 		"account_level": 1,
 		"high_score": 0,
@@ -985,6 +987,16 @@ func mark_parry() -> void:
 
 func mark_bounce() -> void:
 	data["bounces"] = int(data.get("bounces", 0)) + 1
+	save()
+
+
+func mark_skinwalker() -> void:
+	data["skinwalkers_filed"] = int(data.get("skinwalkers_filed", 0)) + 1
+	save()
+
+
+func mark_unmask() -> void:
+	data["unmasks"] = int(data.get("unmasks", 0)) + 1
 	save()
 
 

@@ -223,6 +223,8 @@ func bind(p_son: Fighter, p_dad: Fighter, p_state: RunState = null) -> void:
 
 
 func _prompt_line() -> String:
+	if get_tree().get_first_node_in_group("skinwalker_film"):
+		return "SLIP  ·  LIGHT ADVANCES  ·  PAUSE DOES NOT SKIP"
 	if get_tree().get_first_node_in_group("parachute_fall"):
 		return "FALL  ·  SPECIAL FP  ·  CLING THE SLAP  ·  PAUSE DOES NOT SKIP"
 	if get_tree().get_first_node_in_group("towers") and get_tree().get_first_node_in_group("cling"):
@@ -406,6 +408,9 @@ func _ally_holding(f: Fighter) -> bool:
 
 
 func _toggle_pause() -> void:
+	if get_tree().get_first_node_in_group("skinwalker_film"):
+		Juice.shout("WATCH THE SLIP")
+		return
 	if get_tree().get_first_node_in_group("parachute_fall"):
 		Juice.shout("WATCH THE FALL")
 		return

@@ -9,7 +9,7 @@ func _configure() -> void:
 	next_id = "rail_bridge"
 	light_preset = "waiting_room"
 	toast_title = "THE WAITING ROOM"
-	toast_body = "Fluorescent forever. Number 88 is late on purpose."
+	toast_body = "Fluorescent forever. Number 87 is already sitting."
 	clear_title = Copy.WAIT_CLEAR
 	clear_sub = Copy.WAIT_SUB
 	next_label = Copy.NEXT_BRIDGE
@@ -51,4 +51,22 @@ func build_world() -> void:
 	NightStreet.section(self, Vector2(1100, 150), "gun")
 	NightStreet.section(self, Vector2(80, 150), "brawl")
 	NightStreet.plaque(self, Vector2(700, 180), "DON'T SIT. SITTING IS HOW THEY WIN.", Palette.MUTED, 13)
+	NightStreet.plaque(self, Vector2(980, 430), "THERAPY DOG  ·  PLEASE DO NOT PET", Palette.MUTED, 12)
 	NightStreet.neon(self, Vector2(1400, 140), "88")
+	var walker := Skinwalker.new()
+	walker.title = "Number 87"
+	walker.display = "Number 87"
+	walker.is_mini = true
+	walker.sub = "ALREADY SITTING"
+	walker.home = "street"
+	walker.hp = 128
+	walker.max_hp = 128
+	walker.patrol_min = 820.0
+	walker.patrol_max = 1180.0
+	walker.global_position = Vector2(980, 500)
+	walker.dormant = true
+	add_child(walker)
+	var rs := get_tree().get_first_node_in_group("run_state")
+	if rs and rs.has_method("hp_mul"):
+		walker.hp = int(round(128.0 * float(rs.call("hp_mul"))))
+		walker.max_hp = walker.hp

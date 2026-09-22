@@ -39,7 +39,8 @@ const SCENES := {
 	"invoice_pier": "res://scenes/levels/invoice_pier.tscn",
 	"processing_floor": "res://scenes/levels/processing_floor.tscn",
 	"versus": "res://scenes/levels/versus.tscn",
-	"parachute_fall": "res://scenes/levels/parachute_fall.tscn"
+	"parachute_fall": "res://scenes/levels/parachute_fall.tscn",
+	"skinwalker_film": "res://scenes/levels/skinwalker_film.tscn"
 }
 
 const ORDER := [
@@ -125,6 +126,10 @@ func advance(next_id: String, state: RunState) -> void:
 	if current_map == "copay_orchard" and next_id == "sleet_hour":
 		film_kind = "parachute"
 		_hop("parachute_fall")
+		return
+	if current_map == "neon_exchange" and next_id == "waiting_room":
+		film_kind = "skinwalker"
+		_hop("skinwalker_film")
 		return
 	film_kind = "bridge"
 	var hop := next_id
