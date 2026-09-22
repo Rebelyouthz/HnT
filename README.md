@@ -237,7 +237,7 @@ Timmie does not draw. Sheets live in `assets/sprites/`. **The Father** is an une
 
 **Dock Street** is the only map with pixel tiles and smash/parkour props. Other maps stay blockout. Street punks use one collector-punk sheet. Skinwalker sheet is wired on Waiting Room if the frames load.
 
-Re-slice after new atlases:
+Re-slice after new atlases (sources in `tools/sprite_src/`):
 
 ```bash
 python3 tools/slice_sprites.py
