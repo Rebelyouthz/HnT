@@ -373,6 +373,14 @@ func _open_camp_sheet(id: String) -> void:
 			path = "res://src/ui/lost_sheet.gd"
 		"payphone":
 			path = "res://src/ui/phone_sheet.gd"
+		"water_cooler":
+			path = "res://src/ui/cooler_sheet.gd"
+		"coat_check":
+			path = "res://src/ui/coat_sheet.gd"
+		"time_clock":
+			path = "res://src/ui/clock_sheet.gd"
+		"bleach_closet":
+			path = "res://src/ui/bleach_sheet.gd"
 		_:
 			return
 	var sheet: Control = load(path).new()

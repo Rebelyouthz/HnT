@@ -3,12 +3,12 @@ extends Control
 signal built(id: String)
 signal open_sheet(id: String)
 
-const SHEETS := ["pawn_shop", "patrol_desk", "research_lab", "dojo", "workshop", "bounty_board", "radio_tower", "album_wall", "blood_fridge", "streak_locker", "invoice_wheel", "punching_bag", "warrant_fax", "tip_jar", "lost_found", "payphone"]
+const SHEETS := ["pawn_shop", "patrol_desk", "research_lab", "dojo", "workshop", "bounty_board", "radio_tower", "album_wall", "blood_fridge", "streak_locker", "invoice_wheel", "punching_bag", "warrant_fax", "tip_jar", "lost_found", "payphone", "water_cooler", "coat_check", "time_clock", "bleach_closet"]
 const COLS := 7
 
 
 func _ready() -> void:
-	custom_minimum_size = Vector2(1180, 620)
+	custom_minimum_size = Vector2(1180, 680)
 	var floor := ColorRect.new()
 	floor.color = Color(0.07, 0.075, 0.1)
 	floor.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -98,6 +98,18 @@ func _spot(info: Dictionary) -> Control:
 		elif id == "tip_jar" and int(FamilyProfile.data.get("gold", 0)) >= 5:
 			UiKit.pulse_ready(open)
 			open.text = "TOSS 5 GOLD"
+		elif id == "water_cooler" and FamilyProfile.cooler_ready():
+			UiKit.pulse_ready(open)
+			open.text = "DRINK TODAY"
+		elif id == "coat_check" and FamilyProfile.coat_ready():
+			UiKit.pulse_ready(open)
+			open.text = "PACK TAPE"
+		elif id == "time_clock" and FamilyProfile.clock_ready():
+			UiKit.pulse_ready(open)
+			open.text = "PUNCH IN"
+		elif id == "bleach_closet" and FamilyProfile.bleach_ready():
+			UiKit.pulse_ready(open)
+			open.text = "PACK FIZZ"
 		open.pressed.connect(func() -> void:
 			FamilyProfile.mark_seen("build_%s" % id)
 			open_sheet.emit(id)

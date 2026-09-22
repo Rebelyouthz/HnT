@@ -142,5 +142,29 @@
     "name": "PAYPHONE",
     "blurb": "Once a day. Dial City Hall. Eight gold and Mayor Raven. The cord is sticky.",
     "unlocks": "Phone"
+  },
+  {
+    "id": "water_cooler",
+    "name": "WATER COOLER",
+    "blurb": "Once a day. Four gold and a packed fizz. The gossip is billed. The water is free.",
+    "unlocks": "Cooler"
+  },
+  {
+    "id": "coat_check",
+    "name": "COAT CHECK",
+    "blurb": "Once a day. Pack intake tape for the next spawn. The hanger still wants a copay.",
+    "unlocks": "Coat"
+  },
+  {
+    "id": "time_clock",
+    "name": "TIME CLOCK",
+    "blurb": "Once a day. Punch in. Six gold. The shift is billed as civic engagement.",
+    "unlocks": "Clock"
+  },
+  {
+    "id": "bleach_closet",
+    "name": "BLEACH CLOSET",
+    "blurb": "Once a day. Pack a fizz for the next spawn. The mop still wants tuition.",
+    "unlocks": "Bleach"
   }
 ]

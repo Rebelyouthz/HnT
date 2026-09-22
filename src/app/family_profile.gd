@@ -10,7 +10,8 @@ const BUILDINGS := [
 	"pawn_shop", "patrol_desk", "research_lab", "dojo", "workshop",
 	"bounty_board", "radio_tower", "album_wall",
 	"streak_locker", "invoice_wheel", "punching_bag", "warrant_fax",
-	"tip_jar", "lost_found", "payphone"
+	"tip_jar", "lost_found", "payphone", "water_cooler", "coat_check",
+	"time_clock", "bleach_closet"
 ]
 
 var data: Dictionary = {}
@@ -177,7 +178,24 @@ func _defaults() -> Dictionary:
 		"perfect_parries": 0,
 		"packed_weapon": "",
 		"lost_found_day": "",
-		"phone_day": ""
+		"phone_day": "",
+		"barrels": 0,
+		"grinds": 0,
+		"poles": 0,
+		"wallkicks": 0,
+		"dives": 0,
+		"coolers": 0,
+		"coats": 0,
+		"cooler_day": "",
+		"coat_day": "",
+		"hoods": 0,
+		"benches": 0,
+		"manholes": 0,
+		"slides": 0,
+		"clocks": 0,
+		"bleaches": 0,
+		"clock_day": "",
+		"bleach_day": ""
 	}
 
 
@@ -1074,6 +1092,106 @@ func call_payphone() -> bool:
 	data["phone_day"] = Time.get_date_string_from_system()
 	data["phones"] = int(data.get("phones", 0)) + 1
 	grant(8, 0, "PAYPHONE")
+	return true
+
+
+func mark_barrel() -> void:
+	data["barrels"] = int(data.get("barrels", 0)) + 1
+	save()
+
+
+func mark_grind() -> void:
+	data["grinds"] = int(data.get("grinds", 0)) + 1
+	save()
+
+
+func mark_pole() -> void:
+	data["poles"] = int(data.get("poles", 0)) + 1
+	save()
+
+
+func mark_wallkick() -> void:
+	data["wallkicks"] = int(data.get("wallkicks", 0)) + 1
+	save()
+
+
+func mark_dive() -> void:
+	data["dives"] = int(data.get("dives", 0)) + 1
+	save()
+
+
+func cooler_ready() -> bool:
+	return str(data.get("cooler_day", "")) != Time.get_date_string_from_system()
+
+
+func drink_cooler() -> bool:
+	if not cooler_ready():
+		return false
+	data["cooler_day"] = Time.get_date_string_from_system()
+	data["coolers"] = int(data.get("coolers", 0)) + 1
+	data["snack_buff"] = "steam"
+	grant(4, 0, "WATER COOLER")
+	return true
+
+
+func coat_ready() -> bool:
+	return str(data.get("coat_day", "")) != Time.get_date_string_from_system()
+
+
+func claim_coat() -> bool:
+	if not coat_ready():
+		return false
+	data["coat_day"] = Time.get_date_string_from_system()
+	data["coats"] = int(data.get("coats", 0)) + 1
+	data["snack_buff"] = "tape"
+	save()
+	return true
+
+
+func mark_hood() -> void:
+	data["hoods"] = int(data.get("hoods", 0)) + 1
+	save()
+
+
+func mark_bench() -> void:
+	data["benches"] = int(data.get("benches", 0)) + 1
+	save()
+
+
+func mark_manhole() -> void:
+	data["manholes"] = int(data.get("manholes", 0)) + 1
+	save()
+
+
+func mark_slide() -> void:
+	data["slides"] = int(data.get("slides", 0)) + 1
+	save()
+
+
+func clock_ready() -> bool:
+	return str(data.get("clock_day", "")) != Time.get_date_string_from_system()
+
+
+func punch_clock() -> bool:
+	if not clock_ready():
+		return false
+	data["clock_day"] = Time.get_date_string_from_system()
+	data["clocks"] = int(data.get("clocks", 0)) + 1
+	grant(6, 0, "TIME CLOCK")
+	return true
+
+
+func bleach_ready() -> bool:
+	return str(data.get("bleach_day", "")) != Time.get_date_string_from_system()
+
+
+func claim_bleach() -> bool:
+	if not bleach_ready():
+		return false
+	data["bleach_day"] = Time.get_date_string_from_system()
+	data["bleaches"] = int(data.get("bleaches", 0)) + 1
+	data["snack_buff"] = "steam"
+	save()
 	return true
 
 

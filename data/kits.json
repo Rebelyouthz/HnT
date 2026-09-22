@@ -233,5 +233,45 @@
     "tier": "light", "armor": "none", "style": "brawl", "attack": "ram",
     "block": 0.06, "hp": 36, "speed": 78, "weapon": "fist", "vehicle": "scooter",
     "blurb": "Newsstand smash. Headlines ram first. Subscriptions are violence."
+  },
+  "Oil Ghost": {
+    "tier": "very_light", "armor": "none", "style": "grenade", "attack": "grenade",
+    "block": 0.04, "hp": 32, "speed": 54, "weapon": "grenade",
+    "blurb": "Oil drum smash. Slick invoices. Arc, then splash."
+  },
+  "Pole Clerk": {
+    "tier": "light", "armor": "none", "style": "knife", "attack": "blade",
+    "block": 0.12, "hp": 40, "speed": 56, "weapon": "knife",
+    "blurb": "Pole swing hire. Certified orbit with a blade."
+  },
+  "Rail Rat": {
+    "tier": "light", "armor": "none", "style": "brawl", "attack": "ram",
+    "block": 0.0, "hp": 36, "speed": 82, "weapon": "fist", "vehicle": "scooter",
+    "blurb": "Grind extra. Sparks first. The rail still wants a copay."
+  },
+  "Wall Kid": {
+    "tier": "light", "armor": "none", "style": "martial", "attack": "jump-kick",
+    "block": 0.1, "hp": 34, "speed": 64, "weapon": "kick", "home": "roof",
+    "blurb": "Wall-run hire. Diagonal kick from the brick. Don't hug the invoice."
+  },
+  "Hood Hopper": {
+    "tier": "light", "armor": "none", "style": "martial", "attack": "jump-kick",
+    "block": 0.08, "hp": 38, "speed": 72, "weapon": "kick",
+    "blurb": "Hood bounce hire. Diagonal kick off the bumper. Don't stand on the paint."
+  },
+  "Steam Mole": {
+    "tier": "very_light", "armor": "none", "style": "knife", "attack": "blade",
+    "block": 0.06, "hp": 30, "speed": 60, "weapon": "knife",
+    "blurb": "Manhole smash. Steam with a blade. The lid still wants a copay."
+  },
+  "Bench Clerk": {
+    "tier": "light", "armor": "none", "style": "brawl", "attack": "light",
+    "block": 0.12, "hp": 32, "speed": 48, "weapon": "fist",
+    "blurb": "Bench vault hire. He still wants you to sit. Don't."
+  },
+  "Slide Clerk": {
+    "tier": "light", "armor": "none", "style": "martial", "attack": "slide",
+    "block": 0.1, "hp": 34, "speed": 76, "weapon": "kick",
+    "blurb": "First slide of the night. Low sweep. Jump it or eat the asphalt."
   }
 }

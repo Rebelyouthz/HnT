@@ -93,6 +93,7 @@ var crawling := 0.0
 var parry_win := 0
 var revenge_win := 0
 var cart_t := 0.0
+var _slide_clerk := false
 
 signal died
 signal hit_landed(kind: String, global_pos: Vector2)
@@ -406,6 +407,17 @@ func _process_street(delta: float) -> void:
 	var x := stick.x
 	var y := stick.y
 	if wall_run > 0.0:
+		if _just("jump"):
+			wall_run = 0.0
+			hop_v = -640.0
+			hop = -40.0
+			velocity.x = float(facing) * 380.0
+			Juice.shout(Copy.WALL_KICK)
+			Juice.named_slowmo()
+			KitSfx.hit(role, "jump")
+			FamilyProfile.mark_wallkick()
+			FamilyProfile.mark_trick()
+			return
 		hop = minf(hop, -40.0)
 		hop_v = -40.0
 		velocity.x = float(facing) * 340.0
@@ -720,10 +732,38 @@ func _slide() -> void:
 	invuln = 6
 	dashing = false
 	KitSfx.hit(role, "slide")
+	Juice.shout(Copy.SLIDE)
+	FamilyProfile.mark_slide()
+	VoBank.slide()
 	_spawn_hit("slide", Vector2(52, 28), 0.22, Vector2(24 * facing, -12))
 	var rs := get_tree().get_first_node_in_group("run_state")
 	if rs and rs.has_method("has_card") and rs.has_card("family_blitz"):
 		_spawn_hit("slide", Vector2(64, 30), 0.18, Vector2(40 * facing, -10))
+	if rs != null and rs.has_method("has_card"):
+		if bool(rs.call("has_card", "slide_tax")):
+			invuln = 10
+			_spawn_hit("slide", Vector2(70, 28), 0.2, Vector2(48 * facing, -8))
+	var blood := get_tree().get_first_node_in_group("blood_sim")
+	if blood and blood.has_method("spray"):
+		blood.spray(global_position, "slide", float(facing))
+	_spawn_slide_clerk()
+
+
+func _spawn_slide_clerk() -> void:
+	if _slide_clerk:
+		return
+	_slide_clerk = true
+	var act := get_tree().get_first_node_in_group("run_act")
+	if act is RunAct and (act as RunAct).map_id == "raven_grid" and global_position.x > 2200.0:
+		return
+	var host := get_parent()
+	if host == null:
+		return
+	Party.spawn_row(host, {
+		"title": "Slide Clerk", "x": global_position.x + 52.0, "y": 500,
+		"home": "street", "hp": 34, "pmin": global_position.x - 120.0, "pmax": global_position.x + 220.0
+	}, 1.0)
+	Juice.toast("challenge", "SLIDE CLERK", "You billed the asphalt. He still wants you to sit.")
 
 
 func _try_vault() -> void:
@@ -855,6 +895,7 @@ func _dive() -> void:
 		hop_v = 520.0
 	else:
 		velocity.y = 520.0
+	Juice.shout(Copy.DIVE)
 	_spawn_hit("dive", Vector2(58, 44), 0.24, Vector2(20 * facing, -18 + hop))
 
 
@@ -864,6 +905,25 @@ func _on_hit_landed(kind: String, _global_pos: Vector2) -> void:
 	var rs := get_tree().get_first_node_in_group("run_state")
 	if rs and rs.has_method("has_card") and rs.has_card("steam_tax") and (kind == "heavy" or kind == "launcher"):
 		steam = minf(STEAM_MAX, steam + 8.0)
+	if kind == "dive":
+		var lift := -580.0
+		if rs != null and rs.has_method("has_card"):
+			if bool(rs.call("has_card", "dive_bounce")):
+				lift = -680.0
+		if plane == "street":
+			hop_v = lift
+			hop = minf(hop, -8.0)
+		else:
+			velocity.y = lift
+		Juice.shout(Copy.SLAM_BOUNCE)
+		Juice.named_slowmo()
+		FamilyProfile.mark_dive()
+		VoBank.dive()
+		var blood := get_tree().get_first_node_in_group("blood_sim")
+		if blood and blood.has_method("spray"):
+			blood.spray(global_position, "dive", float(facing))
+		if rs and rs.has_method("add_points"):
+			rs.add_points(role, 18, "dive")
 
 
 func _shoot() -> void:

@@ -76,6 +76,14 @@ func _ready() -> void:
 				Juice.unlock_logo("LOST AND FOUND", "A pipe for later. Tutoring can wait.", "CAMP  ·  PACK")
 			"payphone":
 				Juice.unlock_logo("PAYPHONE", "Dial City Hall. The cord is sticky.", "CAMP  ·  PHONE")
+			"water_cooler":
+				Juice.unlock_logo("WATER COOLER", "The water is free. The gossip is billed.", "CAMP  ·  COOLER")
+			"coat_check":
+				Juice.unlock_logo("COAT CHECK", "Tape on a hanger. The copay still wants a wrap.", "CAMP  ·  TAPE")
+			"time_clock":
+				Juice.unlock_logo("TIME CLOCK", "Punch in. Six gold. The shift still wants a copay.", "CAMP  ·  SHIFT")
+			"bleach_closet":
+				Juice.unlock_logo("BLEACH CLOSET", "A fizz for later. The mop still wants tuition.", "CAMP  ·  FIZZ")
 		need_refresh.emit()
 	)
 	if camp.has_signal("open_sheet"):

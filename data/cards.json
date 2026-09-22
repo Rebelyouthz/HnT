@@ -269,5 +269,59 @@
     "rarity": "rare",
     "tag": "PROP",
     "stats": { "news": "pipe" }
+  },
+  {
+    "id": "oil_policy",
+    "name": "OIL POLICY",
+    "blurb": "Oil drums blast wider. SoR4 threw bodies at barrels. We bill the crater.",
+    "fixed": false,
+    "rarity": "epic",
+    "tag": "PROP",
+    "stats": { "blast": "+36" }
+  },
+  {
+    "id": "pole_vault",
+    "name": "POLE VAULT",
+    "blurb": "Streetlight swings launch higher. Sunset Overdrive rented the lamp. Tutoring can wait.",
+    "fixed": false,
+    "rarity": "uncommon",
+    "tag": "PARKOUR",
+    "stats": { "pole": "+100" }
+  },
+  {
+    "id": "dive_bounce",
+    "name": "DIVE BOUNCE",
+    "blurb": "A dive that lands hops you back up. Sunset Overdrive slam bounce, billed as falling with intent.",
+    "fixed": false,
+    "rarity": "rare",
+    "tag": "AIR",
+    "stats": { "dive": "bounce" }
+  },
+  {
+    "id": "hood_hop",
+    "name": "HOOD HOP",
+    "blurb": "Car hoods bounce higher. Sunset Overdrive rented the bumper. We stole the copay.",
+    "fixed": false,
+    "rarity": "uncommon",
+    "tag": "PARKOUR",
+    "stats": { "hood": "+100" }
+  },
+  {
+    "id": "steam_lid",
+    "name": "STEAM LID",
+    "blurb": "Pop a manhole and nearby punks eat the steam. SoR4 hid knives under crates.",
+    "fixed": false,
+    "rarity": "rare",
+    "tag": "PROP",
+    "stats": { "manhole": "chip" }
+  },
+  {
+    "id": "slide_tax",
+    "name": "SLIDE TAX",
+    "blurb": "Slides last longer and cut a second invoice. Vector went under. We billed the asphalt.",
+    "fixed": false,
+    "rarity": "rare",
+    "tag": "STREET",
+    "stats": { "slide": "+4" }
   }
 ]

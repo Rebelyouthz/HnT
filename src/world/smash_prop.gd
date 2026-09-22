@@ -5,6 +5,7 @@ extends Area2D
 
 @export var kind := "booth"
 var hp := 2
+var exploding := false
 var _box: Polygon2D
 var _lab: Label
 
@@ -59,6 +60,12 @@ func _ready() -> void:
 		"vending":
 			_box.color = Color(0.62, 0.12, 0.18, 0.95)
 			hp = 3
+		"barrel":
+			_box.color = Color(0.62, 0.28, 0.08, 0.95)
+			hp = 2
+		"manhole":
+			_box.color = Color(0.28, 0.3, 0.34, 0.95)
+			hp = 2
 		_:
 			_box.color = Color(0.42, 0.28, 0.14, 0.95)
 	_box.polygon = PackedVector2Array([
@@ -71,6 +78,14 @@ func _ready() -> void:
 	elif kind == "mail":
 		_box.polygon = PackedVector2Array([
 			Vector2(-16, -48), Vector2(16, -48), Vector2(18, 0), Vector2(-18, 0)
+		])
+	elif kind == "barrel":
+		_box.polygon = PackedVector2Array([
+			Vector2(-18, -58), Vector2(18, -58), Vector2(20, 0), Vector2(-20, 0)
+		])
+	elif kind == "manhole":
+		_box.polygon = PackedVector2Array([
+			Vector2(-24, -16), Vector2(24, -16), Vector2(28, 0), Vector2(-28, 0)
 		])
 	add_child(_box)
 	var strap := Polygon2D.new()
@@ -104,6 +119,9 @@ func take_hit(hit: String, from: Node) -> void:
 			if rs0 and rs0.has_method("add_points"):
 				rs0.add_points((from as Fighter).role, 4, "prop")
 		return
+	if kind == "barrel":
+		_explode(from)
+		return
 	hp -= 1
 	Juice.sparks(global_position + Vector2(0, -28))
 	Juice.pulse_shake(2.5)
@@ -132,6 +150,10 @@ func _pop(from: Node) -> void:
 	elif kind == "hydrant":
 		pts = 30
 	elif kind == "vending":
+		pts = 34
+	elif kind == "barrel":
+		pts = 44
+	elif kind == "manhole":
 		pts = 34
 	if from is Fighter and rs and rs.has_method("add_points"):
 		rs.add_points((from as Fighter).role, pts, "smash")
@@ -186,9 +208,30 @@ func _pop(from: Node) -> void:
 		_drop_kind(host, "can")
 		Juice.toast("reward", "VENDING", "A can. A tutoring bar packed itself. The machine still wants a copay.")
 		VoBank.fridge()
+	elif kind == "barrel":
+		_explode(from)
+		return
+	elif kind == "manhole":
+		FamilyProfile.mark_manhole()
+		_spawn_geyser(host)
+		_launch_near()
+		_spawn_named(host, "Steam Mole", 30, "street")
+		Juice.toast("challenge", "STEAM MOLE", "You popped the lid. The underpass billed the steam.")
+		Juice.unlock_logo("MANHOLE", "SoR4 hid knives under crates. We hid a copay under iron.", "NAMED PROP")
+		VoBank.manhole()
+		var steam := false
+		if rs != null and rs.has_method("has_card"):
+			steam = bool(rs.call("has_card", "steam_lid"))
+		if steam:
+			for n in get_tree().get_nodes_in_group("enemies"):
+				if not (n is Punk) or not is_instance_valid(n):
+					continue
+				if global_position.distance_to((n as Node2D).global_position) > 78.0:
+					continue
+				(n as Punk).take_hit("light", from if from != null else self)
 	var blood := get_tree().get_first_node_in_group("blood_sim")
 	if blood and blood.has_method("spray"):
-		blood.spray(global_position, "smash", 1.0)
+		blood.spray(global_position, "manhole" if kind == "manhole" else "smash", 1.0)
 	queue_free()
 
 
@@ -209,6 +252,17 @@ func _drop_kind(host: Node, style: String) -> void:
 	wp.kind = style
 	wp.global_position = global_position + Vector2(0, -18)
 	host.add_child(wp)
+
+
+func _launch_near() -> void:
+	for n in get_tree().get_nodes_in_group("players"):
+		if not (n is Fighter) or not is_instance_valid(n):
+			continue
+		var f: Fighter = n
+		if global_position.distance_to(f.global_position) > 72.0:
+			continue
+		f.hop_v = -620.0
+		f.hop = minf(f.hop, -4.0)
 
 
 func _spawn_geyser(host: Node) -> void:
@@ -232,6 +286,57 @@ func _spawn_named(host: Node, title: String, hp: int, home: String) -> void:
 		"title": title, "x": global_position.x + 36.0, "y": 500 if home == "street" else 430,
 		"home": home, "hp": hp, "pmin": global_position.x - 140.0, "pmax": global_position.x + 200.0
 	}, 1.0)
+
+
+func _explode(from: Node) -> void:
+	if exploding or not is_inside_tree():
+		return
+	exploding = true
+	FamilyProfile.mark_smash()
+	FamilyProfile.mark_barrel()
+	var rad := 96.0
+	var rs := get_tree().get_first_node_in_group("run_state")
+	if rs != null and rs.has_method("has_card"):
+		if bool(rs.call("has_card", "oil_policy")):
+			rad = 132.0
+	var host := get_parent()
+	if from is Fighter and rs and rs.has_method("add_points"):
+		rs.add_points((from as Fighter).role, 44, "smash")
+	Juice.boom(global_position)
+	VoBank.barrel()
+	Juice.unlock_logo("OIL DRUM", "SoR4 threw bodies into barrels. We bill the crater.", "NAMED PROP")
+	var blood := get_tree().get_first_node_in_group("blood_sim")
+	if blood and blood.has_method("spray"):
+		blood.spray(global_position, "barrel", 0.0)
+	for n in get_tree().get_nodes_in_group("enemies"):
+		if not (n is Punk) or not is_instance_valid(n):
+			continue
+		if global_position.distance_to((n as Node2D).global_position) > rad:
+			continue
+		(n as Punk).take_hit("heavy", from if from != null else self)
+	for n in get_tree().get_nodes_in_group("players"):
+		if not (n is Fighter) or not is_instance_valid(n):
+			continue
+		var f: Fighter = n
+		if global_position.distance_to(f.global_position) > 58.0:
+			continue
+		if f.blocking or f.invuln > 0:
+			continue
+		f.hp = maxi(1, f.hp - 8)
+		Juice.flash_red(f.visual, 2)
+	var others: Array = get_tree().get_nodes_in_group("smashables")
+	for n in others:
+		if n == self or not (n is SmashProp) or not is_instance_valid(n):
+			continue
+		var other: SmashProp = n
+		if other.kind != "barrel":
+			continue
+		if global_position.distance_to(other.global_position) > rad:
+			continue
+		other._explode(from)
+	_spawn_named(host, "Oil Ghost", 32, "street")
+	Juice.toast("challenge", "OIL GHOST", "You popped the drum. The slick learned to throw invoices.")
+	queue_free()
 
 
 func _spawn_witch(host: Node) -> void:

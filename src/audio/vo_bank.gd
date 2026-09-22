@@ -82,6 +82,42 @@ static func phone() -> void:
 	_play("res://assets/audio/vo_dad_phone.wav", "res://assets/audio/vo_dad_fax.wav")
 
 
+static func barrel() -> void:
+	_play("res://assets/audio/vo_dad_barrel.wav", "res://assets/audio/vo_dad_clash.wav")
+
+
+static func pole() -> void:
+	_play("res://assets/audio/vo_son_pole.wav", "res://assets/audio/vo_son_awning.wav")
+
+
+static func dive() -> void:
+	_play("res://assets/audio/vo_dad_dive.wav", "res://assets/audio/vo_dad_revenge.wav")
+
+
+static func cooler() -> void:
+	_play("res://assets/audio/vo_mayor_cooler.wav", "res://assets/audio/vo_mayor_tip.wav")
+
+
+static func manhole() -> void:
+	_play("res://assets/audio/vo_dad_manhole.wav", "res://assets/audio/vo_dad_barrel.wav")
+
+
+static func hood() -> void:
+	_play("res://assets/audio/vo_son_hood.wav", "res://assets/audio/vo_son_pole.wav")
+
+
+static func slide() -> void:
+	_play("res://assets/audio/vo_dad_slide.wav", "res://assets/audio/vo_dad_dive.wav")
+
+
+static func clock() -> void:
+	_play("res://assets/audio/vo_mayor_clock.wav", "res://assets/audio/vo_mayor_cooler.wav")
+
+
+static func bleach() -> void:
+	_play("res://assets/audio/vo_mayor_bleach.wav", "res://assets/audio/vo_mayor_cooler.wav")
+
+
 static func _play(prefer: String, fallback: String) -> void:
 	for path in [prefer.get_basename() + ".mp3", prefer, fallback.get_basename() + ".mp3", fallback]:
 		if ResourceLoader.exists(path):

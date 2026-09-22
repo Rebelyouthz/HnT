@@ -23,7 +23,19 @@ func _ready() -> void:
 	monitoring = true
 	var cs := CollisionShape2D.new()
 	var r := RectangleShape2D.new()
-	r.size = Vector2(140, 70) if kind == "hill" else (Vector2(110, 48) if kind == "awning" else Vector2(80, 70))
+	match kind:
+		"hill":
+			r.size = Vector2(140, 70)
+		"awning":
+			r.size = Vector2(110, 48)
+		"pole":
+			r.size = Vector2(36, 90)
+		"hood":
+			r.size = Vector2(96, 42)
+		"bench":
+			r.size = Vector2(100, 36)
+		_:
+			r.size = Vector2(80, 70)
 	cs.shape = r
 	add_child(cs)
 	var col := Color(0.55, 0.42, 0.22, 0.9)
@@ -54,6 +66,12 @@ func _ready() -> void:
 			col = Color(0.62, 0.58, 0.42, 0.95)
 		"geyser":
 			col = Color(0.35, 0.72, 0.88, 0.9)
+		"pole":
+			col = Color(0.78, 0.62, 0.22, 0.95)
+		"hood":
+			col = Color(0.16, 0.22, 0.42, 0.95)
+		"bench":
+			col = Color(0.42, 0.32, 0.22, 0.95)
 	var poly := Polygon2D.new()
 	poly.color = col
 	if kind == "hill":
@@ -100,6 +118,18 @@ func _ready() -> void:
 		poly.polygon = PackedVector2Array([
 			Vector2(-10, 18), Vector2(10, 18), Vector2(22, -28), Vector2(-22, -28)
 		])
+	elif kind == "pole":
+		poly.polygon = PackedVector2Array([
+			Vector2(-6, -52), Vector2(6, -52), Vector2(8, 24), Vector2(-8, 24)
+		])
+	elif kind == "hood":
+		poly.polygon = PackedVector2Array([
+			Vector2(-46, 4), Vector2(40, -10), Vector2(46, 18), Vector2(-40, 20)
+		])
+	elif kind == "bench":
+		poly.polygon = PackedVector2Array([
+			Vector2(-48, 6), Vector2(48, 6), Vector2(44, 20), Vector2(-44, 20)
+		])
 	else:
 		poly.polygon = PackedVector2Array([
 			Vector2(-28, 8), Vector2(28, 8), Vector2(22, 20), Vector2(-22, 20)
@@ -110,7 +140,7 @@ func _ready() -> void:
 	lab.size = Vector2(140, 20)
 	lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lab.text = kind.to_upper()
-	UiKit.apply_label(lab, 13, Palette.LEMON if kind in ["pad", "escape", "drop", "dumpster", "billboard", "wallrun", "grind", "cart", "awning", "scaffold", "geyser"] else Palette.MUTED)
+	UiKit.apply_label(lab, 13, Palette.LEMON if kind in ["pad", "escape", "drop", "dumpster", "billboard", "wallrun", "grind", "cart", "awning", "scaffold", "geyser", "pole", "hood", "bench"] else Palette.MUTED)
 	add_child(lab)
 
 
@@ -191,6 +221,10 @@ func _touch(f: Fighter) -> void:
 				Juice.named_slowmo()
 				KitSfx.hit(f.role, "dash")
 				FamilyProfile.mark_trick()
+				if not _acrobat:
+					_acrobat = true
+					_spawn_named("Wall Kid", 34, "roof")
+					Juice.toast("challenge", "WALL KID", "You rented the brick. He kicks the invoice.")
 		"dumpster":
 			if _used <= 0.0 and (f._just("jump") or f._street_grounded()):
 				_used = 0.4
@@ -218,6 +252,13 @@ func _touch(f: Fighter) -> void:
 			f.hop_v = 0.0
 			f.velocity.x = float(f.facing) * 380.0
 			Juice.keep_combo()
+			if _used <= 0.0:
+				_used = 0.4
+				FamilyProfile.mark_grind()
+				if not _acrobat:
+					_acrobat = true
+					_spawn_named("Rail Rat", 36, "street")
+					Juice.toast("challenge", "RAIL RAT", "You rented the rail. He wants a quote for the sparks.")
 			if f._just("jump"):
 				f.hop_v = -540.0
 				f.trick_boost = 1.16
@@ -289,9 +330,85 @@ func _touch(f: Fighter) -> void:
 				Juice.geyser(global_position)
 				KitSfx.hit(f.role, "jump")
 				FamilyProfile.mark_trick()
+		"pole":
+			if _used <= 0.0 and (f._just("jump") or f._just("special") or f.hop < -8.0):
+				_used = 0.48
+				var lift := -680.0
+				var rs := get_tree().get_first_node_in_group("run_state")
+				if rs != null and rs.has_method("has_card"):
+					if bool(rs.call("has_card", "pole_vault")):
+						lift = -780.0
+				f.hop_v = lift
+				f.hop = -8.0
+				f.velocity.x = float(f.facing) * 420.0
+				f.trick_boost = 1.16
+				f.trick_t = 1.5
+				Juice.shout(Copy.POLE)
+				Juice.named_slowmo()
+				Juice.play("res://assets/audio/pole.wav" if ResourceLoader.exists("res://assets/audio/pole.wav") else "res://assets/audio/dash.wav")
+				KitSfx.hit(f.role, "jump")
+				VoBank.pole()
+				Juice.unlock_logo("POLE SWING", "Sunset Overdrive rented the lamp. We stole the copay.", "NAMED TRICK  ·  POLE")
+				FamilyProfile.mark_pole()
+				FamilyProfile.mark_trick()
+				if rs and rs.has_method("add_points"):
+					rs.add_points(f.role, 36, "swing")
+				if not _acrobat:
+					_acrobat = true
+					_spawn_named("Pole Clerk", 40, "street")
+					Juice.toast("challenge", "POLE CLERK", "You swung the lamp. He bills the orbit.")
+		"hood":
+			if _used <= 0.0 and (f._just("jump") or f.hop < -8.0 or f._street_grounded()):
+				_used = 0.4
+				var lift := -720.0
+				var rs := get_tree().get_first_node_in_group("run_state")
+				if rs != null and rs.has_method("has_card"):
+					if bool(rs.call("has_card", "hood_hop")):
+						lift = -820.0
+				f.hop_v = lift
+				f.hop = -6.0
+				f.velocity.x = float(f.facing) * 320.0
+				f.trick_boost = 1.14
+				f.trick_t = 1.3
+				Juice.shout(Copy.HOOD)
+				Juice.named_slowmo()
+				Juice.hood(global_position)
+				KitSfx.hit(f.role, "jump")
+				VoBank.hood()
+				Juice.unlock_logo("HOOD BOUNCE", "Sunset Overdrive bounced cars. We bounce a copay on a hood.", "NAMED TRICK  ·  HOOD")
+				FamilyProfile.mark_hood()
+				FamilyProfile.mark_trick()
+				if rs and rs.has_method("add_points"):
+					rs.add_points(f.role, 32, "swing")
+				if not _acrobat:
+					_acrobat = true
+					_spawn_named("Hood Hopper", 38, "street")
+					Juice.toast("challenge", "HOOD HOPPER", "You rented the bumper. He wants a quote for the paint.")
+		"bench":
+			if _used <= 0.0 and (f._just("jump") or f._just("dash") or f._street_grounded()):
+				_used = 0.32
+				f.hop_v = -480.0
+				f.hop = -4.0
+				f.velocity.x = float(f.facing) * 400.0
+				f.trick_boost = 1.1
+				f.trick_t = 1.05
+				Juice.shout(Copy.BENCH)
+				Juice.play("res://assets/audio/bench.wav" if ResourceLoader.exists("res://assets/audio/bench.wav") else "res://assets/audio/dash.wav")
+				KitSfx.hit(f.role, "dash")
+				FamilyProfile.mark_bench()
+				FamilyProfile.mark_trick()
+				if not _acrobat:
+					_acrobat = true
+					_spawn_named("Bench Clerk", 32, "street")
+					Juice.toast("challenge", "BENCH CLERK", "You vaulted intake. He still wants you to sit.")
 
 
 func _spawn_acrobat() -> void:
+	_spawn_named("Awning Acrobat", 34, "roof")
+	Juice.toast("challenge", "AWNING ACROBAT", "You bounced the storefront. She wants a quote for the canvas.")
+
+
+func _spawn_named(title: String, hp: int, home: String) -> void:
 	var host := get_parent()
 	if host == null:
 		return
@@ -299,7 +416,6 @@ func _spawn_acrobat() -> void:
 	if act is RunAct and (act as RunAct).map_id == "raven_grid" and global_position.x > 2200.0:
 		return
 	Party.spawn_row(host, {
-		"title": "Awning Acrobat", "x": global_position.x + 48.0, "y": 430,
-		"home": "roof", "hp": 34, "pmin": global_position.x - 120.0, "pmax": global_position.x + 220.0
+		"title": title, "x": global_position.x + 48.0, "y": 430 if home == "roof" else 500,
+		"home": home, "hp": hp, "pmin": global_position.x - 120.0, "pmax": global_position.x + 220.0
 	}, 1.0)
-	Juice.toast("challenge", "AWNING ACROBAT", "You bounced the storefront. She wants a quote for the canvas.")

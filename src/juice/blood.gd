@@ -79,6 +79,24 @@ func spray(at: Vector2, kind: String, dir: float) -> void:
 	elif kind == "geyser":
 		n = 20
 		speed = 240.0
+	elif kind == "barrel":
+		n = 18
+		speed = 300.0
+		cone = true
+	elif kind == "dive":
+		n = 14
+		speed = 240.0
+		cone = true
+	elif kind == "manhole":
+		n = 16
+		speed = 220.0
+	elif kind == "hood":
+		n = 10
+		speed = 180.0
+	elif kind == "slide":
+		n = 12
+		speed = 200.0
+		cone = true
 	var launched := 0
 	for drop in _drops:
 		if drop["active"]:

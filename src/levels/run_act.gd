@@ -83,21 +83,21 @@ func _place_parkour() -> void:
 
 func _place_toys() -> void:
 	var rows: Dictionary = {
-		"dock_street": [[880.0, 500.0, "dumpster"], [1100.0, 500.0, "awning"], [1320.0, 500.0, "cart"], [1680.0, 500.0, "billboard"], [2000.0, 500.0, "scaffold"], [2480.0, 500.0, "grind"]],
-		"fire_escapes": [[800.0, 248.0, "wallrun"], [1180.0, 248.0, "awning"], [1680.0, 500.0, "dumpster"]],
-		"neon_exchange": [[920.0, 500.0, "billboard"], [1180.0, 500.0, "awning"], [1400.0, 500.0, "cart"], [1760.0, 500.0, "grind"]],
-		"rail_bridge": [[1100.0, 500.0, "grind"], [1480.0, 500.0, "scaffold"], [1900.0, 500.0, "dumpster"]],
-		"city_hall": [[720.0, 500.0, "dumpster"], [980.0, 500.0, "awning"], [1280.0, 500.0, "cart"]],
-		"invoice_pier": [[1200.0, 500.0, "grind"], [1480.0, 500.0, "awning"], [1680.0, 500.0, "cart"], [2200.0, 500.0, "billboard"]],
-		"processing_floor": [[980.0, 500.0, "wallrun"], [1400.0, 500.0, "scaffold"]],
+		"dock_street": [[880.0, 500.0, "dumpster"], [1000.0, 500.0, "bench"], [1100.0, 500.0, "awning"], [1320.0, 500.0, "cart"], [1420.0, 500.0, "hood"], [1540.0, 500.0, "pole"], [1680.0, 500.0, "billboard"], [2000.0, 500.0, "scaffold"], [2480.0, 500.0, "grind"]],
+		"fire_escapes": [[800.0, 248.0, "wallrun"], [1180.0, 248.0, "awning"], [1320.0, 500.0, "bench"], [1500.0, 500.0, "pole"], [1680.0, 500.0, "dumpster"], [1900.0, 500.0, "hood"]],
+		"neon_exchange": [[920.0, 500.0, "billboard"], [1040.0, 500.0, "bench"], [1180.0, 500.0, "awning"], [1400.0, 500.0, "cart"], [1580.0, 500.0, "pole"], [1760.0, 500.0, "grind"], [2000.0, 500.0, "hood"]],
+		"rail_bridge": [[1100.0, 500.0, "grind"], [1280.0, 500.0, "hood"], [1480.0, 500.0, "scaffold"], [1680.0, 500.0, "pole"], [1900.0, 500.0, "dumpster"], [2100.0, 500.0, "bench"]],
+		"city_hall": [[720.0, 500.0, "dumpster"], [860.0, 500.0, "bench"], [980.0, 500.0, "awning"], [1280.0, 500.0, "cart"], [1480.0, 500.0, "hood"], [1600.0, 500.0, "pole"]],
+		"invoice_pier": [[1200.0, 500.0, "grind"], [1360.0, 500.0, "bench"], [1480.0, 500.0, "awning"], [1680.0, 500.0, "cart"], [1900.0, 500.0, "pole"], [2040.0, 500.0, "hood"], [2200.0, 500.0, "billboard"]],
+		"processing_floor": [[980.0, 500.0, "wallrun"], [1200.0, 500.0, "hood"], [1400.0, 500.0, "scaffold"], [1700.0, 500.0, "pole"], [1900.0, 500.0, "bench"]],
 		"tutorial_alley": [[860.0, 500.0, "dumpster"]],
-		"intake_lot": [[900.0, 500.0, "dumpster"], [1200.0, 500.0, "awning"], [1480.0, 500.0, "cart"]],
-		"group_circle": [[880.0, 500.0, "grind"], [1280.0, 500.0, "scaffold"]],
-		"waiting_room": [[1100.0, 500.0, "billboard"], [1500.0, 500.0, "awning"]],
-		"copay_orchard": [[1100.0, 500.0, "dumpster"], [1400.0, 500.0, "awning"], [1680.0, 500.0, "cart"], [2480.0, 500.0, "grind"]],
-		"sleet_hour": [[1100.0, 500.0, "grind"], [1480.0, 500.0, "awning"], [1900.0, 500.0, "dumpster"]],
-		"raven_grid": [[1080.0, 500.0, "awning"], [1200.0, 500.0, "dumpster"], [1560.0, 500.0, "cart"], [1900.0, 500.0, "grind"], [2100.0, 500.0, "scaffold"]],
-		"ledger_dive": [[1100.0, 500.0, "grind"], [1480.0, 500.0, "scaffold"], [2000.0, 500.0, "dumpster"]]
+		"intake_lot": [[900.0, 500.0, "dumpster"], [1080.0, 500.0, "bench"], [1200.0, 500.0, "awning"], [1480.0, 500.0, "cart"], [1700.0, 500.0, "pole"], [1900.0, 500.0, "hood"]],
+		"group_circle": [[880.0, 500.0, "grind"], [1000.0, 500.0, "bench"], [1100.0, 500.0, "pole"], [1280.0, 500.0, "scaffold"], [1480.0, 500.0, "hood"]],
+		"waiting_room": [[1100.0, 500.0, "billboard"], [1300.0, 500.0, "hood"], [1500.0, 500.0, "awning"], [1750.0, 500.0, "pole"], [1900.0, 500.0, "bench"]],
+		"copay_orchard": [[1100.0, 500.0, "dumpster"], [1280.0, 500.0, "bench"], [1400.0, 500.0, "awning"], [1680.0, 500.0, "cart"], [1800.0, 500.0, "hood"], [2000.0, 500.0, "pole"], [2480.0, 500.0, "grind"]],
+		"sleet_hour": [[1100.0, 500.0, "grind"], [1300.0, 500.0, "hood"], [1480.0, 500.0, "awning"], [1680.0, 500.0, "pole"], [1900.0, 500.0, "dumpster"], [2100.0, 500.0, "bench"]],
+		"raven_grid": [[980.0, 500.0, "bench"], [1080.0, 500.0, "awning"], [1200.0, 500.0, "dumpster"], [1380.0, 500.0, "pole"], [1560.0, 500.0, "cart"], [1680.0, 500.0, "hood"], [1900.0, 500.0, "grind"], [2100.0, 500.0, "scaffold"]],
+		"ledger_dive": [[1100.0, 500.0, "grind"], [1280.0, 500.0, "hood"], [1480.0, 500.0, "scaffold"], [1700.0, 500.0, "pole"], [2000.0, 500.0, "dumpster"], [2200.0, 500.0, "bench"]]
 	}
 	var list: Variant = rows.get(map_id, [])
 	if typeof(list) != TYPE_ARRAY:
@@ -113,21 +113,21 @@ func _place_toys() -> void:
 
 func _place_smash() -> void:
 	var rows: Dictionary = {
-		"dock_street": [[640.0, "booth"], [1100.0, "hydrant"], [1480.0, "kiosk"], [1760.0, "news"], [1960.0, "cop_car"], [2320.0, "dumpster"]],
-		"fire_escapes": [[700.0, "booth"], [1200.0, "vending"], [1900.0, "fridge"]],
-		"neon_exchange": [[800.0, "billboard"], [1100.0, "hydrant"], [1600.0, "kiosk"], [2000.0, "mail"], [2400.0, "booth"]],
-		"rail_bridge": [[900.0, "dumpster"], [1400.0, "news"], [2000.0, "kiosk"]],
-		"city_hall": [[620.0, "booth"], [900.0, "mail"], [1100.0, "cop_car"], [1400.0, "kiosk"]],
-		"invoice_pier": [[1100.0, "kiosk"], [1500.0, "hydrant"], [2000.0, "booth"]],
-		"processing_floor": [[800.0, "fridge"], [1200.0, "vending"], [1800.0, "kiosk"]],
+		"dock_street": [[640.0, "booth"], [860.0, "barrel"], [1100.0, "hydrant"], [1240.0, "manhole"], [1480.0, "kiosk"], [1760.0, "news"], [1960.0, "cop_car"], [2320.0, "dumpster"]],
+		"fire_escapes": [[700.0, "booth"], [1000.0, "manhole"], [1200.0, "vending"], [1500.0, "barrel"], [1900.0, "fridge"]],
+		"neon_exchange": [[800.0, "billboard"], [1100.0, "hydrant"], [1300.0, "barrel"], [1600.0, "kiosk"], [1800.0, "manhole"], [2000.0, "mail"], [2400.0, "booth"]],
+		"rail_bridge": [[900.0, "dumpster"], [1180.0, "manhole"], [1400.0, "news"], [1650.0, "barrel"], [2000.0, "kiosk"]],
+		"city_hall": [[620.0, "booth"], [900.0, "mail"], [1100.0, "cop_car"], [1280.0, "barrel"], [1400.0, "kiosk"], [1540.0, "manhole"]],
+		"invoice_pier": [[1100.0, "kiosk"], [1300.0, "manhole"], [1500.0, "hydrant"], [1700.0, "barrel"], [2000.0, "booth"]],
+		"processing_floor": [[800.0, "fridge"], [1000.0, "manhole"], [1200.0, "vending"], [1500.0, "barrel"], [1800.0, "kiosk"]],
 		"tutorial_alley": [[780.0, "booth"]],
-		"intake_lot": [[700.0, "dumpster"], [1200.0, "news"], [1600.0, "fridge"]],
-		"group_circle": [[900.0, "kiosk"], [1300.0, "mail"]],
-		"waiting_room": [[1000.0, "booth"], [1400.0, "vending"], [1800.0, "fridge"]],
-		"copay_orchard": [[980.0, "dumpster"], [1400.0, "hydrant"], [1880.0, "kiosk"]],
-		"sleet_hour": [[860.0, "booth"], [1300.0, "mail"], [1700.0, "fridge"]],
-		"raven_grid": [[640.0, "booth"], [820.0, "hydrant"], [980.0, "cop_car"], [1280.0, "billboard"], [1500.0, "mail"], [1760.0, "kiosk"], [2040.0, "news"]],
-		"ledger_dive": [[880.0, "fridge"], [1400.0, "vending"], [1900.0, "kiosk"]]
+		"intake_lot": [[700.0, "dumpster"], [1000.0, "manhole"], [1200.0, "news"], [1400.0, "barrel"], [1600.0, "fridge"]],
+		"group_circle": [[900.0, "kiosk"], [1100.0, "barrel"], [1300.0, "mail"], [1500.0, "manhole"]],
+		"waiting_room": [[1000.0, "booth"], [1200.0, "manhole"], [1400.0, "vending"], [1600.0, "barrel"], [1800.0, "fridge"]],
+		"copay_orchard": [[980.0, "dumpster"], [1200.0, "manhole"], [1400.0, "hydrant"], [1600.0, "barrel"], [1880.0, "kiosk"]],
+		"sleet_hour": [[860.0, "booth"], [1100.0, "barrel"], [1300.0, "mail"], [1500.0, "manhole"], [1700.0, "fridge"]],
+		"raven_grid": [[640.0, "booth"], [820.0, "hydrant"], [980.0, "cop_car"], [1120.0, "barrel"], [1280.0, "billboard"], [1500.0, "mail"], [1760.0, "kiosk"], [1880.0, "manhole"], [2040.0, "news"]],
+		"ledger_dive": [[880.0, "fridge"], [1100.0, "manhole"], [1400.0, "vending"], [1600.0, "barrel"], [1900.0, "kiosk"]]
 	}
 	var list: Variant = rows.get(map_id, [])
 	if typeof(list) != TYPE_ARRAY:

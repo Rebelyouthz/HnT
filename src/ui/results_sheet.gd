@@ -75,7 +75,11 @@ func _ready() -> void:
 		{"name": "SMASH", "value": str(int(FamilyProfile.data.get("smash_kills", 0))), "color": Palette.EDGE},
 		{"name": "PARRY", "value": str(int(FamilyProfile.data.get("parries", 0))), "color": Palette.LEMON},
 		{"name": "CATCH", "value": str(int(FamilyProfile.data.get("catches", 0))), "color": Palette.EDGE},
-		{"name": "CLASH", "value": str(int(FamilyProfile.data.get("clashes", 0))), "color": Palette.BRICK}
+		{"name": "CLASH", "value": str(int(FamilyProfile.data.get("clashes", 0))), "color": Palette.BRICK},
+		{"name": "DRUM", "value": str(int(FamilyProfile.data.get("barrels", 0))), "color": Palette.BRICK},
+		{"name": "DIVE", "value": str(int(FamilyProfile.data.get("dives", 0))), "color": Palette.LEMON},
+		{"name": "HOOD", "value": str(int(FamilyProfile.data.get("hoods", 0))), "color": Palette.LEMON},
+		{"name": "SLIDE", "value": str(int(FamilyProfile.data.get("slides", 0))), "color": Palette.EDGE}
 	]))
 	var grant := _grant_xp(total)
 	_xp_lab = Label.new()

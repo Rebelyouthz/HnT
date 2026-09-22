@@ -383,5 +383,115 @@
     "gold": 36,
     "gems": 2,
     "rarity": "epic"
+  },
+  {
+    "id": "barrel_night",
+    "title": "THE DRUM WAS AN INVOICE",
+    "blurb": "Pop an oil drum. SoR4 threw bodies at barrels. We bill the crater.",
+    "need": {
+      "barrels": 1
+    },
+    "gold": 32,
+    "gems": 2,
+    "rarity": "rare"
+  },
+  {
+    "id": "pole_tourist",
+    "title": "TUTORING CAN WAIT",
+    "blurb": "Swing three streetlights. Sunset Overdrive rented the lamp. We stole the copay.",
+    "need": {
+      "poles": 3
+    },
+    "gold": 25,
+    "gems": 1,
+    "rarity": "uncommon"
+  },
+  {
+    "id": "grind_filed",
+    "title": "SPARKS ON THE RAIL",
+    "blurb": "Ride three grinds. The Rail Rat still wants a quote.",
+    "need": {
+      "grinds": 3
+    },
+    "gold": 25,
+    "gems": 1,
+    "rarity": "uncommon"
+  },
+  {
+    "id": "cooler_night",
+    "title": "THE WATER IS FREE",
+    "blurb": "Drink the water cooler once. Gossip is billed. Steam packs itself.",
+    "need": {
+      "coolers": 1
+    },
+    "gold": 12,
+    "gems": 1,
+    "rarity": "common"
+  },
+  {
+    "id": "dive_class",
+    "title": "FALLING WITH INTENT",
+    "blurb": "Land three dives. Bounce optional. The clipboard still wants a copay.",
+    "need": {
+      "dives": 3
+    },
+    "gold": 30,
+    "gems": 2,
+    "rarity": "rare"
+  },
+  {
+    "id": "hood_night",
+    "title": "CARS ARE TRAMPOLINES",
+    "blurb": "Bounce three hoods. Sunset Overdrive rented the bumper. Tutoring can wait.",
+    "need": {
+      "hoods": 3
+    },
+    "gold": 25,
+    "gems": 1,
+    "rarity": "uncommon"
+  },
+  {
+    "id": "steam_night",
+    "title": "THE LID WAS AN INVOICE",
+    "blurb": "Pop a manhole. Steam bills the underpass. The Mole still wants a quote.",
+    "need": {
+      "manholes": 1
+    },
+    "gold": 32,
+    "gems": 2,
+    "rarity": "rare"
+  },
+  {
+    "id": "slide_class",
+    "title": "ASPHALT WITH INTENT",
+    "blurb": "Slide three times. Vector went under. We billed the clerk.",
+    "need": {
+      "slides": 3
+    },
+    "gold": 28,
+    "gems": 2,
+    "rarity": "rare"
+  },
+  {
+    "id": "clock_night",
+    "title": "PUNCHED IN, BILLED OUT",
+    "blurb": "Punch the time clock once. Six gold. The shift still wants a copay.",
+    "need": {
+      "clocks": 1
+    },
+    "gold": 12,
+    "gems": 1,
+    "rarity": "common"
+  },
+  {
+    "id": "bleach_night",
+    "title": "THE CLOSET PACKED A FIZZ",
+    "blurb": "Open the bleach closet once. Steam packs itself. The mop still wants tuition.",
+    "need": {
+      "bleaches": 1
+    },
+    "gold": 12,
+    "gems": 1,
+    "rarity": "common"
   }
 ]

@@ -790,6 +790,74 @@ func geyser(at: Vector2) -> void:
 	popup_number(at + Vector2(0, -40), Copy.GEYSER, Color(0.45, 0.78, 0.92))
 
 
+func boom(at: Vector2) -> void:
+	if get_tree().get_first_node_in_group("chase_crash"):
+		pulse_shake(6.0)
+		sparks(at)
+		play("res://assets/audio/boom.wav" if ResourceLoader.exists("res://assets/audio/boom.wav") else "res://assets/audio/smash.wav")
+		popup_number(at + Vector2(0, -40), Copy.BARREL, Palette.BRICK)
+		return
+	freeze_frames(3)
+	pulse_shake(9.0)
+	var p := CPUParticles2D.new()
+	p.global_position = at
+	p.emitting = true
+	p.one_shot = true
+	p.explosiveness = 1.0
+	p.amount = 18
+	p.lifetime = 0.32
+	p.direction = Vector2(0, -1)
+	p.spread = 80.0
+	p.initial_velocity_min = 180.0
+	p.initial_velocity_max = 340.0
+	p.color = Color(0.92, 0.42, 0.12, 0.95)
+	var host := get_tree().get_first_node_in_group("dock_world")
+	if host:
+		host.add_child(p)
+	else:
+		add_child(p)
+	get_tree().create_timer(0.45, true, false, true).timeout.connect(func() -> void:
+		if is_instance_valid(p):
+			p.queue_free()
+	)
+	play("res://assets/audio/boom.wav" if ResourceLoader.exists("res://assets/audio/boom.wav") else "res://assets/audio/smash.wav")
+	popup_number(at + Vector2(0, -48), Copy.BARREL, Palette.BRICK)
+	kill_burst(at, "heavy")
+
+
+func hood(at: Vector2) -> void:
+	if get_tree().get_first_node_in_group("chase_crash"):
+		pulse_shake(3.5)
+		sparks(at)
+		play("res://assets/audio/hood.wav" if ResourceLoader.exists("res://assets/audio/hood.wav") else "res://assets/audio/dash.wav")
+		popup_number(at + Vector2(0, -36), Copy.HOOD, Palette.LEMON)
+		return
+	pulse_shake(4.5)
+	var p := CPUParticles2D.new()
+	p.global_position = at
+	p.emitting = true
+	p.one_shot = true
+	p.explosiveness = 0.88
+	p.amount = 18
+	p.lifetime = 0.28
+	p.direction = Vector2(0, -1)
+	p.spread = 42.0
+	p.initial_velocity_min = 120.0
+	p.initial_velocity_max = 240.0
+	p.color = Color(0.92, 0.78, 0.28, 0.9)
+	var host := get_tree().get_first_node_in_group("dock_world")
+	if host:
+		host.add_child(p)
+	else:
+		add_child(p)
+	get_tree().create_timer(0.42, true, false, true).timeout.connect(func() -> void:
+		if is_instance_valid(p):
+			p.queue_free()
+	)
+	play("res://assets/audio/hood.wav" if ResourceLoader.exists("res://assets/audio/hood.wav") else "res://assets/audio/dash.wav")
+	popup_number(at + Vector2(0, -40), Copy.HOOD, Palette.LEMON)
+
+
 func siren() -> void:
 	play("res://assets/audio/siren.wav" if ResourceLoader.exists("res://assets/audio/siren.wav") else "res://assets/audio/heat_up.wav")
 
