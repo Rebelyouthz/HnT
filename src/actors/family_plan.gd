@@ -4,7 +4,6 @@ extends Punk
 ## Late-act climax. Strip the armor plates first. Then SoR4-sized patterns.
 
 const BODY_HP := 720
-var plates := 4
 var phase := 0
 var stun := 0.0
 var heavies_eaten := 0
@@ -26,7 +25,9 @@ func _ready() -> void:
 	speed = 22.0
 	armored = true
 	cop = false
+	plates = 4
 	super._ready()
+	plates = 4
 	add_to_group("act_boss")
 	add_to_group("family_plan")
 	max_hp = BODY_HP

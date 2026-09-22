@@ -314,8 +314,7 @@ func _paint_boss() -> void:
 				best_hp = p.hp
 				best_max = maxi(p.max_hp, 1)
 				best_name = p.title
-				if p is FamilyPlan:
-					plates = (p as FamilyPlan).plates
+				plates = p.plates
 	if best == null:
 		_boss_wrap.visible = false
 		return
