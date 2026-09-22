@@ -6,7 +6,8 @@ signal claimed(kind: String, amount: int, line: String)
 const SAVE_PATH := "user://family.json"
 const BUILDINGS := [
 	"front_desk", "street_map", "therapy_couch", "wardrobe_cage",
-	"trophy_cabinet", "mail_slot", "bulletin_board", "compare_mirrors", "blood_fridge"
+	"trophy_cabinet", "mail_slot", "bulletin_board", "compare_mirrors", "blood_fridge",
+	"pawn_shop", "patrol_desk", "research_lab", "dojo", "workshop"
 ]
 
 var data: Dictionary = {}
@@ -36,6 +37,7 @@ func backup_to(path: String) -> void:
 
 
 func save() -> void:
+	data["last_unix"] = int(Time.get_unix_time_from_system())
 	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if f == null:
 		push_error("Could not write Family Profile")
@@ -113,7 +115,33 @@ func _defaults() -> Dictionary:
 		"loadout": {
 			"son": {"clothes": "hoodie_lemon", "hat": "headband", "shoes": "parkour_kicks"},
 			"father": {"clothes": "polo_navy", "hat": "headband", "shoes": "loafer_web"}
-		}
+		},
+		"unseen": [],
+		"frame_son": "frame_intake",
+		"frame_father": "frame_intake",
+		"banner_son": "banner_clinic",
+		"banner_father": "banner_clinic",
+		"badge_son": "",
+		"badge_father": "",
+		"owned_frames": ["frame_intake"],
+		"owned_banners": ["banner_clinic"],
+		"owned_badges": [],
+		"patrol_left": 2,
+		"patrol_day": "",
+		"patrol_until": 0,
+		"patrol_active": false,
+		"last_unix": 0,
+		"research": [],
+		"dojo": {},
+		"dojo_masters": 0,
+		"parts": { "scrap_coil": 2, "clinic_thread": 0, "invoice_ink": 0 },
+		"stomps": 0,
+		"tricks": 0,
+		"perfect_tricks": 0,
+		"patrols": 0,
+		"menu_alert": false,
+		"patrol_bank_gold": 0,
+		"patrol_bank_xp": 0
 	}
 
 
@@ -129,6 +157,9 @@ func _migrate() -> void:
 		_wear("son", "clothes", "night_tutor")
 	if str(data.get("costume_father", "default")) == "pink_slip":
 		_wear("father", "clothes", "pink_slip")
+	_roll_patrol_day()
+	sync_cosmetics(false)
+	settle_idle()
 
 
 func father_name() -> String:
@@ -180,6 +211,7 @@ func try_build(id: String) -> bool:
 	data["buildings"][id] = building_level(id) + 1
 	data["buildings_tapped"] = int(data["buildings_tapped"]) + 1
 	_bump_daily("build")
+	flag_unseen("build_%s" % id)
 	save()
 	return true
 
@@ -267,6 +299,7 @@ func _roll_daily() -> void:
 		data["daily_progress"] = 0
 		data["daily_claimed"] = []
 		data["daily_flags"] = {}
+		_roll_patrol_day()
 
 
 func unread_log_count() -> int:
@@ -402,14 +435,19 @@ func grant_account_xp(n: int) -> Dictionary:
 		data["account_level"] = int(data.get("account_level", 1)) + 1
 		data["gold"] = int(data.get("gold", 0)) + 8
 		dings += 1
+		flag_unseen("level_%d" % int(data["account_level"]))
 	save()
-	return {
+	var out := {
 		"gained": gained,
 		"xp": int(data["account_xp"]),
 		"need": account_need(),
 		"level": int(data["account_level"]),
 		"dings": dings
 	}
+	if dings > 0:
+		Juice.level_up(out)
+		sync_cosmetics(true)
+	return out
 
 
 func note_score(total: int) -> void:
@@ -510,3 +548,319 @@ func push_log(title: String, body: String) -> void:
 		"unread": true
 	})
 	save()
+
+
+func flag_unseen(id: String) -> void:
+	var u: Array = data.get("unseen", [])
+	if not u.has(id):
+		u.append(id)
+		data["unseen"] = u
+	data["menu_alert"] = true
+
+
+func peek_menu() -> void:
+	data["menu_alert"] = false
+	save()
+
+
+func has_menu_alert() -> bool:
+	return bool(data.get("menu_alert", false)) or has_unseen()
+
+
+func mark_seen(id: String) -> void:
+	var u: Array = data.get("unseen", [])
+	u.erase(id)
+	data["unseen"] = u
+	save()
+
+
+func has_unseen() -> bool:
+	return not (data.get("unseen", []) as Array).is_empty()
+
+
+func is_unseen(id: String) -> bool:
+	return (data.get("unseen", []) as Array).has(id)
+
+
+func equipped_cosmetic(role: String, kind: String) -> String:
+	return str(data.get("%s_%s" % [kind, role], ""))
+
+
+func wear_cosmetic(role: String, kind: String, id: String) -> bool:
+	var key := "owned_%ss" % kind
+	if kind == "badge":
+		key = "owned_badges"
+	var owned: Array = data.get(key, [])
+	if id != "" and not owned.has(id):
+		return false
+	data["%s_%s" % [kind, role]] = id
+	mark_seen(id)
+	save()
+	return true
+
+
+func grant_cosmetic(kind: String, id: String, shout := true) -> bool:
+	var key := "owned_frames"
+	if kind == "banner":
+		key = "owned_banners"
+	elif kind == "badge":
+		key = "owned_badges"
+	var owned: Array = data.get(key, [])
+	if owned.has(id):
+		return false
+	owned.append(id)
+	data[key] = owned
+	flag_unseen(id)
+	if shout:
+		var spec := Cosmetics.item(kind + "s" if kind != "badge" else "badges", id)
+		if kind == "badge":
+			spec = Cosmetics.item("badges", id)
+		elif kind == "frame":
+			spec = Cosmetics.item("frames", id)
+		else:
+			spec = Cosmetics.item("banners", id)
+		var title := str(spec.get("title", id))
+		Juice.unlock_logo(title, str(spec.get("blurb", "Proof. Pin it.")), "%s  ·  %s" % [kind.to_upper(), Rarity.label(str(spec.get("rarity", "common")))])
+		Rarity.juice(str(spec.get("rarity", "common")), title)
+	save()
+	return true
+
+
+func sync_cosmetics(shout := false) -> void:
+	for kind_v in ["frames", "banners", "badges"]:
+		var kind := str(kind_v)
+		var short: String = kind.substr(0, kind.length() - 1)
+		if kind == "badges":
+			short = "badge"
+		for row in Cosmetics.list_for(kind):
+			if typeof(row) != TYPE_DICTIONARY:
+				continue
+			var id := str((row as Dictionary).get("id", ""))
+			if Cosmetics.need_ok(row):
+				grant_cosmetic(short, id, shout)
+
+
+func part_n(id: String) -> int:
+	var p: Dictionary = data.get("parts", {})
+	return int(p.get(id, 0))
+
+
+func add_parts(id: String, n: int) -> void:
+	var p: Dictionary = data.get("parts", {})
+	p[id] = int(p.get(id, 0)) + n
+	data["parts"] = p
+	save()
+
+
+func spend_parts(need: Dictionary) -> bool:
+	for k in need.keys():
+		if part_n(str(k)) < int(need[k]):
+			return false
+	var p: Dictionary = data.get("parts", {})
+	for k in need.keys():
+		p[k] = int(p.get(k, 0)) - int(need[k])
+	data["parts"] = p
+	return true
+
+
+func has_research(id: String) -> bool:
+	return (data.get("research", []) as Array).has(id)
+
+
+func try_research(id: String) -> bool:
+	if has_research(id) or not is_built("research_lab"):
+		return false
+	var table: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/research.json"))
+	var spec := {}
+	for row in table:
+		if str(row.get("id", "")) == id:
+			spec = row
+			break
+	if spec.is_empty():
+		return false
+	if int(data.get("gold", 0)) < int(spec.get("gold", 0)):
+		return false
+	var need: Dictionary = spec.get("parts", {})
+	if not spend_parts(need):
+		return false
+	data["gold"] = int(data["gold"]) - int(spec.get("gold", 0))
+	(data["research"] as Array).append(id)
+	flag_unseen("research_%s" % id)
+	save()
+	Juice.unlock_logo(str(spec.get("title", id)), str(spec.get("blurb", "")), "RESEARCH  ·  %s" % Rarity.label(str(spec.get("rarity", "common"))))
+	Rarity.juice(str(spec.get("rarity", "common")), str(spec.get("title", id)))
+	return true
+
+
+func dojo_rank(id: String) -> int:
+	var d: Dictionary = data.get("dojo", {})
+	return int(d.get(id, 0))
+
+
+func try_dojo(id: String) -> bool:
+	if not is_built("dojo"):
+		return false
+	var table: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/dojo.json"))
+	var spec := {}
+	for row in table:
+		if str(row.get("id", "")) == id:
+			spec = row
+			break
+	if spec.is_empty():
+		return false
+	var rank := dojo_rank(id)
+	if rank >= 3:
+		return false
+	var costs: Array = spec.get("gold", [20, 35, 55])
+	var cost := int(costs[mini(rank, costs.size() - 1)])
+	if int(data.get("gold", 0)) < cost:
+		return false
+	data["gold"] = int(data["gold"]) - cost
+	var d: Dictionary = data.get("dojo", {})
+	d[id] = rank + 1
+	data["dojo"] = d
+	if int(d[id]) >= 3:
+		data["dojo_masters"] = int(data.get("dojo_masters", 0)) + 1
+		grant_cosmetic("badge", "badge_shaolin", true)
+	flag_unseen("dojo_%s" % id)
+	save()
+	var title := str(spec.get("title", id))
+	Juice.unlock_logo("%s  RANK %d" % [title, int(d[id])], "Shaolin billing. The move is meaner.", "MOVE  ·  RANK %d/3" % int(d[id]))
+	return true
+
+
+func _roll_patrol_day() -> void:
+	var today := Time.get_date_string_from_system()
+	if str(data.get("patrol_day", "")) != today:
+		data["patrol_day"] = today
+		data["patrol_left"] = 2
+
+
+func settle_idle() -> void:
+	_roll_patrol_day()
+	if not bool(data.get("patrol_active", false)):
+		return
+	var now := int(Time.get_unix_time_from_system())
+	var last := int(data.get("last_unix", now))
+	if last <= 0:
+		last = now
+	var until := int(data.get("patrol_until", 0))
+	var end_t := now
+	if until > 0:
+		end_t = mini(now, until)
+	var elapsed := maxi(0, end_t - last)
+	var ticks := int(elapsed / 15)
+	if ticks > 0:
+		_bank_patrol(ticks)
+
+
+func _bank_patrol(ticks: int) -> void:
+	data["patrol_bank_gold"] = int(data.get("patrol_bank_gold", 0)) + ticks
+	data["patrol_bank_xp"] = int(data.get("patrol_bank_xp", 0)) + ticks * 2
+
+
+var _idle_acc := 0.0
+
+
+func _process(delta: float) -> void:
+	if not bool(data.get("patrol_active", false)):
+		return
+	_idle_acc += delta
+	if _idle_acc < 15.0:
+		return
+	_idle_acc = 0.0
+	if patrol_ready():
+		return
+	_bank_patrol(1)
+
+
+func patrol_ready() -> bool:
+	return bool(data.get("patrol_active", false)) and int(Time.get_unix_time_from_system()) >= int(data.get("patrol_until", 0))
+
+
+func start_patrol() -> bool:
+	if not is_built("patrol_desk"):
+		return false
+	_roll_patrol_day()
+	if int(data.get("patrol_left", 0)) <= 0:
+		return false
+	if bool(data.get("patrol_active", false)) and not patrol_ready():
+		return false
+	if patrol_ready():
+		claim_patrol()
+	data["patrol_left"] = int(data["patrol_left"]) - 1
+	data["patrol_active"] = true
+	data["patrol_until"] = int(Time.get_unix_time_from_system()) + 12 * 60
+	save()
+	Juice.unlock_logo("QUICK PATROL", "Idle of the Dead energy. Ticks while you play and while the fridge is closed.", "PATROL  ·  12 MIN  ·  2×/DAY")
+	return true
+
+
+func claim_patrol() -> Dictionary:
+	if not patrol_ready():
+		return {}
+	data["patrol_active"] = false
+	data["patrols"] = int(data.get("patrols", 0)) + 1
+	var bank_g := int(data.get("patrol_bank_gold", 0))
+	var bank_x := int(data.get("patrol_bank_xp", 0))
+	data["patrol_bank_gold"] = 0
+	data["patrol_bank_xp"] = 0
+	add_gold(18 + bank_g)
+	add_parts("scrap_coil", 1)
+	var xp_n := 40 + bank_x
+	var rs := get_tree().get_first_node_in_group("run_state")
+	if rs and rs.has_method("has_card") and rs.has_card("idle_alibi"):
+		add_gold(int(round(float(18 + bank_g) * 0.5)))
+		xp_n = int(round(float(xp_n) * 1.5))
+	var xp := grant_account_xp(xp_n)
+	save()
+	Juice.unlock_logo("PATROL FILED", "The alley walked itself. Gold and XP came home.", "+%d GOLD  ·  +%d XP  ·  COIL" % [18 + bank_g, int(xp.get("gained", 40))])
+	return xp
+
+
+func mark_trick() -> void:
+	data["tricks"] = int(data.get("tricks", 0)) + 1
+	sync_cosmetics(true)
+	save()
+
+
+func mark_perfect() -> void:
+	data["perfect_tricks"] = int(data.get("perfect_tricks", 0)) + 1
+	save()
+
+
+func mark_stomp() -> void:
+	data["stomps"] = int(data.get("stomps", 0)) + 1
+	sync_cosmetics(true)
+	save()
+
+
+func try_craft(id: String) -> bool:
+	if not is_built("workshop"):
+		return false
+	var table: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/crafts.json"))
+	var spec := {}
+	for row in table:
+		if str(row.get("id", "")) == id:
+			spec = row
+			break
+	if spec.is_empty():
+		return false
+	if int(data.get("gold", 0)) < int(spec.get("gold", 0)):
+		return false
+	var need: Dictionary = spec.get("parts", {})
+	if not spend_parts(need):
+		return false
+	data["gold"] = int(data["gold"]) - int(spec.get("gold", 0))
+	var grant := str(spec.get("grant", ""))
+	if grant == "gear_hat":
+		var hat := equipped_id("son", "hat")
+		if hat != "":
+			try_upgrade_gear(hat)
+	elif grant != "" and not has_research(grant):
+		(data["research"] as Array).append(grant)
+	flag_unseen("craft_%s" % id)
+	save()
+	Juice.unlock_logo(str(spec.get("title", id)), str(spec.get("blurb", "Crafted. Filed.")), "CRAFT  ·  %s" % Rarity.label(str(spec.get("rarity", "common"))))
+	Rarity.juice(str(spec.get("rarity", "common")), str(spec.get("title", id)))
+	return true

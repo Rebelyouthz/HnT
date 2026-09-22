@@ -141,6 +141,34 @@
     "blurb": "Legendary. Heavies strip an extra plate on armored bosses. The Director hates this card.",
     "fixed": false,
     "rarity": "legendary",
-    "tag": "BOSS"
+    "tag": "BOSS",
+    "stats": { "plates": "+1 strip", "score": "+boss" }
+  },
+  {
+    "id": "named_line",
+    "name": "NAMED LINE",
+    "blurb": "Perfect tricks pay +12 and keep the speed. The coach would bill this. Unique card art.",
+    "fixed": false,
+    "rarity": "epic",
+    "tag": "PARKOUR",
+    "stats": { "trick": "+12", "speed": "keep" }
+  },
+  {
+    "id": "stomp_policy",
+    "name": "STOMP POLICY",
+    "blurb": "Face stomps score double. Brain on three is still the personality.",
+    "fixed": false,
+    "rarity": "rare",
+    "tag": "FINISH",
+    "stats": { "stomp": "x2", "blood": "more" }
+  },
+  {
+    "id": "idle_alibi",
+    "name": "IDLE ALIBI",
+    "blurb": "Legendary. Patrol banks +50% gold. Closed still counts. The alley works for you.",
+    "fixed": false,
+    "rarity": "legendary",
+    "tag": "PATROL",
+    "stats": { "idle": "+50%", "gold": "bank" }
   }
 ]

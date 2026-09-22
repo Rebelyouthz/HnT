@@ -39,6 +39,24 @@ func spray(at: Vector2, kind: String, dir: float) -> void:
 		n = 12
 		speed = 260.0
 		cone = true
+	elif kind == "stomp1":
+		n = 10
+		speed = 160.0
+	elif kind == "stomp2":
+		n = 16
+		speed = 220.0
+		cone = true
+	elif kind == "stomp3":
+		n = 24
+		speed = 300.0
+		cone = true
+	elif kind == "uppercut" or kind == "air-upper":
+		n = 12
+		speed = 210.0
+	elif kind == "roundhouse" or kind == "air-mix":
+		n = 14
+		speed = 230.0
+		cone = true
 	var launched := 0
 	for drop in _drops:
 		if drop["active"]:
@@ -87,6 +105,14 @@ func pulse(at: Vector2) -> void:
 		return
 	spray(at, "heavy", 1.0)
 	spray(at, "heavy", -1.0)
+
+
+func run_pool(at: Vector2, dir: float) -> void:
+	if FamilyProfile.less_gore():
+		return
+	spray(at, "heavy", dir)
+	_stain(at + Vector2(dir * 12.0, 8.0))
+	_drip(at + Vector2(dir * 6.0, 4.0))
 
 
 func _process(delta: float) -> void:

@@ -52,5 +52,35 @@
     "name": "BLOOD FRIDGE",
     "blurb": "Between-run snacks. Gold goes in. Bandages come out. Science.",
     "unlocks": "Supplies"
+  },
+  {
+    "id": "pawn_shop",
+    "name": "CAMP SHOP",
+    "blurb": "Build it. Then the wheel, the slots, the chests. Upgrade expands stock.",
+    "unlocks": "Dopamine"
+  },
+  {
+    "id": "patrol_desk",
+    "name": "QUICK PATROL",
+    "blurb": "2×/day. Idle gold and XP while the game is closed and while you play.",
+    "unlocks": "Patrol"
+  },
+  {
+    "id": "research_lab",
+    "name": "RESEARCH CENTER",
+    "blurb": "Silencers, mags, hollow feelings. Parts in, caliber out.",
+    "unlocks": "Research"
+  },
+  {
+    "id": "dojo",
+    "name": "MARTIAL ARTS SCHOOL",
+    "blurb": "Learn moves. Master ranks. Shaolin badges. The Son already teaches this.",
+    "unlocks": "Dojo"
+  },
+  {
+    "id": "workshop",
+    "name": "WORKSHOP",
+    "blurb": "Parts, coils, thread, ink. Gear and clothes are one build.",
+    "unlocks": "Craft"
   }
 ]

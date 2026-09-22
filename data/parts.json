@@ -1,0 +1,17 @@
+{
+  "scrap_coil": {
+    "title": "SCRAP COIL",
+    "blurb": "Wire with opinions. Crafting's copper feeling.",
+    "rarity": "common"
+  },
+  "clinic_thread": {
+    "title": "CLINIC THREAD",
+    "blurb": "Suture that used to be hope.",
+    "rarity": "uncommon"
+  },
+  "invoice_ink": {
+    "title": "INVOICE INK",
+    "blurb": "Past due, bottled. Research drinks this.",
+    "rarity": "rare"
+  }
+}

@@ -357,6 +357,22 @@ static func rain(host: Node, cx: float) -> void:
 	dust.lifetime = 2.4
 	dust.z_index = 11
 	host.add_child(dust)
+	var mist := GPUParticles2D.new()
+	mist.position = Vector2(cx, 180)
+	var mm := ParticleProcessMaterial.new()
+	mm.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	mm.emission_box_extents = Vector3(maxi(int(cx), 900), 40, 1)
+	mm.direction = Vector3(0.6, 0.05, 0)
+	mm.spread = 20.0
+	mm.gravity = Vector3(0, -4, 0)
+	mm.initial_velocity_min = 6.0
+	mm.initial_velocity_max = 16.0
+	mm.color = Color(0.45, 0.5, 0.6, 0.12)
+	mist.process_material = mm
+	mist.amount = 18
+	mist.lifetime = 3.2
+	mist.z_index = 5
+	host.add_child(mist)
 
 
 static func wet_floor(host: Node, map_w: float) -> void:

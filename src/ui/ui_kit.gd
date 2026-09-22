@@ -64,6 +64,15 @@ static func bang() -> PanelContainer:
 	return p
 
 
+static func new_dot() -> ColorRect:
+	var d := ColorRect.new()
+	d.color = Palette.BADGE
+	d.custom_minimum_size = Vector2(12, 12)
+	d.size = Vector2(12, 12)
+	d.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return d
+
+
 static func pill(title: String, value: String, accent: Color) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 6)

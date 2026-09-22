@@ -13,6 +13,10 @@ var _current := "clinic"
 var _modal: Control
 var _safe: MarginContainer
 var _pill_vals := {"gold": "", "gems": "", "rep": ""}
+var _avatar_btn: Button
+var _avatar_dot: ColorRect
+var _logo_dot: ColorRect
+var _tab_dots: Dictionary = {}
 
 
 func _ready() -> void:
@@ -65,17 +69,32 @@ func _make_top() -> Control:
 	row.add_theme_constant_override("separation", 12)
 	bar.add_child(row)
 
+	var avatar_wrap := Control.new()
+	avatar_wrap.custom_minimum_size = Vector2(228, 56)
 	var avatar := UiKit.button("", Vector2(220, 56))
+	_avatar_btn = avatar
 	avatar.text = "%s  LV %d\nTHE SON\n%s\nTHE FATHER" % [
 		FamilyProfile.son_name(), int(FamilyProfile.data.get("account_level", 1)), FamilyProfile.father_name()
 	]
-	avatar.pressed.connect(_open_intake)
-	row.add_child(avatar)
+	avatar.pressed.connect(_open_profile)
+	avatar.set_anchors_preset(Control.PRESET_FULL_RECT)
+	avatar_wrap.add_child(avatar)
+	_avatar_dot = UiKit.new_dot()
+	_avatar_dot.position = Vector2(206, -2)
+	avatar_wrap.add_child(_avatar_dot)
+	row.add_child(avatar_wrap)
 
 	var logo_box := VBoxContainer.new()
 	logo_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var logo := LogoMark.new()
 	logo.custom_minimum_size = Vector2(56, 56)
+	var logo_wrap := Control.new()
+	logo_wrap.custom_minimum_size = Vector2(64, 56)
+	logo.set_anchors_preset(Control.PRESET_FULL_RECT)
+	logo_wrap.add_child(logo)
+	_logo_dot = UiKit.new_dot()
+	_logo_dot.position = Vector2(48, -2)
+	logo_wrap.add_child(_logo_dot)
 	var title := Label.new()
 	title.text = "%s  ·  %s" % [Copy.LOGO, Copy.SUB]
 	UiKit.apply_label(title, 22, Palette.LEMON)
@@ -86,7 +105,7 @@ func _make_top() -> Control:
 	tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	var brand := HBoxContainer.new()
 	brand.alignment = BoxContainer.ALIGNMENT_CENTER
-	brand.add_child(logo)
+	brand.add_child(logo_wrap)
 	var names := VBoxContainer.new()
 	names.add_child(title)
 	names.add_child(tag)
@@ -139,6 +158,11 @@ func _make_tabs() -> Control:
 		bang.visible = false
 		wrap.add_child(bang)
 		_tab_bangs[id] = bang
+		var dot := UiKit.new_dot()
+		dot.position = Vector2(28, 6)
+		dot.visible = false
+		wrap.add_child(dot)
+		_tab_dots[id] = dot
 		_tab_bar.add_child(wrap)
 	_refresh_tab_locks()
 	return bar
@@ -187,6 +211,8 @@ func _show_tab(id: String) -> void:
 	tw.tween_property(page, "modulate:a", 1.0, 0.18)
 	if page.has_signal("need_refresh"):
 		page.need_refresh.connect(_after_page)
+	if page.has_signal("need_sheet"):
+		page.need_sheet.connect(_open_camp_sheet)
 	_refresh_tab_locks()
 	_refresh_pills()
 	Juice.play("res://assets/audio/ui_click.wav")
@@ -204,6 +230,11 @@ func _refresh_pills() -> void:
 	_set_pill(_gems_pill, str(FamilyProfile.data["gems"]), "gems")
 	_set_pill(_rep_pill, str(FamilyProfile.data["rep"]), "rep")
 	_log_bang.visible = FamilyProfile.unread_log_count() > 0
+	_refresh_new_dots()
+	if _avatar_btn:
+		_avatar_btn.text = "%s  LV %d\nTHE SON\n%s\nTHE FATHER" % [
+			FamilyProfile.son_name(), int(FamilyProfile.data.get("account_level", 1)), FamilyProfile.father_name()
+		]
 	if _log_bang.visible:
 		if not _log_bang.has_meta("pulsing"):
 			_log_bang.set_meta("pulsing", true)
@@ -241,6 +272,9 @@ func _refresh_tab_locks() -> void:
 				var unseen: bool = unlocked and not bool(FamilyProfile.data["seen"].get(id, false))
 				var awards_ready: bool = id == "awards" and unlocked and _has_claim()
 				bang.visible = unseen or awards_ready
+				var dot: Control = _tab_dots.get(id)
+				if dot:
+					dot.visible = FamilyProfile.has_menu_alert()
 				if id == _current:
 					btn.add_theme_stylebox_override("normal", UiKit.panel(Palette.BRICK, Palette.LEMON))
 				else:
@@ -271,6 +305,64 @@ func _log_body() -> String:
 	for item in FamilyProfile.data["log"]:
 		lines.append("%s\n%s" % [item["title"], item["body"]])
 	return "\n\n".join(lines) if lines else Copy.EMPTY_LOG
+
+
+func _refresh_new_dots() -> void:
+	var alert := FamilyProfile.has_menu_alert()
+	if _avatar_dot:
+		_avatar_dot.visible = alert
+	if _logo_dot:
+		_logo_dot.visible = alert
+	for id in _tab_dots.keys():
+		var d: Control = _tab_dots[id]
+		if d:
+			d.visible = alert
+
+
+func _open_profile() -> void:
+	if not bool(FamilyProfile.data.get("named", false)):
+		_open_intake()
+		return
+	_clear_modal()
+	var sheet := preload("res://src/ui/hub_profile.gd").new()
+	sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(sheet)
+	_modal = sheet
+	sheet.closed.connect(_clear_modal)
+	sheet.need_refresh.connect(_refresh_pills)
+	if sheet.has_signal("rename_wanted"):
+		sheet.rename_wanted.connect(func() -> void:
+			_clear_modal()
+			_open_intake()
+		)
+
+
+func _open_camp_sheet(id: String) -> void:
+	_clear_modal()
+	var path := ""
+	match id:
+		"pawn_shop":
+			path = "res://src/ui/dopamine_shop.gd"
+		"patrol_desk":
+			path = "res://src/ui/patrol_sheet.gd"
+		"research_lab":
+			path = "res://src/ui/research_sheet.gd"
+		"dojo":
+			path = "res://src/ui/dojo_sheet.gd"
+		"workshop":
+			path = "res://src/ui/workshop_sheet.gd"
+		_:
+			return
+	var sheet: Control = load(path).new()
+	sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(sheet)
+	_modal = sheet
+	FamilyProfile.peek_menu()
+	_refresh_new_dots()
+	if sheet.has_signal("closed"):
+		sheet.closed.connect(_clear_modal)
+	if sheet.has_signal("need_refresh"):
+		sheet.need_refresh.connect(_after_page)
 
 
 func _open_intake() -> void:

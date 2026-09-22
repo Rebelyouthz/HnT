@@ -99,6 +99,10 @@ func _card(info: Dictionary, mid: bool) -> Control:
 	col.add_theme_constant_override("separation", 6)
 	wrap.add_child(col)
 	var head := HBoxContainer.new()
+	if Rarity.rank(rarity) >= 3:
+		var mark := LogoMark.new()
+		mark.custom_minimum_size = Vector2(36, 36)
+		head.add_child(mark)
 	var stamp := StampMark.new()
 	stamp.accent = Rarity.color(rarity)
 	head.add_child(stamp)
@@ -117,7 +121,8 @@ func _card(info: Dictionary, mid: bool) -> Control:
 	col.add_child(StatPanel.new([
 		{"name": "TAG", "value": str(info.get("tag", "RULE")), "color": Palette.LEMON},
 		{"name": "RARITY", "value": Rarity.label(rarity), "color": Rarity.color(rarity)},
-		{"name": "IF YOU TAKE IT", "value": "RULE STAYS THE RUN", "color": Palette.READY}
+		{"name": "KEEP", "value": "THIS RUN", "color": Palette.READY},
+		{"name": "JUICE", "value": _card_stat(info), "color": Palette.EDGE}
 	]))
 	var go := UiKit.button("TAKE IT", Vector2(160, 44))
 	go.name = "Pick"
@@ -177,6 +182,16 @@ func _process(delta: float) -> void:
 			_choose(str(ids[0]))
 		else:
 			_choose("skip")
+
+
+func _card_stat(info: Dictionary) -> String:
+	var st: Variant = info.get("stats", {})
+	if typeof(st) == TYPE_DICTIONARY and not (st as Dictionary).is_empty():
+		var bits: PackedStringArray = []
+		for k in (st as Dictionary).keys():
+			bits.append("%s %s" % [str(k).to_upper(), str((st as Dictionary)[k])])
+		return "  ·  ".join(bits)
+	return str(info.get("tag", "RULE"))
 
 
 func _choose(id: String) -> void:

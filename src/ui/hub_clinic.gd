@@ -1,6 +1,7 @@
 extends Control
 
 signal need_refresh
+signal need_sheet(id: String)
 
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -54,13 +55,27 @@ func _ready() -> void:
 	camp.built.connect(func(id: String) -> void:
 		match id:
 			"therapy_couch":
-				Juice.unlock_logo("BUILD TAB", "The couch is furniture. The tree is a lifestyle.")
+				Juice.unlock_logo("BUILD TAB", "The couch is furniture. The tree is a lifestyle.", "TAB  ·  BUILD")
 			"wardrobe_cage":
-				Juice.unlock_logo("LOCKER", "Costumes do not change the web. That is the point.")
+				Juice.unlock_logo("LOCKER", "Costumes do not change the web. That is the point.", "TAB  ·  LOCKER")
 			"trophy_cabinet":
-				Juice.unlock_logo("AWARDS", "Claim or it did not happen.")
+				Juice.unlock_logo("AWARDS", "Claim or it did not happen.", "TAB  ·  AWARDS")
+			"pawn_shop":
+				Juice.unlock_logo("CAMP UNLOCKED", "Chests, wheel, slots. Upgrade the stall and the stock gets meaner.", "SHOP  ·  DOPAMINE")
+			"patrol_desk":
+				Juice.unlock_logo("QUICK PATROL", "2×/day. Ticks while you play and while the fridge is closed.", "PATROL  ·  IDLE")
+			"research_lab":
+				Juice.unlock_logo("RESEARCH CENTER", "Silencers, mags, hollow feelings.", "RESEARCH")
+			"dojo":
+				Juice.unlock_logo("MARTIAL ARTS SCHOOL", "Learn. Master. Pin a shaolin badge.", "DOJO")
+			"workshop":
+				Juice.unlock_logo("WORKSHOP", "Parts in. A body out. Gear is the build.", "CRAFT")
 		need_refresh.emit()
 	)
+	if camp.has_signal("open_sheet"):
+		camp.open_sheet.connect(func(id: String) -> void:
+			need_sheet.emit(id)
+		)
 	col.add_child(camp)
 	play.grab_focus()
 

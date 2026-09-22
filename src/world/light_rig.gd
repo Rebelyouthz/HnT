@@ -6,6 +6,7 @@ const MAX_POINT := 3
 static var _radial: Texture2D
 var preset := "dock_street"
 var _flicker := 0.0
+var _storm := 0.0
 
 
 static func radial_tex() -> Texture2D:
@@ -131,6 +132,10 @@ func _process(delta: float) -> void:
 			if not p.has_meta("base_e"):
 				p.set_meta("base_e", p.energy)
 			p.energy = float(p.get_meta("base_e")) * (0.9 + 0.1 * sin(_flicker * 6.4 + p.position.x * 0.008))
+	_storm += delta
+	if _storm > 7.5 and randf() < 0.12:
+		_storm = 0.0
+		_lightning()
 
 
 func tint_at(world: Vector2) -> Color:
@@ -187,3 +192,15 @@ func _glow(at: Vector2, color: Color) -> void:
 	Blockout.add_glow(g)
 	g.z_index = -1
 	add_child(g)
+
+
+func _lightning() -> void:
+	var night := get_node_or_null("Night") as CanvasModulate
+	if night == null:
+		return
+	var was := night.color
+	night.color = Color(0.72, 0.78, 0.92)
+	get_tree().create_timer(0.06, true, false, true).timeout.connect(func() -> void:
+		if is_instance_valid(night):
+			night.color = was
+	)

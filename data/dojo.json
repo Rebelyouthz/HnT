@@ -1,0 +1,58 @@
+[
+  {
+    "id": "uppercut",
+    "title": "UPPERCUT",
+    "blurb": "Up + heavy. Launch. Master rank adds hang-time and points.",
+    "rarity": "uncommon",
+    "gold": [20, 35, 55],
+    "kind": "combat"
+  },
+  {
+    "id": "roundhouse",
+    "title": "ROUNDHOUSE",
+    "blurb": "After two lights, heavy. The kick is the invoice.",
+    "rarity": "rare",
+    "gold": [24, 40, 60],
+    "kind": "combat"
+  },
+  {
+    "id": "stomp_finish",
+    "title": "FACE STOMP",
+    "blurb": "Three stomps on a crushed skull. Smash, pop, splash. Brain on three.",
+    "rarity": "epic",
+    "gold": [30, 50, 80],
+    "kind": "combat"
+  },
+  {
+    "id": "speed_vault",
+    "title": "SPEED VAULT",
+    "blurb": "Vector called. Hands on the rail, legs through. Easy path is just-jump.",
+    "rarity": "uncommon",
+    "gold": [18, 32, 48],
+    "kind": "parkour"
+  },
+  {
+    "id": "kong",
+    "title": "KONG / CAT PASS",
+    "blurb": "Dive the hands. Harder. More points. The Son teaches this for money.",
+    "rarity": "rare",
+    "gold": [26, 44, 70],
+    "kind": "parkour"
+  },
+  {
+    "id": "dash_vault",
+    "title": "DASH VAULT",
+    "blurb": "Dash into the rail. One foot, one lie about grace.",
+    "rarity": "rare",
+    "gold": [22, 38, 58],
+    "kind": "parkour"
+  },
+  {
+    "id": "land_roll",
+    "title": "LANDING ROLL",
+    "blurb": "Vector+. High drop, down or dash on contact. Converts fall into speed.",
+    "rarity": "epic",
+    "gold": [28, 46, 72],
+    "kind": "parkour"
+  }
+]

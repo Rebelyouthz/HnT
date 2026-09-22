@@ -1,0 +1,17 @@
+{
+  "rail": {
+    "easy": { "id": "jump", "title": "JUMP", "points": 8, "speed": 1.0, "input": "jump" },
+    "mid": { "id": "speed_vault", "title": "SPEED VAULT", "points": 28, "speed": 1.06, "input": "up" },
+    "hard": { "id": "kong", "title": "KONG", "points": 48, "speed": 1.1, "input": "special" }
+  },
+  "crate": {
+    "easy": { "id": "jump", "title": "JUMP", "points": 6, "speed": 1.0, "input": "jump" },
+    "mid": { "id": "safety_vault", "title": "SAFETY VAULT", "points": 22, "speed": 1.05, "input": "up" },
+    "hard": { "id": "dash_vault", "title": "DASH VAULT", "points": 40, "speed": 1.08, "input": "dash" }
+  },
+  "gap": {
+    "easy": { "id": "jump", "title": "JUMP", "points": 10, "speed": 1.0, "input": "jump" },
+    "mid": { "id": "tic_tac", "title": "TIC-TAC", "points": 32, "speed": 1.07, "input": "up" },
+    "hard": { "id": "king_kong", "title": "KING KONG JUMPOFF", "points": 55, "speed": 1.12, "input": "special" }
+  }
+}

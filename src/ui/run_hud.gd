@@ -29,6 +29,7 @@ var father: Fighter
 var state: RunState
 var _join_grace := 0
 var _blink_t := 0.0
+var _dad_banner := false
 
 
 func _ready() -> void:
@@ -144,6 +145,31 @@ func _ready() -> void:
 	UiKit.apply_label(_hint, 13, Palette.MUTED)
 	_hint.text = _prompt_line()
 	add_child(_hint)
+	_place_banners()
+
+
+func _place_banners() -> void:
+	_banner_at(Vector2(0, 0), "son")
+	if App.two_bodies():
+		_banner_at(Vector2(1128, 0), "father")
+
+
+func _banner_at(pos: Vector2, role: String) -> void:
+	var tint := Cosmetics.tint("banners", FamilyProfile.equipped_cosmetic(role, "banner"))
+	var b := ColorRect.new()
+	b.color = tint
+	b.position = pos
+	b.size = Vector2(152, 18)
+	add_child(b)
+	var frame := ColorRect.new()
+	frame.color = Cosmetics.tint("frames", FamilyProfile.equipped_cosmetic(role, "frame"))
+	frame.position = pos + Vector2(0, 18)
+	frame.size = Vector2(152, 4)
+	add_child(frame)
+	if FamilyProfile.has_menu_alert():
+		var d := UiKit.new_dot()
+		d.position = pos + Vector2(136, 2)
+		add_child(d)
 
 
 func _pips_row(pos: Vector2, color: Color) -> HBoxContainer:
@@ -191,6 +217,9 @@ func bind(p_son: Fighter, p_dad: Fighter, p_state: RunState = null) -> void:
 	state = p_state
 	if joining:
 		_join_grace = 18
+	if father != null and not _dad_banner:
+		_banner_at(Vector2(1128, 0), "father")
+		_dad_banner = true
 
 
 func _prompt_line() -> String:

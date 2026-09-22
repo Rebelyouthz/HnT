@@ -87,7 +87,7 @@ Everything scores. Father vs Son on the same run (HUD bottom, pause overlay). Af
 
 ## Avatar / rarity
 
-Locker is clothes / hats / shoes. Every piece has stats and three upgrades. **Common → Uncommon → Rare → Epic → Legendary** on cards, gear, CBT, awards, shop, pickups, crates. Colored borders. Legendary juice. Pause shows the pinball table.
+Locker is clothes / hats / shoes plus Profile **frames / banners / badges**. Every piece has stats and three upgrades. **Common → Uncommon → Rare → Epic → Legendary** on cards, gear, CBT, awards, shop, pickups, crates, cosmetics, research, dojo ranks. Colored borders. Legendary juice. Pause shows the pinball table.
 
 ## Options / Reset
 
@@ -137,13 +137,43 @@ On a remote Join, The Father uses **P1** on his machine. The Son stays host-auth
 
 Clinic, Run, Build, Locker, Awards. Family Profile at `user://family.json`.
 
+### Profile / account
+
+**Top-left avatar** (names + LV) opens **Family Profile**. First launch still files names (intake). Rename lives on the Profile.
+
+Profile shows account level, XP bar, avatar card with **frame / banner / badge**. Equip Steam-like **badges** as proof. Swap **avatar frame**, **profile banner**, and **badge**. Unlocks come from in-game accomplishments (runs, stomps, tricks, dojo masters, finale).
+
+Red **new** dots sit on the avatar, the HnT logo, **every hub tab**, the run HUD banner, and the new item itself until you open Profile / the camp sheet and look at the reward. Big unlock logos always print **YOU GOT** plus the reward. Account **level-up** is a full overlay (XP bar, names, +8 gold, frame check).
+
+### Camp buildings (Clinic tab)
+
+The camp grid is the home screen. **BUILD** plays a carpenter animation in front of you. Upgrade expands stock.
+
+| Building | Where | What |
+| --- | --- | --- |
+| **Camp Shop** | Clinic camp → BUILD CAMP SHOP → **OPEN** | Chests, lucky wheel, slots. Upgrade the stall: claw at lv2, scratch cards at lv3. Always shows what you got. |
+| **Quick Patrol** | Clinic camp → BUILD QUICK PATROL → **OPEN** | **2×/day**, 12 minutes. Idle gold + XP + a coil **while the game is closed and while you play**. Claim when the alley comes home. |
+| **Research Center** | Clinic camp → BUILD RESEARCH CENTER → **OPEN** | Silencers, extended mags, hollow rounds, recoil pads, tape wrap. Spend gold + parts. |
+| **Martial Arts School** | Clinic camp → BUILD MARTIAL ARTS SCHOOL → **OPEN** | Learn / upgrade moves (uppercut, roundhouse, face stomp, vaults, landing roll). Rank 3 = master + shaolin badge. |
+| **Workshop** | Clinic camp → BUILD WORKSHOP → **OPEN** | Craft from scrap coil, clinic thread, invoice ink. Gear + clothes + equipment are one character build. |
+
+Patrol, research, and the dojo are **camp buildings**, not extra bottom tabs. Front Desk is already built (Profile). Street Map is already built (Run).
+
+## Combat / parkour (this slice)
+
+SoR4 mix: duck, jump, air attacks, uppercut (up+heavy), roundhouse (two lights then heavy), air mix (special in the air), dive (down+heavy in the air). Unique finishers score more. **Three stomps on a crushed face**: smash / pop / splash, brain on three. Father vs Son SFX (pitch + named clips). Footsteps scale with speed, silent in air, louder on stumble. High land: **landing roll** (down or dash) or stumble / hard fall.
+
+Guns: unique caliber, recoil, muzzle flash, sparks, bullet holes. Blood simulator: spray, drip, run, pool, stain. HP changes how injured they look and limp.
+
+Parkour gates show **three named tricks** (Vector): just-jump is easy. Up = mid. Special / dash = hard. Perfect window +5–10% speed. Fail: stumble / hard fall / splat and minus points. Combo multiplier stays on the pinball table.
+
 ## Layout
 
 ```
 scenes/     hub + intro, tutorial, ten acts, films, versus
 src/        actors, story, survive, vs, juice, world, ui, coop, net
-data/       story, gear, buildings, awards, CBT, cards, shop, encounters
-tools/      hnt_rooms.py, synth_story.py
+data/       story, gear, buildings, awards, CBT, cards, shop, encounters, cosmetics, dojo, research, tricks, dopamine
+tools/      hnt_rooms.py, synth_story.py, synth_kit.py
 assets/     audio + icon
 ```
 

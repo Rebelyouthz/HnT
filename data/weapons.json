@@ -1,0 +1,74 @@
+{
+  "batwing": {
+    "title": "BATWING",
+    "role": "son",
+    "rarity": "common",
+    "caliber": "18mm feeling",
+    "ammo": 3,
+    "recoil": 6,
+    "speed": 520,
+    "kind": "shuriken",
+    "sfx": "res://assets/audio/shuriken.wav",
+    "hit": "light"
+  },
+  "snare": {
+    "title": "WEB SHOT",
+    "role": "father",
+    "rarity": "common",
+    "caliber": "80–280 office",
+    "ammo": 6,
+    "recoil": 4,
+    "speed": 380,
+    "kind": "snare",
+    "sfx": "res://assets/audio/web.wav",
+    "hit": "snare"
+  },
+  "pistol": {
+    "title": "PRE-OWNED 9",
+    "role": "any",
+    "rarity": "rare",
+    "caliber": "9mm leftover",
+    "ammo": 4,
+    "recoil": 10,
+    "speed": 640,
+    "kind": "pistol",
+    "sfx": "res://assets/audio/pistol.wav",
+    "hit": "heavy"
+  },
+  "pipe": {
+    "title": "PIPE",
+    "role": "any",
+    "rarity": "uncommon",
+    "caliber": "melee",
+    "ammo": 0,
+    "recoil": 0,
+    "speed": 0,
+    "kind": "pipe",
+    "sfx": "res://assets/audio/hit_heavy.wav",
+    "hit": "heavy"
+  },
+  "board": {
+    "title": "BOARD",
+    "role": "any",
+    "rarity": "uncommon",
+    "caliber": "melee",
+    "ammo": 0,
+    "recoil": 0,
+    "speed": 0,
+    "kind": "board",
+    "sfx": "res://assets/audio/hit_heavy.wav",
+    "hit": "heavy"
+  },
+  "knife": {
+    "title": "KNIFE",
+    "role": "any",
+    "rarity": "uncommon",
+    "caliber": "melee",
+    "ammo": 0,
+    "recoil": 0,
+    "speed": 0,
+    "kind": "knife",
+    "sfx": "res://assets/audio/hit_light.wav",
+    "hit": "blade"
+  }
+}

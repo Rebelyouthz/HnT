@@ -48,6 +48,29 @@ func build_world() -> void:
 	pass
 
 
+func _place_parkour() -> void:
+	var rows: Dictionary = {
+		"dock_street": [[720.0, 500.0, "crate"], [1260.0, 500.0, "gap"], [2100.0, 500.0, "rail"]],
+		"fire_escapes": [[560.0, 248.0, "rail"], [1100.0, 248.0, "gap"], [2000.0, 500.0, "crate"]],
+		"neon_exchange": [[640.0, 500.0, "crate"], [1320.0, 500.0, "rail"], [2100.0, 500.0, "gap"]],
+		"rail_bridge": [[700.0, 500.0, "rail"], [1500.0, 500.0, "gap"], [2300.0, 500.0, "crate"]],
+		"city_hall": [[480.0, 500.0, "crate"], [980.0, 500.0, "rail"]],
+		"invoice_pier": [[900.0, 500.0, "gap"], [1600.0, 500.0, "rail"], [2600.0, 500.0, "crate"]],
+		"processing_floor": [[620.0, 500.0, "rail"], [1480.0, 500.0, "gap"]],
+		"tutorial_alley": [[640.0, 500.0, "crate"], [1100.0, 500.0, "rail"]],
+		"intake_lot": [[520.0, 500.0, "crate"], [1280.0, 500.0, "rail"]],
+		"group_circle": [[640.0, 500.0, "rail"]],
+		"waiting_room": [[720.0, 500.0, "crate"], [1400.0, 500.0, "gap"]]
+	}
+	var list: Variant = rows.get(map_id, [])
+	if typeof(list) != TYPE_ARRAY:
+		return
+	for row in list:
+		if typeof(row) != TYPE_ARRAY or (row as Array).size() < 3:
+			continue
+		ParkourGate.place(self, Vector2(float(row[0]), float(row[1])), str(row[2]))
+
+
 func _ready() -> void:
 	_configure()
 	add_to_group("dock_world")
@@ -63,6 +86,7 @@ func _ready() -> void:
 	if not App.run_bag.is_empty():
 		_state.unpack(App.run_bag)
 	build_world()
+	_place_parkour()
 	_rig = LightRig.new()
 	_rig.preset = light_preset
 	add_child(_rig)

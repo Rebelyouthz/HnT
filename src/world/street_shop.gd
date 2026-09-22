@@ -21,11 +21,18 @@ func _ready() -> void:
 	cs.shape = r
 	add_child(cs)
 	var stall := Polygon2D.new()
-	stall.color = Color(0.16, 0.13, 0.12, 0.92)
+	stall.color = Color(0.18, 0.16, 0.14, 0.96)
 	stall.polygon = PackedVector2Array([
 		Vector2(-78, -22), Vector2(78, -22), Vector2(70, 26), Vector2(-70, 26)
 	])
 	add_child(stall)
+	var chrome := Polygon2D.new()
+	chrome.color = Color(0.79, 0.64, 0.15, 0.85)
+	chrome.polygon = PackedVector2Array([
+		Vector2(-80, -26), Vector2(80, -26), Vector2(76, -18), Vector2(-76, -18)
+	])
+	add_child(chrome)
+	Blockout.add_glow(chrome)
 	var cloth := Polygon2D.new()
 	cloth.color = Color(0.72, 0.22, 0.2, 0.85) if catalog != "toll_booth" else Color(0.2, 0.45, 0.4, 0.85)
 	cloth.polygon = PackedVector2Array([

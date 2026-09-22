@@ -23,6 +23,10 @@ var guarding := false
 var guard_low := false
 var _alert := Color.WHITE
 var _bob := 0.0
+var stomp_hits := 0
+var _base_mod := Color.WHITE
+var _brain: Polygon2D
+var _walk := 42.0
 signal died
 signal finish_ready
 
@@ -60,6 +64,7 @@ func _ready() -> void:
 	hc.position = Vector2(0, -30)
 	hurt.add_child(hc)
 	add_child(hurt)
+	_walk = speed
 	if title == "Drone":
 		visual.modulate = Color(0.65, 0.75, 0.9)
 	elif title == "Agent Lin":
@@ -76,6 +81,7 @@ func _ready() -> void:
 		visual.modulate = Color(0.78, 0.82, 0.8)
 	elif title == "Chapel Usher":
 		visual.modulate = Color(0.35, 0.42, 0.32)
+	_base_mod = visual.modulate
 
 
 func _part(pos: Vector2, size: Vector2, color: Color) -> void:
@@ -247,7 +253,15 @@ func _mix_mod() -> void:
 	var rig := get_tree().get_first_node_in_group("light_rig")
 	if rig and rig.has_method("tint_at"):
 		lamp = rig.tint_at(global_position)
-	visual.modulate = _alert * lamp
+	var frac := clampf(float(hp) / float(maxi(max_hp, 1)), 0.0, 1.0)
+	var hurt := Color(0.72, 0.32, 0.28)
+	var body := _base_mod.lerp(hurt, (1.0 - frac) * 0.7)
+	visual.modulate = body * _alert * lamp
+	speed = _walk * (0.55 if frac < 0.4 else 1.0)
+	if frac < 0.4 and visual:
+		visual.position.y = 4.0 + 2.2 * sin(_bob * 0.7)
+	if _brain:
+		_brain.visible = stomp_hits >= 3 or (crush and frac <= 0.0)
 
 
 func take_hit(kind: String, from: Node) -> void:
@@ -278,6 +292,19 @@ func take_hit(kind: String, from: Node) -> void:
 		dmg = 20
 		snared = 0.3
 		global_position.y -= 24.0
+	elif kind == "uppercut" or kind == "air-upper":
+		dmg = 18 + FamilyProfile.dojo_rank("uppercut") * 4
+		global_position.y -= 18.0
+	elif kind == "roundhouse":
+		dmg = 20 + FamilyProfile.dojo_rank("roundhouse") * 4
+	elif kind == "air-mix":
+		dmg = 16
+	elif kind.begins_with("stomp"):
+		stomp_hits += 1
+		dmg = 12 + stomp_hits * 10
+		if stomp_hits >= 3:
+			dmg = maxi(dmg, hp)
+			_show_brain()
 	elif kind == "snap":
 		dmg = 48
 	elif kind == "special":
@@ -335,11 +362,17 @@ func take_hit(kind: String, from: Node) -> void:
 		var rs := get_tree().get_first_node_in_group("run_state")
 		if rs and rs.has_method("add_points"):
 			var pts := 12
-			if kind == "heavy" or kind == "launcher":
+			if kind == "heavy" or kind == "launcher" or kind == "roundhouse":
 				pts = 28
+			elif kind == "uppercut" or kind == "air-upper":
+				pts = 32
+			elif kind.begins_with("stomp"):
+				pts = 18 * stomp_hits
+				if rs.has_method("has_card") and rs.has_card("stomp_policy"):
+					pts *= 2
 			elif kind == "snap":
 				pts = 90
-			elif kind == "web-slam" or kind == "finish":
+			elif kind == "web-slam" or kind == "finish" or kind == "air-mix":
 				pts = 40
 			if rs.has_method("has_card") and rs.has_card("open_tab"):
 				pts += 4
@@ -407,6 +440,20 @@ func _die(kind: String, from: Node) -> void:
 	_drops(from)
 	died.emit()
 	queue_free()
+
+
+func _show_brain() -> void:
+	if FamilyProfile.less_gore():
+		return
+	if _brain != null:
+		_brain.visible = true
+		return
+	_brain = Polygon2D.new()
+	_brain.color = Color(0.82, 0.42, 0.5, 0.95)
+	_brain.polygon = PackedVector2Array([
+		Vector2(-8, -68), Vector2(8, -68), Vector2(10, -54), Vector2(-10, -54)
+	])
+	visual.add_child(_brain)
 
 
 func _drops(from: Node) -> void:

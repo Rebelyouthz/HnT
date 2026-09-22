@@ -78,6 +78,16 @@ var _breath := 0.0
 var vs_mode := false
 var magnet_r := 72.0
 var pistol_shots := 0
+var trick_boost := 1.0
+var trick_t := 0.0
+var stumble_t := 0.0
+var ducking := false
+var parkour_lock := 0.0
+var stomp_n := 0
+var stomp_cd := 0.0
+var _foot_cd := 0.0
+var _land_v := 0.0
+var rolling := false
 
 signal died
 signal hit_landed(kind: String, global_pos: Vector2)
@@ -105,6 +115,14 @@ func _ready() -> void:
 	hp = max_hp
 	speed += float(int(bonus.get("speed", 0))) * 1.6
 	steam = mini(STEAM_MAX, steam + float(int(bonus.get("steam", 0))))
+	if FamilyProfile.has_research("mag_plus"):
+		if role == "son":
+			ammo = 4
+		else:
+			ammo = 7
+	if FamilyProfile.has_research("tape_wrap"):
+		tape_t = 6.0
+		armored = true
 	_shadow = Polygon2D.new()
 	_shadow.color = Color(0.02, 0.02, 0.04, 0.45)
 	_shadow.polygon = PackedVector2Array([
@@ -285,6 +303,8 @@ func _tick_meters(delta: float) -> void:
 		ammo_cd -= delta
 		if ammo_cd <= 0.0:
 			var cap := 3 if role == "son" else 6
+			if FamilyProfile.has_research("mag_plus"):
+				cap += 1
 			if ammo < cap:
 				ammo += 1
 				ammo_cd = 2.4 if ammo < cap else 0.0
@@ -298,9 +318,20 @@ func _tick_meters(delta: float) -> void:
 	blocking = _pressed("block") and steam > 2.0 and not downed
 	if tape_t > 0.0:
 		tape_t -= delta
-		armored = true
 		if tape_t <= 0.0:
 			armored = charge_frames >= 18
+	if trick_t > 0.0:
+		trick_t -= delta
+		if trick_t <= 0.0:
+			trick_boost = 1.0
+	if stumble_t > 0.0:
+		stumble_t -= delta
+	if parkour_lock > 0.0:
+		parkour_lock -= delta
+	if stomp_cd > 0.0:
+		stomp_cd -= delta
+		if stomp_cd <= 0.0:
+			stomp_n = 0
 	block_low = blocking and _stick().y > 0.4
 	if blocking:
 		steam = maxf(0.0, steam - 8.0 * delta)
@@ -312,15 +343,24 @@ func _tick_meters(delta: float) -> void:
 		if string_ttl <= 0.0:
 			string_n = 0
 	_update_guard()
-	armored = charge_frames >= 18
+	armored = charge_frames >= 18 or tape_t > 0.0
 	_update_web_line()
 	_apply_lamp()
 	_breath += delta * 6.0
+	ducking = _street_grounded() and _stick().y > 0.55 and not dashing and not sliding
 	if squash_root:
-		if _street_grounded() and attack_cd == 0 and not dashing and not sliding:
+		if ducking:
+			squash_root.scale.y = 0.62
+			squash_root.position.y = 14.0
+		elif _street_grounded() and attack_cd == 0 and not dashing and not sliding:
+			squash_root.scale.y = 1.0
 			squash_root.position.y = 1.6 * sin(_breath)
 		else:
+			squash_root.scale.y = 1.0
 			squash_root.position.y = 0.0
+		var hurt := clampf(1.0 - float(hp) / float(maxi(max_hp, 1)), 0.0, 1.0)
+		if hurt > 0.35:
+			squash_root.modulate = squash_root.modulate.lerp(Color(0.85, 0.45, 0.4), hurt * 0.35)
 	if _shadow:
 		var air := absf(hop) if plane == "street" else maxf(0.0, -minf(velocity.y, 0.0))
 		_shadow.scale.x = 1.1 - clampf(air / 200.0, 0.0, 0.5)
@@ -340,24 +380,29 @@ func _process_street(delta: float) -> void:
 		velocity.x = float(facing) * 360.0
 		velocity.y = 0.0
 	else:
-		velocity.x = x * speed
+		var limp := 0.72 if hp <= int(float(max_hp) * 0.35) else 1.0
+		var combo_spd := 1.0 + clampf(float(Juice.combo) * 0.008, 0.0, 0.14)
+		if stumble_t > 0.0:
+			limp *= 0.4
+		velocity.x = x * speed * limp * trick_boost * combo_spd
 		if _street_grounded():
-			velocity.y = y * depth_speed
+			velocity.y = y * depth_speed * limp
 		else:
 			velocity.y = 0.0
 	if _street_grounded():
 		coyote = COYOTE
+		_footsteps(delta, absf(velocity.x))
 	if jump_buf > 0 and coyote > 0:
 		hop_v = JUMP
 		hop = -1.0
 		jump_buf = 0
 		coyote = 0
-		Juice.play("res://assets/audio/jump.wav")
+		KitSfx.hit(role, "jump")
 	elif jump_buf > 0 and extra_jump > 0 and hop < -8.0:
 		hop_v = JUMP * 0.8
 		jump_buf = 0
 		extra_jump -= 1
-		Juice.play("res://assets/audio/jump.wav")
+		KitSfx.hit(role, "jump")
 	if hop < 0.0 or hop_v != 0.0:
 		var g := GRAV
 		if hop_v > 0.0:
@@ -372,10 +417,10 @@ func _process_street(delta: float) -> void:
 		hop_v += g * delta
 		hop += hop_v * delta
 		if hop >= 0.0:
+			var fall := hop_v
 			hop = 0.0
 			hop_v = 0.0
-			Juice.squash(squash_root, facing)
-			Juice.land_puff(global_position)
+			_on_land(fall)
 	visual.position.y = hop
 	move_and_slide()
 	global_position.y = clampf(global_position.y, STREET_MIN, STREET_MAX)
@@ -415,19 +460,18 @@ func _process_roof(delta: float) -> void:
 		gliding = false
 		coyote = COYOTE
 		if hop_v != 0.0:
-			Juice.squash(squash_root, facing)
-			Juice.land_puff(global_position)
+			_on_land(absf(hop_v) if velocity.y >= 0.0 else 0.0)
 		hop_v = 0.0
 	if jump_buf > 0 and coyote > 0:
 		velocity.y = JUMP
 		jump_buf = 0
 		coyote = 0
-		Juice.play("res://assets/audio/jump.wav")
+		KitSfx.hit(role, "jump")
 	elif jump_buf > 0 and extra_jump > 0 and not is_on_floor():
 		velocity.y = JUMP * 0.85
 		jump_buf = 0
 		extra_jump -= 1
-		Juice.play("res://assets/audio/jump.wav")
+		KitSfx.hit(role, "jump")
 	if dashing:
 		velocity.x = float(facing) * 400.0
 	else:
@@ -527,6 +571,8 @@ func _process_downed(delta: float) -> void:
 
 
 func _combat() -> void:
+	if parkour_lock > 0.0:
+		return
 	var y := _stick().y
 	if snap_ready and (_just("light") or _just("snap")):
 		return
@@ -545,6 +591,10 @@ func _combat() -> void:
 			string_n = 0
 			Juice.shout("STRING")
 			return
+		var air_mix := hop < -16.0 or (plane == "roof" and not is_on_floor())
+		if air_mix:
+			_attack("air-mix", false)
+			return
 		_special()
 	if _just("shoot"):
 		_shoot()
@@ -557,14 +607,24 @@ func _combat() -> void:
 		if charge_frames >= charge_need + 25:
 			_attack("heavy", true)
 	elif charge_frames > 0:
-		if airborne:
+		if airborne and y > 0.35:
 			_dive()
+		elif airborne and y < -0.35:
+			_attack("air-upper", false)
+		elif airborne:
+			_attack("jump-kick", false)
+		elif y > 0.4 and _try_stomp():
+			charge_frames = 0
+		elif y < -0.35:
+			_attack("uppercut", false)
 		elif string_n >= 2:
-			_attack("launcher", true)
+			_attack("roundhouse", false)
 		else:
 			_attack("heavy", charge_frames >= charge_need)
 	elif attack_cd == 0 and _just("light"):
-		if airborne:
+		if airborne and y < -0.35:
+			_attack("air-upper", false)
+		elif airborne:
 			_attack("jump-kick", false)
 		else:
 			_attack("light", false)
@@ -581,7 +641,7 @@ func _dash() -> void:
 		invuln = 12
 		dash_frames = 12
 	velocity.x = float(facing) * 420.0
-	Juice.play("res://assets/audio/dash.wav")
+	KitSfx.hit(role, "dash")
 
 
 func _slide() -> void:
@@ -591,7 +651,7 @@ func _slide() -> void:
 	slide_frames = 16
 	invuln = 6
 	dashing = false
-	Juice.play("res://assets/audio/dash.wav")
+	KitSfx.hit(role, "slide")
 	_spawn_hit("slide", Vector2(52, 28), 0.22, Vector2(24 * facing, -12))
 	var rs := get_tree().get_first_node_in_group("run_state")
 	if rs and rs.has_method("has_card") and rs.has_card("family_blitz"):
@@ -668,6 +728,22 @@ func _attack(kind: String, charged: bool) -> void:
 	elif kind == "launcher":
 		size = Vector2(72, 52)
 		string_n = 0
+	elif kind == "uppercut" or kind == "air-upper":
+		size = Vector2(48, 70)
+		attack_cd = 18
+		if plane == "street":
+			hop_v = -280.0 - 40.0 * float(FamilyProfile.dojo_rank("uppercut"))
+			hop = -1.0
+		Juice.shout("UPPERCUT")
+	elif kind == "roundhouse":
+		size = Vector2(86, 44)
+		attack_cd = 18
+		string_n = 0
+		Juice.shout("ROUNDHOUSE")
+	elif kind == "air-mix":
+		size = Vector2(70, 56)
+		attack_cd = 16
+		Juice.shout("AIR MIX")
 	if pickup == "pipe" or pickup == "board":
 		size += Vector2(18, 6) if pickup == "pipe" else Vector2(24, 8)
 	elif pickup == "knife":
@@ -681,7 +757,9 @@ func _attack(kind: String, charged: bool) -> void:
 			pickup = ""
 	if charged and kind == "heavy":
 		size = Vector2(78, 50)
-	_spawn_hit(kind, size, 0.12 if kind == "light" or kind == "jump-kick" or kind == "gut-punch" else 0.2, Vector2(36 * facing, -34 + hop))
+	KitSfx.hit(role, kind)
+	var life := 0.12 if kind == "light" or kind == "jump-kick" or kind == "gut-punch" else 0.2
+	_spawn_hit(kind, size, life, Vector2(36 * facing, -34 + hop))
 
 
 func _dive() -> void:
@@ -726,16 +804,27 @@ func _shoot() -> void:
 
 
 func _fire_shot(extra := Vector2.ZERO) -> void:
+	var id := "pistol" if pickup == "pistol" else ("batwing" if role == "son" else "snare")
+	var spec := WeaponBook.spec(id)
 	var shot := KitShot.new()
-	shot.kind = "shuriken" if role == "son" else "snare"
+	shot.kind = str(spec.get("kind", "shuriken" if role == "son" else "snare"))
+	shot.caliber = str(spec.get("caliber", ""))
 	shot.ricochet_left = 1 if role == "son" else 0
 	var rs := get_tree().get_first_node_in_group("run_state")
 	if rs and rs.has_method("has_card") and rs.has_card("ricochet_policy") and role == "son":
 		shot.ricochet_left += 1
 	shot.owner_role = role
-	shot.vel = Vector2(float(facing) * (520.0 if role == "son" else 380.0), 0.0)
+	shot.hollow = FamilyProfile.has_research("hollow")
+	shot.quiet = FamilyProfile.has_research("silencer")
+	var spd := float(spec.get("speed", 520.0 if role == "son" else 380.0))
+	shot.vel = Vector2(float(facing) * spd, 0.0)
 	shot.global_position = global_position + Vector2(float(facing) * 28.0, -42.0 + hop) + extra
-	Juice.play("res://assets/audio/shuriken.wav" if role == "son" else "res://assets/audio/web.wav")
+	var recoil := float(spec.get("recoil", 6))
+	if FamilyProfile.has_research("recoil_pad"):
+		recoil = maxf(1.0, recoil - 2.0)
+	velocity.x -= float(facing) * recoil * 8.0
+	KitSfx.gun(id, role)
+	Juice.muzzle(shot.global_position, facing, shot.caliber)
 	get_parent().add_child(shot)
 
 
@@ -984,6 +1073,86 @@ func _find_ladder() -> FireEscape:
 		if n is FireEscape and (n as FireEscape).covers(global_position):
 			return n
 	return null
+
+
+func stumble() -> void:
+	stumble_t = 0.55
+	trick_boost = 0.85
+	trick_t = 0.55
+	KitSfx.foot(role, 0.2, true)
+	Juice.squash(squash_root, facing)
+	Juice.shout("STUMBLE")
+
+
+func _on_land(fall: float) -> void:
+	Juice.squash(squash_root, facing)
+	Juice.land_puff(global_position)
+	rolling = false
+	if fall < 280.0:
+		KitSfx.hit(role, "land")
+		return
+	var want_roll := _stick().y > 0.25 or _just("dash") or FamilyProfile.dojo_rank("land_roll") >= 2
+	if want_roll:
+		rolling = true
+		trick_boost = 1.08 + 0.02 * float(FamilyProfile.dojo_rank("land_roll"))
+		trick_t = 1.2
+		slide_frames = 10
+		sliding = true
+		Juice.shout("LANDING ROLL")
+		KitSfx.hit(role, "dash")
+		Juice.toast("reward", "LANDING ROLL", "+SPEED  ·  VECTOR+")
+		return
+	KitSfx.foot(role, 1.0, true)
+	stumble()
+	if fall > 620.0:
+		take_hit("light", self)
+
+
+func _footsteps(delta: float, spd: float) -> void:
+	if hop < -2.0 or not _street_grounded():
+		return
+	if spd < 28.0:
+		_foot_cd = 0.0
+		return
+	_foot_cd -= delta
+	if _foot_cd > 0.0:
+		return
+	_foot_cd = clampf(0.34 - spd / 900.0, 0.14, 0.34)
+	KitSfx.foot(role, clampf(spd / 280.0, 0.2, 1.2), stumble_t > 0.0)
+
+
+func _try_stomp() -> bool:
+	if attack_cd > 0:
+		return false
+	var best: Punk = null
+	var best_d := 72.0
+	for n in get_tree().get_nodes_in_group("enemies"):
+		if not (n is Punk):
+			continue
+		var p: Punk = n
+		if not p.crush:
+			continue
+		var d := global_position.distance_to(p.global_position)
+		if d < best_d:
+			best_d = d
+			best = p
+	if best == null:
+		return false
+	stomp_n = mini(stomp_n + 1, 3)
+	stomp_cd = 1.1
+	attack_cd = 16
+	var kind := "stomp%d" % stomp_n
+	_spawn_hit(kind, Vector2(52, 36), 0.18, Vector2(8 * facing, 8))
+	KitSfx.hit(role, kind)
+	Juice.shout("STOMP %d" % stomp_n)
+	if stomp_n >= 3:
+		FamilyProfile.mark_stomp()
+		Juice.unlock_logo("FACE STOMP", "Smash. Pop. Splash. Brain on three.", "FINISHER  ·  STOMP 3")
+		stomp_n = 0
+		var rs := get_tree().get_first_node_in_group("run_state")
+		if rs and rs.has_method("add_points"):
+			rs.add_points(role, 80, "stomp")
+	return true
 
 
 func _street_grounded() -> bool:

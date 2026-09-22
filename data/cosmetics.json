@@ -1,0 +1,151 @@
+{
+  "frames": [
+    {
+      "id": "frame_intake",
+      "title": "INTAKE FRAME",
+      "blurb": "Clipboard corners. Everyone starts billed.",
+      "rarity": "common",
+      "need": {},
+      "tint": [0.45, 0.45, 0.5]
+    },
+    {
+      "id": "frame_lemon",
+      "title": "TUTOR FRAME",
+      "blurb": "Three nights. The kid's silhouette leaked onto the glass.",
+      "rarity": "uncommon",
+      "need": { "runs": 3 },
+      "tint": [0.90, 0.85, 0.29]
+    },
+    {
+      "id": "frame_brick",
+      "title": "LANDLORD FRAME",
+      "blurb": "City Hall filed. The brick is the personality.",
+      "rarity": "rare",
+      "need": { "city_clears": 1 },
+      "tint": [0.72, 0.22, 0.2]
+    },
+    {
+      "id": "frame_gold",
+      "title": "GROWTH FRAME",
+      "blurb": "Account level 5. The clipboard added a zero and a border.",
+      "rarity": "epic",
+      "need": { "account_level": 5 },
+      "tint": [0.79, 0.64, 0.15]
+    },
+    {
+      "id": "frame_void",
+      "title": "DIRECTOR FRAME",
+      "blurb": "The Family Plan is a corpse. Legendary glass.",
+      "rarity": "legendary",
+      "need": { "family_plan_kills": 1 },
+      "tint": [0.12, 0.08, 0.18]
+    }
+  ],
+  "banners": [
+    {
+      "id": "banner_clinic",
+      "title": "BASEMENT BANNER",
+      "blurb": "Fluorescent forever. Default proof you exist.",
+      "rarity": "common",
+      "need": {},
+      "tint": [0.14, 0.16, 0.22]
+    },
+    {
+      "id": "banner_wharf",
+      "title": "WHARF BANNER",
+      "blurb": "Survive one coping hour. The magnet kept the chips.",
+      "rarity": "uncommon",
+      "need": { "survive_clears": 1 },
+      "tint": [0.18, 0.32, 0.28]
+    },
+    {
+      "id": "banner_invoice",
+      "title": "INVOICE BANNER",
+      "blurb": "Pier filed. Past due, wearable.",
+      "rarity": "rare",
+      "need": { "annex_clears": 1 },
+      "tint": [0.42, 0.16, 0.12]
+    },
+    {
+      "id": "banner_finale",
+      "title": "FRIDGE BANNER",
+      "blurb": "Ending film. The night closed. The banner stayed.",
+      "rarity": "epic",
+      "need": { "ending_seen": 1 },
+      "tint": [0.55, 0.42, 0.12]
+    },
+    {
+      "id": "banner_director",
+      "title": "FAMILY PLAN BANNER",
+      "blurb": "Legendary. Armor stripped. Patterns eaten. Proof.",
+      "rarity": "legendary",
+      "need": { "family_plan_kills": 1 },
+      "tint": [0.08, 0.06, 0.1]
+    }
+  ],
+  "badges": [
+    {
+      "id": "badge_intake",
+      "title": "INTAKE STAMP",
+      "blurb": "Finish one session. Steam-like: you can pin it.",
+      "rarity": "common",
+      "need": { "runs": 1 }
+    },
+    {
+      "id": "badge_heavy",
+      "title": "HEAVY FEELINGS",
+      "blurb": "Ten heavies. Light hits are just a red feeling.",
+      "rarity": "uncommon",
+      "need": { "heavies": 10 }
+    },
+    {
+      "id": "badge_solo",
+      "title": "ONE CHAIR",
+      "blurb": "Solo clear. I didn't need him. Pin it anyway.",
+      "rarity": "uncommon",
+      "need": { "solo_clears": 1 }
+    },
+    {
+      "id": "badge_host",
+      "title": "LONG DISTANCE",
+      "blurb": "Remote Host/Join clear. Stockholm heard Dalarna.",
+      "rarity": "rare",
+      "need": { "remote_clears": 1 }
+    },
+    {
+      "id": "badge_pinball",
+      "title": "TABLE TEN",
+      "blurb": "10,000 on the table. The clinic bills the winner.",
+      "rarity": "rare",
+      "need": { "high_score": 10000 }
+    },
+    {
+      "id": "badge_stomp",
+      "title": "THREE STOMPS",
+      "blurb": "Face, then brain. The third one is the personality.",
+      "rarity": "epic",
+      "need": { "stomps": 3 }
+    },
+    {
+      "id": "badge_vault",
+      "title": "COACH CARD",
+      "blurb": "Ten named tricks. The Son's license noticed.",
+      "rarity": "epic",
+      "need": { "tricks": 10 }
+    },
+    {
+      "id": "badge_shaolin",
+      "title": "SHAOLIN BILLING",
+      "blurb": "Master rank in the dojo. Badges are homework.",
+      "rarity": "legendary",
+      "need": { "dojo_masters": 1 }
+    },
+    {
+      "id": "badge_director",
+      "title": "THE FAMILY PLAN",
+      "blurb": "Director Binder filed. Wear the corpse.",
+      "rarity": "legendary",
+      "need": { "family_plan_kills": 1 }
+    }
+  ]
+}

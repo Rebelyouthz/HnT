@@ -1,0 +1,47 @@
+[
+  {
+    "id": "coil_tape",
+    "title": "TAPE FROM PARTS",
+    "blurb": "Two coils, one thread. You start the next argument taped.",
+    "rarity": "uncommon",
+    "gold": 10,
+    "parts": { "scrap_coil": 2, "clinic_thread": 1 },
+    "grant": "tape_wrap"
+  },
+  {
+    "id": "thread_hat",
+    "title": "STITCH A BRIM",
+    "blurb": "Upgrade whatever hat is on the Son. Clothes are the build.",
+    "rarity": "uncommon",
+    "gold": 16,
+    "parts": { "clinic_thread": 2 },
+    "grant": "gear_hat"
+  },
+  {
+    "id": "ink_mag",
+    "title": "INK THE MAG",
+    "blurb": "Invoice ink plus a coil. Plus one in the tube.",
+    "rarity": "rare",
+    "gold": 20,
+    "parts": { "invoice_ink": 1, "scrap_coil": 1 },
+    "grant": "mag_plus"
+  },
+  {
+    "id": "silencer_kit",
+    "title": "WHISPER KIT",
+    "blurb": "Thread a silencer. Wanted climbs slower. That's enabling.",
+    "rarity": "rare",
+    "gold": 24,
+    "parts": { "clinic_thread": 2, "scrap_coil": 1 },
+    "grant": "silencer"
+  },
+  {
+    "id": "hollow_cast",
+    "title": "HOLLOW CAST",
+    "blurb": "Ink the round. Sparks get opinions. Caliber stays a lie.",
+    "rarity": "epic",
+    "gold": 36,
+    "parts": { "invoice_ink": 2, "scrap_coil": 2 },
+    "grant": "hollow"
+  }
+]

@@ -1,0 +1,52 @@
+[
+  {
+    "id": "mag_plus",
+    "title": "EXTENDED MAG",
+    "blurb": "Plus one in the tube. The tutoring license still expires.",
+    "rarity": "uncommon",
+    "gold": 28,
+    "parts": { "scrap_coil": 2 },
+    "stat": "ammo",
+    "value": 1
+  },
+  {
+    "id": "silencer",
+    "title": "CLINIC SILENCER",
+    "blurb": "Shots whisper. Wanted climbs slower. That's enabling.",
+    "rarity": "rare",
+    "gold": 45,
+    "parts": { "clinic_thread": 2 },
+    "stat": "quiet",
+    "value": 1
+  },
+  {
+    "id": "hollow",
+    "title": "HOLLOW FEELINGS",
+    "blurb": "Caliber stays. Damage doesn't. Sparks get opinions.",
+    "rarity": "rare",
+    "gold": 50,
+    "parts": { "invoice_ink": 2 },
+    "stat": "shot_dmg",
+    "value": 3
+  },
+  {
+    "id": "recoil_pad",
+    "title": "RECOIL PAD",
+    "blurb": "The muzzle still flashes. Your teeth don't.",
+    "rarity": "uncommon",
+    "gold": 32,
+    "parts": { "scrap_coil": 1 },
+    "stat": "recoil",
+    "value": -1
+  },
+  {
+    "id": "tape_wrap",
+    "title": "TAPE WRAP",
+    "blurb": "Start every run taped for 6 seconds. Not armor. A lifestyle.",
+    "rarity": "epic",
+    "gold": 70,
+    "parts": { "clinic_thread": 3, "scrap_coil": 1 },
+    "stat": "tape",
+    "value": 6
+  }
+]

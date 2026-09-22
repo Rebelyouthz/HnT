@@ -403,15 +403,21 @@ func toast(kind: String, title: String, body: String) -> void:
 			accent = Palette.READY
 		"challenge":
 			accent = Palette.BRICK
+		"reward":
+			accent = Palette.EDGE
 		_:
 			accent = Palette.EDGE
 	wrap.add_theme_stylebox_override("panel", UiKit.panel(Palette.PANEL, accent))
 	wrap.position = Vector2(860, 86 + _overlay.get_child_count() * 8)
-	wrap.size = Vector2(400, 80)
+	wrap.size = Vector2(400, 92)
 	_overlay.add_child(wrap)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 	wrap.add_child(row)
+	if kind == "achievement" or kind == "quest":
+		var mark := LogoMark.new()
+		mark.custom_minimum_size = Vector2(36, 36)
+		row.add_child(mark)
 	var stamp := StampMark.new()
 	stamp.accent = accent
 	stamp.custom_minimum_size = Vector2(28, 28)
@@ -430,8 +436,9 @@ func toast(kind: String, title: String, body: String) -> void:
 	var b := Label.new()
 	b.text = body
 	b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	b.custom_minimum_size = Vector2(360, 0)
-	UiKit.apply_label(b, 13, Palette.TEXT)
+	b.custom_minimum_size = Vector2(320, 0)
+	var body_c := Palette.EDGE if body.find("+") >= 0 or body.find("YOU GOT") >= 0 else Palette.TEXT
+	UiKit.apply_label(b, 13, body_c)
 	col.add_child(b)
 	wrap.scale = Vector2(0.86, 0.86)
 	var tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
@@ -442,7 +449,7 @@ func toast(kind: String, title: String, body: String) -> void:
 	tw.finished.connect(wrap.queue_free)
 
 
-func unlock_logo(title: String, sub: String) -> void:
+func unlock_logo(title: String, sub: String, reward: String = "") -> void:
 	play("res://assets/audio/chest.wav")
 	var wrap := Control.new()
 	wrap.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -452,10 +459,10 @@ func unlock_logo(title: String, sub: String) -> void:
 	var card := PanelContainer.new()
 	card.add_theme_stylebox_override("panel", UiKit.panel(Palette.PANEL, Palette.LEMON))
 	card.set_anchors_preset(Control.PRESET_CENTER)
-	card.offset_left = -240
-	card.offset_right = 240
-	card.offset_top = -90
-	card.offset_bottom = 90
+	card.offset_left = -280
+	card.offset_right = 280
+	card.offset_top = -120
+	card.offset_bottom = 120
 	wrap.add_child(card)
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 8)
@@ -482,12 +489,181 @@ func unlock_logo(title: String, sub: String) -> void:
 	s.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	UiKit.apply_label(s, 15, Palette.TEXT)
 	col.add_child(s)
+	var got := Label.new()
+	got.text = "YOU GOT  ·  %s" % (reward if reward != "" else sub)
+	got.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	got.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	UiKit.apply_label(got, 16, Palette.EDGE)
+	col.add_child(got)
 	card.scale = Vector2(0.72, 0.72)
 	var tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.set_ignore_time_scale(true)
 	tw.tween_property(card, "scale", Vector2(1.08, 1.08), 0.22)
 	tw.tween_property(card, "scale", Vector2.ONE, 0.12)
-	tw.tween_interval(1.15)
+	tw.tween_interval(1.25)
 	tw.tween_property(wrap, "modulate:a", 0.0, 0.2)
 	tw.finished.connect(wrap.queue_free)
+
+
+func level_up(grant: Dictionary) -> void:
+	play("res://assets/audio/levelup.wav" if ResourceLoader.exists("res://assets/audio/levelup.wav") else "res://assets/audio/chest.wav")
+	pulse_shake(8.0)
+	var wrap := Control.new()
+	wrap.set_anchors_preset(Control.PRESET_FULL_RECT)
+	wrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	wrap.process_mode = Node.PROCESS_MODE_ALWAYS
+	_overlay.add_child(wrap)
+	var dim := ColorRect.new()
+	dim.color = Color(0, 0, 0, 0.55)
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	wrap.add_child(dim)
+	var card := PanelContainer.new()
+	card.add_theme_stylebox_override("panel", UiKit.panel(Palette.PANEL, Palette.EDGE))
+	card.set_anchors_preset(Control.PRESET_CENTER)
+	card.offset_left = -300
+	card.offset_right = 300
+	card.offset_top = -160
+	card.offset_bottom = 160
+	wrap.add_child(card)
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 8)
+	card.add_child(col)
+	var mark := LogoMark.new()
+	mark.custom_minimum_size = Vector2(64, 64)
+	col.add_child(mark)
+	var t := Label.new()
+	t.text = "ACCOUNT LEVEL UP"
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	UiKit.apply_label(t, 28, Palette.LEMON)
+	col.add_child(t)
+	var av := Label.new()
+	av.text = "%s  ·  %s" % [FamilyProfile.son_name(), FamilyProfile.father_name()]
+	av.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	UiKit.apply_label(av, 16, Palette.TEXT)
+	col.add_child(av)
+	var bar := ProgressBar.new()
+	bar.custom_minimum_size = Vector2(520, 22)
+	bar.max_value = float(grant.get("need", 100))
+	bar.value = float(grant.get("xp", 0))
+	bar.show_percentage = false
+	col.add_child(bar)
+	var got2 := Label.new()
+	got2.text = "YOU GOT  ·  LV %d  ·  +8 GOLD  ·  PROFILE FRAME CHECK" % int(grant.get("level", 1))
+	got2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	UiKit.apply_label(got2, 15, Palette.EDGE)
+	col.add_child(got2)
+	card.scale = Vector2(0.7, 0.7)
+	var tw2 := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw2.set_ignore_time_scale(true)
+	tw2.tween_property(card, "scale", Vector2(1.1, 1.1), 0.24)
+	tw2.tween_property(card, "scale", Vector2.ONE, 0.12)
+	tw2.tween_interval(1.6)
+	tw2.tween_property(wrap, "modulate:a", 0.0, 0.22)
+	tw2.finished.connect(wrap.queue_free)
+	toast("achievement", "LEVEL UP", "YOU GOT  ·  LV %d  ·  +8 GOLD" % int(grant.get("level", 1)))
+
+
+func carpenter(title: String, reward: String) -> void:
+	play("res://assets/audio/hammer.wav" if ResourceLoader.exists("res://assets/audio/hammer.wav") else "res://assets/audio/chest.wav")
+	pulse_shake(5.0)
+	var wrap := Control.new()
+	wrap.set_anchors_preset(Control.PRESET_FULL_RECT)
+	wrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	wrap.process_mode = Node.PROCESS_MODE_ALWAYS
+	_overlay.add_child(wrap)
+	var plank := ColorRect.new()
+	plank.color = Color(0.45, 0.32, 0.18)
+	plank.size = Vector2(160, 18)
+	plank.position = Vector2(560, 380)
+	wrap.add_child(plank)
+	var saw := ColorRect.new()
+	saw.color = Palette.EDGE
+	saw.size = Vector2(40, 10)
+	saw.position = Vector2(540, 360)
+	wrap.add_child(saw)
+	var lab := Label.new()
+	lab.text = "CAMP UNLOCKED"
+	lab.position = Vector2(400, 250)
+	lab.size = Vector2(480, 40)
+	lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	UiKit.apply_label(lab, 32, Palette.LEMON)
+	wrap.add_child(lab)
+	var sub := Label.new()
+	sub.text = "%s\nYOU GOT  ·  %s" % [title, reward]
+	sub.position = Vector2(360, 300)
+	sub.size = Vector2(560, 60)
+	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	UiKit.apply_label(sub, 16, Palette.TEXT)
+	wrap.add_child(sub)
+	var tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.set_ignore_time_scale(true)
+	tw.tween_property(saw, "position:x", 720.0, 0.35)
+	tw.parallel().tween_property(plank, "rotation", 0.4, 0.4)
+	tw.tween_interval(0.55)
+	tw.tween_property(wrap, "modulate:a", 0.0, 0.2)
+	tw.finished.connect(wrap.queue_free)
+
+
+func muzzle(at: Vector2, facing: int, caliber: String) -> void:
+	var p := CPUParticles2D.new()
+	p.global_position = at
+	p.emitting = true
+	p.one_shot = true
+	p.explosiveness = 1.0
+	p.amount = 10
+	p.lifetime = 0.12
+	p.direction = Vector2(float(facing), -0.1)
+	p.spread = 18.0
+	p.initial_velocity_min = 80.0
+	p.initial_velocity_max = 180.0
+	p.gravity = Vector2.ZERO
+	p.color = Color(1.0, 0.82, 0.35, 0.95)
+	var host := get_tree().get_first_node_in_group("dock_world")
+	if host:
+		host.add_child(p)
+	else:
+		add_child(p)
+	popup_number(at + Vector2(0, -20), caliber, Palette.EDGE)
+	get_tree().create_timer(0.25, true, false, true).timeout.connect(func() -> void:
+		if is_instance_valid(p):
+			p.queue_free()
+	)
+
+
+func sparks(at: Vector2) -> void:
+	var p := CPUParticles2D.new()
+	p.global_position = at
+	p.emitting = true
+	p.one_shot = true
+	p.explosiveness = 0.95
+	p.amount = 12
+	p.lifetime = 0.22
+	p.direction = Vector2(0, -1)
+	p.spread = 80.0
+	p.initial_velocity_min = 60.0
+	p.initial_velocity_max = 160.0
+	p.color = Color(0.95, 0.85, 0.4)
+	var host := get_tree().get_first_node_in_group("dock_world")
+	if host:
+		host.add_child(p)
+	else:
+		add_child(p)
+	get_tree().create_timer(0.35, true, false, true).timeout.connect(func() -> void:
+		if is_instance_valid(p):
+			p.queue_free()
+	)
+
+
+func hole(at: Vector2) -> void:
+	var h := ColorRect.new()
+	h.color = Color(0.05, 0.04, 0.05, 0.85)
+	h.size = Vector2(6, 6)
+	h.global_position = at
+	h.z_index = 2
+	var host := get_tree().get_first_node_in_group("dock_world")
+	if host:
+		host.add_child(h)
+	else:
+		add_child(h)
 

@@ -106,6 +106,14 @@ const NEXT_FLOOR := "THE PROCESSING FLOOR"
 const GATE_FLOOR := "Late act. Strip the armor. Then the patterns. Then go home."
 const NEXT_ENDING := "WATCH THE ENDING"
 const GATE_ENDING := "The night closes. Pause still skips a beat."
+const PROFILE := "FAMILY PROFILE"
+const CAMP_SHOP := "CAMP SHOP"
+const PATROL := "QUICK PATROL"
+const RESEARCH := "RESEARCH CENTER"
+const DOJO := "MARTIAL ARTS SCHOOL"
+const WORKSHOP := "WORKSHOP"
+const OPEN_CAMP := "OPEN"
+const SEND_PATROL := "SEND PATROL"
 
 
 static func come_on(father: String, son: String, who: String) -> String:

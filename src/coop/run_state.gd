@@ -61,7 +61,7 @@ func clear_run() -> void:
 
 
 func add_points(role: String, n: int, _why: String = "") -> void:
-	if n <= 0:
+	if n == 0:
 		return
 	if role == "father":
 		score_dad += n
