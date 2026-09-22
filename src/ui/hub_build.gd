@@ -27,7 +27,7 @@ func _ready() -> void:
 	head.add_child(h)
 	root.add_child(head)
 	var s := Label.new()
-	s.text = "Three trunks. Dark until the parent is owned. Lit when it lives in you. Gold in, violence out. Compare is split-screen menus only."
+	s.text = "Three trunks. Each splits left / core / right. Dark until the parent is owned. Lit when it lives in you. Gold in, violence out. Compare is split-screen menus only."
 	s.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	UiKit.apply_label(s, 13, Palette.MUTED)
 	root.add_child(s)
@@ -82,20 +82,40 @@ func _trunk(name: String, list: Array) -> Control:
 	count.text = "%d / %d  ·  %s" % [owned_n, total, "LIT" if owned_n > 0 else "DARK"]
 	UiKit.apply_label(count, 12, Palette.MUTED)
 	col.add_child(count)
-	var stem := ColorRect.new()
-	stem.custom_minimum_size = Vector2(4, 8)
-	stem.color = Palette.READY if owned_n > 0 else Palette.LOCK
-	col.add_child(stem)
-	nodes.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		var da := 0 if str(a.get("requires", "")) == "" else (1 if str(a.get("branch", "")) == "left" else 2)
-		var db := 0 if str(b.get("requires", "")) == "" else (1 if str(b.get("branch", "")) == "left" else 2)
-		if str(a.get("requires", "")) != "" and str(b.get("requires", "")) != "":
-			if str(a.get("requires", "")) == str(b.get("id", "")):
-				return true
-		return da < db
-	)
+	var graph := HBoxContainer.new()
+	graph.add_theme_constant_override("separation", 6)
+	graph.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	col.add_child(graph)
+	var left := VBoxContainer.new()
+	var core := VBoxContainer.new()
+	var right := VBoxContainer.new()
+	for arm in [left, core, right]:
+		arm.add_theme_constant_override("separation", 6)
+		arm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		graph.add_child(arm)
+	var left_l := Label.new()
+	left_l.text = "LEFT"
+	UiKit.apply_label(left_l, 11, Palette.MUTED)
+	left.add_child(left_l)
+	var core_l := Label.new()
+	core_l.text = "CORE"
+	UiKit.apply_label(core_l, 11, Palette.LEMON)
+	core.add_child(core_l)
+	var right_l := Label.new()
+	right_l.text = "RIGHT"
+	UiKit.apply_label(right_l, 11, Palette.MUTED)
+	right.add_child(right_l)
 	for n in nodes:
-		col.add_child(_node_card(n))
+		var branch := str(n.get("branch", "core"))
+		if str(n.get("requires", "")) == "":
+			branch = "core"
+		match branch:
+			"left":
+				left.add_child(_node_card(n))
+			"right":
+				right.add_child(_node_card(n))
+			_:
+				core.add_child(_node_card(n))
 	return col
 
 

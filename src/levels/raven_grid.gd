@@ -98,6 +98,8 @@ func _process(delta: float) -> void:
 	super._process(delta)
 	if _van != null or not _chase_armed or _state.failed or _state.cleared:
 		return
+	if _tower_blocks_chase():
+		return
 	var lead := spawn_at
 	if _son:
 		lead = _son.global_position
@@ -110,3 +112,16 @@ func _process(delta: float) -> void:
 	_van.dumped.connect(func() -> void:
 		Juice.toast("quest", "FAR SHORE", "Canal ate the chase. Grid still wants a signature.")
 	)
+
+
+func _tower_blocks_chase() -> bool:
+	for n in get_tree().get_nodes_in_group("towers"):
+		if bool(n.get("_busy")):
+			return true
+		if not (n is Node2D):
+			continue
+		var mast: Node2D = n
+		for f in [_son, _dad]:
+			if f and is_instance_valid(f) and f.global_position.distance_to(mast.global_position) < 90.0:
+				return true
+	return false

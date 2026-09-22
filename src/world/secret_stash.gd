@@ -139,8 +139,12 @@ func _claim(f: Fighter) -> void:
 				FamilyProfile.data["polaroids"] = int(FamilyProfile.data.get("polaroids", 0)) + 1
 				FamilyProfile.save()
 			Juice.unlock_logo(title, str(spec.get("blurb", "")), "SECRET  ·  ALBUM")
+		"weapon":
+			f.equip_pickup(str(spec.get("weapon", "invoice_star")))
+			Juice.toast("reward", title, str(spec.get("blurb", "A unique weapon. The clipboard missed this.")))
 		_:
 			FamilyProfile.add_gold(12)
+			Juice.toast("reward", title, "Twelve gold. Unique would have been nicer.")
 	Rarity.juice(rarity, title)
 	Juice.unlock_logo(title, str(spec.get("blurb", "Unique. The clipboard missed this.")), "SECRET  ·  %s" % Rarity.label(rarity))
 	Juice.play("res://assets/audio/chest.wav")

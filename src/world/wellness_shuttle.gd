@@ -66,5 +66,9 @@ func _process(delta: float) -> void:
 				return
 			var rs := get_tree().get_first_node_in_group("run_state")
 			if rs is RunState:
-				App.advance("sleet_hour", rs as RunState)
+				var st: RunState = rs
+				if not st.cleared:
+					st.clear_run()
+			Juice.shout("FILE THE RESULTS")
+			Juice.toast("quest", "WELLNESS SHUTTLE", "NEXT files the orchard. Then the weather packs a personality.")
 			return

@@ -72,6 +72,10 @@ func _ready() -> void:
 			col = Color(0.16, 0.22, 0.42, 0.95)
 		"bench":
 			col = Color(0.42, 0.32, 0.22, 0.95)
+		"flag":
+			col = Palette.BRICK
+		"crate":
+			col = Color(0.5, 0.36, 0.18, 0.95)
 	var poly := Polygon2D.new()
 	poly.color = col
 	if kind == "hill":
@@ -130,6 +134,15 @@ func _ready() -> void:
 		poly.polygon = PackedVector2Array([
 			Vector2(-48, 6), Vector2(48, 6), Vector2(44, 20), Vector2(-44, 20)
 		])
+	elif kind == "flag":
+		poly.polygon = PackedVector2Array([
+			Vector2(-4, -52), Vector2(4, -52), Vector2(4, 20), Vector2(-4, 20),
+			Vector2(4, -48), Vector2(36, -36), Vector2(4, -24)
+		])
+	elif kind == "crate":
+		poly.polygon = PackedVector2Array([
+			Vector2(-22, -4), Vector2(22, -4), Vector2(22, 20), Vector2(-22, 20)
+		])
 	else:
 		poly.polygon = PackedVector2Array([
 			Vector2(-28, 8), Vector2(28, 8), Vector2(22, 20), Vector2(-22, 20)
@@ -140,7 +153,7 @@ func _ready() -> void:
 	lab.size = Vector2(140, 20)
 	lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lab.text = kind.to_upper()
-	UiKit.apply_label(lab, 13, Palette.LEMON if kind in ["pad", "escape", "drop", "dumpster", "billboard", "wallrun", "grind", "cart", "awning", "scaffold", "geyser", "pole", "hood", "bench"] else Palette.MUTED)
+	UiKit.apply_label(lab, 13, Palette.LEMON if kind in ["pad", "escape", "drop", "dumpster", "billboard", "wallrun", "grind", "cart", "awning", "scaffold", "geyser", "pole", "hood", "bench", "flag", "crate"] else Palette.MUTED)
 	add_child(lab)
 
 
@@ -401,6 +414,22 @@ func _touch(f: Fighter) -> void:
 					_acrobat = true
 					_spawn_named("Bench Clerk", 32, "street")
 					Juice.toast("challenge", "BENCH CLERK", "You vaulted intake. He still wants you to sit.")
+		"flag":
+			if _used <= 0.0 and (f._just("jump") or f._just("special")):
+				_used = 0.5
+				f.hop_v = -420.0
+				Juice.shout("FLAG")
+				Juice.unlock_logo("STOLEN FLAG", "A rag on a stick. Points anyway.", "TOY")
+				var rs := get_tree().get_first_node_in_group("run_state")
+				if rs and rs.has_method("add_points"):
+					rs.add_points(f.role, 20, "flag")
+		"crate":
+			if _used <= 0.0 and (f._just("jump") or f._street_grounded()):
+				_used = 0.35
+				f.hop_v = -520.0
+				f.hop = -4.0
+				Juice.shout("CRATE")
+				KitSfx.hit(f.role, "jump")
 
 
 func _spawn_acrobat() -> void:

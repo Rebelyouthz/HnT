@@ -85,6 +85,9 @@ func _seat_hint() -> void:
 func _process(delta: float) -> void:
 	if crashing:
 		return
+	for n in get_tree().get_nodes_in_group("towers"):
+		if bool(n.get("_busy")):
+			return
 	life -= delta
 	if _shot_cd > 0.0:
 		_shot_cd -= delta

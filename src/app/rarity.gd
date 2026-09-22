@@ -73,10 +73,17 @@ static func buy(title: String, info: Dictionary) -> void:
 
 
 static func of_pickup(kind: String) -> String:
+	var spec := WeaponBook.spec(kind)
+	if not spec.is_empty():
+		return normalize(str(spec.get("rarity", "common")))
 	match kind:
-		"pistol":
+		"pistol", "nailgun":
 			return "rare"
-		"knife", "board", "envelope":
+		"knife", "board", "envelope", "chain", "clipboard", "stapler":
 			return "uncommon"
+		"crowbar":
+			return "rare"
+		"invoice_star":
+			return "legendary"
 		_:
 			return "common"

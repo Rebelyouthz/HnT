@@ -863,9 +863,9 @@ func _attack(kind: String, charged: bool) -> void:
 		size = Vector2(70, 56)
 		attack_cd = 16
 		Juice.shout("AIR MIX")
-	if pickup == "pipe" or pickup == "board":
-		size += Vector2(18, 6) if pickup == "pipe" else Vector2(24, 8)
-	elif pickup == "knife":
+	if pickup == "pipe" or pickup == "board" or pickup == "chain" or pickup == "crowbar":
+		size += Vector2(18, 6) if pickup == "pipe" or pickup == "chain" else Vector2(24, 8)
+	elif pickup == "knife" or pickup == "clipboard" or pickup == "stapler" or pickup == "invoice_star":
 		size += Vector2(10, 0)
 		if kind == "light" or kind == "gut-punch":
 			kind = "blade"
@@ -875,7 +875,7 @@ func _attack(kind: String, charged: bool) -> void:
 			kind = "blade"
 	elif pickup == "can":
 		size += Vector2(8, 4)
-	elif pickup == "pistol" and (kind == "light" or kind == "gut-punch") and pistol_shots > 0:
+	elif (pickup == "pistol" or pickup == "nailgun") and (kind == "light" or kind == "gut-punch") and pistol_shots > 0:
 		pistol_shots -= 1
 		_fire_shot()
 		if pistol_shots <= 0:
@@ -950,7 +950,11 @@ func _shoot() -> void:
 
 
 func _fire_shot(extra := Vector2.ZERO) -> void:
-	var id := "pistol" if pickup == "pistol" else ("batwing" if role == "son" else "snare")
+	var id := "pistol"
+	if pickup == "nailgun":
+		id = "nailgun"
+	elif pickup != "pistol":
+		id = "batwing" if role == "son" else "snare"
 	var spec := WeaponBook.spec(id)
 	var shot := KitShot.new()
 	shot.kind = str(spec.get("kind", "shuriken" if role == "son" else "snare"))
@@ -1391,7 +1395,7 @@ func _try_catch() -> bool:
 
 
 func _throw_held_weapon() -> bool:
-	if pickup != "pipe" and pickup != "board" and pickup != "knife" and pickup != "can" and pickup != "envelope":
+	if pickup == "" or pickup == "pistol" or pickup == "nailgun":
 		return false
 	attack_cd = 16
 	var tw := ThrownWeapon.new()
@@ -1458,9 +1462,12 @@ func _throw() -> void:
 
 func equip_pickup(kind: String) -> void:
 	pickup = kind
-	if kind == "pistol":
-		pistol_shots = 6
+	if kind == "pistol" or kind == "nailgun":
+		var spec := WeaponBook.spec(kind)
+		pistol_shots = maxi(3, int(spec.get("ammo", 6)))
 		ammo = maxi(ammo, 3)
+	if kind == "invoice_star":
+		Juice.unlock_logo("INVOICE STAR", "Legendary paperwork. Throw it like you mean the copay.", "SECRET  ·  LEGENDARY")
 	Juice.shout(kind.to_upper())
 
 

@@ -32,6 +32,21 @@ func _ready() -> void:
 		"board":
 			_poly.color = Color(0.55, 0.38, 0.18)
 			_poly.polygon = PackedVector2Array([Vector2(-24, -5), Vector2(24, -5), Vector2(24, 5), Vector2(-24, 5)])
+		"chain":
+			_poly.color = Color(0.62, 0.64, 0.68)
+			_poly.polygon = PackedVector2Array([Vector2(-28, -3), Vector2(28, -3), Vector2(26, 3), Vector2(-26, 3)])
+		"crowbar":
+			_poly.color = Color(0.42, 0.18, 0.14)
+			_poly.polygon = PackedVector2Array([Vector2(-22, -5), Vector2(22, 5), Vector2(18, 6), Vector2(-22, 5)])
+		"clipboard":
+			_poly.color = Color(0.88, 0.82, 0.7)
+			_poly.polygon = PackedVector2Array([Vector2(-12, -14), Vector2(12, -14), Vector2(12, 12), Vector2(-12, 12)])
+		"stapler":
+			_poly.color = Color(0.72, 0.22, 0.18)
+			_poly.polygon = PackedVector2Array([Vector2(-10, -8), Vector2(12, -8), Vector2(12, 6), Vector2(-10, 6)])
+		"invoice_star":
+			_poly.color = Palette.EDGE
+			_poly.polygon = PackedVector2Array([Vector2(0, -14), Vector2(6, -4), Vector2(14, 0), Vector2(6, 4), Vector2(0, 14), Vector2(-6, 4), Vector2(-14, 0), Vector2(-6, -4)])
 		"can":
 			_poly.color = Color(0.82, 0.22, 0.18)
 			_poly.polygon = PackedVector2Array([Vector2(-8, -10), Vector2(8, -10), Vector2(8, 10), Vector2(-8, 10)])
@@ -92,7 +107,7 @@ func _on_body(b: Node) -> void:
 			return
 		var e: Punk = b
 		var from: Node = thrower if is_instance_valid(thrower) else self
-		e.take_hit("blade" if kind == "knife" else "heavy", from)
+		e.take_hit("blade" if kind in ["knife", "clipboard", "stapler", "invoice_star"] else "heavy", from)
 		Juice.sparks(global_position)
 		var blood := get_tree().get_first_node_in_group("blood_sim")
 		if blood and blood.has_method("spray"):

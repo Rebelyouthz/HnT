@@ -58,6 +58,8 @@ func clear_run() -> void:
 		return
 	cleared = true
 	var gold := 12 + int(scrap / 5.0)
+	if App.difficulty == "finals":
+		gold += 6
 	FamilyProfile.add_gold(gold)
 	run_cleared.emit()
 
@@ -101,6 +103,8 @@ func add_wanted(n: int) -> void:
 	var step := n
 	if FamilyProfile.has_cbt("quiet_hands") and step > 0:
 		step = maxi(0, step - 1) if randf() < 0.5 else step
+	if App.difficulty == "finals" and step > 0 and randf() < 0.4:
+		step += 1
 	wanted = clampi(wanted + step, 0, 5)
 	wanted_changed.emit()
 

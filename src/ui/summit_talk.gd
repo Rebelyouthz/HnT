@@ -18,6 +18,9 @@ var _choice := ""
 var _phase := "eat"
 var _bubbles: Control
 var _mom := false
+var _focus_i := 0
+var _lock_t := 0.0
+var _choice_ids: Array[String] = ["yes", "no", "deflect"]
 
 
 func _ready() -> void:
@@ -73,6 +76,8 @@ func _ready() -> void:
 func _begin() -> void:
 	var rs := get_tree().get_first_node_in_group("run_state")
 	var has_lunch := rs != null and rs.has_method("has_lunch") and bool(rs.call("has_lunch"))
+	_phase = "eat"
+	_prompt.text = Copy.LUNCH_140
 	if has_lunch:
 		rs.call("eat_lunch")
 		ate = true
@@ -80,17 +85,16 @@ func _begin() -> void:
 		if FamilyProfile.has_cbt("summit_joke"):
 			FamilyProfile.add_gold(12)
 			Juice.toast("reward", "SUMMIT JOKE", "+12 gold. Peace is also a sink.")
-		_prompt.text = Copy.LUNCH_140
 		_lines = [
 			{"who": "son", "text": str(_talk.get("eat_joke", "We packed this. That's the assignment."))},
 			{"who": "father", "text": "Sit. Eat. Nobody bills the wind."}
 		]
-		_phase = "eat"
-		_paint_line()
 	else:
-		_phase = "opener"
-		_lines = (_talk.get("opener", []) as Array).duplicate()
-		_paint_line()
+		_lines = [
+			{"who": "son", "text": "We didn't pack. That's also the assignment."},
+			{"who": "father", "text": "Sit anyway. Nobody bills the wind."}
+		]
+	_paint_line()
 
 
 func _paint_line() -> void:
@@ -129,7 +133,7 @@ func _advance_phase() -> void:
 			if _choice == "yes" and bool(_talk.get("bubbles", false)) and bool(_talk.get("bubble_yes_only", true)):
 				_phase = "bubbles"
 				_play_bubbles()
-			elif _talk.has("second"):
+			elif _talk.has("second") and map_id == "processing_floor":
 				_phase = "second"
 				var sec: Dictionary = _talk["second"]
 				_offer(str(sec.get("prompt", "Farm talk?")))
@@ -142,17 +146,20 @@ func _advance_phase() -> void:
 
 
 func _offer(prompt: String) -> void:
-	_prompt.text = prompt
+	_prompt.text = prompt + "  ·  LEFT / RIGHT  ·  LIGHT CONFIRMS"
 	_body.text = prompt
 	_who.text = StoryBook.who_name("father")
 	_row.visible = true
-	for c in _row.get_children():
-		c.queue_free()
+	_lock_t = 0.22
+	_focus_i = 0
+	while _row.get_child_count() > 0:
+		var old := _row.get_child(0)
+		_row.remove_child(old)
+		old.free()
 	_choice_btn("YES", "yes")
 	_choice_btn("NO", "no")
 	_choice_btn("DEFLECT", "deflect")
-	if _row.get_child_count() > 0:
-		(_row.get_child(0) as Button).grab_focus()
+	_paint_focus()
 
 
 func _choice_btn(label: String, id: String) -> void:
@@ -165,6 +172,25 @@ func _choice_btn(label: String, id: String) -> void:
 		_pick(id)
 	)
 	_row.add_child(b)
+
+
+func _paint_focus() -> void:
+	var kids := _row.get_children()
+	for i in kids.size():
+		var b := kids[i] as Button
+		if b == null:
+			continue
+		if i == _focus_i:
+			b.grab_focus()
+			b.modulate = Color(1.15, 1.12, 0.85)
+		else:
+			b.modulate = Color.WHITE
+
+
+func _activate_focus() -> void:
+	if _focus_i < 0 or _focus_i >= _choice_ids.size():
+		_focus_i = 0
+	_pick(_choice_ids[_focus_i])
 
 
 func _pick(id: String) -> void:
@@ -202,22 +228,47 @@ func _draw_bubble(at: Vector2, a: Color, b: Color, tag: String) -> void:
 	p.add_child(col)
 	var l := Label.new()
 	l.text = tag
-	l.custom_minimum_size = Vector2(220, 36)
+	l.custom_minimum_size = Vector2(280, 28)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	UiKit.apply_label(l, 16, a)
 	col.add_child(l)
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 40)
+	row.add_theme_constant_override("separation", 28)
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	var kid := ColorRect.new()
-	kid.color = a
-	kid.custom_minimum_size = Vector2(18, 36)
-	var dad := ColorRect.new()
-	dad.color = b
-	dad.custom_minimum_size = Vector2(22, 48)
-	row.add_child(kid)
-	row.add_child(dad)
+	row.add_child(_body_fig(a, 12, 28, 3))
+	row.add_child(_body_fig(b, 22, 72, 26))
 	col.add_child(row)
+	var ages := Label.new()
+	ages.text = "THREE  ·  TWENTY-SIX"
+	ages.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	UiKit.apply_label(ages, 11, Palette.MUTED)
+	col.add_child(ages)
+
+
+func _body_fig(col: Color, w: float, h: float, age: int) -> Control:
+	var wrap := Control.new()
+	wrap.custom_minimum_size = Vector2(maxf(w + 16.0, 40.0), h + 18.0)
+	var torso := ColorRect.new()
+	torso.color = col
+	torso.size = Vector2(w, h)
+	torso.position = Vector2(8, 10)
+	wrap.add_child(torso)
+	var head := ColorRect.new()
+	head.color = col.lightened(0.18)
+	head.size = Vector2(w * 0.7, w * 0.7)
+	head.position = Vector2(8 + w * 0.15, 2)
+	wrap.add_child(head)
+	var arm := ColorRect.new()
+	arm.color = col.darkened(0.12)
+	arm.size = Vector2(6, h * 0.45)
+	arm.position = Vector2(4, 18)
+	wrap.add_child(arm)
+	var tag := Label.new()
+	tag.text = str(age)
+	tag.position = Vector2(8, h + 2)
+	UiKit.apply_label(tag, 10, Palette.MUTED)
+	wrap.add_child(tag)
+	return wrap
 
 
 func _mom_cut() -> void:
@@ -234,13 +285,46 @@ func _mom_cut() -> void:
 	Juice.play("res://assets/audio/mom_door.wav")
 
 
+func _physics_process(delta: float) -> void:
+	if _lock_t > 0.0:
+		_lock_t -= delta
+	if not has_node("/root/NetSession") or not NetSession.active():
+		return
+	if not _row.visible:
+		if _net_tap("light") or _net_tap("jump"):
+			_advance_line()
+		return
+	if _lock_t > 0.0:
+		return
+	if _net_tap("light") or _net_tap("jump"):
+		_activate_focus()
+	elif _net_tap("heavy"):
+		_pick("no")
+	elif _net_tap("special"):
+		_pick("deflect")
+
+
+func _net_tap(action: String) -> bool:
+	if has_node("/root/NetSession") and NetSession.active():
+		return NetSession.tapped(action)
+	return false
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if not event.is_pressed() or event.is_echo():
 		return
 	if _row.visible:
-		if event.is_action_pressed("p1_light") or event.is_action_pressed("p1_jump") \
+		if _lock_t > 0.0:
+			return
+		if event.is_action_pressed("p1_left") or event.is_action_pressed("p2_left") or event.is_action_pressed("ui_left"):
+			_focus_i = wrapi(_focus_i - 1, 0, _choice_ids.size())
+			_paint_focus()
+		elif event.is_action_pressed("p1_right") or event.is_action_pressed("p2_right") or event.is_action_pressed("ui_right"):
+			_focus_i = wrapi(_focus_i + 1, 0, _choice_ids.size())
+			_paint_focus()
+		elif event.is_action_pressed("p1_light") or event.is_action_pressed("p1_jump") \
 				or event.is_action_pressed("p2_light") or event.is_action_pressed("p2_jump"):
-			_pick("yes")
+			_activate_focus()
 		elif event.is_action_pressed("p1_heavy") or event.is_action_pressed("p2_heavy"):
 			_pick("no")
 		elif event.is_action_pressed("p1_special") or event.is_action_pressed("p2_special"):
@@ -248,15 +332,19 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event.is_action_pressed("p1_light") or event.is_action_pressed("p1_jump") \
 			or event.is_action_pressed("p2_light") or event.is_action_pressed("p2_jump"):
-		if _phase == "bubble2":
-			_mom_cut()
-			_phase = "bubble_done"
-			return
-		if _phase == "bubble_done":
-			_close()
-			return
-		_i += 1
-		_paint_line()
+		_advance_line()
+
+
+func _advance_line() -> void:
+	if _phase == "bubble2":
+		_mom_cut()
+		_phase = "bubble_done"
+		return
+	if _phase == "bubble_done":
+		_close()
+		return
+	_i += 1
+	_paint_line()
 
 
 func _close() -> void:

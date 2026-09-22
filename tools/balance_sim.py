@@ -61,51 +61,111 @@ def telegraph(diff: str) -> float:
     return {"open_house": 1.45, "night_class": 1.0, "finals": 0.7}[diff]
 
 
-def loop(diff: str, density: str) -> dict:
-    gold = START_GOLD
-    gems = START_GEMS
-    rep = START_REP
-    scrap = 0
+def loop(diff: str, density: str, carry=None) -> dict:
+    gold = int(carry["gold_end"]) if carry else START_GOLD
+    gems = int(carry["gems_end"]) if carry else START_GEMS
+    rep = int(carry["rep_end"]) if carry else START_REP
+    scrap = int(carry["scrap_end"]) if carry else 0
     xp = 0
     levels = 0
     account_xp = 0
-    account_lv = 1
+    account_lv = int(carry["account_lv"]) if carry else 1
     deaths = 0
     lives = LIVES
     hp = SON_HP
-    parts_have = {"scrap_coil": START_SCRAP_COIL, "clinic_thread": 0, "invoice_ink": 0}
+    parts_have = dict(carry["parts"]) if carry else {"scrap_coil": START_SCRAP_COIL, "clinic_thread": 0, "invoice_ink": 0}
     cards_taken = 0
     lunch = 0
     towers_ok = 0
     secrets_ok = 0
-    cbt_owned: list[str] = []
-    dojo_ranks: dict[str, int] = {}
-    research_owned: list[str] = []
+    cbt_owned: list[str] = list(carry.get("cbt_ids", [])) if carry else []
+    dojo_ranks: dict[str, int] = dict(carry.get("dojo_ranks", {})) if carry else {}
+    research_owned: list[str] = list(carry.get("research_ids", [])) if carry else []
     notes: list[str] = []
+    if carry and diff == "finals":
+        award_slice = sum(int(a.get("gold", 0)) for a in awards) // 2
+        gold += award_slice
+        notes.append(f"finals carry awards +{award_slice}g")
 
     def need_account() -> int:
         return 100 + account_lv * 50
 
     def buy_cbt() -> None:
         nonlocal gold
-        for node in cbt:
-            nid = node["id"]
-            if nid in cbt_owned:
-                continue
-            req = node.get("requires") or ""
-            if req and req not in cbt_owned:
-                continue
-            if gold >= int(node["gold"]) and rep >= int(node["rep"]):
-                gold -= int(node["gold"])
-                cbt_owned.append(nid)
-                notes.append(f"buy CBT {nid} gold={gold}")
-                return
+        progressed = True
+        while progressed:
+            progressed = False
+            for node in cbt:
+                nid = node["id"]
+                if nid in cbt_owned:
+                    continue
+                req = node.get("requires") or ""
+                if req and req not in cbt_owned:
+                    continue
+                if gold >= int(node["gold"]) and rep >= int(node["rep"]):
+                    gold -= int(node["gold"])
+                    cbt_owned.append(nid)
+                    notes.append(f"buy CBT {nid} gold={gold}")
+                    progressed = True
+                    break
+
+    def buy_dojo() -> None:
+        nonlocal gold
+        progressed = True
+        while progressed:
+            progressed = False
+            for row in dojo:
+                did = row["id"]
+                rank = int(dojo_ranks.get(did, 0))
+                ladder = row.get("gold") or []
+                if rank >= len(ladder):
+                    continue
+                cost = int(ladder[rank])
+                if gold >= cost:
+                    gold -= cost
+                    dojo_ranks[did] = rank + 1
+                    notes.append(f"dojo {did} r{rank + 1}")
+                    progressed = True
+                    break
+
+    def buy_research() -> None:
+        nonlocal gold
+        progressed = True
+        while progressed:
+            progressed = False
+            for row in research:
+                rid = row["id"]
+                if rid in research_owned:
+                    continue
+                cost = int(row["gold"])
+                need = row.get("parts") or {}
+                if gold < cost:
+                    continue
+                if any(parts_have.get(k, 0) < int(v) for k, v in need.items()):
+                    continue
+                gold -= cost
+                for k, v in need.items():
+                    parts_have[k] = parts_have.get(k, 0) - int(v)
+                research_owned.append(rid)
+                notes.append(f"research {rid}")
+                progressed = True
+                break
 
     def maybe_shop() -> None:
         nonlocal scrap, lunch
         if scrap >= 5 and lunch == 0:
             scrap -= 5
             lunch = 1
+
+    def take_secret(row: dict) -> None:
+        nonlocal lunch, gems
+        sk = row.get("kind")
+        if sk == "lunch":
+            lunch = 1
+        elif sk == "gems":
+            gems += int(row.get("gems", 1))
+        elif sk == "parts":
+            parts_have[row["item"]] = parts_have.get(row["item"], 0) + int(row.get("n", 1))
 
     for map_id in ORDER:
         pack = encounters[map_id][density]
@@ -124,9 +184,7 @@ def loop(diff: str, density: str) -> dict:
         avg_dmg = (JAB + HEAVY_OUT) * 0.5
         hits_out = max(1, int(total_hp / avg_dmg))
         land = 1.05 if diff == "finals" else (0.55 if diff == "open_house" else 0.72)
-        # One incoming light every ~4 swings if you are average. Heavies are rare.
         incoming = hits_out * 0.22 * land * LIGHT_IN + hits_out * 0.04 * land * HEAVY_IN
-        # Survive hours drip chip instead of a full brawl trade.
         if act.get("survive"):
             incoming *= 0.72
         hp -= incoming
@@ -144,7 +202,8 @@ def loop(diff: str, density: str) -> dict:
             gold = max(0, gold - 4)
         xp += 18 + len(pack) * 8 + (14 if act.get("survive") else 0)
         scrap += 6 + len(pack) * 2
-        gold += CLEAR_GOLD + GATE_GOLD + scrap // 5
+        clear = CLEAR_GOLD + (6 if diff == "finals" else 0)
+        gold += clear + GATE_GOLD + scrap // 5
         account_xp += 24 + (8 if map_deaths == 0 else 4)
         while account_xp >= need_account():
             account_xp -= need_account()
@@ -157,27 +216,26 @@ def loop(diff: str, density: str) -> dict:
             towers_ok += 1
             if lunch:
                 lunch = 0
-                gold += 0
         if map_id in secrets:
             secrets_ok += 1
-            sk = secrets[map_id].get("kind")
-            if sk == "lunch":
-                lunch = 1
-            elif sk == "gems":
-                gems += int(secrets[map_id].get("gems", 1))
-            elif sk == "parts":
-                parts_have[secrets[map_id]["item"]] = parts_have.get(secrets[map_id]["item"], 0) + int(secrets[map_id].get("n", 1))
+            take_secret(secrets[map_id])
+        for extra in secrets.get("_extra", []):
+            if extra.get("map") == map_id:
+                secrets_ok += 1
+                take_secret(extra)
         maybe_shop()
         if map_id in ("dock_street", "fire_escapes", "neon_exchange", "city_hall", "invoice_pier"):
-            buy_cbt()
             rep += 1
         if map_id in ("intake_lot", "group_circle", "waiting_room", "sleet_hour", "ledger_dive"):
             gold += 6
-        # cheap award drip
         gold += 8 if map_id == "dock_street" else 0
+        buy_cbt()
+        buy_research()
         hp = min(SON_HP + (12 if "thick_skin" in cbt_owned else 0) + (8 if "iron_gut" in cbt_owned else 0), hp + 20)
 
-    # leftover gold vs remaining tree
+    buy_cbt()
+    buy_research()
+    buy_dojo()
     unbought = [n["id"] for n in cbt if n["id"] not in cbt_owned]
     dojo_cost = sum(int(d["gold"][0]) for d in dojo)
     research_cost = sum(int(r["gold"]) for r in research)
@@ -197,11 +255,15 @@ def loop(diff: str, density: str) -> dict:
         "card_picks": cards_taken,
         "account_lv": account_lv,
         "cbt_owned": len(cbt_owned),
+        "cbt_ids": cbt_owned,
         "cbt_left": unbought,
+        "dojo_ranks": dojo_ranks,
+        "research_ids": research_owned,
+        "research_owned": len(research_owned),
         "towers": towers_ok,
         "secrets": secrets_ok,
         "parts": parts_have,
-        "notes": notes[-8:],
+        "notes": notes[-12:],
         "catalog": {
             "weapons": weapon_ids,
             "shop": shop_items,
@@ -222,23 +284,23 @@ def loop(diff: str, density: str) -> dict:
 
 
 def main() -> None:
-    reports = [
-        loop("night_class", "solo"),
-        loop("finals", "solo"),
-        loop("night_class", "coop"),
-        loop("finals", "coop"),
-    ]
+    nc_solo = loop("night_class", "solo")
+    fin_solo = loop("finals", "solo", carry=nc_solo)
+    nc_coop = loop("night_class", "coop")
+    fin_coop = loop("finals", "coop", carry=nc_coop)
+    reports = [nc_solo, fin_solo, nc_coop, fin_coop]
     print("=== HnT balance sim ===")
     for r in reports:
         print(
             f"{r['diff']:12} {r['density']:4}  deaths={r['deaths']:2}  gold={r['gold_end']:4}  "
             f"rep={r['rep_end']}  xp={r['xp']}  cards={r['card_picks']}  cbt={r['cbt_owned']}/{r['catalog']['cbt']}  "
+            f"research={r['research_owned']}/{r['catalog']['research']}  dojo={sum(r['dojo_ranks'].values())}  "
             f"acc={r['account_lv']}  towers={r['towers']} secrets={r['secrets']}"
         )
         if r["cbt_left"]:
             print("  leftover CBT:", ", ".join(r["cbt_left"]))
         if r["notes"]:
-            print("  notes:", " | ".join(r["notes"]))
+            print("  notes:", " | ".join(r["notes"][-6:]))
     cat = reports[0]["catalog"]
     print("catalog weapons", cat["weapons"])
     print("catalog shop", cat["shop"])
@@ -252,6 +314,10 @@ def main() -> None:
         print(f"Night Class solo: deaths={nc['deaths']}. Still two loops; menu upgrades are gold-gated not death-gated.")
     if fin["deaths"] > nc["deaths"]:
         print(f"Finals kills more ({fin['deaths']} vs {nc['deaths']}). Two loops stand. Do not thicken 3/6.")
+    if nc["cbt_owned"] < nc["catalog"]["cbt"] and fin["cbt_owned"] >= fin["catalog"]["cbt"]:
+        print("CBT maxes on Finals, not Night Class.")
+    elif fin["cbt_left"]:
+        print("Finals leftover CBT after sequential carry:", ", ".join(fin["cbt_left"]))
     print("Open House stays assist (HP 0.75, telegraph 1.45). Not a third campaign.")
     out = ROOT / "tools" / "balance_sim_out.json"
     out.write_text(json.dumps(reports, indent=2))

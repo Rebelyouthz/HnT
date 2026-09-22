@@ -179,6 +179,10 @@ const TOWER := "VIEWPOINT"
 const LUNCH_140 := "EAT AT 140M"
 const SHUTTLE := "WELLNESS SHUTTLE"
 const PARACHUTE := "PARACHUTE"
+const OPEN_HOUSE := "OPEN HOUSE  ·  ASSIST. Softer HP, longer telegraphs. Not a third campaign."
+const NIGHT_CLASS := "NIGHT CLASS  ·  The loop that matters. Fourteen acts. Come back richer."
+const FINALS := "FINALS  ·  Second loop. Wanted climbs faster. Gold pays the leftover tree."
+const LUNCH_MISSION := "Pack lunch. Fridge, shop, or a tin. Sit at 140m even if you forget."
 
 
 static func come_on(father: String, son: String, who: String) -> String:

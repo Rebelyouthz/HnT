@@ -8,6 +8,7 @@ signal resolved(ok: bool)
 var window := 0.2
 var prompt := "CLING"
 var fail_shout := "FELL"
+var keep_alive := false
 var _t := 0.0
 var _life := 1.15
 var _done := false
@@ -18,7 +19,7 @@ var _hint: Label
 func _ready() -> void:
 	add_to_group("cling")
 	layer = 70
-	process_mode = Node.PROCESS_MODE_ALWAYS
+	process_mode = Node.PROCESS_MODE_ALWAYS if keep_alive else Node.PROCESS_MODE_PAUSABLE
 	var dim := ColorRect.new()
 	dim.color = Color(0.02, 0.02, 0.04, 0.22)
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -51,11 +52,16 @@ func _process(delta: float) -> void:
 	var u := clampf(_t / _life, 0.0, 1.0)
 	var in_win := _in_window(u)
 	_hint.add_theme_color_override("font_color", Palette.READY if in_win else Palette.BADGE)
-	if _pressed():
-		_finish(in_win)
-		return
 	if u >= 1.0:
 		_finish(false)
+
+
+func _physics_process(_delta: float) -> void:
+	if _done:
+		return
+	var u := clampf(_t / _life, 0.0, 1.0)
+	if _pressed():
+		_finish(_in_window(u))
 
 
 func _in_window(u: float) -> bool:
@@ -65,8 +71,12 @@ func _in_window(u: float) -> bool:
 
 
 func _pressed() -> bool:
-	return Input.is_action_just_pressed("p1_light") or Input.is_action_just_pressed("p1_jump") \
-		or Input.is_action_just_pressed("p2_light") or Input.is_action_just_pressed("p2_jump")
+	if Input.is_action_just_pressed("p1_light") or Input.is_action_just_pressed("p1_jump") \
+			or Input.is_action_just_pressed("p2_light") or Input.is_action_just_pressed("p2_jump"):
+		return true
+	if has_node("/root/NetSession") and NetSession.active():
+		return NetSession.tapped("light") or NetSession.tapped("jump")
+	return false
 
 
 func _draw_ring() -> void:

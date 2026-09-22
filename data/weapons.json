@@ -70,5 +70,78 @@
     "kind": "knife",
     "sfx": "res://assets/audio/hit_light.wav",
     "hit": "blade"
+  },
+  "chain": {
+    "title": "CHAIN",
+    "role": "any",
+    "rarity": "uncommon",
+    "caliber": "melee",
+    "ammo": 0,
+    "recoil": 0,
+    "speed": 0,
+    "kind": "chain",
+    "sfx": "res://assets/audio/hit_heavy.wav",
+    "hit": "heavy"
+  },
+  "crowbar": {
+    "title": "CROWBAR",
+    "role": "any",
+    "rarity": "rare",
+    "caliber": "melee",
+    "ammo": 0,
+    "recoil": 0,
+    "speed": 0,
+    "kind": "crowbar",
+    "sfx": "res://assets/audio/hit_heavy.wav",
+    "hit": "heavy"
+  },
+  "clipboard": {
+    "title": "CLIPBOARD",
+    "role": "any",
+    "rarity": "uncommon",
+    "caliber": "melee",
+    "ammo": 0,
+    "recoil": 0,
+    "speed": 0,
+    "kind": "clipboard",
+    "sfx": "res://assets/audio/hit_light.wav",
+    "hit": "blade"
+  },
+  "stapler": {
+    "title": "STAPLER",
+    "role": "any",
+    "rarity": "uncommon",
+    "caliber": "melee",
+    "ammo": 0,
+    "recoil": 0,
+    "speed": 0,
+    "kind": "stapler",
+    "sfx": "res://assets/audio/hit_light.wav",
+    "hit": "blade"
+  },
+  "nailgun": {
+    "title": "NAILGUN",
+    "role": "any",
+    "rarity": "rare",
+    "caliber": "office nails",
+    "ammo": 4,
+    "recoil": 8,
+    "speed": 580,
+    "kind": "pistol",
+    "sfx": "res://assets/audio/pistol.wav",
+    "hit": "heavy"
+  },
+  "invoice_star": {
+    "title": "INVOICE STAR",
+    "role": "any",
+    "rarity": "legendary",
+    "caliber": "paperwork",
+    "ammo": 0,
+    "recoil": 0,
+    "speed": 0,
+    "kind": "invoice_star",
+    "sfx": "res://assets/audio/shuriken.wav",
+    "hit": "blade",
+    "secret": true
   }
 }

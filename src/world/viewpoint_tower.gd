@@ -18,7 +18,7 @@ static func place(host: Node, map: String) -> ViewpointTower:
 		return null
 	var t := ViewpointTower.new()
 	t.map_id = map
-	t.global_position = Vector2(float(row.get("x", 1200.0)), 500.0)
+	t.global_position = Vector2(float(row.get("x", 1200.0)), float(row.get("y", 500.0)))
 	if map == "raven_grid" and t.global_position.x > 2200.0:
 		t.global_position.x = 1640.0
 	host.add_child(t)
@@ -167,6 +167,9 @@ func _nearest_x() -> float:
 func _start(lead: Fighter) -> void:
 	if _busy:
 		return
+	if get_tree().get_first_node_in_group("clinic_van") or get_tree().get_first_node_in_group("chase_crash"):
+		Juice.shout("WATCH THE CRASH")
+		return
 	_busy = true
 	_hint.text = "WIND  ·  CREAK  ·  DON'T FALL"
 	Juice.unlock_logo("VIEWPOINT", "Hell is below. The wind is the only honest therapist.", str(TowerBook.map_row(map_id).get("label", "TOWER")))
@@ -185,18 +188,16 @@ func _start(lead: Fighter) -> void:
 func _climb(players: Array[Fighter]) -> void:
 	var rings := TowerBook.ring_count(map_id)
 	var window := TowerBook.ring_window(map_id)
-	var cam := get_viewport().get_camera_2d()
 	for i in rings:
 		var u := float(i + 1) / float(rings)
 		var y := lerpf(global_position.y, global_position.y - 400.0, u)
+		_cam_hold(Vector2(global_position.x, y - 40.0), true)
 		var tw := create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 		tw.set_parallel(true)
 		for f in players:
 			if not is_instance_valid(f):
 				continue
 			tw.tween_property(f, "global_position", Vector2(global_position.x + (12.0 if f.role == "son" else -12.0), y), 0.28)
-		if cam:
-			tw.tween_property(cam, "global_position", Vector2(global_position.x, y - 40.0), 0.28)
 		await tw.finished
 		Juice.play("res://assets/audio/wind.wav")
 		Juice.pulse_shake(2.0)
@@ -214,14 +215,16 @@ func _climb(players: Array[Fighter]) -> void:
 func _fall(players: Array[Fighter]) -> void:
 	Juice.named_slowmo()
 	Juice.pulse_shake(8.0)
+	_cam_hold(global_position, false)
 	var dmg := 18
 	if FamilyProfile.has_cbt("farm_patience"):
 		dmg = 11
+	var land_y := global_position.y
 	for f in players:
 		if not is_instance_valid(f):
 			continue
 		f.van_seat = ""
-		f.global_position = Vector2(global_position.x + randf_range(-20.0, 20.0), 500.0)
+		f.global_position = Vector2(global_position.x + randf_range(-20.0, 20.0), land_y)
 		f.hop = 0.0
 		var rs := get_tree().get_first_node_in_group("run_state")
 		var refund := false
@@ -246,6 +249,7 @@ func _summit(players: Array[Fighter]) -> void:
 	for f in players:
 		if is_instance_valid(f):
 			f.global_position = Vector2(global_position.x + (18.0 if f.role == "son" else -18.0), global_position.y - 412.0)
+	_cam_hold(Vector2(global_position.x, global_position.y - 452.0), true)
 	FamilyProfile.note_tower()
 	var talk := SummitTalk.new()
 	talk.map_id = map_id
@@ -266,10 +270,11 @@ func _descend(players: Array[Fighter]) -> void:
 			await _water(players)
 		_:
 			await _ledge(players)
+	_cam_hold(global_position, false)
 	for f in players:
 		if is_instance_valid(f):
 			f.van_seat = ""
-			f.global_position = Vector2(global_position.x + 80.0, 500.0)
+			f.global_position = Vector2(global_position.x + 80.0, global_position.y)
 	_busy = false
 	_hint.text = "%s  ·  CLIMBED" % str(TowerBook.map_row(map_id).get("label", "TOWER"))
 	Juice.toast("quest", "BACK IN HELL", "The wind stays up there. We don't.")
@@ -281,7 +286,7 @@ func _local_parachute(players: Array[Fighter]) -> void:
 	for i in 22:
 		for f in players:
 			if is_instance_valid(f):
-				f.global_position.y = lerpf(f.global_position.y, 500.0, 0.11)
+				f.global_position.y = lerpf(f.global_position.y, global_position.y, 0.11)
 		await get_tree().create_timer(0.05).timeout
 
 
@@ -314,3 +319,13 @@ func _ledge(players: Array[Fighter]) -> void:
 			if is_instance_valid(f):
 				f.global_position.y += 40.0
 		await get_tree().create_timer(0.05).timeout
+
+
+func _cam_hold(at: Vector2, on: bool) -> void:
+	for n in get_tree().get_nodes_in_group("couch_cam"):
+		if not (n is CouchCamera):
+			continue
+		var cam: CouchCamera = n
+		cam.cinematic_on = on
+		if on:
+			cam.cinematic = at

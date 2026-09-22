@@ -1,20 +1,20 @@
 {
   "descents": ["parachute", "zip", "water", "ledge"],
   "maps": {
-    "dock_street": { "x": 1180, "talk": "mornings", "rings": 3, "window": 0.24, "label": "WHARF TOWER" },
-    "intake_lot": { "x": 880, "talk": "mornings", "rings": 3, "window": 0.24, "label": "LOT TOWER" },
-    "fire_escapes": { "x": 1040, "talk": "mornings", "rings": 3, "window": 0.22, "label": "ROOF TOWER" },
-    "group_circle": { "x": 720, "talk": "nerf", "rings": 3, "window": 0.22, "label": "COURTYARD TOWER" },
-    "neon_exchange": { "x": 1240, "talk": "nerf", "rings": 4, "window": 0.20, "label": "NEON TOWER" },
-    "waiting_room": { "x": 860, "talk": "nerf", "rings": 4, "window": 0.20, "label": "FLUORESCENT TOWER" },
-    "rail_bridge": { "x": 1040, "talk": "school", "rings": 4, "window": 0.18, "label": "TOLL TOWER" },
-    "city_hall": { "x": 620, "talk": "school", "rings": 4, "window": 0.18, "label": "HALL TOWER" },
-    "copay_orchard": { "x": 1520, "talk": "school", "rings": 4, "window": 0.18, "label": "SILO TOWER" },
-    "sleet_hour": { "x": 840, "talk": "sundays", "rings": 5, "window": 0.16, "label": "ICE TOWER" },
-    "raven_grid": { "x": 1640, "talk": "sundays", "rings": 5, "window": 0.16, "label": "GRID TOWER" },
-    "ledger_dive": { "x": 900, "talk": "sundays", "rings": 5, "window": 0.15, "label": "VAULT TOWER" },
-    "invoice_pier": { "x": 1380, "talk": "sundays", "rings": 5, "window": 0.14, "label": "PIER TOWER" },
-    "processing_floor": { "x": 760, "talk": "sundays", "rings": 5, "window": 0.14, "label": "LAST TOWER" }
+    "dock_street": { "x": 1180, "y": 248, "talk": "mornings", "rings": 3, "window": 0.24, "label": "WHARF TOWER" },
+    "intake_lot": { "x": 880, "y": 500, "talk": "mornings", "rings": 3, "window": 0.24, "label": "LOT TOWER" },
+    "fire_escapes": { "x": 1040, "y": 248, "talk": "mornings", "rings": 3, "window": 0.22, "label": "ROOF TOWER" },
+    "group_circle": { "x": 720, "y": 500, "talk": "nerf", "rings": 3, "window": 0.22, "label": "COURTYARD TOWER" },
+    "neon_exchange": { "x": 1240, "y": 248, "talk": "nerf", "rings": 4, "window": 0.20, "label": "NEON TOWER" },
+    "waiting_room": { "x": 860, "y": 500, "talk": "nerf", "rings": 4, "window": 0.20, "label": "FLUORESCENT TOWER" },
+    "rail_bridge": { "x": 1040, "y": 500, "talk": "school", "rings": 4, "window": 0.18, "label": "TOLL TOWER" },
+    "city_hall": { "x": 620, "y": 500, "talk": "school", "rings": 4, "window": 0.18, "label": "HALL TOWER" },
+    "copay_orchard": { "x": 1520, "y": 500, "talk": "school", "rings": 4, "window": 0.18, "label": "SILO TOWER" },
+    "sleet_hour": { "x": 840, "y": 500, "talk": "sundays", "rings": 5, "window": 0.16, "label": "ICE TOWER" },
+    "raven_grid": { "x": 1640, "y": 500, "talk": "sundays", "rings": 5, "window": 0.16, "label": "GRID TOWER" },
+    "ledger_dive": { "x": 900, "y": 500, "talk": "sundays", "rings": 5, "window": 0.15, "label": "VAULT TOWER" },
+    "invoice_pier": { "x": 1380, "y": 500, "talk": "sundays", "rings": 5, "window": 0.14, "label": "PIER TOWER" },
+    "processing_floor": { "x": 760, "y": 500, "talk": "sundays", "rings": 5, "window": 0.14, "label": "LAST TOWER" }
   },
   "talks": {
     "mornings": {

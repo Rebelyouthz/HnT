@@ -55,6 +55,17 @@ func _ready() -> void:
 		)
 		diff.add_child(b)
 	col.add_child(diff)
+	var diff_hint := Label.new()
+	diff_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	match App.difficulty:
+		"open_house":
+			diff_hint.text = Copy.OPEN_HOUSE
+		"finals":
+			diff_hint.text = Copy.FINALS
+		_:
+			diff_hint.text = Copy.NIGHT_CLASS
+	UiKit.apply_label(diff_hint, 13, Palette.MUTED)
+	col.add_child(diff_hint)
 
 	_counts = StatPanel.new(_count_rows())
 	col.add_child(_counts)

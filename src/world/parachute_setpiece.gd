@@ -21,6 +21,11 @@ var _wind: Label
 var _alt: Label
 var _vy := 28.0
 var _debris: Array[Node2D] = []
+var _left := false
+var _dad_arm: ColorRect
+var _son_arm: ColorRect
+var _visor: ColorRect
+var _visor_b: ColorRect
 
 
 func _ready() -> void:
@@ -69,6 +74,16 @@ func _ready() -> void:
 	_son.size = Vector2(18, 40)
 	_son.position = Vector2(10, -2)
 	_craft.add_child(_son)
+	_dad_arm = ColorRect.new()
+	_dad_arm.color = Palette.BRICK.lightened(0.12)
+	_dad_arm.size = Vector2(28, 8)
+	_dad_arm.visible = false
+	add_child(_dad_arm)
+	_son_arm = ColorRect.new()
+	_son_arm.color = Palette.LEMON.darkened(0.1)
+	_son_arm.size = Vector2(24, 7)
+	_son_arm.visible = false
+	add_child(_son_arm)
 	_snow()
 	var layer := CanvasLayer.new()
 	layer.layer = 55
@@ -79,6 +94,18 @@ func _ready() -> void:
 	_vignette.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	layer.add_child(_vignette)
+	_visor = ColorRect.new()
+	_visor.color = Color(0.02, 0.06, 0.1, 0.0)
+	_visor.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	_visor.offset_bottom = 88
+	_visor.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.add_child(_visor)
+	_visor_b = ColorRect.new()
+	_visor_b.color = Color(0.02, 0.06, 0.1, 0.0)
+	_visor_b.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	_visor_b.offset_top = -88
+	_visor_b.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.add_child(_visor_b)
 	_caption = Label.new()
 	_caption.position = Vector2(80, 500)
 	_caption.size = Vector2(1120, 90)
@@ -153,6 +180,8 @@ func _process(delta: float) -> void:
 	if Input.is_action_just_pressed("p1_special") or Input.is_action_just_pressed("p2_special"):
 		_fp = not _fp
 		_vignette.color.a = 0.55 if _fp else 0.0
+		_visor.color.a = 0.72 if _fp else 0.0
+		_visor_b.color.a = 0.72 if _fp else 0.0
 	if Input.is_action_just_pressed("p1_pause") or Input.is_action_just_pressed("p2_pause"):
 		Juice.shout("WATCH THE FALL")
 	match _phase:
@@ -208,6 +237,7 @@ func _process(delta: float) -> void:
 				_spawn_slap()
 		Phase.SLAP:
 			_apply_fp()
+			_reach_hands(delta)
 		Phase.LAND:
 			_vignette.color.a = lerpf(_vignette.color.a, 0.0, 0.12)
 			_ground.position.y = lerpf(_ground.position.y, 400.0, 0.16)
@@ -239,6 +269,10 @@ func _apply_fp() -> void:
 	var hide := _fp
 	_dad.visible = not hide
 	_son.visible = not hide
+	if is_instance_valid(_dad_arm):
+		_dad_arm.visible = (not hide) and _phase == Phase.SLAP
+	if is_instance_valid(_son_arm):
+		_son_arm.visible = (not hide) and _phase == Phase.SLAP
 	for d in _debris:
 		if is_instance_valid(d):
 			d.visible = not hide
@@ -265,11 +299,28 @@ func _physics_process(delta: float) -> void:
 		d.rotation += float(d.get_meta("spin", 1.0)) * delta
 
 
+func _reach_hands(delta: float) -> void:
+	var mid := (_dad.position + _son.position) * 0.5
+	_dad.position = _dad.position.lerp(mid + Vector2(-22.0, -6.0), 1.0 - exp(-3.0 * delta))
+	_son.position = _son.position.lerp(mid + Vector2(18.0, 4.0), 1.0 - exp(-3.0 * delta))
+	if is_instance_valid(_dad_arm):
+		_dad_arm.position = _dad.position + Vector2(_dad.size.x - 4.0, 16.0)
+		_dad_arm.size.x = lerpf(_dad_arm.size.x, 36.0, 0.12)
+	if is_instance_valid(_son_arm):
+		_son_arm.position = _son.position + Vector2(-28.0, 14.0)
+		_son_arm.size.x = lerpf(_son_arm.size.x, 32.0, 0.12)
+
+
 func _spawn_slap() -> void:
+	Juice.named_slowmo()
 	var qte := ClingQte.new()
+	qte.keep_alive = true
 	qte.window = 0.16 if App.difficulty == "finals" else 0.22
 	if FamilyProfile.has_cbt("cling_callus"):
 		qte.window += 0.05
+	var rs := get_tree().get_first_node_in_group("run_state")
+	if rs != null and rs.has_method("has_card") and bool(rs.call("has_card", "shuttle_rip")):
+		qte.window += 0.08
 	qte.prompt = "HAND SLAP  ·  RESPECT"
 	qte.fail_shout = "MISSED"
 	add_child(qte)
@@ -279,8 +330,14 @@ func _spawn_slap() -> void:
 		Juice.unlock_logo("RESPECT", "A slap at 140 meters. That's the love language.", "MID-AIR")
 		VoBank.summit_son()
 		Juice.pulse_shake(4.0)
+		KitSfx.hit("son", "slap")
+		Juice.catch_flash((_dad.position + _son.position) * 0.5)
 	else:
 		Juice.toast("challenge", "MISSED THE HAND", "You still land. Pride is optional. The ice is not.")
+	if is_instance_valid(_dad_arm):
+		_dad_arm.visible = false
+	if is_instance_valid(_son_arm):
+		_son_arm.visible = false
 	_phase = Phase.LAND
 	_t = 0.0
 	_caption.text = "SLEET HOUR. A SURVIVOR HOUR. DON'T SIT. THE ICE IS A WAITING ROOM WITH WEATHER."
@@ -289,5 +346,11 @@ func _spawn_slap() -> void:
 
 
 func _go_sleet() -> void:
+	if _left:
+		return
+	_left = true
 	App.film_kind = ""
+	if has_node("/root/NetSession") and NetSession.active() and NetSession.is_host():
+		NetSession.broadcast_begin("sleet_hour", App.begin_extra())
+		return
 	App.enter_map("sleet_hour")
