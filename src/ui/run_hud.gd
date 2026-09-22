@@ -223,10 +223,16 @@ func bind(p_son: Fighter, p_dad: Fighter, p_state: RunState = null) -> void:
 
 
 func _prompt_line() -> String:
+	if get_tree().get_first_node_in_group("parachute_fall"):
+		return "FALL  ·  SPECIAL FP  ·  CLING THE SLAP  ·  PAUSE DOES NOT SKIP"
+	if get_tree().get_first_node_in_group("towers") and get_tree().get_first_node_in_group("cling"):
+		return "CLING  ·  LIGHT WHEN GREEN"
 	if get_tree().get_first_node_in_group("chase_crash"):
 		return "RAMP  ·  SLOW-MO  ·  CANAL  ·  CRAWL"
 	if get_tree().get_first_node_in_group("clinic_van"):
 		return "DRIVE  ·  RAIL 360  ·  SPECIAL SWAP  ·  RAMP AHEAD"
+	if get_tree().get_first_node_in_group("towers"):
+		return PadRouter.p1_prompt() + "  ·  LIGHT CLIMBS TOWERS  ·  LIGHT SECRETS  ·  EAT AT 140M"
 	if son == null or father == null:
 		return PadRouter.p1_prompt() + "  ·  " + Copy.JOIN_HINT
 	return PadRouter.p1_prompt() + "  ·  " + PadRouter.p2_prompt() + "  ·  TAP BLOCK PARRY  ·  THROW CATCH  ·  CLASH HEAVIES  ·  AWNINGS  ·  POLES  ·  HOODS  ·  DRUMS  ·  MANHOLES  ·  CARTS"
@@ -268,7 +274,7 @@ func _process(delta: float) -> void:
 			tw.parallel().tween_property(_rank, "modulate", Palette.LEMON, 0.08)
 	_call.text = Juice.callout
 	if state:
-		_scrap.text = "SCRAP  %d   XP  %d" % [state.scrap, state.xp]
+		_scrap.text = "SCRAP  %d   XP  %d%s" % [state.scrap, state.xp, "   LUNCH" if state.lunch > 0 else ""]
 		var w := ""
 		for i in 5:
 			w += "I" if i < state.wanted else "."
@@ -400,6 +406,9 @@ func _ally_holding(f: Fighter) -> bool:
 
 
 func _toggle_pause() -> void:
+	if get_tree().get_first_node_in_group("parachute_fall"):
+		Juice.shout("WATCH THE FALL")
+		return
 	if get_tree().get_first_node_in_group("chase_crash"):
 		Juice.shout("WATCH THE CRASH")
 		return

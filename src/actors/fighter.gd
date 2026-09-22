@@ -103,6 +103,8 @@ signal downed_changed
 func _ready() -> void:
 	if FamilyProfile.has_cbt("thick_skin"):
 		max_hp += 12
+	if FamilyProfile.has_cbt("iron_gut"):
+		max_hp += 8
 	hp = max_hp
 	if FamilyProfile.has_cbt("bandage_pocket"):
 		bandage = 1

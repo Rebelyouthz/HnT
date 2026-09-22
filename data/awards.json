@@ -493,5 +493,38 @@
     "gold": 12,
     "gems": 1,
     "rarity": "common"
+  },
+  {
+    "id": "first_tower",
+    "title": "ONE HUNDRED FORTY",
+    "blurb": "Climb a viewpoint tower once. Hell is below. Lunch is optional. Pride is not.",
+    "need": {
+      "towers_climbed": 1
+    },
+    "gold": 28,
+    "gems": 2,
+    "rarity": "rare"
+  },
+  {
+    "id": "summit_meals",
+    "title": "ATE AT 140M",
+    "blurb": "Sit and eat three times up there. Joke. Chew. Remember. Then jump.",
+    "need": {
+      "summit_meals": 3
+    },
+    "gold": 36,
+    "gems": 3,
+    "rarity": "epic"
+  },
+  {
+    "id": "secret_hour",
+    "title": "THEY BILLED THE HIDE",
+    "blurb": "Find three unique secrets. Unique rewards. The clipboard did not itemize this.",
+    "need": {
+      "secrets_found": 3
+    },
+    "gold": 40,
+    "gems": 3,
+    "rarity": "epic"
   }
 ]

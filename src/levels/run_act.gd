@@ -79,6 +79,8 @@ func _place_parkour() -> void:
 		ParkourGate.place(self, Vector2(float(row[0]), float(row[1])), str(row[2]))
 	_place_toys()
 	_place_smash()
+	_place_towers()
+	_place_secrets()
 
 
 func _place_toys() -> void:
@@ -139,6 +141,22 @@ func _place_smash() -> void:
 		if map_id == "raven_grid" and x > 2200.0:
 			continue
 		SmashProp.place(self, Vector2(x, 500.0), str(row[1]))
+
+
+func _place_towers() -> void:
+	ViewpointTower.place(self, map_id)
+	if map_id in ["group_circle", "waiting_room", "sleet_hour", "intake_lot"]:
+		var tx := float(TowerBook.map_row(map_id).get("x", 800.0))
+		Bystander.place(self, Vector2(tx + 90.0, 500.0))
+		Bystander.place(self, Vector2(tx + 160.0, 500.0))
+
+
+func _place_secrets() -> void:
+	SecretStash.place(self, map_id)
+
+
+func boss_filed() -> bool:
+	return _boss_down
 
 
 func _ready() -> void:

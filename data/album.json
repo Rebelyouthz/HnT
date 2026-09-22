@@ -54,5 +54,13 @@
     "need": { "city_clears": 1 },
     "rarity": "epic",
     "gold": 24
+  },
+  {
+    "id": "mag_1994",
+    "title": "MAGAZINE, 1994",
+    "blurb": "Still angry. Secret. Number 87 never existed. Pin the waiting.",
+    "need": { "secrets_found": 99 },
+    "rarity": "rare",
+    "gold": 18
   }
 ]

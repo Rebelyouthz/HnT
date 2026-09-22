@@ -74,3 +74,6 @@ func build_world() -> void:
 	crowd.global_position = Vector2(1100, 500)
 	add_child(crowd)
 	NightStreet.rain(self, 1800.0)
+	var shuttle := WellnessShuttle.new()
+	shuttle.global_position = Vector2(3320, 490)
+	add_child(shuttle)

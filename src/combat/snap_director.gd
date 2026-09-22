@@ -138,6 +138,11 @@ func _execute() -> void:
 	var rs := get_tree().get_first_node_in_group("run_state")
 	if rs and rs.has_method("has_card") and rs.has_card("quiet_lunch"):
 		f.hp = mini(f.max_hp, f.hp + 8)
+	var stick := false
+	if rs != null and rs.has_method("has_card"):
+		stick = bool(rs.call("has_card", "talking_stick"))
+	if stick:
+		f.hp = mini(f.max_hp, f.hp + 4)
 	Juice.snap_bang((e as Node2D).global_position)
 	FamilyProfile.mark_snap()
 

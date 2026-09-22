@@ -9,6 +9,11 @@
     "line": "STEAM, BILLED AS COFFEE",
     "rarity": "common"
   },
+  "lunch": {
+    "scrap": 5,
+    "line": "SOMETHING TO EAT AT 140M",
+    "rarity": "uncommon"
+  },
   "ammo": {
     "scrap": 4,
     "line": "SHARP FEELINGS, LOOSE COUNT",
@@ -47,7 +52,8 @@
   "catalogs": {
     "blood_mart": [
       "bandage",
-      "thermos"
+      "thermos",
+      "lunch"
     ],
     "roof_vendor": [
       "ammo",

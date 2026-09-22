@@ -528,6 +528,12 @@ func take_hit(kind: String, from: Node) -> void:
 		return
 	if plates > 0 and kind != "snap" and kind != "finish" and kind != "web-slam":
 		plates -= 1
+		var voided := false
+		var rs_p := get_tree().get_first_node_in_group("run_state")
+		if rs_p != null and rs_p.has_method("has_card") and (kind == "heavy" or kind == "dive"):
+			voided = bool(rs_p.call("has_card", "landlord_void"))
+		if voided and plates > 0:
+			plates -= 1
 		armored = plates > 0
 		Juice.shout("STRIP %d" % plates)
 		Juice.sparks(global_position)

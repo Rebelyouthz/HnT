@@ -2,86 +2,193 @@ extends Control
 
 signal need_refresh
 
+var _focus: Dictionary = {}
+var _stats: StatPanel
+var _board: HBoxContainer
+
+
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	var m := MarginContainer.new()
 	m.set_anchors_preset(Control.PRESET_FULL_RECT)
-	m.add_theme_constant_override("margin_left", 20)
-	m.add_theme_constant_override("margin_top", 12)
+	m.add_theme_constant_override("margin_left", 16)
+	m.add_theme_constant_override("margin_top", 8)
+	m.add_theme_constant_override("margin_right", 16)
 	add_child(m)
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 10)
-	m.add_child(col)
+	var root := VBoxContainer.new()
+	root.add_theme_constant_override("separation", 8)
+	m.add_child(root)
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", 10)
+	head.add_child(LogoMark.new())
 	var h := Label.new()
 	h.text = "THE CBT TREE"
 	UiKit.apply_label(h, 24, Palette.LEMON)
-	col.add_child(h)
+	head.add_child(h)
+	root.add_child(head)
 	var s := Label.new()
-	s.text = "Cognitive Behavioral whatever. Gold in, violence out. Fourteen acts. Raven Grid crash is the boss intro. Compare is split-screen menus only."
+	s.text = "Three trunks. Dark until the parent is owned. Lit when it lives in you. Gold in, violence out. Compare is split-screen menus only."
 	s.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	UiKit.apply_label(s, 14, Palette.MUTED)
-	col.add_child(s)
-
-	var compare := UiKit.button("BUILD COMPARE", Vector2(220, 44))
+	UiKit.apply_label(s, 13, Palette.MUTED)
+	root.add_child(s)
+	var tools := HBoxContainer.new()
+	tools.add_theme_constant_override("separation", 10)
+	var compare := UiKit.button("BUILD COMPARE", Vector2(200, 40))
 	compare.pressed.connect(_compare)
-	col.add_child(compare)
-
+	tools.add_child(compare)
+	root.add_child(tools)
+	_board = HBoxContainer.new()
+	_board.add_theme_constant_override("separation", 12)
+	root.add_child(_board)
 	var list: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/cbt.json"))
-	for node in list:
-		col.add_child(_node_row(node))
+	for trunk in ["BODY", "STREET", "SHOW"]:
+		_board.add_child(_trunk(trunk, list))
+	_stats = StatPanel.new(_stat_rows({}))
+	_stats.custom_minimum_size = Vector2(220, 160)
+	_board.add_child(_stats)
 
 
-func _node_row(node: Dictionary) -> Control:
+func _trunk(name: String, list: Array) -> Control:
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 6)
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var top := HBoxContainer.new()
+	top.add_child(LogoMark.new())
+	var t := Label.new()
+	t.text = name
+	UiKit.apply_label(t, 16, Palette.EDGE if name == "SHOW" else (Palette.BRICK if name == "STREET" else Palette.LEMON))
+	top.add_child(t)
+	col.add_child(top)
+	var owned_n := 0
+	var total := 0
+	var nodes: Array = []
+	for n in list:
+		if str(n.get("trunk", "")) != name:
+			continue
+		total += 1
+		if FamilyProfile.has_cbt(str(n.get("id", ""))):
+			owned_n += 1
+		nodes.append(n)
+	var meter := ColorRect.new()
+	meter.custom_minimum_size = Vector2(240, 10)
+	meter.color = Color(0.08, 0.08, 0.1)
+	col.add_child(meter)
+	var fill := ColorRect.new()
+	fill.color = Palette.READY if owned_n == total else Palette.LEMON
+	fill.position = Vector2(0, 0)
+	fill.size = Vector2(240.0 * (float(owned_n) / float(maxi(total, 1))), 10)
+	meter.add_child(fill)
+	var count := Label.new()
+	count.text = "%d / %d  ·  %s" % [owned_n, total, "LIT" if owned_n > 0 else "DARK"]
+	UiKit.apply_label(count, 12, Palette.MUTED)
+	col.add_child(count)
+	var stem := ColorRect.new()
+	stem.custom_minimum_size = Vector2(4, 8)
+	stem.color = Palette.READY if owned_n > 0 else Palette.LOCK
+	col.add_child(stem)
+	nodes.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		var da := 0 if str(a.get("requires", "")) == "" else (1 if str(a.get("branch", "")) == "left" else 2)
+		var db := 0 if str(b.get("requires", "")) == "" else (1 if str(b.get("branch", "")) == "left" else 2)
+		if str(a.get("requires", "")) != "" and str(b.get("requires", "")) != "":
+			if str(a.get("requires", "")) == str(b.get("id", "")):
+				return true
+		return da < db
+	)
+	for n in nodes:
+		col.add_child(_node_card(n))
+	return col
+
+
+func _node_card(node: Dictionary) -> Control:
+	var id := str(node.get("id", ""))
 	var rarity := Rarity.normalize(str(node.get("rarity", "common")))
+	var owned := FamilyProfile.has_cbt(id)
+	var req := str(node.get("requires", ""))
+	var locked := req != "" and not FamilyProfile.has_cbt(req)
+	var can := (not owned) and (not locked) and int(FamilyProfile.data["gold"]) >= int(node["gold"]) and int(FamilyProfile.data["rep"]) >= int(node["rep"])
 	var row := PanelContainer.new()
-	row.add_theme_stylebox_override("panel", UiKit.panel(Rarity.fill(rarity), Rarity.color(rarity)))
+	var border := Palette.LOCK
+	var fill := Color(0.06, 0.06, 0.08)
+	if owned:
+		border = Palette.READY
+		fill = Rarity.fill(rarity)
+	elif can:
+		border = Palette.LEMON
+		fill = Palette.PANEL
+	elif locked:
+		border = Palette.LOCK
+		fill = Color(0.05, 0.05, 0.07)
+	else:
+		border = Rarity.color(rarity)
+		fill = Palette.PANEL
+	row.add_theme_stylebox_override("panel", UiKit.panel(fill, border))
 	var box := HBoxContainer.new()
 	row.add_child(box)
+	var pip := ColorRect.new()
+	pip.custom_minimum_size = Vector2(8, 36)
+	if owned:
+		pip.color = Palette.READY
+	elif locked:
+		pip.color = Palette.LOCK
+	elif can:
+		pip.color = Palette.LEMON
+	else:
+		pip.color = Rarity.color(rarity)
+	box.add_child(pip)
 	var txt := VBoxContainer.new()
 	txt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var t := Label.new()
-	t.text = "%s  ·  %s  ·  %s" % [node["trunk"], node["name"], Rarity.label(rarity)]
-	UiKit.apply_label(t, 16, Rarity.color(rarity))
-	var b := Label.new()
-	b.text = str(node["blurb"])
-	b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	UiKit.apply_label(b, 13, Palette.TEXT)
+	t.text = "%s  ·  %s" % [str(node["name"]), Rarity.label(rarity)]
+	UiKit.apply_label(t, 13, Palette.MUTED if locked else Rarity.color(rarity))
 	txt.add_child(t)
+	var b := Label.new()
+	b.text = str(node["blurb"]) if not locked else "DARK  ·  BUY %s FIRST" % req.replace("_", " ").to_upper()
+	b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	UiKit.apply_label(b, 11, Palette.TEXT if not locked else Palette.LOCK)
 	txt.add_child(b)
-	var stats := StatPanel.new([
-		{"name": "GOLD", "value": str(int(node["gold"])), "color": Palette.EDGE},
-		{"name": "REP", "value": str(int(node["rep"])), "color": Palette.BRICK}
-	])
-	stats.custom_minimum_size = Vector2(160, 0)
-	txt.add_child(stats)
 	box.add_child(txt)
-	var owned: Array = FamilyProfile.data["cbt"]
-	var can_buy := not owned.has(node["id"]) and int(FamilyProfile.data["gold"]) >= int(node["gold"]) and int(FamilyProfile.data["rep"]) >= int(node["rep"])
-	if owned.has(node["id"]):
-		row.add_theme_stylebox_override("panel", UiKit.panel(Palette.PANEL, Palette.READY))
-	elif can_buy:
-		row.add_theme_stylebox_override("panel", UiKit.panel(Palette.PANEL, Palette.LEMON))
-	var buy := UiKit.button("OWNED" if owned.has(node["id"]) else "%d GOLD" % int(node["gold"]), Vector2(140, 40))
-	buy.disabled = owned.has(node["id"]) or int(FamilyProfile.data["gold"]) < int(node["gold"]) or int(FamilyProfile.data["rep"]) < int(node["rep"])
-	if can_buy:
+	var buy := UiKit.button("OWNED" if owned else ("%dG" % int(node["gold"])), Vector2(90, 36))
+	buy.disabled = owned or locked or int(FamilyProfile.data["gold"]) < int(node["gold"]) or int(FamilyProfile.data["rep"]) < int(node["rep"])
+	if can:
 		buy.add_theme_stylebox_override("normal", UiKit.panel(Palette.READY, Palette.LEMON))
 		UiKit.pulse_ready(buy)
 	buy.pressed.connect(func() -> void:
-		if owned.has(node["id"]):
-			return
-		if int(FamilyProfile.data["gold"]) < int(node["gold"]):
-			Juice.claim_burst(get_viewport_rect().size * 0.5, "GOLD IS ALSO A FEELING", 0, 0)
-			return
-		FamilyProfile.data["gold"] = int(FamilyProfile.data["gold"]) - int(node["gold"])
-		owned.append(node["id"])
-		FamilyProfile.save()
-		Juice.claim_burst(get_viewport_rect().size * 0.5, "COPING MECHANISM INSTALLED", 0, 0)
-		Rarity.juice(str(node.get("rarity", "common")), str(node["name"]))
-		Juice.toast("reward", str(node["name"]), "COPING MECHANISM INSTALLED")
-		need_refresh.emit()
+		if FamilyProfile.try_cbt(id):
+			need_refresh.emit()
+		else:
+			Juice.claim_burst(get_viewport_rect().size * 0.5, "GOLD AND PARENTS FIRST", 0, 0)
 	)
 	box.add_child(buy)
+	row.gui_input.connect(func(ev: InputEvent) -> void:
+		if ev is InputEventMouseButton and (ev as InputEventMouseButton).pressed:
+			_focus = node
+			_refresh_stats()
+	)
 	return row
+
+
+func _stat_rows(node: Dictionary) -> Array:
+	if node.is_empty():
+		return [
+			{"name": "GOLD", "value": str(int(FamilyProfile.data.get("gold", 0))), "color": Palette.EDGE},
+			{"name": "REP", "value": str(int(FamilyProfile.data.get("rep", 0))), "color": Palette.BRICK},
+			{"name": "OWNED", "value": str((FamilyProfile.data.get("cbt", []) as Array).size()), "color": Palette.READY}
+		]
+	return [
+		{"name": "STAT", "value": str(node.get("stat", "—")), "color": Palette.LEMON},
+		{"name": "GOLD", "value": str(int(node.get("gold", 0))), "color": Palette.EDGE},
+		{"name": "REP", "value": str(int(node.get("rep", 0))), "color": Palette.BRICK},
+		{"name": "TRUNK", "value": str(node.get("trunk", "")), "color": Palette.TEXT}
+	]
+
+
+func _refresh_stats() -> void:
+	if _stats and is_instance_valid(_stats):
+		_stats.queue_free()
+	_stats = StatPanel.new(_stat_rows(_focus))
+	_stats.custom_minimum_size = Vector2(220, 160)
+	if _board:
+		_board.add_child(_stats)
 
 
 func _compare() -> void:

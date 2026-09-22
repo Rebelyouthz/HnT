@@ -39,6 +39,14 @@
       "rarity": "legendary",
       "need": { "family_plan_kills": 1 },
       "tint": [0.12, 0.08, 0.18]
+    },
+    {
+      "id": "frame_invoice",
+      "title": "ORIGINAL INVOICE",
+      "blurb": "Splint's first clipboard. Secret. Legendary glass. The pier hid it.",
+      "rarity": "legendary",
+      "need": { "secrets_found": 99 },
+      "tint": [0.62, 0.18, 0.12]
     }
   ],
   "banners": [
@@ -146,6 +154,20 @@
       "blurb": "Director Binder filed. Wear the corpse.",
       "rarity": "legendary",
       "need": { "family_plan_kills": 1 }
+    },
+    {
+      "id": "badge_clamp",
+      "title": "CLAMP CHARM",
+      "blurb": "Secret. The valet dropped parking with teeth. Pin it.",
+      "rarity": "rare",
+      "need": { "secrets_found": 99 }
+    },
+    {
+      "id": "badge_summit",
+      "title": "140 METRES",
+      "blurb": "Eat at the top once. Peace is also a badge.",
+      "rarity": "rare",
+      "need": { "summit_meals": 1 }
     }
   ]
 }

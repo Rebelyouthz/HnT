@@ -18,6 +18,7 @@ var score_son: int = 0
 var score_dad: int = 0
 var score_total: int = 0
 var heat: int = 0
+var lunch: int = 0
 
 signal lives_changed
 signal points_changed
@@ -97,8 +98,24 @@ func add_xp(n: int) -> void:
 
 
 func add_wanted(n: int) -> void:
-	wanted = clampi(wanted + n, 0, 5)
+	var step := n
+	if FamilyProfile.has_cbt("quiet_hands") and step > 0:
+		step = maxi(0, step - 1) if randf() < 0.5 else step
+	wanted = clampi(wanted + step, 0, 5)
 	wanted_changed.emit()
+
+
+func add_lunch() -> void:
+	lunch = 1
+	Juice.toast("reward", "LUNCH", "Something to eat at 140m. Sit. Don't share with the wind.")
+
+
+func has_lunch() -> bool:
+	return lunch > 0
+
+
+func eat_lunch() -> void:
+	lunch = 0
 
 
 func add_heat(n: int) -> void:
@@ -168,7 +185,8 @@ func pack() -> Dictionary:
 		"score_son": score_son,
 		"score_dad": score_dad,
 		"score_total": score_total,
-		"heat": heat
+		"heat": heat,
+		"lunch": lunch
 	}
 
 
@@ -185,6 +203,7 @@ func unpack(d: Dictionary) -> void:
 	score_dad = int(d.get("score_dad", score_dad))
 	score_total = int(d.get("score_total", score_total))
 	heat = int(d.get("heat", heat))
+	lunch = int(d.get("lunch", lunch))
 	gated = false
 	cleared = false
 	failed = false

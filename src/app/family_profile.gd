@@ -195,7 +195,13 @@ func _defaults() -> Dictionary:
 		"clocks": 0,
 		"bleaches": 0,
 		"clock_day": "",
-		"bleach_day": ""
+		"bleach_day": "",
+		"last_descent": "",
+		"towers_climbed": 0,
+		"summit_meals": 0,
+		"secrets_found": 0,
+		"secret_ids": [],
+		"talk_choices": {}
 	}
 
 
@@ -381,6 +387,60 @@ func has_cbt(id: String) -> bool:
 	return (data["cbt"] as Array).has(id)
 
 
+func try_cbt(id: String) -> bool:
+	if has_cbt(id):
+		return false
+	var list: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/cbt.json"))
+	var spec := {}
+	for row in list:
+		if str(row.get("id", "")) == id:
+			spec = row
+			break
+	if spec.is_empty():
+		return false
+	var req := str(spec.get("requires", ""))
+	if req != "" and not has_cbt(req):
+		return false
+	if int(data.get("gold", 0)) < int(spec.get("gold", 0)):
+		return false
+	if int(data.get("rep", 0)) < int(spec.get("rep", 0)):
+		return false
+	data["gold"] = int(data["gold"]) - int(spec.get("gold", 0))
+	(data["cbt"] as Array).append(id)
+	save()
+	Rarity.juice(str(spec.get("rarity", "common")), str(spec.get("name", id)))
+	Juice.claim_burst(Vector2(640, 360), "COPING MECHANISM INSTALLED", 0, 0)
+	Juice.toast("reward", str(spec.get("name", id)), "COPING MECHANISM INSTALLED")
+	return true
+
+
+func note_tower() -> void:
+	data["towers_climbed"] = int(data.get("towers_climbed", 0)) + 1
+	save()
+
+
+func note_summit_meal() -> void:
+	data["summit_meals"] = int(data.get("summit_meals", 0)) + 1
+	save()
+
+
+func note_secret(id: String) -> void:
+	var ids: Array = data.get("secret_ids", [])
+	if ids.has(id):
+		return
+	ids.append(id)
+	data["secret_ids"] = ids
+	data["secrets_found"] = ids.size()
+	save()
+
+
+func note_talk_choice(talk_id: String, choice: String) -> void:
+	var t: Dictionary = data.get("talk_choices", {})
+	t[talk_id] = choice
+	data["talk_choices"] = t
+	save()
+
+
 func less_gore() -> bool:
 	return bool(data.get("less_gore", false))
 
@@ -490,6 +550,8 @@ func grant_account_xp(n: int) -> Dictionary:
 	var gained := maxi(0, n)
 	if has_cbt("pinball_brain"):
 		gained = int(round(float(gained) * 1.2))
+	if has_cbt("school_pride"):
+		gained = int(round(float(gained) * 1.1))
 	data["account_xp"] = int(data.get("account_xp", 0)) + gained
 	var dings := 0
 	while int(data["account_xp"]) >= account_need():

@@ -323,5 +323,41 @@
     "rarity": "rare",
     "tag": "STREET",
     "stats": { "slide": "+4" }
+  },
+  {
+    "id": "escape_clause",
+    "name": "ESCAPE CLAUSE",
+    "blurb": "Secret. Tower falls refund a jump. The lease did not sign this.",
+    "fixed": false,
+    "rarity": "epic",
+    "tag": "TOWER",
+    "stats": { "fall": "jump" }
+  },
+  {
+    "id": "talking_stick",
+    "name": "TALKING STICK",
+    "blurb": "Secret. SNAP heals 4 extra. Nobody passed it. You took it.",
+    "fixed": false,
+    "rarity": "rare",
+    "tag": "SNAP",
+    "stats": { "snap": "+4 hp" }
+  },
+  {
+    "id": "landlord_void",
+    "name": "LANDLORD VOID",
+    "blurb": "Secret. Legendary. Heavies on armored punks strip two plates. The mortgage cried.",
+    "fixed": false,
+    "rarity": "legendary",
+    "tag": "BOSS",
+    "stats": { "plates": "+2 strip" }
+  },
+  {
+    "id": "shuttle_rip",
+    "name": "SHUTTLE RIP",
+    "blurb": "Secret. Mid-air slap windows last longer. The wellness drone still wants a copay.",
+    "fixed": false,
+    "rarity": "epic",
+    "tag": "AIR",
+    "stats": { "slap": "+80ms" }
   }
 ]

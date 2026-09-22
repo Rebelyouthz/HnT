@@ -84,6 +84,20 @@ Brawl acts mix **parkour / gun / brawl**. Every act: **miniboss**, later content
 
 Survivor hours sit between/after their pair. Solo thinner spawn + slower horde. Co-op denser. Seed encounters stay **solo 3 / coop 6** on every map.
 
+### How to start a viewpoint tower
+
+Every campaign map has a mast with the plaque **140M · HELL IS BELOW**. Walk up to it. **LIGHT** or **JUMP** starts a guided climb (Tomb Raider shrinking ring: red until the cling window, then green). Miss a ring and you fall (HP chip, try again). Raven Grid's tower stays at **x 1640**, before the ramp.
+
+Pack **lunch** (buy at Blood Mart / street shop, loot a fridge, or find a unique secret) and eat at the summit. Talks are yes / no / deflect. A no is never punished. Deflect is one short Father line. Descent rotates: parachute / zip / water / ledge — never the same twice in a row.
+
+### How the parachute setpiece starts
+
+1. File **Copay Orchard** (Scarecrow Ken, then Combine Brute).
+2. On the results sheet tap **NEXT** (Sleet Hour). The game hops to the **Wellness Shuttle** fall — it is not an optional film, and **SKIP INTER-ACT FILMS** does not skip it.
+3. Or, after the Combine is down, walk to the **Wellness Shuttle** at orchard **x ≈ 3320** and tap **SPECIAL**.
+
+The craft fails like the van. Long fall. **SPECIAL** toggles first person. Mid-air hand slap (cling when green). You land in **Sleet Hour**, a survivor hour. **PAUSE** shouts **WATCH THE FALL** and does not skip.
+
 ### How the Raven Grid chase starts (and ends)
 
 1. File **Grid Kid** (miniboss). Toast: steal the lemon clinic courier.

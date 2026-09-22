@@ -52,6 +52,8 @@ func smash() -> void:
 	if rs and rs.has_method("add_points"):
 		rs.add_points(Juice.last_hitter, 24, "crate")
 	Rarity.juice("uncommon", "CRATE")
+	if randf() < 0.28 and rs and rs.has_method("add_lunch"):
+		rs.add_lunch()
 	var hud := get_tree().get_first_node_in_group("mission_hud")
 	if hud and hud.has_method("complete_side"):
 		hud.complete_side()

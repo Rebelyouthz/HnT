@@ -173,6 +173,12 @@ const MANHOLE := "MANHOLE"
 const SLIDE := "SLIDE"
 const TIME_CLOCK := "TIME CLOCK"
 const BLEACH_CLOSET := "BLEACH CLOSET"
+const CLIMB := "CLIMB"
+const CLING := "CLING"
+const TOWER := "VIEWPOINT"
+const LUNCH_140 := "EAT AT 140M"
+const SHUTTLE := "WELLNESS SHUTTLE"
+const PARACHUTE := "PARACHUTE"
 
 
 static func come_on(father: String, son: String, who: String) -> String:

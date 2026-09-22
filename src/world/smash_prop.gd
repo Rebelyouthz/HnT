@@ -167,7 +167,9 @@ func _pop(from: Node) -> void:
 		_drop_pipe(host)
 	if kind == "fridge":
 		FamilyProfile.stash_snack("bandage")
-		Juice.toast("reward", "COLD SNACK", "The street fridge packed a bandage for later.")
+		if rs and rs.has_method("add_lunch"):
+			rs.add_lunch()
+		Juice.toast("reward", "COLD SNACK", "The street fridge packed a bandage and a lunch for 140m.")
 		VoBank.fridge()
 		_spawn_named(host, "Fridge Imp", 28, "street")
 	elif kind == "dumpster":

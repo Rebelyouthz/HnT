@@ -139,6 +139,9 @@ func _buy(rs: Node, f: Fighter, item: String) -> void:
 			f.bandage += 1
 		"thermos":
 			f.steam = Fighter.STEAM_MAX
+		"lunch":
+			if rs.has_method("add_lunch"):
+				rs.add_lunch()
 	Juice.shout(str(info["line"]))
 	Juice.play("res://assets/audio/shop.wav")
 	Juice.claim_burst(Vector2(640, 180), str(info["line"]), 0, 0)
