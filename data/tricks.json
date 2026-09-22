@@ -13,5 +13,40 @@
     "easy": { "id": "jump", "title": "JUMP", "points": 10, "speed": 1.0, "input": "jump" },
     "mid": { "id": "tic_tac", "title": "TIC-TAC", "points": 32, "speed": 1.07, "input": "up" },
     "hard": { "id": "king_kong", "title": "KING KONG JUMPOFF", "points": 55, "speed": 1.12, "input": "special" }
+  },
+  "wall": {
+    "easy": { "id": "jump", "title": "WALL POP", "points": 12, "speed": 1.02, "input": "jump" },
+    "mid": { "id": "tic_tac", "title": "TIC-TAC", "points": 36, "speed": 1.08, "input": "up" },
+    "hard": { "id": "wall_cling", "title": "WALL CLING KICK", "points": 52, "speed": 1.11, "input": "special" }
+  },
+  "hill": {
+    "easy": { "id": "slide", "title": "SLIDE HILL", "points": 14, "speed": 1.08, "input": "dash" },
+    "mid": { "id": "speed_slide", "title": "SPEED SLIDE", "points": 30, "speed": 1.12, "input": "up" },
+    "hard": { "id": "escape_slide", "title": "ESCAPE SLIDE", "points": 48, "speed": 1.16, "input": "special" }
+  },
+  "wire": {
+    "easy": { "id": "wire_run", "title": "WIRE RUN", "points": 16, "speed": 1.04, "input": "jump" },
+    "mid": { "id": "wire_pop", "title": "WIRE POP", "points": 34, "speed": 1.1, "input": "up" },
+    "hard": { "id": "wire_kick", "title": "WIRE KICK", "points": 50, "speed": 1.14, "input": "special" }
+  },
+  "rope": {
+    "easy": { "id": "swing", "title": "ROPE SWING", "points": 18, "speed": 1.06, "input": "jump" },
+    "mid": { "id": "long_swing", "title": "LONG SWING", "points": 38, "speed": 1.12, "input": "up" },
+    "hard": { "id": "escape_land", "title": "ESCAPE AND LAND", "points": 56, "speed": 1.18, "input": "special" }
+  },
+  "pad": {
+    "easy": { "id": "high_jump", "title": "HIGH JUMP", "points": 12, "speed": 1.04, "input": "jump" },
+    "mid": { "id": "super_jump", "title": "SUPER JUMP", "points": 28, "speed": 1.08, "input": "up" },
+    "hard": { "id": "roof_pop", "title": "ROOF POP", "points": 44, "speed": 1.12, "input": "special" }
+  },
+  "escape": {
+    "easy": { "id": "escape", "title": "ESCAPE LAND", "points": 20, "speed": 1.08, "input": "jump" },
+    "mid": { "id": "escape_roll", "title": "ESCAPE ROLL", "points": 40, "speed": 1.14, "input": "dash" },
+    "hard": { "id": "king_escape", "title": "KING ESCAPE", "points": 58, "speed": 1.18, "input": "special" }
+  },
+  "drop": {
+    "easy": { "id": "drop", "title": "THE DROP", "points": 16, "speed": 1.0, "input": "jump" },
+    "mid": { "id": "dive", "title": "LEDGER DIVE", "points": 36, "speed": 1.06, "input": "up" },
+    "hard": { "id": "cenote", "title": "CENOTE DROP", "points": 54, "speed": 1.1, "input": "special" }
   }
 }

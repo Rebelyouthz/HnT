@@ -104,3 +104,11 @@ func play_music(path: String) -> void:
 func stop_music() -> void:
 	_music_a.stop()
 	_music_b.stop()
+
+
+func set_tension(on: bool) -> void:
+	if on:
+		if ResourceLoader.exists("res://assets/audio/music_tension.wav"):
+			play_music("res://assets/audio/music_tension.wav")
+		elif ResourceLoader.exists("res://assets/audio/music_chase.wav"):
+			play_music("res://assets/audio/music_chase.wav")

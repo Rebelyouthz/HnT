@@ -6,14 +6,14 @@ func _configure() -> void:
 	map_w = 2200.0
 	spawn_at = Vector2(180, 490)
 	goal_x = 99999.0
-	next_id = "invoice_pier"
+	next_id = "copay_orchard"
 	light_preset = "city_hall"
 	toast_title = "CITY HALL"
 	toast_body = "Deputy first. Then the landlord. Statues climb."
 	clear_title = Copy.HALL_CLEAR
 	clear_sub = Copy.HALL_SUB
-	next_label = Copy.NEXT_PIER
-	gate_sub = Copy.PIER_SUB
+	next_label = Copy.NEXT_ORCHARD
+	gate_sub = Copy.GATE_ORCHARD
 	win_mode = "boss"
 
 

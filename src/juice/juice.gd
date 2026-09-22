@@ -71,6 +71,17 @@ func set_world_scale(s: float) -> void:
 	_apply_scale()
 
 
+func slowmo(scale: float) -> void:
+	Engine.time_scale = clampf(scale, 0.05, 1.0)
+
+
+func restore_time() -> void:
+	if _hitstop_depth == 0:
+		Engine.time_scale = _base_scale
+	else:
+		Engine.time_scale = 0.08
+
+
 func _apply_scale() -> void:
 	if _hitstop_depth > 0:
 		return
@@ -653,6 +664,21 @@ func sparks(at: Vector2) -> void:
 		if is_instance_valid(p):
 			p.queue_free()
 	)
+
+
+func bam(at: Vector2, role: String = "son") -> void:
+	shout("BAM")
+	pulse_shake(6.0)
+	sparks(at)
+	VoBank.bam(role)
+
+
+func trick_chain(n: int, title: String = "") -> void:
+	var line := "CHAIN x%d" % n if title == "" else title
+	shout(line)
+	pulse_shake(3.0 + float(mini(n, 8)) * 0.4)
+	if n >= 3:
+		unlock_logo(line, "Named trick. The coach would bill this.", "PARKOUR")
 
 
 func hole(at: Vector2) -> void:

@@ -148,5 +148,65 @@
       {"title": "Beat Cop", "x": 1880, "y": 500, "home": "street", "hp": 52, "pmin": 1720, "pmax": 2100, "cop": true},
       {"title": "Vest Ollie", "x": 2140, "y": 500, "home": "street", "hp": 72, "pmin": 1980, "pmax": 2360, "armored": true}
     ]
+  },
+  "copay_orchard": {
+    "solo": [
+      {"title": "Hay Pin", "x": 720, "y": 500, "home": "street", "hp": 32, "pmin": 560, "pmax": 920},
+      {"title": "Tractor Kid", "x": 1680, "y": 500, "home": "street", "hp": 38, "pmin": 1500, "pmax": 1900},
+      {"title": "Barn Cop", "x": 2480, "y": 500, "home": "street", "hp": 50, "pmin": 2280, "pmax": 2720, "cop": true}
+    ],
+    "coop": [
+      {"title": "Hay Pin", "x": 560, "y": 500, "home": "street", "hp": 32, "pmin": 420, "pmax": 760},
+      {"title": "Tractor Kid", "x": 980, "y": 500, "home": "street", "hp": 38, "pmin": 820, "pmax": 1180},
+      {"title": "Scarecrow Ken", "x": 1420, "y": 500, "home": "street", "hp": 58, "pmin": 1240, "pmax": 1640},
+      {"title": "Barn Cop", "x": 1860, "y": 500, "home": "street", "hp": 50, "pmin": 1680, "pmax": 2100, "cop": true},
+      {"title": "Hay Pin", "x": 2280, "y": 500, "home": "street", "hp": 32, "pmin": 2100, "pmax": 2520},
+      {"title": "Tractor Kid", "x": 2780, "y": 500, "home": "street", "hp": 38, "pmin": 2580, "pmax": 3000}
+    ]
+  },
+  "sleet_hour": {
+    "solo": [
+      {"title": "Sleet Imp", "x": 640, "y": 500, "home": "street", "hp": 30, "pmin": 480, "pmax": 860},
+      {"title": "Ice Drone", "x": 1080, "y": 200, "home": "air", "hp": 24, "pmin": 900, "pmax": 1280},
+      {"title": "Frost Clerk", "x": 1540, "y": 500, "home": "street", "hp": 44, "pmin": 1360, "pmax": 1760}
+    ],
+    "coop": [
+      {"title": "Sleet Imp", "x": 500, "y": 500, "home": "street", "hp": 30, "pmin": 360, "pmax": 720},
+      {"title": "Ice Drone", "x": 780, "y": 190, "home": "air", "hp": 24, "pmin": 620, "pmax": 980},
+      {"title": "Frost Clerk", "x": 1080, "y": 500, "home": "street", "hp": 44, "pmin": 920, "pmax": 1280},
+      {"title": "Sleet Imp", "x": 1320, "y": 500, "home": "street", "hp": 30, "pmin": 1160, "pmax": 1520},
+      {"title": "Ice Drone", "x": 1560, "y": 180, "home": "air", "hp": 24, "pmin": 1400, "pmax": 1760},
+      {"title": "Snowmobile", "x": 1780, "y": 500, "home": "street", "hp": 62, "pmin": 1620, "pmax": 1980}
+    ]
+  },
+  "raven_grid": {
+    "solo": [
+      {"title": "Grid Kid", "x": 720, "y": 500, "home": "street", "hp": 36, "pmin": 560, "pmax": 940},
+      {"title": "Neon Scooter", "x": 1480, "y": 500, "home": "street", "hp": 28, "pmin": 1280, "pmax": 1720},
+      {"title": "Courier Bike", "x": 2100, "y": 500, "home": "street", "hp": 54, "pmin": 1900, "pmax": 2340}
+    ],
+    "coop": [
+      {"title": "Grid Kid", "x": 560, "y": 500, "home": "street", "hp": 36, "pmin": 400, "pmax": 760},
+      {"title": "Neon Scooter", "x": 920, "y": 500, "home": "street", "hp": 28, "pmin": 760, "pmax": 1120},
+      {"title": "Courier Bike", "x": 1320, "y": 500, "home": "street", "hp": 54, "pmin": 1140, "pmax": 1560},
+      {"title": "Grid Car", "x": 1760, "y": 500, "home": "street", "hp": 88, "pmin": 1560, "pmax": 2040},
+      {"title": "Grid Kid", "x": 2140, "y": 248, "home": "roof", "hp": 36, "pmin": 1960, "pmax": 2360},
+      {"title": "Neon Scooter", "x": 2360, "y": 500, "home": "street", "hp": 28, "pmin": 2180, "pmax": 2500}
+    ]
+  },
+  "ledger_dive": {
+    "solo": [
+      {"title": "Ledger Eel", "x": 640, "y": 500, "home": "street", "hp": 26, "pmin": 480, "pmax": 860},
+      {"title": "Billboard Gull", "x": 1100, "y": 190, "home": "air", "hp": 34, "pmin": 920, "pmax": 1320},
+      {"title": "Brine Clerk", "x": 1560, "y": 500, "home": "street", "hp": 40, "pmin": 1380, "pmax": 1780}
+    ],
+    "coop": [
+      {"title": "Ledger Eel", "x": 500, "y": 500, "home": "street", "hp": 26, "pmin": 360, "pmax": 700},
+      {"title": "Brine Clerk", "x": 780, "y": 500, "home": "street", "hp": 40, "pmin": 640, "pmax": 980},
+      {"title": "Billboard Gull", "x": 1040, "y": 180, "home": "air", "hp": 34, "pmin": 880, "pmax": 1240},
+      {"title": "Ledger Eel", "x": 1300, "y": 500, "home": "street", "hp": 26, "pmin": 1140, "pmax": 1500},
+      {"title": "Billboard Gull", "x": 1540, "y": 170, "home": "air", "hp": 34, "pmin": 1380, "pmax": 1740},
+      {"title": "Vault Guard", "x": 1760, "y": 500, "home": "street", "hp": 84, "pmin": 1600, "pmax": 1940, "armored": true}
+    ]
   }
 }

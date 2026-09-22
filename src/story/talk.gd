@@ -1,6 +1,8 @@
 class_name Talk
 extends CanvasLayer
 
+signal closed
+
 var _lines: Array = []
 var _i := 0
 var _who: Label
@@ -35,9 +37,14 @@ func _ready() -> void:
 	col.add_child(hint)
 
 
-func play(lines: Array) -> void:
-	if lines.is_empty() or _open:
+func play(lines: Array, force := false) -> void:
+	if lines.is_empty():
 		return
+	if _open and not force:
+		return
+	if _open:
+		_open = false
+		_panel.visible = false
 	_lines = lines.duplicate()
 	_i = 0
 	_open = true
@@ -90,3 +97,4 @@ func _close() -> void:
 	_open = false
 	_panel.visible = false
 	_lines.clear()
+	closed.emit()

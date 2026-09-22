@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://hnt_sleet"]
+
+[ext_resource type="Script" path="res://src/levels/sleet_hour.gd" id="1"]
+
+[node name="SleetHour" type="Node2D"]
+script = ExtResource("1")

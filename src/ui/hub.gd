@@ -351,6 +351,12 @@ func _open_camp_sheet(id: String) -> void:
 			path = "res://src/ui/dojo_sheet.gd"
 		"workshop":
 			path = "res://src/ui/workshop_sheet.gd"
+		"bounty_board":
+			path = "res://src/ui/bounty_sheet.gd"
+		"radio_tower":
+			path = "res://src/ui/radio_sheet.gd"
+		"album_wall":
+			path = "res://src/ui/album_sheet.gd"
 		_:
 			return
 	var sheet: Control = load(path).new()

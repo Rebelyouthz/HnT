@@ -3,8 +3,8 @@ extends Control
 signal built(id: String)
 signal open_sheet(id: String)
 
-const SHEETS := ["pawn_shop", "patrol_desk", "research_lab", "dojo", "workshop"]
-const COLS := 5
+const SHEETS := ["pawn_shop", "patrol_desk", "research_lab", "dojo", "workshop", "bounty_board", "radio_tower", "album_wall"]
+const COLS := 6
 
 
 func _ready() -> void:

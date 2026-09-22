@@ -54,5 +54,29 @@
     "rarity": "epic",
     "gold": [28, 46, 72],
     "kind": "parkour"
+  },
+  {
+    "id": "grab_slam",
+    "title": "GRAB SLAM",
+    "blurb": "Throw on a crushed skull becomes a slam. SoR4 wall setup. Rank 1 unlocks.",
+    "rarity": "rare",
+    "gold": [24, 40, 64],
+    "kind": "combat"
+  },
+  {
+    "id": "wall_bounce",
+    "title": "WALL BOUNCE",
+    "blurb": "Heavies near a wall juggle. Rank 1 unlocks the bounce. Rank 3 is greedy.",
+    "rarity": "epic",
+    "gold": [32, 50, 78],
+    "kind": "combat"
+  },
+  {
+    "id": "air_mix",
+    "title": "AIR MIX",
+    "blurb": "Special in the air. Rank 1 unlocks. The Son already bills for hang-time.",
+    "rarity": "rare",
+    "gold": [26, 44, 68],
+    "kind": "combat"
   }
 ]

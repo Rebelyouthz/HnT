@@ -223,6 +223,10 @@ func bind(p_son: Fighter, p_dad: Fighter, p_state: RunState = null) -> void:
 
 
 func _prompt_line() -> String:
+	if get_tree().get_first_node_in_group("chase_crash"):
+		return "RAMP  ·  SLOW-MO  ·  CANAL  ·  CRAWL"
+	if get_tree().get_first_node_in_group("clinic_van"):
+		return "DRIVE  ·  RAIL 360  ·  SPECIAL SWAP  ·  RAMP AHEAD"
 	if son == null or father == null:
 		return PadRouter.p1_prompt() + "  ·  " + Copy.JOIN_HINT
 	return PadRouter.p1_prompt() + "  ·  " + PadRouter.p2_prompt()

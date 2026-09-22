@@ -1,0 +1,9 @@
+{
+  "fist": { "title": "PARENTING SLAP", "kind": "finish", "points": 80, "shout": "GROUNDED" },
+  "pipe": { "title": "PIPE SERMON", "kind": "finish", "points": 90, "shout": "SERMON" },
+  "board": { "title": "EVICTION BOARD", "kind": "finish", "points": 88, "shout": "EVICTED" },
+  "knife": { "title": "STAPLE CLEAVE", "kind": "blade", "points": 96, "shout": "FILED" },
+  "pistol": { "title": "9mm RECEIPT", "kind": "heavy", "points": 110, "shout": "PAID" },
+  "batwing": { "title": "BATWING EXIT", "kind": "blade", "points": 84, "shout": "TUTORING" },
+  "snare": { "title": "OFFICE SLAM", "kind": "web-slam", "points": 100, "shout": "OFFICE" }
+}

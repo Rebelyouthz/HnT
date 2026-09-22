@@ -159,6 +159,38 @@ static func _theme_pal(theme: String) -> Dictionary:
 				"mist": Color(0.2, 0.12, 0.08, 0.18), "fg": Color(0.06, 0.05, 0.05, 0.75),
 				"water": Color(0.12, 0.08, 0.06, 0.4)
 			}
+		"farm":
+			return {
+				"sky": Color(0.08, 0.14, 0.18, 0.92), "moon": Color(0.95, 0.82, 0.4, 0.88),
+				"fog": Color(0.18, 0.28, 0.16, 0.18), "far": Color(0.1, 0.16, 0.1),
+				"far_b": Color(0.14, 0.22, 0.12), "mid": Color(0.16, 0.22, 0.12),
+				"mist": Color(0.2, 0.28, 0.14, 0.16), "fg": Color(0.08, 0.12, 0.07, 0.7),
+				"water": Color(0.12, 0.28, 0.24, 0.5)
+			}
+		"snow":
+			return {
+				"sky": Color(0.14, 0.18, 0.24, 0.94), "moon": Color(0.92, 0.95, 1.0, 0.9),
+				"fog": Color(0.7, 0.78, 0.86, 0.22), "far": Color(0.42, 0.5, 0.58),
+				"far_b": Color(0.5, 0.58, 0.66), "mid": Color(0.55, 0.62, 0.7),
+				"mist": Color(0.78, 0.84, 0.9, 0.2), "fg": Color(0.62, 0.7, 0.78, 0.55),
+				"water": Color(0.55, 0.7, 0.8, 0.5)
+			}
+		"cyber":
+			return {
+				"sky": Color(0.05, 0.02, 0.1, 0.96), "moon": Color(0.95, 0.3, 0.85, 0.8),
+				"fog": Color(0.35, 0.08, 0.4, 0.2), "far": Color(0.08, 0.04, 0.16),
+				"far_b": Color(0.14, 0.04, 0.22), "mid": Color(0.12, 0.06, 0.2),
+				"mist": Color(0.4, 0.1, 0.45, 0.16), "fg": Color(0.06, 0.03, 0.1, 0.75),
+				"water": Color(0.12, 0.06, 0.18, 0.45)
+			}
+		"vault":
+			return {
+				"sky": Color(0.03, 0.07, 0.08, 0.97), "moon": Color(0.45, 0.9, 0.7, 0.7),
+				"fog": Color(0.08, 0.22, 0.2, 0.24), "far": Color(0.06, 0.12, 0.12),
+				"far_b": Color(0.08, 0.18, 0.16), "mid": Color(0.07, 0.14, 0.13),
+				"mist": Color(0.1, 0.24, 0.2, 0.22), "fg": Color(0.04, 0.08, 0.08, 0.75),
+				"water": Color(0.08, 0.28, 0.24, 0.6)
+			}
 		_:
 			return {
 				"sky": Color(0.06, 0.07, 0.12, 0.9), "moon": Color(0.78, 0.82, 0.92, 0.85),
@@ -187,6 +219,17 @@ static func _skyline(far: Node, map_w: float, color: Color, theme: String) -> vo
 			Blockout.poly(far, Rect2(x + 8, 120, 18, 22), Color(0.79, 0.64, 0.15, 0.35), -5)
 		elif theme == "rail":
 			Blockout.poly(far, Rect2(x, 160, 140, 40), color, -6)
+		elif theme == "farm":
+			Blockout.poly(far, Rect2(x, 240, 18, 180), color, -6)
+			Blockout.poly(far, Rect2(x + 18, 250, 70, 90), color.lightened(0.05), -6)
+		elif theme == "snow":
+			Blockout.poly(far, Rect2(x, 260, 90, 120), color, -6)
+		elif theme == "cyber":
+			Blockout.poly(far, Rect2(x, 80, 50, 320), color, -6)
+			Blockout.poly(far, Rect2(x + 10, 100, 16, 22), Color(0.95, 0.3, 0.85, 0.45), -5)
+		elif theme == "vault":
+			Blockout.poly(far, Rect2(x, 140, 80, 260), color, -6)
+			Blockout.poly(far, Rect2(x + 20, 170, 28, 40), Color(0.35, 0.85, 0.55, 0.3), -5)
 		else:
 			Blockout.poly(far, Rect2(x, 320.0 - h, 70 + (i % 3) * 20, h), color, -6)
 		x += 160.0
@@ -215,6 +258,20 @@ static func _mid_props(mid: Node, map_w: float, theme: String, pal: Dictionary) 
 				Blockout.poly(mid, Rect2(96.0 + i * 160.0, 300, 18, 14), Color(0.79, 0.64, 0.15, 0.4), -3)
 		"hall":
 			Blockout.poly(mid, Rect2(400, 180, 40, 200), Color(0.28, 0.22, 0.16, 0.55), -4)
+		"farm":
+			for i in 8:
+				Blockout.poly(mid, Rect2(80.0 + i * 160.0, 300, 12, 80), Color(0.18, 0.28, 0.12), -4)
+		"snow":
+			for i in 7:
+				Blockout.poly(mid, Rect2(100.0 + i * 150.0, 340, 70, 28), Color(0.82, 0.88, 0.92, 0.5), -4)
+		"cyber":
+			for i in 6:
+				Blockout.poly(mid, Rect2(120.0 + i * 180.0, 200, 28, 220), Color(0.2, 0.08, 0.28), -4)
+				Blockout.poly(mid, Rect2(128.0 + i * 180.0, 220, 12, 16), Color(0.3, 0.9, 0.95, 0.5), -3)
+		"vault":
+			Blockout.poly(mid, Rect2(0, 480, map_w, 90), pal["water"], -3)
+			for i in 5:
+				Blockout.poly(mid, Rect2(160.0 + i * 200.0, 220, 90, 18), Color(0.2, 0.32, 0.28), -4)
 		_:
 			Blockout.poly(mid, Rect2(400, 180, 40, 200), Color(0.22, 0.12, 0.12, 0.5), -4)
 
@@ -229,6 +286,13 @@ static func _near_props(near: Node, map_w: float, theme: String, pal: Dictionary
 		Blockout.poly(near, Rect2(1500, 220, 110, 18), Color(0.3, 0.85, 0.95, 0.7), -1)
 	if theme == "pier":
 		Blockout.poly(near, Rect2(40, 520, map_w, 40), Color(0.12, 0.1, 0.08, 0.8), -1)
+	if theme == "farm":
+		Blockout.poly(near, Rect2(200, 420, 180, 50), Color(0.28, 0.18, 0.1), -1)
+	if theme == "cyber":
+		Blockout.poly(near, Rect2(500, 220, 120, 16), Color(0.95, 0.3, 0.85, 0.7), -1)
+		Blockout.poly(near, Rect2(1700, 200, 140, 16), Color(0.3, 0.9, 0.95, 0.7), -1)
+	if theme == "vault":
+		Blockout.poly(near, Rect2(40, 500, map_w, 50), Color(0.08, 0.2, 0.18, 0.7), -1)
 
 
 static func _hung_props(hung: Node, map_w: float, theme: String, pal: Dictionary) -> void:
@@ -242,6 +306,14 @@ static func _hung_props(hung: Node, map_w: float, theme: String, pal: Dictionary
 			c = Color(0.18, 0.32, 0.24, 0.85)
 		elif theme == "lot":
 			c = Color(0.55, 0.32, 0.12, 0.8)
+		elif theme == "farm":
+			c = Color(0.32, 0.55, 0.18, 0.8)
+		elif theme == "snow":
+			c = Color(0.85, 0.9, 0.95, 0.7)
+		elif theme == "cyber":
+			c = Color(0.95, 0.25, 0.8, 0.85) if i % 2 == 0 else Color(0.25, 0.9, 0.95, 0.85)
+		elif theme == "vault":
+			c = Color(0.25, 0.55, 0.4, 0.8)
 		Blockout.poly(hung, Rect2(x, 190 + (i % 3) * 8, 64, 16), c, -1)
 
 
@@ -425,6 +497,58 @@ static func statue(host: Node, top: Vector2, top_y: float) -> void:
 	Blockout.poly(host, Rect2(top.x - 28, 320, 56, 280), Color(0.22, 0.2, 0.18), 1)
 	Blockout.poly(host, Rect2(top.x - 40, top_y, 80, 22), Color(0.28, 0.24, 0.2), 2)
 	Blockout.occluder(host, Rect2(top.x - 28, 320, 56, 280))
+
+
+static func barn(host: Node, rect: Rect2) -> void:
+	Blockout.poly(host, rect, Color(0.42, 0.18, 0.12), 1)
+	Blockout.occluder(host, rect)
+	var roof := Polygon2D.new()
+	roof.color = Color(0.28, 0.12, 0.1)
+	roof.polygon = PackedVector2Array([
+		rect.position + Vector2(-20, 50),
+		rect.position + Vector2(rect.size.x * 0.5, -60),
+		rect.position + Vector2(rect.size.x + 20, 50)
+	])
+	host.add_child(roof)
+	Blockout.poly(host, Rect2(rect.position.x + rect.size.x * 0.4, rect.end.y - 80, 44, 80), Color(0.12, 0.08, 0.06), 2)
+
+
+static func silo(host: Node, at: Vector2) -> void:
+	Blockout.poly(host, Rect2(at.x, at.y, 70, 380), Color(0.55, 0.52, 0.48), 1)
+	Blockout.poly(host, Rect2(at.x - 8, at.y - 24, 86, 28), Color(0.4, 0.38, 0.34), 2)
+	Blockout.occluder(host, Rect2(at.x, at.y, 70, 380))
+	anchor_if(host, Vector2(at.x + 35, at.y - 10))
+
+
+static func underpass(host: Node, at: Vector2, w: float = 400.0) -> void:
+	Blockout.poly(host, Rect2(at.x, at.y, w, 18), Color(0.18, 0.16, 0.2), 2)
+	Blockout.solid(host, Rect2(at.x, at.y, w, 18), true)
+	Blockout.poly(host, Rect2(at.x, at.y + 18, 22, 160), Color(0.12, 0.11, 0.14), 1)
+	Blockout.poly(host, Rect2(at.x + w - 22, at.y + 18, 22, 160), Color(0.12, 0.11, 0.14), 1)
+	Blockout.poly(host, Rect2(at.x + 22, at.y + 18, w - 44, 140), Color(0.06, 0.06, 0.08, 0.85), 1)
+	plaque(host, at + Vector2(24, -24), "UNDERPASS  ·  DROP AHEAD", Palette.MUTED, 12)
+
+
+static func ramp(host: Node, at: Vector2) -> void:
+	var p := Polygon2D.new()
+	p.color = Color(0.32, 0.16, 0.38)
+	p.position = at
+	p.polygon = PackedVector2Array([
+		Vector2(0, 48), Vector2(210, -96), Vector2(248, -96), Vector2(248, 48)
+	])
+	p.z_index = 2
+	host.add_child(p)
+	Blockout.add_glow(p)
+	plaque(host, at + Vector2(8, -128), "RAMP  ·  DO NOT BRAKE", Palette.LEMON, 13)
+
+
+static func canal(host: Node, x: float, w: float, y: float = 520.0) -> void:
+	var water := Blockout.poly(host, Rect2(x, y, w, 200), Color(0.05, 0.14, 0.18, 0.92), 1)
+	water.z_index = 1
+	Blockout.poly(host, Rect2(x, y, w, 16), Color(0.22, 0.55, 0.5, 0.55), 2)
+	Blockout.poly(host, Rect2(x - 18, 430, 22, 90), Color(0.16, 0.12, 0.1), 2)
+	Blockout.poly(host, Rect2(x + w - 4, 430, 22, 90), Color(0.16, 0.12, 0.1), 2)
+	plaque(host, Vector2(x + 24, y - 48), "CANAL  ·  THEY DON'T FOLLOW", Palette.EDGE, 13)
 
 
 static func heli(host: Node, map_w: float) -> Node2D:

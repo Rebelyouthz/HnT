@@ -38,6 +38,7 @@ var _talked: Dictionary = {}
 var _mini_down := false
 var _boss_down := false
 var _skip_story_boss := false
+var defer_final_boss := false
 
 
 func _configure() -> void:
@@ -60,7 +61,11 @@ func _place_parkour() -> void:
 		"tutorial_alley": [[640.0, 500.0, "crate"], [1100.0, 500.0, "rail"]],
 		"intake_lot": [[520.0, 500.0, "crate"], [1280.0, 500.0, "rail"]],
 		"group_circle": [[640.0, 500.0, "rail"]],
-		"waiting_room": [[720.0, 500.0, "crate"], [1400.0, 500.0, "gap"]]
+		"waiting_room": [[720.0, 500.0, "crate"], [1400.0, 500.0, "gap"]],
+		"copay_orchard": [[720.0, 500.0, "crate"], [2100.0, 500.0, "gap"]],
+		"sleet_hour": [[700.0, 500.0, "rail"], [1500.0, 500.0, "crate"]],
+		"raven_grid": [[900.0, 500.0, "rail"], [2200.0, 500.0, "gap"]],
+		"ledger_dive": [[720.0, 500.0, "crate"], [1600.0, 500.0, "rail"]]
 	}
 	var list: Variant = rows.get(map_id, [])
 	if typeof(list) != TYPE_ARRAY:
@@ -241,7 +246,7 @@ func _on_gate() -> void:
 	match map_id:
 		"city_hall":
 			FamilyProfile.mark_city_clear()
-		"intake_lot", "group_circle", "waiting_room":
+		"intake_lot", "group_circle", "waiting_room", "sleet_hour", "ledger_dive":
 			FamilyProfile.mark_survive(map_id)
 		"invoice_pier":
 			FamilyProfile.mark_annex()
@@ -261,7 +266,7 @@ func _on_clear() -> void:
 		FamilyProfile.mark_annex()
 	if map_id == "processing_floor":
 		FamilyProfile.mark_family_plan()
-	if map_id in ["intake_lot", "group_circle", "waiting_room"]:
+	if map_id in ["intake_lot", "group_circle", "waiting_room", "sleet_hour", "ledger_dive"]:
 		FamilyProfile.mark_survive(map_id)
 	if App.remote_coop:
 		FamilyProfile.mark_remote_clear()
@@ -303,7 +308,7 @@ func _boot_story() -> void:
 	if not bool(row.get("survive", false)) and not _skip_story_boss:
 		_spawn_story_unit(true)
 		var boss: Variant = row.get("boss", {})
-		if typeof(boss) == TYPE_DICTIONARY and str((boss as Dictionary).get("kind", "")) not in ["mayor_raven", "family_plan"]:
+		if typeof(boss) == TYPE_DICTIONARY and str((boss as Dictionary).get("kind", "")) not in ["mayor_raven", "family_plan"] and not defer_final_boss:
 			_spawn_story_unit(false)
 	var talks: Variant = row.get("talk", [])
 	if typeof(talks) == TYPE_ARRAY and (talks as Array).size() > 0:
@@ -410,6 +415,10 @@ func _banner(title: String, sub: String, win: bool, gate: bool) -> void:
 	sheet.state = _state
 	add_child(sheet)
 	_end = sheet
+
+
+func spawn_deferred_boss() -> void:
+	_spawn_story_unit(false)
 
 
 func fire_escape(at_x: float, top_y: float = 248.0, bottom: float = 500.0) -> void:

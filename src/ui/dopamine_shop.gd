@@ -157,6 +157,9 @@ func _scratch(info: Dictionary) -> Control:
 
 
 func _payout(id: String) -> void:
+	if id == "envelope" or id.begins_with("gear_") or id.begins_with("weapon_"):
+		FamilyProfile.grant_prize(id)
+		return
 	var table: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/dopamine.json"))
 	var prizes: Dictionary = table.get("prizes", {})
 	if prizes.has(id):

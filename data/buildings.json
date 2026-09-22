@@ -82,5 +82,23 @@
     "name": "WORKSHOP",
     "blurb": "Parts, coils, thread, ink. Gear and clothes are one build.",
     "unlocks": "Craft"
+  },
+  {
+    "id": "bounty_board",
+    "name": "BOUNTY BOARD",
+    "blurb": "Street contracts. Claim is required. The radio will lie about who hired you.",
+    "unlocks": "Bounty"
+  },
+  {
+    "id": "radio_tower",
+    "name": "THERAPY RADIO",
+    "blurb": "Mayor Raven on a loop. Daily VO. Heat makes him smugger.",
+    "unlocks": "Radio"
+  },
+  {
+    "id": "album_wall",
+    "name": "FAMILY ALBUM",
+    "blurb": "Polaroids instead of just gold. Pin the night. The fridge still wants a copy.",
+    "unlocks": "Album"
   }
 ]

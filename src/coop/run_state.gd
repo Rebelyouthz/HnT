@@ -17,6 +17,7 @@ var rerolls: int = 0
 var score_son: int = 0
 var score_dad: int = 0
 var score_total: int = 0
+var heat: int = 0
 
 signal lives_changed
 signal points_changed
@@ -100,6 +101,12 @@ func add_wanted(n: int) -> void:
 	wanted_changed.emit()
 
 
+func add_heat(n: int) -> void:
+	heat = clampi(heat + n, 0, 9)
+	if heat >= 4:
+		Mixer.set_tension(true)
+
+
 func take_card(id: String) -> void:
 	if id == "" or id == "skip":
 		Juice.shout("SKIPPED")
@@ -160,7 +167,8 @@ func pack() -> Dictionary:
 		"rerolls": rerolls,
 		"score_son": score_son,
 		"score_dad": score_dad,
-		"score_total": score_total
+		"score_total": score_total,
+		"heat": heat
 	}
 
 
@@ -176,6 +184,7 @@ func unpack(d: Dictionary) -> void:
 	score_son = int(d.get("score_son", score_son))
 	score_dad = int(d.get("score_dad", score_dad))
 	score_total = int(d.get("score_total", score_total))
+	heat = int(d.get("heat", heat))
 	gated = false
 	cleared = false
 	failed = false

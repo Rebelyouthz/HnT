@@ -4,11 +4,14 @@ extends Camera2D
 var targets: Array[Node2D] = []
 var _look := 0.0
 var _nag_cd := 0.0
+var cinematic := Vector2.ZERO
+var cinematic_on := false
 
 
 func _ready() -> void:
 	enabled = true
 	make_current()
+	add_to_group("couch_cam")
 	position_smoothing_enabled = false
 	process_physics_priority = -40
 	limit_top = 0
@@ -21,6 +24,11 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if _nag_cd > 0.0:
 		_nag_cd -= delta
+	if cinematic_on:
+		var t := 1.0 - exp(-10.0 * delta)
+		global_position = global_position.lerp(cinematic, t)
+		offset = Juice.shake_offset()
+		return
 	var living: Array[Node2D] = []
 	for t in targets:
 		if is_instance_valid(t):

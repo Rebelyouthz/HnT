@@ -77,7 +77,7 @@ func _ready() -> void:
 	col.add_child(extra)
 
 	var acts := Label.new()
-	acts.text = "1 DOCK  ·  HOUR: LOT  ·  2 ROOFS  ·  HOUR: CIRCLE  ·  3 NEON  ·  HOUR: WAITING  ·  4 RAIL  ·  5 HALL  ·  6 PIER  ·  7 FLOOR"
+	acts.text = "1 DOCK  ·  LOT  ·  2 ROOFS  ·  CIRCLE  ·  3 NEON  ·  WAITING  ·  4 RAIL  ·  5 HALL  ·  6 ORCHARD  ·  SLEET  ·  7 GRID (CHASE)  ·  LEDGER  ·  8 PIER  ·  9 FLOOR"
 	acts.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	UiKit.apply_label(acts, 12, Palette.MUTED)
 	col.add_child(acts)
@@ -150,8 +150,10 @@ func _count_rows() -> Array:
 		{"name": "FLOOR SOLO", "value": str(Party.count_for("processing_floor", false)), "color": Palette.BRICK},
 		{"name": "LOT SOLO", "value": str(Party.count_for("intake_lot", false)), "color": Palette.LEMON},
 		{"name": "COUCH EACH", "value": str(Party.count_for("dock_street", true)), "color": Palette.TEXT},
-		{"name": "ACTS", "value": "10", "color": Palette.READY},
-		{"name": "HOURS", "value": "3", "color": Palette.EDGE},
+		{"name": "ORCHARD SOLO", "value": str(Party.count_for("copay_orchard", false)), "color": Palette.EDGE},
+		{"name": "GRID SOLO", "value": str(Party.count_for("raven_grid", false)), "color": Palette.LEMON},
+		{"name": "ACTS", "value": "14", "color": Palette.READY},
+		{"name": "HOURS", "value": "5", "color": Palette.EDGE},
 		{"name": "HOST", "value": "SON", "color": Palette.LEMON},
 		{"name": "JOIN", "value": "FATHER", "color": Palette.BRICK}
 	]

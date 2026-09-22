@@ -90,18 +90,58 @@
         {"who": "", "text": "STATUES CLIMB. RAVEN DOES NOT SHARE THE MORTGAGE."}
       ]
     },
-    "city_hall->invoice_pier": {
+    "city_hall->copay_orchard": {
       "chapter": "CHAPTER 9",
+      "title": "COPAY ORCHARD",
+      "sub": "The wellness weekend they never booked.",
+      "lines": [
+        {"who": "son", "text": "They billed a retreat. We never sat on the hay."},
+        {"who": "father", "text": "I networked. With a scarecrow. It had better posture."},
+        {"who": "", "text": "LAKE. FOREST. FIELDS. A SILO WITH A ROPE. THE COPAY HAS TREES."}
+      ]
+    },
+    "copay_orchard->sleet_hour": {
+      "chapter": "CHAPTER 10",
+      "title": "SLEET HOUR",
+      "sub": "The orchard froze. Hold the lake.",
+      "lines": [
+        {"who": "father", "text": "I packed a polo. The weather packed a personality."},
+        {"who": "son", "text": "Don't sit on the ice. Sitting is how they win. Again."},
+        {"who": "", "text": "SNOWMOBILES. ICE WIRES. EIGHTY-EIGHT SECONDS OF COPAY SLEET."}
+      ]
+    },
+    "sleet_hour->raven_grid": {
+      "chapter": "CHAPTER 11",
+      "title": "RAVEN GRID",
+      "sub": "Cyberpunk downtown. Steal the lemon courier.",
+      "lines": [
+        {"who": "son", "text": "You drive. I shoot three-sixty. Do not hit a scooter and call it growth."},
+        {"who": "father", "text": "I am on the rail. If I network with a lamppost, bill me."},
+        {"who": "", "text": "NOT A MIL TRUCK. A CLINIC COURIER. RAMP. CANAL. THE CRASH IS THE BOSS INTRO."}
+      ]
+    },
+    "raven_grid->ledger_dive": {
+      "chapter": "CHAPTER 12",
+      "title": "LEDGER DIVE",
+      "sub": "The drop. A spa they billed as therapy.",
+      "lines": [
+        {"who": "son", "text": "We fell into the vault. The ads are drowning. That's the surprise."},
+        {"who": "father", "text": "I hate spas. I hate brine. I can still punch an eel."},
+        {"who": "", "text": "FLOODED LEDGER. BILLBOARD CENOTE. HOLD THE HOUR. THEN THE PIER."}
+      ]
+    },
+    "ledger_dive->invoice_pier": {
+      "chapter": "CHAPTER 13",
       "title": "INVOICE PIER",
       "sub": "The annex. Not Dock Street with a cold.",
       "lines": [
-        {"who": "son", "text": "Mayor's a receipt. The original invoice walked to the water."},
+        {"who": "son", "text": "The vault spat us at the water. Splint still has the original invoice."},
         {"who": "father", "text": "I hate chapels. I hate being right. I can web a crane."},
         {"who": "", "text": "DR. SPLINT HAS THE CLIPBOARD. THE COPAY IS A NAVE."}
       ]
     },
     "invoice_pier->processing_floor": {
-      "chapter": "CHAPTER 10",
+      "chapter": "CHAPTER 14",
       "title": "THE PROCESSING FLOOR",
       "sub": "Late act. Strip the suit. Then the body.",
       "lines": [
@@ -264,6 +304,68 @@
       ],
       "miniboss": {"title": "Deputy Raven", "x": 880, "y": 500, "home": "street", "hp": 110, "pmin": 720, "pmax": 1080, "sub": "STARRED AND STAMPED"},
       "boss": {"kind": "mayor_raven", "title": "Mayor Raven", "sub": "LANDLORD · NINJA · INVOICE"}
+    },
+    "copay_orchard": {
+      "title": "COPAY ORCHARD",
+      "main": "File the wellness weekend they never booked. Lake, forest, fields, a silo with a rope.",
+      "side": "Slide the hill. Rope-swing the silo. Don't tip the scarecrow.",
+      "talk": [
+        {"at": 0, "lines": [
+          {"who": "son", "text": "They billed a retreat. Hay is not a couch."},
+          {"who": "father", "text": "I networked. With corn. It had better eye contact."}
+        ]},
+        {"at": 1500, "lines": [
+          {"who": "father", "text": "Rope. I can still swing. Unemployment taught me that."},
+          {"who": "son", "text": "Land it. The lake still wants a copay."}
+        ]}
+      ],
+      "miniboss": {"title": "Scarecrow Ken", "x": 1680, "y": 500, "home": "street", "hp": 118, "pmin": 1500, "pmax": 1860, "sub": "STRAW WITH A RANK"},
+      "boss": {"title": "Combine Brute", "x": 3180, "y": 500, "home": "street", "hp": 200, "pmin": 2980, "pmax": 3400, "sub": "HARVEST THE INVOICE"}
+    },
+    "sleet_hour": {
+      "title": "SLEET HOUR",
+      "survive": true,
+      "main": "Hold the frozen lake. Snowmobiles at the elite pack. Don't sit.",
+      "side": "Magnet the chips off the ice. The retreat froze on purpose.",
+      "talk": [
+        {"at": 0, "lines": [
+          {"who": "son", "text": "Don't sit. The ice is a waiting room with weather."},
+          {"who": "father", "text": "I packed a polo. That's on me."}
+        ]}
+      ],
+      "miniboss": {"title": "Plow Cop", "x": 1100, "y": 500, "home": "street", "hp": 120, "sub": "SALT AND A WARRANT"},
+      "boss": {"title": "Snowmobile", "x": 1700, "y": 500, "home": "street", "hp": 190, "sub": "THE SKI IS THE PERSONALITY"}
+    },
+    "raven_grid": {
+      "title": "RAVEN GRID",
+      "main": "Steal the lemon clinic courier. One drives. One rails 360°. Forced ramp. Crash the canal. The crash is the boss intro.",
+      "side": "Vault a scooter. Don't hug the grid car. Don't brake on the ramp.",
+      "talk": [
+        {"at": 0, "lines": [
+          {"who": "son", "text": "Cyberpunk. Not Dock Street with extra pink."},
+          {"who": "father", "text": "I can still drive. LinkedIn called it a transferable skill."}
+        ]},
+        {"at": 1300, "lines": [
+          {"who": "son", "text": "You drive. I shoot. Do not network with a lamppost."},
+          {"who": "father", "text": "I am on the rail. That's called coparenting."}
+        ]}
+      ],
+      "miniboss": {"title": "Grid Kid", "x": 1180, "y": 500, "home": "street", "hp": 110, "pmin": 1000, "pmax": 1400, "sub": "SKATE THE WARRANT"},
+      "boss": {"title": "Invoice Chopper", "x": 3720, "y": 180, "home": "air", "hp": 210, "pmin": 3480, "pmax": 3920, "sub": "HELI WITH A CLIPBOARD"}
+    },
+    "ledger_dive": {
+      "title": "LEDGER DIVE",
+      "survive": true,
+      "main": "Hold the flooded vault. A spa they billed as therapy. Billboards drown. Then the pier.",
+      "side": "Rope the brine. Don't sit in the cenote.",
+      "talk": [
+        {"at": 0, "lines": [
+          {"who": "son", "text": "We dropped into the ledger. The ads are drowning. That's the surprise."},
+          {"who": "father", "text": "I hate spas. I can still punch an eel."}
+        ]}
+      ],
+      "miniboss": {"title": "Vault Guard", "x": 1100, "y": 500, "home": "street", "hp": 124, "sub": "PIPE IN THE AISLE"},
+      "boss": {"title": "Cenote Elite", "x": 1800, "y": 500, "home": "street", "hp": 205, "sub": "THE SPA BILLS LAST"}
     },
     "invoice_pier": {
       "title": "INVOICE PIER",

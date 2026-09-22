@@ -170,5 +170,32 @@
     "rarity": "legendary",
     "tag": "PATROL",
     "stats": { "idle": "+50%", "gold": "bank" }
+  },
+  {
+    "id": "courier_policy",
+    "name": "COURIER POLICY",
+    "blurb": "On the lemon van, rail shots refund 1 ammo. The clinic still bills the crash.",
+    "fixed": false,
+    "rarity": "epic",
+    "tag": "CHASE",
+    "stats": { "ammo": "refund", "rail": "360" }
+  },
+  {
+    "id": "orchard_copay",
+    "name": "ORCHARD COPAY",
+    "blurb": "Slide hills and rope swings pay +8. Hay is not a couch. The lake still wants a copay.",
+    "fixed": false,
+    "rarity": "rare",
+    "tag": "FARM",
+    "stats": { "slide": "+8", "swing": "+8" }
+  },
+  {
+    "id": "brine_lungs",
+    "name": "BRINE LUNGS",
+    "blurb": "Legendary. In Ledger Dive, magnet radius +80 and eels chip slower. The spa hates this.",
+    "fixed": false,
+    "rarity": "legendary",
+    "tag": "VAULT",
+    "stats": { "magnet": "+80", "eel": "slow" }
   }
 ]

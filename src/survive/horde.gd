@@ -66,7 +66,7 @@ func _wave() -> void:
 	var cx := cam.global_position.x if cam else map_w * 0.5
 	var side := -1.0 if randf() < 0.5 else 1.0
 	var title: String = titles[randi() % titles.size()]
-	var air := title == "Clipboard" or title == "Pier Gull" or title == "Drone"
+	var air := title in ["Clipboard", "Pier Gull", "Drone", "Ice Drone", "Billboard Gull", "Invoice Chopper"]
 	var row := {
 		"title": title,
 		"x": clampf(cx + side * (340.0 + randf() * 80.0), 80.0, map_w - 80.0),

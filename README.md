@@ -4,7 +4,7 @@ Couch, **solo**, or **remote Host/Join** brawler for **The Father** and **The So
 
 The Basement Clinic billed them for family therapy they never attended. Mayor Raven holds the eviction **and** the invoice. They collect coping evidence so the clinic does not seize the apartment or the Son's tutoring license. The night is one plot: **story films between every act**, then a late-act climax on **The Processing Floor**.
 
-Playable tonight: hub, **intro film + comic + tutorial + second film**, **ten campaign maps** (six brawl acts + three survivor hours + Invoice Pier + Processing Floor), **Versus**, Host/Join, **Options + Reset**, pinball scores, avatar gear. Solo spawns fewer enemies. Couch 2P keeps the full roster. Drop-in does **not** restock punks.
+Playable tonight: hub, **intro film + comic + tutorial + second film**, **fourteen campaign maps** (brawl + five survivor hours + chase crash + Invoice Pier + Processing Floor), **Versus**, Host/Join, **Options + Reset**, pinball scores, avatar gear. Solo spawns fewer enemies. Couch 2P keeps the full roster. Drop-in does **not** restock punks.
 
 ## Run locally
 
@@ -49,8 +49,9 @@ Replay intro anytime: Run tab **PLAY INTRO**.
 
 ## How the final boss starts
 
-1. File **City Hall** (Mayor Raven). Film to **Invoice Pier**.
-2. File **Invoice Pier** (Usher Prime, then Dr. Splint). Film to **The Processing Floor**.
+1. File **City Hall** (Mayor Raven). Film to **Copay Orchard**.
+2. File orchard → sleet → **Raven Grid** (chase crash) → **Ledger Dive** → **Invoice Pier**.
+3. File **Invoice Pier** (Usher Prime, then Dr. Splint). Film to **The Processing Floor**.
 3. Bandage desk at the start (24/7 Blood Mart). Mini **Adjuster Prime**. Then **The Family Plan** / Director Binder.
 
 The Family Plan is the late-act climax, not a Mayor palette-swap:
@@ -62,7 +63,7 @@ The Family Plan is the late-act climax, not a Mayor palette-swap:
 - **FILE ALIVE:** SNAP while stunned for extra gold (Huntdown take-alive). Still have to finish him.
 - Pre-fight film on the way in. **Ending film** after the results **WATCH THE ENDING** button (or auto after the floor files).
 
-## Campaign order (10 maps)
+## Campaign order (14 maps)
 
 Brawl acts mix **parkour / gun / brawl**. Every act: **miniboss**, later content, **boss** with portrait + name + sting + boss music. Parallax is **multi-layer and themed**.
 
@@ -74,12 +75,25 @@ Brawl acts mix **parkour / gun / brawl**. Every act: **miniboss**, later content
 6. **The Waiting Room** (survivor) — Number 88.
 7. **Rail Bridge** — Conductor 9.
 8. **City Hall** — Deputy Raven, then **Mayor Raven**.
-9. **Invoice Pier** — Usher Prime, then **Dr. Splint**.
-10. **The Processing Floor** — Adjuster Prime, then **The Family Plan**. Ending film.
+9. **Copay Orchard** (brawl, farm/lake/forest/fields) — Scarecrow Ken, then Combine Brute.
+10. **Sleet Hour** (survivor, snow) — Plow Cop, then Snowmobile.
+11. **Raven Grid** (brawl, cyberpunk + chase) — Grid Kid, lemon courier chase, canal crash, then Invoice Chopper.
+12. **Ledger Dive** (survivor, flooded vault / brine spa) — Vault Guard, then Cenote Elite.
+13. **Invoice Pier** — Usher Prime, then **Dr. Splint**.
+14. **The Processing Floor** — Adjuster Prime, then **The Family Plan**. Ending film.
 
-Survivor hours: Halls of Torment bar. Solo thinner spawn + slower horde. Co-op denser.
+Survivor hours sit between/after their pair. Solo thinner spawn + slower horde. Co-op denser. Seed encounters stay **solo 3 / coop 6** on every map.
 
-Wanted 3 = extra patrol. Wanted 5 = heli spotlight. Seed encounters stay **solo 3 / coop 6**, including the new floor.
+### How the Raven Grid chase starts (and ends)
+
+1. File **Grid Kid** (miniboss). Toast: steal the lemon clinic courier.
+2. Walk past **x 1320**. The van spawns. **The Son drives**, **The Father rails 360°**. SPECIAL swaps. Solo: stick steers, shoot 360, SPECIAL hops rail. Not a mil truck.
+3. Mix: on-foot before the steal, van through the underpass, then **forced onto a ramp**.
+4. **Slow-mo** from in front of the ramp: debris, enemies, the lemon **skewed / tumbling / upside-down**. Close-ups: Father **NOOOO**, Son **AAAA**.
+5. New camera. The van **crashes on the far side of the canal**. Enemies do not follow.
+6. Gameplay: they **crawl out of different spots**, talk (black humor), then **Invoice Chopper walks in**. The crash is the boss intro.
+
+Wanted 3 = extra patrol. Wanted 5 = heli spotlight.
 
 ## Pinball, results, death
 
@@ -170,9 +184,9 @@ Parkour gates show **three named tricks** (Vector): just-jump is easy. Up = mid.
 ## Layout
 
 ```
-scenes/     hub + intro, tutorial, ten acts, films, versus
+scenes/     hub + intro, tutorial, fourteen acts, films, versus
 src/        actors, story, survive, vs, juice, world, ui, coop, net
-data/       story, gear, buildings, awards, CBT, cards, shop, encounters, cosmetics, dojo, research, tricks, dopamine
+data/       story, kits, gear, buildings, awards, CBT, cards, shop, encounters, cosmetics, dojo, research, tricks, dopamine
 tools/      hnt_rooms.py, synth_story.py, synth_kit.py
 assets/     audio + icon
 ```

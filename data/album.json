@@ -1,0 +1,58 @@
+[
+  {
+    "id": "polaroid_intake",
+    "title": "INTAKE POLAROID",
+    "blurb": "The fridge took a picture. You look like a filing error.",
+    "need": { "runs": 1 },
+    "rarity": "common",
+    "gold": 6
+  },
+  {
+    "id": "polaroid_stomp",
+    "title": "BRAIN ON THREE",
+    "blurb": "A polaroid of a face that is now a policy. Pin it.",
+    "need": { "stomps": 3 },
+    "rarity": "rare",
+    "gold": 14
+  },
+  {
+    "id": "polaroid_kong",
+    "title": "NAMED LINE",
+    "blurb": "The coach would bill this. The album keeps it anyway.",
+    "need": { "perfect_tricks": 5 },
+    "rarity": "epic",
+    "gold": 22
+  },
+  {
+    "id": "polaroid_director",
+    "title": "FAMILY PLAN RECEIPT",
+    "blurb": "Director Binder, filed. The fridge still wants a copy.",
+    "need": { "family_plan_kills": 1 },
+    "rarity": "legendary",
+    "gold": 40
+  },
+  {
+    "id": "polaroid_solo",
+    "title": "ALONE ON THE COUCH",
+    "blurb": "Solo clears. The other chair stayed empty. Growth.",
+    "need": { "solo_clears": 3 },
+    "rarity": "uncommon",
+    "gold": 10
+  },
+  {
+    "id": "polaroid_orchard",
+    "title": "WELLNESS THEY BILLED",
+    "blurb": "Hay is not a couch. The lake still wants a copay. Pin it.",
+    "need": { "survive_clears": 4 },
+    "rarity": "rare",
+    "gold": 16
+  },
+  {
+    "id": "polaroid_crash",
+    "title": "LEMON IN THE CANAL",
+    "blurb": "The courier went upside-down. NOOOO. AAAA. The fridge kept the photo.",
+    "need": { "city_clears": 1 },
+    "rarity": "epic",
+    "gold": 24
+  }
+]

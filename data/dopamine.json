@@ -31,7 +31,8 @@
       { "id": "parts_coil", "w": 16 },
       { "id": "gems_one", "w": 12 },
       { "id": "chest_common", "w": 10 },
-      { "id": "frame_lemon", "w": 8 },
+      { "id": "envelope", "w": 8 },
+      { "id": "frame_lemon", "w": 6 },
       { "id": "gold_big", "w": 4 },
       { "id": "badge_intake", "w": 2 }
     ]
@@ -58,6 +59,8 @@
     "gems_one": { "title": "ONE GEM", "gold": 0, "gems": 1, "rarity": "uncommon" },
     "parts_coil": { "title": "SCRAP COIL x2", "parts": { "scrap_coil": 2 }, "rarity": "common" },
     "parts_thread": { "title": "CLINIC THREAD x2", "parts": { "clinic_thread": 2 }, "rarity": "uncommon" },
-    "parts_ink": { "title": "INVOICE INK x2", "parts": { "invoice_ink": 2 }, "rarity": "rare" }
+    "parts_ink": { "title": "INVOICE INK x2", "parts": { "invoice_ink": 2 }, "rarity": "rare" },
+    "envelope": { "title": "LUCKY ENVELOPE", "gold": 18, "gems": 1, "rarity": "rare" },
+    "gear_cape": { "title": "THERAPY CAPE", "rarity": "epic" }
   }
 }

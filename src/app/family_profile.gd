@@ -7,7 +7,8 @@ const SAVE_PATH := "user://family.json"
 const BUILDINGS := [
 	"front_desk", "street_map", "therapy_couch", "wardrobe_cage",
 	"trophy_cabinet", "mail_slot", "bulletin_board", "compare_mirrors", "blood_fridge",
-	"pawn_shop", "patrol_desk", "research_lab", "dojo", "workshop"
+	"pawn_shop", "patrol_desk", "research_lab", "dojo", "workshop",
+	"bounty_board", "radio_tower", "album_wall"
 ]
 
 var data: Dictionary = {}
@@ -141,7 +142,14 @@ func _defaults() -> Dictionary:
 		"patrols": 0,
 		"menu_alert": false,
 		"patrol_bank_gold": 0,
-		"patrol_bank_xp": 0
+		"patrol_bank_xp": 0,
+		"album": [],
+		"bounties_claimed": [],
+		"bounty_counts": {},
+		"radio_day": "",
+		"radio_heard": 0,
+		"heat_peak": 0,
+		"polaroids": 0
 	}
 
 
@@ -372,7 +380,9 @@ func try_buy_gear(id: String) -> bool:
 		return false
 	data["gold"] = int(data["gold"]) - int(spec.get("gold", 0))
 	(data["owned_gear"] as Array).append(id)
+	flag_unseen("gear_%s" % id)
 	save()
+	Juice.unlock_logo(str(spec.get("name", id)), str(spec.get("blurb", "Clothes with opinions.")), "GEAR  ·  %s" % Rarity.label(str(spec.get("rarity", "common"))))
 	return true
 
 
@@ -725,8 +735,16 @@ func try_dojo(id: String) -> bool:
 	flag_unseen("dojo_%s" % id)
 	save()
 	var title := str(spec.get("title", id))
-	Juice.unlock_logo("%s  RANK %d" % [title, int(d[id])], "Shaolin billing. The move is meaner.", "MOVE  ·  RANK %d/3" % int(d[id]))
+	if int(d[id]) == 1:
+		Juice.unlock_logo("%s  LEARNED" % title, "Dojo gates the move. Rank 1 unlocks. Rank 3 pins a badge.", "MOVE  ·  UNLOCKED")
+		VoBank.father_level() if str(spec.get("kind", "")) == "combat" else VoBank.son_trick()
+	else:
+		Juice.unlock_logo("%s  RANK %d" % [title, int(d[id])], "Shaolin billing. The move is meaner.", "MOVE  ·  RANK %d/3" % int(d[id]))
 	return true
+
+
+func dojo_learned(id: String) -> bool:
+	return dojo_rank(id) >= 1
 
 
 func _roll_patrol_day() -> void:
@@ -831,8 +849,134 @@ func mark_perfect() -> void:
 
 func mark_stomp() -> void:
 	data["stomps"] = int(data.get("stomps", 0)) + 1
+	bump_bounty("stomp")
 	sync_cosmetics(true)
 	save()
+
+
+func bump_bounty(kind: String) -> void:
+	var c: Dictionary = data.get("bounty_counts", {})
+	c[kind] = int(c.get(kind, 0)) + 1
+	data["bounty_counts"] = c
+	flag_unseen("bounty")
+
+
+func bounty_progress(id: String) -> int:
+	var table: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/bounties.json"))
+	for row in table:
+		if str((row as Dictionary).get("id", "")) != id:
+			continue
+		var kind := str((row as Dictionary).get("kind", ""))
+		if kind == "stomp":
+			return int(data.get("stomps", 0))
+		if kind == "cop":
+			return int((data.get("bounty_counts", {}) as Dictionary).get("cop", 0))
+		return int((data.get("bounty_counts", {}) as Dictionary).get(kind, 0))
+	return 0
+
+
+func bounty_claimed(id: String) -> bool:
+	return (data.get("bounties_claimed", []) as Array).has(id)
+
+
+func bounty_ready(id: String) -> bool:
+	if bounty_claimed(id):
+		return false
+	var table: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/bounties.json"))
+	for row in table:
+		if str((row as Dictionary).get("id", "")) == id:
+			return bounty_progress(id) >= int((row as Dictionary).get("need", 1))
+	return false
+
+
+func claim_bounty(id: String) -> bool:
+	if not bounty_ready(id) or not is_built("bounty_board"):
+		return false
+	var table: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/bounties.json"))
+	var spec := {}
+	for row in table:
+		if str((row as Dictionary).get("id", "")) == id:
+			spec = row
+			break
+	if spec.is_empty():
+		return false
+	(data["bounties_claimed"] as Array).append(id)
+	add_gold(int(spec.get("gold", 0)))
+	grant_account_xp(int(spec.get("xp", 0)))
+	flag_unseen("bounty_%s" % id)
+	save()
+	Juice.unlock_logo(str(spec.get("title", id)), str(spec.get("blurb", "")), "BOUNTY  ·  +%dG" % int(spec.get("gold", 0)))
+	return true
+
+
+func album_has(id: String) -> bool:
+	return (data.get("album", []) as Array).has(id)
+
+
+func album_ready(info: Dictionary) -> bool:
+	var need: Dictionary = info.get("need", {})
+	for k in need.keys():
+		if int(data.get(str(k), 0)) < int(need[k]):
+			return false
+	return true
+
+
+func claim_album(info: Dictionary) -> bool:
+	if not is_built("album_wall"):
+		return false
+	var id := str(info.get("id", ""))
+	if album_has(id) or not album_ready(info):
+		return false
+	(data["album"] as Array).append(id)
+	data["polaroids"] = int(data.get("polaroids", 0)) + 1
+	add_gold(int(info.get("gold", 0)))
+	flag_unseen("album_%s" % id)
+	save()
+	Juice.play("res://assets/audio/polaroid.wav" if ResourceLoader.exists("res://assets/audio/polaroid.wav") else "res://assets/audio/claim.wav")
+	Juice.unlock_logo(str(info.get("title", id)), str(info.get("blurb", "")), "POLAROID  ·  %s" % Rarity.label(str(info.get("rarity", "common"))))
+	return true
+
+
+func radio_line() -> String:
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/radio.json"))
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return "This is Mayor Raven. The invoice is still due."
+	var lines: Array = (parsed as Dictionary).get("lines", [])
+	if lines.is_empty():
+		return "This is Mayor Raven. The invoice is still due."
+	var i := int(data.get("radio_heard", 0)) % lines.size()
+	return str(lines[i])
+
+
+func hear_radio() -> void:
+	var today := Time.get_date_string_from_system()
+	if str(data.get("radio_day", "")) != today:
+		data["radio_day"] = today
+		flag_unseen("radio")
+	data["radio_heard"] = int(data.get("radio_heard", 0)) + 1
+	save()
+
+
+func grant_prize(id: String) -> void:
+	if id.begins_with("gear_"):
+		var gid := id.substr(5)
+		if not owns_gear(gid):
+			(data["owned_gear"] as Array).append(gid)
+			flag_unseen("gear_%s" % gid)
+			save()
+			Juice.unlock_logo(gid.replace("_", " ").to_upper(), "It fell out of a chest. Wear it.", "GEAR")
+		return
+	if id.begins_with("weapon_"):
+		flag_unseen(id)
+		save()
+		Juice.unlock_logo(id.replace("_", " ").to_upper(), "Caliber with opinions.", "WEAPON")
+		return
+	if id == "envelope":
+		add_gold(18)
+		data["gems"] = int(data.get("gems", 0)) + 1
+		save()
+		Juice.unlock_logo("LUCKY ENVELOPE", "Mystery mail. The Session Log would be jealous.", "+18 GOLD  ·  +1 GEM")
+		Juice.play("res://assets/audio/envelope.wav" if ResourceLoader.exists("res://assets/audio/envelope.wav") else "res://assets/audio/claim.wav")
 
 
 func try_craft(id: String) -> bool:

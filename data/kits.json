@@ -1,0 +1,177 @@
+{
+  "Bag Snatch": {
+    "tier": "very_light", "armor": "none", "style": "brawl", "attack": "light",
+    "block": 0.08, "hp": 40, "speed": 48, "weapon": "fist",
+    "blurb": "Jab first. Dies of feelings."
+  },
+  "Roof Runner": {
+    "tier": "light", "armor": "none", "style": "martial", "attack": "jump-kick",
+    "block": 0.12, "hp": 36, "speed": 56, "weapon": "kick", "home": "roof",
+    "blurb": "Diagonal kick. Do not run at the feet."
+  },
+  "Mohawk Bo": {
+    "tier": "heavy", "armor": "light", "style": "brawl", "attack": "heavy",
+    "block": 0.22, "hp": 70, "speed": 28, "weapon": "fist",
+    "blurb": "Headbutt window. Throws refuse 50%."
+  },
+  "Beat Cop": {
+    "tier": "medium", "armor": "light", "style": "gun", "attack": "gun",
+    "block": 0.18, "hp": 48, "speed": 44, "weapon": "pistol", "cop": true,
+    "blurb": "Pistol at range. Wanted's cousin."
+  },
+  "Vest Ollie": {
+    "tier": "medium", "armor": "medium", "style": "brawl", "attack": "heavy",
+    "block": 0.28, "hp": 64, "speed": 32, "weapon": "fist",
+    "blurb": "Plates eat lights. Heavies strip."
+  },
+  "Agent Lin": {
+    "tier": "medium", "armor": "light", "style": "knife", "attack": "blade",
+    "block": 0.16, "hp": 52, "speed": 54, "weapon": "knife", "cop": true,
+    "blurb": "Stab dash. Smile is the warrant."
+  },
+  "Drone": {
+    "tier": "very_light", "armor": "none", "style": "gun", "attack": "gun",
+    "block": 0.0, "hp": 28, "speed": 62, "weapon": "pistol", "vehicle": "drone", "home": "air",
+    "blurb": "Air shot. Vault it like a crate with opinions."
+  },
+  "Toll Bot": {
+    "tier": "heavy", "armor": "heavy", "style": "brawl", "attack": "heavy",
+    "block": 0.35, "hp": 80, "speed": 24, "weapon": "fist",
+    "blurb": "Armor during the swing. Wait the white flash."
+  },
+  "Hall Guard": {
+    "tier": "medium", "armor": "medium", "style": "martial", "attack": "roundhouse",
+    "block": 0.24, "hp": 60, "speed": 30, "weapon": "kick",
+    "blurb": "Roundhouse after a pause. Sidestep the cone."
+  },
+  "Coping Imp": {
+    "tier": "very_light", "armor": "none", "style": "brawl", "attack": "light",
+    "block": 0.05, "hp": 34, "speed": 58, "weapon": "fist",
+    "blurb": "Swarm jab. Magnet food."
+  },
+  "Clipboard": {
+    "tier": "very_light", "armor": "none", "style": "gun", "attack": "gun",
+    "block": 0.0, "hp": 26, "speed": 50, "weapon": "pistol", "home": "air",
+    "blurb": "Paper shot from the ceiling."
+  },
+  "Invoice Clerk": {
+    "tier": "light", "armor": "none", "style": "gun", "attack": "gun",
+    "block": 0.14, "hp": 42, "speed": 40, "weapon": "pistol",
+    "blurb": "Staple pistol. Homework."
+  },
+  "Pier Gull": {
+    "tier": "very_light", "armor": "none", "style": "knife", "attack": "blade",
+    "block": 0.0, "hp": 30, "speed": 64, "weapon": "knife", "home": "air",
+    "blurb": "Dive peck. Anti-air it."
+  },
+  "Chapel Usher": {
+    "tier": "heavy", "armor": "medium", "style": "martial", "attack": "heavy",
+    "block": 0.3, "hp": 70, "speed": 28, "weapon": "board",
+    "blurb": "Board sermon. Don't tip."
+  },
+  "Valet": {
+    "tier": "light", "armor": "none", "style": "brawl", "attack": "light",
+    "block": 0.1, "hp": 44, "speed": 46, "weapon": "fist",
+    "blurb": "Clamps your ankles. Then bills parking."
+  },
+  "Hay Pin": {
+    "tier": "very_light", "armor": "none", "style": "knife", "attack": "blade",
+    "block": 0.06, "hp": 32, "speed": 60, "weapon": "knife",
+    "blurb": "Pitchfork jab. Farm's Galsia."
+  },
+  "Scarecrow Ken": {
+    "tier": "medium", "armor": "light", "style": "martial", "attack": "roundhouse",
+    "block": 0.2, "hp": 58, "speed": 34, "weapon": "kick",
+    "blurb": "Straw roundhouse. The orchard taught this."
+  },
+  "Barn Cop": {
+    "tier": "medium", "armor": "light", "style": "gun", "attack": "gun",
+    "block": 0.18, "hp": 50, "speed": 42, "weapon": "pistol", "cop": true,
+    "blurb": "County pistol. Eviction in a flannel."
+  },
+  "Tractor Kid": {
+    "tier": "light", "armor": "none", "style": "brawl", "attack": "ram",
+    "block": 0.0, "hp": 38, "speed": 72, "weapon": "fist", "vehicle": "scooter",
+    "blurb": "E-scooter ram. Three hits, then scrap."
+  },
+  "Combine Brute": {
+    "tier": "elite", "armor": "heavy", "style": "brawl", "attack": "heavy",
+    "block": 0.32, "hp": 96, "speed": 22, "weapon": "board",
+    "blurb": "Harvest swing. Armor on the wind-up."
+  },
+  "Sleet Imp": {
+    "tier": "very_light", "armor": "none", "style": "brawl", "attack": "light",
+    "block": 0.04, "hp": 30, "speed": 52, "weapon": "fist",
+    "blurb": "Slips. Hits anyway. Snow's coping imp."
+  },
+  "Ice Drone": {
+    "tier": "very_light", "armor": "none", "style": "gun", "attack": "gun",
+    "block": 0.0, "hp": 24, "speed": 58, "weapon": "pistol", "vehicle": "drone", "home": "air",
+    "blurb": "Frozen clipboard with rotors."
+  },
+  "Plow Cop": {
+    "tier": "medium", "armor": "medium", "style": "gun", "attack": "gun",
+    "block": 0.2, "hp": 56, "speed": 36, "weapon": "pistol", "cop": true,
+    "blurb": "Salt gun. Lights chip the plow plate."
+  },
+  "Frost Clerk": {
+    "tier": "light", "armor": "none", "style": "grenade", "attack": "grenade",
+    "block": 0.12, "hp": 44, "speed": 38, "weapon": "grenade",
+    "blurb": "Snowball invoice. Arc, then splash."
+  },
+  "Snowmobile": {
+    "tier": "medium", "armor": "light", "style": "brawl", "attack": "ram",
+    "block": 0.0, "hp": 62, "speed": 88, "weapon": "fist", "vehicle": "moto",
+    "blurb": "Motorcycle weave. Sidestep or eat the ski."
+  },
+  "Grid Kid": {
+    "tier": "light", "armor": "none", "style": "martial", "attack": "slide",
+    "block": 0.1, "hp": 36, "speed": 70, "weapon": "kick", "vehicle": "skate",
+    "blurb": "Skateboard slide. Jump it."
+  },
+  "Courier Bike": {
+    "tier": "medium", "armor": "light", "style": "brawl", "attack": "ram",
+    "block": 0.0, "hp": 54, "speed": 92, "weapon": "fist", "vehicle": "moto",
+    "blurb": "Clinic courier motorcycle. Not a mil truck. Still rude."
+  },
+  "Neon Scooter": {
+    "tier": "very_light", "armor": "none", "style": "brawl", "attack": "ram",
+    "block": 0.0, "hp": 28, "speed": 80, "weapon": "fist", "vehicle": "scooter",
+    "blurb": "E-scooter. Three pokes. Then a spark."
+  },
+  "Grid Car": {
+    "tier": "heavy", "armor": "medium", "style": "brawl", "attack": "ram",
+    "block": 0.0, "hp": 88, "speed": 64, "weapon": "fist", "vehicle": "car",
+    "blurb": "Lemon clinic car. Vault the hood. Don't hug the bumper."
+  },
+  "Invoice Chopper": {
+    "tier": "elite", "armor": "light", "style": "gun", "attack": "gun",
+    "block": 0.0, "hp": 70, "speed": 48, "weapon": "pistol", "vehicle": "heli", "home": "air",
+    "blurb": "Helicopter strafe. Hide under a ledge or eat the cone."
+  },
+  "Ledger Eel": {
+    "tier": "very_light", "armor": "none", "style": "knife", "attack": "blade",
+    "block": 0.0, "hp": 26, "speed": 66, "weapon": "knife",
+    "blurb": "Brine slash. Vault fish with a stapler."
+  },
+  "Brine Clerk": {
+    "tier": "light", "armor": "none", "style": "gun", "attack": "gun",
+    "block": 0.14, "hp": 40, "speed": 38, "weapon": "pistol",
+    "blurb": "Waterproof pistol. The spa still bills."
+  },
+  "Billboard Gull": {
+    "tier": "light", "armor": "none", "style": "gun", "attack": "gun",
+    "block": 0.0, "hp": 34, "speed": 60, "weapon": "pistol", "home": "air",
+    "blurb": "Stolen ad with wings. Shoot the slogan."
+  },
+  "Vault Guard": {
+    "tier": "heavy", "armor": "heavy", "style": "martial", "attack": "heavy",
+    "block": 0.34, "hp": 84, "speed": 26, "weapon": "pipe",
+    "blurb": "Pipe in a flooded aisle. White flash is armor."
+  },
+  "Cenote Elite": {
+    "tier": "elite", "armor": "elite", "style": "grenade", "attack": "grenade",
+    "block": 0.26, "hp": 110, "speed": 30, "weapon": "grenade",
+    "blurb": "Arc bombs into the drop. That's the surprise."
+  }
+}

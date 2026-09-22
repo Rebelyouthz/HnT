@@ -27,6 +27,14 @@ var stomp_hits := 0
 var _base_mod := Color.WHITE
 var _brain: Polygon2D
 var _walk := 42.0
+var kit: Dictionary = {}
+var plates := 0
+var attack_style := "brawl"
+var vehicle := ""
+var armor_grade := "none"
+var tier := "light"
+var flung := false
+var _grenade_cd := 0.0
 signal died
 signal finish_ready
 
@@ -65,6 +73,8 @@ func _ready() -> void:
 	hurt.add_child(hc)
 	add_child(hurt)
 	_walk = speed
+	KitBook.apply(self)
+	_dress_vehicle()
 	if title == "Drone":
 		visual.modulate = Color(0.65, 0.75, 0.9)
 	elif title == "Agent Lin":
@@ -81,7 +91,73 @@ func _ready() -> void:
 		visual.modulate = Color(0.78, 0.82, 0.8)
 	elif title == "Chapel Usher":
 		visual.modulate = Color(0.35, 0.42, 0.32)
+	elif title == "Hay Pin":
+		visual.modulate = Color(0.72, 0.78, 0.32)
+	elif title == "Scarecrow Ken":
+		visual.modulate = Color(0.62, 0.48, 0.22)
+	elif title == "Barn Cop":
+		visual.modulate = Color(0.45, 0.52, 0.28)
+	elif title == "Tractor Kid":
+		visual.modulate = Color(0.9, 0.85, 0.25)
+	elif title == "Combine Brute":
+		visual.modulate = Color(0.4, 0.32, 0.18)
+	elif title == "Sleet Imp":
+		visual.modulate = Color(0.75, 0.88, 0.95)
+	elif title == "Ice Drone":
+		visual.modulate = Color(0.7, 0.85, 1.0)
+	elif title == "Plow Cop":
+		visual.modulate = Color(0.55, 0.62, 0.72)
+	elif title == "Frost Clerk":
+		visual.modulate = Color(0.8, 0.9, 0.95)
+	elif title == "Snowmobile":
+		visual.modulate = Color(0.2, 0.22, 0.28)
+	elif title == "Grid Kid":
+		visual.modulate = Color(0.2, 0.85, 0.9)
+	elif title == "Courier Bike":
+		visual.modulate = Color(0.92, 0.82, 0.22)
+	elif title == "Neon Scooter":
+		visual.modulate = Color(0.95, 0.35, 0.75)
+	elif title == "Grid Car":
+		visual.modulate = Color(0.92, 0.82, 0.22)
+	elif title == "Invoice Chopper":
+		visual.modulate = Color(0.4, 0.45, 0.42)
+	elif title == "Ledger Eel":
+		visual.modulate = Color(0.2, 0.55, 0.42)
+	elif title == "Brine Clerk":
+		visual.modulate = Color(0.45, 0.7, 0.68)
+	elif title == "Billboard Gull":
+		visual.modulate = Color(0.95, 0.55, 0.25)
+	elif title == "Vault Guard":
+		visual.modulate = Color(0.28, 0.32, 0.3)
+	elif title == "Cenote Elite":
+		visual.modulate = Color(0.15, 0.45, 0.4)
 	_base_mod = visual.modulate
+
+
+func _dress_vehicle() -> void:
+	if vehicle == "":
+		return
+	var body := Polygon2D.new()
+	match vehicle:
+		"scooter":
+			body.color = Color(0.85, 0.82, 0.2)
+			body.polygon = PackedVector2Array([Vector2(-22, 4), Vector2(26, 4), Vector2(22, 16), Vector2(-18, 16)])
+		"skate":
+			body.color = Color(0.2, 0.7, 0.85)
+			body.polygon = PackedVector2Array([Vector2(-24, 10), Vector2(24, 10), Vector2(20, 16), Vector2(-20, 16)])
+		"moto":
+			body.color = Color(0.18, 0.18, 0.22)
+			body.polygon = PackedVector2Array([Vector2(-30, -8), Vector2(34, -4), Vector2(30, 16), Vector2(-26, 16)])
+		"car":
+			body.color = Color(0.92, 0.82, 0.22)
+			body.polygon = PackedVector2Array([Vector2(-40, -8), Vector2(44, -8), Vector2(48, 16), Vector2(-44, 16)])
+		"heli":
+			body.color = Color(0.35, 0.4, 0.38)
+			body.polygon = PackedVector2Array([Vector2(-36, -28), Vector2(36, -28), Vector2(28, -8), Vector2(-28, -8)])
+		_:
+			body.color = Color(0.5, 0.55, 0.6)
+			body.polygon = PackedVector2Array([Vector2(-16, -20), Vector2(16, -20), Vector2(12, -6), Vector2(-12, -6)])
+	visual.add_child(body)
 
 
 func _part(pos: Vector2, size: Vector2, color: Color) -> void:
@@ -102,6 +178,8 @@ func _part(pos: Vector2, size: Vector2, color: Color) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if flung:
+		return
 	if staple_cd > 0.0:
 		staple_cd -= delta
 	if staples > 0 and staple_cd <= 0.0:
@@ -153,7 +231,10 @@ func _physics_process(delta: float) -> void:
 		facing = 1 if d > 0.0 else -1
 		visual.scale.x = float(facing)
 		if absf(d) < 46.0:
-			if _maybe_guard(t as Fighter):
+			if vehicle != "" and str(kit.get("attack", "")) == "ram":
+				_ram_hit(t as Fighter)
+				velocity.x = 0
+			elif _maybe_guard(t as Fighter):
 				velocity.x = 0
 			else:
 				_start_telegraph()
@@ -169,6 +250,7 @@ func _physics_process(delta: float) -> void:
 	velocity.y = 0
 	move_and_slide()
 	_lane()
+	_canal()
 	_bob += delta * 4.8
 	if visual:
 		visual.position.y = 1.3 * sin(_bob)
@@ -189,17 +271,34 @@ func _lane() -> void:
 		global_position.y = 248.0
 
 
+func _canal() -> void:
+	var act := get_tree().get_first_node_in_group("run_act")
+	if act == null or not act.has_meta("canal"):
+		return
+	var c: Rect2 = act.get_meta("canal")
+	if global_position.x <= c.position.x - 8.0 or global_position.x >= c.end.x + 8.0:
+		return
+	if global_position.x < c.position.x + c.size.x * 0.5:
+		global_position.x = c.position.x - 28.0
+		facing = -1
+		velocity.x = -absf(speed)
+	else:
+		global_position.x = c.end.x + 28.0
+		facing = 1
+		velocity.x = absf(speed)
+
+
 func _maybe_guard(f: Fighter) -> bool:
 	if telegraph > 0.0 or recover > 0.0:
 		return false
-	var chance := 0.0
+	var chance := float(kit.get("block", 0.2))
 	match App.difficulty:
 		"open_house":
-			chance = 0.06
+			chance *= 0.45
 		"finals":
-			chance = 0.42
-		_:
-			chance = 0.2
+			chance *= 1.7
+	if vehicle != "":
+		return false
 	if not randf() < chance:
 		return false
 	guarding = true
@@ -224,9 +323,46 @@ func _start_telegraph() -> void:
 			telegraph = 0.25
 
 
+func _ram_hit(f: Fighter) -> void:
+	if recover > 0.0:
+		return
+	recover = 0.38
+	f.take_hit("heavy", self)
+	Juice.sparks(global_position)
+	Juice.shout(vehicle.to_upper() if vehicle != "" else "RAM")
+
+
+func _lob() -> void:
+	recover = 0.85
+	var shot := KitShot.new()
+	shot.kind = "pistol"
+	shot.owner_role = "enemy"
+	shot.vel = Vector2(float(facing) * 220.0, -180.0)
+	shot.global_position = global_position + Vector2(float(facing) * 16.0, -50.0)
+	get_parent().add_child(shot)
+	Juice.shout("GRENADE")
+
+
 func _swing() -> void:
 	recover = 0.42 if title != "Mohawk Bo" else 0.62
-	var kind := "heavy" if title == "Mohawk Bo" else "light"
+	var atk := str(kit.get("attack", "heavy" if title == "Mohawk Bo" else "light"))
+	if atk == "gun":
+		_shuriken()
+		return
+	if atk == "grenade":
+		_lob()
+		return
+	if atk == "ram":
+		return
+	var kind := atk
+	if kind == "slide":
+		kind = "slide"
+	elif kind == "blade":
+		kind = "blade"
+	elif kind == "roundhouse" or kind == "jump-kick" or kind == "heavy":
+		pass
+	else:
+		kind = "light"
 	for n in get_tree().get_nodes_in_group("players"):
 		if n is Fighter:
 			var f: Fighter = n
@@ -274,6 +410,19 @@ func take_hit(kind: String, from: Node) -> void:
 			guarding = false
 			return
 		guarding = false
+	if plates > 0 and (kind == "light" or kind == "jump-kick" or kind == "slide"):
+		hp = maxi(0, hp - 2)
+		Juice.flash_red(visual, 1)
+		Juice.hitstop(1)
+		Juice.shout("PLATE")
+		if hp <= 0:
+			_die(kind, from)
+		return
+	if plates > 0 and kind != "snap" and kind != "finish" and kind != "web-slam":
+		plates -= 1
+		armored = plates > 0
+		Juice.shout("STRIP %d" % plates)
+		Juice.sparks(global_position)
 	if armored and kind == "light":
 		hp = maxi(0, hp - 2)
 		Juice.flash_red(visual, 1)
@@ -286,7 +435,13 @@ func take_hit(kind: String, from: Node) -> void:
 		Juice.flash_red(visual, 2)
 		return
 	var dmg := 8
-	if kind == "heavy" or kind == "dive":
+	if kind == "jab":
+		dmg = HitGrade.dmg("jab")
+	elif kind == "cross":
+		dmg = HitGrade.dmg("cross")
+	elif kind == "bam" or kind == "gut-punch":
+		dmg = HitGrade.dmg("bam")
+	elif kind == "heavy" or kind == "dive":
 		dmg = 22
 	elif kind == "launcher":
 		dmg = 20
@@ -417,6 +572,13 @@ func _die(kind: String, from: Node) -> void:
 			if from is Node2D:
 				dir = signf(global_position.x - (from as Node2D).global_position.x)
 			blood.pump(global_position, dir)
+		StreetRagdoll.burst(get_parent(), global_position, -1.0 if from is Node2D else 1.0, _base_mod)
+	var rs_heat := get_tree().get_first_node_in_group("run_state")
+	InvoiceHeat.bump(rs_heat, 2 if cop else 1)
+	if cop:
+		FamilyProfile.bump_bounty("cop")
+	if title == "Bag Snatch":
+		FamilyProfile.bump_bounty("bag")
 	if kind == "web-slam":
 		var rs := get_tree().get_first_node_in_group("run_state")
 		if rs and rs.has_method("has_card") and rs.has_card("pendulum_politics"):

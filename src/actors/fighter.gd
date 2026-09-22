@@ -88,6 +88,8 @@ var stomp_cd := 0.0
 var _foot_cd := 0.0
 var _land_v := 0.0
 var rolling := false
+var van_seat := ""
+var crawling := 0.0
 
 signal died
 signal hit_landed(kind: String, global_pos: Vector2)
@@ -244,6 +246,19 @@ func _apply_locker() -> void:
 
 func _physics_process(delta: float) -> void:
 	_tick_meters(delta)
+	if van_seat != "":
+		return
+	if crawling > 0.0:
+		crawling -= delta
+		velocity.x = float(facing) * 34.0
+		velocity.y = 0.0
+		hop = 10.0
+		motion_mode = MOTION_MODE_FLOATING
+		move_and_slide()
+		global_position.y = clampf(global_position.y, STREET_MIN, STREET_MAX)
+		if crawling <= 0.0:
+			hop = 0.0
+		return
 	if puppeted:
 		if snap_pos != Vector2.ZERO:
 			global_position = global_position.lerp(snap_pos, 0.4)
@@ -593,6 +608,9 @@ func _combat() -> void:
 			return
 		var air_mix := hop < -16.0 or (plane == "roof" and not is_on_floor())
 		if air_mix:
+			if not FamilyProfile.dojo_learned("air_mix"):
+				Juice.shout("DOJO LOCK")
+				return
 			_attack("air-mix", false)
 			return
 		_special()
@@ -616,9 +634,16 @@ func _combat() -> void:
 		elif y > 0.4 and _try_stomp():
 			charge_frames = 0
 		elif y < -0.35:
-			_attack("uppercut", false)
+			if not FamilyProfile.dojo_learned("uppercut"):
+				Juice.shout("DOJO LOCK")
+				charge_frames = 0
+			else:
+				_attack("uppercut", false)
 		elif string_n >= 2:
-			_attack("roundhouse", false)
+			if FamilyProfile.dojo_learned("roundhouse"):
+				_attack("roundhouse", false)
+			else:
+				_attack("heavy", charge_frames >= charge_need)
 		else:
 			_attack("heavy", charge_frames >= charge_need)
 	elif attack_cd == 0 and _just("light"):
@@ -719,6 +744,15 @@ func _attack(kind: String, charged: bool) -> void:
 		string_n += 1
 		string_ttl = 0.4
 		lights_clean += 1
+		var grade := HitGrade.of_lights(string_n)
+		Juice.shout(HitGrade.shout(grade))
+		if grade == "jab":
+			KitSfx.hit(role, "jab")
+		elif grade == "cross":
+			KitSfx.hit(role, "cross")
+		else:
+			KitSfx.hit(role, "bam")
+			VoBank.bam(role)
 		if string_n >= 3:
 			kind = "gut-punch"
 			size = Vector2(54, 42)
@@ -757,7 +791,8 @@ func _attack(kind: String, charged: bool) -> void:
 			pickup = ""
 	if charged and kind == "heavy":
 		size = Vector2(78, 50)
-	KitSfx.hit(role, kind)
+	if kind != "light" and kind != "gut-punch":
+		KitSfx.hit(role, kind)
 	var life := 0.12 if kind == "light" or kind == "jump-kick" or kind == "gut-punch" else 0.2
 	_spawn_hit(kind, size, life, Vector2(36 * facing, -34 + hop))
 
@@ -1091,7 +1126,7 @@ func _on_land(fall: float) -> void:
 	if fall < 280.0:
 		KitSfx.hit(role, "land")
 		return
-	var want_roll := _stick().y > 0.25 or _just("dash") or FamilyProfile.dojo_rank("land_roll") >= 2
+	var want_roll := _stick().y > 0.25 or _just("dash") or FamilyProfile.dojo_learned("land_roll")
 	if want_roll:
 		rolling = true
 		trick_boost = 1.08 + 0.02 * float(FamilyProfile.dojo_rank("land_roll"))
@@ -1122,6 +1157,9 @@ func _footsteps(delta: float, spd: float) -> void:
 
 
 func _try_stomp() -> bool:
+	if not FamilyProfile.dojo_learned("stomp_finish"):
+		Juice.shout("DOJO LOCK")
+		return false
 	if attack_cd > 0:
 		return false
 	var best: Punk = null
@@ -1228,7 +1266,12 @@ func _throw() -> void:
 			continue
 		if absf(dx) > 54.0 or absf(e.global_position.y - global_position.y) > 50.0:
 			continue
-		e.take_hit("throw", self)
+		if FamilyProfile.dojo_learned("grab_slam") and e.crush:
+			e.take_hit("finish", self)
+			Juice.shout("GRAB SLAM")
+			KitSfx.hit(role, "heavy")
+		else:
+			e.take_hit("throw", self)
 		e.global_position.x += float(facing) * 86.0
 		Juice.shout("DISARMED")
 		return

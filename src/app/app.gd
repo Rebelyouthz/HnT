@@ -32,6 +32,10 @@ const SCENES := {
 	"waiting_room": "res://scenes/levels/waiting_room.tscn",
 	"rail_bridge": "res://scenes/levels/rail_bridge.tscn",
 	"city_hall": "res://scenes/levels/city_hall.tscn",
+	"copay_orchard": "res://scenes/levels/copay_orchard.tscn",
+	"sleet_hour": "res://scenes/levels/sleet_hour.tscn",
+	"raven_grid": "res://scenes/levels/raven_grid.tscn",
+	"ledger_dive": "res://scenes/levels/ledger_dive.tscn",
 	"invoice_pier": "res://scenes/levels/invoice_pier.tscn",
 	"processing_floor": "res://scenes/levels/processing_floor.tscn",
 	"versus": "res://scenes/levels/versus.tscn"
@@ -40,6 +44,7 @@ const SCENES := {
 const ORDER := [
 	"dock_street", "intake_lot", "fire_escapes", "group_circle",
 	"neon_exchange", "waiting_room", "rail_bridge", "city_hall",
+	"copay_orchard", "sleet_hour", "raven_grid", "ledger_dive",
 	"invoice_pier", "processing_floor"
 ]
 

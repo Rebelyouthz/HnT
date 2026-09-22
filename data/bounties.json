@@ -1,0 +1,62 @@
+[
+  {
+    "id": "bag_tax",
+    "title": "BAG SNATCH TAX",
+    "blurb": "File three bag snatches. The alley pays gold like an apology.",
+    "need": 3,
+    "kind": "Bag Snatch",
+    "gold": 16,
+    "xp": 24,
+    "rarity": "common"
+  },
+  {
+    "id": "cop_receipt",
+    "title": "COPS ARE ALSO CLIENTS",
+    "blurb": "Drop two badges. Invoice Heat likes this. The radio will lie about it.",
+    "need": 2,
+    "kind": "cop",
+    "gold": 22,
+    "xp": 30,
+    "rarity": "uncommon"
+  },
+  {
+    "id": "stomp_contract",
+    "title": "FACE STOMP CONTRACT",
+    "blurb": "Three smash-pop-splash sequences. Polaroid optional. Brain required.",
+    "need": 3,
+    "kind": "stomp",
+    "gold": 28,
+    "xp": 40,
+    "rarity": "rare"
+  },
+  {
+    "id": "orchard_hay",
+    "title": "HAY IS NOT A COUCH",
+    "blurb": "File two Hay Pins. The retreat still wants a copay.",
+    "need": 2,
+    "kind": "Hay Pin",
+    "gold": 18,
+    "xp": 26,
+    "rarity": "common"
+  },
+  {
+    "id": "grid_courier",
+    "title": "LEMON COURIER",
+    "blurb": "Ram two Courier Bikes. Not a mil truck. Still rude.",
+    "need": 2,
+    "kind": "Courier Bike",
+    "gold": 24,
+    "xp": 32,
+    "rarity": "uncommon"
+  },
+  {
+    "id": "brine_eels",
+    "title": "EEL WITH A STAPLER",
+    "blurb": "File three Ledger Eels. The spa billed them as therapy.",
+    "need": 3,
+    "kind": "Ledger Eel",
+    "gold": 20,
+    "xp": 28,
+    "rarity": "rare"
+  }
+]

@@ -64,6 +64,24 @@ static func bang() -> PanelContainer:
 	return p
 
 
+static func chrome() -> StyleBoxFlat:
+	var s := panel(Color(0.16, 0.14, 0.1), Palette.EDGE)
+	s.shadow_color = Color(0.79, 0.64, 0.15, 0.45)
+	s.shadow_size = 8
+	s.shadow_offset = Vector2(0, 3)
+	s.border_width_left = 3
+	s.border_width_right = 3
+	s.border_width_top = 3
+	s.border_width_bottom = 3
+	return s
+
+
+static func surface_dot(id: String) -> ColorRect:
+	var d := new_dot()
+	d.visible = FamilyProfile.is_unseen(id) or FamilyProfile.has_menu_alert()
+	return d
+
+
 static func new_dot() -> ColorRect:
 	var d := ColorRect.new()
 	d.color = Palette.BADGE
