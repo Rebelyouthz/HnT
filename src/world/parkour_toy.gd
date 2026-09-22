@@ -154,7 +154,8 @@ func _ready() -> void:
 		var s := Sprite2D.new()
 		s.texture = tex
 		s.centered = false
-		s.position = Vector2(-float(tex.get_width()) * 0.5, -float(tex.get_height()) + 20.0)
+		s.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
+		s.position = Vector2(-float(tex.get_width()) * 0.5 * SpriteBook.DRAW_SCALE, -float(tex.get_height()) * SpriteBook.DRAW_SCALE + 20.0)
 		s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		add_child(s)
 

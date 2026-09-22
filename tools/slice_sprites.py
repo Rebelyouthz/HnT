@@ -329,7 +329,7 @@ def split_skinwalker(src: Path) -> None:
 FATHER = {
     "idle": ("father-idle-stand.png", "feet"),
     "walk": ("father-walk.png", "feet"),
-    "parkour_run": ("father-parkour-run.png", "feet"),
+    "parkour_run": ("father-parkour-cycle.png", "feet"),
     "jump": ("father-jump.png", "cell"),
     "duck": ("father-duck.png", "feet"),
     "hurt": ("father-hurt.png", "feet"),
@@ -400,7 +400,7 @@ TOY_NAMES = [
 SON = {
     "idle": ("son-idle-stand.png", "feet"),
     "walk": ("son-walk-jog.png", "feet"),
-    "parkour_run": ("son-parkour-run.png", "feet"),
+    "parkour_run": ("son-parkour-cycle.png", "feet"),
     "jump": ("son-jump-arc.png", "cell"),
     "duck": ("son-duck-crouch.png", "feet"),
     "hurt": ("son-hurt-recoil.png", "feet"),

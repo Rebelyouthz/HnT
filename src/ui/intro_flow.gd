@@ -6,6 +6,7 @@ enum Beat { FILM1, COMIC, DONE }
 var _beat: Beat = Beat.FILM1
 var _i := 0
 var _layer: CanvasLayer
+var _ui: Control
 var _caption: Label
 var _who: Label
 var _skip: Label
@@ -28,42 +29,44 @@ func _ready() -> void:
 	_layer.layer = 50
 	_layer.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(_layer)
+	var ui := PixelStage.attach_canvas(_layer)
+	_ui = ui
 	_letter_t = ColorRect.new()
 	_letter_t.color = Color(0, 0, 0, 1)
 	_letter_t.position = Vector2(0, 0)
 	_letter_t.size = Vector2(1280, 90)
-	_layer.add_child(_letter_t)
+	_ui.add_child(_letter_t)
 	_letter_b = ColorRect.new()
 	_letter_b.color = Color(0, 0, 0, 1)
 	_letter_b.position = Vector2(0, 630)
 	_letter_b.size = Vector2(1280, 90)
-	_layer.add_child(_letter_b)
+	_ui.add_child(_letter_b)
 	_sil_a = ColorRect.new()
 	_sil_a.color = Palette.BRICK
 	_sil_a.size = Vector2(70, 160)
 	_sil_a.position = Vector2(420, 360)
-	_layer.add_child(_sil_a)
+	_ui.add_child(_sil_a)
 	_sil_b = ColorRect.new()
 	_sil_b.color = Palette.LEMON
 	_sil_b.size = Vector2(54, 150)
 	_sil_b.position = Vector2(760, 370)
-	_layer.add_child(_sil_b)
+	_ui.add_child(_sil_b)
 	_who = Label.new()
 	_who.position = Vector2(80, 520)
 	_who.size = Vector2(1120, 28)
 	UiKit.apply_label(_who, 14, Palette.EDGE)
-	_layer.add_child(_who)
+	_ui.add_child(_who)
 	_caption = Label.new()
 	_caption.position = Vector2(80, 552)
 	_caption.size = Vector2(1120, 70)
 	_caption.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	UiKit.apply_label(_caption, 22, Palette.TEXT)
-	_layer.add_child(_caption)
+	_ui.add_child(_caption)
 	_skip = Label.new()
 	_skip.position = Vector2(40, 24)
 	_skip.text = Copy.SKIP_FILM
 	UiKit.apply_label(_skip, 14, Palette.MUTED)
-	_layer.add_child(_skip)
+	_ui.add_child(_skip)
 	Mixer.play_music("res://assets/audio/music_clinic.wav")
 	Juice.play("res://assets/audio/sting_intro.wav")
 	_paint_film()
@@ -116,7 +119,7 @@ func _start_comics() -> void:
 	_caption.text = ""
 	_comic_wrap = Control.new()
 	_comic_wrap.size = Vector2(1280, 720)
-	_layer.add_child(_comic_wrap)
+	_ui.add_child(_comic_wrap)
 	var comics: Variant = _film.get("comics", [])
 	if typeof(comics) != TYPE_ARRAY:
 		_to_tutorial()

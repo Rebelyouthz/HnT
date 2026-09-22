@@ -20,7 +20,7 @@ var _tab_dots: Dictionary = {}
 
 
 func _ready() -> void:
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	PixelStage.apply_control(self)
 	FamilyProfile._roll_daily()
 	Mixer.play_music("res://assets/audio/music_clinic.wav")
 	_build_chrome()
@@ -472,18 +472,11 @@ func _first_button(n: Node) -> Button:
 func _apply_safe() -> void:
 	if _safe == null:
 		return
-	var safe: Rect2i = DisplayServer.get_display_safe_area()
-	var win := DisplayServer.window_get_size()
-	if win.x <= 0:
-		_safe.add_theme_constant_override("margin_left", 8)
-		_safe.add_theme_constant_override("margin_top", 4)
-		_safe.add_theme_constant_override("margin_right", 8)
-		_safe.add_theme_constant_override("margin_bottom", 8)
-		return
-	_safe.add_theme_constant_override("margin_left", maxi(8, safe.position.x))
-	_safe.add_theme_constant_override("margin_top", maxi(4, safe.position.y))
-	_safe.add_theme_constant_override("margin_right", maxi(8, win.x - safe.end.x))
-	_safe.add_theme_constant_override("margin_bottom", maxi(8, win.y - safe.end.y))
+	var m := PixelStage.safe_design_margins()
+	_safe.add_theme_constant_override("margin_left", m.x)
+	_safe.add_theme_constant_override("margin_top", m.y)
+	_safe.add_theme_constant_override("margin_right", m.z)
+	_safe.add_theme_constant_override("margin_bottom", m.w)
 
 
 func _modal_text(title: String, body: String) -> void:

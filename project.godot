@@ -27,8 +27,8 @@ NetSession="*res://src/net/net_session.gd"
 
 [display]
 
-window/size/viewport_width=1280
-window/size/viewport_height=720
+window/size/viewport_width=640
+window/size/viewport_height=360
 window/size/window_width_override=1920
 window/size/window_height_override=1080
 window/stretch/mode="viewport"
@@ -51,5 +51,7 @@ common/physics_ticks_per_second=60
 [rendering]
 
 textures/canvas_textures/default_texture_filter=0
+2d/snap_2d_transforms_to_pixel=true
+2d/snap_2d_vertices_to_pixel=true
 renderer/rendering_method="forward_plus"
 environment/defaults/default_clear_color=Color(0.0470588, 0.0509804, 0.0705882, 1)

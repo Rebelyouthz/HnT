@@ -51,12 +51,13 @@ func _physics_process(delta: float) -> void:
 		_leash(living)
 	var follow := 1.0 - exp(-8.0 * delta)
 	var desired := mid
-	desired.x = clampf(desired.x, limit_left + 640.0, limit_right - 640.0)
-	desired.y = clampf(desired.y, 360.0, 420.0)
+	var half := get_viewport_rect().size * 0.5
+	desired.x = clampf(desired.x, limit_left + half.x, limit_right - half.x)
+	desired.y = clampf(desired.y, 360.0, 500.0)
 	# Vertical lerp ~0.12 toward the pair so roofs and street share one frame.
 	var y_t := 1.0 - exp(-7.5 * delta)
-	global_position.x = lerpf(global_position.x, desired.x, follow)
-	global_position.y = lerpf(global_position.y, desired.y, y_t)
+	global_position.x = roundf(lerpf(global_position.x, desired.x, follow))
+	global_position.y = roundf(lerpf(global_position.y, desired.y, y_t))
 	offset = Juice.shake_offset()
 
 

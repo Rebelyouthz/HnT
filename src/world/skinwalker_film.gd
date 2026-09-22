@@ -34,6 +34,7 @@ func _ready() -> void:
 	_build_hud()
 	var cam := Camera2D.new()
 	cam.position = Vector2(640, 360)
+	cam.zoom = Vector2(0.5, 0.5)
 	add_child(cam)
 	cam.make_current()
 	Mixer.stop_music()

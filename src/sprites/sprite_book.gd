@@ -6,6 +6,8 @@ extends Object
 static var _frames: Dictionary = {}
 static var _tex: Dictionary = {}
 
+const DRAW_SCALE := 0.5
+
 const LOOP := {
 	"idle": true,
 	"walk": true,
@@ -75,7 +77,8 @@ static func make_anim(who: String) -> AnimatedSprite2D:
 	a.name = "Anim"
 	a.sprite_frames = frames(who)
 	a.centered = true
-	a.position = Vector2(0, -40)
+	a.position = Vector2(0, -20)
+	a.scale = Vector2(DRAW_SCALE, DRAW_SCALE)
 	a.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	if a.sprite_frames.has_animation("idle"):
 		a.play("idle")
@@ -134,7 +137,8 @@ static func stamp(host: Node, kind: String, at: Vector2, z: int = 2) -> Sprite2D
 	var s := Sprite2D.new()
 	s.texture = t
 	s.centered = false
-	s.position = at + Vector2(-float(t.get_width()) * 0.5, -float(t.get_height()))
+	s.scale = Vector2(DRAW_SCALE, DRAW_SCALE)
+	s.position = at + Vector2(-float(t.get_width()) * 0.5 * DRAW_SCALE, -float(t.get_height()) * DRAW_SCALE)
 	s.z_index = z
 	s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	host.add_child(s)

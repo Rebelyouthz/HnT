@@ -233,7 +233,9 @@ Encounter counts live in `data/encounters.json`. Recount from that file.
 
 ## Sprites
 
-Timmie does not draw. Sheets live in `assets/sprites/`. **The Father** is an unemployed-dad casual: worn grey hoodie, grey sweatpants, sneakers — not a polo. **The Son** is ~18, athletic casual: dark tee, open zip layer, black joggers, worn sneakers — not Dad's hoodie, not a costume. `AnimatedSprite2D` on the existing fighter for both. Clips are 8–12 frames (never fewer than 6): idle, walk, parkour run, jump, duck, hurt, jab, cross, gut, heavy, front kick, side kick, roundhouse, uppercut, air mix, SNAP. Hitboxes, Host/Join, 3/6, crash, towers, parachute stay.
+Timmie does not draw. Sheets live in `assets/sprites/`. **The Father** is an unemployed-dad casual: worn grey hoodie, grey sweatpants, sneakers — not a polo. **The Son** is ~18, athletic casual: dark tee, open zip layer, black joggers, worn sneakers — not Dad's hoodie, not a costume. `AnimatedSprite2D` on the existing fighter for both. Clips are 8–12 **distinct** frames (never fewer than 6): idle, walk, parkour run, jump, duck, hurt, jab, cross, gut, heavy, front kick, side kick, roundhouse, uppercut, air mix, SNAP. Hitboxes, Host/Join, 3/6, crash, towers, parachute stay.
+
+**Pixel grid:** logical viewport **640×360**, window **1920×1080**, integer **3×**, Nearest, no mipmaps, pixel snap. Do not 1.5× 1280×720. Characters draw at `SpriteBook.DRAW_SCALE` 0.5 (~30–40 logical px). 1280 UI goes through `PixelStage` at 0.5. Touch HUD (light/heavy/jump/duck/parkour) is phone-safe; no IPA. Skill: `.cursor/skills/pixel-perfect-2d/`.
 
 **Dock Street** and **Intake Lot** have pixel tiles and props. Other maps stay blockout. Clinic hub cards show building icons (pawn, radio, fridge, dojo, workshop, locker, awards) when those PNGs exist. Street punks use one collector-punk sheet. Skinwalker sheet is wired on Waiting Room if the frames load.
 

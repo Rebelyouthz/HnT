@@ -8,6 +8,7 @@ var _beat: Beat = Beat.CHAPTER
 var _i := 0
 var _lines: Array = []
 var _layer: CanvasLayer
+var _ui: Control
 var _caption: Label
 var _who: Label
 var _skip: Label
@@ -29,54 +30,55 @@ func _ready() -> void:
 	_layer.layer = 50
 	_layer.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(_layer)
+	_ui = PixelStage.attach_canvas(_layer)
 	var letter_t := ColorRect.new()
 	letter_t.color = Color(0, 0, 0, 1)
 	letter_t.position = Vector2(0, 0)
 	letter_t.size = Vector2(1280, 90)
-	_layer.add_child(letter_t)
+	_ui.add_child(letter_t)
 	var letter_b := ColorRect.new()
 	letter_b.color = Color(0, 0, 0, 1)
 	letter_b.position = Vector2(0, 630)
 	letter_b.size = Vector2(1280, 90)
-	_layer.add_child(letter_b)
+	_ui.add_child(letter_b)
 	_sil_a = ColorRect.new()
 	_sil_a.color = Palette.BRICK
 	_sil_a.size = Vector2(78, 176)
 	_sil_a.position = Vector2(400, 348)
-	_layer.add_child(_sil_a)
+	_ui.add_child(_sil_a)
 	_sil_b = ColorRect.new()
 	_sil_b.color = Palette.LEMON
 	_sil_b.size = Vector2(56, 158)
 	_sil_b.position = Vector2(790, 366)
-	_layer.add_child(_sil_b)
+	_ui.add_child(_sil_b)
 	_chapter = Label.new()
 	_chapter.position = Vector2(80, 220)
 	_chapter.size = Vector2(1120, 70)
 	_chapter.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	UiKit.apply_label(_chapter, 36, Palette.LEMON)
-	_layer.add_child(_chapter)
+	_ui.add_child(_chapter)
 	_sub = Label.new()
 	_sub.position = Vector2(80, 300)
 	_sub.size = Vector2(1120, 48)
 	_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	UiKit.apply_label(_sub, 18, Palette.EDGE)
-	_layer.add_child(_sub)
+	_ui.add_child(_sub)
 	_who = Label.new()
 	_who.position = Vector2(80, 520)
 	_who.size = Vector2(1120, 28)
 	UiKit.apply_label(_who, 14, Palette.EDGE)
-	_layer.add_child(_who)
+	_ui.add_child(_who)
 	_caption = Label.new()
 	_caption.position = Vector2(80, 552)
 	_caption.size = Vector2(1120, 70)
 	_caption.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	UiKit.apply_label(_caption, 22, Palette.TEXT)
-	_layer.add_child(_caption)
+	_ui.add_child(_caption)
 	_skip = Label.new()
 	_skip.position = Vector2(40, 24)
 	_skip.text = Copy.SKIP_FILM
 	UiKit.apply_label(_skip, 14, Palette.MUTED)
-	_layer.add_child(_skip)
+	_ui.add_child(_skip)
 	_lines = StoryBook.film_lines(_kind, App.film_from, App.film_next)
 	var ch := StoryBook.chapter_card(_kind, App.film_from, App.film_next)
 	_chapter.text = str(ch.get("title", "NEXT SESSION"))

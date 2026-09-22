@@ -22,6 +22,7 @@ func _ready() -> void:
 
 func flash(title: String, sub: String, accent: Color, full: bool) -> void:
 	_shown_for = title
+	var ui := PixelStage.attach_canvas(self)
 	var finale := title.to_lower().contains("family plan") or title.to_lower().contains("director")
 	if finale:
 		Juice.play("res://assets/audio/sting_finale.wav")
@@ -35,22 +36,22 @@ func flash(title: String, sub: String, accent: Color, full: bool) -> void:
 	dim.color = Color(0, 0, 0, 0.55)
 	dim.position = Vector2.ZERO
 	dim.size = Vector2(1280, 720)
-	add_child(dim)
+	ui.add_child(dim)
 	var top := ColorRect.new()
 	top.color = Color(0, 0, 0, 0.92)
 	top.position = Vector2.ZERO
 	top.size = Vector2(1280, 70)
-	add_child(top)
+	ui.add_child(top)
 	var bot := ColorRect.new()
 	bot.color = Color(0, 0, 0, 0.92)
 	bot.position = Vector2(0, 650)
 	bot.size = Vector2(1280, 70)
-	add_child(bot)
+	ui.add_child(bot)
 	var portrait := ColorRect.new()
 	portrait.color = accent
 	portrait.size = Vector2(220, 280)
 	portrait.position = Vector2(-240, 200)
-	add_child(portrait)
+	ui.add_child(portrait)
 	var face := ColorRect.new()
 	face.color = accent.lightened(0.25)
 	face.size = Vector2(80, 48)
@@ -71,13 +72,13 @@ func flash(title: String, sub: String, accent: Color, full: bool) -> void:
 	name_l.position = Vector2(1280, 250)
 	name_l.size = Vector2(640, 60)
 	UiKit.apply_label(name_l, 40, Palette.LEMON)
-	add_child(name_l)
+	ui.add_child(name_l)
 	var sub_l := Label.new()
 	sub_l.text = sub
 	sub_l.position = Vector2(1280, 318)
 	sub_l.size = Vector2(640, 40)
 	UiKit.apply_label(sub_l, 18, accent)
-	add_child(sub_l)
+	ui.add_child(sub_l)
 	var tag := Label.new()
 	if finale:
 		tag.text = "FINALE"
@@ -85,7 +86,7 @@ func flash(title: String, sub: String, accent: Color, full: bool) -> void:
 		tag.text = "MINI" if not full else "BOSS"
 	tag.position = Vector2(520, 210)
 	UiKit.apply_label(tag, 14, Palette.EDGE)
-	add_child(tag)
+	ui.add_child(tag)
 	var tw := create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	tw.set_ignore_time_scale(true)
 	tw.tween_property(portrait, "position:x", 120.0, 0.28)

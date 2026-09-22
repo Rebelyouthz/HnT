@@ -453,6 +453,16 @@ func _initialize() -> void:
 	failed += _exists("res://assets/sprites/lot/tiles/asphalt.png")
 	failed += _exists("res://assets/sprites/hub/pawn_shop.png")
 	failed += _contains("res://src/ui/clinic_camp.gd", "SpriteBook.icon")
+	failed += _contains("res://project.godot", "viewport_width=640")
+	failed += _contains("res://project.godot", "viewport_height=360")
+	failed += _contains("res://project.godot", "snap_2d_transforms_to_pixel")
+	failed += _contains("res://src/sprites/sprite_book.gd", "DRAW_SCALE")
+	failed += _contains("res://src/ui/pixel_stage.gd", "LOGICAL")
+	failed += _contains("res://src/ui/touch_hud.gd", "p1_duck")
+	failed += _contains("res://src/ui/touch_hud.gd", "p1_dash")
+	failed += _contains("res://src/actors/fighter.gd", "absf(velocity.x) > 110.0")
+	failed += _cel_diff("father", "parkour_run")
+	failed += _cel_diff("son", "parkour_run")
 	failed += _contains("res://src/juice/juice.gd", "TOAST_COOL_MS")
 	failed += _contains("res://src/juice/juice.gd", "TOAST_MAX")
 	var net := get_root().get_node_or_null("NetSession")
@@ -524,6 +534,23 @@ func _check_json(path: String, n: int) -> int:
 func _exists(path: String) -> int:
 	if not FileAccess.file_exists(path):
 		push_error("missing %s" % path)
+		return 1
+	return 0
+
+
+func _cel_diff(who: String, clip: String) -> int:
+	var a_path := "res://assets/sprites/%s/%s/00.png" % [who, clip]
+	var b_path := "res://assets/sprites/%s/%s/06.png" % [who, clip]
+	if not FileAccess.file_exists(a_path) or not FileAccess.file_exists(b_path):
+		push_error("missing cels %s/%s" % [who, clip])
+		return 1
+	var ia := Image.new()
+	var ib := Image.new()
+	if ia.load(a_path) != OK or ib.load(b_path) != OK:
+		push_error("load cels %s/%s" % [who, clip])
+		return 1
+	if ia.get_data() == ib.get_data():
+		push_error("identical cels %s/%s" % [who, clip])
 		return 1
 	return 0
 

@@ -257,7 +257,7 @@ func _tick_sprite() -> void:
 		clip = "duck"
 	elif hop < -8.0 or (plane == "roof" and not is_on_floor()) or gliding:
 		clip = "jump"
-	elif dashing or parkour_lock > 0.0 or absf(velocity.x) > 260.0:
+	elif dashing or parkour_lock > 0.0 or absf(velocity.x) > 110.0:
 		clip = "parkour_run"
 	elif sliding:
 		clip = "duck"

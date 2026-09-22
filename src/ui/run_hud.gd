@@ -24,6 +24,7 @@ var _boss_wrap: Control
 var _boss_fill: ColorRect
 var _boss_lab: Label
 var _pause: Control
+var _stage: Control
 var son: Fighter
 var father: Fighter
 var state: RunState
@@ -35,16 +36,17 @@ var _dad_banner := false
 func _ready() -> void:
 	layer = 20
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_stage = PixelStage.attach_canvas(self)
 	_fps = Label.new()
 	_fps.position = Vector2(12, 6)
 	_fps.visible = OS.has_feature("editor")
 	UiKit.apply_label(_fps, 12, Palette.LEMON)
-	add_child(_fps)
+	_put(_fps)
 
 	_son = Label.new()
 	_son.position = Vector2(12, 22)
 	UiKit.apply_label(_son, 14, Palette.LEMON)
-	add_child(_son)
+	_put(_son)
 	_hp_a = _pips_row(Vector2(12, 44), Palette.LEMON)
 	_steam_a = _bar(Vector2(12, 56), Palette.LEMON)
 
@@ -53,7 +55,7 @@ func _ready() -> void:
 	_dad.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_dad.size = Vector2(368, 22)
 	UiKit.apply_label(_dad, 14, Palette.BRICK)
-	add_child(_dad)
+	_put(_dad)
 	_hp_b = _pips_row(Vector2(1048, 44), Palette.BRICK)
 	_steam_b = _bar(Vector2(1048, 56), Palette.BRICK)
 
@@ -62,32 +64,32 @@ func _ready() -> void:
 	_lives.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_lives.size = Vector2(680, 16)
 	UiKit.apply_label(_lives, 12, Palette.TEXT)
-	add_child(_lives)
+	_put(_lives)
 
 	_scrap = Label.new()
 	_scrap.visible = false
-	add_child(_scrap)
+	_put(_scrap)
 
 	_wanted = Label.new()
 	_wanted.position = Vector2(12, 68)
 	UiKit.apply_label(_wanted, 12, Palette.BRICK)
-	add_child(_wanted)
+	_put(_wanted)
 
 	_act = Label.new()
 	_act.visible = false
-	add_child(_act)
+	_put(_act)
 
 	_score = Label.new()
 	_score.position = Vector2(360, 688)
 	_score.size = Vector2(560, 22)
 	_score.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	UiKit.apply_label(_score, 14, Palette.EDGE)
-	add_child(_score)
+	_put(_score)
 
 	_boss_wrap = Control.new()
 	_boss_wrap.position = Vector2(280, 40)
 	_boss_wrap.visible = false
-	add_child(_boss_wrap)
+	_put(_boss_wrap)
 	var bb := ColorRect.new()
 	bb.size = Vector2(720, 14)
 	bb.color = Color(0, 0, 0, 0.7)
@@ -107,28 +109,28 @@ func _ready() -> void:
 	_combo = Label.new()
 	_combo.position = Vector2(12, 84)
 	UiKit.apply_label(_combo, 16, Palette.EDGE)
-	add_child(_combo)
+	_put(_combo)
 	_rank = Label.new()
 	_rank.position = Vector2(12, 102)
 	UiKit.apply_label(_rank, 12, Palette.LEMON)
-	add_child(_rank)
+	_put(_rank)
 	_combo_bg = ColorRect.new()
 	_combo_bg.position = Vector2(12, 120)
 	_combo_bg.size = Vector2(180, 5)
 	_combo_bg.color = Color(0, 0, 0, 0.55)
-	add_child(_combo_bg)
+	_put(_combo_bg)
 	_combo_fill = ColorRect.new()
 	_combo_fill.position = Vector2(12, 120)
 	_combo_fill.size = Vector2(180, 5)
 	_combo_fill.color = Palette.LEMON
-	add_child(_combo_fill)
+	_put(_combo_fill)
 
 	_call = Label.new()
 	_call.position = Vector2(280, 40)
 	_call.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_call.size = Vector2(720, 22)
 	UiKit.apply_label(_call, 16, Palette.LEMON)
-	add_child(_call)
+	_put(_call)
 
 	_snap_a = _snap_lab()
 	_snap_b = _snap_lab()
@@ -138,8 +140,15 @@ func _ready() -> void:
 	_hint.size = Vector2(1250, 28)
 	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	UiKit.apply_label(_hint, 13, Palette.MUTED)
-	add_child(_hint)
+	_put(_hint)
 	_place_banners()
+
+
+func _put(n: Node) -> void:
+	if _stage:
+		_stage.add_child(n)
+	else:
+		add_child(n)
 
 
 func _place_banners() -> void:
@@ -154,16 +163,16 @@ func _banner_at(pos: Vector2, role: String) -> void:
 	b.color = tint
 	b.position = pos
 	b.size = Vector2(152, 18)
-	add_child(b)
+	_put(b)
 	var frame := ColorRect.new()
 	frame.color = Cosmetics.tint("frames", FamilyProfile.equipped_cosmetic(role, "frame"))
 	frame.position = pos + Vector2(0, 18)
 	frame.size = Vector2(152, 4)
-	add_child(frame)
+	_put(frame)
 	if FamilyProfile.has_menu_alert():
 		var d := UiKit.new_dot()
 		d.position = pos + Vector2(136, 2)
-		add_child(d)
+		_put(d)
 
 
 func _pips_row(pos: Vector2, color: Color) -> HBoxContainer:
@@ -175,7 +184,7 @@ func _pips_row(pos: Vector2, color: Color) -> HBoxContainer:
 		pip.custom_minimum_size = Vector2(24, 8)
 		pip.color = color
 		row.add_child(pip)
-	add_child(row)
+	_put(row)
 	return row
 
 
@@ -184,12 +193,12 @@ func _bar(pos: Vector2, color: Color) -> ColorRect:
 	bg.position = pos
 	bg.size = Vector2(220, 8)
 	bg.color = Color(0, 0, 0, 0.55)
-	add_child(bg)
+	_put(bg)
 	var fill := ColorRect.new()
 	fill.position = pos
 	fill.size = Vector2(220, 8)
 	fill.color = color
-	add_child(fill)
+	_put(fill)
 	return fill
 
 
@@ -200,7 +209,7 @@ func _snap_lab() -> Label:
 	l.process_mode = Node.PROCESS_MODE_ALWAYS
 	l.z_index = -1
 	UiKit.apply_label(l, 22, Color(0.86, 0.92, 1.0))
-	add_child(l)
+	_put(l)
 	return l
 
 
@@ -422,7 +431,7 @@ func _toggle_pause() -> void:
 	var layer := Control.new()
 	layer.set_anchors_preset(Control.PRESET_FULL_RECT)
 	layer.process_mode = Node.PROCESS_MODE_ALWAYS
-	add_child(layer)
+	_put(layer)
 	_pause = layer
 	var dim := ColorRect.new()
 	dim.color = Color(0, 0, 0, 0.7)
