@@ -16,6 +16,7 @@ var _sfx: AudioStreamPlayer
 const DECAY := 1.35
 const MAX_OFFSET := Vector2(12, 8)
 const COMBO_WINDOW := 1.55
+const WORLD_SNAP := 0.25
 
 
 func _ready() -> void:
@@ -178,6 +179,9 @@ func register_hit(kind: String, global_pos: Vector2, dmg: int) -> void:
 		shout("RANK S")
 	elif combo == 40:
 		shout("THE THERAPIST IS CRYING")
+		toaster_pop("S+")
+	if combo == 5 or combo == 10 or combo == 20:
+		toaster_pop(combo_rank())
 
 
 func shout(line: String) -> void:
@@ -692,4 +696,53 @@ func hole(at: Vector2) -> void:
 		host.add_child(h)
 	else:
 		add_child(h)
+
+
+func named_slowmo() -> void:
+	if get_tree().get_first_node_in_group("chase_crash"):
+		return
+	if get_tree().get_first_node_in_group("snap_director") and Engine.time_scale <= WORLD_SNAP:
+		return
+	slowmo(0.32)
+	get_tree().create_timer(0.14, true, false, true).timeout.connect(func() -> void:
+		restore_time()
+	)
+
+
+func smash_burst(at: Vector2, kind: String) -> void:
+	pulse_shake(4.0)
+	kill_burst(at, "heavy")
+	popup_number(at + Vector2(0, -36), kind.to_upper(), Palette.EDGE)
+	play("res://assets/audio/smash.wav" if ResourceLoader.exists("res://assets/audio/smash.wav") else "res://assets/audio/hit_heavy.wav")
+
+
+func kill_cam(at: Vector2) -> void:
+	if get_tree().get_first_node_in_group("chase_crash"):
+		return
+	pulse_shake(10.0)
+	shout("KILL CAM")
+	popup_number(at + Vector2(0, -70), "KILL CAM", Palette.BRICK)
+	play("res://assets/audio/finish.wav")
+	freeze_frames(5)
+
+
+func toaster_pop(rank: String) -> void:
+	if rank == "":
+		return
+	play("res://assets/audio/combo_son.wav" if ResourceLoader.exists("res://assets/audio/combo_son.wav") else "res://assets/audio/claim.wav")
+	shout(rank)
+	popup_number(Vector2(640, 220), rank, Palette.LEMON)
+
+
+func revenge_flash(at: Vector2) -> void:
+	pulse_shake(6.0)
+	sparks(at + Vector2(0, -24))
+	kill_burst(at, "heavy")
+	popup_number(at + Vector2(0, -48), Copy.REVENGE, Palette.BRICK)
+	play("res://assets/audio/revenge.wav" if ResourceLoader.exists("res://assets/audio/revenge.wav") else "res://assets/audio/hit_heavy.wav")
+	freeze_frames(3)
+
+
+func siren() -> void:
+	play("res://assets/audio/siren.wav" if ResourceLoader.exists("res://assets/audio/siren.wav") else "res://assets/audio/heat_up.wav")
 

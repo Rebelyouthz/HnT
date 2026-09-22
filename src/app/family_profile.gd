@@ -8,7 +8,8 @@ const BUILDINGS := [
 	"front_desk", "street_map", "therapy_couch", "wardrobe_cage",
 	"trophy_cabinet", "mail_slot", "bulletin_board", "compare_mirrors", "blood_fridge",
 	"pawn_shop", "patrol_desk", "research_lab", "dojo", "workshop",
-	"bounty_board", "radio_tower", "album_wall"
+	"bounty_board", "radio_tower", "album_wall",
+	"streak_locker", "invoice_wheel", "punching_bag", "warrant_fax"
 ]
 
 var data: Dictionary = {}
@@ -149,7 +150,23 @@ func _defaults() -> Dictionary:
 		"radio_day": "",
 		"radio_heard": 0,
 		"heat_peak": 0,
-		"polaroids": 0
+		"polaroids": 0,
+		"smash_kills": 0,
+		"dual_snaps": 0,
+		"parries": 0,
+		"snacks_bought": 0,
+		"lottery_spins": 0,
+		"streak": 0,
+		"streak_best": 0,
+		"streak_claimed": [],
+		"snack_buff": "",
+		"bounces": 0,
+		"bag_rounds": 0,
+		"bag_hits": 0,
+		"revenges": 0,
+		"cart_rides": 0,
+		"faxes": 0,
+		"fax_day": ""
 	}
 
 
@@ -248,6 +265,12 @@ func mark_run_finished(ok: bool = true) -> void:
 	data["runs"] = int(data["runs"]) + 1
 	data["lifetime_points"] = int(data["lifetime_points"]) + (2 if ok else 1)
 	data["rep"] = int(data["rep"]) + (1 if ok else 0)
+	if ok:
+		data["streak"] = int(data.get("streak", 0)) + 1
+		data["streak_best"] = maxi(int(data.get("streak_best", 0)), int(data["streak"]))
+		flag_unseen("build_streak_locker")
+	else:
+		data["streak"] = 0
 	_bump_daily("run")
 	save()
 
@@ -852,6 +875,118 @@ func mark_stomp() -> void:
 	bump_bounty("stomp")
 	sync_cosmetics(true)
 	save()
+
+
+func mark_smash() -> void:
+	data["smash_kills"] = int(data.get("smash_kills", 0)) + 1
+	save()
+
+
+func mark_dual_snap() -> void:
+	data["dual_snaps"] = int(data.get("dual_snaps", 0)) + 1
+	save()
+
+
+func mark_parry() -> void:
+	data["parries"] = int(data.get("parries", 0)) + 1
+	save()
+
+
+func mark_bounce() -> void:
+	data["bounces"] = int(data.get("bounces", 0)) + 1
+	save()
+
+
+func stash_snack(kind: String) -> void:
+	data["snack_buff"] = kind
+	save()
+
+
+func buy_snack(kind: String, gold: int) -> bool:
+	if int(data.get("gold", 0)) < gold:
+		return false
+	data["gold"] = int(data["gold"]) - gold
+	data["snack_buff"] = kind
+	data["snacks_bought"] = int(data.get("snacks_bought", 0)) + 1
+	save()
+	return true
+
+
+func consume_snack_buff() -> String:
+	var k := str(data.get("snack_buff", ""))
+	if k == "":
+		return ""
+	data["snack_buff"] = ""
+	save()
+	return k
+
+
+func claim_streak(at: int) -> bool:
+	var claimed: Array = data.get("streak_claimed", [])
+	if claimed.has(at):
+		return false
+	if int(data.get("streak", 0)) < at:
+		return false
+	claimed.append(at)
+	data["streak_claimed"] = claimed
+	var gold := 20 + at * 8
+	var gems := 1 if at >= 5 else 0
+	grant(gold, gems, "STREAK %d" % at)
+	return true
+
+
+func spin_lottery() -> Dictionary:
+	if int(data.get("gems", 0)) < 2:
+		return {}
+	data["gems"] = int(data["gems"]) - 2
+	data["lottery_spins"] = int(data.get("lottery_spins", 0)) + 1
+	var bag: Array = [
+		{"title": "GOLD RECEIPT", "gold": 28, "gems": 0, "got": "+28 GOLD"},
+		{"title": "GOLD RECEIPT", "gold": 28, "gems": 0, "got": "+28 GOLD"},
+		{"title": "SCRAP COIL", "gold": 8, "gems": 0, "got": "COIL  ·  +8 GOLD"},
+		{"title": "GEM BACK", "gold": 0, "gems": 1, "got": "+1 GEM"},
+		{"title": "JACKPOT INVOICE", "gold": 60, "gems": 1, "got": "+60 GOLD  ·  +1 GEM"}
+	]
+	bag.shuffle()
+	var pay: Dictionary = bag[0]
+	if int(pay.get("gold", 0)) > 0:
+		data["gold"] = int(data["gold"]) + int(pay["gold"])
+	if int(pay.get("gems", 0)) > 0:
+		data["gems"] = int(data["gems"]) + int(pay["gems"])
+	if str(pay.get("title", "")).find("COIL") >= 0:
+		add_parts("scrap_coil", 1)
+	save()
+	return pay
+
+
+func mark_bag(hits: int) -> void:
+	data["bag_rounds"] = int(data.get("bag_rounds", 0)) + 1
+	data["bag_hits"] = int(data.get("bag_hits", 0)) + hits
+	save()
+
+
+func mark_revenge() -> void:
+	data["revenges"] = int(data.get("revenges", 0)) + 1
+	save()
+
+
+func mark_cart() -> void:
+	data["cart_rides"] = int(data.get("cart_rides", 0)) + 1
+	save()
+
+
+func fax_ready() -> bool:
+	return str(data.get("fax_day", "")) != Time.get_date_string_from_system()
+
+
+func fax_today() -> bool:
+	if not fax_ready():
+		return false
+	data["fax_day"] = Time.get_date_string_from_system()
+	data["faxes"] = int(data.get("faxes", 0)) + 1
+	data["snack_buff"] = "tape"
+	grant(8, 0, "FAX FILED")
+	return true
 
 
 func bump_bounty(kind: String) -> void:

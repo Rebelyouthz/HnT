@@ -229,7 +229,7 @@ func _prompt_line() -> String:
 		return "DRIVE  ·  RAIL 360  ·  SPECIAL SWAP  ·  RAMP AHEAD"
 	if son == null or father == null:
 		return PadRouter.p1_prompt() + "  ·  " + Copy.JOIN_HINT
-	return PadRouter.p1_prompt() + "  ·  " + PadRouter.p2_prompt()
+	return PadRouter.p1_prompt() + "  ·  " + PadRouter.p2_prompt() + "  ·  TAP BLOCK PARRY  ·  REVENGE AFTER A HIT  ·  CARTS  ·  THROW INTO PROPS"
 
 
 func _process(delta: float) -> void:
@@ -259,6 +259,13 @@ func _process(delta: float) -> void:
 		_combo_bg.visible = true
 		_combo_fill.size.x = 180.0 * Juice.combo_frac()
 		_combo_fill.color = Palette.LEMON if Juice.combo_frac() > 0.35 else Palette.BRICK
+		if str(_combo.get_meta("rank", "")) != Juice.combo_rank() and Juice.combo_rank() != "":
+			_combo.set_meta("rank", Juice.combo_rank())
+			_combo.scale = Vector2(1.24, 1.24)
+			var tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+			tw.set_ignore_time_scale(true)
+			tw.tween_property(_combo, "scale", Vector2.ONE, 0.18)
+			tw.parallel().tween_property(_rank, "modulate", Palette.LEMON, 0.08)
 	_call.text = Juice.callout
 	if state:
 		_scrap.text = "SCRAP  %d   XP  %d" % [state.scrap, state.xp]
@@ -266,6 +273,10 @@ func _process(delta: float) -> void:
 		for i in 5:
 			w += "I" if i < state.wanted else "."
 		_wanted.text = "" if state.wanted == 0 else "WANTED  " + w
+		if son and son.revenge_win > 0:
+			_wanted.text += "  ·  REVENGE"
+		elif father and father.revenge_win > 0:
+			_wanted.text += "  ·  REVENGE"
 		_act.text = str(App.current_map).replace("_", " ").to_upper()
 		var horde := get_tree().get_first_node_in_group("horde")
 		if horde and horde.has_method("left"):
@@ -416,6 +427,12 @@ func _toggle_pause() -> void:
 	t.text = Copy.PAUSE
 	UiKit.apply_label(t, 28, Palette.LEMON)
 	col.add_child(t)
+	var hint := Label.new()
+	hint.text = "Tap BLOCK to PARRY. Eat a hit, the next one is REVENGE. Ride CARTS. Throw into props. Pause never skips the Raven Grid crash."
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	hint.custom_minimum_size = Vector2(380, 0)
+	UiKit.apply_label(hint, 13, Palette.MUTED)
+	col.add_child(hint)
 	var r := UiKit.button("RESUME", Vector2(220, 48))
 	r.process_mode = Node.PROCESS_MODE_ALWAYS
 	r.pressed.connect(_toggle_pause)

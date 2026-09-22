@@ -114,8 +114,27 @@ func _execute() -> void:
 	f.invuln = 18
 	f.snap_ready = false
 	f.global_position.x = e.global_position.x - float(f.facing) * 22.0
+	var dual := false
+	for n in get_tree().get_nodes_in_group("players"):
+		if n == f or not (n is Fighter):
+			continue
+		var other: Fighter = n
+		if other.downed:
+			continue
+		if other.global_position.distance_to((e as Node2D).global_position) < 120.0:
+			dual = true
+			other.invuln = 18
 	if e.has_method("take_hit"):
 		e.take_hit("snap", f)
+		if dual and e.has_method("take_hit"):
+			e.take_hit("heavy", f)
+	if dual:
+		Juice.shout(Copy.DUAL_SNAP)
+		Juice.freeze_frames(7)
+		Juice.pulse_shake(12.0)
+		VoBank.dual()
+		FamilyProfile.mark_dual_snap()
+		Juice.unlock_logo("DUAL SNAP", "Two windows. One corpse. Johnny Trigger would bill this.", "DUAL")
 	var rs := get_tree().get_first_node_in_group("run_state")
 	if rs and rs.has_method("has_card") and rs.has_card("quiet_lunch"):
 		f.hp = mini(f.max_hp, f.hp + 8)

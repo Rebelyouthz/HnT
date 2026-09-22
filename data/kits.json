@@ -173,5 +173,45 @@
     "tier": "elite", "armor": "elite", "style": "grenade", "attack": "grenade",
     "block": 0.26, "hp": 110, "speed": 30, "weapon": "grenade",
     "blurb": "Arc bombs into the drop. That's the surprise."
+  },
+  "Phone Ghost": {
+    "tier": "light", "armor": "none", "style": "gun", "attack": "gun",
+    "block": 0.0, "hp": 34, "speed": 58, "weapon": "pistol", "home": "air",
+    "blurb": "Wanted 2. A ringtone with a stapler. Shoot the slogan."
+  },
+  "Dumpster King": {
+    "tier": "heavy", "armor": "medium", "style": "brawl", "attack": "ram",
+    "block": 0.22, "hp": 86, "speed": 38, "weapon": "board", "vehicle": "skate",
+    "blurb": "Wanted 4. The dumpster learned parkour. Sidestep the lid."
+  },
+  "Billboard Witch": {
+    "tier": "medium", "armor": "light", "style": "grenade", "attack": "grenade",
+    "block": 0.14, "hp": 48, "speed": 44, "weapon": "grenade", "home": "roof",
+    "blurb": "Pop the ad, she bills the sky. Arc, then splash."
+  },
+  "Lottery Goon": {
+    "tier": "light", "armor": "none", "style": "brawl", "attack": "light",
+    "block": 0.1, "hp": 40, "speed": 50, "weapon": "fist",
+    "blurb": "Drops gems like a raffle. The wheel hired him."
+  },
+  "Fridge Imp": {
+    "tier": "very_light", "armor": "none", "style": "knife", "attack": "blade",
+    "block": 0.04, "hp": 28, "speed": 66, "weapon": "knife",
+    "blurb": "Cold snack with legs. Magnet food that bites."
+  },
+  "Meter Maid": {
+    "tier": "light", "armor": "none", "style": "gun", "attack": "gun",
+    "block": 0.08, "hp": 36, "speed": 62, "weapon": "pistol", "cop": true, "vehicle": "scooter",
+    "blurb": "Wanted 1. Tickets your ankles. The scooter is the citation."
+  },
+  "Coupon Cart": {
+    "tier": "medium", "armor": "light", "style": "brawl", "attack": "ram",
+    "block": 0.0, "hp": 58, "speed": 76, "weapon": "fist", "vehicle": "scooter",
+    "blurb": "Kiosk smash. Huntdown hovercraft energy, billed as groceries."
+  },
+  "Ticket Skipper": {
+    "tier": "light", "armor": "none", "style": "martial", "attack": "slide",
+    "block": 0.1, "hp": 38, "speed": 74, "weapon": "kick",
+    "blurb": "Cop-car smash. Slide under the invoice. Jump it or eat the fare."
   }
 }

@@ -90,6 +90,9 @@ var _land_v := 0.0
 var rolling := false
 var van_seat := ""
 var crawling := 0.0
+var parry_win := 0
+var revenge_win := 0
+var cart_t := 0.0
 
 signal died
 signal hit_landed(kind: String, global_pos: Vector2)
@@ -125,6 +128,9 @@ func _ready() -> void:
 	if FamilyProfile.has_research("tape_wrap"):
 		tape_t = 6.0
 		armored = true
+	var snack := FamilyProfile.consume_snack_buff()
+	if snack != "":
+		_apply_snack(snack)
 	_shadow = Polygon2D.new()
 	_shadow.color = Color(0.02, 0.02, 0.04, 0.45)
 	_shadow.polygon = PackedVector2Array([
@@ -310,6 +316,14 @@ func _tick_meters(delta: float) -> void:
 			sliding = false
 	if wall_run > 0.0:
 		wall_run -= delta
+	if parry_win > 0:
+		parry_win -= 1
+	if revenge_win > 0:
+		revenge_win -= 1
+	if cart_t > 0.0:
+		cart_t -= delta
+	if _just("block"):
+		parry_win = 10
 	if cape_guard > 0.0:
 		cape_guard -= delta
 	if web_incoming:
@@ -388,6 +402,32 @@ func _process_street(delta: float) -> void:
 	var stick := _stick()
 	var x := stick.x
 	var y := stick.y
+	if wall_run > 0.0:
+		hop = minf(hop, -40.0)
+		hop_v = -40.0
+		velocity.x = float(facing) * 340.0
+		velocity.y = 0.0
+		visual.position.y = hop
+		move_and_slide()
+		global_position.y = clampf(global_position.y, STREET_MIN, STREET_MAX)
+		_face(x)
+		return
+	if cart_t > 0.0:
+		hop = -10.0
+		hop_v = 0.0
+		velocity.x = float(facing) * 360.0
+		velocity.y = 0.0
+		visual.position.y = hop
+		if _just("jump"):
+			cart_t = 0.0
+			hop_v = -560.0
+			Juice.shout("CART POP")
+			Juice.named_slowmo()
+			KitSfx.hit(role, "jump")
+		move_and_slide()
+		global_position.y = clampf(global_position.y, STREET_MIN, STREET_MAX)
+		_face(x)
+		return
 	if dashing:
 		velocity.x = float(facing) * 420.0
 		velocity.y = 0.0
@@ -891,6 +931,10 @@ func _spawn_hit(kind: String, size: Vector2, life: float, offset: Vector2) -> vo
 			var hit_kind := kind
 			if web_incoming:
 				hit_kind = "web-slam"
+			if revenge_win > 0 and victim is Punk:
+				if hit_kind == "light" or hit_kind == "gut-punch":
+					hit_kind = "heavy"
+				_spend_revenge(victim as Punk)
 			victim.take_hit(hit_kind, self)
 			hit_landed.emit(hit_kind, (node as Node2D).global_position)
 	box.area_entered.connect(func(a: Area2D) -> void:
@@ -906,6 +950,20 @@ func _spawn_hit(kind: String, size: Vector2, life: float, offset: Vector2) -> vo
 
 func take_hit(kind: String, from: Node) -> void:
 	if downed or invuln > 0:
+		return
+	if blocking and parry_win > 0 and kind != "snap" and kind != "throw":
+		parry_win = 0
+		invuln = 14
+		steam = minf(STEAM_MAX, steam + 18.0)
+		Juice.shout(Copy.PARRY)
+		Juice.sparks(global_position + Vector2(float(facing) * 24.0, -30.0))
+		Juice.pulse_shake(5.0)
+		Juice.hitstop(5)
+		Juice.play("res://assets/audio/parry.wav" if ResourceLoader.exists("res://assets/audio/parry.wav") else "res://assets/audio/block.wav")
+		FamilyProfile.mark_parry()
+		_spawn_hit("heavy", Vector2(70, 48), 0.16, Vector2(40 * facing, -30))
+		if from is Punk:
+			(from as Punk).take_hit("heavy", self)
 		return
 	if blocking and kind != "throw" and kind != "snap":
 		var chip := maxi(1, int(round(6 * 0.1)))
@@ -964,6 +1022,12 @@ func take_hit(kind: String, from: Node) -> void:
 		Juice.shout("BANDAGE")
 	if hp <= 0:
 		_go_down()
+		return
+	revenge_win = 36
+	var rs2 := get_tree().get_first_node_in_group("run_state")
+	if rs2 and rs2.has_method("has_card") and rs2.has_card("revenge_policy"):
+		revenge_win = 54
+	Juice.shout("REVENGE READY")
 
 
 func _go_down() -> void:
@@ -1272,7 +1336,12 @@ func _throw() -> void:
 			KitSfx.hit(role, "heavy")
 		else:
 			e.take_hit("throw", self)
-		e.global_position.x += float(facing) * 86.0
+		e.flung = true
+		e.flung_dir = float(facing)
+		e.flung_t = 0.48
+		e.flung_ground = false
+		e.global_position.x += float(facing) * 64.0
+		_try_wall_bounce(e)
 		Juice.shout("DISARMED")
 		return
 
@@ -1283,6 +1352,71 @@ func equip_pickup(kind: String) -> void:
 		pistol_shots = 6
 		ammo = maxi(ammo, 3)
 	Juice.shout(kind.to_upper())
+
+
+func _apply_snack(kind: String) -> void:
+	match kind:
+		"bandage":
+			bandage += 1
+		"tape":
+			tape_t = maxf(tape_t, 4.0)
+			armored = true
+		"steam":
+			steam = STEAM_MAX
+		"boost":
+			trick_boost = 1.12
+			trick_t = 8.0
+	Juice.toast("reward", "SNACK", "The fridge packed a feeling. %s." % kind.to_upper())
+	VoBank.fridge()
+
+
+func _spend_revenge(e: Punk) -> void:
+	revenge_win = 0
+	hp = mini(max_hp, hp + 8)
+	steam = minf(STEAM_MAX, steam + 14.0)
+	Juice.shout(Copy.REVENGE)
+	Juice.revenge_flash(e.global_position)
+	VoBank.revenge()
+	FamilyProfile.mark_revenge()
+	var blood := get_tree().get_first_node_in_group("blood_sim")
+	if blood and blood.has_method("spray"):
+		blood.spray(e.global_position, "revenge", float(facing))
+	var rs := get_tree().get_first_node_in_group("run_state")
+	if rs and rs.has_method("add_points"):
+		rs.add_points(role, 22, "revenge")
+
+
+func _try_wall_bounce(e: Punk) -> void:
+	var hit_prop := false
+	for n in get_tree().get_nodes_in_group("smashables"):
+		if not is_instance_valid(n) or not (n is Node2D):
+			continue
+		var p := n as Node2D
+		var dx := p.global_position.x - e.global_position.x
+		if signf(dx) != float(facing) and absf(dx) > 10.0:
+			continue
+		if e.global_position.distance_to(p.global_position) > 78.0:
+			continue
+		if n.has_method("take_hit"):
+			n.take_hit("throw", self)
+		hit_prop = true
+		break
+	var rs := get_tree().get_first_node_in_group("run_state")
+	var policy := rs != null and rs.has_method("has_card") and rs.has_card("wall_bounce")
+	if not hit_prop and not policy:
+		return
+	e.flung_dir *= -1.0
+	e.flung_t = maxf(e.flung_t, 0.28)
+	e.global_position.x -= float(facing) * 42.0
+	e.hp = maxi(1, e.hp - 10)
+	Juice.shout(Copy.WALL_BOUNCE)
+	Juice.named_slowmo()
+	Juice.play("res://assets/audio/wall_bounce.wav" if ResourceLoader.exists("res://assets/audio/wall_bounce.wav") else "res://assets/audio/hit_heavy.wav")
+	VoBank.bounce()
+	FamilyProfile.mark_bounce()
+	var blood := get_tree().get_first_node_in_group("blood_sim")
+	if blood and blood.has_method("spray"):
+		blood.spray(e.global_position, "throw", e.flung_dir)
 
 
 func _update_guard() -> void:

@@ -121,9 +121,13 @@ static func pulse_ready(b: Control) -> void:
 
 
 static func pop_in(n: Control) -> void:
-	n.pivot_offset = n.size * 0.5
-	n.scale = Vector2(0.86, 0.86)
-	n.modulate.a = 0.0
+	if n.size == Vector2.ZERO:
+		n.pivot_offset = Vector2(
+			absf(n.offset_right - n.offset_left) * 0.5,
+			absf(n.offset_bottom - n.offset_top) * 0.5
+		)
+	else:
+		n.pivot_offset = n.size * 0.5
+	n.scale = Vector2(0.88, 0.88)
 	var tw := n.create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tw.tween_property(n, "scale", Vector2.ONE, 0.18)
-	tw.parallel().tween_property(n, "modulate:a", 1.0, 0.14)
+	tw.tween_property(n, "scale", Vector2.ONE, 0.2)

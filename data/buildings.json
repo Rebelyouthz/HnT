@@ -100,5 +100,29 @@
     "name": "FAMILY ALBUM",
     "blurb": "Polaroids instead of just gold. Pin the night. The fridge still wants a copy.",
     "unlocks": "Album"
+  },
+  {
+    "id": "streak_locker",
+    "name": "STREAK LOCKER",
+    "blurb": "Consecutive files. Chests on a rail. Die and the clipboard laughs.",
+    "unlocks": "Streak"
+  },
+  {
+    "id": "invoice_wheel",
+    "name": "INVOICE LOTTERY",
+    "blurb": "Two gems. One spin. Civic engagement, billed as luck.",
+    "unlocks": "Lottery"
+  },
+  {
+    "id": "punching_bag",
+    "name": "PUNCHING BAG",
+    "blurb": "Eight seconds. Light the dummy. Combo toaster. The dojo still wants tuition.",
+    "unlocks": "Bag"
+  },
+  {
+    "id": "warrant_fax",
+    "name": "WARRANT FAX",
+    "blurb": "Once a day. Fax a complaint. Gold comes back. Tape packs itself. Civic engagement.",
+    "unlocks": "Fax"
   }
 ]

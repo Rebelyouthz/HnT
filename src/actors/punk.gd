@@ -34,6 +34,9 @@ var vehicle := ""
 var armor_grade := "none"
 var tier := "light"
 var flung := false
+var flung_dir := -1.0
+var flung_t := 0.0
+var flung_ground := false
 var _grenade_cd := 0.0
 signal died
 signal finish_ready
@@ -131,6 +134,22 @@ func _ready() -> void:
 		visual.modulate = Color(0.28, 0.32, 0.3)
 	elif title == "Cenote Elite":
 		visual.modulate = Color(0.15, 0.45, 0.4)
+	elif title == "Phone Ghost":
+		visual.modulate = Color(0.55, 0.85, 1.0)
+	elif title == "Dumpster King":
+		visual.modulate = Color(0.28, 0.48, 0.22)
+	elif title == "Billboard Witch":
+		visual.modulate = Color(0.95, 0.45, 0.7)
+	elif title == "Lottery Goon":
+		visual.modulate = Color(0.85, 0.72, 0.2)
+	elif title == "Fridge Imp":
+		visual.modulate = Color(0.7, 0.88, 0.92)
+	elif title == "Meter Maid":
+		visual.modulate = Color(0.35, 0.55, 0.95)
+	elif title == "Coupon Cart":
+		visual.modulate = Color(0.85, 0.55, 0.22)
+	elif title == "Ticket Skipper":
+		visual.modulate = Color(0.55, 0.22, 0.28)
 	_base_mod = visual.modulate
 
 
@@ -177,8 +196,45 @@ func _part(pos: Vector2, size: Vector2, color: Color) -> void:
 	visual.add_child(p)
 
 
+func _fling(delta: float) -> void:
+	flung_t -= delta
+	velocity.x = flung_dir * 400.0
+	velocity.y = 0.0
+	move_and_slide()
+	_lane()
+	for n in get_tree().get_nodes_in_group("smashables"):
+		if not is_instance_valid(n) or not (n is Node2D):
+			continue
+		if global_position.distance_to((n as Node2D).global_position) > 56.0:
+			continue
+		if n.has_method("take_hit"):
+			n.take_hit("throw", self)
+		flung_dir *= -1.0
+		flung_t = 0.22
+		hp = maxi(1, hp - 8)
+		Juice.shout(Copy.WALL_BOUNCE)
+		Juice.play("res://assets/audio/wall_bounce.wav" if ResourceLoader.exists("res://assets/audio/wall_bounce.wav") else "res://assets/audio/hit_heavy.wav")
+		FamilyProfile.mark_bounce()
+		Juice.named_slowmo()
+		break
+	if flung_t <= 0.0:
+		if not flung_ground:
+			flung_ground = true
+			flung_t = 0.16
+			flung_dir *= -0.75
+			hp = maxi(1, hp - 6)
+			Juice.shout(Copy.GROUND_BOUNCE)
+			Juice.named_slowmo()
+			Juice.play("res://assets/audio/wall_bounce.wav" if ResourceLoader.exists("res://assets/audio/wall_bounce.wav") else "res://assets/audio/hit_heavy.wav")
+			FamilyProfile.mark_bounce()
+			return
+		flung = false
+		velocity.x = 0.0
+
+
 func _physics_process(delta: float) -> void:
 	if flung:
+		_fling(delta)
 		return
 	if staple_cd > 0.0:
 		staple_cd -= delta
@@ -570,6 +626,8 @@ func take_hit(kind: String, from: Node) -> void:
 		var blood := get_tree().get_first_node_in_group("blood_sim")
 		if blood and kind != "light" and blood.has_method("spray"):
 			blood.spray(global_position, kind, dir)
+			if kind == "bam" or kind == "gut-punch" or kind == "stomp3":
+				blood.pump(global_position, dir)
 		if not crush and hp > 0 and hp <= int(round(float(max_hp) * 0.12)):
 			crush = true
 			finish_ready.emit()
@@ -590,6 +648,8 @@ func _die(kind: String, from: Node) -> void:
 	if kind != "light" and kind != "snap":
 		Juice.kill_burst(global_position, kind)
 		Juice.play("res://assets/audio/kill.wav")
+		if kind == "finish" or kind == "stomp3":
+			Juice.kill_cam(global_position)
 		var blood := get_tree().get_first_node_in_group("blood_sim")
 		if blood and blood.has_method("pump"):
 			var dir := -1.0
@@ -651,6 +711,9 @@ func _drops(from: Node) -> void:
 	orb.amount = 5 if title == "Mohawk Bo" else 3
 	orb.global_position = global_position + Vector2(0, -20)
 	host.add_child(orb)
+	if title == "Lottery Goon":
+		FamilyProfile.add_gems(1)
+		Juice.toast("reward", "RAFFLE", "The goon dropped a gem. Civic engagement.")
 	var chance := 0.35
 	if FamilyProfile.has_cbt("disarm_habit"):
 		chance += 0.2

@@ -3,8 +3,8 @@ extends Control
 signal built(id: String)
 signal open_sheet(id: String)
 
-const SHEETS := ["pawn_shop", "patrol_desk", "research_lab", "dojo", "workshop", "bounty_board", "radio_tower", "album_wall"]
-const COLS := 6
+const SHEETS := ["pawn_shop", "patrol_desk", "research_lab", "dojo", "workshop", "bounty_board", "radio_tower", "album_wall", "blood_fridge", "streak_locker", "invoice_wheel", "punching_bag", "warrant_fax"]
+const COLS := 7
 
 
 func _ready() -> void:
@@ -34,7 +34,8 @@ func _spot(info: Dictionary) -> Control:
 	var id := str(info["id"])
 	var lvl := FamilyProfile.building_level(id)
 	var wrap := PanelContainer.new()
-	wrap.custom_minimum_size = Vector2(178, 148)
+	wrap.custom_minimum_size = Vector2(154, 148)
+	wrap.clip_contents = false
 	wrap.add_theme_stylebox_override("panel", UiKit.panel(Palette.PANEL if lvl > 0 else Palette.PANEL_2, Palette.EDGE if lvl > 0 else Palette.LOCK))
 	var col := VBoxContainer.new()
 	wrap.add_child(col)
@@ -53,11 +54,11 @@ func _spot(info: Dictionary) -> Control:
 	var blurb := Label.new()
 	blurb.text = str(info["blurb"])
 	blurb.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	blurb.custom_minimum_size = Vector2(190, 0)
+	blurb.custom_minimum_size = Vector2(140, 0)
 	UiKit.apply_label(blurb, 11, Palette.TEXT)
 	col.add_child(blurb)
 	var cost := FamilyProfile.build_cost(id)
-	var b := UiKit.button("BUILD %d" % cost if lvl == 0 else "UPGRADE %d" % cost, Vector2(154, 32))
+	var b := UiKit.button("BUILD %d" % cost if lvl == 0 else "UPGRADE %d" % cost, Vector2(136, 32))
 	if int(FamilyProfile.data["gold"]) < cost:
 		b.disabled = true
 	else:
@@ -75,11 +76,19 @@ func _spot(info: Dictionary) -> Control:
 	)
 	col.add_child(b)
 	if lvl > 0 and id in SHEETS:
-		var open := UiKit.button(Copy.OPEN_CAMP, Vector2(154, 32))
+		var open := UiKit.button(Copy.OPEN_CAMP, Vector2(136, 32))
 		open.add_theme_stylebox_override("normal", UiKit.panel(Palette.BRICK, Palette.LEMON))
 		if id == "patrol_desk" and FamilyProfile.patrol_ready():
 			UiKit.pulse_ready(open)
 			open.text = "CLAIM PATROL"
+		elif id == "streak_locker" and int(FamilyProfile.data.get("streak", 0)) >= 3:
+			var claimed: Array = FamilyProfile.data.get("streak_claimed", [])
+			if not claimed.has(3) or (int(FamilyProfile.data.get("streak", 0)) >= 5 and not claimed.has(5)):
+				UiKit.pulse_ready(open)
+				open.text = "CLAIM STREAK"
+		elif id == "warrant_fax" and FamilyProfile.fax_ready():
+			UiKit.pulse_ready(open)
+			open.text = "FAX TODAY"
 		open.pressed.connect(func() -> void:
 			FamilyProfile.mark_seen("build_%s" % id)
 			open_sheet.emit(id)
@@ -88,6 +97,6 @@ func _spot(info: Dictionary) -> Control:
 	var can_pay := int(FamilyProfile.data["gold"]) >= cost
 	if can_pay and (lvl == 0 or lvl < 4):
 		var bang := UiKit.bang()
-		bang.position = Vector2(182, 4)
+		bang.position = Vector2(118, -8)
 		wrap.add_child(bang)
 	return wrap

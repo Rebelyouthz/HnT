@@ -71,6 +71,12 @@ func _ready() -> void:
 	lead.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	UiKit.apply_label(lead, 14, Palette.MUTED)
 	col.add_child(lead)
+	col.add_child(StatPanel.new([
+		{"name": "SMASH", "value": str(int(FamilyProfile.data.get("smash_kills", 0))), "color": Palette.EDGE},
+		{"name": "PARRY", "value": str(int(FamilyProfile.data.get("parries", 0))), "color": Palette.LEMON},
+		{"name": "REVENGE", "value": str(int(FamilyProfile.data.get("revenges", 0))), "color": Palette.BRICK},
+		{"name": "CARTS", "value": str(int(FamilyProfile.data.get("cart_rides", 0))), "color": Palette.TEXT}
+	]))
 	var grant := _grant_xp(total)
 	_xp_lab = Label.new()
 	_xp_lab.text = "ACCOUNT  LV %d" % int(grant.get("level", 1))

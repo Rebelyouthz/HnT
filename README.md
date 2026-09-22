@@ -93,7 +93,11 @@ Survivor hours sit between/after their pair. Solo thinner spawn + slower horde. 
 5. New camera. The van **crashes on the far side of the canal**. Enemies do not follow.
 6. Gameplay: they **crawl out of different spots**, talk (black humor), then **Invoice Chopper walks in**. The crash is the boss intro.
 
-Wanted 3 = extra patrol. Wanted 5 = heli spotlight.
+Wanted 1 = **Meter Maid** (scooter citation, extra). Wanted 2 = **Phone Ghost**. Wanted 3 = extra patrol. Wanted 4 = **Dumpster King**. Wanted 5 = heli spotlight. Smash a **billboard** and **Billboard Witch** walks in. Smash a **kiosk** and **Coupon Cart** rams. Smash a **cop car** and **Ticket Skipper** slides. Smash a **booth** and a **pipe** drops. Smash a **fridge** and **Fridge Imp** bites. **Lottery Goon** drops a gem. Seed encounters stay **solo 3 / coop 6**.
+
+Smashable **booths / kiosks / dumpsters / fridges / billboards** keep the combo on lights (SoR4 barrels) and pop scrap on heavies. Throw a punk into a prop for a **wall bounce**. Tap block in a 10-frame window for a **parry** counter. Two bodies near a SNAP victim = **Dual SNAP**. Finish / stomp 3 gets a **kill cam** (skipped during the Raven Grid crash). Blood tints per biome (snow / brine / neon / sap).
+
+Parkour toys on every map: **dumpster lift, billboard trampoline, wall-run, grind**. Raven Grid extras sit **before the ramp** (nothing in the canal). Perfect tricks get a named slow-mo.
 
 ## Pinball, results, death
 
@@ -170,12 +174,17 @@ The camp grid is the home screen. **BUILD** plays a carpenter animation in front
 | **Research Center** | Clinic camp → BUILD RESEARCH CENTER → **OPEN** | Silencers, extended mags, hollow rounds, recoil pads, tape wrap. Spend gold + parts. |
 | **Martial Arts School** | Clinic camp → BUILD MARTIAL ARTS SCHOOL → **OPEN** | Learn / upgrade moves (uppercut, roundhouse, face stomp, vaults, landing roll). Rank 3 = master + shaolin badge. |
 | **Workshop** | Clinic camp → BUILD WORKSHOP → **OPEN** | Craft from scrap coil, clinic thread, invoice ink. Gear + clothes + equipment are one character build. |
+| **Blood Fridge** | Clinic camp → BUILD BLOOD FRIDGE → **OPEN** | Between-run snacks. Gold in. Bandage / tape / fizz / tutoring bar packed for the next spawn. |
+| **Streak Locker** | Clinic camp → BUILD STREAK LOCKER → **OPEN** | Consecutive files. Chests at 3 / 5 / 8. Die and the rail resets. Claim required. |
+| **Invoice Lottery** | Clinic camp → BUILD INVOICE LOTTERY → **OPEN** | Two gems, one spin. Civic engagement, billed as luck. |
+| **Punching Bag** | Clinic camp → BUILD PUNCHING BAG → **OPEN** | Eight seconds. LIGHT or click the dummy. Combo toaster. Gold for hits. |
+| **Warrant Fax** | Clinic camp → BUILD WARRANT FAX → **OPEN** | Once a day. Fax a complaint. +8 gold and packs intake ice for the next spawn. |
 
-Patrol, research, and the dojo are **camp buildings**, not extra bottom tabs. Front Desk is already built (Profile). Street Map is already built (Run).
+Patrol, research, and the dojo are **camp buildings**, not extra bottom tabs. Front Desk is already built (Profile). Street Map is already built (Run). The Blood Fridge is now a real snack sheet, not a dead plaque.
 
 ## Combat / parkour (this slice)
 
-SoR4 mix: duck, jump, air attacks, uppercut (up+heavy), roundhouse (two lights then heavy), air mix (special in the air), dive (down+heavy in the air). Unique finishers score more. **Three stomps on a crushed face**: smash / pop / splash, brain on three. Father vs Son SFX (pitch + named clips). Footsteps scale with speed, silent in air, louder on stumble. High land: **landing roll** (down or dash) or stumble / hard fall.
+SoR4 mix: duck, jump, air attacks, uppercut (up+heavy), roundhouse (two lights then heavy), air mix (special in the air), dive (down+heavy in the air). Unique finishers score more. **Three stomps on a crushed face**: smash / pop / splash, brain on three. **Parry** (tap block on the incoming hit). **Revenge** after you eat a hit — next strike restores HP like a SoR4 special follow-up. **Wall bounce** and **ground bounce** throws. **Dual SNAP**. **Cart ride** (Sunset Overdrive bounce, billed as groceries). Father vs Son SFX. Footsteps scale with speed, silent in air, louder on stumble. High land: **landing roll** (down or dash) or stumble / hard fall. Combo toaster pops at 5 / 10 / 20. Pause never skips the Raven Grid ramp-crash.
 
 Guns: unique caliber, recoil, muzzle flash, sparks, bullet holes. Blood simulator: spray, drip, run, pool, stain. HP changes how injured they look and limp.
 

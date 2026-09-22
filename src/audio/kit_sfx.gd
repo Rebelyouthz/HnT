@@ -33,6 +33,14 @@ static func hit(role: String, kind: String) -> void:
 			Mixer.play_sfx("res://assets/audio/stomp3.wav" if ResourceLoader.exists("res://assets/audio/stomp3.wav") else "res://assets/audio/finish.wav", 0.86)
 		"slap":
 			Mixer.play_sfx("res://assets/audio/slap.wav", pitch)
+		"parry":
+			Mixer.play_sfx("res://assets/audio/parry.wav" if ResourceLoader.exists("res://assets/audio/parry.wav") else "res://assets/audio/block.wav", pitch * 1.12)
+		"smash":
+			Mixer.play_sfx("res://assets/audio/smash.wav", pitch)
+		"revenge":
+			Mixer.play_sfx("res://assets/audio/revenge.wav" if ResourceLoader.exists("res://assets/audio/revenge.wav") else "res://assets/audio/hit_heavy.wav", pitch * 0.9)
+		"cart":
+			Mixer.play_sfx("res://assets/audio/cart.wav" if ResourceLoader.exists("res://assets/audio/cart.wav") else "res://assets/audio/dash.wav", pitch)
 		_:
 			Mixer.play_sfx("res://assets/audio/hit_heavy.wav", pitch)
 

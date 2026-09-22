@@ -102,6 +102,7 @@ func _attempt(f: Fighter) -> void:
 		Juice.play("res://assets/audio/trick_perfect.wav")
 		FamilyProfile.mark_perfect()
 		Juice.unlock_logo(title, "Perfect. +speed. Next rail is cheaper.", "NAMED TRICK  ·  PERFECT")
+		Juice.named_slowmo()
 	elif pick == "easy":
 		Juice.shout(title)
 		Juice.play("res://assets/audio/trick_ok.wav")

@@ -1,7 +1,7 @@
 class_name BloodSim
 extends Node2D
 
-const POOL := 48
+const POOL := 56
 var _drops: Array[Dictionary] = []
 var _stains: Array[Polygon2D] = []
 
@@ -50,6 +50,21 @@ func spray(at: Vector2, kind: String, dir: float) -> void:
 		n = 24
 		speed = 300.0
 		cone = true
+	elif kind == "bam" or kind == "gut-punch":
+		n = 20
+		speed = 270.0
+		cone = true
+	elif kind == "throw":
+		n = 14
+		speed = 240.0
+		cone = true
+	elif kind == "smash":
+		n = 10
+		speed = 160.0
+	elif kind == "revenge":
+		n = 16
+		speed = 260.0
+		cone = true
 	elif kind == "uppercut" or kind == "air-upper":
 		n = 12
 		speed = 210.0
@@ -76,6 +91,7 @@ func spray(at: Vector2, kind: String, dir: float) -> void:
 		node.scale = Vector2.ONE
 		node.rotation = 0.0
 		var tint := Color(0.55, 0.05, 0.08, 0.92)
+		tint = tint.lerp(_biome(), 0.55)
 		var rig := get_tree().get_first_node_in_group("light_rig")
 		if rig and rig.has_method("tint_at"):
 			tint = tint.lerp(rig.tint_at(at), 0.4)
@@ -136,13 +152,31 @@ func _process(delta: float) -> void:
 			drop["active"] = false
 
 
+func _biome() -> Color:
+	var act := get_tree().get_first_node_in_group("run_act")
+	if act is RunAct:
+		match (act as RunAct).map_id:
+			"sleet_hour":
+				return Color(0.72, 0.84, 0.95, 0.9)
+			"ledger_dive":
+				return Color(0.18, 0.45, 0.42, 0.9)
+			"raven_grid":
+				return Color(0.85, 0.2, 0.55, 0.9)
+			"copay_orchard":
+				return Color(0.45, 0.22, 0.12, 0.9)
+			"neon_exchange":
+				return Color(0.75, 0.25, 0.7, 0.9)
+	return Color(0.55, 0.05, 0.08, 0.92)
+
+
 func _stain(at: Vector2) -> void:
 	if _stains.size() > 28:
 		var old: Polygon2D = _stains.pop_front()
 		if is_instance_valid(old):
 			old.queue_free()
 	var s := Polygon2D.new()
-	s.color = Color(0.42, 0.04, 0.07, 0.45)
+	s.color = _biome().darkened(0.15)
+	s.color.a = 0.45
 	var w := randf_range(6.0, 14.0)
 	s.polygon = PackedVector2Array([
 		Vector2(-w, -3), Vector2(w, -3), Vector2(w * 0.8, 3), Vector2(-w * 0.8, 3)

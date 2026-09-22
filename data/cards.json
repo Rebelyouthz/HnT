@@ -197,5 +197,41 @@
     "rarity": "legendary",
     "tag": "VAULT",
     "stats": { "magnet": "+80", "eel": "slow" }
+  },
+  {
+    "id": "wall_bounce",
+    "name": "WALL BOUNCE",
+    "blurb": "Throws bounce off smashables AND the invoice wall. SoR4 called it a juggle. We bill it.",
+    "fixed": false,
+    "rarity": "rare",
+    "tag": "THROW",
+    "stats": { "bounce": "+1" }
+  },
+  {
+    "id": "snack_break",
+    "name": "SNACK BREAK",
+    "blurb": "Smash a fridge or kiosk and the combo does not die. Extra scrap. The till still wants a copay.",
+    "fixed": false,
+    "rarity": "uncommon",
+    "tag": "PROP",
+    "stats": { "smash": "combo" }
+  },
+  {
+    "id": "revenge_policy",
+    "name": "REVENGE POLICY",
+    "blurb": "After you eat dirt, the next hit is a Revenge. Longer window. SoR4 special restore, billed.",
+    "fixed": false,
+    "rarity": "rare",
+    "tag": "COUNTER",
+    "stats": { "revenge": "+1" }
+  },
+  {
+    "id": "cart_hop",
+    "name": "CART HOP",
+    "blurb": "Shopping carts last longer. Jump off for a pop. Don't tell tutoring.",
+    "fixed": false,
+    "rarity": "uncommon",
+    "tag": "PARKOUR",
+    "stats": { "cart": "+0.6s" }
   }
 ]

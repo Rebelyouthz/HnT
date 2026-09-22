@@ -139,6 +139,18 @@ const LEDGER_CLEAR := "LEDGER DIVE FILED"
 const LEDGER_SUB := "You dropped into the vault. The spa they billed as therapy drowned with the ads."
 const GATE_LEDGER := "The drop. Flooded ledger. Hold the brine."
 const GATE_PIER := "The annex. Cranes. Chapel. Dr. Splint has the original invoice."
+const FRIDGE := "SNACK FRIDGE"
+const STREAK := "STREAK LOCKER"
+const LOTTERY := "INVOICE LOTTERY"
+const BAG := "PUNCHING BAG"
+const PARRY := "PARRY"
+const DUAL_SNAP := "DUAL SNAP"
+const WALL_BOUNCE := "WALL BOUNCE"
+const REVENGE := "REVENGE"
+const CART := "CART RIDE"
+const FAX := "WARRANT FAX"
+const GROUND_BOUNCE := "GROUND BOUNCE"
+const METER_MAID := "METER MAID"
 
 
 static func come_on(father: String, son: String, who: String) -> String:

@@ -218,5 +218,93 @@
     "gold": 35,
     "gems": 3,
     "rarity": "legendary"
+  },
+  {
+    "id": "smash_night",
+    "title": "WE LET THE FURNITURE DIE",
+    "blurb": "Pop eight smashables. Streets of Rage called them barrels. We call them copays.",
+    "need": {
+      "smash_kills": 8
+    },
+    "gold": 25,
+    "gems": 2,
+    "rarity": "uncommon"
+  },
+  {
+    "id": "dual_policy",
+    "title": "TWO BUTTONS, ONE CORPSE",
+    "blurb": "Land a Dual SNAP. Johnny Trigger called it a window. We call it parenting.",
+    "need": {
+      "dual_snaps": 1
+    },
+    "gold": 40,
+    "gems": 3,
+    "rarity": "epic"
+  },
+  {
+    "id": "fridge_stocked",
+    "title": "THE FRIDGE PACKED A FEELING",
+    "blurb": "Buy three snacks. Gold in. Bandages out. Science.",
+    "need": {
+      "snacks_bought": 3
+    },
+    "gold": 20,
+    "gems": 1,
+    "rarity": "common"
+  },
+  {
+    "id": "lottery_receipt",
+    "title": "CIVIC ENGAGEMENT",
+    "blurb": "Spin the invoice wheel once. Mayor Raven calls this a raffle.",
+    "need": {
+      "lottery_spins": 1
+    },
+    "gold": 15,
+    "gems": 0,
+    "rarity": "rare"
+  },
+  {
+    "id": "parry_class",
+    "title": "THAT'S CALLED PARENTING",
+    "blurb": "Land three parries. Tap block. The incoming feeling bounces.",
+    "need": {
+      "parries": 3
+    },
+    "gold": 30,
+    "gems": 2,
+    "rarity": "rare"
+  },
+  {
+    "id": "cart_night",
+    "title": "GROCERIES WITH INTENT",
+    "blurb": "Ride three shopping carts. Sunset Overdrive bounced on cars. We bounce on till receipts.",
+    "need": {
+      "cart_rides": 3
+    },
+    "gold": 25,
+    "gems": 1,
+    "rarity": "uncommon"
+  },
+  {
+    "id": "revenge_filed",
+    "title": "SPECIAL RESTORED",
+    "blurb": "Land a Revenge hit. SoR4 gave HP back for follow-ups. We bill the bruise.",
+    "need": {
+      "revenges": 1
+    },
+    "gold": 35,
+    "gems": 2,
+    "rarity": "epic"
+  },
+  {
+    "id": "fax_night",
+    "title": "THE MACHINE ATE IT",
+    "blurb": "Fax a warrant once. The clinic still keeps a carbon copy.",
+    "need": {
+      "faxes": 1
+    },
+    "gold": 12,
+    "gems": 1,
+    "rarity": "common"
   }
 ]

@@ -31,6 +31,9 @@ var _cam: CouchCamera
 var _join_grace := 0
 var _wanted_cop := false
 var _heli: Node2D
+var _phone_ghost := false
+var _dumpster_king := false
+var _meter_maid := false
 var _rig: LightRig
 var _talk: Talk
 var _missions: MissionHud
@@ -74,6 +77,68 @@ func _place_parkour() -> void:
 		if typeof(row) != TYPE_ARRAY or (row as Array).size() < 3:
 			continue
 		ParkourGate.place(self, Vector2(float(row[0]), float(row[1])), str(row[2]))
+	_place_toys()
+	_place_smash()
+
+
+func _place_toys() -> void:
+	var rows: Dictionary = {
+		"dock_street": [[880.0, 500.0, "dumpster"], [1320.0, 500.0, "cart"], [1680.0, 500.0, "billboard"], [2480.0, 500.0, "grind"]],
+		"fire_escapes": [[800.0, 248.0, "wallrun"], [1680.0, 500.0, "dumpster"]],
+		"neon_exchange": [[920.0, 500.0, "billboard"], [1400.0, 500.0, "cart"], [1760.0, 500.0, "grind"]],
+		"rail_bridge": [[1100.0, 500.0, "grind"], [1900.0, 500.0, "dumpster"]],
+		"city_hall": [[720.0, 500.0, "dumpster"], [1280.0, 500.0, "cart"]],
+		"invoice_pier": [[1200.0, 500.0, "grind"], [1680.0, 500.0, "cart"], [2200.0, 500.0, "billboard"]],
+		"processing_floor": [[980.0, 500.0, "wallrun"]],
+		"tutorial_alley": [[860.0, 500.0, "dumpster"]],
+		"intake_lot": [[900.0, 500.0, "dumpster"], [1480.0, 500.0, "cart"]],
+		"group_circle": [[880.0, 500.0, "grind"]],
+		"waiting_room": [[1100.0, 500.0, "billboard"]],
+		"copay_orchard": [[1100.0, 500.0, "dumpster"], [1680.0, 500.0, "cart"], [2480.0, 500.0, "grind"]],
+		"sleet_hour": [[1100.0, 500.0, "grind"], [1900.0, 500.0, "dumpster"]],
+		"raven_grid": [[1200.0, 500.0, "dumpster"], [1560.0, 500.0, "cart"], [1900.0, 500.0, "grind"]],
+		"ledger_dive": [[1100.0, 500.0, "grind"], [2000.0, 500.0, "dumpster"]]
+	}
+	var list: Variant = rows.get(map_id, [])
+	if typeof(list) != TYPE_ARRAY:
+		return
+	for row in list:
+		if typeof(row) != TYPE_ARRAY or (row as Array).size() < 3:
+			continue
+		var x := float(row[0])
+		if map_id == "raven_grid" and x > 2200.0:
+			continue
+		ParkourToy.place(self, Vector2(x, float(row[1])), str(row[2]))
+
+
+func _place_smash() -> void:
+	var rows: Dictionary = {
+		"dock_street": [[640.0, "booth"], [1480.0, "kiosk"], [1960.0, "cop_car"], [2320.0, "dumpster"]],
+		"fire_escapes": [[700.0, "booth"], [1900.0, "fridge"]],
+		"neon_exchange": [[800.0, "billboard"], [1600.0, "kiosk"], [2400.0, "booth"]],
+		"rail_bridge": [[900.0, "dumpster"], [2000.0, "kiosk"]],
+		"city_hall": [[620.0, "booth"], [1100.0, "cop_car"], [1400.0, "kiosk"]],
+		"invoice_pier": [[1100.0, "kiosk"], [2000.0, "booth"]],
+		"processing_floor": [[800.0, "fridge"], [1800.0, "kiosk"]],
+		"tutorial_alley": [[780.0, "booth"]],
+		"intake_lot": [[700.0, "dumpster"], [1600.0, "fridge"]],
+		"group_circle": [[900.0, "kiosk"]],
+		"waiting_room": [[1000.0, "booth"], [1800.0, "fridge"]],
+		"copay_orchard": [[980.0, "dumpster"], [1880.0, "kiosk"]],
+		"sleet_hour": [[860.0, "booth"], [1700.0, "fridge"]],
+		"raven_grid": [[640.0, "booth"], [980.0, "cop_car"], [1280.0, "billboard"], [1760.0, "kiosk"]],
+		"ledger_dive": [[880.0, "fridge"], [1900.0, "kiosk"]]
+	}
+	var list: Variant = rows.get(map_id, [])
+	if typeof(list) != TYPE_ARRAY:
+		return
+	for row in list:
+		if typeof(row) != TYPE_ARRAY or (row as Array).size() < 2:
+			continue
+		var x := float(row[0])
+		if map_id == "raven_grid" and x > 2200.0:
+			continue
+		SmashProp.place(self, Vector2(x, 500.0), str(row[1]))
 
 
 func _ready() -> void:
@@ -218,16 +283,40 @@ func _on_dropin(device: int) -> void:
 
 
 func _on_wanted() -> void:
+	var at := Vector2(spawn_at.x + 400.0, 500.0)
+	if _cam:
+		at.x = _cam.global_position.x + 280.0
+	if map_id == "raven_grid":
+		at.x = minf(at.x, 2000.0)
+	Juice.siren()
+	if _state.wanted >= 1 and not _meter_maid:
+		_meter_maid = true
+		Party.spawn_row(self, {
+			"title": "Meter Maid", "x": at.x - 40.0, "y": 500, "home": "street",
+			"hp": 36, "pmin": at.x - 180.0, "pmax": at.x + 220.0, "cop": true
+		}, _state.hp_mul())
+		Juice.toast("challenge", Copy.METER_MAID, "Wanted 1. A scooter with a citation. Not in the seed roster.")
+	if _state.wanted >= 2 and not _phone_ghost:
+		_phone_ghost = true
+		Party.spawn_row(self, {
+			"title": "Phone Ghost", "x": at.x, "y": 430, "home": "air",
+			"hp": 34, "pmin": at.x - 180.0, "pmax": at.x + 240.0
+		}, _state.hp_mul())
+		Juice.toast("challenge", "WANTED 2", "A ringtone with a stapler. Not in the seed roster.")
 	if _state.wanted >= 3 and not _wanted_cop:
 		_wanted_cop = true
-		var at := Vector2(spawn_at.x + 400.0, 500.0)
-		if _cam:
-			at.x = _cam.global_position.x + 280.0
 		Party.spawn_row(self, {
-			"title": "Beat Cop", "x": at.x, "y": 500, "home": "street",
+			"title": "Beat Cop", "x": at.x + 40.0, "y": 500, "home": "street",
 			"hp": 48, "pmin": at.x - 160.0, "pmax": at.x + 220.0, "cop": true
 		}, _state.hp_mul())
 		Juice.toast("challenge", "WANTED 3", "A patrol heard the feelings.")
+	if _state.wanted >= 4 and not _dumpster_king:
+		_dumpster_king = true
+		Party.spawn_row(self, {
+			"title": "Dumpster King", "x": at.x + 80.0, "y": 500, "home": "street",
+			"hp": 86, "pmin": at.x - 140.0, "pmax": at.x + 260.0
+		}, _state.hp_mul())
+		Juice.toast("challenge", "WANTED 4", "The dumpster learned parkour.")
 	if _state.wanted >= 5 and _heli == null:
 		_heli = NightStreet.heli(self, map_w)
 		Juice.toast("challenge", "WANTED 5", "Spotlight. Hide under a ledge or eat it.")
