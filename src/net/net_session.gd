@@ -424,10 +424,9 @@ func ensure_rooms() -> void:
 	if _rooms_booted:
 		return
 	_rooms_booted = true
-	var script := ProjectSettings.globalize_path("res://tools/hnt_rooms.py")
-	if not FileAccess.file_exists(script):
-		return
-	OS.create_process("python3", [script])
+	# In-engine board+relay so the Windows exe Host/Joins with no Python.
+	# If these ports are already taken (python3 tools/hnt_rooms.py), reuse that.
+	RoomsServer.boot()
 
 
 func _write_room_file() -> void:
@@ -439,7 +438,7 @@ func _write_room_file() -> void:
 		"lan": Array(lan_ips()),
 		"wan": wan_ip,
 		"port": GAME_PORT,
-		"relay": "127.0.0.1",
+		"relay": _relay_host(),
 		"relay_port": RELAY_PORT,
 		"upnp": upnp_ok
 	}))
@@ -454,13 +453,19 @@ func _read_room_file() -> Dictionary:
 	return parsed
 
 
+func _relay_host() -> String:
+	if lan_ip != "" and lan_ip != "127.0.0.1":
+		return lan_ip
+	return "127.0.0.1"
+
+
 func _register_room() -> void:
 	var body := JSON.stringify({
 		"code": room_code,
 		"lan": Array(lan_ips()),
 		"wan": wan_ip,
 		"port": GAME_PORT,
-		"relay": "127.0.0.1",
+		"relay": _relay_host(),
 		"relay_port": RELAY_PORT,
 		"upnp": upnp_ok
 	})

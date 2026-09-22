@@ -3,6 +3,7 @@
 export_credentials.cfg
 android/.gradle/
 android/build/
+build/
 
 # Local engine copies and Windows downloads (not the game)
 Godot_v*

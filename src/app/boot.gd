@@ -1,6 +1,8 @@
 extends Node
 
 func _enter_tree() -> void:
+	if OS.has_feature("windows") and not OS.has_feature("editor"):
+		DisplayServer.window_set_title("Father & Son")
 	_bind_keyboard()
 
 

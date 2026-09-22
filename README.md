@@ -21,13 +21,13 @@ Headless smoke:
 godot --headless --path . --script res://tests/smoke.gd
 ```
 
-Rooms (needed for room-code Join and the automatic relay). Host will try to start this itself:
+Host/Join rooms live **inside the game** (HTTP `8787`, TCP relay `8789`). The Son does not install Python or Godot. Optional standalone rooms for a shared server:
 
 ```bash
 python3 tools/hnt_rooms.py
 ```
 
-Default listen: HTTP `8787`, TCP relay `8789`. Change the URL in **Options** if the Father is on another PC.
+Change the rooms URL in **Options** if the Father is on another PC. Windows Setup: `tools/windows/pack_windows.sh` → `build/windows/FatherAndSonSetup.exe`.
 
 ## How to see the inter-act films
 

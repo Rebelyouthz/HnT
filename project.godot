@@ -22,6 +22,7 @@ FamilyProfile="*res://src/app/family_profile.gd"
 Juice="*res://src/juice/juice.gd"
 Mixer="*res://src/audio/mixer.gd"
 App="*res://src/app/app.gd"
+RoomsServer="*res://src/net/rooms_server.gd"
 NetSession="*res://src/net/net_session.gd"
 
 [display]
