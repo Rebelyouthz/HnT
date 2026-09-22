@@ -5,6 +5,8 @@ extends Area2D
 
 @export var kind := "hill"
 var _used := 0.0
+var life := 0.0
+var _acrobat := false
 
 
 static func place(host: Node, at: Vector2, style: String) -> ParkourToy:
@@ -21,7 +23,7 @@ func _ready() -> void:
 	monitoring = true
 	var cs := CollisionShape2D.new()
 	var r := RectangleShape2D.new()
-	r.size = Vector2(140, 70) if kind == "hill" else Vector2(80, 70)
+	r.size = Vector2(140, 70) if kind == "hill" else (Vector2(110, 48) if kind == "awning" else Vector2(80, 70))
 	cs.shape = r
 	add_child(cs)
 	var col := Color(0.55, 0.42, 0.22, 0.9)
@@ -46,6 +48,12 @@ func _ready() -> void:
 			col = Color(0.78, 0.72, 0.42, 0.95)
 		"cart":
 			col = Color(0.72, 0.74, 0.78, 0.95)
+		"awning":
+			col = Color(0.82, 0.28, 0.22, 0.95)
+		"scaffold":
+			col = Color(0.62, 0.58, 0.42, 0.95)
+		"geyser":
+			col = Color(0.35, 0.72, 0.88, 0.9)
 	var poly := Polygon2D.new()
 	poly.color = col
 	if kind == "hill":
@@ -80,6 +88,18 @@ func _ready() -> void:
 		poly.polygon = PackedVector2Array([
 			Vector2(-30, -8), Vector2(34, -8), Vector2(30, 22), Vector2(-26, 22)
 		])
+	elif kind == "awning":
+		poly.polygon = PackedVector2Array([
+			Vector2(-54, -6), Vector2(54, -18), Vector2(54, -4), Vector2(-54, 8)
+		])
+	elif kind == "scaffold":
+		poly.polygon = PackedVector2Array([
+			Vector2(-40, -6), Vector2(40, -6), Vector2(36, 8), Vector2(-36, 8)
+		])
+	elif kind == "geyser":
+		poly.polygon = PackedVector2Array([
+			Vector2(-10, 18), Vector2(10, 18), Vector2(22, -28), Vector2(-22, -28)
+		])
 	else:
 		poly.polygon = PackedVector2Array([
 			Vector2(-28, 8), Vector2(28, 8), Vector2(22, 20), Vector2(-22, 20)
@@ -90,11 +110,16 @@ func _ready() -> void:
 	lab.size = Vector2(140, 20)
 	lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lab.text = kind.to_upper()
-	UiKit.apply_label(lab, 13, Palette.LEMON if kind in ["pad", "escape", "drop", "dumpster", "billboard", "wallrun", "grind", "cart"] else Palette.MUTED)
+	UiKit.apply_label(lab, 13, Palette.LEMON if kind in ["pad", "escape", "drop", "dumpster", "billboard", "wallrun", "grind", "cart", "awning", "scaffold", "geyser"] else Palette.MUTED)
 	add_child(lab)
 
 
 func _process(delta: float) -> void:
+	if life > 0.0:
+		life -= delta
+		if life <= 0.0:
+			queue_free()
+			return
 	if _used > 0.0:
 		_used -= delta
 	for n in get_overlapping_bodies():
@@ -221,3 +246,60 @@ func _touch(f: Fighter) -> void:
 				f.hop_v = -560.0
 				Juice.shout("CART POP")
 				Juice.named_slowmo()
+		"awning":
+			if _used <= 0.0 and (f._just("jump") or f.hop < -8.0 or f._street_grounded()):
+				_used = 0.38
+				var lift := -820.0
+				var rs := get_tree().get_first_node_in_group("run_state")
+				if rs and rs.has_method("has_card") and rs.has_card("awning_hop"):
+					lift = -920.0
+				f.hop_v = lift
+				f.hop = -6.0
+				f.velocity.x = float(f.facing) * 300.0
+				f.trick_boost = 1.16
+				f.trick_t = 1.4
+				Juice.shout(Copy.AWNING)
+				Juice.named_slowmo()
+				Juice.play("res://assets/audio/awning.wav" if ResourceLoader.exists("res://assets/audio/awning.wav") else "res://assets/audio/dash.wav")
+				KitSfx.hit(f.role, "jump")
+				VoBank.awning()
+				Juice.unlock_logo("AWNING", "Sunset Overdrive bounced storefronts. We bounce copays.", "NAMED TRICK  ·  AWNING")
+				FamilyProfile.mark_awning()
+				FamilyProfile.mark_trick()
+				if not _acrobat:
+					_acrobat = true
+					_spawn_acrobat()
+		"scaffold":
+			f.hop = -36.0
+			f.hop_v = 0.0
+			f.velocity.x = float(f.facing) * 280.0
+			if f._just("jump"):
+				f.hop_v = -520.0
+				f.trick_boost = 1.12
+				f.trick_t = 1.1
+				Juice.shout("SCAFFOLD POP")
+				FamilyProfile.mark_trick()
+		"geyser":
+			if _used <= 0.0:
+				_used = 0.32
+				f.hop_v = -760.0
+				f.hop = -4.0
+				f.velocity.x = float(f.facing) * 220.0
+				Juice.shout(Copy.GEYSER)
+				Juice.geyser(global_position)
+				KitSfx.hit(f.role, "jump")
+				FamilyProfile.mark_trick()
+
+
+func _spawn_acrobat() -> void:
+	var host := get_parent()
+	if host == null:
+		return
+	var act := get_tree().get_first_node_in_group("run_act")
+	if act is RunAct and (act as RunAct).map_id == "raven_grid" and global_position.x > 2200.0:
+		return
+	Party.spawn_row(host, {
+		"title": "Awning Acrobat", "x": global_position.x + 48.0, "y": 430,
+		"home": "roof", "hp": 34, "pmin": global_position.x - 120.0, "pmax": global_position.x + 220.0
+	}, 1.0)
+	Juice.toast("challenge", "AWNING ACROBAT", "You bounced the storefront. She wants a quote for the canvas.")

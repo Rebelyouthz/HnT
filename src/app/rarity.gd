@@ -76,7 +76,7 @@ static func of_pickup(kind: String) -> String:
 	match kind:
 		"pistol":
 			return "rare"
-		"knife", "board":
+		"knife", "board", "envelope":
 			return "uncommon"
 		_:
 			return "common"

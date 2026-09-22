@@ -70,6 +70,12 @@ func _ready() -> void:
 				Juice.unlock_logo("MARTIAL ARTS SCHOOL", "Learn. Master. Pin a shaolin badge.", "DOJO")
 			"workshop":
 				Juice.unlock_logo("WORKSHOP", "Parts in. A body out. Gear is the build.", "CRAFT")
+			"tip_jar":
+				Juice.unlock_logo("TIP JAR", "Five gold. The jar might love you back.", "CAMP  ·  TIP")
+			"lost_found":
+				Juice.unlock_logo("LOST AND FOUND", "A pipe for later. Tutoring can wait.", "CAMP  ·  PACK")
+			"payphone":
+				Juice.unlock_logo("PAYPHONE", "Dial City Hall. The cord is sticky.", "CAMP  ·  PHONE")
 		need_refresh.emit()
 	)
 	if camp.has_signal("open_sheet"):

@@ -124,5 +124,23 @@
     "name": "WARRANT FAX",
     "blurb": "Once a day. Fax a complaint. Gold comes back. Tape packs itself. Civic engagement.",
     "unlocks": "Fax"
+  },
+  {
+    "id": "tip_jar",
+    "name": "TIP JAR",
+    "blurb": "Five gold. Toss it. Gem, snack, or the jar eats it. Civic engagement, billed as luck.",
+    "unlocks": "Tip"
+  },
+  {
+    "id": "lost_found",
+    "name": "LOST AND FOUND",
+    "blurb": "Once a day. Pack a pipe into the next spawn. SoR4 left bats in barrels.",
+    "unlocks": "Pack"
+  },
+  {
+    "id": "payphone",
+    "name": "PAYPHONE",
+    "blurb": "Once a day. Dial City Hall. Eight gold and Mayor Raven. The cord is sticky.",
+    "unlocks": "Phone"
   }
 ]

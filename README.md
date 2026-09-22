@@ -93,11 +93,11 @@ Survivor hours sit between/after their pair. Solo thinner spawn + slower horde. 
 5. New camera. The van **crashes on the far side of the canal**. Enemies do not follow.
 6. Gameplay: they **crawl out of different spots**, talk (black humor), then **Invoice Chopper walks in**. The crash is the boss intro.
 
-Wanted 1 = **Meter Maid** (scooter citation, extra). Wanted 2 = **Phone Ghost**. Wanted 3 = extra patrol. Wanted 4 = **Dumpster King**. Wanted 5 = heli spotlight. Smash a **billboard** and **Billboard Witch** walks in. Smash a **kiosk** and **Coupon Cart** rams. Smash a **cop car** and **Ticket Skipper** slides. Smash a **booth** and a **pipe** drops. Smash a **fridge** and **Fridge Imp** bites. **Lottery Goon** drops a gem. Seed encounters stay **solo 3 / coop 6**.
+Wanted 1 = **Meter Maid** (scooter citation, extra). Wanted 2 = **Phone Ghost**. Wanted 3 = extra patrol. Wanted 4 = **Dumpster King**. Wanted 5 = heli spotlight. Smash a **billboard** and **Billboard Witch** walks in. Smash a **kiosk** and **Coupon Cart** rams. Smash a **cop car** and **Ticket Skipper** slides. Smash a **booth** and a **pipe** drops. Smash a **fridge** and **Fridge Imp** bites. Smash a **hydrant** and a **geyser** launches you while **Hydrant Cop** tickets the spray. Smash a **mailbox** and **Envelope Clerk** stabs with certified mail. Smash a **newsstand** and **Paper Boy** rams. Smash a **vending** machine for a throwable **can**. Bounce an **awning** and **Awning Acrobat** kicks from the canvas. **Lottery Goon** drops a gem. Seed encounters stay **solo 3 / coop 6**.
 
-Smashable **booths / kiosks / dumpsters / fridges / billboards** keep the combo on lights (SoR4 barrels) and pop scrap on heavies. Throw a punk into a prop for a **wall bounce**. Tap block in a 10-frame window for a **parry** counter. Two bodies near a SNAP victim = **Dual SNAP**. Finish / stomp 3 gets a **kill cam** (skipped during the Raven Grid crash). Blood tints per biome (snow / brine / neon / sap).
+Smashable **booths / kiosks / dumpsters / fridges / billboards / hydrants / mail / news / vending** keep the combo on lights (SoR4 barrels) and pop scrap on heavies. Throw a **pipe / board / knife / envelope** (SoR4 throw-and-catch): tap THROW again to **catch**. **WEAPON CATCH** card boomerangs the pipe once. Heavy vs a telegraphing punk is a **CLASH** (Huntdown katana, billed). First three parry frames are a **perfect parry** (SNAP loads). Throw a punk into a prop for a **wall bounce**. Tap block in a 10-frame window for a **parry** counter. Two bodies near a SNAP victim = **Dual SNAP**. Finish / stomp 3 gets a **kill cam** (skipped during the Raven Grid crash). Blood tints per biome (snow / brine / neon / sap). Clash and geyser spray extra blood; kill cam / named slow-mo still skip the crash.
 
-Parkour toys on every map: **dumpster lift, billboard trampoline, wall-run, grind**. Raven Grid extras sit **before the ramp** (nothing in the canal). Perfect tricks get a named slow-mo.
+Parkour toys on every map: **dumpster lift, billboard trampoline, wall-run, grind, cart, awning bounce, scaffold hang**. Hydrant smash leaves a short **geyser**. Raven Grid extras sit **before the ramp** (nothing in the canal). Perfect tricks get a named slow-mo.
 
 ## Pinball, results, death
 
@@ -179,12 +179,15 @@ The camp grid is the home screen. **BUILD** plays a carpenter animation in front
 | **Invoice Lottery** | Clinic camp → BUILD INVOICE LOTTERY → **OPEN** | Two gems, one spin. Civic engagement, billed as luck. |
 | **Punching Bag** | Clinic camp → BUILD PUNCHING BAG → **OPEN** | Eight seconds. LIGHT or click the dummy. Combo toaster. Gold for hits. |
 | **Warrant Fax** | Clinic camp → BUILD WARRANT FAX → **OPEN** | Once a day. Fax a complaint. +8 gold and packs intake ice for the next spawn. |
+| **Tip Jar** | Clinic camp → BUILD TIP JAR → **OPEN** | Five gold. Toss it. Gem, snack, or the jar eats it. |
+| **Lost and Found** | Clinic camp → BUILD LOST AND FOUND → **OPEN** | Once a day. Pack a pipe into the next spawn. |
+| **Payphone** | Clinic camp → BUILD PAYPHONE → **OPEN** | Once a day. Dial City Hall. +8 gold. Mayor Raven still talks. |
 
 Patrol, research, and the dojo are **camp buildings**, not extra bottom tabs. Front Desk is already built (Profile). Street Map is already built (Run). The Blood Fridge is now a real snack sheet, not a dead plaque.
 
 ## Combat / parkour (this slice)
 
-SoR4 mix: duck, jump, air attacks, uppercut (up+heavy), roundhouse (two lights then heavy), air mix (special in the air), dive (down+heavy in the air). Unique finishers score more. **Three stomps on a crushed face**: smash / pop / splash, brain on three. **Parry** (tap block on the incoming hit). **Revenge** after you eat a hit — next strike restores HP like a SoR4 special follow-up. **Wall bounce** and **ground bounce** throws. **Dual SNAP**. **Cart ride** (Sunset Overdrive bounce, billed as groceries). Father vs Son SFX. Footsteps scale with speed, silent in air, louder on stumble. High land: **landing roll** (down or dash) or stumble / hard fall. Combo toaster pops at 5 / 10 / 20. Pause never skips the Raven Grid ramp-crash.
+SoR4 mix: duck, jump, air attacks, uppercut (up+heavy), roundhouse (two lights then heavy), air mix (special in the air), dive (down+heavy in the air). Unique finishers score more. **Three stomps on a crushed face**: smash / pop / splash, brain on three. **Parry** (tap block on the incoming hit). **Perfect parry** (first three frames) loads SNAP. **Clash** a telegraphing punk with a heavy. **Throw and catch** pipes (SoR4). **Revenge** after you eat a hit — next strike restores HP like a SoR4 special follow-up. **Wall bounce** and **ground bounce** throws. **Dual SNAP**. **Cart ride** and **awning bounce** (Sunset Overdrive, billed as copays). **Geyser** from a smashed hydrant. Father vs Son SFX. Footsteps scale with speed, silent in air, louder on stumble. High land: **landing roll** (down or dash) or stumble / hard fall. Combo toaster pops at 5 / 10 / 20. Pause never skips the Raven Grid ramp-crash.
 
 Guns: unique caliber, recoil, muzzle flash, sparks, bullet holes. Blood simulator: spray, drip, run, pool, stain. HP changes how injured they look and limp.
 

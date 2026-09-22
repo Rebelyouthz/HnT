@@ -233,5 +233,41 @@
     "rarity": "uncommon",
     "tag": "PARKOUR",
     "stats": { "cart": "+0.6s" }
+  },
+  {
+    "id": "weapon_catch",
+    "name": "WEAPON CATCH",
+    "blurb": "Thrown pipes bounce back once. SoR4 called it a juggle. We call it recycling.",
+    "fixed": false,
+    "rarity": "rare",
+    "tag": "THROW",
+    "stats": { "catch": "boomerang" }
+  },
+  {
+    "id": "clash_policy",
+    "name": "CLASH POLICY",
+    "blurb": "Heavy vs a telegraphing punk chips extra and refunds Steam. Huntdown called it a katana. We bill the spark.",
+    "fixed": false,
+    "rarity": "epic",
+    "tag": "COUNTER",
+    "stats": { "clash": "+6" }
+  },
+  {
+    "id": "awning_hop",
+    "name": "AWNING HOP",
+    "blurb": "Awnings bounce higher. Sunset Overdrive storefronts, billed as copays.",
+    "fixed": false,
+    "rarity": "uncommon",
+    "tag": "PARKOUR",
+    "stats": { "awning": "+100" }
+  },
+  {
+    "id": "news_cycle",
+    "name": "NEWS CYCLE",
+    "blurb": "Pop a newsstand and a pipe drops with the Paper Boy. The headline still wants a copay.",
+    "fixed": false,
+    "rarity": "rare",
+    "tag": "PROP",
+    "stats": { "news": "pipe" }
   }
 ]

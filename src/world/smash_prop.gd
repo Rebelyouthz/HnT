@@ -47,11 +47,31 @@ func _ready() -> void:
 		"cop_car":
 			_box.color = Color(0.12, 0.22, 0.55, 0.95)
 			hp = 3
+		"hydrant":
+			_box.color = Color(0.72, 0.18, 0.16, 0.95)
+			hp = 2
+		"mail":
+			_box.color = Color(0.42, 0.28, 0.16, 0.95)
+			hp = 2
+		"news":
+			_box.color = Color(0.88, 0.78, 0.22, 0.95)
+			hp = 2
+		"vending":
+			_box.color = Color(0.62, 0.12, 0.18, 0.95)
+			hp = 3
 		_:
 			_box.color = Color(0.42, 0.28, 0.14, 0.95)
 	_box.polygon = PackedVector2Array([
 		Vector2(-22, -64), Vector2(22, -64), Vector2(22, 0), Vector2(-22, 0)
 	])
+	if kind == "hydrant":
+		_box.polygon = PackedVector2Array([
+			Vector2(-10, -42), Vector2(10, -42), Vector2(14, 0), Vector2(-14, 0)
+		])
+	elif kind == "mail":
+		_box.polygon = PackedVector2Array([
+			Vector2(-16, -48), Vector2(16, -48), Vector2(18, 0), Vector2(-18, 0)
+		])
 	add_child(_box)
 	var strap := Polygon2D.new()
 	strap.color = Palette.EDGE
@@ -109,6 +129,10 @@ func _pop(from: Node) -> void:
 		pts = 32
 	elif kind == "cop_car":
 		pts = 40
+	elif kind == "hydrant":
+		pts = 30
+	elif kind == "vending":
+		pts = 34
 	if from is Fighter and rs and rs.has_method("add_points"):
 		rs.add_points((from as Fighter).role, pts, "smash")
 	Rarity.juice("uncommon" if kind != "dumpster" and kind != "cop_car" else "rare", kind.to_upper())
@@ -139,6 +163,29 @@ func _pop(from: Node) -> void:
 		Juice.unlock_logo("COP CAR", "Huntdown wrecked hovercrafts. We wrecked a citation.", "NAMED PROP")
 		_spawn_named(host, "Ticket Skipper", 38, "street")
 		Juice.toast("challenge", "TICKET SKIPPER", "The fare slid under the bumper.")
+	elif kind == "hydrant":
+		_spawn_geyser(host)
+		_spawn_named(host, "Hydrant Cop", 44, "street")
+		Juice.toast("challenge", "HYDRANT COP", "You opened the city. He brought a ticket and a spray.")
+		Juice.unlock_logo("GEYSER", "Sunset Overdrive bounced awnings. We billed the hydrant.", "NAMED PROP")
+	elif kind == "mail":
+		_drop_kind(host, "envelope")
+		_spawn_named(host, "Envelope Clerk", 40, "street")
+		Juice.toast("challenge", "ENVELOPE CLERK", "You popped the box. Certified mail learned to stab.")
+	elif kind == "news":
+		_spawn_named(host, "Paper Boy", 36, "street")
+		FamilyProfile.mark_paper()
+		Juice.toast("challenge", "PAPER BOY", "The headline rammed first. Subscriptions are violence.")
+		var cycle := false
+		if rs != null and rs.has_method("has_card"):
+			cycle = bool(rs.call("has_card", "news_cycle"))
+		if cycle:
+			_drop_pipe(host)
+	elif kind == "vending":
+		FamilyProfile.stash_snack("boost")
+		_drop_kind(host, "can")
+		Juice.toast("reward", "VENDING", "A can. A tutoring bar packed itself. The machine still wants a copay.")
+		VoBank.fridge()
 	var blood := get_tree().get_first_node_in_group("blood_sim")
 	if blood and blood.has_method("spray"):
 		blood.spray(global_position, "smash", 1.0)
@@ -153,6 +200,26 @@ func _drop_pipe(host: Node) -> void:
 	wp.global_position = global_position + Vector2(0, -18)
 	host.add_child(wp)
 	Juice.toast("reward", "PIPE", "SoR4 barrels drop bats. Ours drop invoices with a handle.")
+
+
+func _drop_kind(host: Node, style: String) -> void:
+	if host == null:
+		return
+	var wp := WeaponPickup.new()
+	wp.kind = style
+	wp.global_position = global_position + Vector2(0, -18)
+	host.add_child(wp)
+
+
+func _spawn_geyser(host: Node) -> void:
+	if host == null:
+		return
+	var toy := ParkourToy.place(host, global_position + Vector2(0, 0), "geyser")
+	toy.life = 3.4
+	Juice.geyser(global_position)
+	var blood := get_tree().get_first_node_in_group("blood_sim")
+	if blood and blood.has_method("spray"):
+		blood.spray(global_position, "geyser", 0.0)
 
 
 func _spawn_named(host: Node, title: String, hp: int, home: String) -> void:

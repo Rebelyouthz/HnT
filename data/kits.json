@@ -213,5 +213,25 @@
     "tier": "light", "armor": "none", "style": "martial", "attack": "slide",
     "block": 0.1, "hp": 38, "speed": 74, "weapon": "kick",
     "blurb": "Cop-car smash. Slide under the invoice. Jump it or eat the fare."
+  },
+  "Hydrant Cop": {
+    "tier": "medium", "armor": "light", "style": "gun", "attack": "gun",
+    "block": 0.16, "hp": 44, "speed": 46, "weapon": "pistol", "cop": true,
+    "blurb": "Hydrant smash. He tickets the geyser. Shoot the badge, not the spray."
+  },
+  "Envelope Clerk": {
+    "tier": "light", "armor": "none", "style": "knife", "attack": "blade",
+    "block": 0.12, "hp": 40, "speed": 58, "weapon": "knife",
+    "blurb": "Mailbox smash. Certified mail with a blade. Don't sign."
+  },
+  "Awning Acrobat": {
+    "tier": "light", "armor": "none", "style": "martial", "attack": "jump-kick",
+    "block": 0.1, "hp": 34, "speed": 70, "weapon": "kick", "home": "roof",
+    "blurb": "Awning bounce hire. Diagonal kick from the canvas. Don't run at the feet."
+  },
+  "Paper Boy": {
+    "tier": "light", "armor": "none", "style": "brawl", "attack": "ram",
+    "block": 0.06, "hp": 36, "speed": 78, "weapon": "fist", "vehicle": "scooter",
+    "blurb": "Newsstand smash. Headlines ram first. Subscriptions are violence."
   }
 }

@@ -743,6 +743,53 @@ func revenge_flash(at: Vector2) -> void:
 	freeze_frames(3)
 
 
+func clash(at: Vector2) -> void:
+	if get_tree().get_first_node_in_group("chase_crash"):
+		pulse_shake(4.0)
+		sparks(at)
+		play("res://assets/audio/clash.wav" if ResourceLoader.exists("res://assets/audio/clash.wav") else "res://assets/audio/parry.wav")
+		return
+	freeze_frames(4)
+	pulse_shake(7.0)
+	sparks(at + Vector2(0, -20))
+	popup_number(at + Vector2(0, -48), Copy.CLASH, Palette.LEMON)
+	play("res://assets/audio/clash.wav" if ResourceLoader.exists("res://assets/audio/clash.wav") else "res://assets/audio/parry.wav")
+
+
+func catch_flash(at: Vector2) -> void:
+	pulse_shake(3.5)
+	sparks(at)
+	popup_number(at + Vector2(0, -36), Copy.CATCH, Palette.EDGE)
+	play("res://assets/audio/catch.wav" if ResourceLoader.exists("res://assets/audio/catch.wav") else "res://assets/audio/throw.wav")
+
+
+func geyser(at: Vector2) -> void:
+	pulse_shake(4.5)
+	var p := CPUParticles2D.new()
+	p.global_position = at
+	p.emitting = true
+	p.one_shot = true
+	p.explosiveness = 0.92
+	p.amount = 18
+	p.lifetime = 0.38
+	p.direction = Vector2(0, -1)
+	p.spread = 28.0
+	p.initial_velocity_min = 140.0
+	p.initial_velocity_max = 280.0
+	p.color = Color(0.45, 0.78, 0.92, 0.9)
+	var host := get_tree().get_first_node_in_group("dock_world")
+	if host:
+		host.add_child(p)
+	else:
+		add_child(p)
+	get_tree().create_timer(0.5, true, false, true).timeout.connect(func() -> void:
+		if is_instance_valid(p):
+			p.queue_free()
+	)
+	play("res://assets/audio/geyser.wav" if ResourceLoader.exists("res://assets/audio/geyser.wav") else "res://assets/audio/splash.wav")
+	popup_number(at + Vector2(0, -40), Copy.GEYSER, Color(0.45, 0.78, 0.92))
+
+
 func siren() -> void:
 	play("res://assets/audio/siren.wav" if ResourceLoader.exists("res://assets/audio/siren.wav") else "res://assets/audio/heat_up.wav")
 

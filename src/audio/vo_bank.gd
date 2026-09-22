@@ -59,6 +59,29 @@ static func fax() -> void:
 	_play("res://assets/audio/vo_dad_fax.wav", "res://assets/audio/vo_dad_fridge.wav")
 
 
+static func catch_vo(role: String) -> void:
+	if role == "father":
+		_play("res://assets/audio/vo_dad_catch.wav", "res://assets/audio/vo_dad_level.wav")
+	else:
+		_play("res://assets/audio/vo_son_catch.wav", "res://assets/audio/vo_son_kong.wav")
+
+
+static func clash() -> void:
+	_play("res://assets/audio/vo_dad_clash.wav", "res://assets/audio/vo_dad_revenge.wav")
+
+
+static func awning() -> void:
+	_play("res://assets/audio/vo_son_awning.wav", "res://assets/audio/vo_son_cart.wav")
+
+
+static func tip() -> void:
+	_play("res://assets/audio/vo_mayor_tip.wav", "res://assets/audio/vo_mayor_lottery.wav")
+
+
+static func phone() -> void:
+	_play("res://assets/audio/vo_dad_phone.wav", "res://assets/audio/vo_dad_fax.wav")
+
+
 static func _play(prefer: String, fallback: String) -> void:
 	for path in [prefer.get_basename() + ".mp3", prefer, fallback.get_basename() + ".mp3", fallback]:
 		if ResourceLoader.exists(path):

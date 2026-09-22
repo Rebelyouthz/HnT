@@ -3,12 +3,12 @@ extends Control
 signal built(id: String)
 signal open_sheet(id: String)
 
-const SHEETS := ["pawn_shop", "patrol_desk", "research_lab", "dojo", "workshop", "bounty_board", "radio_tower", "album_wall", "blood_fridge", "streak_locker", "invoice_wheel", "punching_bag", "warrant_fax"]
+const SHEETS := ["pawn_shop", "patrol_desk", "research_lab", "dojo", "workshop", "bounty_board", "radio_tower", "album_wall", "blood_fridge", "streak_locker", "invoice_wheel", "punching_bag", "warrant_fax", "tip_jar", "lost_found", "payphone"]
 const COLS := 7
 
 
 func _ready() -> void:
-	custom_minimum_size = Vector2(1180, 460)
+	custom_minimum_size = Vector2(1180, 620)
 	var floor := ColorRect.new()
 	floor.color = Color(0.07, 0.075, 0.1)
 	floor.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -89,6 +89,15 @@ func _spot(info: Dictionary) -> Control:
 		elif id == "warrant_fax" and FamilyProfile.fax_ready():
 			UiKit.pulse_ready(open)
 			open.text = "FAX TODAY"
+		elif id == "lost_found" and FamilyProfile.lost_found_ready():
+			UiKit.pulse_ready(open)
+			open.text = "PACK A PIPE"
+		elif id == "payphone" and FamilyProfile.payphone_ready():
+			UiKit.pulse_ready(open)
+			open.text = "DIAL TODAY"
+		elif id == "tip_jar" and int(FamilyProfile.data.get("gold", 0)) >= 5:
+			UiKit.pulse_ready(open)
+			open.text = "TOSS 5 GOLD"
 		open.pressed.connect(func() -> void:
 			FamilyProfile.mark_seen("build_%s" % id)
 			open_sheet.emit(id)

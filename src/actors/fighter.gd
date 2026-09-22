@@ -131,6 +131,9 @@ func _ready() -> void:
 	var snack := FamilyProfile.consume_snack_buff()
 	if snack != "":
 		_apply_snack(snack)
+	var packed := FamilyProfile.consume_packed_weapon()
+	if packed != "":
+		equip_pickup(packed)
 	_shadow = Polygon2D.new()
 	_shadow.color = Color(0.02, 0.02, 0.04, 0.45)
 	_shadow.polygon = PackedVector2Array([
@@ -824,6 +827,12 @@ func _attack(kind: String, charged: bool) -> void:
 		size += Vector2(10, 0)
 		if kind == "light" or kind == "gut-punch":
 			kind = "blade"
+	elif pickup == "envelope":
+		size += Vector2(8, 2)
+		if kind == "light" or kind == "gut-punch":
+			kind = "blade"
+	elif pickup == "can":
+		size += Vector2(8, 4)
 	elif pickup == "pistol" and (kind == "light" or kind == "gut-punch") and pistol_shots > 0:
 		pistol_shots -= 1
 		_fire_shot()
@@ -952,13 +961,18 @@ func take_hit(kind: String, from: Node) -> void:
 	if downed or invuln > 0:
 		return
 	if blocking and parry_win > 0 and kind != "snap" and kind != "throw":
+		var perfect := parry_win >= 7
 		parry_win = 0
 		invuln = 14
 		steam = minf(STEAM_MAX, steam + 18.0)
-		Juice.shout(Copy.PARRY)
+		Juice.shout(Copy.PERFECT_PARRY if perfect else Copy.PARRY)
 		Juice.sparks(global_position + Vector2(float(facing) * 24.0, -30.0))
-		Juice.pulse_shake(5.0)
-		Juice.hitstop(5)
+		Juice.pulse_shake(7.0 if perfect else 5.0)
+		Juice.hitstop(7 if perfect else 5)
+		if perfect:
+			snap_ready = true
+			Juice.named_slowmo()
+			FamilyProfile.mark_perfect_parry()
 		Juice.play("res://assets/audio/parry.wav" if ResourceLoader.exists("res://assets/audio/parry.wav") else "res://assets/audio/block.wav")
 		FamilyProfile.mark_parry()
 		_spawn_hit("heavy", Vector2(70, 48), 0.16, Vector2(40 * facing, -30))
@@ -1302,8 +1316,42 @@ func _stick() -> Vector2:
 	return PadRouter.stick(prefix)
 
 
+func _try_catch() -> bool:
+	for n in get_tree().get_nodes_in_group("thrown_weapons"):
+		if not (n is ThrownWeapon) or not is_instance_valid(n):
+			continue
+		var tw: ThrownWeapon = n
+		if global_position.distance_to(tw.global_position) > 64.0:
+			continue
+		if tw.catch_by(self):
+			return true
+	return false
+
+
+func _throw_held_weapon() -> bool:
+	if pickup != "pipe" and pickup != "board" and pickup != "knife" and pickup != "can" and pickup != "envelope":
+		return false
+	attack_cd = 16
+	var tw := ThrownWeapon.new()
+	tw.kind = pickup
+	tw.thrower = self
+	tw.vel = Vector2(float(facing) * (560.0 if hop < -8.0 else 480.0), -40.0 if hop < -8.0 else -90.0)
+	tw.global_position = global_position + Vector2(float(facing) * 26.0, -36.0 + hop)
+	pickup = ""
+	var host := get_parent()
+	if host:
+		host.add_child(tw)
+	Juice.shout(Copy.THROW)
+	KitSfx.hit(role, "dash")
+	return true
+
+
 func _throw() -> void:
+	if _try_catch():
+		return
 	if attack_cd > 0:
+		return
+	if _throw_held_weapon():
 		return
 	attack_cd = 18
 	Juice.play("res://assets/audio/throw.wav")

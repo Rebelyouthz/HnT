@@ -25,6 +25,12 @@ func _ready() -> void:
 		"board":
 			p.color = Color(0.55, 0.38, 0.18)
 			p.polygon = PackedVector2Array([Vector2(-24, -5), Vector2(24, -5), Vector2(24, 5), Vector2(-24, 5)])
+		"can":
+			p.color = Color(0.82, 0.22, 0.18)
+			p.polygon = PackedVector2Array([Vector2(-8, -10), Vector2(8, -10), Vector2(8, 10), Vector2(-8, 10)])
+		"envelope":
+			p.color = Color(0.92, 0.9, 0.82)
+			p.polygon = PackedVector2Array([Vector2(-14, -8), Vector2(14, -8), Vector2(14, 8), Vector2(-14, 8)])
 		_:
 			p.color = Color(0.45, 0.32, 0.2)
 			p.polygon = PackedVector2Array([Vector2(-20, -4), Vector2(20, -4), Vector2(20, 4), Vector2(-20, 4)])

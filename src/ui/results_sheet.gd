@@ -74,8 +74,8 @@ func _ready() -> void:
 	col.add_child(StatPanel.new([
 		{"name": "SMASH", "value": str(int(FamilyProfile.data.get("smash_kills", 0))), "color": Palette.EDGE},
 		{"name": "PARRY", "value": str(int(FamilyProfile.data.get("parries", 0))), "color": Palette.LEMON},
-		{"name": "REVENGE", "value": str(int(FamilyProfile.data.get("revenges", 0))), "color": Palette.BRICK},
-		{"name": "CARTS", "value": str(int(FamilyProfile.data.get("cart_rides", 0))), "color": Palette.TEXT}
+		{"name": "CATCH", "value": str(int(FamilyProfile.data.get("catches", 0))), "color": Palette.EDGE},
+		{"name": "CLASH", "value": str(int(FamilyProfile.data.get("clashes", 0))), "color": Palette.BRICK}
 	]))
 	var grant := _grant_xp(total)
 	_xp_lab = Label.new()

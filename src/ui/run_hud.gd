@@ -229,7 +229,7 @@ func _prompt_line() -> String:
 		return "DRIVE  ·  RAIL 360  ·  SPECIAL SWAP  ·  RAMP AHEAD"
 	if son == null or father == null:
 		return PadRouter.p1_prompt() + "  ·  " + Copy.JOIN_HINT
-	return PadRouter.p1_prompt() + "  ·  " + PadRouter.p2_prompt() + "  ·  TAP BLOCK PARRY  ·  REVENGE AFTER A HIT  ·  CARTS  ·  THROW INTO PROPS"
+	return PadRouter.p1_prompt() + "  ·  " + PadRouter.p2_prompt() + "  ·  TAP BLOCK PARRY  ·  THROW CATCH  ·  CLASH HEAVIES  ·  AWNINGS  ·  CARTS"
 
 
 func _process(delta: float) -> void:
@@ -428,7 +428,7 @@ func _toggle_pause() -> void:
 	UiKit.apply_label(t, 28, Palette.LEMON)
 	col.add_child(t)
 	var hint := Label.new()
-	hint.text = "Tap BLOCK to PARRY. Eat a hit, the next one is REVENGE. Ride CARTS. Throw into props. Pause never skips the Raven Grid crash."
+	hint.text = "Tap BLOCK to PARRY. First frames are PERFECT. THROW pipes, tap THROW to CATCH. HEAVY vs a wind-up is a CLASH. Bounce AWNINGS. Pause never skips the Raven Grid crash."
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.custom_minimum_size = Vector2(380, 0)
 	UiKit.apply_label(hint, 13, Palette.MUTED)

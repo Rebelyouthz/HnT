@@ -9,7 +9,8 @@ const BUILDINGS := [
 	"trophy_cabinet", "mail_slot", "bulletin_board", "compare_mirrors", "blood_fridge",
 	"pawn_shop", "patrol_desk", "research_lab", "dojo", "workshop",
 	"bounty_board", "radio_tower", "album_wall",
-	"streak_locker", "invoice_wheel", "punching_bag", "warrant_fax"
+	"streak_locker", "invoice_wheel", "punching_bag", "warrant_fax",
+	"tip_jar", "lost_found", "payphone"
 ]
 
 var data: Dictionary = {}
@@ -166,7 +167,17 @@ func _defaults() -> Dictionary:
 		"revenges": 0,
 		"cart_rides": 0,
 		"faxes": 0,
-		"fax_day": ""
+		"fax_day": "",
+		"catches": 0,
+		"clashes": 0,
+		"awnings": 0,
+		"tips": 0,
+		"phones": 0,
+		"papers": 0,
+		"perfect_parries": 0,
+		"packed_weapon": "",
+		"lost_found_day": "",
+		"phone_day": ""
 	}
 
 
@@ -986,6 +997,83 @@ func fax_today() -> bool:
 	data["faxes"] = int(data.get("faxes", 0)) + 1
 	data["snack_buff"] = "tape"
 	grant(8, 0, "FAX FILED")
+	return true
+
+
+func mark_catch() -> void:
+	data["catches"] = int(data.get("catches", 0)) + 1
+	save()
+
+
+func mark_clash() -> void:
+	data["clashes"] = int(data.get("clashes", 0)) + 1
+	save()
+
+
+func mark_awning() -> void:
+	data["awnings"] = int(data.get("awnings", 0)) + 1
+	save()
+
+
+func mark_perfect_parry() -> void:
+	data["perfect_parries"] = int(data.get("perfect_parries", 0)) + 1
+	save()
+
+
+func mark_paper() -> void:
+	data["papers"] = int(data.get("papers", 0)) + 1
+	save()
+
+
+func toss_tip() -> Dictionary:
+	if int(data.get("gold", 0)) < 5:
+		return {}
+	data["gold"] = int(data["gold"]) - 5
+	data["tips"] = int(data.get("tips", 0)) + 1
+	var roll := randf()
+	var pay := {"line": "THE JAR ATE IT", "gold": 0, "gems": 0}
+	if roll < 0.28:
+		data["gems"] = int(data.get("gems", 0)) + 1
+		pay = {"line": "THE JAR BLINKED  ·  +1 GEM", "gold": 0, "gems": 1}
+	elif roll < 0.52:
+		data["snack_buff"] = "boost"
+		pay = {"line": "SNACK IN THE JAR  ·  BOOST PACKED", "gold": 0, "gems": 0}
+	save()
+	return pay
+
+
+func lost_found_ready() -> bool:
+	return str(data.get("lost_found_day", "")) != Time.get_date_string_from_system()
+
+
+func pack_lost_found() -> bool:
+	if not lost_found_ready():
+		return false
+	data["lost_found_day"] = Time.get_date_string_from_system()
+	data["packed_weapon"] = "pipe"
+	save()
+	return true
+
+
+func consume_packed_weapon() -> String:
+	var k := str(data.get("packed_weapon", ""))
+	if k == "":
+		return ""
+	data["packed_weapon"] = ""
+	save()
+	return k
+
+
+func payphone_ready() -> bool:
+	return str(data.get("phone_day", "")) != Time.get_date_string_from_system()
+
+
+func call_payphone() -> bool:
+	if not payphone_ready():
+		return false
+	data["phone_day"] = Time.get_date_string_from_system()
+	data["phones"] = int(data.get("phones", 0)) + 1
+	grant(8, 0, "PAYPHONE")
 	return true
 
 

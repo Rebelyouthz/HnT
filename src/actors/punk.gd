@@ -403,6 +403,30 @@ func _start_telegraph() -> void:
 	telegraph = t
 
 
+func _clash(from: Fighter) -> void:
+	telegraph = 0.0
+	recover = 0.42
+	hp = maxi(1, hp - 8)
+	Juice.clash(global_position)
+	Juice.shout(Copy.CLASH)
+	VoBank.clash()
+	FamilyProfile.mark_clash()
+	from.steam = minf(from.STEAM_MAX, from.steam + 10.0)
+	from.invuln = maxi(from.invuln, 8)
+	var rs := get_tree().get_first_node_in_group("run_state")
+	var policy := false
+	if rs != null and rs.has_method("has_card"):
+		policy = bool(rs.call("has_card", "clash_policy"))
+	if policy:
+		from.steam = minf(from.STEAM_MAX, from.steam + 8.0)
+		hp = maxi(1, hp - 6)
+	if rs and rs.has_method("add_points"):
+		rs.add_points(from.role, 18, "clash")
+	var blood := get_tree().get_first_node_in_group("blood_sim")
+	if blood and blood.has_method("spray"):
+		blood.spray(global_position, "clash", float(from.facing))
+
+
 func _ram_hit(f: Fighter) -> void:
 	if recover > 0.0:
 		return
@@ -481,6 +505,10 @@ func _mix_mod() -> void:
 
 
 func take_hit(kind: String, from: Node) -> void:
+	if telegraph > 0.0 and from is Fighter and (kind == "heavy" or kind == "roundhouse" or kind == "blade" or kind == "special"):
+		if get_tree().get_first_node_in_group("chase_crash") == null:
+			_clash(from as Fighter)
+			return
 	if guarding and kind != "throw" and kind != "snap" and kind != "finish" and kind != "web-slam":
 		var high_beats_low := guard_low and (kind == "jump-kick" or kind == "dive" or kind == "heavy" or kind == "launcher")
 		var low_beats_high := (not guard_low) and (kind == "slide" or kind == "jump-kick")

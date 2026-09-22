@@ -306,5 +306,82 @@
     "gold": 12,
     "gems": 1,
     "rarity": "common"
+  },
+  {
+    "id": "catch_night",
+    "title": "THAT'S CALLED CATCHING",
+    "blurb": "Catch three thrown weapons. SoR4 did this in mid-air. We bill the timing.",
+    "need": {
+      "catches": 3
+    },
+    "gold": 30,
+    "gems": 2,
+    "rarity": "rare"
+  },
+  {
+    "id": "clash_filed",
+    "title": "STEEL ON STEEL",
+    "blurb": "Clash a telegraphing punk. Huntdown called it a katana. We call it parenting.",
+    "need": {
+      "clashes": 1
+    },
+    "gold": 35,
+    "gems": 2,
+    "rarity": "epic"
+  },
+  {
+    "id": "awning_tourist",
+    "title": "STOREFRONT THERAPY",
+    "blurb": "Bounce three awnings. Sunset Overdrive rented the canvas. We stole the copay.",
+    "need": {
+      "awnings": 3
+    },
+    "gold": 25,
+    "gems": 1,
+    "rarity": "uncommon"
+  },
+  {
+    "id": "tip_night",
+    "title": "CIVIC ENGAGEMENT, TIPPED",
+    "blurb": "Toss the tip jar once. Sometimes a gem. Sometimes the jar eats it.",
+    "need": {
+      "tips": 1
+    },
+    "gold": 12,
+    "gems": 1,
+    "rarity": "common"
+  },
+  {
+    "id": "paper_route",
+    "title": "HEADLINES WITH INTENT",
+    "blurb": "Pop a newsstand. The Paper Boy rammed first. Subscriptions are violence.",
+    "need": {
+      "papers": 1
+    },
+    "gold": 32,
+    "gems": 2,
+    "rarity": "rare"
+  },
+  {
+    "id": "payphone_night",
+    "title": "THE CORD STILL WORKS",
+    "blurb": "Dial the payphone once. Eight gold comes back as a clerical apology.",
+    "need": {
+      "phones": 1
+    },
+    "gold": 12,
+    "gems": 1,
+    "rarity": "common"
+  },
+  {
+    "id": "perfect_parent",
+    "title": "THAT'S CALLED TIMING",
+    "blurb": "Land a perfect parry. First three frames. SNAP loads itself. That's called parenting.",
+    "need": {
+      "perfect_parries": 1
+    },
+    "gold": 36,
+    "gems": 2,
+    "rarity": "epic"
   }
 ]

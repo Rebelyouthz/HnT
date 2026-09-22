@@ -151,6 +151,15 @@ const CART := "CART RIDE"
 const FAX := "WARRANT FAX"
 const GROUND_BOUNCE := "GROUND BOUNCE"
 const METER_MAID := "METER MAID"
+const CATCH := "CATCH"
+const THROW := "THROW"
+const CLASH := "CLASH"
+const AWNING := "AWNING"
+const GEYSER := "GEYSER"
+const TIP_JAR := "TIP JAR"
+const LOST_FOUND := "LOST AND FOUND"
+const PAYPHONE := "PAYPHONE"
+const PERFECT_PARRY := "PERFECT PARRY"
 
 
 static func come_on(father: String, son: String, who: String) -> String:

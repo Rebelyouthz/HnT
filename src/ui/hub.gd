@@ -367,6 +367,12 @@ func _open_camp_sheet(id: String) -> void:
 			path = "res://src/ui/bag_sheet.gd"
 		"warrant_fax":
 			path = "res://src/ui/fax_sheet.gd"
+		"tip_jar":
+			path = "res://src/ui/tip_sheet.gd"
+		"lost_found":
+			path = "res://src/ui/lost_sheet.gd"
+		"payphone":
+			path = "res://src/ui/phone_sheet.gd"
 		_:
 			return
 	var sheet: Control = load(path).new()
