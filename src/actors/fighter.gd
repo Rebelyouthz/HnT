@@ -1402,7 +1402,9 @@ func _try_wall_bounce(e: Punk) -> void:
 		hit_prop = true
 		break
 	var rs := get_tree().get_first_node_in_group("run_state")
-	var policy := rs != null and rs.has_method("has_card") and rs.has_card("wall_bounce")
+	var policy := false
+	if rs != null and rs.has_method("has_card"):
+		policy = bool(rs.call("has_card", "wall_bounce"))
 	if not hit_prop and not policy:
 		return
 	e.flung_dir *= -1.0
