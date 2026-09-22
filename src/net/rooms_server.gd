@@ -37,12 +37,7 @@ func boot() -> bool:
 	return true
 
 
-func _ready() -> void:
-	set_process(false)
-	process_mode = Node.PROCESS_MODE_ALWAYS
-
-
-func _process(_delta: float) -> void:
+func pump() -> void:
 	if not _booted:
 		return
 	_prune()
@@ -51,6 +46,15 @@ func _process(_delta: float) -> void:
 	_accept_relay()
 	_pump_relay_handshake()
 	_pump_pairs()
+
+
+func _process(_delta: float) -> void:
+	pump()
+
+
+func _ready() -> void:
+	set_process(false)
+	process_mode = Node.PROCESS_MODE_ALWAYS
 
 
 func _prune() -> void:
@@ -71,13 +75,15 @@ func _accept_http() -> void:
 	while _http.is_connection_available():
 		var peer := _http.take_connection()
 		if peer:
-			_http_peers.append({"peer": peer, "buf": PackedByteArray()})
+			peer.set_no_delay(true)
+			_http_peers.append({"peer": peer, "buf": PackedByteArray(), "done": false, "close_at": 0})
 
 
 func _accept_relay() -> void:
 	while _relay.is_connection_available():
 		var peer := _relay.take_connection()
 		if peer:
+			peer.set_no_delay(true)
 			_relay_peers.append({"peer": peer, "buf": PackedByteArray()})
 
 
@@ -98,15 +104,24 @@ func _read_into(peer: StreamPeerTCP, buf: PackedByteArray) -> PackedByteArray:
 
 
 func _pump_http() -> void:
+	var now := Time.get_ticks_msec()
 	var keep: Array[Dictionary] = []
 	for row in _http_peers:
 		var peer: StreamPeerTCP = row["peer"]
 		peer.poll()
 		if peer.get_status() != StreamPeerTCP.STATUS_CONNECTED:
 			continue
+		if bool(row.get("done", false)):
+			if now >= int(row.get("close_at", 0)):
+				peer.disconnect_from_host()
+				continue
+			keep.append(row)
+			continue
 		row["buf"] = _read_into(peer, row["buf"])
 		if _try_http(peer, row["buf"]):
-			peer.disconnect_from_host()
+			row["done"] = true
+			row["close_at"] = now + 80
+			keep.append(row)
 		else:
 			keep.append(row)
 	_http_peers = keep

@@ -166,6 +166,7 @@ func _initialize() -> void:
 	failed += _exists("res://src/net/rooms_server.gd")
 	failed += _exists("res://assets/icon/fns.ico")
 	failed += _contains("res://src/net/net_session.gd", "RoomsServer.boot")
+	failed += _contains("res://src/audio/vo_bank.gd", "static func son_aaa")
 	failed += _contains("res://src/net/rooms_server.gd", "HTTP_PORT := 8787")
 	failed += _contains("res://src/net/rooms_server.gd", "RELAY_PORT := 8789")
 	failed += _exists("res://src/ui/host_wait.gd")
@@ -419,6 +420,10 @@ func _initialize() -> void:
 	var net := get_root().get_node_or_null("NetSession")
 	if net == null:
 		push_error("NetSession autoload missing")
+		failed += 1
+	var rooms := get_root().get_node_or_null("RoomsServer")
+	if rooms == null:
+		push_error("RoomsServer autoload missing")
 		failed += 1
 	if failed > 0:
 		push_error("SMOKE FAILED %d" % failed)

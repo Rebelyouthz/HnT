@@ -35,6 +35,10 @@ static func dual() -> void:
 	_play("res://assets/audio/vo_son_dual.wav", "res://assets/audio/vo_son_aaa.wav")
 
 
+static func son_aaa() -> void:
+	_play("res://assets/audio/vo_son_aaa.wav", "res://assets/audio/vo_son_dual.wav")
+
+
 static func fridge() -> void:
 	_play("res://assets/audio/vo_dad_fridge.wav", "res://assets/audio/vo_dad_level.wav")
 

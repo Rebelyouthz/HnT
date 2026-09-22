@@ -91,7 +91,7 @@ def ico(pngs: list[tuple[int, bytes]]) -> bytes:
 
 def main() -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    sizes = (16, 32, 48, 256)
+    sizes = (16, 32, 48, 64, 128, 256)
     pngs: list[tuple[int, bytes]] = []
     for s in sizes:
         blob = png_rgba(s, s, draw(s))
