@@ -16,7 +16,6 @@ var _whistle_cd := 2.4
 var _burst_cd := 0.0
 var _burst_t := 0.0
 var _stutter := 0.0
-var _crawl_t := 0.0
 var _jerk := 0.0
 var _woke := false
 var _gape_open := false
@@ -178,6 +177,8 @@ func _slip() -> void:
 	title = "Skinwalker"
 	display = "Skinwalker"
 	sub = "THAT"
+	visual.rotation = 0.0
+	visual.position = Vector2.ZERO
 	var keep_hp := hp
 	var keep_max := max_hp
 	KitBook.apply(self)
@@ -339,7 +340,6 @@ func _drive_shape(t: Node2D, d: float, delta: float) -> void:
 		return
 	if frac < 0.48 and dist > 56.0:
 		_hold_shape(Shape.CRAWL)
-		_crawl_t += delta
 		visual.scale.x = float(-facing)
 		velocity.x = float(-facing) * _walk * 0.72
 		if dist < 64.0:

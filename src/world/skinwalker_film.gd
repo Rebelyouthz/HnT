@@ -120,6 +120,12 @@ func _build_room() -> void:
 	_ghost.position = Vector2(560, 280)
 	_ghost.size = Vector2(28, 90)
 	add_child(_ghost)
+	var ghost2 := ColorRect.new()
+	ghost2.name = "GhostTwo"
+	ghost2.color = Color(0.95, 0.9, 0.2, 0.0)
+	ghost2.position = Vector2(600, 300)
+	ghost2.size = Vector2(10, 14)
+	add_child(ghost2)
 
 
 func _build_cast() -> void:
@@ -277,6 +283,10 @@ func _process(delta: float) -> void:
 			_invoice.color.a = minf(0.92, _invoice.color.a + delta * 0.7)
 			_ghost.color.a = 0.18 + 0.18 * sin(_t * 8.0)
 			_ghost.position.x = 560.0 + sin(_t * 11.0) * 40.0
+			var g2 := get_node_or_null("GhostTwo")
+			if g2 is ColorRect:
+				(g2 as ColorRect).color.a = 0.35 + 0.35 * sin(_t * 14.0)
+				(g2 as ColorRect).position.x = 600.0 + sin(_t * 9.0) * 70.0
 			_true.modulate.a = 0.55 + 0.45 * absf(sin(_t * 6.0))
 			if _t > 3.6:
 				_go(Beat.NAME)
