@@ -13,7 +13,7 @@ const RELAY_PORT := 8789
 const ROOM_FILE := "user://open_room.json"
 const ALPHA := "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"
 const ACTIONS := [
-	"jump", "light", "heavy", "special", "shoot", "block", "throw", "dash", "snap", "pause"
+	"jump", "light", "heavy", "special", "shoot", "block", "throw", "dash", "snap", "pause", "duck"
 ]
 
 var room_code := ""

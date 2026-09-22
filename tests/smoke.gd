@@ -417,6 +417,12 @@ func _initialize() -> void:
 	if not InputMap.has_action("p1_snap") or not InputMap.has_action("p1_dash"):
 		push_error("P1 kit actions missing")
 		failed += 1
+	if not InputMap.has_action("p1_duck") or not InputMap.has_action("p2_duck"):
+		push_error("duck actions missing")
+		failed += 1
+	failed += _contains("res://src/actors/fighter.gd", '_pressed("duck")')
+	failed += _contains("res://src/juice/juice.gd", "TOAST_COOL_MS")
+	failed += _contains("res://src/juice/juice.gd", "TOAST_MAX")
 	var net := get_root().get_node_or_null("NetSession")
 	if net == null:
 		push_error("NetSession autoload missing")

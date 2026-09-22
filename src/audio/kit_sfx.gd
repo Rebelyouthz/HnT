@@ -59,7 +59,10 @@ static func foot(role: String, speed_frac: float, stumble := false) -> void:
 		Mixer.play_sfx("res://assets/audio/stumble.wav" if ResourceLoader.exists("res://assets/audio/stumble.wav") else "res://assets/audio/hit_heavy.wav", 0.92 if role == "father" else 1.08)
 		return
 	var pitch := (1.08 if role == "son" else 0.84) * (0.92 + speed_frac * 0.25)
-	Mixer.play_sfx("res://assets/audio/foot.wav" if ResourceLoader.exists("res://assets/audio/foot.wav") else "res://assets/audio/dash.wav", pitch)
+	if ResourceLoader.exists("res://assets/audio/foot.wav"):
+		Mixer.play_sfx("res://assets/audio/foot.wav", pitch, -16.0)
+	else:
+		Mixer.play_sfx("res://assets/audio/dash.wav", pitch, -22.0)
 
 
 static func vehicle(kind: String) -> void:

@@ -42,7 +42,7 @@ func _set_bus(name: String, linear: float) -> void:
 	AudioServer.set_bus_volume_db(idx, linear_to_db(maxf(linear, 0.0001)))
 
 
-func play_sfx(path: String, pitch := 1.0) -> void:
+func play_sfx(path: String, pitch := 1.0, vol_db := 0.0) -> void:
 	if not ResourceLoader.exists(path):
 		return
 	var p: AudioStreamPlayer = null
@@ -52,8 +52,15 @@ func play_sfx(path: String, pitch := 1.0) -> void:
 			break
 	if p == null:
 		p = _sfx
+	var quiet := vol_db
+	if quiet == 0.0:
+		if path.ends_with("ui_click.wav"):
+			quiet = -18.0
+		elif path.ends_with("foot.wav"):
+			quiet = -16.0
 	p.stream = load(path)
 	p.pitch_scale = clampf(pitch * randf_range(0.94, 1.06), 0.8, 1.25)
+	p.volume_db = quiet
 	p.play()
 
 

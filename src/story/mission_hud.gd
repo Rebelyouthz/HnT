@@ -13,28 +13,31 @@ var _lunch_done := false
 func _ready() -> void:
 	layer = 19
 	var wrap := PanelContainer.new()
-	wrap.add_theme_stylebox_override("panel", UiKit.panel(Palette.PANEL, Palette.EDGE))
-	wrap.position = Vector2(360, 8)
-	wrap.size = Vector2(560, 96)
+	wrap.add_theme_stylebox_override("panel", UiKit.panel(Color(0.05, 0.05, 0.07, 0.62), Palette.EDGE))
+	wrap.position = Vector2(300, 0)
+	wrap.size = Vector2(680, 20)
+	wrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(wrap)
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 2)
-	wrap.add_child(col)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	wrap.add_child(row)
 	_main = Label.new()
-	_main.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_main.custom_minimum_size = Vector2(540, 0)
-	UiKit.apply_label(_main, 13, Palette.LEMON)
-	col.add_child(_main)
+	_main.clip_text = true
+	_main.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_main.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	UiKit.apply_label(_main, 11, Palette.LEMON)
+	row.add_child(_main)
 	_side = Label.new()
-	_side.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_side.custom_minimum_size = Vector2(540, 0)
-	UiKit.apply_label(_side, 12, Palette.MUTED)
-	col.add_child(_side)
+	_side.clip_text = true
+	_side.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_side.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	UiKit.apply_label(_side, 11, Palette.MUTED)
+	row.add_child(_side)
 	_lunch = Label.new()
-	_lunch.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_lunch.custom_minimum_size = Vector2(540, 0)
-	UiKit.apply_label(_lunch, 12, Palette.EDGE)
-	col.add_child(_lunch)
+	_lunch.clip_text = true
+	_lunch.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	UiKit.apply_label(_lunch, 11, Palette.EDGE)
+	row.add_child(_lunch)
 	_paint()
 
 
@@ -49,12 +52,12 @@ func _paint() -> void:
 	var row := StoryBook.act(map_id)
 	var main := str(row.get("main", ""))
 	var side := str(row.get("side", ""))
-	_main.text = ("FILED  ·  " if _main_done else "MAIN  ·  ") + main
-	_side.text = ("FILED  ·  " if _side_done else "SIDE  ·  ") + side
+	_main.text = ("FILED  " if _main_done else "MAIN  ") + main
+	_side.text = ("FILED  " if _side_done else "SIDE  ") + side
 	_main.add_theme_color_override("font_color", Palette.READY if _main_done else Palette.LEMON)
 	_side.add_theme_color_override("font_color", Palette.READY if _side_done else Palette.MUTED)
 	if _lunch:
-		_lunch.text = ("FILED  ·  " if _lunch_done else "LUNCH  ·  ") + Copy.LUNCH_MISSION
+		_lunch.text = ("FILED  " if _lunch_done else "LUNCH  ") + Copy.LUNCH_MISSION
 		_lunch.add_theme_color_override("font_color", Palette.READY if _lunch_done else Palette.EDGE)
 
 

@@ -12,6 +12,11 @@ var _hitstop_depth := 0
 var _noise_t := 0.0
 var _overlay: CanvasLayer
 var _sfx: AudioStreamPlayer
+var _toast_box: VBoxContainer
+var _toast_at: Dictionary = {}
+
+const TOAST_COOL_MS := 2800
+const TOAST_MAX := 3
 
 const DECAY := 1.35
 const MAX_OFFSET := Vector2(12, 8)
@@ -25,6 +30,21 @@ func _ready() -> void:
 	_overlay.layer = 80
 	_overlay.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(_overlay)
+	var toast_root := Control.new()
+	toast_root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	toast_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_overlay.add_child(toast_root)
+	_toast_box = VBoxContainer.new()
+	_toast_box.anchor_left = 1.0
+	_toast_box.anchor_right = 1.0
+	_toast_box.anchor_top = 0.0
+	_toast_box.offset_left = -268
+	_toast_box.offset_right = -10
+	_toast_box.offset_top = 8
+	_toast_box.offset_bottom = 240
+	_toast_box.add_theme_constant_override("separation", 4)
+	_toast_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	toast_root.add_child(_toast_box)
 	_sfx = AudioStreamPlayer.new()
 	_sfx.bus = "sfx"
 	add_child(_sfx)
@@ -406,118 +426,61 @@ func land_puff(global_pos: Vector2) -> void:
 
 
 func toast(kind: String, title: String, body: String) -> void:
-	play("res://assets/audio/claim.wav")
-	var wrap := PanelContainer.new()
-	wrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	wrap.process_mode = Node.PROCESS_MODE_ALWAYS
+	if _toast_box == null:
+		return
+	var now := Time.get_ticks_msec()
+	var key := title.strip_edges()
+	if _toast_at.has(key) and now - int(_toast_at[key]) < TOAST_COOL_MS:
+		return
+	_toast_at[key] = now
+	while _toast_box.get_child_count() >= TOAST_MAX:
+		var oldest := _toast_box.get_child(0)
+		_toast_box.remove_child(oldest)
+		oldest.queue_free()
 	var accent := Palette.EDGE
 	match kind:
-		"achievement":
+		"achievement", "unlock":
 			accent = Palette.LEMON
 		"quest":
 			accent = Palette.READY
 		"challenge":
 			accent = Palette.BRICK
-		"reward":
-			accent = Palette.EDGE
 		_:
 			accent = Palette.EDGE
-	wrap.add_theme_stylebox_override("panel", UiKit.panel(Palette.PANEL, accent))
-	wrap.position = Vector2(860, 86 + _overlay.get_child_count() * 8)
-	wrap.size = Vector2(400, 92)
-	_overlay.add_child(wrap)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
-	wrap.add_child(row)
-	if kind == "achievement" or kind == "quest":
-		var mark := LogoMark.new()
-		mark.custom_minimum_size = Vector2(36, 36)
-		row.add_child(mark)
-	var stamp := StampMark.new()
-	stamp.accent = accent
-	stamp.custom_minimum_size = Vector2(28, 28)
-	row.add_child(stamp)
+	var wrap := PanelContainer.new()
+	wrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	wrap.process_mode = Node.PROCESS_MODE_ALWAYS
+	wrap.add_theme_stylebox_override("panel", UiKit.panel(Color(0.06, 0.06, 0.08, 0.82), accent))
+	wrap.custom_minimum_size = Vector2(250, 0)
+	_toast_box.add_child(wrap)
 	var col := VBoxContainer.new()
-	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(col)
-	var k := Label.new()
-	k.text = kind.to_upper()
-	UiKit.apply_label(k, 11, accent)
-	col.add_child(k)
+	col.add_theme_constant_override("separation", 0)
+	wrap.add_child(col)
 	var t := Label.new()
 	t.text = title
-	UiKit.apply_label(t, 18, Palette.LEMON)
+	t.clip_text = true
+	t.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	UiKit.apply_label(t, 13, accent)
 	col.add_child(t)
-	var b := Label.new()
-	b.text = body
-	b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	b.custom_minimum_size = Vector2(320, 0)
-	var body_c := Palette.EDGE if body.find("+") >= 0 or body.find("YOU GOT") >= 0 else Palette.TEXT
-	UiKit.apply_label(b, 13, body_c)
-	col.add_child(b)
-	wrap.scale = Vector2(0.86, 0.86)
-	var tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	if body != "":
+		var b := Label.new()
+		b.text = body
+		b.clip_text = true
+		b.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		UiKit.apply_label(b, 11, Palette.MUTED)
+		col.add_child(b)
+	wrap.modulate.a = 0.0
+	var tw := create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tw.set_ignore_time_scale(true)
-	tw.tween_property(wrap, "scale", Vector2.ONE, 0.18)
-	tw.tween_interval(1.8)
-	tw.tween_property(wrap, "modulate:a", 0.0, 0.22)
+	tw.tween_property(wrap, "modulate:a", 1.0, 0.08)
+	tw.tween_interval(1.6)
+	tw.tween_property(wrap, "modulate:a", 0.0, 0.18)
 	tw.finished.connect(wrap.queue_free)
 
 
 func unlock_logo(title: String, sub: String, reward: String = "") -> void:
-	play("res://assets/audio/chest.wav")
-	var wrap := Control.new()
-	wrap.set_anchors_preset(Control.PRESET_FULL_RECT)
-	wrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	wrap.process_mode = Node.PROCESS_MODE_ALWAYS
-	_overlay.add_child(wrap)
-	var card := PanelContainer.new()
-	card.add_theme_stylebox_override("panel", UiKit.panel(Palette.PANEL, Palette.LEMON))
-	card.set_anchors_preset(Control.PRESET_CENTER)
-	card.offset_left = -280
-	card.offset_right = 280
-	card.offset_top = -120
-	card.offset_bottom = 120
-	wrap.add_child(card)
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 8)
-	card.add_child(col)
-	var brand := HBoxContainer.new()
-	brand.alignment = BoxContainer.ALIGNMENT_CENTER
-	var mark := LogoMark.new()
-	mark.custom_minimum_size = Vector2(48, 48)
-	brand.add_child(mark)
-	var stamp := Label.new()
-	stamp.text = "UNLOCKED"
-	stamp.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	UiKit.apply_label(stamp, 13, Palette.EDGE)
-	brand.add_child(stamp)
-	col.add_child(brand)
-	var t := Label.new()
-	t.text = title
-	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	UiKit.apply_label(t, 32, Palette.LEMON)
-	col.add_child(t)
-	var s := Label.new()
-	s.text = sub
-	s.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	s.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	UiKit.apply_label(s, 15, Palette.TEXT)
-	col.add_child(s)
-	var got := Label.new()
-	got.text = "YOU GOT  ·  %s" % (reward if reward != "" else sub)
-	got.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	got.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	UiKit.apply_label(got, 16, Palette.EDGE)
-	col.add_child(got)
-	card.scale = Vector2(0.72, 0.72)
-	var tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tw.set_ignore_time_scale(true)
-	tw.tween_property(card, "scale", Vector2(1.08, 1.08), 0.22)
-	tw.tween_property(card, "scale", Vector2.ONE, 0.12)
-	tw.tween_interval(1.25)
-	tw.tween_property(wrap, "modulate:a", 0.0, 0.2)
-	tw.finished.connect(wrap.queue_free)
+	var body := reward if reward != "" else sub
+	toast("unlock", title, body)
 
 
 func level_up(grant: Dictionary) -> void:

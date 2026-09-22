@@ -37,49 +37,44 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_fps = Label.new()
 	_fps.position = Vector2(12, 6)
-	UiKit.apply_label(_fps, 14, Palette.LEMON)
+	_fps.visible = OS.has_feature("editor")
+	UiKit.apply_label(_fps, 12, Palette.LEMON)
 	add_child(_fps)
 
 	_son = Label.new()
-	_son.position = Vector2(12, 28)
-	UiKit.apply_label(_son, 15, Palette.LEMON)
+	_son.position = Vector2(12, 22)
+	UiKit.apply_label(_son, 14, Palette.LEMON)
 	add_child(_son)
-	_hp_a = _pips_row(Vector2(12, 68), Palette.LEMON)
-	_steam_a = _bar(Vector2(12, 84), Palette.LEMON)
+	_hp_a = _pips_row(Vector2(12, 44), Palette.LEMON)
+	_steam_a = _bar(Vector2(12, 56), Palette.LEMON)
 
 	_dad = Label.new()
-	_dad.position = Vector2(900, 28)
+	_dad.position = Vector2(900, 22)
 	_dad.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_dad.size = Vector2(368, 48)
-	UiKit.apply_label(_dad, 15, Palette.BRICK)
+	_dad.size = Vector2(368, 22)
+	UiKit.apply_label(_dad, 14, Palette.BRICK)
 	add_child(_dad)
-	_hp_b = _pips_row(Vector2(1048, 68), Palette.BRICK)
-	_steam_b = _bar(Vector2(1048, 84), Palette.BRICK)
+	_hp_b = _pips_row(Vector2(1048, 44), Palette.BRICK)
+	_steam_b = _bar(Vector2(1048, 56), Palette.BRICK)
 
 	_lives = Label.new()
-	_lives.position = Vector2(500, 8)
+	_lives.position = Vector2(300, 22)
 	_lives.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_lives.size = Vector2(280, 24)
-	UiKit.apply_label(_lives, 16, Palette.TEXT)
+	_lives.size = Vector2(680, 16)
+	UiKit.apply_label(_lives, 12, Palette.TEXT)
 	add_child(_lives)
 
 	_scrap = Label.new()
-	_scrap.position = Vector2(500, 56)
-	_scrap.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_scrap.size = Vector2(280, 20)
-	UiKit.apply_label(_scrap, 14, Palette.EDGE)
+	_scrap.visible = false
 	add_child(_scrap)
 
 	_wanted = Label.new()
-	_wanted.position = Vector2(820, 8)
-	UiKit.apply_label(_wanted, 13, Palette.BRICK)
+	_wanted.position = Vector2(12, 68)
+	UiKit.apply_label(_wanted, 12, Palette.BRICK)
 	add_child(_wanted)
 
 	_act = Label.new()
-	_act.position = Vector2(500, 32)
-	_act.size = Vector2(280, 20)
-	_act.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	UiKit.apply_label(_act, 12, Palette.MUTED)
+	_act.visible = false
 	add_child(_act)
 
 	_score = Label.new()
@@ -90,7 +85,7 @@ func _ready() -> void:
 	add_child(_score)
 
 	_boss_wrap = Control.new()
-	_boss_wrap.position = Vector2(280, 52)
+	_boss_wrap.position = Vector2(280, 40)
 	_boss_wrap.visible = false
 	add_child(_boss_wrap)
 	var bb := ColorRect.new()
@@ -110,40 +105,39 @@ func _ready() -> void:
 	_boss_wrap.add_child(_boss_lab)
 
 	_combo = Label.new()
-	_combo.position = Vector2(12, 98)
-	UiKit.apply_label(_combo, 20, Palette.EDGE)
+	_combo.position = Vector2(12, 84)
+	UiKit.apply_label(_combo, 16, Palette.EDGE)
 	add_child(_combo)
 	_rank = Label.new()
-	_rank.position = Vector2(12, 120)
-	UiKit.apply_label(_rank, 13, Palette.LEMON)
+	_rank.position = Vector2(12, 102)
+	UiKit.apply_label(_rank, 12, Palette.LEMON)
 	add_child(_rank)
 	_combo_bg = ColorRect.new()
-	_combo_bg.position = Vector2(12, 142)
-	_combo_bg.size = Vector2(180, 6)
+	_combo_bg.position = Vector2(12, 120)
+	_combo_bg.size = Vector2(180, 5)
 	_combo_bg.color = Color(0, 0, 0, 0.55)
 	add_child(_combo_bg)
 	_combo_fill = ColorRect.new()
-	_combo_fill.position = Vector2(12, 142)
-	_combo_fill.size = Vector2(180, 6)
+	_combo_fill.position = Vector2(12, 120)
+	_combo_fill.size = Vector2(180, 5)
 	_combo_fill.color = Palette.LEMON
 	add_child(_combo_fill)
 
 	_call = Label.new()
-	_call.position = Vector2(280, 96)
+	_call.position = Vector2(280, 40)
 	_call.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_call.size = Vector2(720, 40)
-	UiKit.apply_label(_call, 26, Palette.LEMON)
+	_call.size = Vector2(720, 22)
+	UiKit.apply_label(_call, 16, Palette.LEMON)
 	add_child(_call)
 
 	_snap_a = _snap_lab()
 	_snap_b = _snap_lab()
 
 	_hint = Label.new()
-	_hint.position = Vector2(12, 668)
-	_hint.size = Vector2(1250, 44)
+	_hint.position = Vector2(12, 688)
+	_hint.size = Vector2(1250, 28)
 	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	UiKit.apply_label(_hint, 13, Palette.MUTED)
-	_hint.text = _prompt_line()
 	add_child(_hint)
 	_place_banners()
 
@@ -233,11 +227,7 @@ func _prompt_line() -> String:
 		return "RAMP  ·  SLOW-MO  ·  CANAL  ·  CRAWL"
 	if get_tree().get_first_node_in_group("clinic_van"):
 		return "DRIVE  ·  RAIL 360  ·  SPECIAL SWAP  ·  RAMP AHEAD"
-	if get_tree().get_first_node_in_group("towers"):
-		return PadRouter.p1_prompt() + "  ·  LIGHT CLIMBS TOWERS  ·  LIGHT SECRETS  ·  EAT AT 140M"
-	if son == null or father == null:
-		return PadRouter.p1_prompt() + "  ·  " + Copy.JOIN_HINT
-	return PadRouter.p1_prompt() + "  ·  " + PadRouter.p2_prompt() + "  ·  TAP BLOCK PARRY  ·  THROW CATCH  ·  CLASH HEAVIES  ·  AWNINGS  ·  POLES  ·  HOODS  ·  DRUMS  ·  MANHOLES  ·  CARTS"
+	return ""
 
 
 func _process(delta: float) -> void:
@@ -255,7 +245,12 @@ func _process(delta: float) -> void:
 	var stamps := ""
 	for i in 3:
 		stamps += "[  ] " if i < life_n else "[x] "
-	_lives.text = "LIVES  " + stamps
+	var scrap := ""
+	var act := ""
+	if state:
+		scrap = "  ·  SCRAP %d  XP %d%s" % [state.scrap, state.xp, "  LUNCH" if state.lunch > 0 else ""]
+		act = "  ·  " + str(App.current_map).replace("_", " ").to_upper()
+	_lives.text = "LIVES  " + stamps + scrap + act
 	if Juice.combo < 2:
 		_combo.text = ""
 		_rank.text = ""
@@ -276,7 +271,7 @@ func _process(delta: float) -> void:
 			tw.parallel().tween_property(_rank, "modulate", Palette.LEMON, 0.08)
 	_call.text = Juice.callout
 	if state:
-		_scrap.text = "SCRAP  %d   XP  %d%s" % [state.scrap, state.xp, "   LUNCH" if state.lunch > 0 else ""]
+		_scrap.text = ""
 		var w := ""
 		for i in 5:
 			w += "I" if i < state.wanted else "."
@@ -285,17 +280,18 @@ func _process(delta: float) -> void:
 			_wanted.text += "  ·  REVENGE"
 		elif father and father.revenge_win > 0:
 			_wanted.text += "  ·  REVENGE"
-		_act.text = str(App.current_map).replace("_", " ").to_upper()
+		_act.text = ""
 		var horde := get_tree().get_first_node_in_group("horde")
 		if horde and horde.has_method("left"):
-			_act.text += "  ·  %ds" % int(horde.left())
+			_lives.text += "  ·  %ds" % int(horde.left())
 		if App.remote_coop:
-			_act.text += "  ·  " + (NetSession.path_name if NetSession.path_name != "" else "REMOTE")
+			_lives.text += "  ·  " + (NetSession.path_name if NetSession.path_name != "" else "REMOTE")
 		_score.text = "%s %06d   ·   %s %06d" % [
 			FamilyProfile.son_name(), state.score_son, FamilyProfile.father_name(), state.score_dad
 		]
 		_paint_boss()
 	_hint.text = _prompt_line()
+	_hint.visible = _hint.text != ""
 	if _join_grace > 0:
 		return
 	if Input.is_action_just_pressed("p1_pause"):
@@ -441,7 +437,7 @@ func _toggle_pause() -> void:
 	UiKit.apply_label(t, 28, Palette.LEMON)
 	col.add_child(t)
 	var hint := Label.new()
-	hint.text = "Tap BLOCK to PARRY. First frames are PERFECT. THROW pipes, tap THROW to CATCH. HEAVY vs a wind-up is a CLASH. Bounce AWNINGS and HOODS. Swing POLES. Vault BENCHES. Pop OIL DRUMS and MANHOLES. Jump during a WALL RUN. Down+heavy DIVE bounces. Slide under. Pause never skips the Raven Grid crash."
+	hint.text = "C ducks. Stick down walks into the street, it does not crouch. Tap BLOCK to PARRY. THROW pipes, tap THROW to CATCH. HEAVY vs a wind-up is a CLASH. Pause never skips the Raven Grid crash."
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.custom_minimum_size = Vector2(380, 0)
 	UiKit.apply_label(hint, 13, Palette.MUTED)

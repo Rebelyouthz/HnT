@@ -7,7 +7,6 @@ extends Area2D
 var hp := 2
 var exploding := false
 var _box: Polygon2D
-var _lab: Label
 
 
 static func place(host: Node, at: Vector2, style: String) -> SmashProp:
@@ -94,13 +93,6 @@ func _ready() -> void:
 		Vector2(-22, -38), Vector2(22, -38), Vector2(22, -32), Vector2(-22, -32)
 	])
 	add_child(strap)
-	_lab = Label.new()
-	_lab.position = Vector2(-48, -86)
-	_lab.size = Vector2(96, 18)
-	_lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_lab.text = kind.to_upper()
-	UiKit.apply_label(_lab, 11, Palette.LEMON)
-	add_child(_lab)
 
 
 func take_hit(hit: String, from: Node) -> void:

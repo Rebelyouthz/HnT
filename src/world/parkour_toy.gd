@@ -148,13 +148,6 @@ func _ready() -> void:
 			Vector2(-28, 8), Vector2(28, 8), Vector2(22, 20), Vector2(-22, 20)
 		])
 	add_child(poly)
-	var lab := Label.new()
-	lab.position = Vector2(-70, -36)
-	lab.size = Vector2(140, 20)
-	lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lab.text = kind.to_upper()
-	UiKit.apply_label(lab, 13, Palette.LEMON if kind in ["pad", "escape", "drop", "dumpster", "billboard", "wallrun", "grind", "cart", "awning", "scaffold", "geyser", "pole", "hood", "bench", "flag", "crate"] else Palette.MUTED)
-	add_child(lab)
 
 
 func _process(delta: float) -> void:

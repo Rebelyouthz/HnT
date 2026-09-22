@@ -382,15 +382,26 @@ func _tick_meters(delta: float) -> void:
 	_update_web_line()
 	_apply_lamp()
 	_breath += delta * 6.0
-	ducking = _street_grounded() and _stick().y > 0.55 and not dashing and not sliding
+	ducking = _street_grounded() and _pressed("duck") and not dashing and not sliding
 	if squash_root:
 		if ducking:
 			squash_root.scale.y = 0.62
 			squash_root.position.y = 14.0
+			squash_root.scale.x = 1.0
+		elif attack_cd >= 13:
+			squash_root.scale.x = 1.22
+			squash_root.scale.y = 1.0
+			squash_root.position.y = 0.0
+		elif attack_cd >= 11:
+			squash_root.scale.x = 0.9
+			squash_root.scale.y = 1.0
+			squash_root.position.y = 0.0
 		elif _street_grounded() and attack_cd == 0 and not dashing and not sliding:
+			squash_root.scale.x = 1.0
 			squash_root.scale.y = 1.0
 			squash_root.position.y = 1.6 * sin(_breath)
 		else:
+			squash_root.scale.x = 1.0
 			squash_root.scale.y = 1.0
 			squash_root.position.y = 0.0
 		var hurt := clampf(1.0 - float(hp) / float(maxi(max_hp, 1)), 0.0, 1.0)
