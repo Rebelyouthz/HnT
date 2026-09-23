@@ -2,12 +2,26 @@ class_name PowerBook
 extends Object
 
 ## Night Class power checks. Open House skips. One real buy per gated map.
+## Autoload names are not in scope for Object class_name under --script.
 
 const PATH := "res://data/power_gates.json"
 
 
+static func _boot(node_name: String) -> Node:
+	var loop := Engine.get_main_loop()
+	if loop == null:
+		return null
+	var tree := loop as SceneTree
+	if tree == null or tree.root == null:
+		return null
+	return tree.root.get_node_or_null(node_name)
+
+
 static func enforced() -> bool:
-	return App.difficulty != "open_house"
+	var app := _boot("App")
+	if app == null:
+		return true
+	return str(app.get("difficulty")) != "open_house"
 
 
 static func table() -> Dictionary:
@@ -49,7 +63,10 @@ static func _lock_need(need: Dictionary, gate_when: String) -> Dictionary:
 	var node := str(need.get("node", ""))
 	var kind := str(need.get("kind", ""))
 	var id := str(need.get("id", ""))
-	if shop != "" and not FamilyProfile.is_built(shop):
+	var fp := _boot("FamilyProfile")
+	if fp == null:
+		return {}
+	if shop != "" and not bool(fp.call("is_built", shop)):
 		return {
 			"kind": "building",
 			"id": shop,
@@ -59,7 +76,7 @@ static func _lock_need(need: Dictionary, gate_when: String) -> Dictionary:
 			"when": gate_when,
 			"line": "LOCKED · %s" % shop_name
 		}
-	if _met(kind, id):
+	if _met(fp, kind, id):
 		return {}
 	var line := "LOCKED · %s" % shop_name
 	if node != "":
@@ -75,22 +92,22 @@ static func _lock_need(need: Dictionary, gate_when: String) -> Dictionary:
 	}
 
 
-static func _met(kind: String, id: String) -> bool:
+static func _met(fp: Node, kind: String, id: String) -> bool:
 	match kind:
 		"cbt":
-			return FamilyProfile.has_cbt(id)
+			return bool(fp.call("has_cbt", id))
 		"dojo":
-			return FamilyProfile.dojo_learned(id)
+			return bool(fp.call("dojo_learned", id))
 		"gear":
-			return FamilyProfile.owns_gear(id)
+			return bool(fp.call("owns_gear", id))
 		"research":
-			return FamilyProfile.has_research(id)
+			return bool(fp.call("has_research", id))
 		"craft":
-			return FamilyProfile.has_craft(id)
+			return bool(fp.call("has_craft", id))
 		"building":
-			return FamilyProfile.is_built(id)
+			return bool(fp.call("is_built", id))
 		"weapon":
-			return FamilyProfile.has_research(id) or FamilyProfile.has_craft(id)
+			return bool(fp.call("has_research", id)) or bool(fp.call("has_craft", id))
 		_:
 			return true
 
@@ -102,8 +119,19 @@ static func line(info: Dictionary) -> String:
 
 
 static func boss_x(map_id: String) -> float:
-	var act := StoryBook.act(map_id)
-	var boss: Variant = act.get("boss", {})
+	var path := "res://data/story.json"
+	if not FileAccess.file_exists(path):
+		return 0.0
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return 0.0
+	var acts: Variant = (parsed as Dictionary).get("acts", {})
+	if typeof(acts) != TYPE_DICTIONARY:
+		return 0.0
+	var row: Variant = (acts as Dictionary).get(map_id, {})
+	if typeof(row) != TYPE_DICTIONARY:
+		return 0.0
+	var boss: Variant = (row as Dictionary).get("boss", {})
 	if typeof(boss) != TYPE_DICTIONARY:
 		return 0.0
 	return float((boss as Dictionary).get("x", 0.0))
