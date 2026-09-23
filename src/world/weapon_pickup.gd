@@ -54,6 +54,8 @@ func _ready() -> void:
 			p.polygon = PackedVector2Array([Vector2(-20, -4), Vector2(20, -4), Vector2(20, 4), Vector2(-20, 4)])
 	add_child(p)
 	p.color = Rarity.color(Rarity.of_pickup(kind))
+	if SpriteBook.attach_living(self, kind):
+		p.visible = false
 	body_entered.connect(_grab)
 
 

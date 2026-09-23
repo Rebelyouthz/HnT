@@ -200,21 +200,39 @@ func _part(pos: Vector2, size: Vector2, color: Color) -> void:
 	visual.add_child(p)
 
 
-func _wants_sprite() -> bool:
+func _sprite_who() -> String:
 	if title == "Number 87" or title == "Skinwalker":
-		return false
+		return ""
 	if vehicle != "":
-		return false
+		return ""
 	if home == "air" or title == "Drone":
-		return false
+		return ""
 	if cop:
-		return SpriteBook.has_who("cop")
-	return SpriteBook.has_who("punk")
+		return "cop"
+	if title == "Collector Gant":
+		return "gant"
+	if title == "Shift Lead":
+		return "shift_lead"
+	if title == "Mohawk Bo":
+		return "mohawk"
+	return "punk"
+
+
+func _wants_sprite() -> bool:
+	var who := _sprite_who()
+	if who == "":
+		return false
+	if SpriteBook.has_who(who):
+		return true
+	return who != "punk" and SpriteBook.has_who("punk")
 
 
 func _mount_sprite() -> void:
 	SpriteBook.hide_polys(visual)
-	_anim = SpriteBook.make_anim("cop" if cop and SpriteBook.has_who("cop") else "punk")
+	var who := _sprite_who()
+	if not SpriteBook.has_who(who):
+		who = "punk"
+	_anim = SpriteBook.make_anim(who)
 	visual.add_child(_anim)
 
 

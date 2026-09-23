@@ -64,6 +64,7 @@ func _row(info: Dictionary) -> Control:
 	p.add_theme_stylebox_override("panel", UiKit.panel(Rarity.fill(rarity), Rarity.color(rarity)))
 	var row := HBoxContainer.new()
 	p.add_child(row)
+	row.add_child(UiKit.portrait(SpriteBook.icon("workshop"), Vector2(48, 48)))
 	var stamp := StampMark.new()
 	stamp.accent = Rarity.color(rarity)
 	row.add_child(stamp)

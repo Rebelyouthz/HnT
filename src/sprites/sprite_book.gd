@@ -96,8 +96,18 @@ static func hide_polys(n: Node) -> void:
 	if n == null:
 		return
 	for c in n.get_children():
-		if c is Polygon2D:
+		if c is Polygon2D or c is ColorRect:
 			(c as CanvasItem).visible = false
+
+
+static func attach_living(host: Node, who: String, extra_y: float = 0.0) -> bool:
+	if host == null or who == "" or not has_who(who):
+		return false
+	hide_polys(host)
+	var a := make_anim(who)
+	a.position.y += extra_y
+	host.add_child(a)
+	return true
 
 
 static func tex(path: String) -> Texture2D:

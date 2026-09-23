@@ -33,6 +33,7 @@ func _ready() -> void:
 		Vector2(-40, -8), Vector2(40, -8), Vector2(36, 8), Vector2(-36, 8)
 	])
 	add_child(rail)
+	SpriteBook.attach_living(self, kind)
 	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/tricks.json"))
 	if typeof(parsed) == TYPE_DICTIONARY:
 		_table = (parsed as Dictionary).get(kind, {})

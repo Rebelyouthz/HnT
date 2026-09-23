@@ -23,6 +23,8 @@ func _ready() -> void:
 
 
 func _crown() -> void:
+	if _anim != null:
+		return
 	var band := Polygon2D.new()
 	band.color = accent
 	band.polygon = PackedVector2Array([

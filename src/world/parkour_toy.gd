@@ -148,6 +148,8 @@ func _ready() -> void:
 			Vector2(-28, 8), Vector2(28, 8), Vector2(22, 20), Vector2(-22, 20)
 		])
 	add_child(poly)
+	if SpriteBook.attach_living(self, kind, 20.0):
+		return
 	var tex := SpriteBook.prop(kind)
 	if tex:
 		poly.visible = false

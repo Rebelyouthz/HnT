@@ -97,6 +97,8 @@ func _ready() -> void:
 
 
 func _mount_sprite() -> void:
+	if SpriteBook.attach_living(self, kind):
+		return
 	var tex := SpriteBook.prop(kind)
 	if tex == null:
 		return

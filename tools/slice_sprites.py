@@ -492,6 +492,69 @@ HUB2_NAMES = [
     "punching_bag",
 ]
 
+HUB3_NAMES = [
+    "bulletin_board",
+    "compare_mirrors",
+    "patrol_desk",
+    "album_wall",
+    "invoice_wheel",
+    "warrant_fax",
+    "tip_jar",
+    "lost_found",
+    "payphone",
+    "water_cooler",
+    "coat_check",
+    "time_clock",
+    "bleach_closet",
+]
+
+LIVE_IDLE = {
+    "booth": "smash-booth-idle.png",
+    "barrel": "smash-barrel-idle.png",
+    "hydrant": "smash-hydrant-idle.png",
+    "manhole": "smash-manhole-idle.png",
+    "kiosk": "smash-kiosk-idle.png",
+    "news": "smash-news-idle.png",
+    "cop_car": "smash-copcar-idle.png",
+    "dumpster": "smash-dumpster-idle.png",
+    "mail": "smash-mail-idle.png",
+    "bench": "toy-bench-idle.png",
+    "awning": "toy-awning-idle.png",
+    "cart": "toy-cart-idle.png",
+    "hood": "toy-hood-idle.png",
+    "pole": "toy-pole-idle.png",
+    "billboard": "toy-billboard-idle.png",
+    "scaffold": "toy-scaffold-idle.png",
+    "grind": "toy-grind-idle.png",
+    "flag": "toy-flag-idle.png",
+    "crate": "toy-crate-idle.png",
+    "gap": "gate-gap-idle.png",
+    "rail": "gate-rail-idle.png",
+    "power_gate": "power-gate-idle.png",
+    "chain": "pickup-chain-idle.png",
+}
+
+GANT = {
+    "idle": "gant-idle-stand.png",
+    "walk": "gant-walk-cycle.png",
+    "attack": "gant-attack-knuckles.png",
+    "hurt": "gant-hurt-recoil.png",
+}
+
+SHIFT = {
+    "idle": "shift-idle-stand.png",
+    "walk": "shift-walk-cycle.png",
+    "attack": "shift-attack-clip.png",
+    "hurt": "shift-hurt-recoil.png",
+}
+
+MOHAWK = {
+    "idle": "mohawk-idle-stand.png",
+    "walk": "mohawk-walk-cycle.png",
+    "attack": "mohawk-attack-bat.png",
+    "hurt": "mohawk-hurt-recoil.png",
+}
+
 
 def _wipe(name: str) -> None:
     p = OUT / name
@@ -571,11 +634,36 @@ def slice_bystander() -> None:
         raise SystemExit("bystander/idle has %d frames" % n)
 
 
+def slice_hub3() -> None:
+    src = copy_sheet("clinic-hub-camp-icons.png")
+    slice_named(src, OUT / "hub", HUB3_NAMES, "icon", 4, 4)
+
+
+def slice_named_who(who: str, mapping: dict[str, str]) -> None:
+    for clip, name in mapping.items():
+        src = copy_sheet(name)
+        n = slice_who(src, OUT / who / clip, "feet")
+        if n < 6:
+            raise SystemExit("%s/%s has %d frames" % (who, clip, n))
+
+
+def slice_live() -> None:
+    for who, name in LIVE_IDLE.items():
+        src = copy_sheet(name)
+        n = slice_who(src, OUT / who / "idle", "prop")
+        if n < 6:
+            raise SystemExit("%s/idle has %d frames" % (who, n))
+
+
 def main() -> None:
     if not ART.is_dir():
         raise SystemExit("missing art dir %s" % ART)
     args = [a.lower() for a in sys.argv[1:]] or ["all"]
-    unknown = [a for a in args if a not in ("all", "father", "punk", "dock", "skinwalker", "son", "lot", "hub", "hub2", "cop", "lamp", "bystander", "slides")]
+    known = (
+        "all", "father", "punk", "dock", "skinwalker", "son", "lot", "hub", "hub2",
+        "hub3", "cop", "lamp", "bystander", "slides", "live", "gant", "shift", "mohawk",
+    )
+    unknown = [a for a in args if a not in known]
     if unknown:
         raise SystemExit("unknown who: %s" % " ".join(unknown))
     if "all" in args:
@@ -583,8 +671,12 @@ def main() -> None:
         for child in ["father", "punk", "dock", "skinwalker", "son", "lot", "hub", "cop", "lamp", "bystander"]:
             _wipe(child)
     else:
+        skip_wipe = ("hub2", "hub3", "slides", "live")
         for child in args:
-            if child in ("hub2", "slides"):
+            if child in skip_wipe:
+                continue
+            if child == "shift":
+                _wipe("shift_lead")
                 continue
             _wipe(child)
     SHEETS.mkdir(parents=True, exist_ok=True)
@@ -611,6 +703,16 @@ def main() -> None:
         slice_lamp()
     if "bystander" in args:
         slice_bystander()
+    if "hub3" in args:
+        slice_hub3()
+    if "live" in args:
+        slice_live()
+    if "gant" in args:
+        slice_named_who("gant", GANT)
+    if "shift" in args:
+        slice_named_who("shift_lead", SHIFT)
+    if "mohawk" in args:
+        slice_named_who("mohawk", MOHAWK)
     if "slides" in args:
         for who, mapping in (("father", FATHER), ("son", SON)):
             for clip in ("slide", "dive"):

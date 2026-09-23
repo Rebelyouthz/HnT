@@ -37,6 +37,7 @@ func _ready() -> void:
 	board.size = Vector2(72, 28)
 	board.position = Vector2(-36, -118)
 	add_child(board)
+	SpriteBook.attach_living(self, "power_gate", -40.0)
 	body_entered.connect(_on_body)
 
 
