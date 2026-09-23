@@ -70,6 +70,7 @@ func _ready() -> void:
 	UiKit.apply_label(_hint, 12, Palette.EDGE)
 	_hint.text = "FILED" if _taken else str(spec.get("title", "SECRET"))
 	add_child(_hint)
+	SpriteBook.attach_living(self, "secret")
 
 
 func _shape(kind: String) -> PackedVector2Array:

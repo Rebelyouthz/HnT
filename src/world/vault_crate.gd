@@ -27,6 +27,7 @@ func _ready() -> void:
 		Vector2(-28, -22), Vector2(28, -22), Vector2(28, -16), Vector2(-28, -16)
 	])
 	add_child(strap)
+	SpriteBook.attach_living(self, "vault")
 
 
 func covers(pos: Vector2) -> bool:

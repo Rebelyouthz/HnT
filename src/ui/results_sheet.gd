@@ -111,10 +111,17 @@ func _ready() -> void:
 		if lock_line == "" and not enter_lock.is_empty():
 			lock_line = PowerBook.line(enter_lock)
 		if lock_line != "":
-			var locked := UiKit.button(lock_line, Vector2(520, 52))
+			var lock_row := HBoxContainer.new()
+			lock_row.add_theme_constant_override("separation", 8)
+			var shop := str(enter_lock.get("shop_id", "dojo"))
+			if shop == "":
+				shop = "dojo"
+			lock_row.add_child(UiKit.portrait(SpriteBook.icon(shop), Vector2(48, 48)))
+			var locked := UiKit.button(lock_line, Vector2(460, 52))
 			locked.disabled = true
 			locked.process_mode = Node.PROCESS_MODE_ALWAYS
-			col.add_child(locked)
+			lock_row.add_child(locked)
+			col.add_child(lock_row)
 			var why := Label.new()
 			why.text = lock_line
 			why.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

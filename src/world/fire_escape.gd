@@ -56,3 +56,5 @@ func _paint() -> void:
 		])
 		add_child(rung)
 		y += 22.0
+	var span := maxf(96.0, h)
+	SpriteBook.attach_scaled(self, "fire_escape", 0.0, Vector2(0.85, clampf(span / 96.0, 1.4, 3.2)))

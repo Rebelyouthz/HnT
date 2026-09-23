@@ -110,6 +110,17 @@ static func attach_living(host: Node, who: String, extra_y: float = 0.0) -> bool
 	return true
 
 
+static func attach_scaled(host: Node, who: String, extra_y: float, scl: Vector2) -> bool:
+	if host == null or who == "" or not has_who(who):
+		return false
+	hide_polys(host)
+	var a := make_anim(who)
+	a.scale = scl
+	a.position.y += extra_y
+	host.add_child(a)
+	return true
+
+
 static func tex(path: String) -> Texture2D:
 	if _tex.has(path):
 		return _tex[path] as Texture2D

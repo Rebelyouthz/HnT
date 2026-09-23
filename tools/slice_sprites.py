@@ -534,6 +534,21 @@ LIVE_IDLE = {
     "chain": "pickup-chain-idle.png",
 }
 
+REMAIN_IDLE = {
+    "vault": "smash-vault-idle.png",
+    "geyser": "toy-geyser-idle.png",
+    "pistol": "pickup-pistol-idle.png",
+    "board": "pickup-board-idle.png",
+    "knife": "pickup-knife-idle.png",
+    "pipe": "pickup-pipe-idle.png",
+    "envelope": "pickup-envelope-idle.png",
+    "web_anchor": "web-anchor-idle.png",
+    "blood_mart": "blood-mart-idle.png",
+    "secret": "secret-stash-idle.png",
+    "fire_escape": "fire-escape-idle.png",
+    "tower": "viewpoint-tower-idle.png",
+}
+
 GANT = {
     "idle": "gant-idle-stand.png",
     "walk": "gant-walk-cycle.png",
@@ -655,6 +670,14 @@ def slice_live() -> None:
             raise SystemExit("%s/idle has %d frames" % (who, n))
 
 
+def slice_remain() -> None:
+    for who, name in REMAIN_IDLE.items():
+        src = copy_sheet(name)
+        n = slice_who(src, OUT / who / "idle", "prop")
+        if n < 6:
+            raise SystemExit("%s/idle has %d frames" % (who, n))
+
+
 def main() -> None:
     if not ART.is_dir():
         raise SystemExit("missing art dir %s" % ART)
@@ -662,6 +685,7 @@ def main() -> None:
     known = (
         "all", "father", "punk", "dock", "skinwalker", "son", "lot", "hub", "hub2",
         "hub3", "cop", "lamp", "bystander", "slides", "live", "gant", "shift", "mohawk",
+        "remain",
     )
     unknown = [a for a in args if a not in known]
     if unknown:
@@ -671,7 +695,7 @@ def main() -> None:
         for child in ["father", "punk", "dock", "skinwalker", "son", "lot", "hub", "cop", "lamp", "bystander"]:
             _wipe(child)
     else:
-        skip_wipe = ("hub2", "hub3", "slides", "live")
+        skip_wipe = ("hub2", "hub3", "slides", "live", "remain")
         for child in args:
             if child in skip_wipe:
                 continue
@@ -707,6 +731,8 @@ def main() -> None:
         slice_hub3()
     if "live" in args:
         slice_live()
+    if "remain" in args:
+        slice_remain()
     if "gant" in args:
         slice_named_who("gant", GANT)
     if "shift" in args:

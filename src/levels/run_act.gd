@@ -652,6 +652,7 @@ func lock_boss_card(line: String) -> void:
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 10)
 	card.add_child(col)
+	col.add_child(UiKit.portrait(SpriteBook.icon("therapy_couch"), Vector2(56, 56)))
 	var t := Label.new()
 	t.text = line
 	t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

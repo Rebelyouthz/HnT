@@ -466,8 +466,9 @@ static func wind(host: Node, cx: float) -> void:
 	host.add_child(p)
 
 
-static func wet_floor(host: Node, map_w: float) -> void:
-	Blockout.poly(host, Rect2(0, 430, map_w, 290), Color(0.10, 0.10, 0.12), 0)
+static func wet_floor(host: Node, map_w: float, skip_fill: bool = false) -> void:
+	if not skip_fill:
+		Blockout.poly(host, Rect2(0, 430, map_w, 290), Color(0.10, 0.10, 0.12), 0)
 	var wet := Blockout.poly(host, Rect2(0, 520, map_w, 90), Color(0.18, 0.2, 0.28, 0.38), 1)
 	wet.z_index = 1
 	wet.uv = PackedVector2Array([Vector2(0, 0), Vector2(1, 0), Vector2(1, 1), Vector2(0, 1)])
@@ -670,7 +671,25 @@ static func pixel_dock(host: Node, map_w: float) -> void:
 				x += pw
 	for lx in [420.0, 900.0, 1480.0, 2100.0, 2680.0]:
 		AmbientProp.lamp(host, Vector2(lx, 500.0), 3)
-	SpriteBook.stamp(host, "crane", Vector2(180.0, 240.0), -5)
+
+
+static func pixel_roof(host: Node, rect: Rect2) -> void:
+	var roof := SpriteBook.tile("roof")
+	if roof == null:
+		Blockout.poly(host, rect, Color(0.22, 0.18, 0.2), 2)
+		return
+	var tw := float(roof.get_width()) * SpriteBook.DRAW_SCALE
+	var x := rect.position.x
+	while x < rect.end.x - 2.0:
+		var s := Sprite2D.new()
+		s.texture = roof
+		s.centered = false
+		s.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
+		s.position = Vector2(x, rect.position.y)
+		s.z_index = 2
+		s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		host.add_child(s)
+		x += tw
 
 
 static func pixel_lot(host: Node, map_w: float) -> void:

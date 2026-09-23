@@ -21,6 +21,7 @@ func _ready() -> void:
 	UiKit.apply_label(_hint, 13, Palette.READY)
 	_hint.text = "24/7  ·  SPECIAL BUYS"
 	add_child(_hint)
+	SpriteBook.attach_scaled(self, "blood_mart", 8.0, Vector2(1.15, 1.15))
 
 
 func _process(_delta: float) -> void:

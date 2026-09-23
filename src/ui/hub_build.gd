@@ -145,6 +145,7 @@ func _node_card(node: Dictionary) -> Control:
 	row.add_theme_stylebox_override("panel", UiKit.panel(fill, border))
 	var box := HBoxContainer.new()
 	row.add_child(box)
+	box.add_child(UiKit.portrait(SpriteBook.icon("therapy_couch"), Vector2(36, 36)))
 	var pip := ColorRect.new()
 	pip.custom_minimum_size = Vector2(8, 36)
 	if owned:

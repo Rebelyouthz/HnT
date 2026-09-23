@@ -24,29 +24,27 @@ func build_world() -> void:
 	var sky := Blockout.poly(self, Rect2(0, 0, map_w, 720), Color(0.07, 0.08, 0.13), -8)
 	sky.z_index = -8
 	NightStreet.parallax(self, map_w, "dock")
-	NightStreet.wet_floor(self, map_w)
-	NightStreet.tenement(self, Rect2(80, 160, 220, 280), Color(0.14, 0.1, 0.12))
-	NightStreet.tenement(self, Rect2(420, 90, 260, 160), Color(0.16, 0.11, 0.13))
-	NightStreet.tenement(self, Rect2(860, 70, 300, 180), Color(0.13, 0.1, 0.14))
-	NightStreet.tenement(self, Rect2(1480, 60, 340, 190), Color(0.15, 0.1, 0.12))
-	NightStreet.tenement(self, Rect2(2480, 80, 280, 170), Color(0.14, 0.11, 0.13))
-	NightStreet.tenement(self, Rect2(2920, 140, 220, 290), Color(0.12, 0.16, 0.14))
-	NightStreet.pixel_tenement(self, Rect2(80, 160, 220, 280))
-	NightStreet.pixel_tenement(self, Rect2(420, 90, 260, 160))
-	NightStreet.pixel_tenement(self, Rect2(860, 70, 300, 180))
-	NightStreet.pixel_tenement(self, Rect2(1480, 60, 340, 190))
-	NightStreet.pixel_tenement(self, Rect2(2480, 80, 280, 170))
-	NightStreet.pixel_tenement(self, Rect2(2920, 140, 220, 290))
+	NightStreet.wet_floor(self, map_w, true)
+	for r in [
+		Rect2(80, 160, 220, 280),
+		Rect2(420, 90, 260, 160),
+		Rect2(860, 70, 300, 180),
+		Rect2(1480, 60, 340, 190),
+		Rect2(2480, 80, 280, 170),
+		Rect2(2920, 140, 220, 290)
+	]:
+		Blockout.occluder(self, r)
+		NightStreet.pixel_tenement(self, r)
 	NightStreet.pixel_dock(self, map_w)
 	Blockout.solid(self, Rect2(400, ROOF_Y, 840, 22), true)
-	Blockout.poly(self, Rect2(400, ROOF_Y, 840, 22), Color(0.22, 0.18, 0.2), 2)
+	NightStreet.pixel_roof(self, Rect2(400, ROOF_Y, 840, 22))
 	Blockout.solid(self, Rect2(1420, ROOF_Y, 580, 22), true)
-	Blockout.poly(self, Rect2(1420, ROOF_Y, 580, 22), Color(0.22, 0.18, 0.2), 2)
+	NightStreet.pixel_roof(self, Rect2(1420, ROOF_Y, 580, 22))
 	Blockout.solid(self, Rect2(2480, ROOF_Y, 440, 22), true)
-	Blockout.poly(self, Rect2(2480, ROOF_Y, 440, 22), Color(0.22, 0.18, 0.2), 2)
+	NightStreet.pixel_roof(self, Rect2(2480, ROOF_Y, 440, 22))
 	var wall := Blockout.solid(self, Rect2(1234, 140, 18, 110), false)
 	wall.add_to_group("metal")
-	Blockout.poly(self, Rect2(1234, 140, 18, 110), Color(0.3, 0.22, 0.2), 3)
+	NightStreet.pixel_tenement(self, Rect2(1230, 140, 32, 110))
 	fire_escape(480.0)
 	fire_escape(1920.0)
 	fire_escape(2520.0)

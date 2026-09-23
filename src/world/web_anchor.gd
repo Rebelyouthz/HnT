@@ -21,6 +21,7 @@ func _ready() -> void:
 		Vector2(-40, -8), Vector2(40, -8), Vector2(40, 0), Vector2(-40, 0)
 	])
 	add_child(beam)
+	SpriteBook.attach_living(self, "web_anchor")
 
 
 static func nearest_in_cone(from: Vector2, facing: int, origin: Node) -> WebAnchor:

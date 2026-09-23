@@ -47,26 +47,18 @@ func flash(title: String, sub: String, accent: Color, full: bool) -> void:
 	bot.position = Vector2(0, 650)
 	bot.size = Vector2(1280, 70)
 	ui.add_child(bot)
-	var portrait := ColorRect.new()
-	portrait.color = accent
+	var who := _who_for(title)
+	var face := SpriteBook.tex("res://assets/sprites/%s/idle/00.png" % who)
+	var portrait := TextureRect.new()
+	portrait.custom_minimum_size = Vector2(220, 280)
 	portrait.size = Vector2(220, 280)
 	portrait.position = Vector2(-240, 200)
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	portrait.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	if face:
+		portrait.texture = face
 	ui.add_child(portrait)
-	var face := ColorRect.new()
-	face.color = accent.lightened(0.25)
-	face.size = Vector2(80, 48)
-	face.position = Vector2(70, 70)
-	portrait.add_child(face)
-	var eye_l := ColorRect.new()
-	eye_l.color = Color(0.05, 0.04, 0.06)
-	eye_l.size = Vector2(18, 10)
-	eye_l.position = Vector2(12, 16)
-	face.add_child(eye_l)
-	var eye_r := ColorRect.new()
-	eye_r.color = Color(0.05, 0.04, 0.06)
-	eye_r.size = Vector2(18, 10)
-	eye_r.position = Vector2(50, 16)
-	face.add_child(eye_r)
 	var name_l := Label.new()
 	name_l.text = title.to_upper()
 	name_l.position = Vector2(1280, 250)
@@ -96,3 +88,18 @@ func flash(title: String, sub: String, accent: Color, full: bool) -> void:
 	tw.chain().tween_property(self, "modulate:a", 0.0, 0.28)
 	tw.finished.connect(queue_free)
 	Juice.unlock_logo(title.to_upper(), sub)
+
+
+func _who_for(title: String) -> String:
+	var t := title.to_lower()
+	if t.contains("gant"):
+		return "gant"
+	if t.contains("shift"):
+		return "shift_lead"
+	if t.contains("mohawk"):
+		return "mohawk"
+	if t.contains("cop"):
+		return "cop"
+	if SpriteBook.has_who("punk"):
+		return "punk"
+	return "father"

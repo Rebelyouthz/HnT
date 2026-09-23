@@ -27,17 +27,17 @@ func _ready() -> void:
 	cs.shape = r
 	cs.position = Vector2(0, -40)
 	add_child(cs)
-	var post := ColorRect.new()
-	post.color = Palette.BRICK
-	post.size = Vector2(10, 96)
-	post.position = Vector2(-5, -96)
-	add_child(post)
-	var board := ColorRect.new()
-	board.color = Color(0.08, 0.07, 0.1, 0.95)
-	board.size = Vector2(72, 28)
-	board.position = Vector2(-36, -118)
-	add_child(board)
-	SpriteBook.attach_living(self, "power_gate", -40.0)
+	if not SpriteBook.attach_living(self, "power_gate", -40.0):
+		var post := ColorRect.new()
+		post.color = Palette.BRICK
+		post.size = Vector2(10, 96)
+		post.position = Vector2(-5, -96)
+		add_child(post)
+		var board := ColorRect.new()
+		board.color = Color(0.08, 0.07, 0.1, 0.95)
+		board.size = Vector2(72, 28)
+		board.position = Vector2(-36, -118)
+		add_child(board)
 	body_entered.connect(_on_body)
 
 

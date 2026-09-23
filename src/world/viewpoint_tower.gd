@@ -102,6 +102,7 @@ func _ready() -> void:
 	UiKit.apply_label(_hint, 13, Palette.EDGE)
 	_hint.text = "%s  ·  LIGHT CLIMBS" % str(TowerBook.map_row(map_id).get("label", "TOWER"))
 	add_child(_hint)
+	SpriteBook.attach_scaled(self, "tower", -200.0, Vector2(1.15, 3.2))
 	NightStreet.plaque(get_parent(), global_position + Vector2(-90, -470), "140M  ·  HELL IS BELOW", Palette.LEMON, 13)
 
 
