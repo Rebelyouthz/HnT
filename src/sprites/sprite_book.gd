@@ -14,7 +14,8 @@ const LOOP := {
 	"parkour_run": true,
 	"duck": true,
 	"dog": true,
-	"crawl": true
+	"crawl": true,
+	"lamp": true
 }
 
 
@@ -61,6 +62,10 @@ static func _add_clip(sf: SpriteFrames, root: String, clip: String) -> void:
 	var spd := 10.0
 	if clip == "idle" or clip == "dog":
 		spd = 6.0
+	if "/lamp" in root:
+		spd = 4.0
+	elif "/bystander" in root and clip == "idle":
+		spd = 5.0
 	elif clip == "parkour_run" or clip == "attack":
 		spd = 14.0
 	elif clip == "jab" or clip == "cross" or clip == "gut" or clip == "front_kick" or clip == "side_kick":

@@ -21,6 +21,7 @@ func _ready() -> void:
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", 10)
 	head.add_child(LogoMark.new())
+	head.add_child(UiKit.portrait(SpriteBook.icon("therapy_couch"), Vector2(48, 48)))
 	var h := Label.new()
 	h.text = "THE CBT TREE"
 	UiKit.apply_label(h, 24, Palette.LEMON)
@@ -161,8 +162,21 @@ func _node_card(node: Dictionary) -> Control:
 	t.text = "%s  ·  %s" % [str(node["name"]), Rarity.label(rarity)]
 	UiKit.apply_label(t, 13, Palette.MUTED if locked else Rarity.color(rarity))
 	txt.add_child(t)
+	var got := Label.new()
+	got.text = str(node.get("stat", node.get("blurb", "")))
+	UiKit.apply_label(got, 11, Palette.LEMON if not locked else Palette.MUTED)
+	txt.add_child(got)
 	var b := Label.new()
-	b.text = str(node["blurb"]) if not locked else "DARK  ·  BUY %s FIRST" % req.replace("_", " ").to_upper()
+	if locked:
+		b.text = "DARK  ·  BUY %s FIRST" % req.replace("_", " ").to_upper()
+	elif owned:
+		b.text = str(node["blurb"])
+	elif int(FamilyProfile.data["gold"]) < int(node["gold"]):
+		b.text = "NEED %d GOLD" % int(node["gold"])
+	elif int(FamilyProfile.data["rep"]) < int(node["rep"]):
+		b.text = "NEED %d REP" % int(node["rep"])
+	else:
+		b.text = str(node["blurb"])
 	b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	UiKit.apply_label(b, 11, Palette.TEXT if not locked else Palette.LOCK)
 	txt.add_child(b)

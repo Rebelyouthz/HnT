@@ -39,12 +39,25 @@ func _ready() -> void:
 
 	var play := UiKit.button(Copy.PLAY, Vector2(320, 52))
 	play.add_theme_stylebox_override("normal", UiKit.panel(Palette.BRICK, Palette.LEMON))
-	UiKit.pulse_ready(play)
-	play.pressed.connect(func() -> void:
-		App.couch = false
-		App.start_run()
-	)
+	var hop := FamilyProfile.next_run_map()
+	var enter_lock := PowerBook.lock(hop, "enter")
+	var boss_lock := PowerBook.lock(hop, "boss")
+	if not enter_lock.is_empty():
+		play.disabled = true
+		play.text = PowerBook.line(enter_lock)
+	else:
+		UiKit.pulse_ready(play)
+		play.pressed.connect(func() -> void:
+			App.couch = false
+			App.start_run()
+		)
 	col.add_child(play)
+	if not enter_lock.is_empty() or not boss_lock.is_empty():
+		var lock_lab := Label.new()
+		lock_lab.text = PowerBook.line(enter_lock if not enter_lock.is_empty() else boss_lock)
+		lock_lab.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		UiKit.apply_label(lock_lab, 14, Palette.BRICK)
+		col.add_child(lock_lab)
 	var play_sub := Label.new()
 	play_sub.text = Copy.CLINIC_PLAY_SUB
 	play_sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

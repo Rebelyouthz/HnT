@@ -465,6 +465,51 @@ func _initialize() -> void:
 	failed += _cel_diff("son", "parkour_run")
 	failed += _contains("res://src/juice/juice.gd", "TOAST_COOL_MS")
 	failed += _contains("res://src/juice/juice.gd", "TOAST_MAX")
+	failed += _exists("res://data/power_gates.json")
+	failed += _exists("res://src/app/power_book.gd")
+	failed += _exists("res://src/world/power_gate.gd")
+	failed += _exists("res://assets/sprites/hub/therapy_couch.png")
+	failed += _exists("res://assets/sprites/hub/street_map.png")
+	failed += _exists("res://assets/sprites/hub/wardrobe_cage.png")
+	failed += _exists("res://assets/sprites/hub/research_lab.png")
+	failed += _exists("res://assets/sprites/father/slide/00.png")
+	failed += _exists("res://assets/sprites/son/dive/00.png")
+	failed += _exists("res://assets/sprites/cop/idle/00.png")
+	failed += _exists("res://assets/sprites/lamp/idle/00.png")
+	failed += _exists("res://assets/sprites/bystander/idle/00.png")
+	failed += _cel_diff("father", "slide")
+	failed += _cel_diff("son", "dive")
+	failed += _contains("res://src/ui/results_sheet.gd", "PowerBook.lock")
+	failed += _contains("res://src/levels/run_act.gd", "lock_boss_card")
+	failed += _contains("res://src/app/family_profile.gd", "func cash_fail")
+	failed += _contains("res://src/coop/party.gd", "density_coop")
+	var gates: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/power_gates.json"))
+	if typeof(gates) != TYPE_DICTIONARY or not (gates as Dictionary).has("dock_street"):
+		push_error("power_gates missing dock_street")
+		failed += 1
+	else:
+		var dock: Variant = (gates as Dictionary).get("dock_street", {})
+		if typeof(dock) != TYPE_DICTIONARY:
+			push_error("dock_street gate malformed")
+			failed += 1
+		else:
+			var need: Variant = (dock as Dictionary).get("need", {})
+			if typeof(need) != TYPE_DICTIONARY or str((need as Dictionary).get("id", "")) != "thick_skin":
+				push_error("Night Class first wall must be thick_skin")
+				failed += 1
+	var fp2 := get_root().get_node("FamilyProfile")
+	var app2 := get_root().get_node("App")
+	app2.difficulty = "open_house"
+	if not PowerBook.lock("dock_street", "boss").is_empty():
+		push_error("open house must skip power lock")
+		failed += 1
+	app2.difficulty = "night_class"
+	if not bool(fp2.has_cbt("thick_skin")):
+		var boss_lock: Dictionary = PowerBook.lock("dock_street", "boss")
+		var line := str(boss_lock.get("line", ""))
+		if boss_lock.is_empty() or (line.find("THERAPY COUCH") < 0 and line.find("THICK SKIN") < 0):
+			push_error("dock boss must name THERAPY COUCH or THICK SKIN")
+			failed += 1
 	var net := get_root().get_node_or_null("NetSession")
 	if net == null:
 		push_error("NetSession autoload missing")

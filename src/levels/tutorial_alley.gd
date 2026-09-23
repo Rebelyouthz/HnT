@@ -46,6 +46,8 @@ func build_world() -> void:
 	NightStreet.plaque(self, Vector2(860, 180), "PICK UP THE PISTOL  ·  O / RB TO FIRE", Palette.MUTED, 13)
 	NightStreet.plaque(self, Vector2(1240, 180), "PUNCH THE DUMMY  ·  THEN WALK RIGHT", Palette.MUTED, 13)
 	NightStreet.rain(self, 900.0)
+	AmbientProp.lamp(self, Vector2(360.0, 500.0), 3)
+	AmbientProp.lamp(self, Vector2(1180.0, 500.0), 3)
 	var dummy := Party.spawn_row(self, {
 		"title": "Bag Snatch", "x": 1420, "y": 500, "home": "street", "hp": 24, "pmin": 1320, "pmax": 1560
 	}, 0.6)

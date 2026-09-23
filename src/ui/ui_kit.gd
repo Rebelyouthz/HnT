@@ -131,3 +131,14 @@ static func pop_in(n: Control) -> void:
 	n.scale = Vector2(0.88, 0.88)
 	var tw := n.create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.tween_property(n, "scale", Vector2.ONE, 0.2)
+
+
+static func portrait(tex: Texture2D, size: Vector2 = Vector2(48, 48)) -> TextureRect:
+	var pic := TextureRect.new()
+	pic.custom_minimum_size = size
+	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	pic.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	if tex:
+		pic.texture = tex
+	return pic

@@ -203,16 +203,18 @@ func _part(pos: Vector2, size: Vector2, color: Color) -> void:
 func _wants_sprite() -> bool:
 	if title == "Number 87" or title == "Skinwalker":
 		return false
-	if cop or vehicle != "":
+	if vehicle != "":
 		return false
 	if home == "air" or title == "Drone":
 		return false
+	if cop:
+		return SpriteBook.has_who("cop")
 	return SpriteBook.has_who("punk")
 
 
 func _mount_sprite() -> void:
 	SpriteBook.hide_polys(visual)
-	_anim = SpriteBook.make_anim("punk")
+	_anim = SpriteBook.make_anim("cop" if cop and SpriteBook.has_who("cop") else "punk")
 	visual.add_child(_anim)
 
 

@@ -669,7 +669,7 @@ static func pixel_dock(host: Node, map_w: float) -> void:
 				host.add_child(p)
 				x += pw
 	for lx in [420.0, 900.0, 1480.0, 2100.0, 2680.0]:
-		SpriteBook.stamp(host, "lamp", Vector2(lx, 500.0), 3)
+		AmbientProp.lamp(host, Vector2(lx, 500.0), 3)
 	SpriteBook.stamp(host, "awning", Vector2(1100.0, 430.0), 3)
 	SpriteBook.stamp(host, "crane", Vector2(180.0, 240.0), -5)
 

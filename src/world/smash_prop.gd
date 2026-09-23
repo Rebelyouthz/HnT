@@ -148,6 +148,10 @@ func _pop(from: Node) -> void:
 	orb.global_position = global_position + Vector2(0, -16)
 	var host := get_parent()
 	host.add_child(orb)
+	if kind in ["dumpster", "kiosk", "barrel", "cop_car"]:
+		FamilyProfile.add_parts("scrap_coil", 1)
+	elif kind in ["mail", "news", "booth"]:
+		FamilyProfile.add_parts("clinic_thread", 1)
 	Juice.smash_burst(global_position, kind)
 	Juice.shout(kind.to_upper() + " POP")
 	var rs := get_tree().get_first_node_in_group("run_state")

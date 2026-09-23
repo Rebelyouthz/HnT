@@ -30,6 +30,7 @@ func _paint() -> void:
 		c.queue_free()
 	var head := HBoxContainer.new()
 	head.add_child(LogoMark.new())
+	head.add_child(UiKit.portrait(SpriteBook.icon("wardrobe_cage"), Vector2(48, 48)))
 	var h := Label.new()
 	h.text = "AVATAR  ·  LOCKER"
 	UiKit.apply_label(h, 24, Palette.LEMON)
@@ -85,6 +86,9 @@ func _row(item: Dictionary) -> Control:
 	p.add_theme_stylebox_override("panel", UiKit.panel(Rarity.fill(rarity), Rarity.color(rarity)))
 	var row := HBoxContainer.new()
 	p.add_child(row)
+	var who := "father" if _role == "father" else "son"
+	var face := SpriteBook.tex("res://assets/sprites/%s/idle/00.png" % who)
+	row.add_child(UiKit.portrait(face, Vector2(56, 56)))
 	var stamp := StampMark.new()
 	stamp.accent = Rarity.color(rarity)
 	row.add_child(stamp)
@@ -126,10 +130,14 @@ func _row(item: Dictionary) -> Control:
 	else:
 		var cost := int(item.get("gold", 0))
 		var buy := UiKit.button("%d GOLD" % cost if cost > 0 else "CLAIM", Vector2(150, 40))
-		var can := int(FamilyProfile.data.get("gold", 0)) >= cost and int(FamilyProfile.data.get("rep", 0)) >= int(item.get("rep", 0))
+		var need_gold := int(FamilyProfile.data.get("gold", 0)) < cost
+		var need_rep := int(FamilyProfile.data.get("rep", 0)) < int(item.get("rep", 0))
+		var can := not need_gold and not need_rep
 		buy.disabled = not can
-		if not can:
-			buy.text = "LOCK  REP %d" % int(item.get("rep", 0))
+		if need_rep:
+			buy.text = "NEED %d REP" % int(item.get("rep", 0))
+		elif need_gold:
+			buy.text = "NEED %d GOLD" % cost
 		buy.pressed.connect(func() -> void:
 			if FamilyProfile.try_buy_gear(id):
 				Rarity.juice(rarity, str(item.get("title", "")))

@@ -57,19 +57,27 @@ func start_run() -> void:
 	density_coop = couch or remote_coop
 	run_bag = {}
 	map_index = 0
-	current_map = "dock_street"
 	film_from = ""
 	film_next = ""
 	film_kind = ""
 	last_run_ok = false
 	if remote_coop:
+		current_map = "dock_street"
 		enter_map("dock_street")
 		return
 	if force_intro or not bool(FamilyProfile.data.get("intro_done", false)):
 		force_intro = false
+		current_map = "dock_street"
 		enter_map("intro_flow")
 		return
-	enter_map("dock_street")
+	var hop := FamilyProfile.next_run_map()
+	var enter_lock := PowerBook.lock(hop, "enter")
+	if not enter_lock.is_empty():
+		Juice.toast("challenge", "LOCKED", PowerBook.line(enter_lock))
+		back_to_hub("clinic")
+		return
+	current_map = hop
+	enter_map(hop)
 
 
 func start_versus() -> void:
@@ -114,6 +122,10 @@ func apply_begin_extra(d: Dictionary) -> void:
 
 
 func advance(next_id: String, state: RunState) -> void:
+	var enter_lock := PowerBook.lock(next_id, "enter")
+	if not enter_lock.is_empty():
+		Juice.toast("challenge", "LOCKED", PowerBook.line(enter_lock))
+		return
 	run_bag = state.pack()
 	get_tree().paused = false
 	film_from = current_map

@@ -24,18 +24,22 @@ func _ready() -> void:
 	home = global_position
 	visual = Node2D.new()
 	add_child(visual)
-	var coat := Polygon2D.new()
-	coat.color = Color(0.28, 0.26, 0.32, 0.92)
-	coat.polygon = PackedVector2Array([
-		Vector2(-10, -36), Vector2(10, -36), Vector2(12, 0), Vector2(-12, 0)
-	])
-	visual.add_child(coat)
-	var head := Polygon2D.new()
-	head.color = Palette.TEXT.darkened(0.25)
-	head.polygon = PackedVector2Array([
-		Vector2(-8, -52), Vector2(8, -52), Vector2(7, -36), Vector2(-7, -36)
-	])
-	visual.add_child(head)
+	if SpriteBook.has_who("bystander"):
+		var a := SpriteBook.make_anim("bystander")
+		visual.add_child(a)
+	else:
+		var coat := Polygon2D.new()
+		coat.color = Color(0.28, 0.26, 0.32, 0.92)
+		coat.polygon = PackedVector2Array([
+			Vector2(-10, -36), Vector2(10, -36), Vector2(12, 0), Vector2(-12, 0)
+		])
+		visual.add_child(coat)
+		var head := Polygon2D.new()
+		head.color = Palette.TEXT.darkened(0.25)
+		head.polygon = PackedVector2Array([
+			Vector2(-8, -52), Vector2(8, -52), Vector2(7, -36), Vector2(-7, -36)
+		])
+		visual.add_child(head)
 
 
 func _physics_process(delta: float) -> void:

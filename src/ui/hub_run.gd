@@ -73,8 +73,14 @@ func _ready() -> void:
 	_go = UiKit.button(Copy.GO_SOLO if not App.couch else Copy.GO_COUCH, Vector2(360, 56))
 	_go.add_theme_stylebox_override("normal", UiKit.panel(Palette.BRICK, Palette.LEMON))
 	UiKit.pulse_ready(_go)
-	_go.pressed.connect(App.start_run)
+	_bind_go()
 	col.add_child(_go)
+	var lock_lab := Label.new()
+	lock_lab.name = "PowerLock"
+	lock_lab.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	UiKit.apply_label(lock_lab, 14, Palette.BRICK)
+	col.add_child(lock_lab)
+	_paint_lock(lock_lab)
 
 	var extra := HBoxContainer.new()
 	extra.add_theme_constant_override("separation", 8)
@@ -175,5 +181,46 @@ func _count_rows() -> Array:
 func _refresh_copy() -> void:
 	if _go:
 		_go.text = Copy.GO_COUCH if App.couch else Copy.GO_SOLO
+		_bind_go()
 	if _hint:
 		_hint.text = (Copy.COUCH_HINT if App.couch else Copy.SOLO_HINT) + "  " + Copy.JOIN_HINT + "  " + Copy.REMOTE_HINT
+	var lock_lab := get_node_or_null("PowerLock") as Label
+	if lock_lab == null:
+		for c in get_children():
+			lock_lab = c.find_child("PowerLock", true, false) as Label
+			if lock_lab:
+				break
+	if lock_lab:
+		_paint_lock(lock_lab)
+
+
+func _bind_go() -> void:
+	if _go == null:
+		return
+	var hop := FamilyProfile.next_run_map()
+	var enter_lock := PowerBook.lock(hop, "enter")
+	if not enter_lock.is_empty():
+		_go.disabled = true
+		_go.text = PowerBook.line(enter_lock)
+		if _go.pressed.is_connected(App.start_run):
+			_go.pressed.disconnect(App.start_run)
+	else:
+		_go.disabled = false
+		if not _go.pressed.is_connected(App.start_run):
+			_go.pressed.connect(App.start_run)
+
+
+func _paint_lock(lab: Label) -> void:
+	var hop := FamilyProfile.next_run_map()
+	var enter_lock := PowerBook.lock(hop, "enter")
+	if not enter_lock.is_empty():
+		lab.text = PowerBook.line(enter_lock)
+		lab.visible = true
+		return
+	var boss_lock := PowerBook.lock(hop, "boss")
+	if not boss_lock.is_empty():
+		lab.text = PowerBook.line(boss_lock)
+		lab.visible = true
+		return
+	lab.text = ""
+	lab.visible = false

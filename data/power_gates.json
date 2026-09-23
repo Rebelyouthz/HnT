@@ -1,0 +1,52 @@
+{
+  "dock_street": {
+    "when": "boss",
+    "need": {
+      "kind": "cbt",
+      "id": "thick_skin",
+      "shop": "therapy_couch",
+      "shop_name": "THERAPY COUCH",
+      "node": "THICK SKIN"
+    }
+  },
+  "intake_lot": {
+    "when": "enter",
+    "need": {
+      "kind": "dojo",
+      "id": "uppercut",
+      "shop": "dojo",
+      "shop_name": "MARTIAL ARTS SCHOOL",
+      "node": "UPPERCUT"
+    }
+  },
+  "fire_escapes": {
+    "when": "enter",
+    "need": {
+      "kind": "gear",
+      "id": "clinic_scrubs",
+      "shop": "wardrobe_cage",
+      "shop_name": "WARDROBE CAGE",
+      "node": "STOLEN SCRUBS"
+    }
+  },
+  "group_circle": {
+    "when": "enter",
+    "need": {
+      "kind": "research",
+      "id": "mag_plus",
+      "shop": "research_lab",
+      "shop_name": "RESEARCH CENTER",
+      "node": "EXTENDED MAG"
+    }
+  },
+  "neon_exchange": {
+    "when": "enter",
+    "need": {
+      "kind": "craft",
+      "id": "coil_tape",
+      "shop": "workshop",
+      "shop_name": "WORKSHOP",
+      "node": "TAPE FROM PARTS"
+    }
+  }
+}

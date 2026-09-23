@@ -234,9 +234,9 @@ func _sprite_clip(kind: String) -> String:
 		"snap", "special":
 			return "snap"
 		"slide":
-			return "duck"
+			return "slide"
 		"dive":
-			return "jump"
+			return "dive"
 		_:
 			return "jab"
 
@@ -257,16 +257,20 @@ func _tick_sprite() -> void:
 		clip = "duck"
 	elif hop < -8.0 or (plane == "roof" and not is_on_floor()) or gliding:
 		clip = "jump"
+	elif sliding or slide_frames > 0:
+		clip = "slide"
 	elif dashing or parkour_lock > 0.0 or absf(velocity.x) > 110.0:
 		clip = "parkour_run"
-	elif sliding:
-		clip = "duck"
 	elif absf(velocity.x) > 18.0:
 		clip = "walk"
 	if not _anim.sprite_frames.has_animation(clip):
 		if clip == "side_kick" and _anim.sprite_frames.has_animation("front_kick"):
 			clip = "front_kick"
 		elif clip == "air_mix" and _anim.sprite_frames.has_animation("jump"):
+			clip = "jump"
+		elif clip == "slide" and _anim.sprite_frames.has_animation("duck"):
+			clip = "duck"
+		elif clip == "dive" and _anim.sprite_frames.has_animation("jump"):
 			clip = "jump"
 		elif _anim.sprite_frames.has_animation("idle"):
 			clip = "idle"

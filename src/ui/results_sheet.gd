@@ -9,6 +9,8 @@ var win := true
 var gate := false
 var next_id := ""
 var next_label := "NEXT"
+var fail_gold := 0
+var lock_line := ""
 var state: RunState
 var _xp_bar: ProgressBar
 var _xp_lab: Label
@@ -18,10 +20,11 @@ func _ready() -> void:
 	layer = 42
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	get_tree().paused = true
+	var ui := PixelStage.attach_canvas(self)
 	var dim := ColorRect.new()
 	dim.color = Color(0, 0, 0, 0.78)
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(dim)
+	ui.add_child(dim)
 	var card := PanelContainer.new()
 	card.add_theme_stylebox_override("panel", UiKit.panel(Palette.PANEL, Palette.LEMON if win else Palette.BRICK))
 	card.set_anchors_preset(Control.PRESET_CENTER)
@@ -29,7 +32,7 @@ func _ready() -> void:
 	card.offset_right = 420
 	card.offset_top = -300
 	card.offset_bottom = 300
-	add_child(card)
+	ui.add_child(card)
 	var sc := ScrollContainer.new()
 	sc.custom_minimum_size = Vector2(820, 580)
 	card.add_child(sc)
@@ -46,6 +49,11 @@ func _ready() -> void:
 	s.custom_minimum_size = Vector2(780, 0)
 	UiKit.apply_label(s, 15, Palette.TEXT)
 	col.add_child(s)
+	if not win and fail_gold > 0:
+		var pay := Label.new()
+		pay.text = "+%d GOLD  ·  %s" % [fail_gold, Copy.FAIL_GOLD]
+		UiKit.apply_label(pay, 16, Palette.EDGE)
+		col.add_child(pay)
 	var son_n := FamilyProfile.son_name()
 	var dad_n := FamilyProfile.father_name()
 	var son_s := 0
@@ -99,16 +107,30 @@ func _ready() -> void:
 	UiKit.apply_label(xp_line, 13, Palette.TEXT)
 	col.add_child(xp_line)
 	if gate and next_id != "":
-		var nxt := UiKit.button(next_label, Vector2(360, 52))
-		nxt.process_mode = Node.PROCESS_MODE_ALWAYS
-		nxt.pressed.connect(_go_next)
-		col.add_child(nxt)
-		nxt.grab_focus()
+		var enter_lock := PowerBook.lock(next_id, "enter")
+		if lock_line == "" and not enter_lock.is_empty():
+			lock_line = PowerBook.line(enter_lock)
+		if lock_line != "":
+			var locked := UiKit.button(lock_line, Vector2(520, 52))
+			locked.disabled = true
+			locked.process_mode = Node.PROCESS_MODE_ALWAYS
+			col.add_child(locked)
+			var why := Label.new()
+			why.text = lock_line
+			why.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			UiKit.apply_label(why, 13, Palette.BRICK)
+			col.add_child(why)
+		else:
+			var nxt := UiKit.button(next_label, Vector2(360, 52))
+			nxt.process_mode = Node.PROCESS_MODE_ALWAYS
+			nxt.pressed.connect(_go_next)
+			col.add_child(nxt)
+			nxt.grab_focus()
 	var b := UiKit.button("BACK TO THE CLINIC", Vector2(280, 48))
 	b.process_mode = Node.PROCESS_MODE_ALWAYS
 	b.pressed.connect(_go_hub)
 	col.add_child(b)
-	if not gate:
+	if not gate or lock_line != "":
 		b.grab_focus()
 	Juice.pulse_shake(8.0 if win else 5.0)
 	if win:
@@ -147,6 +169,10 @@ func _tween_xp(xp: float, dings: int) -> void:
 
 
 func _go_next() -> void:
+	var enter_lock := PowerBook.lock(next_id, "enter")
+	if not enter_lock.is_empty():
+		Juice.toast("challenge", "LOCKED", PowerBook.line(enter_lock))
+		return
 	get_tree().paused = false
 	if state:
 		App.advance(next_id, state)

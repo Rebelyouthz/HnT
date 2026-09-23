@@ -203,7 +203,9 @@ func _defaults() -> Dictionary:
 		"summit_meals": 0,
 		"secrets_found": 0,
 		"secret_ids": [],
-		"talk_choices": {}
+		"talk_choices": {},
+		"maps_filed": [],
+		"crafts": []
 	}
 
 
@@ -242,6 +244,35 @@ func building_level(id: String) -> int:
 
 func is_built(id: String) -> bool:
 	return building_level(id) > 0
+
+
+func next_run_map() -> String:
+	var filed: Array = data.get("maps_filed", [])
+	for id in App.ORDER:
+		if not filed.has(id):
+			return str(id)
+	return "dock_street"
+
+
+func mark_map_filed(id: String) -> void:
+	if id == "" or id == "tutorial_alley" or id == "intro_flow":
+		return
+	var filed: Array = data.get("maps_filed", [])
+	if filed.has(id):
+		return
+	filed.append(id)
+	data["maps_filed"] = filed
+	save()
+
+
+func cash_fail(scrap: int, score: int) -> int:
+	var gold := 10 + int(scrap / 4.0) + mini(20, int(score / 50.0))
+	add_gold(gold)
+	return gold
+
+
+func has_craft(id: String) -> bool:
+	return (data.get("crafts", []) as Array).has(id)
 
 
 func tab_unlocked(tab: String) -> bool:
@@ -1411,6 +1442,10 @@ func try_craft(id: String) -> bool:
 	if not spend_parts(need):
 		return false
 	data["gold"] = int(data["gold"]) - int(spec.get("gold", 0))
+	var crafts: Array = data.get("crafts", [])
+	if not crafts.has(id):
+		crafts.append(id)
+		data["crafts"] = crafts
 	var grant := str(spec.get("grant", ""))
 	if grant == "gear_hat":
 		var hat := equipped_id("son", "hat")

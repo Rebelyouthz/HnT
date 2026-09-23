@@ -24,10 +24,14 @@ func _ready() -> void:
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 10)
 	sc.add_child(col)
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", 10)
+	head.add_child(UiKit.portrait(SpriteBook.icon("dojo"), Vector2(56, 56)))
 	var h := Label.new()
 	h.text = "MARTIAL ARTS SCHOOL"
 	UiKit.apply_label(h, 24, Palette.LEMON)
-	col.add_child(h)
+	head.add_child(h)
+	col.add_child(head)
 	var s := Label.new()
 	s.text = "Learn, upgrade, master. Rank 3 pins a shaolin badge. The Son already bills for this."
 	s.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -53,6 +57,7 @@ func _row(info: Dictionary) -> Control:
 	p.add_theme_stylebox_override("panel", UiKit.panel(Rarity.fill(rarity), Rarity.color(rarity)))
 	var row := HBoxContainer.new()
 	p.add_child(row)
+	row.add_child(UiKit.portrait(SpriteBook.icon("dojo"), Vector2(48, 48)))
 	if FamilyProfile.is_unseen("dojo_%s" % id):
 		row.add_child(UiKit.new_dot())
 	var v := VBoxContainer.new()
@@ -60,17 +65,20 @@ func _row(info: Dictionary) -> Control:
 	var t := Label.new()
 	t.text = "%s  ·  %s  ·  RANK %d/3" % [str(info.get("title", "")), Rarity.label(rarity), rank]
 	UiKit.apply_label(t, 16, Rarity.color(rarity))
-	var b := Label.new()
-	b.text = str(info.get("blurb", ""))
-	b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	UiKit.apply_label(b, 13, Palette.TEXT)
+	var got := Label.new()
+	got.text = str(info.get("kind", "move")).to_upper() + "  ·  " + str(info.get("blurb", ""))
+	got.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	UiKit.apply_label(got, 12, Palette.LEMON)
 	v.add_child(t)
-	v.add_child(b)
+	v.add_child(got)
 	row.add_child(v)
 	var costs: Array = info.get("gold", [20, 35, 55])
 	var cost := int(costs[mini(rank, costs.size() - 1)])
 	var go := UiKit.button("MASTERED" if rank >= 3 else "TRAIN  %dG" % cost, Vector2(150, 40))
 	go.disabled = rank >= 3
+	if rank < 3 and int(FamilyProfile.data.get("gold", 0)) < cost:
+		go.disabled = true
+		go.text = "NEED %d GOLD" % cost
 	go.pressed.connect(func() -> void:
 		if FamilyProfile.try_dojo(id):
 			FamilyProfile.mark_seen("dojo_%s" % id)

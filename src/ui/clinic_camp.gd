@@ -34,7 +34,7 @@ func _spot(info: Dictionary) -> Control:
 	var id := str(info["id"])
 	var lvl := FamilyProfile.building_level(id)
 	var wrap := PanelContainer.new()
-	wrap.custom_minimum_size = Vector2(154, 148)
+	wrap.custom_minimum_size = Vector2(154, 188)
 	wrap.clip_contents = false
 	wrap.add_theme_stylebox_override("panel", UiKit.panel(Palette.PANEL if lvl > 0 else Palette.PANEL_2, Palette.EDGE if lvl > 0 else Palette.LOCK))
 	var col := VBoxContainer.new()
@@ -47,18 +47,16 @@ func _spot(info: Dictionary) -> Control:
 	if FamilyProfile.is_unseen("build_%s" % id):
 		roof_row.add_child(UiKit.new_dot())
 	col.add_child(roof_row)
+	var portrait := SpriteBook.icon(id)
+	col.add_child(UiKit.portrait(portrait, Vector2(56, 56)))
 	var title := Label.new()
 	title.text = str(info["name"])
 	UiKit.apply_label(title, 14, Palette.LEMON if lvl > 0 else Palette.MUTED)
 	col.add_child(title)
-	var portrait := SpriteBook.icon(id)
-	if portrait:
-		var pic := TextureRect.new()
-		pic.texture = portrait
-		pic.custom_minimum_size = Vector2(48, 48)
-		pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		pic.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		col.add_child(pic)
+	var unlocks := Label.new()
+	unlocks.text = "UNLOCKS  ·  %s" % str(info.get("unlocks", "CAMP"))
+	UiKit.apply_label(unlocks, 11, Palette.EDGE if lvl > 0 else Palette.MUTED)
+	col.add_child(unlocks)
 	var blurb := Label.new()
 	blurb.text = str(info["blurb"])
 	blurb.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -66,9 +64,11 @@ func _spot(info: Dictionary) -> Control:
 	UiKit.apply_label(blurb, 11, Palette.TEXT)
 	col.add_child(blurb)
 	var cost := FamilyProfile.build_cost(id)
+	var can_pay := int(FamilyProfile.data["gold"]) >= cost
 	var b := UiKit.button("BUILD %d" % cost if lvl == 0 else "UPGRADE %d" % cost, Vector2(136, 32))
-	if int(FamilyProfile.data["gold"]) < cost:
+	if not can_pay:
 		b.disabled = true
+		b.text = "NEED %d GOLD" % cost
 	else:
 		b.add_theme_stylebox_override("normal", UiKit.panel(Palette.PANEL_2, Palette.READY if lvl == 0 else Palette.EDGE))
 		if lvl == 0:
@@ -123,7 +123,6 @@ func _spot(info: Dictionary) -> Control:
 			open_sheet.emit(id)
 		)
 		col.add_child(open)
-	var can_pay := int(FamilyProfile.data["gold"]) >= cost
 	if can_pay and (lvl == 0 or lvl < 4):
 		var bang := UiKit.bang()
 		bang.position = Vector2(118, -8)

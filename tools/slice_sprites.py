@@ -231,11 +231,20 @@ def save_clip(frames: list[Image.Image], dest: Path) -> None:
 def slice_who(src: Path, dest: Path, anchor: str) -> int:
     im = Image.open(src).convert("RGBA")
     bg = _bg(im)
-    cells = grid(im)
+    w, h = im.size
+    if w / max(h, 1) > 1.45:
+        rows_b, cols_b = _equal(w, h, 4, 3)
+        cells = [(x0, y0, x1, y1) for y0, y1 in rows_b for x0, x1 in cols_b]
+    else:
+        cells = grid(im)
     frames: list[Image.Image] = []
+    forced = w / max(h, 1) > 1.45
     for box in cells:
         raw = chroma_cell(im, box, bg, strict=anchor == "tile")
-        if _bbox(raw) is None or _opaque_frac(raw) < 0.06:
+        if _bbox(raw) is None or _opaque_frac(raw) < (0.01 if forced else 0.06):
+            if not forced:
+                continue
+            frames.append(Image.new("RGBA", (CANVAS, CANVAS), (0, 0, 0, 0)))
             continue
         if anchor == "cell":
             frames.append(fit_cell(raw))
@@ -290,7 +299,12 @@ def slice_named(
     frames: list[Image.Image] = []
     forced = cols >= 2 and rows >= 2
     for box in cells:
-        raw = chroma_cell(im, box, bg, strict=mode == "tile")
+        if mode == "icon":
+            x0, y0, x1, y1 = box
+            pad = 2
+            raw = im.crop((x0 + pad, y0 + pad, max(x0 + pad + 1, x1 - pad), max(y0 + pad + 1, y1 - pad))).convert("RGBA")
+        else:
+            raw = chroma_cell(im, box, bg, strict=mode == "tile")
         empty = _bbox(raw) is None or _opaque_frac(raw) < (0.02 if forced else 0.06)
         if empty and not forced:
             continue
@@ -343,6 +357,8 @@ FATHER = {
     "uppercut": ("father-uppercut-casual.png", "cell"),
     "air_mix": ("father-air-mix-casual.png", "cell"),
     "snap": ("father-snap-casual.png", "feet"),
+    "slide": ("father-slide-casual.png", "feet"),
+    "dive": ("father-dive-casual.png", "cell"),
 }
 
 PUNK = {
@@ -350,6 +366,13 @@ PUNK = {
     "walk": "punk-walk-casual.png",
     "attack": "punk-attack.png",
     "hurt": "punk-hurt.png",
+}
+
+COP = {
+    "idle": "cop-idle-stand.png",
+    "walk": "cop-walk-patrol.png",
+    "attack": "cop-attack-stick.png",
+    "hurt": "cop-hurt-recoil.png",
 }
 
 TILE_NAMES = [
@@ -414,6 +437,8 @@ SON = {
     "uppercut": ("son-uppercut.png", "cell"),
     "air_mix": ("son-air-mix.png", "cell"),
     "snap": ("son-snap-flash.png", "feet"),
+    "slide": ("son-slide-crouch.png", "feet"),
+    "dive": ("son-dive-drop.png", "cell"),
 }
 
 LOT_TILE_NAMES = [
@@ -454,6 +479,17 @@ HUB_NAMES = [
     "workshop",
     "streak_locker",
     "trophy_cabinet",
+]
+
+HUB2_NAMES = [
+    "street_map",
+    "therapy_couch",
+    "wardrobe_cage",
+    "research_lab",
+    "front_desk",
+    "mail_slot",
+    "bounty_board",
+    "punching_bag",
 ]
 
 
@@ -508,19 +544,48 @@ def slice_hub() -> None:
     slice_named(src, OUT / "hub", HUB_NAMES, "icon", 4, 2)
 
 
+def slice_hub2() -> None:
+    src = copy_sheet("clinic-hub-gate-icons.png")
+    slice_named(src, OUT / "hub", HUB2_NAMES, "icon", 4, 2)
+
+
+def slice_cop() -> None:
+    for clip, name in COP.items():
+        src = copy_sheet(name)
+        n = slice_who(src, OUT / "cop" / clip, "feet")
+        if n < 6:
+            raise SystemExit("cop/%s has %d frames" % (clip, n))
+
+
+def slice_lamp() -> None:
+    src = copy_sheet("lamp-flicker-sheet.png")
+    n = slice_who(src, OUT / "lamp" / "idle", "cell")
+    if n < 6:
+        raise SystemExit("lamp/idle has %d frames" % n)
+
+
+def slice_bystander() -> None:
+    src = copy_sheet("bystander-idle-sheet.png")
+    n = slice_who(src, OUT / "bystander" / "idle", "feet")
+    if n < 6:
+        raise SystemExit("bystander/idle has %d frames" % n)
+
+
 def main() -> None:
     if not ART.is_dir():
         raise SystemExit("missing art dir %s" % ART)
     args = [a.lower() for a in sys.argv[1:]] or ["all"]
-    unknown = [a for a in args if a not in ("all", "father", "punk", "dock", "skinwalker", "son", "lot", "hub")]
+    unknown = [a for a in args if a not in ("all", "father", "punk", "dock", "skinwalker", "son", "lot", "hub", "hub2", "cop", "lamp", "bystander", "slides")]
     if unknown:
         raise SystemExit("unknown who: %s" % " ".join(unknown))
     if "all" in args:
-        args = ["father", "punk", "dock", "skinwalker", "son", "lot", "hub"]
-        for child in args:
+        args = ["father", "punk", "dock", "skinwalker", "son", "lot", "hub", "hub2", "cop", "lamp", "bystander"]
+        for child in ["father", "punk", "dock", "skinwalker", "son", "lot", "hub", "cop", "lamp", "bystander"]:
             _wipe(child)
     else:
         for child in args:
+            if child in ("hub2", "slides"):
+                continue
             _wipe(child)
     SHEETS.mkdir(parents=True, exist_ok=True)
     if "father" in args:
@@ -538,6 +603,22 @@ def main() -> None:
         slice_lot()
     if "hub" in args:
         slice_hub()
+    if "hub2" in args:
+        slice_hub2()
+    if "cop" in args:
+        slice_cop()
+    if "lamp" in args:
+        slice_lamp()
+    if "bystander" in args:
+        slice_bystander()
+    if "slides" in args:
+        for who, mapping in (("father", FATHER), ("son", SON)):
+            for clip in ("slide", "dive"):
+                name, anchor = mapping[clip]
+                src = copy_sheet(name)
+                n = slice_who(src, OUT / who / clip, anchor)
+                if n < 6:
+                    raise SystemExit("%s/%s has %d frames" % (who, clip, n))
     print("done")
 
 

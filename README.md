@@ -189,6 +189,8 @@ Red **new** dots sit on the avatar, the HnT logo, **every hub tab**, the run HUD
 
 The camp grid is the home screen. **BUILD** plays a carpenter animation in front of you. Upgrade expands stock.
 
+**Night Class / Finals:** camp is not optional shopping. Death or a failed boss returns here **with gold**. **NEXT** and the first real boss stay locked until you buy the upgrade the next map requires. The lock names the building or node (Therapy Couch, Thick Skin, Dojo). Open House skips the check. Solo 3 / couch 6 is unchanged. Currencies stay gold, rep, parts.
+
 | Building | Where | What |
 | --- | --- | --- |
 | **Camp Shop** | Clinic camp → BUILD CAMP SHOP → **OPEN** | Chests, lucky wheel, slots. Upgrade the stall: claw at lv2, scratch cards at lv3. Always shows what you got. |

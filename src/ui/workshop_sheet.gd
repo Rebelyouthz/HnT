@@ -28,6 +28,7 @@ func _ready() -> void:
 	var mark := LogoMark.new()
 	mark.custom_minimum_size = Vector2(48, 48)
 	head.add_child(mark)
+	head.add_child(UiKit.portrait(SpriteBook.icon("workshop"), Vector2(56, 56)))
 	var h := Label.new()
 	h.text = Copy.WORKSHOP
 	UiKit.apply_label(h, 24, Palette.LEMON)
@@ -73,14 +74,36 @@ func _row(info: Dictionary) -> Control:
 	var t := Label.new()
 	t.text = "%s  ·  %s" % [str(info.get("title", "")), Rarity.label(rarity)]
 	UiKit.apply_label(t, 16, Rarity.color(rarity))
+	var need: Dictionary = info.get("parts", {})
+	var parts_bits: PackedStringArray = PackedStringArray()
+	for k in need.keys():
+		parts_bits.append("%s %d" % [str(k).replace("_", " ").to_upper(), int(need[k])])
+	var got := Label.new()
+	got.text = "GET  ·  %s  ·  %s" % [str(info.get("grant", "")), " ".join(parts_bits)]
+	UiKit.apply_label(got, 12, Palette.LEMON)
 	var b := Label.new()
 	b.text = str(info.get("blurb", ""))
+	if FamilyProfile.has_craft(id):
+		b.text = "OWNED  ·  " + b.text
 	b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	UiKit.apply_label(b, 13, Palette.TEXT)
 	v.add_child(t)
+	v.add_child(got)
 	v.add_child(b)
 	row.add_child(v)
 	var go := UiKit.button("CRAFT  %dG" % int(info.get("gold", 0)), Vector2(150, 40))
+	if FamilyProfile.has_craft(id):
+		go.text = "OWNED"
+		go.disabled = true
+	elif int(FamilyProfile.data.get("gold", 0)) < int(info.get("gold", 0)):
+		go.disabled = true
+		go.text = "NEED %d GOLD" % int(info.get("gold", 0))
+	else:
+		for k in need.keys():
+			if FamilyProfile.part_n(str(k)) < int(need[k]):
+				go.disabled = true
+				go.text = "NEED PARTS"
+				break
 	go.pressed.connect(func() -> void:
 		if FamilyProfile.try_craft(id):
 			FamilyProfile.mark_seen("craft_%s" % id)

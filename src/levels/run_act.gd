@@ -396,9 +396,11 @@ func _on_wanted() -> void:
 
 func _on_fail() -> void:
 	FamilyProfile.mark_run_finished(false)
+	var g := 0
 	if _state:
 		FamilyProfile.note_score(_state.score_total)
-	_banner(Copy.FAIL, fail_sub, false, false)
+		g = FamilyProfile.cash_fail(_state.scrap, _state.score_total)
+	_banner(Copy.FAIL, fail_sub if fail_sub != "" else Copy.FAIL_GOLD, false, false, g)
 
 
 func _on_gate() -> void:
@@ -411,6 +413,7 @@ func _on_gate() -> void:
 			FamilyProfile.mark_survive(map_id)
 		"invoice_pier":
 			FamilyProfile.mark_annex()
+	FamilyProfile.mark_map_filed(map_id)
 	if _state:
 		FamilyProfile.note_score(_state.score_total)
 	Juice.toast("quest", "CHECKPOINT", gate_sub)
@@ -419,6 +422,7 @@ func _on_gate() -> void:
 
 func _on_clear() -> void:
 	FamilyProfile.mark_run_finished(true)
+	FamilyProfile.mark_map_filed(map_id)
 	if App.is_solo_density():
 		FamilyProfile.mark_solo_clear()
 	if map_id == "city_hall":
@@ -469,7 +473,12 @@ func _boot_story() -> void:
 	if not bool(row.get("survive", false)) and not _skip_story_boss:
 		_spawn_story_unit(true)
 		var boss: Variant = row.get("boss", {})
-		if typeof(boss) == TYPE_DICTIONARY and str((boss as Dictionary).get("kind", "")) not in ["mayor_raven", "family_plan"] and not defer_final_boss:
+		var boss_lock := PowerBook.lock(map_id, "boss")
+		if not boss_lock.is_empty():
+			var bx := float((boss as Dictionary).get("x", spawn_at.x + 1800.0)) if typeof(boss) == TYPE_DICTIONARY else spawn_at.x + 1800.0
+			PowerGate.place(self, Vector2(bx, 500.0), PowerBook.line(boss_lock))
+			Juice.toast("challenge", "LOCKED", PowerBook.line(boss_lock))
+		elif typeof(boss) == TYPE_DICTIONARY and str((boss as Dictionary).get("kind", "")) not in ["mayor_raven", "family_plan"] and not defer_final_boss:
 			_spawn_story_unit(false)
 	var talks: Variant = row.get("talk", [])
 	if typeof(talks) == TYPE_ARRAY and (talks as Array).size() > 0:
@@ -598,7 +607,7 @@ func _tick_boss_intro(lead_x: float) -> void:
 		BossCard.present(self, title, sub, accent, full)
 
 
-func _banner(title: String, sub: String, win: bool, gate: bool) -> void:
+func _banner(title: String, sub: String, win: bool, gate: bool, gold_n: int = 0) -> void:
 	if _end and is_instance_valid(_end):
 		return
 	var sheet := ResultsSheet.new()
@@ -609,8 +618,63 @@ func _banner(title: String, sub: String, win: bool, gate: bool) -> void:
 	sheet.next_id = next_id
 	sheet.next_label = next_label if next_label != "" else Copy.NEXT_MAP
 	sheet.state = _state
+	sheet.fail_gold = gold_n
+	if gate and next_id != "":
+		var enter_lock := PowerBook.lock(next_id, "enter")
+		if not enter_lock.is_empty():
+			sheet.lock_line = PowerBook.line(enter_lock)
 	add_child(sheet)
 	_end = sheet
+
+
+func lock_boss_card(line: String) -> void:
+	if get_node_or_null("LockCard"):
+		return
+	var layer := CanvasLayer.new()
+	layer.name = "LockCard"
+	layer.layer = 50
+	layer.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(layer)
+	get_tree().paused = true
+	var ui := PixelStage.attach_canvas(layer)
+	var dim := ColorRect.new()
+	dim.color = Color(0, 0, 0, 0.72)
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	ui.add_child(dim)
+	var card := PanelContainer.new()
+	card.add_theme_stylebox_override("panel", UiKit.panel(Palette.PANEL, Palette.BRICK))
+	card.set_anchors_preset(Control.PRESET_CENTER)
+	card.offset_left = -280
+	card.offset_right = 280
+	card.offset_top = -140
+	card.offset_bottom = 140
+	ui.add_child(card)
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 10)
+	card.add_child(col)
+	var t := Label.new()
+	t.text = line
+	t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	UiKit.apply_label(t, 22, Palette.LEMON)
+	col.add_child(t)
+	var back := UiKit.button("BACK TO THE CLINIC", Vector2(280, 48))
+	back.process_mode = Node.PROCESS_MODE_ALWAYS
+	back.pressed.connect(func() -> void:
+		get_tree().paused = false
+		layer.queue_free()
+		if not _state.failed:
+			_state.failed = true
+			_state.run_failed.emit()
+	)
+	col.add_child(back)
+	var stay := UiKit.button(Copy.KEEP_SMASHING, Vector2(280, 44))
+	stay.process_mode = Node.PROCESS_MODE_ALWAYS
+	stay.pressed.connect(func() -> void:
+		get_tree().paused = false
+		layer.queue_free()
+	)
+	col.add_child(stay)
+	back.grab_focus()
 
 
 func spawn_deferred_boss() -> void:
