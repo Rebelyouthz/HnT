@@ -5,11 +5,15 @@ extends Node2D
 
 
 static func lamp(host: Node, at: Vector2, z: int = 3) -> void:
-	if SpriteBook.has_who("lamp"):
+	place(host, "lamp", at, z)
+
+
+static func place(host: Node, who: String, at: Vector2, z: int = 3) -> void:
+	if SpriteBook.has_who(who):
 		var n := AmbientProp.new()
 		n.z_index = z
 		n.global_position = at
-		n.add_child(SpriteBook.make_anim("lamp"))
+		n.add_child(SpriteBook.make_anim(who))
 		host.add_child(n)
 		return
-	SpriteBook.stamp(host, "lamp", at, z)
+	SpriteBook.stamp(host, who, at, z)

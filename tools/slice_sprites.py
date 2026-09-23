@@ -570,6 +570,55 @@ MOHAWK = {
     "hurt": "mohawk-hurt-recoil.png",
 }
 
+LOT_LIVE = {
+    "fridge": "smash-fridge-idle.png",
+    "crowbar": "pickup-crowbar-idle.png",
+    "sedan": "lot-sedan-idle.png",
+    "hatchback": "lot-hatchback-idle.png",
+    "van": "lot-van-idle.png",
+    "sodium_lamp": "lot-sodium-idle.png",
+    "ticket_booth": "lot-ticket-booth-idle.png",
+    "cone": "lot-cone-idle.png",
+    "barrier": "lot-barrier-idle.png",
+    "drum": "lot-drum-idle.png",
+    "fence": "lot-fence-idle.png",
+}
+
+COPING = {
+    "idle": "coping-imp-idle-stand.png",
+    "walk": "coping-imp-walk-cycle.png",
+    "attack": "coping-imp-attack-jab.png",
+    "hurt": "coping-imp-hurt-recoil.png",
+}
+
+VALET = {
+    "idle": "valet-idle-stand.png",
+    "walk": "valet-walk-cycle.png",
+    "attack": "valet-attack-clamp.png",
+    "hurt": "valet-hurt-recoil.png",
+}
+
+CLAMP = {
+    "idle": "clamp-king-idle-stand.png",
+    "walk": "clamp-king-walk-cycle.png",
+    "attack": "clamp-king-attack-slam.png",
+    "hurt": "clamp-king-hurt-recoil.png",
+}
+
+HYDRA = {
+    "idle": "lot-hydra-idle-stand.png",
+    "walk": "lot-hydra-walk-cycle.png",
+    "attack": "lot-hydra-attack-boots.png",
+    "hurt": "lot-hydra-hurt-recoil.png",
+}
+
+CLIPBOARD = {
+    "idle": "clipboard-idle-hover.png",
+    "walk": "clipboard-walk-fly.png",
+    "attack": "clipboard-attack-paper.png",
+    "hurt": "clipboard-hurt-recoil.png",
+}
+
 
 def _wipe(name: str) -> None:
     p = OUT / name
@@ -654,12 +703,25 @@ def slice_hub3() -> None:
     slice_named(src, OUT / "hub", HUB3_NAMES, "icon", 4, 4)
 
 
-def slice_named_who(who: str, mapping: dict[str, str]) -> None:
+def slice_named_who(who: str, mapping: dict[str, str], anchor: str = "feet") -> None:
     for clip, name in mapping.items():
         src = copy_sheet(name)
-        n = slice_who(src, OUT / who / clip, "feet")
+        n = slice_who(src, OUT / who / clip, anchor)
         if n < 6:
             raise SystemExit("%s/%s has %d frames" % (who, clip, n))
+
+
+def slice_lotlive() -> None:
+    for who, name in LOT_LIVE.items():
+        src = copy_sheet(name)
+        n = slice_who(src, OUT / who / "idle", "prop")
+        if n < 6:
+            raise SystemExit("%s/idle has %d frames" % (who, n))
+    slice_named_who("coping_imp", COPING)
+    slice_named_who("valet", VALET)
+    slice_named_who("clamp_king", CLAMP)
+    slice_named_who("lot_hydra", HYDRA)
+    slice_named_who("clipboard_flier", CLIPBOARD, "cell")
 
 
 def slice_live() -> None:
@@ -685,7 +747,7 @@ def main() -> None:
     known = (
         "all", "father", "punk", "dock", "skinwalker", "son", "lot", "hub", "hub2",
         "hub3", "cop", "lamp", "bystander", "slides", "live", "gant", "shift", "mohawk",
-        "remain",
+        "remain", "lotlive",
     )
     unknown = [a for a in args if a not in known]
     if unknown:
@@ -695,7 +757,7 @@ def main() -> None:
         for child in ["father", "punk", "dock", "skinwalker", "son", "lot", "hub", "cop", "lamp", "bystander"]:
             _wipe(child)
     else:
-        skip_wipe = ("hub2", "hub3", "slides", "live", "remain")
+        skip_wipe = ("hub2", "hub3", "slides", "live", "remain", "lotlive")
         for child in args:
             if child in skip_wipe:
                 continue
@@ -739,6 +801,8 @@ def main() -> None:
         slice_named_who("shift_lead", SHIFT)
     if "mohawk" in args:
         slice_named_who("mohawk", MOHAWK)
+    if "lotlive" in args:
+        slice_lotlive()
     if "slides" in args:
         for who, mapping in (("father", FATHER), ("son", SON)):
             for clip in ("slide", "dive"):

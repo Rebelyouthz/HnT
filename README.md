@@ -239,7 +239,7 @@ Timmie does not draw. Sheets live in `assets/sprites/`. **The Father** is an une
 
 **Pixel grid:** logical viewport **640×360**, window **1920×1080**, integer **3×**, Nearest, no mipmaps, pixel snap. Do not 1.5× 1280×720. Characters draw at `SpriteBook.DRAW_SCALE` 0.5 (~30–40 logical px). 1280 UI goes through `PixelStage` at 0.5. Touch HUD (light/heavy/jump/duck/parkour) is phone-safe; no IPA. Skill: `.cursor/skills/pixel-perfect-2d/`.
 
-**Dock Street** and **Intake Lot** have pixel tiles and props. Other maps stay blockout. Clinic hub cards show building icons (pawn, radio, fridge, dojo, workshop, locker, awards) when those PNGs exist. Street punks use one collector-punk sheet. Skinwalker sheet is wired on Waiting Room if the frames load.
+**Dock Street** and **Intake Lot** have living 8–12 cel sheets (smash, parkour, cars-as-roofs, sodium lamps, named lot enemies). Later streets stay blockout until their pass. Clinic hub cards show building icons when those PNGs exist. Street punks use one collector-punk sheet unless a named who exists. Skinwalker sheet is wired on Waiting Room if the frames load.
 
 Re-slice after new atlases (sources in `tools/sprite_src/`):
 
@@ -247,6 +247,8 @@ Re-slice after new atlases (sources in `tools/sprite_src/`):
 python3 tools/slice_sprites.py
 python3 tools/slice_sprites.py son
 python3 tools/slice_sprites.py lot hub
+python3 tools/slice_sprites.py remain
+python3 tools/slice_sprites.py lotlive
 ```
 
 Contract: Project game plan. Superpolish2 lives in `.cursor/skills/superpolish2/`.

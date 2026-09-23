@@ -89,9 +89,11 @@ func _ready() -> void:
 	elif title == "Toll Bot":
 		visual.modulate = Color(0.7, 0.75, 0.7)
 	elif title == "Coping Imp":
-		visual.modulate = Color(0.55, 0.9, 0.62)
+		if not SpriteBook.has_who("coping_imp"):
+			visual.modulate = Color(0.55, 0.9, 0.62)
 	elif title == "Clipboard":
-		visual.modulate = Color(0.85, 0.86, 0.7)
+		if not SpriteBook.has_who("clipboard_flier"):
+			visual.modulate = Color(0.85, 0.86, 0.7)
 	elif title == "Invoice Clerk":
 		visual.modulate = Color(0.7, 0.88, 0.72)
 	elif title == "Pier Gull":
@@ -205,7 +207,9 @@ func _sprite_who() -> String:
 		return ""
 	if vehicle != "":
 		return ""
-	if home == "air" or title == "Drone":
+	if title == "Drone":
+		return ""
+	if home == "air" and title != "Clipboard":
 		return ""
 	if cop:
 		return "cop"
@@ -215,6 +219,16 @@ func _sprite_who() -> String:
 		return "shift_lead"
 	if title == "Mohawk Bo":
 		return "mohawk"
+	if title == "Coping Imp":
+		return "coping_imp"
+	if title == "Valet":
+		return "valet"
+	if title == "Clamp King":
+		return "clamp_king"
+	if title == "Lot Hydra":
+		return "lot_hydra"
+	if title == "Clipboard":
+		return "clipboard_flier"
 	return "punk"
 
 

@@ -21,21 +21,15 @@ func _configure() -> void:
 
 
 func build_world() -> void:
-	var sky := Blockout.poly(self, Rect2(0, 0, map_w, 720), Color(0.07, 0.05, 0.04), -8)
-	sky.z_index = -8
 	NightStreet.parallax(self, map_w, "lot")
-	NightStreet.wet_floor(self, map_w)
-	NightStreet.water_band(self, map_w, 580.0)
-	for i in 7:
-		var x := 80.0 + i * 260.0
-		var stall := Blockout.poly(self, Rect2(x, 470, 200, 8), Color(0.55, 0.45, 0.18, 0.7), 1)
-		stall.z_index = 1
-	NightStreet.car(self, Vector2(360, 500), Color(0.28, 0.18, 0.12))
-	NightStreet.car(self, Vector2(820, 500), Color(0.18, 0.2, 0.22))
-	NightStreet.car(self, Vector2(1280, 500), Color(0.32, 0.14, 0.1))
-	NightStreet.car(self, Vector2(1680, 500), Color(0.16, 0.16, 0.18))
+	NightStreet.wet_floor(self, map_w, true)
+	NightStreet.water_band(self, map_w, 580.0, "puddle")
+	NightStreet.car(self, Vector2(360, 500), Color(0.28, 0.18, 0.12), "sedan")
+	NightStreet.car(self, Vector2(820, 500), Color(0.18, 0.2, 0.22), "hatchback")
+	NightStreet.car(self, Vector2(1280, 500), Color(0.32, 0.14, 0.1), "van")
+	NightStreet.car(self, Vector2(1680, 500), Color(0.16, 0.16, 0.18), "sedan")
 	Blockout.solid(self, Rect2(520, 248, 220, 18), true)
-	Blockout.poly(self, Rect2(520, 248, 220, 18), Color(0.22, 0.16, 0.1), 2)
+	NightStreet.pixel_roof(self, Rect2(520, 248, 220, 18), "lot_roof")
 	fire_escape(560.0, 248.0)
 	var crate := VaultCrate.new()
 	crate.global_position = Vector2(980, 500)

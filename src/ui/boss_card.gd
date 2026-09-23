@@ -98,6 +98,16 @@ func _who_for(title: String) -> String:
 		return "shift_lead"
 	if t.contains("mohawk"):
 		return "mohawk"
+	if t.contains("clamp"):
+		return "clamp_king"
+	if t.contains("hydra"):
+		return "lot_hydra"
+	if t.contains("imp"):
+		return "coping_imp"
+	if t.contains("valet"):
+		return "valet"
+	if t.contains("clipboard"):
+		return "clipboard_flier"
 	if t.contains("cop"):
 		return "cop"
 	if SpriteBook.has_who("punk"):

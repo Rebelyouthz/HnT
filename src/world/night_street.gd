@@ -11,6 +11,8 @@ static func parallax(host: Node, map_w: float, theme: String = "dock") -> void:
 	sky_l.motion_scale = Vector2(0.02, 0.02)
 	pb.add_child(sky_l)
 	Blockout.poly(sky_l, Rect2(-200, -40, map_w + 600.0, 280), pal["sky"], -9)
+	if theme == "lot":
+		_tile_fill(sky_l, Rect2(-200, -40, map_w + 600.0, 280), "sodium_tile", -8, Color(1.0, 0.62, 0.28, 0.32))
 	var moon_l := ParallaxLayer.new()
 	moon_l.motion_scale = Vector2(0.05, 0.04)
 	pb.add_child(moon_l)
@@ -36,11 +38,17 @@ static func parallax(host: Node, map_w: float, theme: String = "dock") -> void:
 	var fog := ParallaxLayer.new()
 	fog.motion_scale = Vector2(0.08, 0.03)
 	pb.add_child(fog)
-	Blockout.poly(fog, Rect2(-80, 70, map_w + 240.0, 240), pal["fog"], -7)
+	if theme == "lot":
+		_tile_fill(fog, Rect2(-80, 70, map_w + 240.0, 180), "sodium_tile", -7, Color(0.85, 0.45, 0.15, 0.22))
+	else:
+		Blockout.poly(fog, Rect2(-80, 70, map_w + 240.0, 240), pal["fog"], -7)
 	var far := ParallaxLayer.new()
 	far.motion_scale = Vector2(0.16, 0.08)
 	pb.add_child(far)
-	Blockout.poly(far, Rect2(0, 190, map_w, 420), pal["far"], -6)
+	if theme == "lot":
+		_tile_fill(far, Rect2(0, 190, map_w, 200), "lot_roof", -6, Color(0.5, 0.35, 0.22, 0.9))
+	else:
+		Blockout.poly(far, Rect2(0, 190, map_w, 420), pal["far"], -6)
 	_skyline(far, map_w, pal["far_b"], theme)
 	var mid := ParallaxLayer.new()
 	mid.motion_scale = Vector2(0.34, 0.12)
@@ -201,6 +209,30 @@ static func _theme_pal(theme: String) -> Dictionary:
 			}
 
 
+static func _tile_fill(host: Node, rect: Rect2, kind: String, z: int, mod: Color = Color.WHITE) -> void:
+	var t := SpriteBook.tile(kind)
+	if t == null:
+		Blockout.poly(host, rect, Color(0.12, 0.09, 0.07, 0.7), z)
+		return
+	var tw := float(t.get_width()) * SpriteBook.DRAW_SCALE
+	var th := float(t.get_height()) * SpriteBook.DRAW_SCALE
+	var y := rect.position.y
+	while y < rect.end.y - 4.0:
+		var x := rect.position.x
+		while x < rect.end.x - 4.0:
+			var s := Sprite2D.new()
+			s.texture = t
+			s.centered = false
+			s.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
+			s.position = Vector2(x, y)
+			s.z_index = z
+			s.modulate = mod
+			s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			host.add_child(s)
+			x += tw
+		y += th
+
+
 static func _skyline(far: Node, map_w: float, color: Color, theme: String) -> void:
 	var i := 0
 	var x := 80.0
@@ -210,7 +242,19 @@ static func _skyline(far: Node, map_w: float, color: Color, theme: String) -> vo
 			Blockout.poly(far, Rect2(x, 80, 18, 340), color.lightened(0.05), -6)
 			Blockout.poly(far, Rect2(x + 18, 140, 90, 16), color, -6)
 		elif theme == "lot":
-			Blockout.poly(far, Rect2(x, 200, 110, 140), color, -6)
+			var roof := SpriteBook.tile("lot_roof")
+			if roof:
+				var s := Sprite2D.new()
+				s.texture = roof
+				s.centered = false
+				s.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
+				s.position = Vector2(x, 200)
+				s.z_index = -6
+				s.modulate = Color(0.62, 0.42, 0.28)
+				s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+				far.add_child(s)
+			else:
+				Blockout.poly(far, Rect2(x, 200, 110, 140), color, -6)
 		elif theme == "waiting":
 			Blockout.poly(far, Rect2(x, 120, 70, 260), color, -6)
 			Blockout.poly(far, Rect2(x + 12, 140, 14, 18), Color(0.9, 0.92, 0.7, 0.35), -5)
@@ -246,7 +290,7 @@ static func _mid_props(mid: Node, map_w: float, theme: String, pal: Dictionary) 
 			Blockout.poly(mid, Rect2(0, 500, map_w, 80), pal["water"], -3)
 		"lot":
 			for i in 6:
-				Blockout.poly(mid, Rect2(120.0 + i * 180.0, 360, 90, 40), Color(0.18, 0.12, 0.1), -4)
+				_tile_fill(mid, Rect2(120.0 + i * 180.0, 360, 90, 40), "lot_roof", -4, Color(0.7, 0.5, 0.35))
 		"circle":
 			Blockout.poly(mid, Rect2(map_w * 0.4, 300, 180, 80), Color(0.16, 0.2, 0.16), -4)
 		"waiting":
@@ -368,14 +412,36 @@ static func chapel(host: Node, rect: Rect2) -> void:
 	Blockout.add_glow(win)
 
 
-static func car(host: Node, at: Vector2, color: Color) -> void:
+static func car(host: Node, at: Vector2, color: Color, who: String = "sedan") -> void:
 	Blockout.solid(host, Rect2(at.x, at.y - 36, 110, 22), true)
+	Blockout.occluder(host, Rect2(at.x, at.y - 36, 110, 36))
+	var n := Node2D.new()
+	n.position = at + Vector2(55, 0)
+	n.z_index = 2
+	host.add_child(n)
+	if SpriteBook.attach_scaled(n, who, -8.0, Vector2(1.35, 1.05)):
+		return
 	Blockout.poly(host, Rect2(at.x, at.y - 36, 110, 36), color, 2)
 	Blockout.poly(host, Rect2(at.x + 18, at.y - 58, 70, 24), color.darkened(0.15), 2)
-	Blockout.occluder(host, Rect2(at.x, at.y - 36, 110, 36))
 
 
-static func water_band(host: Node, map_w: float, y: float = 560.0) -> void:
+static func water_band(host: Node, map_w: float, y: float = 560.0, tile_kind: String = "") -> void:
+	if tile_kind != "":
+		var t := SpriteBook.tile(tile_kind)
+		if t:
+			var tw := float(t.get_width()) * SpriteBook.DRAW_SCALE
+			var x := 0.0
+			while x < map_w:
+				var s := Sprite2D.new()
+				s.texture = t
+				s.centered = false
+				s.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
+				s.position = Vector2(x, y)
+				s.z_index = 1
+				s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+				host.add_child(s)
+				x += tw
+			return
 	var w := Blockout.poly(host, Rect2(0, y, map_w, 160), Color(0.07, 0.16, 0.15, 0.85), 1)
 	w.z_index = 1
 	Blockout.poly(host, Rect2(0, y, map_w, 18), Color(0.18, 0.32, 0.28, 0.55), 2)
@@ -673,8 +739,10 @@ static func pixel_dock(host: Node, map_w: float) -> void:
 		AmbientProp.lamp(host, Vector2(lx, 500.0), 3)
 
 
-static func pixel_roof(host: Node, rect: Rect2) -> void:
-	var roof := SpriteBook.tile("roof")
+static func pixel_roof(host: Node, rect: Rect2, kind: String = "roof") -> void:
+	var roof := SpriteBook.tile(kind)
+	if roof == null and kind != "roof":
+		roof = SpriteBook.tile("roof")
 	if roof == null:
 		Blockout.poly(host, rect, Color(0.22, 0.18, 0.2), 2)
 		return
@@ -731,15 +799,11 @@ static func pixel_lot(host: Node, map_w: float) -> void:
 			st.z_index = 1
 			st.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 			host.add_child(st)
-	var xs: Array[float] = [415.0, 875.0, 1335.0, 1735.0]
-	var kinds: Array[String] = ["sedan", "hatchback", "van", "sedan"]
-	for i in xs.size():
-		SpriteBook.stamp(host, kinds[i], Vector2(xs[i], 500.0), 4)
 	for lx in [200.0, 700.0, 1100.0, 1500.0, 1880.0]:
-		SpriteBook.stamp(host, "sodium_lamp", Vector2(lx, 500.0), 3)
-	SpriteBook.stamp(host, "ticket_booth", Vector2(120.0, 500.0), 3)
-	SpriteBook.stamp(host, "cone", Vector2(500.0, 500.0), 3)
-	SpriteBook.stamp(host, "cone", Vector2(1040.0, 500.0), 3)
-	SpriteBook.stamp(host, "barrier", Vector2(1480.0, 500.0), 3)
-	SpriteBook.stamp(host, "drum", Vector2(900.0, 500.0), 3)
-	SpriteBook.stamp(host, "fence", Vector2(48.0, 500.0), 3)
+		AmbientProp.place(host, "sodium_lamp", Vector2(lx, 500.0), 3)
+	AmbientProp.place(host, "ticket_booth", Vector2(120.0, 500.0), 3)
+	AmbientProp.place(host, "cone", Vector2(500.0, 500.0), 3)
+	AmbientProp.place(host, "cone", Vector2(1040.0, 500.0), 3)
+	AmbientProp.place(host, "barrier", Vector2(1480.0, 500.0), 3)
+	AmbientProp.place(host, "drum", Vector2(900.0, 500.0), 3)
+	AmbientProp.place(host, "fence", Vector2(48.0, 500.0), 3)
