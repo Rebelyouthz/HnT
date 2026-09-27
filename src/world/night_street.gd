@@ -13,6 +13,8 @@ static func parallax(host: Node, map_w: float, theme: String = "dock") -> void:
 	Blockout.poly(sky_l, Rect2(-200, -40, map_w + 600.0, 280), pal["sky"], -9)
 	if theme == "lot":
 		_tile_fill(sky_l, Rect2(-200, -40, map_w + 600.0, 280), "sodium_tile", -8, Color(1.0, 0.62, 0.28, 0.32))
+	elif theme == "roofs":
+		_tile_fill(sky_l, Rect2(-200, -40, map_w + 600.0, 280), "brick", -8, Color(0.4, 0.32, 0.48, 0.22))
 	var moon_l := ParallaxLayer.new()
 	moon_l.motion_scale = Vector2(0.05, 0.04)
 	pb.add_child(moon_l)
@@ -40,6 +42,8 @@ static func parallax(host: Node, map_w: float, theme: String = "dock") -> void:
 	pb.add_child(fog)
 	if theme == "lot":
 		_tile_fill(fog, Rect2(-80, 70, map_w + 240.0, 180), "sodium_tile", -7, Color(0.85, 0.45, 0.15, 0.22))
+	elif theme == "roofs":
+		_tile_fill(fog, Rect2(-80, 70, map_w + 240.0, 180), "roof", -7, Color(0.55, 0.45, 0.5, 0.22))
 	else:
 		Blockout.poly(fog, Rect2(-80, 70, map_w + 240.0, 240), pal["fog"], -7)
 	var far := ParallaxLayer.new()
@@ -47,6 +51,8 @@ static func parallax(host: Node, map_w: float, theme: String = "dock") -> void:
 	pb.add_child(far)
 	if theme == "lot":
 		_tile_fill(far, Rect2(0, 190, map_w, 200), "lot_roof", -6, Color(0.5, 0.35, 0.22, 0.9))
+	elif theme == "roofs":
+		_tile_fill(far, Rect2(0, 190, map_w, 200), "brick", -6, Color(0.42, 0.32, 0.38, 0.88))
 	else:
 		Blockout.poly(far, Rect2(0, 190, map_w, 420), pal["far"], -6)
 	_skyline(far, map_w, pal["far_b"], theme)

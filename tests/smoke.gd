@@ -555,6 +555,8 @@ func _initialize() -> void:
 	failed += _contains("res://src/world/ambient_prop.gd", "static func place")
 	failed += _contains("res://src/levels/intake_lot.gd", "pixel_roof")
 	failed += _contains("res://src/levels/intake_lot.gd", "lot_roof")
+	failed += _contains("res://src/levels/fire_escapes.gd", "pixel_tenement")
+	failed += _contains("res://src/levels/fire_escapes.gd", "pixel_roof")
 	failed += _contains("res://src/ui/boss_card.gd", "clamp_king")
 	var gates: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/power_gates.json"))
 	if typeof(gates) != TYPE_DICTIONARY or not (gates as Dictionary).has("dock_street"):

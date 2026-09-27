@@ -15,3 +15,7 @@ Godot_v*
 *.tmp
 *~
 .DS_Store
+
+# Tool output
+tools/__pycache__/
+tools/balance_sim_out.json
