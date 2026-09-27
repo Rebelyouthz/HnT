@@ -81,6 +81,45 @@ static func parallax(host: Node, map_w: float, theme: String = "dock") -> void:
 	Blockout.poly(fg, Rect2(map_w * 0.7, 622, 200, 36), pal["fg"], 13)
 	if theme == "pier" or theme == "lot":
 		Blockout.poly(fg, Rect2(80, 640, map_w, 30), pal["water"], 13)
+	_backdrop(pb, theme)
+
+
+## Painted street backdrop (assets/backdrops/<theme>.png, from
+## tools/backdrop.py): native pixel grid drawn at BACKDROP_TEXEL world units
+## per texel = 6 screen px on 1080p under the 1.5x couch camera. Its ground
+## line sits on the kerb (y 430); it scrolls a touch slower than the street
+## and mirrors across the map.
+const BACKDROP_TEXEL := 4.0 / 3.0
+const KERB_Y := 430.0
+
+
+static func has_backdrop(theme: String) -> bool:
+	return ResourceLoader.exists("res://assets/backdrops/%s.png" % theme)
+
+
+static func _backdrop(pb: ParallaxBackground, theme: String) -> void:
+	if not has_backdrop(theme):
+		return
+	var tex := load("res://assets/backdrops/%s.png" % theme) as Texture2D
+	var ground := float(tex.get_height()) * 0.86
+	var meta_path := "res://assets/backdrops/%s.json" % theme
+	if FileAccess.file_exists(meta_path):
+		var meta: Variant = JSON.parse_string(FileAccess.get_file_as_string(meta_path))
+		if meta is Dictionary:
+			ground = float((meta as Dictionary).get("ground", ground))
+	var layer := ParallaxLayer.new()
+	layer.name = "Backdrop"
+	layer.motion_scale = Vector2(0.9, 1.0)
+	layer.motion_mirroring = Vector2(float(tex.get_width()) * BACKDROP_TEXEL, 0.0)
+	pb.add_child(layer)
+	var s := Sprite2D.new()
+	s.texture = tex
+	s.centered = false
+	s.scale = Vector2(BACKDROP_TEXEL, BACKDROP_TEXEL)
+	s.position = Vector2(0.0, KERB_Y - ground * BACKDROP_TEXEL)
+	s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	s.z_index = -3
+	layer.add_child(s)
 
 
 static func _theme_pal(theme: String) -> Dictionary:
@@ -697,22 +736,20 @@ static func pixel_dock(host: Node, map_w: float) -> void:
 	var x := 0.0
 	var n := 0
 	while x < map_w:
-		var s := Sprite2D.new()
-		s.texture = wet if wet != null and n % 4 == 2 else cobble
-		s.centered = false
-		s.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
-		s.position = Vector2(x, 430.0)
-		s.z_index = 0
-		s.texture_filter = SpriteBook.world_filter()
-		host.add_child(s)
-		var s2 := Sprite2D.new()
-		s2.texture = cobble
-		s2.centered = false
-		s2.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
-		s2.position = Vector2(x, 430.0 + th)
-		s2.z_index = 0
-		s2.texture_filter = SpriteBook.world_filter()
-		host.add_child(s2)
+		# Pave the whole walkable band (430-520) down to the floor at 600.
+		var y := 430.0
+		var r := 0
+		while y < 600.0:
+			var s := Sprite2D.new()
+			s.texture = wet if wet != null and (n + r * 3) % 4 == 2 else cobble
+			s.centered = false
+			s.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
+			s.position = Vector2(x, y)
+			s.z_index = 0
+			s.texture_filter = SpriteBook.world_filter()
+			host.add_child(s)
+			y += th
+			r += 1
 		x += tw
 		n += 1
 	if water:
@@ -776,22 +813,19 @@ static func pixel_lot(host: Node, map_w: float) -> void:
 	var x := 0.0
 	var n := 0
 	while x < map_w:
-		var s := Sprite2D.new()
-		s.texture = wet if wet != null and n % 5 == 2 else asphalt
-		s.centered = false
-		s.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
-		s.position = Vector2(x, 430.0)
-		s.z_index = 0
-		s.texture_filter = SpriteBook.world_filter()
-		host.add_child(s)
-		var s2 := Sprite2D.new()
-		s2.texture = asphalt
-		s2.centered = false
-		s2.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
-		s2.position = Vector2(x, 430.0 + th)
-		s2.z_index = 0
-		s2.texture_filter = SpriteBook.world_filter()
-		host.add_child(s2)
+		var y := 430.0
+		var r := 0
+		while y < 600.0:
+			var s := Sprite2D.new()
+			s.texture = wet if wet != null and (n + r * 2) % 5 == 2 else asphalt
+			s.centered = false
+			s.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
+			s.position = Vector2(x, y)
+			s.z_index = 0
+			s.texture_filter = SpriteBook.world_filter()
+			host.add_child(s)
+			y += th
+			r += 1
 		x += tw
 		n += 1
 	var stall := SpriteBook.tile("stall")

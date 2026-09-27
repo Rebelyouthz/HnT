@@ -15,7 +15,7 @@ magenta; sometimes black or plum cell rules, sometimes a dark vignette).
    area barely changes with pose).
 4. Anchor: feet on one baseline, x registered by mask overlap against idle.
 5. Resample premultiplied with Lanczos, hard alpha -> crisp at 1:1 on 1080p
-   (3 texels per world unit).
+   (4.5 texels per world unit under the 1.5x couch camera).
 6. Pack every clip into one trimmed sheet + JSON (region + offset per frame)
    that SpriteBook turns into AtlasTextures.
 
@@ -39,11 +39,13 @@ ART = Path(os.environ.get("HNT_SPRITE_SRC", str(ROOT / "tools" / "sprite_src")))
 OUT = ROOT / "assets" / "sprites"
 SHEETS = ROOT / "tools" / "sprite_src"
 
-# Texel budget: 3 texels per world unit (SpriteBook.DRAW_SCALE = 1/3).
-STAND_H = 132       # standing actor, 44 world units (unchanged from the 96 px era)
-MIN_WHO_CELL = 192  # actor cell floor, 64 world units
-PROP_CELL = 144     # props / pickups / living props, 48 world units
-TILE = 96           # 32 world units
+# Texel budget: 4.5 texels per world unit (SpriteBook.DRAW_SCALE = 1/4.5).
+# The couch camera zooms 1.5x, so a 1080p window (3x of 640x360) draws one
+# texel per screen pixel.
+STAND_H = 198       # standing actor, 44 world units (unchanged from the 96 px era)
+MIN_WHO_CELL = 288  # actor cell floor, 64 world units
+PROP_CELL = 216     # props / pickups / living props, 48 world units
+TILE = 144          # 32 world units
 ICON = 128          # hub icons, shrunk into UI boxes with trilinear
 SHEET_MAX_W = 2048
 PAD = 4             # transparent gutter between packed frames (mip bleed)
@@ -396,6 +398,17 @@ def key(rgb: np.ndarray, strict: bool = False) -> np.ndarray:
         tight = ndimage.mean((d < lo * 0.8).astype(np.float32), lab, index=idx)
         bgmask |= np.isin(lab, np.nonzero((sizes >= 6) & (tight > 0.6))[0] + 1)
     fg = ~bgmask
+    if pink_board:
+        # Board-hued blobs hanging on the outside (a painted magenta puddle,
+        # a glow dot) peel off; board-hued details enclosed by the figure
+        # (Gant's tie) stay because they never touch the outside.
+        h_, s_ = _hue_sat(f)
+        peel = fg & _board_hue(f, bg) & (s_ > 0.45)
+        if peel.any():
+            labp, npk = ndimage.label(peel, structure=np.ones((3, 3), bool))
+            outside = ndimage.binary_dilation(~fg, iterations=1)
+            touch = np.unique(labp[outside & peel])
+            fg &= ~np.isin(labp, touch[touch > 0])
     lab2, n2 = ndimage.label(fg)
     if n2:
         sizes = ndimage.sum(fg, lab2, index=np.arange(1, n2 + 1))

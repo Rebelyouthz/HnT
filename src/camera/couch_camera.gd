@@ -1,6 +1,10 @@
 class_name CouchCamera
 extends Camera2D
 
+## 1.5x: the street band (y 430-520) fills ~38% of the frame and bodies read
+## at ~200 px on 1080p, one sprite texel per screen pixel.
+const ZOOM := 1.5
+
 var targets: Array[Node2D] = []
 var _look := 0.0
 var _nag_cd := 0.0
@@ -10,6 +14,7 @@ var cinematic_on := false
 
 func _ready() -> void:
 	enabled = true
+	zoom = Vector2(ZOOM, ZOOM)
 	make_current()
 	add_to_group("couch_cam")
 	position_smoothing_enabled = false
@@ -51,9 +56,11 @@ func _physics_process(delta: float) -> void:
 		_leash(living)
 	var follow := 1.0 - exp(-8.0 * delta)
 	var desired := mid
-	var half := get_viewport_rect().size * 0.5
+	var half := get_viewport_rect().size * 0.5 / zoom
 	desired.x = clampf(desired.x, limit_left + half.x, limit_right - half.x)
-	desired.y = clampf(desired.y, 360.0, 500.0)
+	# Frame the feet a little below centre: street fights keep the kerb near
+	# the bottom edge, roof runs (y 248) still get headroom.
+	desired.y = clampf(desired.y - 30.0, 190.0, 425.0)
 	# Vertical lerp ~0.12 toward the pair so roofs and street share one frame.
 	var y_t := 1.0 - exp(-7.5 * delta)
 	global_position.x = roundf(lerpf(global_position.x, desired.x, follow))
@@ -63,7 +70,7 @@ func _physics_process(delta: float) -> void:
 
 func _leash(living: Array[Node2D]) -> void:
 	var dist := absf(living[0].global_position.x - living[1].global_position.x)
-	var max_sep := get_viewport_rect().size.x * 0.7
+	var max_sep := get_viewport_rect().size.x / zoom.x * 0.7
 	if dist <= max_sep:
 		return
 	var left := living[0] if living[0].global_position.x < living[1].global_position.x else living[1]

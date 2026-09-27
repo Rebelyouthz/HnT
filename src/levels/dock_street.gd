@@ -21,8 +21,6 @@ func _configure() -> void:
 
 
 func build_world() -> void:
-	var sky := Blockout.poly(self, Rect2(0, 0, map_w, 720), Color(0.07, 0.08, 0.13), -8)
-	sky.z_index = -8
 	NightStreet.parallax(self, map_w, "dock")
 	NightStreet.wet_floor(self, map_w, true)
 	for r in [
@@ -34,7 +32,10 @@ func build_world() -> void:
 		Rect2(2920, 140, 220, 290)
 	]:
 		Blockout.occluder(self, r)
-		NightStreet.pixel_tenement(self, r)
+		# The painted backdrop is the street's buildings; tile patches only
+		# stand in when it is missing.
+		if not NightStreet.has_backdrop("dock"):
+			NightStreet.pixel_tenement(self, r)
 	NightStreet.pixel_dock(self, map_w)
 	Blockout.solid(self, Rect2(400, ROOF_Y, 840, 22), true)
 	NightStreet.pixel_roof(self, Rect2(400, ROOF_Y, 840, 22))

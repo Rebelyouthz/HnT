@@ -27,8 +27,6 @@ func _ready() -> void:
 
 
 func build_world() -> void:
-	var sky := Blockout.poly(self, Rect2(0, 0, map_w, 720), Color(0.04, 0.08, 0.1), -8)
-	sky.z_index = -8
 	NightStreet.parallax(self, map_w, "vault")
 	NightStreet.water_band(self, map_w, 540.0)
 	Blockout.poly(self, Rect2(0, 430, map_w, 40), Color(0.18, 0.16, 0.12), 1)

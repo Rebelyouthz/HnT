@@ -6,10 +6,11 @@ extends Object
 static var _frames: Dictionary = {}
 static var _tex: Dictionary = {}
 
-## Three texels per world unit: a 1080p window (3x of 640x360) shows every
-## texel 1:1. Props are 144 px cells, actors >= 192 px, tiles 96 px.
-const CELL := 144.0
-const DRAW_SCALE := 1.0 / 3.0
+## 4.5 texels per world unit. The couch camera zooms 1.5x, so a 1080p window
+## (3x of 640x360) shows every texel 1:1. Props are 216 px cells, actors
+## >= 288 px, tiles 144 px.
+const CELL := 216.0
+const DRAW_SCALE := 1.0 / 4.5
 ## attach_scaled callers speak in the old 96 px cell (1 texel per world unit).
 const LEGACY_CELL := 96.0
 
@@ -25,7 +26,8 @@ const LOOP := {
 
 
 ## Nearest when the stretch lands on an exact multiple of 3x (texels 1:1 or
-## 2:2); trilinear otherwise so 720p/1440p/phones never drop or double texels.
+## 2:2 under the 1.5x camera); trilinear otherwise so 720p/1440p/phones never
+## drop or double texels.
 static func world_filter() -> CanvasItem.TextureFilter:
 	var win := DisplayServer.window_get_size()
 	var k := minf(float(win.x) / 640.0, float(win.y) / 360.0)

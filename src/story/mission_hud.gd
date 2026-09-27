@@ -14,10 +14,12 @@ func _ready() -> void:
 	layer = 19
 	var wrap := PanelContainer.new()
 	wrap.add_theme_stylebox_override("panel", UiKit.panel(Color(0.05, 0.05, 0.07, 0.62), Palette.EDGE))
+	# Design space (1280x720 at 0.5) like every other HUD layer; without the
+	# stage the panel drew at 2x over the top-right corner.
 	wrap.position = Vector2(300, 0)
 	wrap.size = Vector2(680, 20)
 	wrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(wrap)
+	PixelStage.attach_canvas(self).add_child(wrap)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
 	wrap.add_child(row)

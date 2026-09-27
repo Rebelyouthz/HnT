@@ -47,8 +47,8 @@ func _ready() -> void:
 	_son.position = Vector2(12, 22)
 	UiKit.apply_label(_son, 14, Palette.LEMON)
 	_put(_son)
-	_hp_a = _pips_row(Vector2(12, 44), Palette.LEMON)
-	_steam_a = _bar(Vector2(12, 56), Palette.LEMON)
+	_hp_a = _pips_row(Vector2(12, 64), Palette.LEMON)
+	_steam_a = _bar(Vector2(12, 76), Palette.LEMON)
 
 	_dad = Label.new()
 	_dad.position = Vector2(900, 22)
@@ -56,11 +56,11 @@ func _ready() -> void:
 	_dad.size = Vector2(368, 22)
 	UiKit.apply_label(_dad, 14, Palette.BRICK)
 	_put(_dad)
-	_hp_b = _pips_row(Vector2(1048, 44), Palette.BRICK)
-	_steam_b = _bar(Vector2(1048, 56), Palette.BRICK)
+	_hp_b = _pips_row(Vector2(1048, 64), Palette.BRICK)
+	_steam_b = _bar(Vector2(1048, 76), Palette.BRICK)
 
 	_lives = Label.new()
-	_lives.position = Vector2(300, 22)
+	_lives.position = Vector2(300, 26)
 	_lives.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_lives.size = Vector2(680, 16)
 	UiKit.apply_label(_lives, 12, Palette.TEXT)
@@ -71,7 +71,7 @@ func _ready() -> void:
 	_put(_scrap)
 
 	_wanted = Label.new()
-	_wanted.position = Vector2(12, 68)
+	_wanted.position = Vector2(12, 88)
 	UiKit.apply_label(_wanted, 12, Palette.BRICK)
 	_put(_wanted)
 
@@ -87,7 +87,7 @@ func _ready() -> void:
 	_put(_score)
 
 	_boss_wrap = Control.new()
-	_boss_wrap.position = Vector2(280, 40)
+	_boss_wrap.position = Vector2(280, 72)
 	_boss_wrap.visible = false
 	_put(_boss_wrap)
 	var bb := ColorRect.new()
@@ -107,26 +107,26 @@ func _ready() -> void:
 	_boss_wrap.add_child(_boss_lab)
 
 	_combo = Label.new()
-	_combo.position = Vector2(12, 84)
+	_combo.position = Vector2(12, 104)
 	UiKit.apply_label(_combo, 16, Palette.EDGE)
 	_put(_combo)
 	_rank = Label.new()
-	_rank.position = Vector2(12, 102)
+	_rank.position = Vector2(12, 122)
 	UiKit.apply_label(_rank, 12, Palette.LEMON)
 	_put(_rank)
 	_combo_bg = ColorRect.new()
-	_combo_bg.position = Vector2(12, 120)
+	_combo_bg.position = Vector2(12, 140)
 	_combo_bg.size = Vector2(180, 5)
 	_combo_bg.color = Color(0, 0, 0, 0.55)
 	_put(_combo_bg)
 	_combo_fill = ColorRect.new()
-	_combo_fill.position = Vector2(12, 120)
+	_combo_fill.position = Vector2(12, 140)
 	_combo_fill.size = Vector2(180, 5)
 	_combo_fill.color = Palette.LEMON
 	_put(_combo_fill)
 
 	_call = Label.new()
-	_call.position = Vector2(280, 40)
+	_call.position = Vector2(280, 96)
 	_call.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_call.size = Vector2(720, 22)
 	UiKit.apply_label(_call, 16, Palette.LEMON)
