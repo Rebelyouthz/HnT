@@ -20,7 +20,7 @@ const LOOP := {
 
 
 static func has_who(who: String) -> bool:
-	return FileAccess.file_exists("res://assets/sprites/%s/idle/00.png" % who) or FileAccess.file_exists("res://assets/sprites/%s/dog/00.png" % who)
+	return ResourceLoader.exists("res://assets/sprites/%s/idle/00.png" % who) or ResourceLoader.exists("res://assets/sprites/%s/dog/00.png" % who)
 
 
 static func frames(who: String) -> SpriteFrames:
@@ -49,7 +49,7 @@ static func _add_clip(sf: SpriteFrames, root: String, clip: String) -> void:
 	var texs: Array[Texture2D] = []
 	while i < 16:
 		var path := "%s/%02d.png" % [dir, i]
-		if not FileAccess.file_exists(path):
+		if not ResourceLoader.exists(path):
 			break
 		var loaded: Variant = load(path)
 		if loaded is Texture2D:
@@ -124,7 +124,7 @@ static func attach_scaled(host: Node, who: String, extra_y: float, scl: Vector2)
 static func tex(path: String) -> Texture2D:
 	if _tex.has(path):
 		return _tex[path] as Texture2D
-	if not FileAccess.file_exists(path):
+	if not ResourceLoader.exists(path):
 		return null
 	var loaded: Variant = load(path)
 	if loaded is Texture2D:

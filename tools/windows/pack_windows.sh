@@ -14,6 +14,13 @@ if [[ ! -f "$OUT/FatherAndSon.exe" ]]; then
   echo "export failed: $OUT/FatherAndSon.exe missing" >&2
   exit 1
 fi
+# The editor hides export-only breakage (imported PNGs are invisible to FileAccess
+# inside a pack). Boot the shipped exe's own pack and prove the art is in it.
+(cd /tmp && "$GODOT" --headless --main-pack "$OUT/FatherAndSon.exe" --script res://tests/export_pack.gd) 2>&1 | tee "$OUT/export_pack.log"
+if ! grep -q EXPORT_PACK_OK "$OUT/export_pack.log"; then
+  echo "shipped pack is broken: $OUT/export_pack.log" >&2
+  exit 1
+fi
 export NSISDIR
 "$MAKENSIS" "$ROOT/tools/windows/FatherAndSon.nsi"
 ls -lh "$OUT/FatherAndSon.exe" "$OUT/FatherAndSonSetup.exe"
