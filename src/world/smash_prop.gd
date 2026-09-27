@@ -112,7 +112,7 @@ func _mount_sprite() -> void:
 	s.centered = false
 	s.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
 	s.position = Vector2(-float(tex.get_width()) * 0.5 * SpriteBook.DRAW_SCALE, -float(tex.get_height()) * SpriteBook.DRAW_SCALE)
-	s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	s.texture_filter = SpriteBook.world_filter()
 	add_child(s)
 
 

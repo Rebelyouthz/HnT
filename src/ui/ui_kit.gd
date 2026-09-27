@@ -138,7 +138,7 @@ static func portrait(tex: Texture2D, size: Vector2 = Vector2(48, 48)) -> Texture
 	pic.custom_minimum_size = size
 	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	pic.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	pic.texture_filter = SpriteBook.UI_FILTER
 	if tex:
 		pic.texture = tex
 	return pic

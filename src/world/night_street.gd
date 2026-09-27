@@ -233,7 +233,7 @@ static func _tile_fill(host: Node, rect: Rect2, kind: String, z: int, mod: Color
 			s.position = Vector2(x, y)
 			s.z_index = z
 			s.modulate = mod
-			s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			s.texture_filter = SpriteBook.world_filter()
 			host.add_child(s)
 			x += tw
 		y += th
@@ -257,7 +257,7 @@ static func _skyline(far: Node, map_w: float, color: Color, theme: String) -> vo
 				s.position = Vector2(x, 200)
 				s.z_index = -6
 				s.modulate = Color(0.62, 0.42, 0.28)
-				s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+				s.texture_filter = SpriteBook.world_filter()
 				far.add_child(s)
 			else:
 				Blockout.poly(far, Rect2(x, 200, 110, 140), color, -6)
@@ -444,7 +444,7 @@ static func water_band(host: Node, map_w: float, y: float = 560.0, tile_kind: St
 				s.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
 				s.position = Vector2(x, y)
 				s.z_index = 1
-				s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+				s.texture_filter = SpriteBook.world_filter()
 				host.add_child(s)
 				x += tw
 			return
@@ -677,7 +677,7 @@ static func pixel_tenement(host: Node, rect: Rect2) -> void:
 			s.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
 			s.position = Vector2(x, y)
 			s.z_index = 0
-			s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			s.texture_filter = SpriteBook.world_filter()
 			host.add_child(s)
 			x += tw
 			col += 1
@@ -703,7 +703,7 @@ static func pixel_dock(host: Node, map_w: float) -> void:
 		s.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
 		s.position = Vector2(x, 430.0)
 		s.z_index = 0
-		s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		s.texture_filter = SpriteBook.world_filter()
 		host.add_child(s)
 		var s2 := Sprite2D.new()
 		s2.texture = cobble
@@ -711,7 +711,7 @@ static func pixel_dock(host: Node, map_w: float) -> void:
 		s2.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
 		s2.position = Vector2(x, 430.0 + th)
 		s2.z_index = 0
-		s2.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		s2.texture_filter = SpriteBook.world_filter()
 		host.add_child(s2)
 		x += tw
 		n += 1
@@ -725,7 +725,7 @@ static func pixel_dock(host: Node, map_w: float) -> void:
 			w.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
 			w.position = Vector2(x, 560.0)
 			w.z_index = 1
-			w.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			w.texture_filter = SpriteBook.world_filter()
 			host.add_child(w)
 			x += ww
 		if plank:
@@ -738,7 +738,7 @@ static func pixel_dock(host: Node, map_w: float) -> void:
 				p.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
 				p.position = Vector2(x, 500.0)
 				p.z_index = 1
-				p.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+				p.texture_filter = SpriteBook.world_filter()
 				host.add_child(p)
 				x += pw
 	for lx in [420.0, 900.0, 1480.0, 2100.0, 2680.0]:
@@ -761,7 +761,7 @@ static func pixel_roof(host: Node, rect: Rect2, kind: String = "roof") -> void:
 		s.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
 		s.position = Vector2(x, rect.position.y)
 		s.z_index = 2
-		s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		s.texture_filter = SpriteBook.world_filter()
 		host.add_child(s)
 		x += tw
 
@@ -782,7 +782,7 @@ static func pixel_lot(host: Node, map_w: float) -> void:
 		s.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
 		s.position = Vector2(x, 430.0)
 		s.z_index = 0
-		s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		s.texture_filter = SpriteBook.world_filter()
 		host.add_child(s)
 		var s2 := Sprite2D.new()
 		s2.texture = asphalt
@@ -790,7 +790,7 @@ static func pixel_lot(host: Node, map_w: float) -> void:
 		s2.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
 		s2.position = Vector2(x, 430.0 + th)
 		s2.z_index = 0
-		s2.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		s2.texture_filter = SpriteBook.world_filter()
 		host.add_child(s2)
 		x += tw
 		n += 1
@@ -803,7 +803,7 @@ static func pixel_lot(host: Node, map_w: float) -> void:
 			st.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
 			st.position = Vector2(80.0 + float(i) * 260.0, 470.0)
 			st.z_index = 1
-			st.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			st.texture_filter = SpriteBook.world_filter()
 			host.add_child(st)
 	for lx in [200.0, 700.0, 1100.0, 1500.0, 1880.0]:
 		AmbientProp.place(host, "sodium_lamp", Vector2(lx, 500.0), 3)

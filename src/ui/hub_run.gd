@@ -28,8 +28,8 @@ func _ready() -> void:
 	var faces := HBoxContainer.new()
 	faces.add_theme_constant_override("separation", 8)
 	faces.add_child(UiKit.portrait(SpriteBook.icon("street_map"), Vector2(48, 48)))
-	faces.add_child(UiKit.portrait(SpriteBook.tex("res://assets/sprites/father/idle/00.png"), Vector2(48, 48)))
-	faces.add_child(UiKit.portrait(SpriteBook.tex("res://assets/sprites/son/idle/00.png"), Vector2(48, 48)))
+	faces.add_child(UiKit.portrait(SpriteBook.face("father"), Vector2(48, 48)))
+	faces.add_child(UiKit.portrait(SpriteBook.face("son"), Vector2(48, 48)))
 	col.add_child(faces)
 	var s := Label.new()
 	s.text = "Starts now. Intro films the first time. Gates play a story film (PAUSE skips the beat). Versus is Father vs Son. Drop-in does not restock the street."
@@ -159,7 +159,7 @@ func _paint_roles() -> void:
 			need_refresh.emit()
 		)
 		var who := str(pair[0])
-		_role_row.add_child(UiKit.portrait(SpriteBook.tex("res://assets/sprites/%s/idle/00.png" % who), Vector2(40, 40)))
+		_role_row.add_child(UiKit.portrait(SpriteBook.face(who), Vector2(40, 40)))
 		_role_row.add_child(b)
 
 

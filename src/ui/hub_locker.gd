@@ -87,7 +87,7 @@ func _row(item: Dictionary) -> Control:
 	var row := HBoxContainer.new()
 	p.add_child(row)
 	var who := "father" if _role == "father" else "son"
-	var face := SpriteBook.tex("res://assets/sprites/%s/idle/00.png" % who)
+	var face := SpriteBook.face(who)
 	row.add_child(UiKit.portrait(face, Vector2(56, 56)))
 	var stamp := StampMark.new()
 	stamp.accent = Rarity.color(rarity)

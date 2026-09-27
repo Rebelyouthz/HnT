@@ -6,6 +6,17 @@ func _enter_tree() -> void:
 	_bind_keyboard()
 
 
+## F11 / Alt+Enter: fullscreen <-> window. The game boots fullscreen.
+func _unhandled_key_input(event: InputEvent) -> void:
+	var k := event as InputEventKey
+	if k == null or not k.pressed or k.echo:
+		return
+	if k.keycode == KEY_F11 or (k.keycode == KEY_ENTER and k.alt_pressed):
+		var full := DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED if full else DisplayServer.WINDOW_MODE_FULLSCREEN)
+		get_viewport().set_input_as_handled()
+
+
 func _bind_keyboard() -> void:
 	_act("p1_left", [KEY_A])
 	_act("p1_right", [KEY_D])
