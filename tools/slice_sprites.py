@@ -740,7 +740,13 @@ def build_named(src: Path, dest_dir: Path, names: list[str], mode: str, cols: in
         inset = 4
         cell = a[y0 + inset:y1 - inset, x0 + inset:x1 - inset]
         if mode == "icon":
-            im = np.dstack([cell.astype(np.float32) / 255.0, np.ones(cell.shape[:2], np.float32)])
+            f = cell.astype(np.float32)
+            rim = np.median(_border(f, 4), axis=0)
+            if bool(_pinkish(rim[None, :])[0]):
+                # Icon painted on the pink board: key it like a prop.
+                im = key(cell)
+            else:
+                im = np.dstack([f / 255.0, np.ones(cell.shape[:2], np.float32)])
             out = resample(im, ICON / max(im.shape[:2]))
             canvas = np.zeros((ICON, ICON, 4), np.float32)
             oy, ox = (ICON - out.shape[0]) // 2, (ICON - out.shape[1]) // 2

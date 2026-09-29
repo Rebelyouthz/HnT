@@ -127,6 +127,21 @@ static func _add_clip(sf: SpriteFrames, root: String, clip: String) -> void:
 		sf.add_frame(clip, t)
 
 
+## Head-and-shoulders crop of the first idle cel (no empty cell margin),
+## for small portrait slots.
+static func bust(who: String, frac: float = 0.42) -> Texture2D:
+	var f := face(who)
+	if not (f is AtlasTexture):
+		return f
+	var at := f as AtlasTexture
+	var r := at.region
+	var b := AtlasTexture.new()
+	b.atlas = at.atlas
+	b.region = Rect2(r.position, Vector2(r.size.x, maxf(8.0, r.size.y * frac)))
+	b.filter_clip = true
+	return b
+
+
 ## First idle cel, for portraits (hub faces, boss cards, locker).
 static func face(who: String) -> Texture2D:
 	var sf := frames(who)

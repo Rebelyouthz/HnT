@@ -26,11 +26,30 @@ func load_or_create() -> void:
 		var raw := FileAccess.get_file_as_string(SAVE_PATH)
 		var parsed: Variant = JSON.parse_string(raw)
 		if typeof(parsed) == TYPE_DICTIONARY:
-			data = parsed
+			data = _whole(parsed) as Dictionary
 			_migrate()
 			return
 	data = _defaults()
 	save()
+
+
+## JSON has one number type: counters saved as 40 load back as 40.0 and the
+## menus printed "GOLD 40.0". Whole floats become ints again; volume sliders
+## (vol_*) stay floats.
+static func _whole(v: Variant, key: String = "") -> Variant:
+	if v is Dictionary:
+		var d := {}
+		for k in (v as Dictionary):
+			d[k] = _whole((v as Dictionary)[k], str(k))
+		return d
+	if v is Array:
+		var a := []
+		for x in (v as Array):
+			a.append(_whole(x, key))
+		return a
+	if v is float and not key.begins_with("vol_") and is_equal_approx(float(v), roundf(float(v))) and absf(float(v)) < 9.0e15:
+		return int(v)
+	return v
 
 
 func backup_to(path: String) -> void:

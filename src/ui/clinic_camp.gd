@@ -33,10 +33,20 @@ func _ready() -> void:
 func _spot(info: Dictionary) -> Control:
 	var id := str(info["id"])
 	var lvl := FamilyProfile.building_level(id)
+	# The card is a PanelContainer; the badge must not be its child or the
+	# container stretches it over the whole card (every card read as a red
+	# "!" block). Holder = plain Control: card fills it, badge floats on top.
+	var holder := Control.new()
+	holder.custom_minimum_size = Vector2(154, 188)
 	var wrap := PanelContainer.new()
-	wrap.custom_minimum_size = Vector2(154, 188)
+	wrap.set_anchors_preset(Control.PRESET_FULL_RECT)
 	wrap.clip_contents = false
-	wrap.add_theme_stylebox_override("panel", UiKit.panel(Palette.PANEL if lvl > 0 else Palette.PANEL_2, Palette.EDGE if lvl > 0 else Palette.LOCK))
+	var style := UiKit.frame(Palette.EDGE, 0.26) if lvl > 0 else UiKit.panel(Color(0.06, 0.065, 0.09, 0.95), Palette.LOCK)
+	wrap.add_theme_stylebox_override("panel", style)
+	holder.add_child(wrap)
+	holder.resized.connect(func() -> void:
+		holder.custom_minimum_size.y = maxf(holder.custom_minimum_size.y, wrap.get_combined_minimum_size().y)
+	)
 	var col := VBoxContainer.new()
 	wrap.add_child(col)
 	var roof_row := HBoxContainer.new()
@@ -48,10 +58,13 @@ func _spot(info: Dictionary) -> Control:
 		roof_row.add_child(UiKit.new_dot())
 	col.add_child(roof_row)
 	var portrait := SpriteBook.icon(id)
-	col.add_child(UiKit.portrait(portrait, Vector2(56, 56)))
-	var title := Label.new()
-	title.text = str(info["name"])
-	UiKit.apply_label(title, 14, Palette.LEMON if lvl > 0 else Palette.MUTED)
+	var pic := UiKit.portrait(portrait, Vector2(128, 72))
+	if lvl == 0:
+		pic.modulate = Color(0.55, 0.55, 0.62)
+	col.add_child(pic)
+	var title := UiKit.title(str(info["name"]).to_upper(), 14, Palette.LEMON if lvl > 0 else Palette.MUTED)
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	title.custom_minimum_size = Vector2(140, 0)
 	col.add_child(title)
 	var unlocks := Label.new()
 	unlocks.text = "UNLOCKS  ·  %s" % str(info.get("unlocks", "CAMP"))
@@ -125,6 +138,8 @@ func _spot(info: Dictionary) -> Control:
 		col.add_child(open)
 	if can_pay and (lvl == 0 or lvl < 4):
 		var bang := UiKit.bang()
-		bang.position = Vector2(118, -8)
-		wrap.add_child(bang)
-	return wrap
+		bang.position = Vector2(132, -8)
+		holder.add_child(bang)
+	# Grow the holder to the card's content height once laid out.
+	holder.custom_minimum_size.y = maxf(188.0, wrap.get_combined_minimum_size().y)
+	return holder

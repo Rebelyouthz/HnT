@@ -37,6 +37,10 @@ window/stretch/aspect="keep"
 window/stretch/scale_mode="fractional"
 window/vsync/vsync_mode=0
 
+[gui]
+
+theme/custom_font="res://assets/fonts/Rajdhani-SemiBold.ttf"
+
 [layer_names]
 
 2d_physics/layer_1="world"

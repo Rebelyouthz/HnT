@@ -14,6 +14,9 @@ var _modal: Control
 var _safe: MarginContainer
 var _pill_vals := {"gold": "", "gems": "", "rep": ""}
 var _avatar_btn: Button
+var _avatar_names: Label
+var _avatar_lv: Label
+var _avatar_xp: ProgressBar
 var _avatar_dot: ColorRect
 var _logo_dot: ColorRect
 var _tab_dots: Dictionary = {}
@@ -66,21 +69,51 @@ func _make_top() -> Control:
 	var bar := PanelContainer.new()
 	bar.add_theme_stylebox_override("panel", UiKit.panel(Palette.PANEL, Palette.EDGE))
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 12)
+	row.add_theme_constant_override("separation", 8)
 	bar.add_child(row)
 
 	var avatar_wrap := Control.new()
-	avatar_wrap.custom_minimum_size = Vector2(228, 56)
-	var avatar := UiKit.button("", Vector2(220, 56))
+	avatar_wrap.custom_minimum_size = Vector2(246, 64)
+	var avatar := UiKit.button("", Vector2(240, 64))
 	_avatar_btn = avatar
-	avatar.text = "%s  LV %d\nTHE SON\n%s\nTHE FATHER" % [
-		FamilyProfile.son_name(), int(FamilyProfile.data.get("account_level", 1)), FamilyProfile.father_name()
-	]
 	avatar.pressed.connect(_open_profile)
 	avatar.set_anchors_preset(Control.PRESET_FULL_RECT)
 	avatar_wrap.add_child(avatar)
+	# Profile card: both patients, names, account level and XP to next.
+	var card := HBoxContainer.new()
+	card.set_anchors_preset(Control.PRESET_FULL_RECT)
+	card.offset_left = 8
+	card.offset_right = -8
+	card.add_theme_constant_override("separation", 6)
+	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for who in ["son", "father"]:
+		var pic := UiKit.portrait(SpriteBook.bust(who), Vector2(44, 56))
+		pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		card.add_child(pic)
+	var info := VBoxContainer.new()
+	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info.alignment = BoxContainer.ALIGNMENT_CENTER
+	info.add_theme_constant_override("separation", 2)
+	info.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_avatar_names = UiKit.title("", 15, Palette.TEXT)
+	_avatar_names.clip_text = true
+	_avatar_names.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_avatar_names.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	info.add_child(_avatar_names)
+	var lv_row := HBoxContainer.new()
+	lv_row.add_theme_constant_override("separation", 6)
+	lv_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_avatar_lv = Label.new()
+	UiKit.apply_label(_avatar_lv, 13, Palette.LEMON)
+	lv_row.add_child(_avatar_lv)
+	_avatar_xp = UiKit.glow_bar(0.0, Palette.READY, Vector2(96, 8))
+	_avatar_xp.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	lv_row.add_child(_avatar_xp)
+	info.add_child(lv_row)
+	card.add_child(info)
+	avatar.add_child(card)
 	_avatar_dot = UiKit.new_dot()
-	_avatar_dot.position = Vector2(206, -2)
+	_avatar_dot.position = Vector2(232, -2)
 	avatar_wrap.add_child(_avatar_dot)
 	row.add_child(avatar_wrap)
 
@@ -95,9 +128,7 @@ func _make_top() -> Control:
 	_logo_dot = UiKit.new_dot()
 	_logo_dot.position = Vector2(48, -2)
 	logo_wrap.add_child(_logo_dot)
-	var title := Label.new()
-	title.text = "%s  ·  %s" % [Copy.LOGO, Copy.SUB]
-	UiKit.apply_label(title, 22, Palette.LEMON)
+	var title := UiKit.title("%s  ·  %s" % [Copy.LOGO, Copy.SUB], 20, Palette.LEMON)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	var tag := Label.new()
 	tag.text = Copy.TAGLINE
@@ -120,17 +151,20 @@ func _make_top() -> Control:
 	row.add_child(_gems_pill)
 	row.add_child(_rep_pill)
 
-	var log_btn := UiKit.button("LOG", Vector2(72, 52))
+	var log_btn := UiKit.button("LOG", Vector2(64, 52))
 	log_btn.pressed.connect(_open_log)
 	var log_wrap := Control.new()
-	log_wrap.custom_minimum_size = Vector2(80, 52)
+	log_wrap.custom_minimum_size = Vector2(66, 52)
 	log_btn.set_anchors_preset(Control.PRESET_FULL_RECT)
 	log_wrap.add_child(log_btn)
 	_log_bang = UiKit.bang()
-	_log_bang.position = Vector2(56, -4)
+	_log_bang.position = Vector2(48, -4)
 	log_wrap.add_child(_log_bang)
 	row.add_child(log_wrap)
-	var gear := UiKit.button(Copy.OPTIONS, Vector2(96, 52))
+	var stats := UiKit.button("STATS", Vector2(72, 52))
+	stats.pressed.connect(_open_stats)
+	row.add_child(stats)
+	var gear := UiKit.button(Copy.OPTIONS, Vector2(88, 52))
 	gear.pressed.connect(_open_settings)
 	row.add_child(gear)
 
@@ -226,15 +260,17 @@ func _after_page() -> void:
 
 
 func _refresh_pills() -> void:
-	_set_pill(_gold_pill, str(FamilyProfile.data["gold"]), "gold")
-	_set_pill(_gems_pill, str(FamilyProfile.data["gems"]), "gems")
-	_set_pill(_rep_pill, str(FamilyProfile.data["rep"]), "rep")
+	_set_pill(_gold_pill, UiKit.num(FamilyProfile.data["gold"]), "gold")
+	_set_pill(_gems_pill, UiKit.num(FamilyProfile.data["gems"]), "gems")
+	_set_pill(_rep_pill, UiKit.num(FamilyProfile.data["rep"]), "rep")
 	_log_bang.visible = FamilyProfile.unread_log_count() > 0
 	_refresh_new_dots()
-	if _avatar_btn:
-		_avatar_btn.text = "%s  LV %d\nTHE SON\n%s\nTHE FATHER" % [
-			FamilyProfile.son_name(), int(FamilyProfile.data.get("account_level", 1)), FamilyProfile.father_name()
-		]
+	if _avatar_names:
+		_avatar_names.text = "%s  &  %s" % [FamilyProfile.son_name(), FamilyProfile.father_name()]
+		var need := maxf(1.0, float(FamilyProfile.account_need()))
+		var xp := float(FamilyProfile.data.get("account_xp", 0))
+		_avatar_lv.text = "LV %d" % int(FamilyProfile.data.get("account_level", 1))
+		_avatar_xp.value = clampf(xp / need, 0.0, 1.0)
 	if _log_bang.visible:
 		if not _log_bang.has_meta("pulsing"):
 			_log_bang.set_meta("pulsing", true)
@@ -335,6 +371,15 @@ func _open_profile() -> void:
 			_clear_modal()
 			_open_intake()
 		)
+
+
+func _open_stats() -> void:
+	_clear_modal()
+	var sheet := preload("res://src/ui/stats_sheet.gd").new()
+	sheet.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(sheet)
+	_modal = sheet
+	sheet.closed.connect(_clear_modal)
 
 
 func _open_camp_sheet(id: String) -> void:
