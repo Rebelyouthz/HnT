@@ -28,6 +28,12 @@ func _prepare() -> void:
 	var app := root.get_node_or_null("App")
 	if app != null and _tab != "" and not _tab.begins_with("title") and not _tab.begins_with("camp"):
 		app.set("pending_tab", _tab)
+	# Menu shots: open the gated tabs so BUILD / LOCKER / AWARDS render.
+	if _tab in ["build", "locker", "awards"] and fp != null:
+		var b: Dictionary = (fp.data as Dictionary).get("buildings", {})
+		for id in ["therapy_couch", "wardrobe_cage", "trophy_cabinet"]:
+			b[id] = maxi(1, int(b.get(id, 0)))
+		(fp.data as Dictionary)["buildings"] = b
 	if _tab == "stats":
 		# Demo numbers so the report has something to draw.
 		var d2 := fp.data as Dictionary
@@ -41,7 +47,15 @@ func _prepare() -> void:
 	change_scene_to_file(_target)
 
 
+var _had_profile := false
+
+
 func _initialize() -> void:
+	# Shots edit the profile (names, unlocked tabs, demo stats) and the hub
+	# saves it; put things back afterwards so tests see a clean profile.
+	_had_profile = FileAccess.file_exists("user://family.json")
+	if _had_profile:
+		DirAccess.copy_absolute("user://family.json", "user://family.capture_backup.json")
 	var args := OS.get_cmdline_user_args()
 	var target := args[0] if args.size() > 0 else "res://scenes/ui/hub.tscn"
 	if args.size() > 1:
@@ -91,5 +105,14 @@ func _process(_delta: float) -> bool:
 		var img := root.get_texture().get_image()
 		img.save_png(_out)
 		print("CAPTURED ", _out, " ", img.get_size())
+		_restore_profile()
 		quit()
 	return false
+
+
+func _restore_profile() -> void:
+	if _had_profile:
+		DirAccess.copy_absolute("user://family.capture_backup.json", "user://family.json")
+		DirAccess.remove_absolute("user://family.capture_backup.json")
+	elif FileAccess.file_exists("user://family.json"):
+		DirAccess.remove_absolute("user://family.json")

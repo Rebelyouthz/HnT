@@ -3,227 +3,351 @@ extends Control
 signal need_refresh
 
 var _focus: Dictionary = {}
-var _stats: StatPanel
-var _board: HBoxContainer
+var _tip: PanelContainer
+var _tip_box: VBoxContainer
+var _stage: Control
+
+## BUILD page after Timmie's reference board: the clinic room behind, three
+## vine trees (BODY / STREET / SHOW) of round skill nodes, a tooltip with the
+## price and BUY / NEED GOLD, a legend box, a progress bar under each tree.
+const CENTERS := {"BODY": 300.0, "STREET": 640.0, "SHOW": 980.0}
+const TOP := 128.0
+const STEP := 84.0
+const ARM := 74.0
 
 
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
-	var m := MarginContainer.new()
-	m.set_anchors_preset(Control.PRESET_FULL_RECT)
-	m.add_theme_constant_override("margin_left", 16)
-	m.add_theme_constant_override("margin_top", 8)
-	m.add_theme_constant_override("margin_right", 16)
-	add_child(m)
-	var root := VBoxContainer.new()
-	root.add_theme_constant_override("separation", 8)
-	m.add_child(root)
-	var head := HBoxContainer.new()
-	head.add_theme_constant_override("separation", 10)
-	head.add_child(LogoMark.new())
-	head.add_child(UiKit.portrait(SpriteBook.icon("therapy_couch"), Vector2(48, 48)))
-	var h := Label.new()
-	h.text = "THE CBT TREE"
-	UiKit.apply_label(h, 24, Palette.LEMON)
-	head.add_child(h)
-	root.add_child(head)
-	var s := Label.new()
-	s.text = "Three trunks. Each splits left / core / right. Dark until the parent is owned. Lit when it lives in you. Gold in, violence out. Compare is split-screen menus only."
-	s.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	UiKit.apply_label(s, 13, Palette.MUTED)
-	root.add_child(s)
-	var tools := HBoxContainer.new()
-	tools.add_theme_constant_override("separation", 10)
-	var compare := UiKit.button("BUILD COMPARE", Vector2(200, 40))
-	compare.pressed.connect(_compare)
-	tools.add_child(compare)
-	root.add_child(tools)
-	_board = HBoxContainer.new()
-	_board.add_theme_constant_override("separation", 12)
-	root.add_child(_board)
+	_stage = Control.new()
+	_stage.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(_stage)
+	if ResourceLoader.exists("res://assets/ui/clinic_room.png"):
+		var room := TextureRect.new()
+		room.texture = load("res://assets/ui/clinic_room.png")
+		room.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		room.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		room.texture_filter = SpriteBook.UI_FILTER
+		room.position = Vector2(-16, -8)
+		room.size = Vector2(1280, 580)
+		room.modulate = Color(0.62, 0.62, 0.72)
+		_stage.add_child(room)
+	var frame := Panel.new()
+	var fs := StyleBoxFlat.new()
+	fs.bg_color = Color(0, 0, 0, 0)
+	fs.border_color = UiKit.RIM
+	fs.set_border_width_all(3)
+	frame.add_theme_stylebox_override("panel", fs)
+	frame.position = Vector2(-8, -4)
+	frame.size = Vector2(1264, 572)
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_stage.add_child(frame)
+	var title := UiKit.title("BUILD", 54, Palette.EDGE)
+	title.position = Vector2(0, 2)
+	title.size = Vector2(1248, 64)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_stage.add_child(title)
+	for x in [470.0, 714.0]:
+		var orn := ColorRect.new()
+		orn.color = Color(UiKit.GOLD.r, UiKit.GOLD.g, UiKit.GOLD.b, 0.7)
+		orn.position = Vector2(x, 34)
+		orn.size = Vector2(64, 3)
+		_stage.add_child(orn)
+	var brand := UiKit.title("FATHER\n& SON", 20, Palette.TEXT)
+	brand.position = Vector2(16, 10)
+	_stage.add_child(brand)
+	# The therapy couch is where the tree lives.
+	var couch := UiKit.portrait(SpriteBook.icon("therapy_couch"), Vector2(56, 56))
+	couch.position = Vector2(118, 10)
+	_stage.add_child(couch)
 	var list: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/cbt.json"))
 	for trunk in ["BODY", "STREET", "SHOW"]:
-		_board.add_child(_trunk(trunk, list))
-	_stats = StatPanel.new(_stat_rows({}))
-	_stats.custom_minimum_size = Vector2(220, 160)
-	_board.add_child(_stats)
+		_tree(trunk, list)
+	_legend()
+	var compare := UiKit.button("BUILD COMPARE", Vector2(170, 32))
+	compare.add_theme_font_size_override("font_size", 12)
+	compare.position = Vector2(1062, 16)
+	compare.pressed.connect(_compare)
+	_stage.add_child(compare)
+	_tip = PanelContainer.new()
+	_tip.add_theme_stylebox_override("panel", UiKit.frame(UiKit.GOLD, 0.3))
+	_tip.visible = false
+	_stage.add_child(_tip)
+	_tip_box = VBoxContainer.new()
+	_tip_box.add_theme_constant_override("separation", 4)
+	_tip.add_child(_tip_box)
 
 
-func _trunk(name: String, list: Array) -> Control:
+func _depth(node: Dictionary, by_id: Dictionary) -> int:
+	var d := 0
+	var req := str(node.get("requires", ""))
+	while req != "" and by_id.has(req) and d < 8:
+		d += 1
+		req = str((by_id[req] as Dictionary).get("requires", ""))
+	return d
+
+
+func _glyph(node: Dictionary) -> String:
+	var st := (str(node.get("stat", "")) + " " + str(node.get("id", ""))).to_lower()
+	if "hp" in st:
+		return "heart"
+	if "steam" in st:
+		return "drop"
+	if "bandage" in st:
+		return "cross"
+	if "gear" in st or "wanted" in st:
+		return "shield"
+	if "fall" in st or "cling" in st:
+		return "boot"
+	if "throw" in st or "charge" in st:
+		return "fist"
+	if "snap" in st:
+		return "bolt"
+	if "shadow" in st or "eyes" in st:
+		return "eye"
+	if "gems" in st:
+		return "gems"
+	if "drops" in st or "lunch" in st or "magnet" in st:
+		return "gold"
+	return "star"
+
+
+func _tree(trunk: String, list: Array) -> void:
+	var cx: float = CENTERS[trunk]
+	var by_id := {}
+	var nodes: Array = []
+	for n: Dictionary in list:
+		if str(n.get("trunk", "")) == trunk:
+			nodes.append(n)
+			by_id[str(n["id"])] = n
+	var pos := {}
+	var owned_n := 0
+	for n: Dictionary in nodes:
+		var d := _depth(n, by_id)
+		var br := str(n.get("branch", "core"))
+		var x := cx
+		if d > 0:
+			x += -ARM if br == "left" else ARM
+		pos[str(n["id"])] = Vector2(x, TOP + float(d) * STEP + (0.0 if d == 0 else 26.0))
+		if FamilyProfile.has_cbt(str(n["id"])):
+			owned_n += 1
+	var vines := VineDraw.new()
+	vines.position = Vector2.ZERO
+	vines.size = Vector2(1280, 600)
+	vines.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for n: Dictionary in nodes:
+		var req := str(n.get("requires", ""))
+		var a: Vector2 = pos[str(n["id"])]
+		var b: Vector2 = pos[req] if pos.has(req) else Vector2(cx, a.y + 60.0)
+		vines.links.append([b, a, FamilyProfile.has_cbt(str(n["id"]))])
+	vines.trunk_x = cx
+	vines.trunk_top = TOP
+	vines.trunk_bottom = TOP + STEP * 3.0 + 70.0
+	_stage.add_child(vines)
+	var name_l := UiKit.title(trunk, 22, Palette.EDGE)
+	name_l.position = Vector2(cx - 80, TOP - 66)
+	name_l.size = Vector2(160, 28)
+	name_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_stage.add_child(name_l)
+	for n: Dictionary in nodes:
+		_stage.add_child(_node_button(n, pos[str(n["id"])]))
+	var bar := UiKit.glow_bar(float(owned_n) / float(maxi(1, nodes.size())), UiKit.GOLD, Vector2(220, 12))
+	bar.position = Vector2(cx - 110, TOP + STEP * 3.0 + 92.0)
+	_stage.add_child(bar)
+	var cnt := Label.new()
+	cnt.text = "%d / %d" % [owned_n, nodes.size()]
+	cnt.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(cnt, 12, Palette.MUTED)
+	cnt.position = Vector2(cx - 20, TOP + STEP * 3.0 + 106.0)
+	_stage.add_child(cnt)
+
+
+func _state(node: Dictionary) -> String:
+	var id := str(node.get("id", ""))
+	if FamilyProfile.has_cbt(id):
+		return "owned"
+	var req := str(node.get("requires", ""))
+	if req != "" and not FamilyProfile.has_cbt(req):
+		return "locked"
+	if int(FamilyProfile.data["gold"]) >= int(node["gold"]) and int(FamilyProfile.data["rep"]) >= int(node["rep"]):
+		return "can"
+	return "poor"
+
+
+func _node_button(node: Dictionary, at: Vector2) -> Control:
+	var st := _state(node)
+	var b := Button.new()
+	b.custom_minimum_size = Vector2(62, 62)
+	b.size = Vector2(62, 62)
+	b.position = at - Vector2(31, 31)
+	b.focus_mode = Control.FOCUS_ALL
+	var ring := StyleBoxFlat.new()
+	ring.set_corner_radius_all(31)
+	ring.set_border_width_all(4)
+	ring.bg_color = Color(0.05, 0.06, 0.1, 0.96)
+	ring.anti_aliasing = true
+	match st:
+		"owned":
+			ring.border_color = UiKit.GOLD
+			ring.bg_color = Color(0.32, 0.22, 0.08)
+			ring.shadow_color = Color(UiKit.GOLD.r, UiKit.GOLD.g, UiKit.GOLD.b, 0.5)
+			ring.shadow_size = 8
+		"can":
+			ring.border_color = UiKit.GOLD
+			ring.shadow_color = Color(UiKit.GOLD.r, UiKit.GOLD.g, UiKit.GOLD.b, 0.75)
+			ring.shadow_size = 16
+		"poor":
+			ring.border_color = UiKit.RIM
+		_:
+			ring.border_color = Color(0.3, 0.28, 0.3)
+	var hover := ring.duplicate() as StyleBoxFlat
+	hover.border_color = Color.WHITE.lerp(UiKit.GOLD, 0.4)
+	hover.shadow_color = Color(UiKit.GOLD.r, UiKit.GOLD.g, UiKit.GOLD.b, 0.8)
+	hover.shadow_size = 18
+	b.add_theme_stylebox_override("normal", ring)
+	b.add_theme_stylebox_override("hover", hover)
+	b.add_theme_stylebox_override("focus", hover)
+	b.add_theme_stylebox_override("pressed", hover)
+	var icon := PixelIcon.new()
+	icon.kind = _glyph(node)
+	icon.dim = st == "locked"
+	icon.size = Vector2(36, 36)
+	icon.position = Vector2(13, 13)
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.add_child(icon)
+	if st == "can":
+		b.pivot_offset = Vector2(31, 31)
+		UiKit.pulse_ready(b)
+	b.mouse_entered.connect(func() -> void: _show_tip(node, at))
+	b.focus_entered.connect(func() -> void: _show_tip(node, at))
+	b.pressed.connect(func() -> void:
+		_show_tip(node, at)
+		if st == "can":
+			_buy(node)
+	)
+	return b
+
+
+func _show_tip(node: Dictionary, at: Vector2) -> void:
+	_focus = node
+	for c in _tip_box.get_children():
+		c.queue_free()
+	var st := _state(node)
+	var name_l := Label.new()
+	name_l.text = str(node["name"])
+	name_l.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(name_l, 17, Palette.TEXT)
+	_tip_box.add_child(name_l)
+	var stat := Label.new()
+	stat.text = str(node.get("stat", ""))
+	stat.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(stat, 15, UiKit.GOLD)
+	_tip_box.add_child(stat)
+	var blurb := Label.new()
+	blurb.text = str(node.get("blurb", ""))
+	blurb.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	blurb.custom_minimum_size = Vector2(210, 0)
+	UiKit.apply_label(blurb, 12, Palette.MUTED)
+	_tip_box.add_child(blurb)
+	var cost := Label.new()
+	cost.text = "COST: %d GOLD%s" % [int(node["gold"]), ("  ·  %d REP" % int(node["rep"])) if int(node["rep"]) > 0 else ""]
+	cost.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(cost, 13, Palette.TEXT)
+	_tip_box.add_child(cost)
+	match st:
+		"owned":
+			var o := Label.new()
+			o.text = "OWNED"
+			o.add_theme_font_override("font", UiKit.pixel_font())
+			UiKit.apply_label(o, 15, Palette.READY)
+			_tip_box.add_child(o)
+		"locked":
+			var l := Label.new()
+			l.text = "BUY %s FIRST" % str(node.get("requires", "")).replace("_", " ").to_upper()
+			l.add_theme_font_override("font", UiKit.pixel_font())
+			UiKit.apply_label(l, 13, Palette.MUTED)
+			_tip_box.add_child(l)
+		"poor":
+			var p := Label.new()
+			p.text = "NEED GOLD" if int(FamilyProfile.data["gold"]) < int(node["gold"]) else "NEED REP"
+			p.add_theme_font_override("font", UiKit.pixel_font())
+			UiKit.apply_label(p, 16, Color(0.95, 0.25, 0.22))
+			_tip_box.add_child(p)
+		_:
+			var buy := UiKit.button("BUY", Vector2(120, 32))
+			buy.pressed.connect(func() -> void: _buy(node))
+			_tip_box.add_child(buy)
+	_tip.visible = true
+	_tip.size = Vector2.ZERO
+	var x := at.x + 44.0
+	if x + 250.0 > 1240.0:
+		x = at.x - 44.0 - 250.0
+	_tip.position = Vector2(x, clampf(at.y - 50.0, 70.0, 420.0))
+
+
+func _buy(node: Dictionary) -> void:
+	if FamilyProfile.try_cbt(str(node["id"])):
+		Juice.play("res://assets/audio/claim.wav")
+		need_refresh.emit()
+	else:
+		Juice.claim_burst(get_viewport_rect().size * 0.5, "GOLD AND PARENTS FIRST", 0, 0)
+
+
+func _legend() -> void:
+	var box := PanelContainer.new()
+	box.add_theme_stylebox_override("panel", UiKit.frame(UiKit.RIM, 0.2))
+	box.position = Vector2(14, 300)
+	_stage.add_child(box)
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 6)
-	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var top := HBoxContainer.new()
-	top.add_child(LogoMark.new())
-	var t := Label.new()
-	t.text = name
-	UiKit.apply_label(t, 16, Palette.EDGE if name == "SHOW" else (Palette.BRICK if name == "STREET" else Palette.LEMON))
-	top.add_child(t)
-	col.add_child(top)
-	var owned_n := 0
-	var total := 0
-	var nodes: Array = []
-	for n in list:
-		if str(n.get("trunk", "")) != name:
-			continue
-		total += 1
-		if FamilyProfile.has_cbt(str(n.get("id", ""))):
-			owned_n += 1
-		nodes.append(n)
-	var meter := ColorRect.new()
-	meter.custom_minimum_size = Vector2(240, 10)
-	meter.color = Color(0.08, 0.08, 0.1)
-	col.add_child(meter)
-	var fill := ColorRect.new()
-	fill.color = Palette.READY if owned_n == total else Palette.LEMON
-	fill.position = Vector2(0, 0)
-	fill.size = Vector2(240.0 * (float(owned_n) / float(maxi(total, 1))), 10)
-	meter.add_child(fill)
-	var count := Label.new()
-	count.text = "%d / %d  ·  %s" % [owned_n, total, "LIT" if owned_n > 0 else "DARK"]
-	UiKit.apply_label(count, 12, Palette.MUTED)
-	col.add_child(count)
-	var graph := HBoxContainer.new()
-	graph.add_theme_constant_override("separation", 6)
-	graph.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	col.add_child(graph)
-	var left := VBoxContainer.new()
-	var core := VBoxContainer.new()
-	var right := VBoxContainer.new()
-	for arm in [left, core, right]:
-		arm.add_theme_constant_override("separation", 6)
-		arm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		graph.add_child(arm)
-	var left_l := Label.new()
-	left_l.text = "LEFT"
-	UiKit.apply_label(left_l, 11, Palette.MUTED)
-	left.add_child(left_l)
-	var core_l := Label.new()
-	core_l.text = "CORE"
-	UiKit.apply_label(core_l, 11, Palette.LEMON)
-	core.add_child(core_l)
-	var right_l := Label.new()
-	right_l.text = "RIGHT"
-	UiKit.apply_label(right_l, 11, Palette.MUTED)
-	right.add_child(right_l)
-	for n in nodes:
-		var branch := str(n.get("branch", "core"))
-		if str(n.get("requires", "")) == "":
-			branch = "core"
-		match branch:
-			"left":
-				left.add_child(_node_card(n))
-			"right":
-				right.add_child(_node_card(n))
-			_:
-				core.add_child(_node_card(n))
-	return col
+	box.add_child(col)
+	for pair in [["heart", "HP"], ["fist", "DAMAGE"], ["boot", "SPEED"], ["drop", "STEAM"], ["bolt", "SNAP"]]:
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 8)
+		var ic := PixelIcon.new()
+		ic.kind = str(pair[0])
+		ic.custom_minimum_size = Vector2(24, 24)
+		row.add_child(ic)
+		var l := Label.new()
+		l.text = str(pair[1])
+		l.add_theme_font_override("font", UiKit.pixel_font())
+		UiKit.apply_label(l, 14, Palette.TEXT)
+		row.add_child(l)
+		col.add_child(row)
 
 
-func _node_card(node: Dictionary) -> Control:
-	var id := str(node.get("id", ""))
-	var rarity := Rarity.normalize(str(node.get("rarity", "common")))
-	var owned := FamilyProfile.has_cbt(id)
-	var req := str(node.get("requires", ""))
-	var locked := req != "" and not FamilyProfile.has_cbt(req)
-	var can := (not owned) and (not locked) and int(FamilyProfile.data["gold"]) >= int(node["gold"]) and int(FamilyProfile.data["rep"]) >= int(node["rep"])
-	var row := PanelContainer.new()
-	var border := Palette.LOCK
-	var fill := Color(0.06, 0.06, 0.08)
-	if owned:
-		border = Palette.READY
-		fill = Rarity.fill(rarity)
-	elif can:
-		border = Palette.LEMON
-		fill = Palette.PANEL
-	elif locked:
-		border = Palette.LOCK
-		fill = Color(0.05, 0.05, 0.07)
-	else:
-		border = Rarity.color(rarity)
-		fill = Palette.PANEL
-	row.add_theme_stylebox_override("panel", UiKit.panel(fill, border))
-	var box := HBoxContainer.new()
-	row.add_child(box)
-	box.add_child(UiKit.portrait(SpriteBook.icon("therapy_couch"), Vector2(36, 36)))
-	var pip := ColorRect.new()
-	pip.custom_minimum_size = Vector2(8, 36)
-	if owned:
-		pip.color = Palette.READY
-	elif locked:
-		pip.color = Palette.LOCK
-	elif can:
-		pip.color = Palette.LEMON
-	else:
-		pip.color = Rarity.color(rarity)
-	box.add_child(pip)
-	var txt := VBoxContainer.new()
-	txt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var t := Label.new()
-	t.text = "%s  ·  %s" % [str(node["name"]), Rarity.label(rarity)]
-	UiKit.apply_label(t, 13, Palette.MUTED if locked else Rarity.color(rarity))
-	txt.add_child(t)
-	var got := Label.new()
-	got.text = str(node.get("stat", node.get("blurb", "")))
-	UiKit.apply_label(got, 11, Palette.LEMON if not locked else Palette.MUTED)
-	txt.add_child(got)
-	var b := Label.new()
-	if locked:
-		b.text = "DARK  ·  BUY %s FIRST" % req.replace("_", " ").to_upper()
-	elif owned:
-		b.text = str(node["blurb"])
-	elif int(FamilyProfile.data["gold"]) < int(node["gold"]):
-		b.text = "NEED %d GOLD" % int(node["gold"])
-	elif int(FamilyProfile.data["rep"]) < int(node["rep"]):
-		b.text = "NEED %d REP" % int(node["rep"])
-	else:
-		b.text = str(node["blurb"])
-	b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	UiKit.apply_label(b, 11, Palette.TEXT if not locked else Palette.LOCK)
-	txt.add_child(b)
-	box.add_child(txt)
-	var buy := UiKit.button("OWNED" if owned else ("%dG" % int(node["gold"])), Vector2(90, 36))
-	buy.disabled = owned or locked or int(FamilyProfile.data["gold"]) < int(node["gold"]) or int(FamilyProfile.data["rep"]) < int(node["rep"])
-	if can:
-		buy.add_theme_stylebox_override("normal", UiKit.panel(Palette.READY, Palette.LEMON))
-		UiKit.pulse_ready(buy)
-	buy.pressed.connect(func() -> void:
-		if FamilyProfile.try_cbt(id):
-			need_refresh.emit()
-		else:
-			Juice.claim_burst(get_viewport_rect().size * 0.5, "GOLD AND PARENTS FIRST", 0, 0)
-	)
-	box.add_child(buy)
-	row.gui_input.connect(func(ev: InputEvent) -> void:
-		if ev is InputEventMouseButton and (ev as InputEventMouseButton).pressed:
-			_focus = node
-			_refresh_stats()
-	)
-	return row
+## Brown vines with leaves from each node up to its parent, plus the trunk.
+class VineDraw extends Control:
+	var links: Array = []
+	var trunk_x := 0.0
+	var trunk_top := 0.0
+	var trunk_bottom := 0.0
 
-
-func _stat_rows(node: Dictionary) -> Array:
-	if node.is_empty():
-		return [
-			{"name": "GOLD", "value": str(int(FamilyProfile.data.get("gold", 0))), "color": Palette.EDGE},
-			{"name": "REP", "value": str(int(FamilyProfile.data.get("rep", 0))), "color": Palette.BRICK},
-			{"name": "OWNED", "value": str((FamilyProfile.data.get("cbt", []) as Array).size()), "color": Palette.READY}
-		]
-	return [
-		{"name": "STAT", "value": str(node.get("stat", "—")), "color": Palette.LEMON},
-		{"name": "GOLD", "value": str(int(node.get("gold", 0))), "color": Palette.EDGE},
-		{"name": "REP", "value": str(int(node.get("rep", 0))), "color": Palette.BRICK},
-		{"name": "TRUNK", "value": str(node.get("trunk", "")), "color": Palette.TEXT}
-	]
-
-
-func _refresh_stats() -> void:
-	if _stats and is_instance_valid(_stats):
-		_stats.queue_free()
-	_stats = StatPanel.new(_stat_rows(_focus))
-	_stats.custom_minimum_size = Vector2(220, 160)
-	if _board:
-		_board.add_child(_stats)
+	func _draw() -> void:
+		var bark := Color(0.33, 0.22, 0.12)
+		var bark_lit := Color(0.5, 0.36, 0.2)
+		var leaf := Color(0.27, 0.48, 0.2)
+		draw_line(Vector2(trunk_x, trunk_top), Vector2(trunk_x, trunk_bottom), bark, 12.0)
+		draw_line(Vector2(trunk_x - 3, trunk_top), Vector2(trunk_x - 3, trunk_bottom), bark_lit, 3.0)
+		for l: Array in links:
+			var a: Vector2 = l[0]
+			var b: Vector2 = l[1]
+			var lit: bool = l[2]
+			var mid := Vector2(a.x, (a.y + b.y) * 0.5)
+			var pts := PackedVector2Array()
+			for i in 13:
+				var t := float(i) / 12.0
+				pts.append(a.lerp(mid, t).lerp(mid.lerp(b, t), t))
+			draw_polyline(pts, bark, 7.0)
+			draw_polyline(pts, Color(0.9, 0.7, 0.3, 0.8) if lit else bark_lit, 2.0)
+			for i in [3, 7, 10]:
+				var p: Vector2 = pts[i]
+				var side := 7.0 if i % 2 == 0 else -7.0
+				draw_colored_polygon(PackedVector2Array([p, p + Vector2(side, -4), p + Vector2(side * 1.6, 1), p + Vector2(side, 4)]), leaf)
+		for k in 5:
+			var y := lerpf(trunk_top + 20.0, trunk_bottom - 10.0, float(k) / 4.0)
+			var s := 9.0 if k % 2 == 0 else -9.0
+			var p := Vector2(trunk_x, y)
+			draw_colored_polygon(PackedVector2Array([p, p + Vector2(s, -5), p + Vector2(s * 1.7, 1), p + Vector2(s, 5)]), leaf)
 
 
 func _compare() -> void:

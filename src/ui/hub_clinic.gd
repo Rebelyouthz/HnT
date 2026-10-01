@@ -20,25 +20,35 @@ func _ready() -> void:
 	col.add_theme_constant_override("separation", 10)
 	margin.add_child(col)
 
-	var head_row := HBoxContainer.new()
-	var head := Label.new()
-	head.text = "THE BASEMENT CLINIC"
-	UiKit.apply_label(head, 24, Palette.LEMON)
-	head_row.add_child(head)
-	var event := Label.new()
-	event.text = "  ·  %s TONIGHT" % str(App.difficulty).replace("_", " ").to_upper()
-	UiKit.apply_label(event, 14, Palette.BRICK)
-	head_row.add_child(event)
-	col.add_child(head_row)
+	# Reference header: lemon in the brick arch, FATHER & SON in gold pixel
+	# caps, THE BASEMENT CLINIC under it, tonight's difficulty as a tag.
+	var head := VBoxContainer.new()
+	head.alignment = BoxContainer.ALIGNMENT_CENTER
+	head.add_theme_constant_override("separation", -2)
+	var logo := TextureRect.new()
+	logo.texture = load("res://assets/ui/logo_lemon.png")
+	logo.custom_minimum_size = Vector2(150, 113)
+	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	logo.texture_filter = SpriteBook.UI_FILTER
+	logo.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	head.add_child(logo)
+	var t := UiKit.title("FATHER & SON", 44, Palette.EDGE)
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	head.add_child(t)
 	var sub := Label.new()
-	sub.text = Copy.CLINIC_NIGHT
-	UiKit.apply_label(sub, 14, Palette.MUTED)
-	col.add_child(sub)
+	sub.text = "THE BASEMENT CLINIC  ·  %s TONIGHT" % str(App.difficulty).replace("_", " ").to_upper()
+	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sub.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(sub, 14, UiKit.GOLD)
+	head.add_child(sub)
+	col.add_child(head)
 
 	col.add_child(_daily_strip())
 
 	var play := UiKit.button(Copy.PLAY, Vector2(320, 52))
-	play.add_theme_stylebox_override("normal", UiKit.panel(Palette.BRICK, Palette.LEMON))
+	play.add_theme_stylebox_override("normal", UiKit.panel(UiKit.NAVY_HI, UiKit.GOLD))
+	play.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	var hop := FamilyProfile.next_run_map()
 	var enter_lock := PowerBook.lock(hop, "enter")
 	var boss_lock := PowerBook.lock(hop, "boss")
@@ -104,6 +114,8 @@ func _ready() -> void:
 			need_sheet.emit(id)
 		)
 	col.add_child(camp)
+	# Cards right under the logo like the reference; daily goals + GO below.
+	col.move_child(camp, 1)
 	play.grab_focus()
 
 

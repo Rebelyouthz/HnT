@@ -41,10 +41,24 @@ func _build_chrome() -> void:
 	bg.color = Palette.BG
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
+	# The wharf at night behind every menu (reference board), dimmed so the
+	# navy cards read on top; 8/3 design px per texel = 4 screen px.
+	if ResourceLoader.exists("res://assets/backdrops/dock.png"):
+		var city := TextureRect.new()
+		city.texture = load("res://assets/backdrops/dock.png")
+		city.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		city.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		city.stretch_mode = TextureRect.STRETCH_SCALE
+		var tw := float(city.texture.get_width()) * 8.0 / 3.0
+		city.size = Vector2(tw, float(city.texture.get_height()) * 8.0 / 3.0)
+		city.position = Vector2((1280.0 - tw) * 0.5, 0.0)
+		city.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(city)
 
 	var night := ColorRect.new()
-	night.color = Color(0.22, 0.25, 0.38, 0.35)
+	night.color = Color(0.02, 0.03, 0.08, 0.62)
 	night.set_anchors_preset(Control.PRESET_FULL_RECT)
+	night.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(night)
 
 	_safe = MarginContainer.new()
@@ -67,7 +81,8 @@ func _build_chrome() -> void:
 
 func _make_top() -> Control:
 	var bar := PanelContainer.new()
-	bar.add_theme_stylebox_override("panel", UiKit.panel(Palette.PANEL, Palette.EDGE))
+	# No slab across the top: the city shows through (reference board).
+	bar.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 	bar.add_child(row)
@@ -128,20 +143,8 @@ func _make_top() -> Control:
 	_logo_dot = UiKit.new_dot()
 	_logo_dot.position = Vector2(48, -2)
 	logo_wrap.add_child(_logo_dot)
-	var title := UiKit.title("%s  ·  %s" % [Copy.LOGO, Copy.SUB], 20, Palette.LEMON)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	var tag := Label.new()
-	tag.text = Copy.TAGLINE
-	UiKit.apply_label(tag, 13, Palette.MUTED)
-	tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	var brand := HBoxContainer.new()
-	brand.alignment = BoxContainer.ALIGNMENT_CENTER
-	brand.add_child(logo_wrap)
-	var names := VBoxContainer.new()
-	names.add_child(title)
-	names.add_child(tag)
-	brand.add_child(names)
-	logo_box.add_child(brand)
+	logo_wrap.visible = false
+	logo_box.add_child(logo_wrap)
 	row.add_child(logo_box)
 
 	_gold_pill = UiKit.pill("GOLD", "0", Palette.EDGE)
@@ -151,20 +154,20 @@ func _make_top() -> Control:
 	row.add_child(_gems_pill)
 	row.add_child(_rep_pill)
 
-	var log_btn := UiKit.button("LOG", Vector2(64, 52))
+	var log_btn := UiKit.button("LOG", Vector2(64, 40))
 	log_btn.pressed.connect(_open_log)
 	var log_wrap := Control.new()
-	log_wrap.custom_minimum_size = Vector2(66, 52)
+	log_wrap.custom_minimum_size = Vector2(66, 40)
 	log_btn.set_anchors_preset(Control.PRESET_FULL_RECT)
 	log_wrap.add_child(log_btn)
 	_log_bang = UiKit.bang()
 	_log_bang.position = Vector2(48, -4)
 	log_wrap.add_child(_log_bang)
 	row.add_child(log_wrap)
-	var stats := UiKit.button("STATS", Vector2(72, 52))
+	var stats := UiKit.button("STATS", Vector2(84, 40))
 	stats.pressed.connect(_open_stats)
 	row.add_child(stats)
-	var gear := UiKit.button(Copy.OPTIONS, Vector2(88, 52))
+	var gear := UiKit.button(Copy.OPTIONS, Vector2(110, 40))
 	gear.pressed.connect(_open_settings)
 	row.add_child(gear)
 
@@ -172,17 +175,34 @@ func _make_top() -> Control:
 	return bar
 
 
+## Bottom tab bar like the reference: one framed strip, an icon + pixel
+## caps per tab, the open tab in a lit gold box.
+const TAB_ICON := {"clinic": "front_desk", "run": "street_map", "build": "therapy_couch", "locker": "wardrobe_cage", "awards": "trophy_cabinet"}
+
+
 func _make_tabs() -> Control:
+	var center := CenterContainer.new()
 	var bar := PanelContainer.new()
-	bar.add_theme_stylebox_override("panel", UiKit.panel(Palette.PANEL, Palette.EDGE))
+	var st := UiKit.panel(UiKit.NAVY, UiKit.RIM)
+	st.content_margin_left = 6
+	st.content_margin_right = 6
+	st.content_margin_top = 5
+	st.content_margin_bottom = 5
+	bar.add_theme_stylebox_override("panel", st)
+	bar.custom_minimum_size = Vector2(1000, 0)
+	center.add_child(bar)
 	_tab_bar = HBoxContainer.new()
-	_tab_bar.add_theme_constant_override("separation", 8)
+	_tab_bar.add_theme_constant_override("separation", 4)
 	bar.add_child(_tab_bar)
 	for id in TABS:
 		var wrap := Control.new()
 		wrap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		wrap.custom_minimum_size = Vector2(0, 64)
-		var b := UiKit.button(_tab_title(id), Vector2(0, 64))
+		wrap.custom_minimum_size = Vector2(0, 52)
+		var b := UiKit.button(_tab_title(id), Vector2(0, 52))
+		b.icon = SpriteBook.icon(str(TAB_ICON.get(id, "")))
+		b.expand_icon = true
+		b.add_theme_constant_override("icon_max_width", 34)
+		b.add_theme_constant_override("h_separation", 10)
 		b.name = id
 		b.set_anchors_preset(Control.PRESET_FULL_RECT)
 		b.pressed.connect(_show_tab.bind(id))
@@ -199,7 +219,7 @@ func _make_tabs() -> Control:
 		_tab_dots[id] = dot
 		_tab_bar.add_child(wrap)
 	_refresh_tab_locks()
-	return bar
+	return center
 
 
 func _tab_title(id: String) -> String:
@@ -312,9 +332,16 @@ func _refresh_tab_locks() -> void:
 				if dot:
 					dot.visible = FamilyProfile.has_menu_alert()
 				if id == _current:
-					btn.add_theme_stylebox_override("normal", UiKit.panel(Palette.BRICK, Palette.LEMON))
+					var on := UiKit.panel(UiKit.NAVY_HI, UiKit.GOLD)
+					on.shadow_color = Color(UiKit.GOLD.r, UiKit.GOLD.g, UiKit.GOLD.b, 0.45)
+					on.shadow_size = 10
+					btn.add_theme_stylebox_override("normal", on)
 				else:
-					btn.add_theme_stylebox_override("normal", UiKit.panel(Palette.PANEL_2, Palette.EDGE))
+					var off := StyleBoxFlat.new()
+					off.bg_color = Color(0, 0, 0, 0)
+					off.border_color = Color(UiKit.RIM.r, UiKit.RIM.g, UiKit.RIM.b, 0.35)
+					off.border_width_right = 1
+					btn.add_theme_stylebox_override("normal", off)
 
 
 func _has_claim() -> bool:

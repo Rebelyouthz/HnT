@@ -1,15 +1,24 @@
 class_name UiKit
 extends Object
 
-## Menu look: dark glass panels with a thin lit rim and a soft outer glow in
-## the accent colour, Cinzel titles, Rajdhani numbers and body text.
+## Menu look (Timmie's reference boards): deep navy cards with a thin
+## antique-gold rim that lights up bright gold with a glow when selected,
+## chunky gold pixel titles (Pixelify Sans) with a dark brown outline,
+## pixel caps on buttons and tabs (Pixelify Sans 600), Rajdhani for body text.
+
+const NAVY := Color(0.043, 0.066, 0.13, 0.94)
+const NAVY_HI := Color(0.07, 0.1, 0.19, 0.97)
+const RIM := Color(0.6, 0.45, 0.22)
+const GOLD := Color(0.98, 0.78, 0.3)
+const INK := Color(0.16, 0.09, 0.03)
 
 static var _title_font: Font
+static var _pixel_font: Font
 
 
 static func title_font() -> Font:
 	if _title_font == null:
-		var base := load("res://assets/fonts/Cinzel.ttf") as FontFile
+		var base := load("res://assets/fonts/PixelifySans.ttf") as FontFile
 		var v := FontVariation.new()
 		v.base_font = base
 		v.variation_opentype = {"wght": 700}
@@ -18,12 +27,25 @@ static func title_font() -> Font:
 	return _title_font
 
 
+## Pixel caps for buttons, tabs and card names.
+static func pixel_font() -> Font:
+	if _pixel_font == null:
+		var v := FontVariation.new()
+		v.base_font = load("res://assets/fonts/PixelifySans.ttf") as FontFile
+		v.variation_opentype = {"wght": 600}
+		v.spacing_glyph = 1
+		_pixel_font = v
+	return _pixel_font
+
+
 static func panel(bg: Color = Palette.PANEL, border: Color = Palette.EDGE) -> StyleBoxFlat:
 	var s := StyleBoxFlat.new()
-	s.bg_color = bg
-	s.border_color = border
+	# The old flat greys read as navy glass now; accents keep their colour
+	# but the default gold edge becomes the antique rim.
+	s.bg_color = NAVY if bg == Palette.PANEL or bg == Palette.PANEL_2 else bg
+	s.border_color = RIM if border == Palette.EDGE else border
 	s.set_border_width_all(2)
-	s.set_corner_radius_all(4)
+	s.set_corner_radius_all(3)
 	s.shadow_color = Color(border.r, border.g, border.b, 0.18)
 	s.shadow_size = 5
 	s.anti_aliasing = true
@@ -36,7 +58,7 @@ static func panel(bg: Color = Palette.PANEL, border: Color = Palette.EDGE) -> St
 
 ## Framed card: near-black glass, lit rim, wide accent glow (reference look).
 static func frame(accent: Color = Palette.EDGE, glow: float = 0.34) -> StyleBoxFlat:
-	var s := panel(Color(0.035, 0.04, 0.062, 0.95), accent)
+	var s := panel(NAVY, accent)
 	s.shadow_color = Color(accent.r, accent.g, accent.b, glow)
 	s.shadow_size = 12
 	s.border_width_top = 2
@@ -53,9 +75,9 @@ static func title(text: String, size: int = 28, color: Color = Palette.EDGE) -> 
 	lab.text = text
 	lab.add_theme_font_override("font", title_font())
 	lab.add_theme_font_size_override("font_size", size)
-	lab.add_theme_color_override("font_color", color)
-	lab.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
-	lab.add_theme_constant_override("outline_size", 4 if size < 22 else 6)
+	lab.add_theme_color_override("font_color", GOLD if color == Palette.EDGE else color)
+	lab.add_theme_color_override("font_outline_color", INK)
+	lab.add_theme_constant_override("outline_size", 5 if size < 22 else 8)
 	# Only big headers glow; on small titles the halo smears the serifs.
 	if size >= 22:
 		lab.add_theme_color_override("font_shadow_color", Color(color.r, color.g, color.b, 0.3))
@@ -129,20 +151,21 @@ static func button(text: String, min_size: Vector2 = Vector2(120, 44)) -> Button
 	var b := Button.new()
 	b.text = text
 	b.custom_minimum_size = min_size
+	b.add_theme_font_override("font", pixel_font())
 	b.add_theme_font_size_override("font_size", 16)
 	b.add_theme_color_override("font_color", Palette.TEXT)
 	b.add_theme_color_override("font_hover_color", Color.WHITE)
+	b.add_theme_color_override("font_focus_color", Color.WHITE)
 	b.add_theme_color_override("font_disabled_color", Palette.MUTED)
-	var normal := panel(Color(0.07, 0.075, 0.11, 0.96), Palette.EDGE)
-	var hover := panel(Color(0.2, 0.12, 0.08, 0.98), Palette.LEMON)
-	hover.shadow_color = Color(Palette.LEMON.r, Palette.LEMON.g, Palette.LEMON.b, 0.45)
+	b.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
+	b.add_theme_constant_override("outline_size", 3)
+	var normal := panel(NAVY, RIM)
+	var hover := panel(NAVY_HI, GOLD)
+	hover.shadow_color = Color(GOLD.r, GOLD.g, GOLD.b, 0.4)
 	hover.shadow_size = 10
-	var pressed := panel(Palette.BRICK, Palette.LEMON)
+	var pressed := panel(Color(0.2, 0.14, 0.06, 0.98), GOLD)
 	pressed.shadow_size = 12
-	var focus := normal.duplicate() as StyleBoxFlat
-	focus.border_color = Palette.LEMON
-	focus.shadow_color = Color(Palette.LEMON.r, Palette.LEMON.g, Palette.LEMON.b, 0.35)
-	focus.shadow_size = 8
+	var focus := hover.duplicate() as StyleBoxFlat
 	var off := panel(Color(0.06, 0.06, 0.08, 0.9), Palette.LOCK)
 	off.shadow_size = 0
 	b.add_theme_stylebox_override("normal", normal)
@@ -209,24 +232,27 @@ static func new_dot() -> ColorRect:
 	return d
 
 
+## Currency readout like the reference: a small pixel icon, the name in
+## pixel caps, the number - no box.
 static func pill(title: String, value: String, accent: Color) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 6)
-	var box := PanelContainer.new()
-	box.add_theme_stylebox_override("panel", panel(Palette.PANEL_2, accent))
-	var inner := HBoxContainer.new()
-	inner.add_theme_constant_override("separation", 8)
+	var icon := PixelIcon.new()
+	icon.kind = title.to_lower()
+	icon.custom_minimum_size = Vector2(22, 22)
+	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(icon)
 	var t := Label.new()
-	t.text = title
-	apply_label(t, 12, accent)
+	t.text = title.to_upper()
+	t.add_theme_font_override("font", pixel_font())
+	apply_label(t, 14, Palette.TEXT)
+	row.add_child(t)
 	var v := Label.new()
 	v.text = value
 	v.name = "Value"
-	apply_label(v, 18, Palette.TEXT)
-	inner.add_child(t)
-	inner.add_child(v)
-	box.add_child(inner)
-	row.add_child(box)
+	v.add_theme_font_override("font", pixel_font())
+	apply_label(v, 14, Palette.TEXT)
+	row.add_child(v)
 	return row
 
 
