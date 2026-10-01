@@ -213,6 +213,23 @@ func boss_filed() -> bool:
 	return _boss_down
 
 
+## A crew member waiting in an impound cage on this map (data/story.json
+## acts.<map>.rescue), until the family breaks them out once.
+func _place_rescue() -> void:
+	var r := StoryBook.rescue(map_id)
+	if r.is_empty():
+		return
+	var who := str(r.get("who", ""))
+	if who == "" or StoryBook.has_crew(who):
+		return
+	var cage := RescueCage.new()
+	cage.who = who
+	var v: Variant = r.get("lines", [])
+	cage.lines = v if v is Array else []
+	cage.position = Vector2(float(r.get("x", spawn_at.x + 600.0)), 498.0)
+	add_child(cage)
+
+
 func _ready() -> void:
 	_configure()
 	add_to_group("dock_world")
@@ -229,6 +246,7 @@ func _ready() -> void:
 		_state.unpack(App.run_bag)
 	build_world()
 	_place_parkour()
+	_place_rescue()
 	_rig = LightRig.new()
 	_rig.preset = light_preset
 	add_child(_rig)

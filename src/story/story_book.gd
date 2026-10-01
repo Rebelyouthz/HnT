@@ -33,7 +33,22 @@ static func who_name(who: String) -> String:
 		return FamilyProfile.father_name()
 	if who == "son":
 		return FamilyProfile.son_name()
+	if who == "collector":
+		return "COLLECTOR GANT"
+	var crew: Variant = all().get("crew", {})
+	if crew is Dictionary and (crew as Dictionary).has(who):
+		return str(((crew as Dictionary)[who] as Dictionary).get("name", who.to_upper()))
 	return "THE STREET"
+
+
+## Has the family rescued this crew member (benny / rico)?
+static func has_crew(who: String) -> bool:
+	return bool(FamilyProfile.data.get("crew_" + who, false))
+
+
+static func rescue(map_id: String) -> Dictionary:
+	var v: Variant = act(map_id).get("rescue", {})
+	return v if v is Dictionary else {}
 
 
 static func bridge_key(from_id: String, to_id: String) -> String:

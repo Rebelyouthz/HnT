@@ -113,16 +113,23 @@ func busy() -> bool:
 
 
 static func accent(who: String) -> Color:
-	if who == "father":
-		return Palette.BRICK
-	if who == "son":
-		return Palette.LEMON
+	match who:
+		"father":
+			return Palette.BRICK
+		"son":
+			return Palette.LEMON
+		"benny":
+			return Color(0.95, 0.55, 0.22)
+		"rico":
+			return Color(0.45, 0.78, 0.42)
+		"collector":
+			return Color(0.75, 0.2, 0.25)
 	return Palette.EDGE
 
 
 ## The actor saying the line, if it is in the level and on screen.
 func _speaker(who: String) -> Node2D:
-	if who != "father" and who != "son":
+	if who == "":
 		return null
 	for n in get_tree().get_nodes_in_group("players"):
 		if n is Node2D and str(n.get("role")) == who and (n as Node2D).is_visible_in_tree():
@@ -153,14 +160,14 @@ func _paint() -> void:
 	if actor != null:
 		_bubble = SpeechBubble.make(_ui, actor, StoryBook.who_name(who), text, accent(who))
 		_wait = _bubble.reading_time()
-	elif who == "father" or who == "son":
+	elif who == "father" or who == "son" or StoryBook.all().get("crew", {}).has(who):
 		_show_dock(who, text)
 	else:
 		_show_caption(text)
 
 
 func _show_dock(who: String, text: String) -> void:
-	_dock_pic.texture = SpriteBook.bust(who)
+	_dock_pic.texture = SpriteBook.bust(who) if SpriteBook.has_who(who) else CrewNPC.bust(who)
 	_dock_who.text = StoryBook.who_name(who).to_upper()
 	_dock_who.add_theme_color_override("font_color", accent(who).darkened(0.35))
 	_dock_body.text = text

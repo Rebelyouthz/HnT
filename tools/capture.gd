@@ -28,6 +28,11 @@ func _prepare() -> void:
 	var app := root.get_node_or_null("App")
 	if app != null and _tab != "" and not _tab.begins_with("title") and not _tab.begins_with("camp"):
 		app.set("pending_tab", _tab)
+	# Hideout shots: both brothers home and lumber money.
+	if _tab.begins_with("camp_") and fp != null:
+		(fp.data as Dictionary)["crew_benny"] = true
+		(fp.data as Dictionary)["crew_rico"] = true
+		(fp.data as Dictionary)["gold"] = 500
 	# Menu shots: open the gated tabs so BUILD / LOCKER / AWARDS render.
 	if _tab in ["build", "locker", "awards"] and fp != null:
 		var b: Dictionary = (fp.data as Dictionary).get("buildings", {})
@@ -93,6 +98,11 @@ func _process(_delta: float) -> bool:
 		var what := _tab.substr(5)
 		if what == "hub":
 			current_scene.call("_open_hub", "clinic")
+		elif what.begins_with("build_"):
+			for st: Dictionary in current_scene.get("_stations"):
+				if str(st["id"]) == what.substr(6):
+					current_scene.get("_walker").position.x = float(st["x"]) + 30.0
+					current_scene.call("_construct", st)
 		else:
 			current_scene.call("_use", {"id": what, "locked": false})
 	if _tab.begins_with("title_") and _n == 60 and current_scene != null:
