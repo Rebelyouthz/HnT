@@ -19,9 +19,14 @@ var current_map: String = "dock_street"
 var film_from: String = ""
 var film_next: String = ""
 var film_kind: String = ""
+## Hideout between maps: the map the portal leads on to ("" = new run), and a
+## hub tab the hideout should open on arrival (results -> awards, ...).
+var camp_next: String = ""
+var camp_open_tab: String = ""
 
 const SCENES := {
 	"intro_flow": "res://scenes/levels/intro_flow.tscn",
+	"camp": "res://scenes/levels/camp.tscn",
 	"tutorial_alley": "res://scenes/levels/tutorial_alley.tscn",
 	"act_film": "res://scenes/levels/act_film.tscn",
 	"dock_street": "res://scenes/levels/dock_street.tscn",
@@ -128,6 +133,31 @@ func advance(next_id: String, state: RunState) -> void:
 		return
 	run_bag = state.pack()
 	get_tree().paused = false
+	# Between maps the family steps through a portal into the hideout; its
+	# portal carries on to next_id (with the bridge film) from there. Online
+	# co-op skips it so both machines stay on the same scene.
+	var online := has_node("/root/NetSession") and NetSession.active()
+	if not online and next_id != "ending" and current_map != "camp":
+		camp_next = next_id
+		film_from = current_map
+		get_tree().change_scene_to_file(str(SCENES["camp"]))
+		return
+	_advance_core(next_id)
+
+
+## Hideout portal: continue the run where advance() paused it.
+func leave_camp() -> void:
+	var next_id := camp_next
+	camp_next = ""
+	if next_id == "":
+		start_run()
+		return
+	current_map = film_from
+	_advance_core(next_id)
+
+
+func _advance_core(next_id: String) -> void:
+	get_tree().paused = false
 	film_from = current_map
 	film_next = next_id
 	if next_id == "ending":
@@ -164,15 +194,19 @@ func carry_to_fire_escapes(state: RunState) -> void:
 	advance("fire_escapes", state)
 
 
+## "Home" is the walkable hideout now; its COMMAND BOARD is the old hub with
+## every menu. The requested tab opens over the hideout on arrival.
 func back_to_hub(tab: String = "clinic") -> void:
 	pending_tab = tab
+	camp_open_tab = tab
+	camp_next = ""
 	run_bag = {}
 	remote_coop = false
 	versus = false
 	film_from = ""
 	film_next = ""
 	film_kind = ""
-	get_tree().change_scene_to_file("res://scenes/ui/hub.tscn")
+	get_tree().change_scene_to_file(str(SCENES["camp"]))
 
 
 func is_solo_density() -> bool:

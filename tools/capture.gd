@@ -7,6 +7,7 @@ extends SceneTree
 var _out := "user://capture.png"
 var _frames := 90
 var _walk := false
+var _left := false
 var _n := 0
 var _target := ""
 var _tab := ""
@@ -25,7 +26,7 @@ func _prepare() -> void:
 		if str(d.get("son_name", "")) == "":
 			d["son_name"] = "Kid"
 	var app := root.get_node_or_null("App")
-	if app != null and _tab != "" and not _tab.begins_with("title"):
+	if app != null and _tab != "" and not _tab.begins_with("title") and not _tab.begins_with("camp"):
 		app.set("pending_tab", _tab)
 	if _tab == "stats":
 		# Demo numbers so the report has something to draw.
@@ -47,11 +48,16 @@ func _initialize() -> void:
 		_out = args[1]
 	if args.size() > 2:
 		_frames = int(args[2])
-	_walk = args.size() > 3 and args[3] == "walk"
+	_walk = args.size() > 3 and (args[3] == "walk" or args[3] == "left")
+	_left = args.size() > 3 and args[3] == "left"
 	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
 	DisplayServer.window_set_size(Vector2i(1920, 1080))
+	# camp:hub / camp:dojo open a hideout menu over the camp.
+	if target.begins_with("camp:"):
+		_tab = "camp_" + target.get_slice(":", 1)
+		target = "res://scenes/levels/camp.tscn"
 	# title / title:credits / title:options open the start screen.
-	if target.begins_with("title"):
+	elif target.begins_with("title"):
 		_tab = "title_" + (target.get_slice(":", 1) if ":" in target else "")
 		target = "res://scenes/ui/title.tscn"
 	# hub:<tab> opens the hub on that tab.
@@ -69,12 +75,18 @@ func _process(_delta: float) -> bool:
 		_prepare()
 	if _tab == "stats" and _n == 40 and current_scene != null and current_scene.has_method("_open_stats"):
 		current_scene.call("_open_stats")
+	if _tab.begins_with("camp_") and _n == 90 and current_scene != null:
+		var what := _tab.substr(5)
+		if what == "hub":
+			current_scene.call("_open_hub", "clinic")
+		else:
+			current_scene.call("_use", {"id": what, "locked": false})
 	if _tab.begins_with("title_") and _n == 60 and current_scene != null:
 		var page := _tab.substr(6)
 		if page != "" and current_scene.has_method("_" + page):
 			current_scene.call("_" + page)
 	if _walk and _n > 20:
-		Input.action_press("p1_right")
+		Input.action_press("p1_left" if _left else "p1_right")
 	if _n == _frames:
 		var img := root.get_texture().get_image()
 		img.save_png(_out)

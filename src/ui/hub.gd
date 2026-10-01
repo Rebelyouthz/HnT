@@ -384,50 +384,9 @@ func _open_stats() -> void:
 
 func _open_camp_sheet(id: String) -> void:
 	_clear_modal()
-	var path := ""
-	match id:
-		"pawn_shop":
-			path = "res://src/ui/dopamine_shop.gd"
-		"patrol_desk":
-			path = "res://src/ui/patrol_sheet.gd"
-		"research_lab":
-			path = "res://src/ui/research_sheet.gd"
-		"dojo":
-			path = "res://src/ui/dojo_sheet.gd"
-		"workshop":
-			path = "res://src/ui/workshop_sheet.gd"
-		"bounty_board":
-			path = "res://src/ui/bounty_sheet.gd"
-		"radio_tower":
-			path = "res://src/ui/radio_sheet.gd"
-		"album_wall":
-			path = "res://src/ui/album_sheet.gd"
-		"blood_fridge":
-			path = "res://src/ui/fridge_sheet.gd"
-		"streak_locker":
-			path = "res://src/ui/streak_sheet.gd"
-		"invoice_wheel":
-			path = "res://src/ui/lottery_sheet.gd"
-		"punching_bag":
-			path = "res://src/ui/bag_sheet.gd"
-		"warrant_fax":
-			path = "res://src/ui/fax_sheet.gd"
-		"tip_jar":
-			path = "res://src/ui/tip_sheet.gd"
-		"lost_found":
-			path = "res://src/ui/lost_sheet.gd"
-		"payphone":
-			path = "res://src/ui/phone_sheet.gd"
-		"water_cooler":
-			path = "res://src/ui/cooler_sheet.gd"
-		"coat_check":
-			path = "res://src/ui/coat_sheet.gd"
-		"time_clock":
-			path = "res://src/ui/clock_sheet.gd"
-		"bleach_closet":
-			path = "res://src/ui/bleach_sheet.gd"
-		_:
-			return
+	var path := CampSheets.path(id)
+	if path == "":
+		return
 	var sheet: Control = load(path).new()
 	sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(sheet)
