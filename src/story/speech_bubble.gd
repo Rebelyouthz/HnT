@@ -118,8 +118,8 @@ func _follow() -> void:
 	var v: Variant = target.get("hop")
 	if v is float:
 		hop = minf(0.0, float(v))
-	var head := target.global_position + Vector2(0, -HEAD + hop)
-	var p := target.get_viewport().get_canvas_transform() * head
+	# Works for actors in the world and in film CanvasLayers alike.
+	var p := target.get_global_transform_with_canvas() * Vector2(0, -HEAD + hop)
 	var k := float(PixelStage.DESIGN.x) / float(PixelStage.LOGICAL.x)
 	var d := p * k
 	var half := 0.0
@@ -130,7 +130,14 @@ func _follow() -> void:
 	position = d.round()
 
 
+var _laid := Vector2.ZERO
+
+
 func _process(delta: float) -> void:
+	# Re-fit the balloon and tail whenever wrapping changes its size.
+	if is_instance_valid(_panel) and _panel.get_combined_minimum_size() != _laid:
+		_laid = _panel.get_combined_minimum_size()
+		_layout()
 	_follow()
 	if _done:
 		return

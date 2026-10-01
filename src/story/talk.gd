@@ -136,6 +136,8 @@ func _speaker(who: String) -> Node2D:
 		return null
 	for n in get_tree().get_nodes_in_group("players"):
 		if n is Node2D and str(n.get("role")) == who and (n as Node2D).is_visible_in_tree():
+			if n.has_meta("film"):
+				return n as Node2D
 			var cam := get_viewport().get_camera_2d()
 			if cam == null:
 				return n as Node2D

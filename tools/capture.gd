@@ -26,7 +26,7 @@ func _prepare() -> void:
 		if str(d.get("son_name", "")) == "":
 			d["son_name"] = "Kid"
 	var app := root.get_node_or_null("App")
-	if app != null and _tab != "" and not _tab.begins_with("title") and not _tab.begins_with("camp"):
+	if app != null and _tab != "" and not _tab.begins_with("title") and not _tab.begins_with("camp") and not _tab.begins_with("tower"):
 		app.set("pending_tab", _tab)
 	# Hideout shots: both brothers home and lumber money.
 	if _tab.begins_with("camp_") and fp != null:
@@ -71,8 +71,12 @@ func _initialize() -> void:
 	_left = args.size() > 3 and args[3] == "left"
 	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
 	DisplayServer.window_set_size(Vector2i(1920, 1080))
+	# tower:<map> plays the giant tower film on autopilot.
+	if target.begins_with("tower:"):
+		_tab = "tower_" + target.get_slice(":", 1)
+		target = "res://scenes/levels/%s.tscn" % target.get_slice(":", 1)
 	# camp:hub / camp:dojo open a hideout menu over the camp.
-	if target.begins_with("camp:"):
+	elif target.begins_with("camp:"):
 		_tab = "camp_" + target.get_slice(":", 1)
 		target = "res://scenes/levels/camp.tscn"
 	# title / title:credits / title:options open the start screen.
@@ -94,6 +98,12 @@ func _process(_delta: float) -> bool:
 		_prepare()
 	if _tab == "stats" and _n == 40 and current_scene != null and current_scene.has_method("_open_stats"):
 		current_scene.call("_open_stats")
+	if _tab.begins_with("tower_") and _n == 60:
+		load("res://src/ui/timing_ring.gd").set("autoplay", true)
+		root.get_tree().paused = true
+		var film: Node = load("res://src/world/giant_tower_film.gd").new()
+		film.set("map_id", _tab.substr(6))
+		root.add_child(film)
 	if _tab.begins_with("camp_") and _n == 90 and current_scene != null:
 		var what := _tab.substr(5)
 		if what == "hub":

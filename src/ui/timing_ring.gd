@@ -15,6 +15,9 @@ extends CanvasLayer
 
 signal resolved(grade: String)
 
+## Capture / demo: rings hit themselves perfectly.
+static var autoplay := false
+
 const PERFECT := 0.05
 const GOOD := 0.1
 const OK := 0.17
@@ -108,7 +111,7 @@ func _elapsed() -> float:
 func _place() -> void:
 	var center := Vector2(640, 300)
 	if anchor != null and is_instance_valid(anchor):
-		var p := anchor.get_viewport().get_canvas_transform() * (anchor.global_position + Vector2(0, -70))
+		var p := anchor.get_global_transform_with_canvas() * Vector2(0, -70)
 		center = p * (float(PixelStage.DESIGN.x) / float(PixelStage.LOGICAL.x))
 		center.x = clampf(center.x, 150.0, 1130.0)
 		center.y = clampf(center.y, 150.0, 560.0)
@@ -124,7 +127,7 @@ func _process(_delta: float) -> void:
 	if t > lead + OK + 0.05:
 		_finish("miss")
 		return
-	var hit := _just(action)
+	var hit := _just(action) or (autoplay and t >= lead)
 	if hit:
 		var err := absf(t - lead)
 		if t < lead * 0.45:
