@@ -98,6 +98,20 @@ var parry_win := 0
 var revenge_win := 0
 var cart_t := 0.0
 var _slide_clerk := false
+## Move system (MoveBook): the body position the last strike ended in, how
+## long it stays live for chaining, and the strike in flight.
+var stance := "guard"
+var stance_t := 0.0
+var _strike_id := 0
+var _strike_clip := ""
+var _strike_phase := 0
+var _strike_hit := false
+var _strike_grade := ""
+var _lunge_v := 0.0
+var _drift_v := 0.0
+var _drift_t := 0.0
+var _plant := 1.0
+var _land_t := 0.0
 
 signal died
 signal hit_landed(kind: String, global_pos: Vector2)
@@ -212,6 +226,33 @@ func _mount_sprite() -> void:
 
 
 func _sprite_clip(kind: String) -> String:
+	var base := _base_clip(kind)
+	var st := _live_stance()
+	var v := base
+	if kind == "light" or kind == "gut-punch":
+		v = MoveBook.light_variant(st, base)
+	elif kind == "heavy":
+		v = MoveBook.heavy_variant(st, base)
+	if v != base and _anim != null and _anim.sprite_frames.has_animation(v):
+		return v
+	return base
+
+
+## Body position for the next move: the last strike's end pose while it is
+## live, else what the legs are doing right now.
+func _live_stance() -> String:
+	if stance_t > 0.0:
+		return stance
+	if hop < -16.0 or (plane == "roof" and not is_on_floor()):
+		return "air"
+	if dashing or absf(velocity.x) > 180.0:
+		return "run"
+	if ducking or sliding:
+		return "low"
+	return "guard"
+
+
+func _base_clip(kind: String) -> String:
 	match kind:
 		"light":
 			if string_n <= 1:
@@ -255,6 +296,8 @@ func _tick_sprite() -> void:
 		clip = "hurt"
 	elif ducking:
 		clip = "duck"
+	elif _land_t > 0.0 and _anim.sprite_frames.has_animation("land"):
+		clip = "land"
 	elif hop < -8.0 or (plane == "roof" and not is_on_floor()) or gliding:
 		clip = "jump"
 	elif sliding or slide_frames > 0:
@@ -277,9 +320,44 @@ func _tick_sprite() -> void:
 		else:
 			return
 	if _anim.animation != clip:
+		_anim.speed_scale = 1.0
 		_anim.play(clip)
 	elif not _anim.is_playing() and _anim.sprite_frames.get_animation_loop(clip):
 		_anim.play(clip)
+	_drive_clip(clip)
+
+
+## Clips the physics drives instead of a clock. Locomotion plays at the
+## speed the feet actually travel (no ice-skating); the jump clip is scrubbed
+## by vertical velocity so take-off, tuck, apex and drop line up with the arc.
+func _drive_clip(clip: String) -> void:
+	match clip:
+		"walk":
+			_anim.speed_scale = clampf(absf(velocity.x) / 80.0, 0.55, 1.5)
+		"parkour_run":
+			var spd := maxf(absf(velocity.x), 420.0 if dashing else 0.0)
+			_anim.speed_scale = clampf(spd / speed, 0.7, 1.6)
+		"jump":
+			if anim_atk == "jump":
+				return
+			var n := _anim.sprite_frames.get_frame_count("jump")
+			if n < 3:
+				return
+			var vy := hop_v if plane == "street" else velocity.y
+			# Take-off, tuck and flip at the apex, reach for the ground on the way down.
+			# Rising covers the first half (take-off -> apex), falling the second;
+			# falling is faster (FALL_MUL), so its velocity range is wider.
+			var t := 0.0
+			if vy < 0.0:
+				t = 0.5 * clampf((vy - JUMP) / absf(JUMP), 0.0, 1.0)
+			else:
+				t = 0.5 + 0.5 * clampf(vy / (absf(JUMP) * sqrt(FALL_MUL)), 0.0, 1.0)
+			_anim.pause()
+			_anim.frame = clampi(int(round(t * float(n - 1))), 0, n - 1)
+		"idle":
+			# Breathing deepens with exertion: low HP or low steam = faster.
+			var tired := 1.0 - minf(float(hp) / float(maxi(max_hp, 1)), steam / STEAM_MAX)
+			_anim.speed_scale = 1.0 + 0.5 * clampf(tired, 0.0, 1.0)
 
 
 func _part(pos: Vector2, size: Vector2, color: Color) -> void:
@@ -472,6 +550,16 @@ func _tick_meters(delta: float) -> void:
 		_atk_t -= delta
 	else:
 		anim_atk = ""
+		if _strike_phase == 3:
+			_strike_phase = 0
+	if stance_t > 0.0:
+		stance_t -= delta
+		if stance_t <= 0.0:
+			stance = "guard"
+	if _drift_t > 0.0:
+		_drift_t -= delta
+	if _land_t > 0.0:
+		_land_t -= delta
 	ducking = _street_grounded() and _pressed("duck") and not dashing and not sliding
 	if squash_root:
 		if _anim:
@@ -566,6 +654,7 @@ func _process_street(delta: float) -> void:
 			velocity.y = y * depth_speed * limp
 		else:
 			velocity.y = 0.0
+		_strike_motion()
 	if _street_grounded():
 		coyote = COYOTE
 		_footsteps(delta, absf(velocity.x))
@@ -838,7 +927,7 @@ func _slide() -> void:
 	slide_frames = 16
 	invuln = 6
 	dashing = false
-	anim_atk = "duck"
+	anim_atk = "slide" if _anim != null and _anim.sprite_frames.has_animation("slide") else "duck"
 	_atk_t = 0.42
 	KitSfx.hit(role, "slide")
 	Juice.shout(Copy.SLIDE)
@@ -936,15 +1025,9 @@ func _attack(kind: String, charged: bool) -> void:
 		string_n += 1
 		string_ttl = 0.4
 		lights_clean += 1
-		var grade := HitGrade.of_lights(string_n)
-		Juice.shout(HitGrade.shout(grade))
-		if grade == "jab":
-			KitSfx.hit(role, "jab")
-		elif grade == "cross":
-			KitSfx.hit(role, "cross")
-		else:
-			KitSfx.hit(role, "bam")
-			VoBank.bam(role)
+		# Grade shout + impact sound wait for contact (_strike_impact): a jab
+		# that hits air only makes a whoosh.
+		_strike_grade = HitGrade.of_lights(string_n)
 		if string_n >= 3:
 			kind = "gut-punch"
 			size = Vector2(54, 42)
@@ -989,12 +1072,169 @@ func _attack(kind: String, charged: bool) -> void:
 			pickup = ""
 	if charged and kind == "heavy":
 		size = Vector2(78, 50)
-	if kind != "light" and kind != "gut-punch":
-		KitSfx.hit(role, kind)
+	if kind != "light":
+		_strike_grade = ""
 	anim_atk = _sprite_clip(kind)
 	_atk_t = 0.48 if kind == "light" or kind == "gut-punch" or kind == "jump-kick" else 0.72
 	var life := 0.12 if kind == "light" or kind == "jump-kick" or kind == "gut-punch" else 0.2
-	_spawn_hit(kind, size, life, Vector2(36 * facing, -34 + hop))
+	_begin_strike(kind, size, life, 36.0)
+
+
+## Strike in three beats, timed by the sprite: wind-up (body steps in, the
+## hitbox does not exist yet), contact on the art's extension frame, then
+## recovery. A chain from a live stance enters the clip part-way through its
+## wind-up, so combos flow as one motion instead of resetting to guard.
+func _begin_strike(kind: String, size: Vector2, life: float, reach: float) -> void:
+	var clip := anim_atk
+	var mv := MoveBook.move(clip)
+	var info: Dictionary = SpriteBook.clip_info(role, clip) if _anim != null else {}
+	var fps := maxf(1.0, float(info.get("fps", 16.0)))
+	var count := int(info.get("count", 0))
+	var hit_f := int(info.get("hit", -1))
+	var start_f := 0
+	var startup := 0.0
+	if hit_f > 0:
+		var skip := MoveBook.entry_skip(_live_stance(), clip)
+		start_f = clampi(roundi(float(hit_f) * skip), 0, hit_f - 1)
+		startup = minf(float(hit_f - start_f) / fps, float(mv["startup_cap"]))
+		# The art must reach its peak on the contact tick: speed the wind-up
+		# up if the cap is shorter than the drawn extension.
+		var natural := float(hit_f - start_f) / fps
+		var rate := natural / maxf(startup, 0.001)
+		_atk_t = startup + float(count - hit_f) / fps + 0.02
+		if _anim != null and _anim.sprite_frames.has_animation(clip):
+			_anim.play(clip)
+			_anim.frame = start_f
+			_anim.speed_scale = rate
+	else:
+		# Old boards without timing data: near-instant contact as before.
+		startup = 0.05
+	_strike_id += 1
+	var id := _strike_id
+	_strike_clip = clip
+	_strike_phase = 1
+	_strike_hit = false
+	_plant = float(mv["plant"])
+	_lunge_v = float(mv["lunge"])
+	_drift_t = 0.0
+	stance_t = 0.0
+	_whoosh(clip, float(mv["weight"]))
+	if startup > 0.0:
+		await get_tree().create_timer(startup, false).timeout
+	if id != _strike_id or downed or not is_inside_tree():
+		return
+	_strike_phase = 2
+	_lunge_v = 0.0
+	if _anim != null and _anim.animation == clip:
+		_anim.speed_scale = 1.0
+	_spawn_hit(kind, size, life, Vector2(reach * facing, -34.0 + hop))
+	await get_tree().create_timer(life + 0.02, false).timeout
+	if id != _strike_id or not is_inside_tree():
+		return
+	_strike_phase = 3
+	if not _strike_hit:
+		_strike_whiff(mv)
+
+
+## Physics of a strike on the street: feet planted (stick input mostly
+## cancelled), the step-in lunge during wind-up, and the stumble forward
+## after a whiff.
+func _strike_motion() -> void:
+	if _strike_phase == 1 or _strike_phase == 2:
+		velocity.x *= _plant
+		velocity.y *= _plant
+		velocity.x += float(facing) * _lunge_v
+	if _drift_t > 0.0:
+		velocity.x += float(facing) * _drift_v * clampf(_drift_t / 0.18, 0.0, 1.0)
+
+
+## Missed: the weight carries through. Drift forward, slow retract (the
+## arm has to be dragged back), longer recovery, short chain window.
+func _strike_whiff(mv: Dictionary) -> void:
+	_drift_v = float(mv["whiff_drift"])
+	_drift_t = 0.18
+	Juice.whiff(global_position + Vector2(float(facing) * 10.0, -34.0 + hop), facing, 40.0 + 30.0 * float(mv["weight"]), _strike_clip == "uppercut")
+	attack_cd = maxi(attack_cd, int(mv["whiff_cd"]))
+	if _anim != null and _anim.animation == _strike_clip:
+		_anim.speed_scale = float(mv["whiff_rate"])
+		_atk_t /= maxf(0.3, float(mv["whiff_rate"]))
+	stance = str(mv["stance"])
+	stance_t = MoveBook.STANCE_LIVE_WHIFF
+	if float(mv["weight"]) >= 0.8:
+		# A missed haymaker or roundhouse spins you off balance.
+		string_n = 0
+		stumble_t = maxf(stumble_t, 0.18)
+	_strike_grade = ""
+
+
+## Connected: the impact is felt on both bodies. Hitstop holds the extension
+## frame, the camera kicks, the attacker pushes off the target, the retract
+## snaps back faster and the chain window opens early and stays open longer.
+func _strike_impact(at: Vector2) -> void:
+	if _strike_hit or _strike_phase != 2:
+		return
+	_strike_hit = true
+	var mv := MoveBook.move(_strike_clip)
+	Juice.hitstop(int(mv["stop"]))
+	Juice.pulse_shake(float(mv["shake"]))
+	Juice.impact(at, float(mv["weight"]), facing)
+	velocity.x -= float(facing) * float(mv["push"])
+	_drift_t = 0.0
+	attack_cd = mini(attack_cd, int(mv["hit_cd"]))
+	if _anim != null and _anim.animation == _strike_clip:
+		_anim.speed_scale = 1.25
+	stance = str(mv["stance"])
+	stance_t = MoveBook.STANCE_LIVE_HIT
+	match _strike_grade:
+		"jab":
+			Juice.shout(HitGrade.shout("jab"))
+			KitSfx.hit(role, "jab")
+		"cross":
+			Juice.shout(HitGrade.shout("cross"))
+			KitSfx.hit(role, "cross")
+		"":
+			KitSfx.hit(role, _strike_sfx())
+		_:
+			Juice.shout(HitGrade.shout(_strike_grade))
+			KitSfx.hit(role, "bam")
+			VoBank.bam(role)
+	_strike_grade = ""
+
+
+## Got hit mid-swing: the strike never lands, the stance is gone.
+func _cancel_strike() -> void:
+	_strike_id += 1
+	_strike_phase = 0
+	_lunge_v = 0.0
+	_drift_t = 0.0
+	stance = "guard"
+	stance_t = 0.0
+	anim_atk = ""
+	_atk_t = 0.0
+
+
+func _strike_sfx() -> String:
+	match _strike_clip:
+		"roundhouse":
+			return "roundhouse"
+		"uppercut":
+			return "uppercut"
+		"air_mix":
+			return "air-mix"
+		"heavy", "side_kick", "snap":
+			return "heavy"
+	return "light"
+
+
+## Air being cut: pitch and length follow the limb (kicks are longer and
+## lower than jabs, heavies the lowest).
+func _whoosh(clip: String, weight: float) -> void:
+	var kick := clip.ends_with("kick") or clip == "roundhouse" or clip == "air_mix"
+	var path := "res://assets/audio/whoosh_kick.wav" if kick else ("res://assets/audio/whoosh_heavy.wav" if weight >= 0.6 else "res://assets/audio/whoosh_light.wav")
+	if not ResourceLoader.exists(path):
+		return
+	var pitch := (1.14 if role == "son" else 0.94) * randf_range(0.95, 1.06)
+	Mixer.play_sfx(path, pitch)
 
 
 func _dive() -> void:
@@ -1002,7 +1242,7 @@ func _dive() -> void:
 	if attack_cd > 0:
 		return
 	attack_cd = 20
-	anim_atk = "jump"
+	anim_atk = "dive" if _anim != null and _anim.sprite_frames.has_animation("dive") else "jump"
 	_atk_t = 0.55
 	if plane == "street":
 		hop_v = 520.0
@@ -1013,6 +1253,7 @@ func _dive() -> void:
 
 
 func _on_hit_landed(kind: String, _global_pos: Vector2) -> void:
+	_strike_impact(_global_pos)
 	if kind == "light" or kind == "jump-kick" or kind == "gut-punch" or kind == "slide":
 		attack_cd = mini(attack_cd, 7)
 	var rs := get_tree().get_first_node_in_group("run_state")
@@ -1190,6 +1431,7 @@ func take_hit(kind: String, from: Node) -> void:
 		dmg = int(round(float(dmg) * 0.85))
 	hp = maxi(0, hp - dmg)
 	_hurt_t = 0.32
+	_cancel_strike()
 	var rs := get_tree().get_first_node_in_group("run_state")
 	if rs and rs.has_method("has_card") and rs.has_card("family_discount"):
 		Juice.keep_combo()
@@ -1376,6 +1618,14 @@ func stumble() -> void:
 
 
 func _on_land(fall: float) -> void:
+	# Knees absorb the drop: the deeper the fall, the longer the crouch.
+	if fall > 160.0 and _strike_phase == 0:
+		_land_t = clampf(fall / 2600.0, 0.1, 0.26)
+		if _anim != null and _anim.sprite_frames.has_animation("land"):
+			_anim.speed_scale = 1.0
+			_anim.play("land")
+			var n := _anim.sprite_frames.get_frame_count("land")
+			_anim.speed_scale = float(n) / maxf(0.05, _land_t) / maxf(1.0, _anim.sprite_frames.get_animation_speed("land"))
 	Juice.squash(squash_root, facing)
 	Juice.land_puff(global_position)
 	rolling = false
@@ -1393,9 +1643,15 @@ func _on_land(fall: float) -> void:
 		KitSfx.hit(role, "dash")
 		Juice.toast("reward", "LANDING ROLL", "+SPEED  ·  VECTOR+")
 		return
+	# A full jump lands at JUMP * sqrt(FALL_MUL) (~800): legs absorb that.
+	# Only drops beyond what a jump can produce stagger or hurt.
+	var full_jump := absf(JUMP) * sqrt(FALL_MUL)
+	if fall <= full_jump + 30.0:
+		KitSfx.hit(role, "land")
+		return
 	KitSfx.foot(role, 1.0, true)
 	stumble()
-	if fall > 620.0:
+	if fall > full_jump + 220.0:
 		take_hit("light", self)
 
 
@@ -1454,6 +1710,9 @@ func _street_grounded() -> bool:
 
 
 func _face(x: float) -> void:
+	# No turning around mid-strike: the hips are committed.
+	if _strike_phase == 1 or _strike_phase == 2:
+		return
 	if absf(x) > 0.1:
 		facing = 1 if x > 0.0 else -1
 		visual.scale.x = float(facing)

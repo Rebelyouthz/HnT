@@ -5,6 +5,8 @@ extends Object
 
 static var _frames: Dictionary = {}
 static var _tex: Dictionary = {}
+static var _cell: Dictionary = {}
+static var _info: Dictionary = {}
 
 ## 4.5 texels per world unit. The couch camera zooms 1.5x, so a 1080p window
 ## (3x of 640x360) shows every texel 1:1. Props are 216 px cells, actors
@@ -65,10 +67,39 @@ static func frames(who: String) -> SpriteFrames:
 		if f.ends_with(".json"):
 			clips.append(f.get_basename())
 	clips.sort()
+	# One canvas for every clip of a character: wide kicks and tall jumps get
+	# bigger cells, so pad each clip to the largest cell with the feet on the
+	# same floor row and the body on the same centre column. Without this a
+	# centred AnimatedSprite2D would shift the body whenever the cell changes.
+	var big := Vector2.ZERO
 	for clip in clips:
-		_add_clip(sf, root, clip)
+		var cell: Array = clip_meta(who, clip).get("cell", [0, 0])
+		big.x = maxf(big.x, float(cell[0]))
+		big.y = maxf(big.y, float(cell[1]))
+	_cell[who] = big
+	for clip in clips:
+		_add_clip(sf, root, clip, big)
 	_frames[who] = sf
 	return sf
+
+
+## Timing a clip was authored with: fps, loop, frame count, and the peak
+## (contact) frame for strikes. Fighter syncs hitboxes to "hit".
+static func clip_info(who: String, clip: String) -> Dictionary:
+	var key := who + "/" + clip
+	if _info.has(key):
+		return _info[key] as Dictionary
+	var meta := clip_meta(who, clip)
+	var n: int = (meta.get("frames", []) as Array).size()
+	var info := {
+		"fps": float(meta.get("fps", _default_fps(who, clip))),
+		"loop": bool(meta.get("loop", LOOP.has(clip))),
+		"count": n,
+		"hit": int(meta.get("hit", -1)),
+		"anchor": str(meta.get("anchor", "feet")),
+	}
+	_info[key] = info
+	return info
 
 
 static func clip_meta(who: String, clip: String) -> Dictionary:
@@ -79,7 +110,7 @@ static func clip_meta(who: String, clip: String) -> Dictionary:
 	return parsed as Dictionary if parsed is Dictionary else {}
 
 
-static func _clip_textures(root: String, clip: String) -> Array[Texture2D]:
+static func _clip_textures(root: String, clip: String, big := Vector2.ZERO) -> Array[Texture2D]:
 	var out: Array[Texture2D] = []
 	var meta_path := "%s/%s.json" % [root, clip]
 	var sheet_path := "%s/%s.png" % [root, clip]
@@ -93,28 +124,34 @@ static func _clip_textures(root: String, clip: String) -> Array[Texture2D]:
 	var cell: Array = meta.get("cell", [0, 0])
 	var cw := float(cell[0])
 	var ch := float(cell[1])
+	# Pad into the character's shared canvas: centre column, same floor.
+	var px := 0.0
+	var py := 0.0
+	if big.x > cw:
+		px = floorf((big.x - cw) * 0.5)
+	if big.y > ch:
+		py = big.y - ch
+	var tw := maxf(cw, big.x)
+	var th := maxf(ch, big.y)
 	for fr: Dictionary in meta.get("frames", []):
 		var at := AtlasTexture.new()
 		at.atlas = sheet
 		at.region = Rect2(float(fr["x"]), float(fr["y"]), float(fr["w"]), float(fr["h"]))
-		at.margin = Rect2(float(fr["ox"]), float(fr["oy"]), cw - float(fr["w"]), ch - float(fr["h"]))
+		var ox := float(fr["ox"]) + px
+		var oy := float(fr["oy"]) + py
+		at.margin = Rect2(ox, oy, tw - float(fr["w"]), th - float(fr["h"]))
 		at.filter_clip = true
 		out.append(at)
 	return out
 
 
-static func _add_clip(sf: SpriteFrames, root: String, clip: String) -> void:
-	var texs := _clip_textures(root, clip)
-	if texs.is_empty():
-		return
-	sf.add_animation(clip)
-	sf.set_animation_loop(clip, LOOP.has(clip))
+static func _default_fps(who: String, clip: String) -> float:
 	var spd := 10.0
 	if clip == "idle" or clip == "dog":
 		spd = 6.0
-	if "/lamp" in root:
+	if who.begins_with("lamp"):
 		spd = 4.0
-	elif "/bystander" in root and clip == "idle":
+	elif who.begins_with("bystander") and clip == "idle":
 		spd = 5.0
 	elif clip == "parkour_run" or clip == "attack":
 		spd = 14.0
@@ -122,7 +159,18 @@ static func _add_clip(sf: SpriteFrames, root: String, clip: String) -> void:
 		spd = 16.0
 	elif clip == "heavy" or clip == "roundhouse" or clip == "snap":
 		spd = 12.0
-	sf.set_animation_speed(clip, spd)
+	return spd
+
+
+static func _add_clip(sf: SpriteFrames, root: String, clip: String, big := Vector2.ZERO) -> void:
+	var texs := _clip_textures(root, clip, big)
+	if texs.is_empty():
+		return
+	var who := root.get_file()
+	var info := clip_info(who, clip)
+	sf.add_animation(clip)
+	sf.set_animation_loop(clip, bool(info["loop"]))
+	sf.set_animation_speed(clip, float(info["fps"]))
 	for t in texs:
 		sf.add_frame(clip, t)
 

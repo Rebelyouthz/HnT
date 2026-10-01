@@ -137,3 +137,54 @@ Models come from image-to-3D (Hugging Face) + Mixamo rig/animations.
   sprite sets.
 - Hub: profile box overlaps the "THE BASEMENT CLINIC" title; saved numbers
   come back as floats ("GOLD 40.0").
+
+## Video -> sprite moves (Father done, 19 clips)
+
+The old boards have good poses in the wrong order, so they animate badly.
+Each move is now generated as a video and cut into a sheet:
+
+1. `tools/videogen/father_spec.py`: per clip a start key pose, an end key
+   pose (the peak: fist out, leg extended) and a prompt. Start = guard for
+   strikes; the video model draws the in-betweens.
+2. `python3 tools/videogen/keys_build.py father_spec father` places both keys
+   on a white 1280x720 frame at one body scale.
+3. `python3 tools/videogen/run_batch.py father_spec father` runs Wan 2.2
+   I2V A14B on Hugging Face Inference Providers (fal-ai, `end_image_url` for
+   the end key; 33 frames for strikes, 81 for loops; `HF_TOKEN` env).
+4. `tools/video2sprite.py` per clip: keys every frame once (cached as
+   `<video>.keyed.npz`), greys magenta spill, scales against `idle.json`
+   by body area (one size for every clip), and writes the sheet. Strikes use
+   `--start/--end` (guard -> peak), `--hold N` (impact hold), `--retract N`
+   (the extension played back, eased) and store `"hit"` = the peak frame.
+   Airborne clips use `--anchor center`. Exact cuts used are in the commit.
+5. QA: strip of every frame, then `tools/capture_moves.gd` records the
+   Father in game (combo | whiff | kicks | jump | run) frame by frame.
+
+## Move system (`src/combat/move_book.gd` + `Fighter`)
+
+- Hitboxes open on the sprite's `hit` frame (`SpriteBook.clip_info`), not on
+  the button press. Wind-up is capped per move; the art is sped up to land
+  on the contact tick. Clips without `hit` (Son, old boards) keep the old
+  near-instant timing.
+- Feet are planted during a strike (`plant`), the body steps in (`lunge`),
+  no turning mid-swing.
+- Stances: every strike ends in a body position (`lead_out`, `rear_out`,
+  `low`, `rising`, `kick`, `spun`, plus `run`/`air` from movement). The next
+  strike from a live stance skips the wind-up the body already did
+  (`ENTRY`), and the same button picks a different move from a different
+  stance (low + light -> uppercut, kick stance + light -> front kick,
+  sprint + heavy -> running front kick).
+- Hit: hitstop holds the extension frame, camera kick, `Juice.impact` star
+  + ring + debris, push-off, fast retract, early cancel, long chain window,
+  grade shout and impact sound only now.
+- Miss: whoosh only, `Juice.whiff` smear, the weight carries forward
+  (drift), slow retract, longer recovery, short chain window; a missed
+  haymaker/roundhouse stumbles and drops the string.
+- Physics-driven clips: walk/run play at foot speed, the jump clip is
+  scrubbed by vertical velocity (rise -> flip at apex -> reach down), a
+  landing crouch scales with fall speed. Full jumps no longer count as
+  fall damage (they land at JUMP*sqrt(FALL_MUL), above the old threshold).
+- `SpriteBook` pads every clip of a character into one shared canvas (same
+  floor row, same centre), so wider kick cells never shift the body.
+
+Next: Son (same spec format), then enemies.

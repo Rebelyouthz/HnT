@@ -633,6 +633,100 @@ func sparks(at: Vector2) -> void:
 	)
 
 
+## Contact flash for a landed strike: a hot star at the contact point, a
+## shock ring and debris thrown the way the blow travelled. Weight 0..1
+## scales size, count and life (a jab pops, a haymaker blooms).
+func impact(at: Vector2, weight: float, dir: int) -> void:
+	var host: Node = get_tree().get_first_node_in_group("dock_world")
+	if host == null:
+		host = self
+	var w := clampf(weight, 0.0, 1.0)
+	var star := Polygon2D.new()
+	var pts := PackedVector2Array()
+	var spikes := 8
+	var r_out := 10.0 + 12.0 * w
+	for i in spikes * 2:
+		var ang := TAU * float(i) / float(spikes * 2) + 0.2
+		var r := r_out if i % 2 == 0 else r_out * 0.38
+		pts.append(Vector2(cos(ang) * r * 1.25, sin(ang) * r))
+	star.polygon = pts
+	star.color = Color(1.0, 0.97, 0.82, 0.95)
+	star.global_position = at
+	star.z_index = 40
+	host.add_child(star)
+	var ring := Line2D.new()
+	var rp := PackedVector2Array()
+	for i in 25:
+		var ang := TAU * float(i) / 24.0
+		rp.append(Vector2(cos(ang), sin(ang)) * 6.0)
+	ring.points = rp
+	ring.width = 2.0 + 2.0 * w
+	ring.default_color = Color(1.0, 0.78, 0.4, 0.9)
+	ring.global_position = at
+	ring.z_index = 39
+	host.add_child(ring)
+	var life := 0.12 + 0.12 * w
+	var tw := star.create_tween().set_parallel(true)
+	tw.tween_property(star, "scale", Vector2(1.5, 1.5), life).from(Vector2(0.4, 0.4)).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
+	tw.tween_property(star, "modulate:a", 0.0, life)
+	tw.tween_property(star, "rotation", 0.35 * float(dir), life)
+	var tr := ring.create_tween().set_parallel(true)
+	tr.tween_property(ring, "scale", Vector2.ONE * (3.0 + 4.0 * w), life * 1.4).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
+	tr.tween_property(ring, "modulate:a", 0.0, life * 1.4)
+	var p := CPUParticles2D.new()
+	p.global_position = at
+	p.one_shot = true
+	p.explosiveness = 1.0
+	p.amount = 8 + int(14.0 * w)
+	p.lifetime = 0.18 + 0.16 * w
+	p.direction = Vector2(float(dir), -0.25)
+	p.spread = 38.0
+	p.gravity = Vector2(0, 520)
+	p.initial_velocity_min = 120.0 + 80.0 * w
+	p.initial_velocity_max = 260.0 + 160.0 * w
+	p.scale_amount_min = 1.5
+	p.scale_amount_max = 3.0 + 2.0 * w
+	p.color = Color(1.0, 0.86, 0.5)
+	p.z_index = 41
+	p.emitting = true
+	host.add_child(p)
+	get_tree().create_timer(0.7, true, false, true).timeout.connect(func() -> void:
+		for n: Node in [star, ring, p]:
+			if is_instance_valid(n):
+				n.queue_free()
+	)
+
+
+## A strike that met nothing: a thin pale smear along the limb's path that
+## fades fast. No star, no shake, no stop - the absence is the feedback.
+func whiff(at: Vector2, dir: int, reach: float, rising: bool) -> void:
+	var host: Node = get_tree().get_first_node_in_group("dock_world")
+	if host == null:
+		host = self
+	var arc := Line2D.new()
+	var pts := PackedVector2Array()
+	for i in 9:
+		var t := float(i) / 8.0
+		var x := float(dir) * reach * t
+		var y := -sin(t * PI) * 8.0 if not rising else -reach * 0.8 * t
+		pts.append(Vector2(x, y))
+	arc.points = pts
+	var wc := Curve.new()
+	wc.add_point(Vector2(0.0, 0.1))
+	wc.add_point(Vector2(0.75, 1.0))
+	wc.add_point(Vector2(1.0, 0.3))
+	arc.width_curve = wc
+	arc.width = 5.0
+	arc.default_color = Color(0.9, 0.94, 1.0, 0.38)
+	arc.global_position = at
+	arc.z_index = 38
+	host.add_child(arc)
+	var tw := arc.create_tween().set_parallel(true)
+	tw.tween_property(arc, "modulate:a", 0.0, 0.14)
+	tw.tween_property(arc, "position:x", arc.position.x + float(dir) * 10.0, 0.14)
+	tw.chain().tween_callback(arc.queue_free)
+
+
 func bam(at: Vector2, role: String = "son") -> void:
 	shout("BAM")
 	pulse_shake(6.0)

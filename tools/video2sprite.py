@@ -41,6 +41,26 @@ def decode(path: str) -> tuple[list[np.ndarray], float]:
     return [np.asarray(f)[..., :3] for f in r], fps
 
 
+def keyed_cached(path: str) -> tuple[list[np.ndarray], float]:
+    """Decode + key once; the keyed frames (cropped to the union box) are
+    cached next to the video as <video>.keyed.npz (keying is the slow step)."""
+    cache = Path(path).with_suffix(".keyed.npz")
+    if cache.exists() and cache.stat().st_mtime >= Path(path).stat().st_mtime:
+        z = np.load(cache)
+        return [f.astype(np.float32) / 255.0 for f in z["k"]], float(z["fps"])
+    raw, vfps = decode(path)
+    keys = keyed(raw)
+    boxes = [S.bbox(k) for k in keys]
+    boxes = [b for b in boxes if b]
+    x0 = max(0, min(b[0] for b in boxes) - 4)
+    y0 = max(0, min(b[1] for b in boxes) - 4)
+    x1 = max(b[2] for b in boxes) + 4
+    y1 = max(b[3] for b in boxes) + 4
+    keys = [k[y0:y1, x0:x1] for k in keys]
+    np.savez_compressed(cache, k=np.stack([(np.clip(k, 0, 1) * 255).astype(np.uint8) for k in keys]), fps=vfps)
+    return keys, vfps
+
+
 def keyed(frames: list[np.ndarray]) -> list[np.ndarray]:
     out = []
     for f in frames:
@@ -107,14 +127,29 @@ def resample_idx(a: int, b: int, count: int, loop: bool) -> list[int]:
     return [int(round(a + (b - a) * i / max(1, count - 1))) for i in range(count)]
 
 
-def build(keys: list[np.ndarray], idx: list[int], stand_h: int) -> tuple[list, tuple[int, int]]:
-    sel = [keys[i] for i in idx]
+def despill(k: np.ndarray) -> np.ndarray:
+    """Magenta left over from pink source boards (the video model keeps it as
+    a purple belt or rim). Nothing on these characters is magenta: grey it."""
+    r, g, b = k[..., 0], k[..., 1], k[..., 2]
+    m = (r - g > 0.1) & (b - g > 0.08) & (k[..., 3] > 0.0)
+    if not m.any():
+        return k
+    out = k.copy()
+    lum = (0.3 * r + 0.59 * g + 0.11 * b)[m] * 0.92
+    for c in range(3):
+        out[..., c][m] = lum
+    return out
+
+
+def build(keys: list[np.ndarray], idx: list[int], stand_h: int, anchor: str = "feet", scale: float = 0.0) -> tuple[list, tuple[int, int]]:
+    sel = [despill(keys[i]) for i in idx]
     heights = []
     for k in sel:
         bb = S.bbox(k)
         if bb:
             heights.append(bb[3] - bb[1])
-    scale = stand_h / float(np.percentile(heights, 90))
+    if scale <= 0.0:
+        scale = stand_h / float(np.percentile(heights, 90))
     ims = []
     for k in sel:
         bb = S.bbox(k)
@@ -139,7 +174,14 @@ def build(keys: list[np.ndarray], idx: list[int], stand_h: int) -> tuple[list, t
     cw = int(np.ceil(max(ref.shape[1] * 0.5 + max_side, S.MIN_WHO_CELL * 0.5))) * 2
     ch = max(S.MIN_WHO_CELL, int(np.ceil((max_h + 4) / 2.0)) * 2)
     left = cw // 2 - ref.shape[1] // 2
-    frames = [(im, int(np.clip(left + dx, 0, cw - im.shape[1])), ch - 2 - im.shape[0]) for im, dx in placed]
+    if anchor == "center":
+        # Airborne: hold the body's vertical centre still (physics moves the
+        # actor); the cell is tall enough for the widest tuck/extension.
+        ch = max(S.MIN_WHO_CELL, int(np.ceil((max_h + 4) / 2.0)) * 2 + 40)
+        frames = [(im, int(np.clip(left + dx, 0, cw - im.shape[1])), int(np.clip(ch - 2 - S.STAND_H // 2 - im.shape[0] // 2 - S.STAND_H // 4, 0, ch - im.shape[0]))) for im, dx in placed]
+    else:
+        frames = [(im, int(np.clip(left + dx, 0, cw - im.shape[1])), ch - 2 - im.shape[0]) for im, dx in placed]
+    build.scale = scale
     return frames, (cw, ch)
 
 
@@ -168,17 +210,42 @@ def main() -> None:
     ap.add_argument("--min-cycle", type=float, default=0.5, help="shortest loop in seconds")
     ap.add_argument("--max-cycle", type=float, default=1.6, help="longest loop in seconds")
     ap.add_argument("--out", default=str(S.OUT))
+    ap.add_argument("--retract", type=int, default=0, help="strike: append N frames playing the extension back to guard")
+    ap.add_argument("--anchor", default="feet", choices=["feet", "center"], help="center for airborne clips")
+    ap.add_argument("--hold", type=int, default=0, help="strike: repeat the peak frame N extra times (impact hold)")
+    ap.add_argument("--scale-ref", default="", help="use the body scale stored in this clip's JSON (one scale per character)")
+    ap.add_argument("--start", type=float, default=-1.0, help="force start (seconds)")
+    ap.add_argument("--end", type=float, default=-1.0, help="force end (seconds)")
     a = ap.parse_args()
-    raw, vfps = decode(a.video)
-    keys = keyed(raw)
+    keys, vfps = keyed_cached(a.video)
     if a.loop:
         s, e, d = best_loop(keys, int(a.min_cycle * vfps), int(a.max_cycle * vfps))
         print("loop %d..%d (%.2fs), mismatch %.4f" % (s, e, (e - s) / vfps, d))
     else:
         s, e = trim_still(keys)
         print("action %d..%d (%.2fs)" % (s, e, (e - s) / vfps))
+    if a.start >= 0:
+        s = int(a.start * vfps)
+    if a.end >= 0:
+        e = min(len(keys) - 1, int(a.end * vfps))
     idx = resample_idx(s, e, a.frames, a.loop)
-    frames, cell = build(keys, idx, a.stand)
+    hit = -1
+    if not a.loop and (a.retract or a.hold):
+        # Peak = last extension frame. Hold it, then ease back to guard
+        # (retract samples are spaced quadratically: fast snap back, soft settle).
+        hit = len(idx) - 1
+        idx = idx + [idx[-1]] * a.hold
+        back = [int(round(e - (e - s) * ((i + 1) / a.retract) ** 1.6)) for i in range(a.retract)] if a.retract else []
+        idx = idx + back
+    # One body size per character: every clip is scaled against a reference
+    # clip by body AREA of its first frame (pose-invariant, unlike height:
+    # a crouch or a raised fist would otherwise change the scale).
+    src_area = float((keys[s][..., 3] >= 0.5).sum())
+    scale = 0.0
+    if a.scale_ref:
+        ref = json.loads(Path(a.scale_ref).read_text())
+        scale = float(ref["scale"]) * float(np.sqrt(float(ref["src_area"]) / src_area))
+    frames, cell = build(keys, idx, a.stand, a.anchor, scale)
     fps = a.fps or a.frames / max(1e-3, (e - s) / vfps)
     dest = Path(a.out) / a.who
     dest.mkdir(parents=True, exist_ok=True)
@@ -186,6 +253,12 @@ def main() -> None:
     meta = json.loads((dest / (a.clip + ".json")).read_text())
     meta["fps"] = round(fps, 2)
     meta["loop"] = bool(a.loop)
+    meta["scale"] = round(build.scale, 5)
+    meta["src_area"] = src_area
+    if hit >= 0:
+        meta["hit"] = hit
+    if a.anchor != "feet":
+        meta["anchor"] = a.anchor
     (dest / (a.clip + ".json")).write_text(json.dumps(meta, separators=(",", ":")))
     prev = dest / (a.clip + "_preview.gif")
     preview(frames, cell, fps, prev)
