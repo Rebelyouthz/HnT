@@ -1,5 +1,6 @@
 # One-click Windows installer on GitHub Releases.
-# Push a tag like v0.3.0 (or run it from the Actions tab) and this builds the
+# Push a tag like v0.3.0, push a commit whose message contains [release], or
+# run it from the Actions tab. It builds the
 # game with Godot 4.7.2, checks the shipped pack boots, wraps it in the NSIS
 # FatherAndSonSetup.exe and attaches it (plus a portable zip and the Web
 # build) to a GitHub Release. Players need nothing installed: the exe carries
@@ -9,6 +10,7 @@ name: release
 on:
   push:
     tags: ["v*"]
+    branches: ["**"]
   workflow_dispatch:
     inputs:
       tag:
@@ -24,6 +26,8 @@ env:
 
 jobs:
   build:
+    # Tags and manual runs always build; branch pushes only when asked.
+    if: github.event_name != 'push' || startsWith(github.ref, 'refs/tags/') || contains(github.event.head_commit.message, '[release]')
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -76,8 +80,8 @@ jobs:
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
-          name: Father & Son ${{ github.event.inputs.tag || github.ref_name }}
+          tag_name: ${{ github.event.inputs.tag || (startsWith(github.ref, 'refs/tags/') && github.ref_name) || format('v0.3.{0}', github.run_number) }}
+          name: Father & Son ${{ github.event.inputs.tag || (startsWith(github.ref, 'refs/tags/') && github.ref_name) || format('v0.3.{0}', github.run_number) }}
           target_commitish: ${{ github.sha }}
           make_latest: true
           body: |
