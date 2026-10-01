@@ -27,6 +27,7 @@ var camp_open_tab: String = ""
 const SCENES := {
 	"intro_flow": "res://scenes/levels/intro_flow.tscn",
 	"camp": "res://scenes/levels/camp.tscn",
+	"prologue": "res://scenes/levels/prologue.tscn",
 	"tutorial_alley": "res://scenes/levels/tutorial_alley.tscn",
 	"act_film": "res://scenes/levels/act_film.tscn",
 	"dock_street": "res://scenes/levels/dock_street.tscn",
@@ -73,7 +74,8 @@ func start_run() -> void:
 	if force_intro or not bool(FamilyProfile.data.get("intro_done", false)):
 		force_intro = false
 		current_map = "dock_street"
-		enter_map("intro_flow")
+		# Story order: prologue (the brothers taken) -> alley film -> tutorial.
+		enter_map("prologue")
 		return
 	var hop := FamilyProfile.next_run_map()
 	var enter_lock := PowerBook.lock(hop, "enter")

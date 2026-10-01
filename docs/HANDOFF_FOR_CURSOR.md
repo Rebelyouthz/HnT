@@ -40,6 +40,15 @@ waterdroppixi repo/folder, ever.**
   planted feet, lunge, stance chains, hit vs whiff feel, physics-driven
   jump/run playback.
 - **Backdrops**: dock (Gamma), tutorial alley + 4 hideout rooms (FLUX Krea).
+- **Menus** restyled to Timmie's three reference boards (UiKit navy/gold,
+  Pixelify Sans, clinic card grid with lemon logo, BUILD vine trees, RUN
+  framed fight scene). Keep that look; extend it, don't replace it.
+- **Story crew**: Benny & Rico Vale (`src/world/crew_npc.gd`,
+  `assets/sprites/crew/`). Prologue film `scenes/levels/prologue.tscn`
+  (they are taken as collateral) runs before the alley film. Rescue cages
+  on Dock Street / Intake Lot (`src/world/rescue_cage.gd`, data in
+  `data/story.json` `acts.<map>.rescue`). In the hideout Benny builds rooms
+  live (`_construct` in `camp_hideout.gd`), Rico gates the shop stations.
 - **Installer**: `.github/workflows/release.yml` -> `FatherAndSonSetup.exe` on
   GitHub Releases (no Godot needed by players).
 
@@ -110,4 +119,10 @@ pay-as-you-go enabled.
 6. Every change: `tests/smoke.gd`, `tests/rooms_boot.gd`, a 1080p capture you
    actually looked at. Commit small, describe what you verified.
 7. Release: push a commit with `[release]` in the message (or a `v*` tag) and
-   the workflow publishes `FatherAndSonSetup.exe`.
+   the workflow publishes `FatherAndSonSetup.exe`. Every run so far ended in
+   `startup_failure` before any step: GitHub Actions must be enabled for the
+   repo (Settings -> Actions -> General) and the account's Actions billing
+   must allow private-repo minutes. Locally `tools/windows/pack_windows.sh`
+   builds the same Setup.exe (needs `makensis`).
+8. Crew sprites are single painted frames animated in code; a proper sheet
+   (idle/walk/hammer) via the video pipeline is a good next upgrade.

@@ -9,6 +9,9 @@ extends CanvasLayer
 ## a reading pause, so a fight never waits on a conversation. PAUSE skips.
 
 signal closed
+## Emitted as each line appears (index into the played lines, the row), so a
+## film can stage action on cue.
+signal line(index: int, row: Dictionary)
 
 var _lines: Array = []
 var _i := 0
@@ -156,6 +159,7 @@ func _paint() -> void:
 	var d: Dictionary = row
 	var who := str(d.get("who", ""))
 	var text := str(d.get("text", ""))
+	line.emit(_i, d)
 	var actor := _speaker(who)
 	if actor != null:
 		_bubble = SpeechBubble.make(_ui, actor, StoryBook.who_name(who), text, accent(who))
