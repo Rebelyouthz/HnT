@@ -1,0 +1,131 @@
+{
+ "note": "Real parkour tricks. input = the button in the timing ring. learn = dojo id ('' = known from the start). kinds = gate kinds it fits.",
+ "tricks": [
+  {
+   "id": "jump",
+   "title": "JUMP",
+   "input": "jump",
+   "learn": "",
+   "kinds": [
+    "rail",
+    "crate",
+    "gap",
+    "wall",
+    "pad",
+    "drop",
+    "wire",
+    "rope",
+    "escape",
+    "hill"
+   ],
+   "points": 8,
+   "speed": 1.0,
+   "tier": 0
+  },
+  {
+   "id": "safety_vault",
+   "title": "SAFETY VAULT",
+   "input": "up",
+   "learn": "",
+   "kinds": [
+    "crate",
+    "rail"
+   ],
+   "points": 22,
+   "speed": 1.05,
+   "tier": 1
+  },
+  {
+   "id": "land_roll",
+   "title": "LAND ROLL",
+   "input": "dash",
+   "learn": "land_roll",
+   "kinds": [
+    "drop",
+    "escape",
+    "pad"
+   ],
+   "points": 30,
+   "speed": 1.1,
+   "tier": 1
+  },
+  {
+   "id": "speed_vault",
+   "title": "SPEED VAULT",
+   "input": "up",
+   "learn": "speed_vault",
+   "kinds": [
+    "rail",
+    "crate"
+   ],
+   "points": 28,
+   "speed": 1.07,
+   "tier": 2
+  },
+  {
+   "id": "tic_tac",
+   "title": "TIC-TAC",
+   "input": "up",
+   "learn": "tic_tac",
+   "kinds": [
+    "wall",
+    "gap"
+   ],
+   "points": 34,
+   "speed": 1.08,
+   "tier": 2
+  },
+  {
+   "id": "dash_vault",
+   "title": "DASH VAULT",
+   "input": "dash",
+   "learn": "dash_vault",
+   "kinds": [
+    "crate",
+    "rail"
+   ],
+   "points": 40,
+   "speed": 1.09,
+   "tier": 3
+  },
+  {
+   "id": "kong",
+   "title": "KONG VAULT",
+   "input": "special",
+   "learn": "kong",
+   "kinds": [
+    "rail",
+    "crate",
+    "gap"
+   ],
+   "points": 48,
+   "speed": 1.11,
+   "tier": 3
+  },
+  {
+   "id": "wall_kick",
+   "title": "WALL CLING KICK",
+   "input": "special",
+   "learn": "wall_kick",
+   "kinds": [
+    "wall"
+   ],
+   "points": 52,
+   "speed": 1.11,
+   "tier": 3
+  },
+  {
+   "id": "king_kong",
+   "title": "KING KONG JUMPOFF",
+   "input": "special",
+   "learn": "king_kong",
+   "kinds": [
+    "gap",
+    "rail"
+   ],
+   "points": 58,
+   "speed": 1.13,
+   "tier": 4
+  }
+ ]
+}

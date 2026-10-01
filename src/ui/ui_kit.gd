@@ -44,10 +44,13 @@ static func panel(bg: Color = Palette.PANEL, border: Color = Palette.EDGE) -> St
 	# but the default gold edge becomes the antique rim.
 	s.bg_color = NAVY if bg == Palette.PANEL or bg == Palette.PANEL_2 else bg
 	s.border_color = RIM if border == Palette.EDGE else border
-	s.set_border_width_all(2)
-	s.set_corner_radius_all(3)
-	s.shadow_color = Color(border.r, border.g, border.b, 0.18)
-	s.shadow_size = 5
+	# Chunky and cosy: thick rim, rounded pixel corners, and a solid dark
+	# base under every box (hard drop) so panels and buttons read as 3D blocks.
+	s.set_border_width_all(3)
+	s.set_corner_radius_all(5)
+	s.shadow_color = Color(0.0, 0.0, 0.02, 0.85)
+	s.shadow_size = 1
+	s.shadow_offset = Vector2(0, 5)
 	s.anti_aliasing = true
 	s.content_margin_left = 10
 	s.content_margin_right = 10
@@ -159,13 +162,21 @@ static func button(text: String, min_size: Vector2 = Vector2(120, 44)) -> Button
 	b.add_theme_color_override("font_disabled_color", Palette.MUTED)
 	b.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
 	b.add_theme_constant_override("outline_size", 3)
+	# 3D block buttons: face + rim on a solid base; hover lights the rim gold,
+	# press sinks the face onto the base (text drops with it).
 	var normal := panel(NAVY, RIM)
+	normal.border_width_top = 3
+	normal.border_width_bottom = 4
 	var hover := panel(NAVY_HI, GOLD)
-	hover.shadow_color = Color(GOLD.r, GOLD.g, GOLD.b, 0.4)
-	hover.shadow_size = 10
+	hover.border_width_bottom = 4
 	var pressed := panel(Color(0.2, 0.14, 0.06, 0.98), GOLD)
-	pressed.shadow_size = 12
+	pressed.shadow_offset = Vector2(0, 1)
+	pressed.content_margin_top += 4
+	pressed.content_margin_bottom -= 2
 	var focus := hover.duplicate() as StyleBoxFlat
+	focus.shadow_color = Color(GOLD.r, GOLD.g, GOLD.b, 0.45)
+	focus.shadow_size = 9
+	focus.shadow_offset = Vector2(0, 3)
 	var off := panel(Color(0.06, 0.06, 0.08, 0.9), Palette.LOCK)
 	off.shadow_size = 0
 	b.add_theme_stylebox_override("normal", normal)
@@ -236,22 +247,26 @@ static func new_dot() -> ColorRect:
 ## pixel caps, the number - no box.
 static func pill(title: String, value: String, accent: Color) -> HBoxContainer:
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 6)
+	row.add_theme_constant_override("separation", 8)
 	var icon := PixelIcon.new()
 	icon.kind = title.to_lower()
-	icon.custom_minimum_size = Vector2(22, 22)
+	icon.custom_minimum_size = Vector2(33, 33)
 	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(icon)
 	var t := Label.new()
 	t.text = title.to_upper()
-	t.add_theme_font_override("font", pixel_font())
-	apply_label(t, 14, Palette.TEXT)
+	t.add_theme_font_override("font", title_font())
+	apply_label(t, 22, Palette.TEXT)
+	t.add_theme_constant_override("outline_size", 6)
+	t.add_theme_color_override("font_outline_color", INK)
 	row.add_child(t)
 	var v := Label.new()
 	v.text = value
 	v.name = "Value"
-	v.add_theme_font_override("font", pixel_font())
-	apply_label(v, 14, Palette.TEXT)
+	v.add_theme_font_override("font", title_font())
+	apply_label(v, 22, Palette.TEXT)
+	v.add_theme_constant_override("outline_size", 6)
+	v.add_theme_color_override("font_outline_color", INK)
 	row.add_child(v)
 	return row
 

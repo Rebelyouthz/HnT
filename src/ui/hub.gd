@@ -131,6 +131,23 @@ func _make_top() -> Control:
 	_avatar_dot.position = Vector2(232, -2)
 	avatar_wrap.add_child(_avatar_dot)
 	row.add_child(avatar_wrap)
+	var log_btn := UiKit.button("LOG", Vector2(64, 38))
+	log_btn.pressed.connect(_open_log)
+	var log_wrap := Control.new()
+	log_wrap.custom_minimum_size = Vector2(66, 40)
+	log_btn.set_anchors_preset(Control.PRESET_FULL_RECT)
+	log_wrap.add_child(log_btn)
+	_log_bang = UiKit.bang()
+	_log_bang.position = Vector2(48, -4)
+	log_wrap.add_child(_log_bang)
+	row.add_child(log_wrap)
+	var stats := UiKit.button("STATS", Vector2(84, 38))
+	stats.pressed.connect(_open_stats)
+	row.add_child(stats)
+	var gear := UiKit.button(Copy.OPTIONS, Vector2(110, 38))
+	gear.pressed.connect(_open_settings)
+	row.add_child(gear)
+
 
 	var logo_box := VBoxContainer.new()
 	logo_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -146,30 +163,19 @@ func _make_top() -> Control:
 	logo_wrap.visible = false
 	logo_box.add_child(logo_wrap)
 	row.add_child(logo_box)
-
+	# Currency exactly like the reference board: big pixel icon, the name and
+	# the number in cream pixel caps, no boxes, spaced out at the top right.
+	var purse := HBoxContainer.new()
+	purse.add_theme_constant_override("separation", 26)
+	purse.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_gold_pill = UiKit.pill("GOLD", "0", Palette.EDGE)
 	_gems_pill = UiKit.pill("GEMS", "0", Palette.LEMON)
 	_rep_pill = UiKit.pill("REP", "0", Palette.BRICK)
-	row.add_child(_gold_pill)
-	row.add_child(_gems_pill)
-	row.add_child(_rep_pill)
+	purse.add_child(_gold_pill)
+	purse.add_child(_gems_pill)
+	purse.add_child(_rep_pill)
 
-	var log_btn := UiKit.button("LOG", Vector2(64, 40))
-	log_btn.pressed.connect(_open_log)
-	var log_wrap := Control.new()
-	log_wrap.custom_minimum_size = Vector2(66, 40)
-	log_btn.set_anchors_preset(Control.PRESET_FULL_RECT)
-	log_wrap.add_child(log_btn)
-	_log_bang = UiKit.bang()
-	_log_bang.position = Vector2(48, -4)
-	log_wrap.add_child(_log_bang)
-	row.add_child(log_wrap)
-	var stats := UiKit.button("STATS", Vector2(84, 40))
-	stats.pressed.connect(_open_stats)
-	row.add_child(stats)
-	var gear := UiKit.button(Copy.OPTIONS, Vector2(110, 40))
-	gear.pressed.connect(_open_settings)
-	row.add_child(gear)
+	row.add_child(purse)
 
 	_refresh_pills()
 	return bar

@@ -50,12 +50,40 @@ func _ready() -> void:
 
 
 func _idle() -> String:
-	var e: Dictionary = _table.get("easy", {})
-	var m: Dictionary = _table.get("mid", {})
-	var h: Dictionary = _table.get("hard", {})
-	return "%s  ·  UP %s  ·  SPECIAL %s" % [
-		str(e.get("title", "JUMP")), str(m.get("title", "VAULT")), str(h.get("title", "KONG"))
-	]
+	var t := _pick_trick()
+	return "%s  ·  %s" % [str(t.get("title", "JUMP")), str(TimingRing.NAMES.get(str(t.get("input", "jump")), "JUMP"))]
+
+
+## Learned tricks that fit this gate (data/parkour.json, learn = dojo id).
+static func known_tricks(gate_kind: String) -> Array:
+	var out: Array = []
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/parkour.json"))
+	if not (parsed is Dictionary):
+		return out
+	for t: Dictionary in (parsed as Dictionary).get("tricks", []):
+		if not (gate_kind in (t.get("kinds", []) as Array)):
+			continue
+		var learn := str(t.get("learn", ""))
+		if learn == "" or FamilyProfile.dojo_learned(learn):
+			out.append(t)
+	return out
+
+
+var _next: Dictionary = {}
+
+
+## The move this gate will ask for: one of the two best learned ones, so a
+## run shows off the whole repertoire instead of the same vault.
+func _pick_trick() -> Dictionary:
+	if not _next.is_empty():
+		return _next
+	var list := known_tricks(kind)
+	if list.is_empty():
+		_next = {"id": "jump", "title": "JUMP", "input": "jump", "points": 8, "speed": 1.0, "tier": 0}
+		return _next
+	list.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a.get("tier", 0)) > int(b.get("tier", 0)))
+	_next = list[randi() % mini(2, list.size())]
+	return _next
 
 
 func _process(_delta: float) -> void:
@@ -64,25 +92,40 @@ func _process(_delta: float) -> void:
 	for n in get_overlapping_bodies():
 		if n is Fighter:
 			var f: Fighter = n
+			# Only a body actually running at it triggers the move.
+			if f.downed or f.van_seat != "" or absf(f.velocity.x) < 40.0:
+				continue
 			_hint.modulate = Color(1.25, 1.2, 0.7)
-			if f._just("jump") or f._just("special") or f._just("dash"):
-				_attempt(f)
+			_attempt(f)
 			return
 	_hint.modulate = Color.WHITE
 
 
+## Entering the gate shows the trick's button in the timing ring; the press
+## timing grades the move (perfect / good / ok / miss / big miss).
 func _attempt(f: Fighter) -> void:
 	if _used:
 		return
 	_used = true
-	var pick := "easy"
-	if f._just("special") or (f._pressed("special") and f._just("jump")):
-		pick = "hard"
-	elif f._stick().y < -0.35 or f._just("dash"):
-		pick = "mid" if not f._just("dash") else ("hard" if kind == "crate" else "mid")
-		if f._just("dash") and kind == "crate":
-			pick = "hard"
-	var row: Dictionary = _table.get(pick, _table.get("easy", {}))
+	var trick := _pick_trick()
+	var ring := TimingRing.spawn(get_tree().current_scene, str(trick.get("input", "jump")), f, 0.62, str(trick.get("title", "JUMP")))
+	ring.slow = 0.45
+	var grade: String = await ring.resolved
+	if not is_instance_valid(f):
+		return
+	_next = {}
+	if grade == "miss":
+		_fail(f, false)
+		return
+	if grade == "big_miss":
+		_fail(f, true)
+		return
+	var perfect := grade == "perfect"
+	var row: Dictionary = trick
+	var pick := "easy" if int(trick.get("tier", 0)) == 0 else ("hard" if int(trick.get("tier", 0)) >= 3 else "mid")
+	if grade == "ok":
+		row = trick.duplicate()
+		row["points"] = int(round(float(trick.get("points", 8)) * 0.6))
 	var title := str(row.get("title", "JUMP"))
 	var pts := int(row.get("points", 8))
 	var spd := float(row.get("speed", 1.0))
@@ -90,11 +133,6 @@ func _attempt(f: Fighter) -> void:
 	pts += rank * 8
 	if rank >= 1:
 		spd += 0.02 * float(rank)
-	var window := absf(f.global_position.x - global_position.x) < 32.0
-	if pick != "easy" and not window:
-		_fail(f)
-		return
-	var perfect := window and pick != "easy"
 	var rs0 := get_tree().get_first_node_in_group("run_state")
 	if perfect and rs0 and rs0.has_method("has_card") and rs0.has_card("named_line"):
 		pts += 12
@@ -115,6 +153,11 @@ func _attempt(f: Fighter) -> void:
 		Juice.unlock_logo(title, "Named trick. The coach would bill this.", title)
 	f.trick_boost = spd
 	f.trick_t = 2.4 if perfect else 1.4
+	# The body actually goes over: a vault hop and a burst forward.
+	if f.plane == "street" and f.hop >= -2.0:
+		f.hop_v = -380.0 if perfect else -320.0
+		f.hop = -1.0
+	f.velocity.x = float(f.facing) * 340.0 * spd
 	f.parkour_lock = 0.22
 	var rs := get_tree().get_first_node_in_group("run_state")
 	if rs and rs.has_method("add_points"):
@@ -129,9 +172,9 @@ func _attempt(f: Fighter) -> void:
 	)
 
 
-func _fail(f: Fighter) -> void:
-	var worst := f.hop < -160.0
-	var hard := f.hop < -70.0
+func _fail(f: Fighter, big := false) -> void:
+	var worst := big and f.hop < -60.0
+	var hard := big
 	if worst:
 		Juice.shout("SPLAT")
 		Juice.play("res://assets/audio/stumble.wav")
