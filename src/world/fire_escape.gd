@@ -35,26 +35,34 @@ func covers(pos: Vector2) -> bool:
 	return pos.y >= top_y - 18.0 and pos.y <= bottom_y + 24.0
 
 
+## Iron ladder drawn at the world grid: two rails with a lit edge, rungs
+## every 11 u, bolts, a landing grate at the top. (The old board sprite was
+## stretched up to 3.2x and smeared.)
 func _paint() -> void:
 	var h := bottom_y - top_y
-	var rail := Polygon2D.new()
-	rail.color = Color(0.28, 0.16, 0.14)
-	rail.polygon = PackedVector2Array([
-		Vector2(-16, -h * 0.5), Vector2(-10, -h * 0.5),
-		Vector2(-10, h * 0.5), Vector2(-16, h * 0.5)
-	])
-	add_child(rail)
-	var rail2 := rail.duplicate() as Polygon2D
-	rail2.position.x = 26
-	add_child(rail2)
-	var y := -h * 0.5
-	while y < h * 0.5:
-		var rung := Polygon2D.new()
-		rung.color = Color(0.42, 0.24, 0.2)
-		rung.polygon = PackedVector2Array([
-			Vector2(-16, y), Vector2(16, y), Vector2(16, y + 5), Vector2(-16, y + 5)
-		])
-		add_child(rung)
-		y += 22.0
-	var span := maxf(96.0, h)
-	SpriteBook.attach_scaled(self, "fire_escape", 0.0, Vector2(0.85, clampf(span / 96.0, 1.4, 3.2)))
+	var iron := Color(0.11, 0.11, 0.13)
+	var lit := Color(0.36, 0.33, 0.34)
+	var rust := Color(0.34, 0.17, 0.12)
+	for x in [-15.0, 11.0]:
+		_rect(Rect2(x, -h * 0.5 - 6.0, 4, h + 6.0), iron)
+		_rect(Rect2(x, -h * 0.5 - 6.0, 1, h + 6.0), lit)
+	var y := -h * 0.5 + 4.0
+	var n := 0
+	while y < h * 0.5 - 2.0:
+		_rect(Rect2(-11, y, 22, 2), iron)
+		_rect(Rect2(-11, y, 22, 1), lit if n % 3 != 1 else rust)
+		y += 11.0
+		n += 1
+	# Landing grate + bracket at the roof line.
+	_rect(Rect2(-22, -h * 0.5 - 8.0, 44, 3), iron)
+	_rect(Rect2(-22, -h * 0.5 - 8.0, 44, 1), lit)
+	for bx in range(-20, 22, 6):
+		_rect(Rect2(float(bx), -h * 0.5 - 5.0, 1, 6), iron)
+
+
+func _rect(r: Rect2, c: Color) -> void:
+	var p := Polygon2D.new()
+	p.color = c
+	p.polygon = PackedVector2Array([r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)])
+	p.z_index = 1
+	add_child(p)

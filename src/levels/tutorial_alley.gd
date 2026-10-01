@@ -4,8 +4,6 @@ extends RunAct
 
 var _film2 := false
 var _dummy_hit := false
-var _overlay: CanvasLayer
-var _fi := 0
 
 
 func _configure() -> void:
@@ -22,11 +20,14 @@ func _configure() -> void:
 
 func build_world() -> void:
 	NightStreet.parallax(self, map_w, "tutorial")
-	NightStreet.wet_floor(self, map_w)
-	NightStreet.tenement(self, Rect2(40, 80, 260, 240), Color(0.14, 0.11, 0.12))
-	NightStreet.tenement(self, Rect2(1400, 60, 280, 260), Color(0.12, 0.14, 0.16))
+	NightStreet.wet_floor(self, map_w, true)
+	# The painted alley is the buildings; flat blockout walls only without it.
+	if not NightStreet.has_backdrop("tutorial"):
+		NightStreet.tenement(self, Rect2(40, 80, 260, 240), Color(0.14, 0.11, 0.12))
+		NightStreet.tenement(self, Rect2(1400, 60, 280, 260), Color(0.12, 0.14, 0.16))
+	NightStreet.pixel_dock(self, map_w, false)
 	Blockout.solid(self, Rect2(480, 248, 280, 22), true)
-	Blockout.poly(self, Rect2(480, 248, 280, 22), Color(0.22, 0.18, 0.2), 2)
+	NightStreet.pixel_roof(self, Rect2(480, 248, 280, 22))
 	fire_escape(520.0)
 	var crate := VaultCrate.new()
 	crate.global_position = Vector2(640, 500)
@@ -66,81 +67,19 @@ func _process(delta: float) -> void:
 		_start_film2()
 
 
+## Film 2 plays on the street itself: the two of them stop at the end of the
+## alley and talk in bubbles over their heads, then Dock Street.
 func _start_film2() -> void:
 	if _film2:
 		return
 	_film2 = true
-	get_tree().paused = true
-	_overlay = CanvasLayer.new()
-	_overlay.layer = 55
-	_overlay.process_mode = Node.PROCESS_MODE_ALWAYS
-	add_child(_overlay)
-	var dim := ColorRect.new()
-	dim.color = Color(0, 0, 0, 0.82)
-	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_overlay.add_child(dim)
-	var top := ColorRect.new()
-	top.color = Color.BLACK
-	top.size = Vector2(1280, 80)
-	_overlay.add_child(top)
-	var bot := ColorRect.new()
-	bot.color = Color.BLACK
-	bot.position = Vector2(0, 640)
-	bot.size = Vector2(1280, 80)
-	_overlay.add_child(bot)
-	_fi = 0
-	_paint_f2()
-
-
-func _paint_f2() -> void:
 	var lines: Variant = StoryBook.all().get("intro", {}).get("film2", [])
-	if typeof(lines) != TYPE_ARRAY or _fi >= (lines as Array).size():
+	if typeof(lines) != TYPE_ARRAY or (lines as Array).is_empty() or _talk == null:
 		_finish_intro()
 		return
-	for c in _overlay.get_children():
-		if c is Label:
-			c.queue_free()
-	var row: Variant = (lines as Array)[_fi]
-	if typeof(row) != TYPE_DICTIONARY:
-		_fi += 1
-		_paint_f2()
-		return
-	var d: Dictionary = row
-	var who := Label.new()
-	who.position = Vector2(80, 500)
-	who.size = Vector2(1120, 24)
-	UiKit.apply_label(who, 14, Palette.EDGE)
-	who.text = StoryBook.who_name(str(d.get("who", ""))) if str(d.get("who", "")) != "" else "INTRO"
-	who.process_mode = Node.PROCESS_MODE_ALWAYS
-	_overlay.add_child(who)
-	var body := Label.new()
-	body.position = Vector2(80, 536)
-	body.size = Vector2(1120, 80)
-	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	UiKit.apply_label(body, 22, Palette.TEXT)
-	body.text = str(d.get("text", ""))
-	body.process_mode = Node.PROCESS_MODE_ALWAYS
-	_overlay.add_child(body)
-	var skip := Label.new()
-	skip.position = Vector2(40, 24)
-	skip.text = Copy.SKIP_FILM
-	skip.process_mode = Node.PROCESS_MODE_ALWAYS
-	UiKit.apply_label(skip, 14, Palette.MUTED)
-	_overlay.add_child(skip)
 	Juice.play("res://assets/audio/sting_intro.wav")
-
-
-func _unhandled_input(event: InputEvent) -> void:
-	if not _film2:
-		return
-	if event.is_action_pressed("p1_pause") or event.is_action_pressed("p2_pause"):
-		_finish_intro()
-		get_viewport().set_input_as_handled()
-		return
-	if event.is_action_pressed("p1_light") or event.is_action_pressed("p1_jump") or event.is_action_pressed("p2_light"):
-		_fi += 1
-		_paint_f2()
-		get_viewport().set_input_as_handled()
+	_talk.closed.connect(_finish_intro, CONNECT_ONE_SHOT)
+	_talk.play(lines as Array, true)
 
 
 func _finish_intro() -> void:

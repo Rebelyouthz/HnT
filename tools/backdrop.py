@@ -67,6 +67,8 @@ def main() -> None:
     ap.add_argument("--crop", default="")
     ap.add_argument("--ground", type=float, default=0.86,
                     help="ground line (sidewalk top) as a fraction of the source height")
+    ap.add_argument("--period", type=float, default=0.0,
+                    help="force a square grid of this many source px per texel (images with no real grid)")
     a = ap.parse_args()
     im = Image.open(a.src).convert("RGB")
     ground_px = im.size[1] * a.ground
@@ -76,8 +78,12 @@ def main() -> None:
         ground_px -= y0
     rgb = np.asarray(im)
     gray = rgb.astype(np.float32).mean(axis=2)
-    px, ox = grid(gray, 1)
-    py, oy = grid(gray, 0)
+    if a.period > 0:
+        px = py = a.period
+        ox = oy = 0.0
+    else:
+        px, ox = grid(gray, 1)
+        py, oy = grid(gray, 0)
     out = snap(rgb, px, ox, py, oy)
     Path(a.dst).parent.mkdir(parents=True, exist_ok=True)
     Image.fromarray(out, "RGB").save(a.dst, optimize=True)

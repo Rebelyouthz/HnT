@@ -38,8 +38,10 @@ func _ready() -> void:
 	if typeof(parsed) == TYPE_DICTIONARY:
 		_table = (parsed as Dictionary).get(kind, {})
 	_hint = Label.new()
-	_hint.position = Vector2(-120, -70)
-	_hint.size = Vector2(240, 56)
+	# World text at half scale (see NightStreet.WORLD_TEXT).
+	_hint.scale = Vector2(0.5, 0.5)
+	_hint.position = Vector2(-120, -62)
+	_hint.size = Vector2(480, 56)
 	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	UiKit.apply_label(_hint, 12, Palette.EDGE)

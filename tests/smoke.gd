@@ -539,7 +539,8 @@ func _initialize() -> void:
 	failed += _contains("res://src/sprites/sprite_book.gd", "attach_living")
 	failed += _contains("res://src/sprites/sprite_book.gd", "attach_scaled")
 	failed += _contains("res://src/world/vault_crate.gd", "attach_living")
-	failed += _contains("res://src/world/fire_escape.gd", "attach_scaled")
+	# Ladder is drawn on the world grid now (the stretched board sprite smeared).
+	failed += _contains("res://src/world/fire_escape.gd", "func _rect(")
 	failed += _contains("res://src/world/blood_mart.gd", "blood_mart")
 	failed += _contains("res://src/world/night_street.gd", "pixel_roof")
 	failed += _contains("res://src/levels/dock_street.gd", "pixel_roof")

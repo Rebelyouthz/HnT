@@ -32,6 +32,12 @@ static func parallax(host: Node, map_w: float, theme: String = "dock") -> void:
 			Vector2(420, 50), Vector2(460, 50), Vector2(460, 88), Vector2(420, 88)
 		])
 		moon_l.add_child(moon2)
+	# A painted backdrop already is the city: the procedural layers (fog,
+	# skyline, mid/near props, mist band, foreground slabs) would draw boxes
+	# over it, so only sky + moon stay behind it.
+	if has_backdrop(theme):
+		_backdrop(pb, theme)
+		return
 	var stars := ParallaxLayer.new()
 	stars.motion_scale = Vector2(0.06, 0.03)
 	pb.add_child(stars)
@@ -102,21 +108,25 @@ static func _backdrop(pb: ParallaxBackground, theme: String) -> void:
 		return
 	var tex := load("res://assets/backdrops/%s.png" % theme) as Texture2D
 	var ground := float(tex.get_height()) * 0.86
+	# Per-backdrop texel size: close-up paintings use 2/3 u (3 screen px on
+	# 1080p, still integer) so more of the wall fits above the street.
+	var texel := BACKDROP_TEXEL
 	var meta_path := "res://assets/backdrops/%s.json" % theme
 	if FileAccess.file_exists(meta_path):
 		var meta: Variant = JSON.parse_string(FileAccess.get_file_as_string(meta_path))
 		if meta is Dictionary:
 			ground = float((meta as Dictionary).get("ground", ground))
+			texel = float((meta as Dictionary).get("texel", texel))
 	var layer := ParallaxLayer.new()
 	layer.name = "Backdrop"
 	layer.motion_scale = Vector2(0.9, 1.0)
-	layer.motion_mirroring = Vector2(float(tex.get_width()) * BACKDROP_TEXEL, 0.0)
+	layer.motion_mirroring = Vector2(float(tex.get_width()) * texel, 0.0)
 	pb.add_child(layer)
 	var s := Sprite2D.new()
 	s.texture = tex
 	s.centered = false
-	s.scale = Vector2(BACKDROP_TEXEL, BACKDROP_TEXEL)
-	s.position = Vector2(0.0, KERB_Y - ground * BACKDROP_TEXEL)
+	s.scale = Vector2(texel, texel)
+	s.position = Vector2(0.0, KERB_Y - ground * texel)
 	s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	s.z_index = -3
 	layer.add_child(s)
@@ -597,10 +607,17 @@ static func bounds(host: Node, map_w: float) -> void:
 	wall_r.collision_layer = 1
 
 
+## World-space text. Font sizes were picked for the old 640x360 render;
+## under the 1.5x camera at full resolution they came out 4.5x, so world
+## labels draw at WORLD_TEXT scale (fonts oversample, still crisp).
+const WORLD_TEXT := 0.5
+
+
 static func plaque(host: Node, at: Vector2, text: String, color: Color, size: int = 16) -> Label:
 	var lab := Label.new()
 	lab.text = text
 	lab.position = at
+	lab.scale = Vector2(WORLD_TEXT, WORLD_TEXT)
 	UiKit.apply_label(lab, size, color)
 	host.add_child(lab)
 	return lab
@@ -724,7 +741,7 @@ static func pixel_tenement(host: Node, rect: Rect2) -> void:
 		row += 1
 
 
-static func pixel_dock(host: Node, map_w: float) -> void:
+static func pixel_dock(host: Node, map_w: float, harbour: bool = true) -> void:
 	var cobble := SpriteBook.tile("cobble")
 	var wet := SpriteBook.tile("cobble_wet")
 	var plank := SpriteBook.tile("plank")
@@ -739,7 +756,7 @@ static func pixel_dock(host: Node, map_w: float) -> void:
 		# Pave the whole walkable band (430-520) down to the floor at 600.
 		var y := 430.0
 		var r := 0
-		while y < 600.0:
+		while y < 680.0:
 			var s := Sprite2D.new()
 			s.texture = wet if wet != null and (n + r * 3) % 4 == 2 else cobble
 			s.centered = false
@@ -752,7 +769,7 @@ static func pixel_dock(host: Node, map_w: float) -> void:
 			r += 1
 		x += tw
 		n += 1
-	if water:
+	if water and harbour:
 		x = 0.0
 		var ww := float(water.get_width()) * SpriteBook.DRAW_SCALE
 		while x < 300.0:
@@ -778,6 +795,8 @@ static func pixel_dock(host: Node, map_w: float) -> void:
 				p.texture_filter = SpriteBook.world_filter()
 				host.add_child(p)
 				x += pw
+	if not harbour:
+		return
 	for lx in [420.0, 900.0, 1480.0, 2100.0, 2680.0]:
 		AmbientProp.lamp(host, Vector2(lx, 500.0), 3)
 
@@ -815,7 +834,7 @@ static func pixel_lot(host: Node, map_w: float) -> void:
 	while x < map_w:
 		var y := 430.0
 		var r := 0
-		while y < 600.0:
+		while y < 680.0:
 			var s := Sprite2D.new()
 			s.texture = wet if wet != null and (n + r * 2) % 5 == 2 else asphalt
 			s.centered = false

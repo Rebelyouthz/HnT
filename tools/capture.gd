@@ -25,7 +25,7 @@ func _prepare() -> void:
 		if str(d.get("son_name", "")) == "":
 			d["son_name"] = "Kid"
 	var app := root.get_node_or_null("App")
-	if app != null and _tab != "":
+	if app != null and _tab != "" and not _tab.begins_with("title"):
 		app.set("pending_tab", _tab)
 	if _tab == "stats":
 		# Demo numbers so the report has something to draw.
@@ -50,8 +50,12 @@ func _initialize() -> void:
 	_walk = args.size() > 3 and args[3] == "walk"
 	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
 	DisplayServer.window_set_size(Vector2i(1920, 1080))
+	# title / title:credits / title:options open the start screen.
+	if target.begins_with("title"):
+		_tab = "title_" + (target.get_slice(":", 1) if ":" in target else "")
+		target = "res://scenes/ui/title.tscn"
 	# hub:<tab> opens the hub on that tab.
-	if target.begins_with("hub"):
+	elif target.begins_with("hub"):
 		_tab = target.get_slice(":", 1) if ":" in target else ""
 		target = "res://scenes/ui/hub.tscn"
 	if not target.begins_with("res://"):
@@ -65,6 +69,10 @@ func _process(_delta: float) -> bool:
 		_prepare()
 	if _tab == "stats" and _n == 40 and current_scene != null and current_scene.has_method("_open_stats"):
 		current_scene.call("_open_stats")
+	if _tab.begins_with("title_") and _n == 60 and current_scene != null:
+		var page := _tab.substr(6)
+		if page != "" and current_scene.has_method("_" + page):
+			current_scene.call("_" + page)
 	if _walk and _n > 20:
 		Input.action_press("p1_right")
 	if _n == _frames:
