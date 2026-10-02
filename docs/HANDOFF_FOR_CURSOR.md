@@ -142,3 +142,8 @@ pay-as-you-go enabled.
 - New systems: `BloodSim` (src/juice/blood.gd), `HitReact`, wound shader (wounds/suits/tears),
   `SmashProp` stages + `ShardBurst` + `LootDrop`, `LevelUpFx` + `CardPick`/`PixelCard`, `Gfx` options,
   `PixelCursor`, `Suits`, `Charms`, `DogBuddy`, `SprayCan`, `PhotoMode`, `StreetLife`, fighter `knock_t`.
+
+
+## Update (Oct 2026, later): see docs/CLAUDE_WORKLOG.md
+
+The full list of everything Claude changed on this branch, with how and why, is in `docs/CLAUDE_WORKLOG.md` (fighting styles, timed dojo combos, guard heights, roll, get-up attacks, dojo practice floor, the stitched Dock Street).
