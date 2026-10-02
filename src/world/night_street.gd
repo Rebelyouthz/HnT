@@ -135,6 +135,10 @@ static func _backdrop(pb: ParallaxBackground, theme: String) -> void:
 		fs.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 		fs.z_index = -5
 		far.add_child(fs)
+	# A stitched street (<theme>_strip.json): different shops along the whole
+	# map, laid left to right instead of one facade on repeat.
+	if _strip(pb, theme):
+		return
 	var layer := ParallaxLayer.new()
 	layer.name = "Backdrop"
 	layer.motion_scale = Vector2(0.9, 1.0)
@@ -154,6 +158,44 @@ static func _backdrop(pb: ParallaxBackground, theme: String) -> void:
 		s.material = nm
 	s.z_index = -3
 	layer.add_child(s)
+
+
+static func _strip(pb: ParallaxBackground, theme: String) -> bool:
+	var meta_path := "res://assets/backdrops/%s_strip.json" % theme
+	if not FileAccess.file_exists(meta_path):
+		return false
+	var meta: Variant = JSON.parse_string(FileAccess.get_file_as_string(meta_path))
+	if not (meta is Dictionary):
+		return false
+	var m := meta as Dictionary
+	var texel := float(m.get("texel", 0.26))
+	var ground := float(m.get("ground", 791))
+	var layer := ParallaxLayer.new()
+	layer.name = "Backdrop"
+	layer.motion_scale = Vector2(0.9, 1.0)
+	pb.add_child(layer)
+	var nm := ShaderMaterial.new()
+	nm.shader = preload("res://src/shaders/neon_backdrop.gdshader")
+	var x := 0.0
+	var i := 0
+	for w in m.get("parts", []):
+		var path := "res://assets/backdrops/%s_strip_%d.png" % [theme, i]
+		i += 1
+		if not ResourceLoader.exists(path):
+			continue
+		var s := Sprite2D.new()
+		s.texture = load(path) as Texture2D
+		s.centered = false
+		s.scale = Vector2(texel, texel)
+		s.position = Vector2(x, KERB_Y - ground * texel)
+		s.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+		s.material = nm
+		s.z_index = -3
+		layer.add_child(s)
+		x += float(w) * texel
+	# Past the last shop the street repeats from the first.
+	layer.motion_mirroring = Vector2(x, 0.0)
+	return true
 
 
 static func _theme_pal(theme: String) -> Dictionary:
