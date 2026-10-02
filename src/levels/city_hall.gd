@@ -19,9 +19,14 @@ func _configure() -> void:
 
 func build_world() -> void:
 	NightStreet.parallax(self, map_w, "hall")
-	NightStreet.wet_floor(self, map_w)
-	NightStreet.tenement(self, Rect2(40, 40, 360, 280), Color(0.16, 0.14, 0.12))
-	NightStreet.tenement(self, Rect2(1780, 40, 360, 280), Color(0.14, 0.12, 0.14))
+	# Painted hall sections (backdrops/hall_strip) replace the blockout
+	# tenements; the painted wet street is the floor.
+	if NightStreet.has_backdrop("hall") and WetStreet.available():
+		WetStreet.lay(self, map_w)
+	else:
+		NightStreet.wet_floor(self, map_w)
+		NightStreet.tenement(self, Rect2(40, 40, 360, 280), Color(0.16, 0.14, 0.12))
+		NightStreet.tenement(self, Rect2(1780, 40, 360, 280), Color(0.14, 0.12, 0.14))
 	NightStreet.statue(self, Vector2(620, 248), 248.0)
 	NightStreet.statue(self, Vector2(1180, 208), 208.0)
 	NightStreet.statue(self, Vector2(1680, 248), 248.0)
