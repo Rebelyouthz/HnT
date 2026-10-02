@@ -17,7 +17,7 @@ extends RefCounted
 
 const PERFECT_AT := 0.18
 const PERFECT_TOL := 0.08
-const WINDOW := 0.62
+const WINDOW := 0.8
 
 static var _data: Dictionary = {}
 

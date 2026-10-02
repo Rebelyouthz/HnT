@@ -584,6 +584,18 @@ static func tenement(host: Node, rect: Rect2, color: Color) -> void:
 
 
 static func rain(host: Node, cx: float) -> void:
+	# Rain you can hear: one quiet looping bed per map.
+	if ResourceLoader.exists("res://assets/audio/sfx/rain_loop.ogg") and host.get_node_or_null("RainBed") == null:
+		var bed := AudioStreamPlayer.new()
+		bed.name = "RainBed"
+		var st := load("res://assets/audio/sfx/rain_loop.ogg") as AudioStreamOggVorbis
+		if st != null:
+			st.loop = true
+			bed.stream = st
+			bed.volume_db = -14.0
+			bed.bus = "sfx" if AudioServer.get_bus_index("sfx") >= 0 else "Master"
+			bed.autoplay = true
+			host.add_child(bed)
 	var rain := GPUParticles2D.new()
 	rain.position = Vector2(cx, -20)
 	var mat := ParticleProcessMaterial.new()

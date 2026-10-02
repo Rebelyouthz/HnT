@@ -138,6 +138,55 @@ static func son_skinwalker() -> void:
 	_play("res://assets/audio/vo_son_skinwalker.wav", "res://assets/audio/vo_son_kong.wav")
 
 
+static var _lines: Dictionary = {}
+static var _last: Dictionary = {}
+static var _last_any := -10.0
+
+
+## A voiced bark from data/vo_lines.json (assets/audio/vo/<id>.ogg): a
+## random line for this speaker and event, at `chance`, never on top of
+## another bark and never the same speaker twice inside 3 s.
+static func line(who: String, ev: String, chance: float = 1.0) -> void:
+	if randf() > chance:
+		return
+	var now := Time.get_ticks_msec() / 1000.0
+	if now - _last_any < 1.4 or now - float(_last.get(who, -10.0)) < 3.0:
+		return
+	if _lines.is_empty():
+		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/vo_lines.json"))
+		if parsed is Dictionary:
+			for l: Dictionary in (parsed as Dictionary).get("lines", []):
+				var key := "%s/%s" % [str(l["who"]), str(l["ev"])]
+				var arr: Array = _lines.get(key, [])
+				arr.append(str(l["id"]))
+				_lines[key] = arr
+	var pool: Array = _lines.get("%s/%s" % [who, ev], [])
+	if pool.is_empty():
+		return
+	var path := "res://assets/audio/vo/%s.ogg" % str(pool[randi() % pool.size()])
+	if not ResourceLoader.exists(path):
+		return
+	_last_any = now
+	_last[who] = now
+	Mixer.play_vo(path)
+
+
+## Speaker key for an enemy (matches vo_lines.json).
+static func who_of(p: Node) -> String:
+	if p == null:
+		return "thug"
+	if bool(p.get("cop")):
+		return "cop"
+	match str(p.get("title")):
+		"Mohawk Bo":
+			return "mohawk"
+		"Shift Lead":
+			return "shift_lead"
+		"Collector Gant":
+			return "gant"
+	return "thug"
+
+
 static func _play(prefer: String, fallback: String) -> void:
 	for path in [prefer.get_basename() + ".mp3", prefer, fallback.get_basename() + ".mp3", fallback]:
 		if ResourceLoader.exists(path):

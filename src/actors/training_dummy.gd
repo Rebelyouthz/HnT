@@ -53,6 +53,7 @@ func _physics_process(delta: float) -> void:
 			atk_height = str(_cycle[_ci % _cycle.size()])
 			_ci += 1
 			_show_height()
+			_pick_swing()
 	super._physics_process(delta)
 
 

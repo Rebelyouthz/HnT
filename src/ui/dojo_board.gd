@@ -134,9 +134,9 @@ func _refresh_labels() -> void:
 			_:
 				mark.text = "" if learned else "🔒"
 	if _pad:
-		_guide.text = "BLOCK: hold LB  ·  stick ↑ HIGH  ·  neutral MID  ·  ↓ LOW      ROLL: LB + RT      GET-UP ATTACK: X / Y while getting up      L3: spar"
+		_guide.text = "BLOCK: hold LB  ·  stick ↑ HIGH  ·  neutral MID  ·  ↓ LOW      ROLL: LB + RT      GET-UP: X / Y on the floor      AIR: A then Y = spinning heel      L3: spar"
 	else:
-		_guide.text = "BLOCK: hold I  ·  W HIGH  ·  neutral MID  ·  S LOW      ROLL: I + SHIFT      GET-UP ATTACK: J / K while getting up      TAB: spar"
+		_guide.text = "BLOCK: hold I  ·  W HIGH  ·  neutral MID  ·  S LOW      ROLL: I + SHIFT      GET-UP: J / K on the floor      AIR: SPACE then K = spinning heel      TAB: spar"
 
 
 func _on_landed(id: String, perfect: bool) -> void:

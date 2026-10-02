@@ -307,6 +307,8 @@ func _base_clip(kind: String) -> String:
 			return "uppercut"
 		"air-mix":
 			return "air_mix"
+		"air-spin":
+			return "air_spin_kick"
 		"heavy", "launcher":
 			return "heavy"
 		"snap", "special":
@@ -969,6 +971,9 @@ func _combat() -> void:
 			_dive()
 		elif airborne and y < -0.35:
 			_attack("air-upper", false)
+		elif airborne and _anim != null and _anim.sprite_frames.has_animation("air_spin_kick"):
+			# Jump + heavy: the spinning heel in the air.
+			_attack("air-spin", false)
 		elif airborne:
 			_attack("jump-kick", false)
 		elif y > 0.4 and _try_stomp():
@@ -1153,6 +1158,14 @@ func _attack(kind: String, charged: bool) -> void:
 		size = Vector2(70, 56)
 		attack_cd = 16
 		Juice.shout("AIR MIX")
+	elif kind == "air-spin":
+		size = Vector2(80, 56)
+		attack_cd = 18
+		string_n = 0
+		Juice.shout("SPINNING HEEL")
+		# Hang a beat at the top of the jump so the whole turn reads.
+		if plane == "street" and hop_v > -120.0:
+			hop_v = minf(hop_v, -120.0)
 	if pickup == "pipe" or pickup == "board" or pickup == "chain" or pickup == "crowbar":
 		size += Vector2(18, 6) if pickup == "pipe" or pickup == "chain" else Vector2(24, 8)
 	elif pickup == "knife" or pickup == "clipboard" or pickup == "stapler" or pickup == "invoice_star":
@@ -1428,11 +1441,14 @@ func _combo_finish(c: Dictionary) -> void:
 	attack_cd = maxi(attack_cd, int(_atk_t * 60.0 * 0.8))
 	invuln = maxi(invuln, 14 if perfect else 6)
 	Juice.shout(str(c.get("title", "COMBO")))
+	VoBank.line(role, "combo", 0.45)
 	if perfect:
 		Juice.named_slowmo()
 		Juice.popup_number(global_position + Vector2(0, -96), "PERFECT", UiKit.GOLD)
-		Juice.play("res://assets/audio/trick_perfect.wav")
+		Mixer.play_sfx("res://assets/audio/sfx/perfect_sting.ogg")
+		Mixer.play_sfx("res://assets/audio/vo/ann_perfect.ogg", 1.0, -1.0)
 	else:
+		Mixer.play_sfx("res://assets/audio/sfx/combo_sting.ogg", 1.0, -3.0)
 		Juice.popup_number(global_position + Vector2(0, -96), "COMBO", Palette.READY)
 	FamilyProfile.data["combos_landed"] = int(FamilyProfile.data.get("combos_landed", 0)) + 1
 	var rs := get_tree().get_first_node_in_group("run_state")
@@ -1464,7 +1480,7 @@ func _roll() -> void:
 	if _roll_dir != float(facing) and absf(x) > 0.3:
 		facing = int(_roll_dir)
 		visual.scale.x = float(facing)
-	KitSfx.hit(role, "dash")
+	Mixer.play_sfx("res://assets/audio/sfx/roll.ogg")
 	Juice.land_puff(global_position)
 	Juice.shout("ROLL")
 
@@ -1612,6 +1628,7 @@ func _spawn_hit(kind: String, size: Vector2, life: float, offset: Vector2) -> vo
 					hit_kind = "heavy"
 				Juice.shout("COUNTER")
 				Juice.hitstop(4)
+				Mixer.play_sfx("res://assets/audio/vo/ann_counter.ogg", 1.0, -2.0)
 			if revenge_win > 0 and victim is Punk:
 				if hit_kind == "light" or hit_kind == "gut-punch":
 					hit_kind = "heavy"
@@ -1645,7 +1662,7 @@ func take_hit(kind: String, from: Node) -> void:
 			snap_ready = true
 			Juice.named_slowmo()
 			FamilyProfile.mark_perfect_parry()
-		Juice.play("res://assets/audio/parry.wav" if ResourceLoader.exists("res://assets/audio/parry.wav") else "res://assets/audio/block.wav")
+		Mixer.play_sfx("res://assets/audio/sfx/parry_ring.ogg")
 		FamilyProfile.mark_parry()
 		_spawn_hit("heavy", Vector2(70, 48), 0.16, Vector2(40 * facing, -30))
 		if from is Punk:
@@ -1682,6 +1699,7 @@ func take_hit(kind: String, from: Node) -> void:
 		dmg = maxi(1, int(round(float(dmg) * 0.7)))
 	hp = maxi(0, hp - dmg)
 	_hurt_t = 0.32
+	VoBank.line(role, "hurt", 0.22)
 	_cancel_strike()
 	var rs := get_tree().get_first_node_in_group("run_state")
 	if rs and rs.has_method("has_card") and rs.has_card("family_discount"):
@@ -1746,7 +1764,8 @@ func _clean_block(kind: String, from: Node) -> void:
 	Juice.sparks(at)
 	Juice.hitstop(4 if heavy else 2)
 	Juice.pulse_shake(3.0 if heavy else 1.4)
-	Juice.play("res://assets/audio/block.wav")
+	Mixer.play_sfx("res://assets/audio/sfx/block_hit.ogg" if ResourceLoader.exists("res://assets/audio/sfx/block_hit.ogg") else "res://assets/audio/block.wav")
+	VoBank.line(role, "block", 0.08)
 	Juice.popup_number(at + Vector2(0, -20), "BLOCK", Color(0.62, 0.86, 1.0))
 	global_position.x -= float(facing) * (12.0 if heavy else 6.0)
 	if from is Punk:
@@ -1762,6 +1781,7 @@ func _clean_block(kind: String, from: Node) -> void:
 		blocking = false
 		stumble()
 		Juice.shout("GUARD BREAK")
+		Mixer.play_sfx("res://assets/audio/vo/ann_guard_break.ogg")
 
 
 func _go_down() -> void:

@@ -24,6 +24,10 @@ var _stain_layer: Node2D
 var _pool_layer: Node2D
 var _screen: Control
 var _screen_blobs: Array[Dictionary] = []
+## Solid gore: meat chunks, teeth, bone splinters. They fly, tumble, land,
+## smear a stain and lie on the street with the bodies.
+var _gibs: Array[Dictionary] = []
+const MAX_GIBS := 90
 
 
 func _ready() -> void:
@@ -302,8 +306,82 @@ func burst(from: Vector2, floor_y: float, dir: float, p: Dictionary) -> void:
 		})
 
 
+## Brutal kills. kind: "kill" (a few chunks and teeth), "overkill" (the body
+## comes apart: chunks, teeth, bone, a fountain from the neck and the
+## camera glass painted), "teeth" (a jaw shot: teeth and a spit of blood),
+## "crack" (bone splinters on a breaking blow).
+func gore(at: Vector2, dir: float, kind: String) -> void:
+	if FamilyProfile.less_gore():
+		return
+	var floor_y := at.y
+	var head := at + Vector2(0, -58)
+	match kind:
+		"overkill":
+			_throw_gibs(head, floor_y, dir, 12, "chunk", 340.0)
+			_throw_gibs(head, floor_y, dir, 7, "tooth", 300.0)
+			_throw_gibs(at + Vector2(0, -36), floor_y, dir, 3, "bone", 280.0)
+			burst(head, floor_y, dir, {"n": 46, "speed": 420.0, "spread": 1.1, "rise": 0.9, "size": 1.6, "streak": true})
+			burst(head, floor_y, -dir, {"n": 18, "speed": 260.0, "spread": 0.9, "rise": 0.8, "size": 1.2})
+			for k in 5:
+				get_tree().create_timer(0.12 * float(k + 1)).timeout.connect(func() -> void:
+					if is_instance_valid(self):
+						burst(head + Vector2(0, 6), floor_y, dir * 0.4, {"n": 10, "speed": 300.0, "spread": 0.35, "rise": 1.35, "size": 1.3, "streak": true})
+				)
+			pool(Vector2(at.x + dir * 10.0, floor_y + 2.0), 26.0)
+			screen(dir, 1.0)
+		"kill":
+			_throw_gibs(head, floor_y, dir, 4, "chunk", 260.0)
+			_throw_gibs(head, floor_y, dir, 2, "tooth", 240.0)
+		"teeth":
+			_throw_gibs(head + Vector2(dir * 6.0, 8), floor_y, dir, randi_range(1, 3), "tooth", 220.0)
+			burst(head + Vector2(dir * 6.0, 8), floor_y, dir, {"n": 8, "speed": 220.0, "spread": 0.5, "rise": 0.4, "size": 1.0})
+		"crack":
+			_throw_gibs(at + Vector2(0, -34), floor_y, dir, randi_range(1, 2), "bone", 200.0)
+
+
+func _throw_gibs(from: Vector2, floor_y: float, dir: float, n: int, kind: String, speed: float) -> void:
+	for i in n:
+		if _gibs.size() >= MAX_GIBS:
+			_gibs.pop_front()
+		var ang := randf_range(-0.9, 0.3) - 0.6
+		var v := Vector2(cos(ang) * dir * randf_range(0.3, 1.1), sin(ang)) * speed * randf_range(0.5, 1.1)
+		var sz := 1.0
+		match kind:
+			"chunk":
+				sz = randf_range(1.6, 3.4)
+			"tooth":
+				sz = randf_range(0.8, 1.1)
+			"bone":
+				sz = randf_range(2.0, 3.2)
+		_gibs.append({"p": from + Vector2(randf_range(-4, 4), randf_range(-4, 4)), "v": v, "kind": kind, "s": sz,
+			"rot": randf() * TAU, "spin": randf_range(-14.0, 14.0), "floor": clampf(floor_y + randf_range(-6.0, 10.0), 428.0, 640.0),
+			"down": false, "seed": randi() % 997})
+
+
 func _process(delta: float) -> void:
 	var landed := false
+	for g in _gibs:
+		if bool(g["down"]):
+			continue
+		var gv: Vector2 = g["v"]
+		gv.y += G * delta
+		g["v"] = gv
+		var gp: Vector2 = (g["p"] as Vector2) + gv * delta
+		g["rot"] = float(g["rot"]) + float(g["spin"]) * delta
+		if gv.y > 0.0 and gp.y >= float(g["floor"]):
+			gp.y = float(g["floor"])
+			if gv.y > 160.0:
+				# Bounce once, a little smear where it hit.
+				g["v"] = Vector2(gv.x * 0.45, -gv.y * 0.28)
+				g["spin"] = float(g["spin"]) * 0.5
+				if str(g["kind"]) == "chunk":
+					_splat(gp, gv, float(g["s"]) * 0.9, DARK.lerp(FRESH, 0.4))
+			else:
+				g["down"] = true
+				if str(g["kind"]) == "chunk":
+					_splat(gp, gv, float(g["s"]) * 1.2, DARK)
+			landed = true
+		g["p"] = gp
 	var i := 0
 	while i < _drops.size():
 		var d: Dictionary = _drops[i]
@@ -377,6 +455,29 @@ static func _snap(v: Vector2) -> Vector2:
 # --- Drawing -----------------------------------------------------------------
 
 func _draw() -> void:
+	for g in _gibs:
+		var gp := _snap(g["p"] as Vector2)
+		var s: float = g["s"]
+		var r: float = g["rot"]
+		match str(g["kind"]):
+			"chunk":
+				# A ragged lump: dark meat, a wet highlight, a pale fat edge.
+				var pts := PackedVector2Array()
+				var sd: int = g["seed"]
+				for k in 6:
+					var a := r + TAU * float(k) / 6.0
+					var rr := s * (0.65 + 0.35 * float((sd >> k) & 1))
+					pts.append(gp + Vector2(cos(a), sin(a) * 0.8) * rr)
+				draw_colored_polygon(pts, Color(0.42, 0.03, 0.05))
+				draw_rect(Rect2(gp + Vector2(-s * 0.3, -s * 0.4), Vector2(s * 0.5, s * 0.35)), Color(0.75, 0.12, 0.12))
+				draw_rect(Rect2(gp + Vector2(s * 0.2, s * 0.1), Vector2(0.5, 0.5)), Color(0.95, 0.8, 0.7, 0.8))
+			"tooth":
+				draw_rect(Rect2(gp - Vector2(s * 0.4, s * 0.6), Vector2(s * 0.8, s * 1.2)), Color(0.96, 0.94, 0.86))
+				draw_rect(Rect2(gp + Vector2(-s * 0.4, s * 0.3), Vector2(s * 0.8, 0.5)), Color(0.7, 0.1, 0.1))
+			"bone":
+				var dv := Vector2(cos(r), sin(r)) * s
+				draw_line(gp - dv, gp + dv, Color(0.92, 0.88, 0.78), 1.1)
+				draw_rect(Rect2(gp + dv - Vector2(0.6, 0.6), Vector2(1.2, 1.2)), Color(0.98, 0.95, 0.88))
 	for d in _drops:
 		var p := _snap(d["p"] as Vector2)
 		var v: Vector2 = d["v"]

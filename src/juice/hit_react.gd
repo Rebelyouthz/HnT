@@ -31,7 +31,7 @@ static func zone_of(kind: String, clip: String) -> String:
 	match clip:
 		"gut", "front_kick", "side_kick", "flying_knee", "body_hook", "clinch_knee", "shoulder_charge", "dropkick", "boot_kick":
 			return "gut"
-		"uppercut", "backflip_kick", "getup_upper", "getup_kick":
+		"uppercut", "backflip_kick", "getup_upper", "getup_kick", "jump_spin_kick", "jump_high_kick", "air_spin_kick":
 			return "up"
 		"slide", "sweep":
 			return "low"
@@ -48,7 +48,7 @@ static func power_of(kind: String) -> float:
 			return 0.4
 		"bam", "gut-punch", "blade", "air-mix", "special":
 			return 0.6
-		"heavy", "dive", "roundhouse", "uppercut", "air-upper", "launcher", "throw", "web-slam":
+		"heavy", "dive", "roundhouse", "uppercut", "air-upper", "launcher", "throw", "web-slam", "air-spin":
 			return 0.85
 		"snap", "finish", "stomp3", "blast":
 			return 1.0
@@ -142,9 +142,27 @@ static func corpse(host: Node, art: AnimatedSprite2D, feet: Vector2, zone: Strin
 			m.set_shader_parameter("wound", 1.0)
 			m.set_shader_parameter("head", BloodSim.head_of_tex(sp.texture))
 			m.set_shader_parameter("splat", maxf(0.5, float(m.get_shader_parameter("splat"))))
+	# A drawn death fall (falls backward, lies still) beats a tweened still
+	# for the ordinary deaths; launches, blasts and crushes keep the tween.
+	var drawn := art.sprite_frames.has_animation("death") and zone in ["head", "gut", "low", "bullet", "blade"]
 	var flip := Node2D.new()
 	flip.scale.x = float(facing)
-	flip.add_child(sp)
+	if drawn:
+		var an := AnimatedSprite2D.new()
+		an.sprite_frames = art.sprite_frames
+		an.position = art.position
+		an.scale = art.scale
+		an.flip_h = art.flip_h
+		an.centered = art.centered
+		an.offset = art.offset
+		an.texture_filter = art.texture_filter
+		an.material = sp.material
+		an.play("death")
+		an.speed_scale = randf_range(0.95, 1.15) * (1.25 if zone == "bullet" else 1.0)
+		sp.free()
+		flip.add_child(an)
+	else:
+		flip.add_child(sp)
 	body.add_child(flip)
 	host.add_child(body)
 	# Old bodies make room.
@@ -158,6 +176,11 @@ static func corpse(host: Node, art: AnimatedSprite2D, feet: Vector2, zone: Strin
 	var away := dir
 	var lie := 0.0
 	var bleed := 10.0
+	if drawn:
+		# The art does the fall; the body only slides with the blow.
+		tw.tween_property(body, "position:x", feet.x + away * 18.0, 0.5).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		tw.tween_interval(0.35)
+		zone = "drawn"
 	match zone:
 		"gut":
 			# Knees go, then face-first toward the one who did it.
@@ -206,6 +229,8 @@ static func corpse(host: Node, art: AnimatedSprite2D, feet: Vector2, zone: Strin
 		"crush":
 			tw.tween_property(body, "scale", Vector2(1.25, 0.35), 0.1)
 			bleed = 18.0
+		"drawn":
+			bleed = 14.0
 		_:
 			# Spun off a head blow: a twist, then down on the back.
 			lie = away * PI * 0.5

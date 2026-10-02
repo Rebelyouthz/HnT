@@ -394,6 +394,57 @@
     50
    ],
    "reach": 22
+  },
+  {
+   "id": "tornado_heel",
+   "who": "father",
+   "title": "TORNADO HEEL",
+   "rarity": "epic",
+   "gold": [
+    40,
+    65,
+    100
+   ],
+   "blurb": "Down + light, then up + heavy: he jumps, turns his back, spins a full circle and the heel lands on the jaw. A dock worker should not be able to do this.",
+   "steps": [
+    "Dn+L",
+    "U+H"
+   ],
+   "clip": "jump_spin_kick",
+   "dmg": 34,
+   "fx": "launch",
+   "box": [
+    84,
+    60
+   ],
+   "reach": 34,
+   "vx": 60
+  },
+  {
+   "id": "high_tide",
+   "who": "father",
+   "title": "HIGH TIDE",
+   "rarity": "rare",
+   "gold": [
+    30,
+    50,
+    80
+   ],
+   "blurb": "Jab, cross, forward + light: hop off the back foot and kick straight through the chin.",
+   "steps": [
+    "L",
+    "L",
+    "F+L"
+   ],
+   "clip": "jump_high_kick",
+   "dmg": 26,
+   "fx": "launch",
+   "box": [
+    70,
+    56
+   ],
+   "reach": 32,
+   "vx": 40
   }
  ]
 }
