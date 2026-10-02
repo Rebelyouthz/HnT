@@ -10,6 +10,8 @@ var gate := false
 var next_id := ""
 var next_label := "NEXT"
 var fail_gold := 0
+## Lost runs: how it ended ("GOT SHOT WITH A 9MM BY SHIFT LEAD").
+var death_line := ""
 var lock_line := ""
 var state: RunState
 var _xp_bar: ProgressBar
@@ -52,6 +54,8 @@ func _ready() -> void:
 	var t := UiKit.title(headline, 46, Palette.EDGE if win else Palette.BRICK)
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(t)
+	if not win:
+		_death_plate(col)
 	var s := Label.new()
 	s.text = sub
 	s.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -267,3 +271,43 @@ func _go_hub() -> void:
 	if App.remote_coop:
 		NetSession.shutdown()
 	App.back_to_hub("awards" if win else "clinic")
+
+
+## A red plate with a skull-ish cross under the title: the cause of death.
+func _death_plate(col: VBoxContainer) -> void:
+	var line := death_line
+	if line == "":
+		line = DeathCause.for_run(get_tree())
+	if line == "":
+		return
+	var plate := PanelContainer.new()
+	var st := UiKit.panel(Color(0.18, 0.03, 0.04), Palette.BRICK)
+	st.content_margin_left = 18
+	st.content_margin_right = 18
+	st.content_margin_top = 8
+	st.content_margin_bottom = 8
+	plate.add_theme_stylebox_override("panel", st)
+	plate.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	plate.add_child(row)
+	var ic := PixelIcon.new()
+	ic.kind = "cross"
+	ic.custom_minimum_size = Vector2(30, 30)
+	row.add_child(ic)
+	var l := Label.new()
+	l.text = line
+	l.add_theme_font_override("font", UiKit.title_font())
+	l.add_theme_font_size_override("font_size", 22)
+	l.add_theme_color_override("font_color", Color(1.0, 0.82, 0.78))
+	l.add_theme_color_override("font_outline_color", UiKit.INK)
+	l.add_theme_constant_override("outline_size", 6)
+	row.add_child(l)
+	col.add_child(plate)
+	plate.pivot_offset = Vector2(200, 20)
+	plate.scale = Vector2(1.4, 1.4)
+	plate.modulate.a = 0.0
+	var tw := plate.create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_interval(0.25)
+	tw.tween_property(plate, "scale", Vector2.ONE, 0.25)
+	tw.parallel().tween_property(plate, "modulate:a", 1.0, 0.15)

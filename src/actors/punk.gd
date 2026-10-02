@@ -570,7 +570,8 @@ func _mix_mod() -> void:
 		lamp = rig.tint_at(global_position)
 	var frac := clampf(float(hp) / float(maxi(max_hp, 1)), 0.0, 1.0)
 	var hurt := Color(0.72, 0.32, 0.28)
-	var body := _base_mod.lerp(hurt, (1.0 - frac) * 0.7)
+	# Sprites show damage as blood and wounds; only a hint of flush here.
+	var body := _base_mod.lerp(hurt, (1.0 - frac) * (0.18 if _anim != null else 0.7))
 	visual.modulate = body * _alert * lamp
 	speed = _walk * (0.55 if frac < 0.4 else 1.0)
 	if frac < 0.4 and visual:

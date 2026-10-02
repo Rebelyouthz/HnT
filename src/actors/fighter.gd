@@ -1938,6 +1938,10 @@ func _apply_lamp() -> void:
 ## the hearts go (like the portrait in the corner), and the hit is
 ## remembered for the death screen.
 func _bleed_from(kind: String, from: Node, dir: float) -> void:
+	if from == self:
+		last_hit_by = "the street"
+		last_hit_kind = "fall"
+		return
 	if from is Punk:
 		last_hit_by = (from as Punk).title
 	elif from is KitShot:

@@ -11,6 +11,7 @@ shader_type canvas_item;
 uniform float wound : hint_range(0.0, 1.0) = 0.0;
 uniform float splat : hint_range(0.0, 1.0) = 0.0;
 uniform float side = 1.0;
+uniform float tear : hint_range(0.0, 1.0) = 0.0;  // ripped clothes (bosses)
 uniform float seed = 0.0;
 uniform vec3 head = vec3(0.0, -60.0, 14.0);  // centre x, centre y, radius
 uniform vec2 holes[6];
@@ -66,6 +67,15 @@ void fragment() {
 			float thr = 1.0 - splat * (0.3 + 0.4 * lean);
 			if (s > thr) {
 				col = mix(col, blood.rgb * 0.75, 0.85);
+			}
+		}
+		// Torn clothes: rips that show bruised skin and scratches.
+		if (tear > 0.01 && in_head < 0.3) {
+			float r = noise(t * vec2(0.12, 0.4) + 41.0);
+			if (r > 1.0 - tear * 0.6) {
+				col = mix(vec3(0.62, 0.4, 0.32), vec3(0.42, 0.12, 0.12), step(0.5, hash(t)) * 0.6);
+			} else if (r > 1.0 - tear * 0.68) {
+				col = vec3(0.06, 0.03, 0.04);
 			}
 		}
 		// Bullet holes.

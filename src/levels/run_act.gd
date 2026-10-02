@@ -436,6 +436,8 @@ func _on_fail() -> void:
 		FamilyProfile.note_score(_state.score_total)
 		g = FamilyProfile.cash_fail(_state.scrap, _state.score_total)
 	_banner(Copy.FAIL, fail_sub if fail_sub != "" else Copy.FAIL_GOLD, false, false, g)
+	if _end is ResultsSheet:
+		(_end as ResultsSheet).death_line = DeathCause.for_run(get_tree())
 
 
 func _on_gate() -> void:

@@ -188,6 +188,8 @@ func _banner_at(pos: Vector2, role: String) -> void:
 
 
 var _plates := {}
+var _faces := {}
+var _last_hp := {}
 
 
 func _plate(pos: Vector2, role: String) -> void:
@@ -201,7 +203,16 @@ func _plate(pos: Vector2, role: String) -> void:
 	var face := UiKit.portrait(SpriteBook.bust(role), Vector2(76, 84))
 	face.position = Vector2(8, 8)
 	face.size = Vector2(76, 84)
+	face.pivot_offset = Vector2(38, 42)
 	p.add_child(face)
+	# Doom-style: the face in the corner bleeds more as the hearts go.
+	var wm := ShaderMaterial.new()
+	wm.shader = preload("res://src/shaders/wound.gdshader")
+	wm.set_shader_parameter("head", Vector3(38, 34, 24))
+	wm.set_shader_parameter("seed", 3.0 if role == "son" else 9.0)
+	wm.set_shader_parameter("holes", PackedVector2Array([Vector2.ZERO, Vector2.ZERO, Vector2.ZERO, Vector2.ZERO, Vector2.ZERO, Vector2.ZERO]))
+	face.material = wm
+	_faces[role] = face
 	_plates[role] = p
 
 
@@ -403,6 +414,7 @@ func _paint_fighter(lab: Label, bar: ColorRect, pips: HBoxContainer, snap: Label
 		lab.add_theme_color_override("font_color", Palette.BRICK)
 	bar.size.x = 220.0 * (f.steam / Fighter.STEAM_MAX)
 	_paint_pips(pips, f, lemon_slot)
+	_paint_face(f)
 	_place_snap(snap, f)
 
 
@@ -554,3 +566,30 @@ func _show_bar(bar: ColorRect, on: bool) -> void:
 	var bg: Variant = bar.get_meta("bg", null)
 	if bg is Control:
 		(bg as Control).visible = on
+
+
+## The corner portrait: blood builds up with damage, it flinches and flashes
+## on every hit, and goes grey when down.
+func _paint_face(f: Fighter) -> void:
+	var face: Variant = _faces.get(f.role)
+	if not (face is TextureRect):
+		return
+	var tr := face as TextureRect
+	var hurt := 1.0 - float(f.hp) / float(maxi(f.max_hp, 1))
+	var m := tr.material as ShaderMaterial
+	if m and not FamilyProfile.less_gore():
+		m.set_shader_parameter("wound", clampf(hurt * 1.2, 0.0, 1.0))
+		m.set_shader_parameter("splat", clampf(hurt * 0.8, 0.0, 1.0))
+	var was := int(_last_hp.get(f.role, f.hp))
+	_last_hp[f.role] = f.hp
+	if f.hp < was:
+		tr.modulate = Color(1.6, 0.5, 0.45)
+		var tw := tr.create_tween()
+		tw.tween_property(tr, "position:x", 8.0 + 4.0, 0.03)
+		tw.tween_property(tr, "position:x", 8.0 - 3.0, 0.04)
+		tw.tween_property(tr, "position:x", 8.0, 0.05)
+		tw.parallel().tween_property(tr, "modulate", Color.WHITE, 0.25)
+	if f.downed:
+		tr.modulate = Color(0.45, 0.4, 0.42)
+	elif f.hp >= was and tr.modulate == Color(0.45, 0.4, 0.42):
+		tr.modulate = Color.WHITE
