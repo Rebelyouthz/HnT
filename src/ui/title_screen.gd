@@ -170,7 +170,7 @@ func _build_menu() -> void:
 	var has_save := bool(FamilyProfile.data.get("intro_done", false))
 	if has_save:
 		_add_item("CONTINUE", _continue)
-	_add_item("START GAME", _start_game)
+	_add_item("NEW NIGHT" if has_save else "HIT THE STREETS", _start_game)
 	_add_item("OPTIONS", _options)
 	_add_item("CREDITS", _credits)
 	if not OS.has_feature("web") and not OS.has_feature("mobile"):

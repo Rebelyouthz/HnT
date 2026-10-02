@@ -30,18 +30,13 @@ func _ready() -> void:
 	_overlay.layer = 80
 	_overlay.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(_overlay)
-	var toast_root := Control.new()
-	toast_root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	# Toasts live in the 1280x720 design space like the rest of the HUD,
+	# stacked on the right under the objectives card.
+	var toast_root := PixelStage.attach_canvas(_overlay)
 	toast_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_overlay.add_child(toast_root)
 	_toast_box = VBoxContainer.new()
-	_toast_box.anchor_left = 1.0
-	_toast_box.anchor_right = 1.0
-	_toast_box.anchor_top = 0.0
-	_toast_box.offset_left = -268
-	_toast_box.offset_right = -10
-	_toast_box.offset_top = 8
-	_toast_box.offset_bottom = 240
+	_toast_box.position = Vector2(930, 250)
+	_toast_box.size = Vector2(340, 300)
 	_toast_box.add_theme_constant_override("separation", 4)
 	_toast_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	toast_root.add_child(_toast_box)
@@ -448,35 +443,64 @@ func toast(kind: String, title: String, body: String) -> void:
 			accent = Palette.BRICK
 		_:
 			accent = Palette.EDGE
+	# Pixel toast: chunky framed plate, a glyph medallion by kind, title in
+	# the pixel caps; slides in from the side with a bounce, shines once.
+	var glyph := {"achievement": "star", "unlock": "star", "quest": "eye", "challenge": "fist", "reward": "gold"}.get(kind, "star") as String
 	var wrap := PanelContainer.new()
 	wrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	wrap.process_mode = Node.PROCESS_MODE_ALWAYS
-	wrap.add_theme_stylebox_override("panel", UiKit.panel(Color(0.06, 0.06, 0.08, 0.82), accent))
-	wrap.custom_minimum_size = Vector2(250, 0)
+	var st := UiKit.panel(Color(0.05, 0.07, 0.14, 0.94), accent)
+	st.set_border_width_all(3)
+	st.shadow_color = Color(0, 0, 0.02, 0.85)
+	st.shadow_size = 1
+	st.shadow_offset = Vector2(0, 4)
+	st.content_margin_left = 8
+	st.content_margin_right = 10
+	st.content_margin_top = 5
+	st.content_margin_bottom = 5
+	wrap.add_theme_stylebox_override("panel", st)
+	wrap.custom_minimum_size = Vector2(340, 0)
 	_toast_box.add_child(wrap)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	wrap.add_child(row)
+	var ic := PixelIcon.new()
+	ic.kind = glyph
+	ic.custom_minimum_size = Vector2(34, 34)
+	ic.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	ic.pivot_offset = Vector2(17, 17)
+	row.add_child(ic)
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 0)
-	wrap.add_child(col)
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(col)
 	var t := Label.new()
 	t.text = title
 	t.clip_text = true
 	t.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	UiKit.apply_label(t, 13, accent)
+	t.add_theme_font_override("font", UiKit.title_font())
+	UiKit.apply_label(t, 18, accent)
 	col.add_child(t)
 	if body != "":
 		var b := Label.new()
 		b.text = body
 		b.clip_text = true
 		b.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-		UiKit.apply_label(b, 11, Palette.MUTED)
+		b.add_theme_font_override("font", UiKit.pixel_font())
+		UiKit.apply_label(b, 13, Palette.TEXT)
 		col.add_child(b)
 	wrap.modulate.a = 0.0
-	var tw := create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	wrap.position.x = 60.0
+	var tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.set_ignore_time_scale(true)
-	tw.tween_property(wrap, "modulate:a", 1.0, 0.08)
-	tw.tween_interval(1.6)
-	tw.tween_property(wrap, "modulate:a", 0.0, 0.18)
+	tw.tween_property(wrap, "modulate:a", 1.0, 0.1)
+	tw.parallel().tween_property(ic, "scale", Vector2(1.3, 1.3), 0.12)
+	tw.tween_property(ic, "scale", Vector2.ONE, 0.1)
+	tw.tween_interval(1.9)
+	tw.tween_property(wrap, "modulate:a", 0.0, 0.2)
 	tw.finished.connect(wrap.queue_free)
+	if kind == "reward" or kind == "achievement" or kind == "unlock":
+		play("res://assets/audio/cling.wav")
 
 
 func unlock_logo(title: String, sub: String, reward: String = "") -> void:
@@ -496,48 +520,98 @@ func level_up(grant: Dictionary) -> void:
 	dim.color = Color(0, 0, 0, 0.55)
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	wrap.add_child(dim)
+	# Rays behind the card.
+	var rays := Control.new()
+	rays.set_anchors_preset(Control.PRESET_FULL_RECT)
+	rays.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	wrap.add_child(rays)
+	var t0 := Time.get_ticks_msec()
+	rays.draw.connect(func() -> void:
+		var c := rays.size * 0.5
+		var a0 := float(Time.get_ticks_msec() - t0) / 1000.0 * 0.4
+		for k in 16:
+			var a := a0 + TAU * float(k) / 16.0
+			rays.draw_colored_polygon(PackedVector2Array([c, c + Vector2(cos(a - 0.06), sin(a - 0.06)) * 900.0, c + Vector2(cos(a + 0.06), sin(a + 0.06)) * 900.0]), Color(1.0, 0.85, 0.35, 0.08))
+	)
+	var spin := create_tween().set_loops(30)
+	spin.set_ignore_time_scale(true)
+	spin.tween_callback(rays.queue_redraw).set_delay(0.033)
 	var card := PanelContainer.new()
-	card.add_theme_stylebox_override("panel", UiKit.panel(Palette.PANEL, Palette.EDGE))
+	var cs := preload("res://src/ui/clinic_featured.gd").card_style(true)
+	cs.set_border_width_all(7)
+	cs.content_margin_left = 34
+	cs.content_margin_right = 34
+	cs.content_margin_top = 18
+	cs.content_margin_bottom = 18
+	card.add_theme_stylebox_override("panel", cs)
 	card.set_anchors_preset(Control.PRESET_CENTER)
 	card.offset_left = -300
 	card.offset_right = 300
-	card.offset_top = -160
-	card.offset_bottom = 160
+	card.offset_top = -170
+	card.offset_bottom = 170
+	card.pivot_offset = Vector2(300, 170)
 	wrap.add_child(card)
 	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 8)
+	col.add_theme_constant_override("separation", 10)
 	card.add_child(col)
-	var mark := LogoMark.new()
-	mark.custom_minimum_size = Vector2(64, 64)
-	col.add_child(mark)
-	var t := Label.new()
-	t.text = "ACCOUNT LEVEL UP"
+	var t := UiKit.title("PROFILE LEVEL %d" % int(grant.get("level", 1)), 40, UiKit.GOLD)
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	UiKit.apply_label(t, 28, Palette.LEMON)
 	col.add_child(t)
 	var av := Label.new()
-	av.text = "%s  ·  %s" % [FamilyProfile.son_name(), FamilyProfile.father_name()]
+	av.text = "%s  &  %s" % [FamilyProfile.son_name().to_upper(), FamilyProfile.father_name().to_upper()]
 	av.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	av.add_theme_font_override("font", UiKit.pixel_font())
 	UiKit.apply_label(av, 16, Palette.TEXT)
 	col.add_child(av)
-	var bar := ProgressBar.new()
-	bar.custom_minimum_size = Vector2(520, 22)
-	bar.max_value = float(grant.get("need", 100))
-	bar.value = float(grant.get("xp", 0))
-	bar.show_percentage = false
+	# Segmented XP bar that fills up.
+	var bar := Control.new()
+	bar.custom_minimum_size = Vector2(520, 26)
 	col.add_child(bar)
-	var got2 := Label.new()
-	got2.text = "YOU GOT  ·  LV %d  ·  +8 GOLD  ·  PROFILE FRAME CHECK" % int(grant.get("level", 1))
-	got2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	UiKit.apply_label(got2, 15, Palette.EDGE)
-	col.add_child(got2)
-	card.scale = Vector2(0.7, 0.7)
+	var frac := clampf(float(grant.get("xp", 0)) / maxf(1.0, float(grant.get("need", 100))), 0.0, 1.0)
+	var fill := [0.0]
+	bar.draw.connect(func() -> void:
+		for k in 20:
+			var x := float(k) * 26.0
+			bar.draw_rect(Rect2(x, 0, 24, 22), Color(0, 0, 0.02))
+			var on: bool = float(k) / 20.0 < float(fill[0])
+			bar.draw_rect(Rect2(x + 3, 3, 18, 12), UiKit.GOLD if on else Color(0.16, 0.18, 0.26))
+			bar.draw_rect(Rect2(x + 3, 15, 18, 4), (UiKit.GOLD.darkened(0.45)) if on else Color(0.1, 0.11, 0.16))
+	)
+	var tf := create_tween()
+	tf.set_ignore_time_scale(true)
+	tf.tween_method(func(v: float) -> void:
+		fill[0] = v
+		bar.queue_redraw(), 0.0, maxf(frac, 0.05), 0.6).set_delay(0.3)
+	var rewards := HBoxContainer.new()
+	rewards.alignment = BoxContainer.ALIGNMENT_CENTER
+	rewards.add_theme_constant_override("separation", 14)
+	col.add_child(rewards)
+	for pair: Array in [["gold", "+8 GOLD"], ["star", "LV %d" % int(grant.get("level", 1))], ["gem", "FRAME CHECK"]]:
+		var tile := PanelContainer.new()
+		tile.add_theme_stylebox_override("panel", UiKit.panel(Color(0.08, 0.1, 0.2), UiKit.GOLD))
+		var tv := VBoxContainer.new()
+		tv.alignment = BoxContainer.ALIGNMENT_CENTER
+		tile.add_child(tv)
+		var ic := PixelIcon.new()
+		ic.kind = str(pair[0])
+		ic.custom_minimum_size = Vector2(40, 40)
+		ic.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		tv.add_child(ic)
+		var tl := Label.new()
+		tl.text = str(pair[1])
+		tl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		tl.add_theme_font_override("font", UiKit.title_font())
+		UiKit.apply_label(tl, 14, Palette.TEXT)
+		tv.add_child(tl)
+		tile.custom_minimum_size = Vector2(150, 84)
+		rewards.add_child(tile)
+	card.scale = Vector2(0.6, 0.6)
 	var tw2 := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw2.set_ignore_time_scale(true)
 	tw2.tween_property(card, "scale", Vector2(1.1, 1.1), 0.24)
 	tw2.tween_property(card, "scale", Vector2.ONE, 0.12)
-	tw2.tween_interval(1.6)
-	tw2.tween_property(wrap, "modulate:a", 0.0, 0.22)
+	tw2.tween_interval(2.2)
+	tw2.tween_property(wrap, "modulate:a", 0.0, 0.25)
 	tw2.finished.connect(wrap.queue_free)
 	toast("achievement", "LEVEL UP", "YOU GOT  ·  LV %d  ·  +8 GOLD" % int(grant.get("level", 1)))
 
