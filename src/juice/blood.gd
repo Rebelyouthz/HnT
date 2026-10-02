@@ -212,13 +212,13 @@ static func head_of_tex(tex: Texture2D) -> Vector3:
 			var body := float(bottom - top)
 			var cx := 0.0
 			var cnt := 0.0
-			var hy := top + int(body * 0.07)
+			var hy := top + int(body * 0.08)
 			for x in w:
 				if img.get_pixel(x, hy).a > 0.5:
 					cx += float(x)
 					cnt += 1.0
 			cx = cx / cnt if cnt > 0.0 else float(w) * 0.5
-			out = Vector3(cx - float(w) * 0.5, float(top) + body * 0.075 - float(h) * 0.5, maxf(10.0, body * 0.075))
+			out = Vector3(cx - float(w) * 0.5, float(top) + body * 0.085 - float(h) * 0.5, maxf(10.0, body * 0.085))
 	_heads[key] = out
 	return out
 

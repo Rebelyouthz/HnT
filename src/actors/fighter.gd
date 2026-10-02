@@ -227,6 +227,7 @@ func _mount_sprite() -> void:
 	SpriteBook.hide_polys(squash_root)
 	_anim = SpriteBook.make_anim(role)
 	squash_root.add_child(_anim)
+	Suits.dress(_anim, role)
 
 
 func _sprite_clip(kind: String) -> String:

@@ -12,6 +12,7 @@ uniform float wound : hint_range(0.0, 1.0) = 0.0;
 uniform float splat : hint_range(0.0, 1.0) = 0.0;
 uniform float side = 1.0;
 uniform float tear : hint_range(0.0, 1.0) = 0.0;  // ripped clothes (bosses)
+uniform int suit = 0;  // 1 = bat suit (son), 2 = spider suit (father)
 uniform float seed = 0.0;
 uniform vec3 head = vec3(0.0, -60.0, 14.0);  // centre x, centre y, radius
 uniform vec2 holes[6];
@@ -39,6 +40,72 @@ bool skin(vec3 c) {
 	return c.r > c.g && c.g > c.b * 0.9 && (c.r - c.b) > 0.1 && c.r > 0.28;
 }
 
+// Suits recolour the clothes by brightness so folds and shading survive.
+vec3 suit_col(vec3 c, vec2 t, vec2 hv, float in_head) {
+	float l = dot(c, vec3(0.3, 0.59, 0.11));
+	float shade = 0.55 + 0.9 * l;
+	float yrel = hv.y;
+	if (suit == 1) {
+		vec3 cloth = mix(vec3(0.07, 0.07, 0.1), vec3(0.24, 0.25, 0.31), smoothstep(0.1, 0.7, l));
+		vec3 o = cloth;
+		// Cowl over the head, the jaw stays bare.
+		if (in_head > 0.5 && skin(c) && yrel > 0.2) {
+			o = c;
+		}
+		// Ears of the cowl.
+		if (abs(abs(hv.x - 0.1) - 0.45) < 0.12 && yrel < -0.85 && yrel > -1.5) {
+			o = vec3(0.07, 0.07, 0.1);
+		}
+		// White eye slits.
+		if (in_head > 0.5 && abs(yrel + 0.12) < 0.1 && hv.x > 0.15 && hv.x < 0.7) {
+			o = vec3(0.92, 0.94, 1.0);
+		}
+		// Utility belt.
+		if (in_head < 0.5 && abs(yrel - 5.0) < 0.3) {
+			o = vec3(0.86, 0.68, 0.16) * shade;
+		}
+		// Chest emblem: a yellow oval with a black bat.
+		vec2 e = vec2((hv.x - 0.15) / 0.9, (yrel - 2.6) / 0.42);
+		if (length(e) < 1.0 && in_head < 0.5) {
+			o = vec3(0.95, 0.8, 0.2);
+			float wing = abs(e.x);
+			if (wing < 0.85 && abs(e.y + 0.1 * sin(wing * 9.0)) < 0.35 - wing * 0.25) {
+				o = vec3(0.05, 0.05, 0.07);
+			}
+		}
+		return o;
+	}
+	// Spider suit: red over head, chest and arms, blue legs and flanks,
+	// a black web over the red, big white lenses.
+	vec3 red = vec3(0.78, 0.08, 0.1) * shade;
+	vec3 blue = vec3(0.1, 0.2, 0.62) * shade;
+	vec3 o = yrel > 5.2 ? blue : red;
+	if (yrel > 1.6 && yrel < 5.2 && abs(hv.x - 0.1) > 1.15) {
+		o = blue;
+	}
+	if (o == red) {
+		vec2 cw = vec2(hv.x - 0.1, yrel - (in_head > 0.5 ? 0.0 : 2.3));
+		float ang = atan(cw.y, cw.x);
+		float spoke = abs(fract(ang / 6.2832 * 10.0 + 0.5) - 0.5);
+		float ring = abs(fract(length(cw) / 0.55) - 0.5);
+		if (spoke < 0.04 || ring < 0.06) {
+			o = vec3(0.12, 0.02, 0.03);
+		}
+	}
+	if (in_head > 0.5) {
+		vec2 lens = (hv - vec2(0.42, -0.12)) / vec2(0.26, 0.2);
+		if (length(lens) < 1.0) {
+			o = length(lens) > 0.78 ? vec3(0.03, 0.02, 0.04) : vec3(0.95, 0.96, 1.0);
+		}
+	}
+	// Spider on the chest.
+	vec2 sp = vec2((hv.x - 0.15) / 0.3, (yrel - 2.5) / 0.4);
+	if (length(sp) < 1.0 && in_head < 0.5) {
+		o = vec3(0.04, 0.02, 0.03);
+	}
+	return o;
+}
+
 void fragment() {
 	vec4 base = texture(TEXTURE, UV);
 	vec2 t = floor(lp);
@@ -46,6 +113,9 @@ void fragment() {
 	if (base.a > 0.5) {
 		vec2 hv = (t - head.xy) / max(head.z, 1.0);
 		float in_head = 1.0 - smoothstep(0.9, 1.25, length(hv * vec2(1.0, 0.85)));
+		if (suit > 0) {
+			col = suit_col(base.rgb, t, hv, in_head);
+		}
 		// Face: cuts and smears where the skin is.
 		if (wound > 0.01 && in_head > 0.0) {
 			float n = noise(t * 0.35) * 0.6 + noise(t * 0.9) * 0.4;

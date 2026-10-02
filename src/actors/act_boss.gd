@@ -49,6 +49,10 @@ func _on_dead() -> void:
 			act.on_mini_down()
 		return
 	Juice.toast("quest", "BOSS FILED", "%s is a receipt now." % title.to_upper())
+	# Gant's office had something hanging in the closet.
+	if act is RunAct and (act as RunAct).map_id == "dock_street":
+		Suits.grant("bat")
+		Suits.grant("spider")
 	if act and act.has_method("finish_boss"):
 		act.finish_boss()
 

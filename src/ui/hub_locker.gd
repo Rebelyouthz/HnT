@@ -61,6 +61,7 @@ func _paint() -> void:
 		)
 		roles.add_child(b)
 	_col.add_child(roles)
+	_suit_row()
 	var slots := HBoxContainer.new()
 	slots.add_theme_constant_override("separation", 8)
 	for pair in [["clothes", "CLOTHES"], ["hat", "HATS"], ["shoes", "SHOES"]]:
@@ -158,3 +159,42 @@ func _row(item: Dictionary) -> Control:
 		wrap.add_child(up)
 	row.add_child(wrap)
 	return p
+
+
+## Hero suit for this role: wear it or take it off (locked until found).
+func _suit_row() -> void:
+	for id: String in Suits.LIST.keys():
+		var row: Dictionary = Suits.LIST[id]
+		if str(row["role"]) != _role:
+			continue
+		var p := PanelContainer.new()
+		p.add_theme_stylebox_override("panel", UiKit.panel(Rarity.fill("legendary"), Rarity.color("legendary")))
+		var h := HBoxContainer.new()
+		h.add_theme_constant_override("separation", 12)
+		p.add_child(h)
+		var ic := PixelIcon.new()
+		ic.kind = "star" if Suits.owned(id) else "lock"
+		ic.custom_minimum_size = Vector2(40, 40)
+		h.add_child(ic)
+		var v := VBoxContainer.new()
+		v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var t := Label.new()
+		t.text = "%s  ·  LEGENDARY" % str(row["title"])
+		UiKit.apply_label(t, 18, Rarity.color("legendary"))
+		v.add_child(t)
+		var b := Label.new()
+		b.text = str(row["blurb"]) if Suits.owned(id) else "Locked. File Dock Street and check Gant's office."
+		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		UiKit.apply_label(b, 13, Palette.TEXT)
+		v.add_child(b)
+		h.add_child(v)
+		if Suits.owned(id):
+			var on := Suits.worn(_role) == id
+			var btn := UiKit.button("TAKE OFF" if on else "WEAR", Vector2(150, 44))
+			btn.pressed.connect(func() -> void:
+				Suits.wear(_role, "" if on else id)
+				Juice.play("res://assets/audio/ui_click.wav")
+				_paint()
+			)
+			h.add_child(btn)
+		_col.add_child(p)
