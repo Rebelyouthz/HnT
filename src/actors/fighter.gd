@@ -81,6 +81,9 @@ var pistol_shots := 0
 var trick_boost := 1.0
 var trick_t := 0.0
 var stumble_t := 0.0
+## Knocked flat by a big hit: the knockdown clip plays (fall, lie, get up),
+## no control and no damage until it ends.
+var knock_t := 0.0
 var ducking := false
 var _anim: AnimatedSprite2D
 var anim_atk := ""
@@ -291,7 +294,9 @@ func _tick_sprite() -> void:
 	if _anim == null or _anim.sprite_frames == null:
 		return
 	var clip := "idle"
-	if downed:
+	if knock_t > 0.0 and _anim.sprite_frames.has_animation("knockdown"):
+		clip = "knockdown"
+	elif downed:
 		clip = "hurt"
 	elif anim_atk != "" and _atk_t > 0.0:
 		clip = anim_atk
@@ -447,6 +452,14 @@ func _physics_process(delta: float) -> void:
 		return
 	if downed:
 		_process_downed(delta)
+		return
+	if knock_t > 0.0:
+		knock_t -= delta
+		velocity.x = move_toward(velocity.x, 0.0, 600.0 * delta)
+		velocity.y = 0.0
+		move_and_slide()
+		global_position.y = clampf(global_position.y, STREET_MIN, STREET_MAX)
+		_tick_sprite()
 		return
 	if _pressed("jump"):
 		jump_buf = BUFFER
@@ -1469,6 +1482,7 @@ func take_hit(kind: String, from: Node) -> void:
 	if hp <= 0:
 		_go_down()
 		return
+	_maybe_knockdown(kind, from)
 	revenge_win = 36
 	var rs2 := get_tree().get_first_node_in_group("run_state")
 	if rs2 and rs2.has_method("has_card") and rs2.has_card("revenge_policy"):
@@ -1968,3 +1982,29 @@ func _bleed_from(kind: String, from: Node, dir: float) -> void:
 		if zone == "bullet":
 			var head := BloodSim.head_of(_anim)
 			BloodSim.add_hole(_anim, Vector2(head.x + randf_range(-6.0, 6.0), head.y + head.z * randf_range(2.6, 5.0)))
+
+
+## Heavy blows (and throws, specials, SNAPs) put you on the street: a real
+## fall, a beat on your back, then you get up. Damage cannot land meanwhile.
+func _maybe_knockdown(kind: String, from: Node) -> void:
+	if knock_t > 0.0 or _anim == null or not _anim.sprite_frames.has_animation("knockdown"):
+		return
+	if not (kind in ["heavy", "snap", "special", "throw"]):
+		return
+	if kind == "heavy" and randf() > 0.55:
+		return
+	var n := _anim.sprite_frames.get_frame_count("knockdown")
+	var fps := maxf(1.0, _anim.sprite_frames.get_animation_speed("knockdown"))
+	knock_t = float(n) / fps
+	invuln = maxi(invuln, int(knock_t * 60.0))
+	_cancel_strike()
+	if from is Node2D:
+		velocity.x = signf(global_position.x - (from as Node2D).global_position.x) * 220.0
+	_anim.play("knockdown")
+	_anim.frame = 0
+	Juice.pulse_shake(5.0)
+	get_tree().create_timer(knock_t * 0.28).timeout.connect(func() -> void:
+		if is_instance_valid(self):
+			Juice.play("res://assets/audio/stumble.wav")
+			Juice.pulse_shake(4.0)
+	)
