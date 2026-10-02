@@ -23,13 +23,18 @@ func _configure() -> void:
 
 func build_world() -> void:
 	NightStreet.parallax(self, map_w, "neon")
-	NightStreet.wet_floor(self, map_w)
-	NightStreet.tenement(self, Rect2(60, 80, 240, 240), Color(0.18, 0.08, 0.16))
-	NightStreet.tenement(self, Rect2(420, 40, 280, 200), Color(0.12, 0.1, 0.2))
-	NightStreet.tenement(self, Rect2(880, 20, 320, 220), Color(0.2, 0.08, 0.12))
-	NightStreet.tenement(self, Rect2(1400, 50, 260, 190), Color(0.14, 0.12, 0.18))
-	NightStreet.tenement(self, Rect2(1960, 30, 300, 210), Color(0.16, 0.07, 0.14))
-	NightStreet.tenement(self, Rect2(2480, 70, 280, 230), Color(0.1, 0.14, 0.16))
+	# The painted district (neon_strip) is the buildings and WetStreet the
+	# road; the flat blockout tenements only without it.
+	if NightStreet.has_backdrop("neon") and WetStreet.available():
+		WetStreet.lay(self, map_w)
+	else:
+		NightStreet.wet_floor(self, map_w)
+		NightStreet.tenement(self, Rect2(60, 80, 240, 240), Color(0.18, 0.08, 0.16))
+		NightStreet.tenement(self, Rect2(420, 40, 280, 200), Color(0.12, 0.1, 0.2))
+		NightStreet.tenement(self, Rect2(880, 20, 320, 220), Color(0.2, 0.08, 0.12))
+		NightStreet.tenement(self, Rect2(1400, 50, 260, 190), Color(0.14, 0.12, 0.18))
+		NightStreet.tenement(self, Rect2(1960, 30, 300, 210), Color(0.16, 0.07, 0.14))
+		NightStreet.tenement(self, Rect2(2480, 70, 280, 230), Color(0.1, 0.14, 0.16))
 	Blockout.solid(self, Rect2(360, ROOF_Y, 520, 22), true)
 	Blockout.poly(self, Rect2(360, ROOF_Y, 520, 22), Color(0.28, 0.16, 0.22), 2)
 	Blockout.solid(self, Rect2(1100, ROOF_Y, 480, 22), true)
