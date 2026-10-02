@@ -29,12 +29,14 @@ static func zone_of(kind: String, clip: String) -> String:
 		"blast":
 			return "blast"
 	match clip:
-		"gut", "front_kick", "side_kick":
+		"gut", "front_kick", "side_kick", "flying_knee", "body_hook", "clinch_knee", "shoulder_charge", "dropkick", "boot_kick":
 			return "gut"
-		"uppercut":
+		"uppercut", "backflip_kick", "getup_upper", "getup_kick":
 			return "up"
 		"slide", "sweep":
 			return "low"
+		"hammer":
+			return "crush"
 	return "head"
 
 
@@ -50,6 +52,8 @@ static func power_of(kind: String) -> float:
 			return 0.85
 		"snap", "finish", "stomp3", "blast":
 			return 1.0
+		"combo":
+			return 0.9
 	return 0.5
 
 

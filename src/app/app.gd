@@ -52,7 +52,8 @@ const SCENES := {
 	"processing_floor": "res://scenes/levels/processing_floor.tscn",
 	"versus": "res://scenes/levels/versus.tscn",
 	"parachute_fall": "res://scenes/levels/parachute_fall.tscn",
-	"skinwalker_film": "res://scenes/levels/skinwalker_film.tscn"
+	"skinwalker_film": "res://scenes/levels/skinwalker_film.tscn",
+	"dojo_practice": "res://scenes/levels/dojo_practice.tscn"
 }
 
 const ORDER := [

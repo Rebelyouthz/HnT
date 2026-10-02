@@ -42,6 +42,10 @@ var flung_ground := false
 var _grenade_cd := 0.0
 var _last_zone := "head"
 var _splat := 0.0
+## Where the swing being wound up will land (high / mid / low), read by the
+## fighter's guard. A marker over the head shows it during the wind-up.
+var atk_height := ""
+var _height_mark: Polygon2D
 signal died
 signal finish_ready
 
@@ -476,6 +480,60 @@ func _start_telegraph() -> void:
 		"finals":
 			t *= 0.7
 	telegraph = t
+	atk_height = _pick_height(atk)
+	_show_height()
+
+
+## Light swings go for the face or the body; heavies the body or a low
+## kick; spinning kicks are high, slides low. Brawlers mix in leg kicks.
+func _pick_height(atk: String) -> String:
+	match atk:
+		"slide":
+			return "low"
+		"roundhouse", "jump-kick":
+			return "high"
+		"heavy":
+			return "low" if randf() < 0.3 else "mid"
+		"blade":
+			return "mid"
+		"gun", "grenade", "ram":
+			return ""
+	var r := randf()
+	return "high" if r < 0.45 else ("mid" if r < 0.8 else "low")
+
+
+func _show_height() -> void:
+	if atk_height == "":
+		return
+	if _height_mark == null:
+		_height_mark = Polygon2D.new()
+		_height_mark.z_index = 12
+		var m := CanvasItemMaterial.new()
+		m.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+		_height_mark.material = m
+		add_child(_height_mark)
+	var pts := PackedVector2Array()
+	match atk_height:
+		"high":
+			pts = PackedVector2Array([Vector2(0, -6), Vector2(6, 3), Vector2(-6, 3)])
+			_height_mark.color = Color(1.0, 0.3, 0.25)
+		"low":
+			pts = PackedVector2Array([Vector2(-6, -3), Vector2(6, -3), Vector2(0, 6)])
+			_height_mark.color = Color(1.0, 0.85, 0.2)
+		_:
+			pts = PackedVector2Array([Vector2(-5, -5), Vector2(5, -5), Vector2(5, 5), Vector2(-5, 5)])
+			_height_mark.color = Color(1.0, 0.6, 0.2)
+	_height_mark.polygon = pts
+	_height_mark.position = Vector2(0, -92)
+	_height_mark.visible = true
+	_height_mark.scale = Vector2(1.6, 1.6)
+	var tw := _height_mark.create_tween()
+	tw.tween_property(_height_mark, "scale", Vector2.ONE, 0.1)
+	tw.tween_interval(maxf(0.05, telegraph))
+	tw.tween_callback(func() -> void:
+		if is_instance_valid(_height_mark):
+			_height_mark.visible = false
+	)
 
 
 func _clash(from: Fighter) -> void:
@@ -549,6 +607,7 @@ func _swing() -> void:
 				continue
 			if absf(f.global_position.x - global_position.x) < 50.0 and absf(f.global_position.y - global_position.y) < 70.0:
 				f.take_hit(kind, self)
+	atk_height = ""
 
 
 func _shuriken() -> void:
@@ -668,6 +727,8 @@ func take_hit(kind: String, from: Node) -> void:
 	elif kind == "snare":
 		dmg = 4
 		snared = 1.1
+	elif kind == "combo":
+		dmg = int(from.get("combo_dmg")) if from != null and from.get("combo_dmg") != null else 24
 	if FamilyProfile.has_cbt("pocket_sand") and kind == "throw":
 		dmg += 8
 	if FamilyProfile.has_cbt("night_eyes") and kind == "snap":
@@ -754,8 +815,35 @@ func take_hit(kind: String, from: Node) -> void:
 		finish_ready.emit()
 		Juice.freeze_frames(8)
 		Juice.shout("FINISH")
+	if kind == "combo" and hp > 0 and from is Fighter:
+		_combo_fx(str((from as Fighter).combo_fx), from as Fighter)
 	if hp <= 0:
 		_die(kind, from)
+
+
+## What a dojo finisher does to a body that survives it.
+func _combo_fx(fx: String, from: Fighter) -> void:
+	var dir := signf(global_position.x - from.global_position.x)
+	if dir == 0.0:
+		dir = float(from.facing)
+	telegraph = 0.0
+	atk_height = ""
+	match fx:
+		"launch":
+			flung = true
+			flung_dir = dir
+			flung_t = 0.18
+			flung_ground = false
+		"fling":
+			flung = true
+			flung_dir = dir
+			flung_t = 0.34
+			flung_ground = false
+		"knockdown", "crush":
+			recover = maxf(recover, 1.2)
+		"stun":
+			recover = maxf(recover, 0.95)
+			Juice.shout("STUNNED")
 
 
 func _die(kind: String, from: Node) -> void:

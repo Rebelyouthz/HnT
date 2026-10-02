@@ -40,6 +40,28 @@ func _ready() -> void:
 	var table: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/dojo.json"))
 	for row in table:
 		col.add_child(_row(row))
+	# Combos: one style per fighter, learned here, drilled on the dummy.
+	for who in ["son", "father"]:
+		var st := ComboBook.style(who)
+		var hh := Label.new()
+		hh.text = "%s COMBOS  ·  %s STYLE" % ["THE SON'S" if who == "son" else "THE FATHER'S", str(st.get("name", ""))]
+		UiKit.apply_label(hh, 20, UiKit.GOLD)
+		col.add_child(hh)
+		var sb := Label.new()
+		sb.text = str(st.get("blurb", "")) + "  The ring on your body is the beat: press the next button as it closes for PERFECT."
+		sb.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		UiKit.apply_label(sb, 12, Palette.MUTED)
+		col.add_child(sb)
+		var go := UiKit.button("PRACTICE ON THE DUMMY AS %s" % ("THE SON" if who == "son" else "THE FATHER"), Vector2(420, 40))
+		go.pressed.connect(_practice.bind(who))
+		col.add_child(go)
+		for c: Dictionary in ComboBook.all_for(who):
+			var info := c.duplicate()
+			info["kind"] = "combo"
+			info["blurb"] = ComboBook.steps_label(c, PadRouter.last_kind == "pad") + "   ·   " + str(c.get("blurb", ""))
+			if bool(c.get("starter", false)):
+				info["blurb"] = "KNOWN FROM THE START   ·   " + str(info["blurb"])
+			col.add_child(_row(info))
 	var close := UiKit.button("CLOSE", Vector2(140, 44))
 	close.pressed.connect(func() -> void:
 		closed.emit()
@@ -47,6 +69,12 @@ func _ready() -> void:
 	)
 	col.add_child(close)
 	close.grab_focus()
+
+
+func _practice(who: String) -> void:
+	App.set_meta("dojo_role", who)
+	closed.emit()
+	App.enter_map("dojo_practice")
 
 
 func _row(info: Dictionary) -> Control:

@@ -119,10 +119,35 @@ var _drift_v := 0.0
 var _drift_t := 0.0
 var _plant := 1.0
 var _land_t := 0.0
+## Dojo combos: the chain reader, the finisher's damage/effect for the
+## victim to read, and the finisher's own travel (flips, flying knees).
+var _combo: ComboBook
+var combo_dmg := 0
+var combo_fx := ""
+var combo_id := ""
+var _combo_vx := 0.0
+var _combo_t := 0.0
+var _clock := 0.0
+var _pre_face := 1
+var _hit_y := -34.0
+var combo_ring: ComboRing
+## Guard: which height the block covers (high / mid / low) and how long the
+## guard has been up; a clean block opens a counter window.
+var block_height := "mid"
+var counter_t := 0.0
+var _block_flinch := 0.0
+## Combat roll (block + dash) and the get-up attack from a knockdown.
+var roll_t := 0.0
+var _roll_dir := 0.0
+var _getup_done := false
+## A light pressed during recovery is kept for a few frames and thrown the
+## moment the body is free, so chains don't eat presses.
+var _light_buf := 0
 
 signal died
 signal hit_landed(kind: String, global_pos: Vector2)
 signal downed_changed
+signal combo_landed(id: String, perfect: bool)
 
 
 func _ready() -> void:
@@ -188,6 +213,10 @@ func _ready() -> void:
 		ammo = 6
 	snap_pos = global_position
 	hit_landed.connect(_on_hit_landed)
+	_combo = ComboBook.new(role)
+	combo_ring = ComboRing.new()
+	combo_ring.fighter = self
+	add_child(combo_ring)
 
 
 func _build_body() -> void:
@@ -300,6 +329,8 @@ func _tick_sprite() -> void:
 		clip = "hurt"
 	elif anim_atk != "" and _atk_t > 0.0:
 		clip = anim_atk
+	elif blocking and _anim.sprite_frames.has_animation("block_" + block_height):
+		clip = "block_" + block_height
 	elif snap_ready:
 		clip = "snap"
 	elif _hurt_t > 0.0:
@@ -429,6 +460,8 @@ func _apply_locker() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	_clock += delta
+	_pre_face = facing
 	_tick_meters(delta)
 	if van_seat != "":
 		return
@@ -455,6 +488,8 @@ func _physics_process(delta: float) -> void:
 		return
 	if knock_t > 0.0:
 		knock_t -= delta
+		if _try_getup_attack():
+			return
 		velocity.x = move_toward(velocity.x, 0.0, 600.0 * delta)
 		velocity.y = 0.0
 		move_and_slide()
@@ -504,6 +539,8 @@ func _tick_meters(delta: float) -> void:
 		wall_run -= delta
 	if parry_win > 0:
 		parry_win -= 1
+	if _light_buf > 0:
+		_light_buf -= 1
 	if revenge_win > 0:
 		revenge_win -= 1
 	if cart_t > 0.0:
@@ -547,7 +584,17 @@ func _tick_meters(delta: float) -> void:
 		stomp_cd -= delta
 		if stomp_cd <= 0.0:
 			stomp_n = 0
-	block_low = blocking and _stick().y > 0.4
+	if roll_t > 0.0 or knock_t > 0.0:
+		blocking = false
+	# Guard height from the stick: up = high (face), down = low (legs),
+	# neutral or back = mid (body).
+	var bst := _stick()
+	block_height = "high" if bst.y < -0.4 else ("low" if bst.y > 0.4 else "mid")
+	block_low = blocking and block_height == "low"
+	if counter_t > 0.0:
+		counter_t -= delta
+	if _block_flinch > 0.0:
+		_block_flinch -= delta
 	if blocking:
 		steam = maxf(0.0, steam - 8.0 * delta)
 		steam_lock = 0.15
@@ -673,6 +720,18 @@ func _process_street(delta: float) -> void:
 		else:
 			velocity.y = 0.0
 		_strike_motion()
+		if blocking and roll_t <= 0.0:
+			# Feet set under the guard: you can shuffle, not walk.
+			velocity.x *= 0.25
+			velocity.y *= 0.4
+	if _combo_t > 0.0:
+		_combo_t -= delta
+		velocity.x = float(facing) * _combo_vx
+		velocity.y = 0.0
+	if roll_t > 0.0:
+		roll_t -= delta
+		velocity.x = _roll_dir * 330.0 * clampf(roll_t / 0.2, 0.35, 1.0)
+		velocity.y = y * depth_speed * 0.5
 	if _street_grounded():
 		coyote = COYOTE
 		_footsteps(delta, absf(velocity.x))
@@ -860,10 +919,18 @@ func _combat() -> void:
 	var y := _stick().y
 	if snap_ready and (_just("light") or _just("snap")):
 		return
+	if roll_t > 0.0 or _combo_t > 0.0:
+		return
+	if blocking and _just("dash") and plane == "street" and _street_grounded():
+		_roll()
+		return
+	if _just("jump"):
+		_combo_press("J")
 	if attack_cd == 0 and _just("dash") and not dashing:
 		if y > 0.45 and plane == "street":
 			_slide()
 		else:
+			_combo_press("D")
 			_dash()
 	if _street_grounded() or (plane == "roof" and is_on_floor()):
 		_try_vault()
@@ -894,6 +961,10 @@ func _combat() -> void:
 		if charge_frames >= charge_need + 25:
 			_attack("heavy", true)
 	elif charge_frames > 0:
+		if not airborne or _combo_air_ok():
+			if _combo_press("H"):
+				charge_frames = 0
+				return
 		if airborne and y > 0.35:
 			_dive()
 		elif airborne and y < -0.35:
@@ -915,7 +986,12 @@ func _combat() -> void:
 				_attack("heavy", charge_frames >= charge_need)
 		else:
 			_attack("heavy", charge_frames >= charge_need)
-	elif attack_cd == 0 and _just("light"):
+	elif _just("light") and attack_cd > 0:
+		_light_buf = 9
+	elif attack_cd == 0 and (_just("light") or _light_buf > 0):
+		_light_buf = 0
+		if (not airborne or _combo_air_ok()) and _combo_press("L"):
+			return
 		if airborne and y < -0.35:
 			_attack("air-upper", false)
 		elif airborne:
@@ -1151,7 +1227,10 @@ func _begin_strike(kind: String, size: Vector2, life: float, reach: float) -> vo
 	_lunge_v = 0.0
 	if _anim != null and _anim.animation == clip:
 		_anim.speed_scale = 1.0
-	_spawn_hit(kind, size, life, Vector2(reach * facing, -34.0 + hop))
+	_spawn_hit(kind, size, life, Vector2(reach * facing, _hit_y + hop))
+	_hit_y = -34.0
+	if _combo != null:
+		_combo.beat(_clock)
 	await get_tree().create_timer(life + 0.02, false).timeout
 	if id != _strike_id or not is_inside_tree():
 		return
@@ -1276,6 +1355,151 @@ func _dive() -> void:
 	_spawn_hit("dive", Vector2(58, 44), 0.24, Vector2(20 * facing, -18 + hop))
 
 
+## One press as a combo token: button plus stick, forward/back measured
+## against the way the body faced before this frame's turn.
+func _combo_tok(btn: String) -> String:
+	var st := _stick()
+	var d := ""
+	if absf(st.y) > 0.5 and absf(st.y) >= absf(st.x):
+		d = "U" if st.y < 0.0 else "Dn"
+	elif absf(st.x) > 0.5:
+		d = "F" if signf(st.x) == float(_pre_face) else "B"
+	return d + "+" + btn if d != "" else btn
+
+
+## A chain is running: let a press count even mid-air (the dropkick's
+## heavy comes after the jump).
+func _combo_air_ok() -> bool:
+	return _combo != null and not _combo.hist.is_empty()
+
+
+## Feed a press to the chain reader. True when it finished a combo (the
+## caller skips the normal move).
+func _combo_press(btn: String) -> bool:
+	if _combo == null:
+		return false
+	var pool := ComboBook.learned(role)
+	if pool.is_empty():
+		return false
+	var tok := _combo_tok(btn)
+	var c := _combo.feed(tok, _clock, pool)
+	if OS.has_environment("HNT_COMBO_DEBUG"):
+		print("stick=%s combo tok=%s t=%.2f beat=%.2f hist=%s grades=%s -> %s" % [str(_stick()), tok, _clock, _combo.beat_t, str(_combo.hist.map(func(h: Dictionary) -> String: return str(h["tok"]))), str(_combo.grades), str(c.get("id", ""))])
+	var chained := not c.is_empty() or not _combo.hist.is_empty()
+	if tok.begins_with("B+") and chained:
+		# Back is a direction in the chain, not a turn: keep facing the target.
+		facing = _pre_face
+		visual.scale.x = float(facing)
+	if combo_ring:
+		combo_ring.pressed(_combo.last_grade)
+	if btn == "J" or btn == "D":
+		_combo.beat(_clock)
+	if c.is_empty():
+		return false
+	_combo_finish(c)
+	return true
+
+
+## The last press of a learned combo: the finisher clip, its travel, its
+## damage (x1.5 when every beat was perfect) and what it does to the target.
+func _combo_finish(c: Dictionary) -> void:
+	var clip := str(c.get("clip", "heavy"))
+	var perfect := _combo.all_perfect()
+	combo_id = str(c.get("id", ""))
+	combo_dmg = int(round(float(c.get("dmg", 24)) * (1.5 if perfect else 1.0)))
+	combo_dmg += 2 * FamilyProfile.dojo_rank(combo_id)
+	combo_fx = str(c.get("fx", ""))
+	charge_frames = 0
+	string_n = 0
+	_cancel_strike()
+	var has := _anim != null and _anim.sprite_frames.has_animation(clip)
+	anim_atk = clip if has else ("roundhouse" if role == "son" else "heavy")
+	var box: Array = c.get("box", [70, 48])
+	if bool(c.get("low", false)):
+		_hit_y = -10.0
+	if c.has("hop") and plane == "street":
+		hop_v = float(c["hop"])
+		hop = minf(hop, -1.0)
+	_atk_t = 0.7
+	_begin_strike("combo", Vector2(float(box[0]), float(box[1])), 0.2, float(c.get("reach", 32)))
+	# The finisher owns the body for the whole clip: travel for most of it.
+	_combo_vx = float(c.get("vx", 0.0))
+	_combo_t = _atk_t * 0.55 if _combo_vx != 0.0 else 0.0
+	attack_cd = maxi(attack_cd, int(_atk_t * 60.0 * 0.8))
+	invuln = maxi(invuln, 14 if perfect else 6)
+	Juice.shout(str(c.get("title", "COMBO")))
+	if perfect:
+		Juice.named_slowmo()
+		Juice.popup_number(global_position + Vector2(0, -96), "PERFECT", UiKit.GOLD)
+		Juice.play("res://assets/audio/trick_perfect.wav")
+	else:
+		Juice.popup_number(global_position + Vector2(0, -96), "COMBO", Palette.READY)
+	FamilyProfile.data["combos_landed"] = int(FamilyProfile.data.get("combos_landed", 0)) + 1
+	var rs := get_tree().get_first_node_in_group("run_state")
+	if rs and rs.has_method("add_points"):
+		rs.add_points(role, 40 if perfect else 24, "combo")
+	if combo_ring:
+		combo_ring.finished(perfect)
+	combo_landed.emit(combo_id, perfect)
+
+
+## Block + dash: a combat roll along the stick (backwards with no stick).
+## Through people, untouchable for most of it, out on your feet.
+func _roll() -> void:
+	if not _spend(14.0):
+		return
+	var x := _stick().x
+	_roll_dir = signf(x) if absf(x) > 0.3 else -float(facing)
+	roll_t = 0.42
+	invuln = maxi(invuln, 22)
+	blocking = false
+	_cancel_strike()
+	if _anim != null and _anim.sprite_frames.has_animation("roll"):
+		anim_atk = "roll"
+		var n := _anim.sprite_frames.get_frame_count("roll")
+		_anim.play("roll")
+		_anim.frame = 0
+		_anim.speed_scale = float(n) / maxf(1.0, _anim.sprite_frames.get_animation_speed("roll")) / 0.5
+		_atk_t = 0.5
+	if _roll_dir != float(facing) and absf(x) > 0.3:
+		facing = int(_roll_dir)
+		visual.scale.x = float(facing)
+	KitSfx.hit(role, "dash")
+	Juice.land_puff(global_position)
+	Juice.shout("ROLL")
+
+
+## On the floor after a knockdown: once the body starts to rise, a press
+## turns the get-up into an attack (Son: kip-up kick, Father: rising
+## uppercut). Ends the knockdown early.
+func _try_getup_attack() -> bool:
+	if _getup_done or _anim == null:
+		return false
+	var clip := "getup_kick" if role == "son" else "getup_upper"
+	if not _anim.sprite_frames.has_animation(clip):
+		return false
+	var n := _anim.sprite_frames.get_frame_count("knockdown")
+	var fps := maxf(1.0, _anim.sprite_frames.get_animation_speed("knockdown"))
+	var total := float(n) / fps
+	# Only once flat on the ground (after the fall, before standing).
+	if knock_t > total * 0.55 or knock_t < 0.12:
+		return false
+	if not (_just("light") or _just("heavy")):
+		return false
+	_getup_done = true
+	knock_t = 0.0
+	invuln = maxi(invuln, 24)
+	combo_dmg = 18
+	combo_fx = "launch"
+	combo_id = "getup"
+	anim_atk = clip
+	_atk_t = 0.7
+	_begin_strike("combo", Vector2(60, 70), 0.2, 26.0)
+	Juice.shout("GET-UP ATTACK")
+	KitSfx.hit(role, "heavy")
+	return true
+
+
 func _on_hit_landed(kind: String, _global_pos: Vector2) -> void:
 	_strike_impact(_global_pos)
 	if kind == "light" or kind == "jump-kick" or kind == "gut-punch" or kind == "slide":
@@ -1382,6 +1606,12 @@ func _spawn_hit(kind: String, size: Vector2, life: float, offset: Vector2) -> vo
 			var hit_kind := kind
 			if web_incoming:
 				hit_kind = "web-slam"
+			if counter_t > 0.0 and victim is Punk:
+				counter_t = 0.0
+				if hit_kind == "light" or hit_kind == "gut-punch":
+					hit_kind = "heavy"
+				Juice.shout("COUNTER")
+				Juice.hitstop(4)
 			if revenge_win > 0 and victim is Punk:
 				if hit_kind == "light" or hit_kind == "gut-punch":
 					hit_kind = "heavy"
@@ -1402,7 +1632,7 @@ func _spawn_hit(kind: String, size: Vector2, life: float, offset: Vector2) -> vo
 func take_hit(kind: String, from: Node) -> void:
 	if downed or invuln > 0:
 		return
-	if blocking and parry_win > 0 and kind != "snap" and kind != "throw":
+	if blocking and parry_win > 0 and kind != "snap" and kind != "throw" and attack_height(kind, from) in ["any", block_height]:
 		var perfect := parry_win >= 7
 		parry_win = 0
 		invuln = 14
@@ -1421,22 +1651,17 @@ func take_hit(kind: String, from: Node) -> void:
 		if from is Punk:
 			(from as Punk).take_hit("heavy", self)
 		return
+	var wrong_guard := false
 	if blocking and kind != "throw" and kind != "snap":
-		var chip := maxi(1, int(round(6 * 0.1)))
-		if kind == "heavy":
-			chip = 2
-		steam = maxf(0.0, steam - 12.0)
-		hp = maxi(0, hp - chip)
-		Juice.play("res://assets/audio/block.wav")
-		Juice.flash_red(visual, 1)
-		if steam <= 0.0:
-			blocking = false
-			invuln = 0
+		var need := attack_height(kind, from)
+		if need == "any" or need == block_height:
+			_clean_block(kind, from)
+			if blocking:
+				return
 		else:
-			return
-		if hp <= 0:
-			_go_down()
-			return
+			# Guard in the wrong place: most of it gets through.
+			wrong_guard = true
+			Juice.popup_number(global_position + Vector2(0, -92), "%s!" % need.to_upper(), Color(1.0, 0.45, 0.3))
 	if armored and kind == "light":
 		Juice.flash_red(visual, 1)
 		return
@@ -1453,6 +1678,8 @@ func take_hit(kind: String, from: Node) -> void:
 		dmg = 18
 	if buff_t > 0.0:
 		dmg = int(round(float(dmg) * 0.85))
+	if wrong_guard:
+		dmg = maxi(1, int(round(float(dmg) * 0.7)))
 	hp = maxi(0, hp - dmg)
 	_hurt_t = 0.32
 	_cancel_strike()
@@ -1488,6 +1715,53 @@ func take_hit(kind: String, from: Node) -> void:
 	if rs2 and rs2.has_method("has_card") and rs2.has_card("revenge_policy"):
 		revenge_win = 54
 	Juice.shout("REVENGE READY")
+
+
+## Where an incoming blow lands: enemies call it during their wind-up
+## (atk_height), otherwise read it off the kind. Bullets and blasts can be
+## stopped by any guard.
+static func attack_height(kind: String, from: Node) -> String:
+	if from != null and from.get("atk_height") != null and str(from.get("atk_height")) != "":
+		return str(from.get("atk_height"))
+	if from is KitShot:
+		return "any"
+	match kind:
+		"slide", "sweep":
+			return "low"
+		"jump-kick", "roundhouse", "dive":
+			return "high"
+	return "mid"
+
+
+## Right height, guard up: nothing gets through. The hit rings off the
+## forearms, both bodies jolt, the attacker bounces off (an opening) and a
+## counter window opens: your next blow hits as a heavy.
+func _clean_block(kind: String, from: Node) -> void:
+	var heavy := kind in ["heavy", "roundhouse", "jump-kick", "blade"]
+	steam = maxf(0.0, steam - (14.0 if heavy else 7.0))
+	_block_flinch = 0.2
+	counter_t = 0.5
+	var y := -58.0 if block_height == "high" else (-12.0 if block_height == "low" else -36.0)
+	var at := global_position + Vector2(float(facing) * 16.0, y)
+	Juice.sparks(at)
+	Juice.hitstop(4 if heavy else 2)
+	Juice.pulse_shake(3.0 if heavy else 1.4)
+	Juice.play("res://assets/audio/block.wav")
+	Juice.popup_number(at + Vector2(0, -20), "BLOCK", Color(0.62, 0.86, 1.0))
+	global_position.x -= float(facing) * (12.0 if heavy else 6.0)
+	if from is Punk:
+		var p := from as Punk
+		p.recover = maxf(p.recover, 0.45 if heavy else 0.32)
+		HitReact.react(p.visual, p.facing, "head", -float(p.facing), 0.25)
+	if _anim != null:
+		var tw := _anim.create_tween()
+		_anim.self_modulate = Color(1.5, 1.7, 2.0)
+		tw.tween_property(_anim, "self_modulate", Color.WHITE, 0.16)
+	FamilyProfile.data["blocks"] = int(FamilyProfile.data.get("blocks", 0)) + 1
+	if steam <= 0.0:
+		blocking = false
+		stumble()
+		Juice.shout("GUARD BREAK")
 
 
 func _go_down() -> void:
@@ -1738,6 +2012,9 @@ func _street_grounded() -> bool:
 func _face(x: float) -> void:
 	# No turning around mid-strike: the hips are committed.
 	if _strike_phase == 1 or _strike_phase == 2:
+		return
+	# Mid-chain the stick is part of the input (back + heavy), not a turn.
+	if _combo != null and not _combo.hist.is_empty() and not _combo.cold(_clock):
 		return
 	if absf(x) > 0.1:
 		facing = 1 if x > 0.0 else -1
@@ -1996,6 +2273,7 @@ func _maybe_knockdown(kind: String, from: Node) -> void:
 	var n := _anim.sprite_frames.get_frame_count("knockdown")
 	var fps := maxf(1.0, _anim.sprite_frames.get_animation_speed("knockdown"))
 	knock_t = float(n) / fps
+	_getup_done = false
 	invuln = maxi(invuln, int(knock_t * 60.0))
 	_cancel_strike()
 	if from is Node2D:

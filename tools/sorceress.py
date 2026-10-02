@@ -34,7 +34,7 @@ def req(method: str, path: str, body: dict | None = None) -> dict:
     r.add_header("Authorization", "Bearer " + key())
     r.add_header("Content-Type", "application/json")
     try:
-        with urllib.request.urlopen(r, timeout=120) as f:
+        with urllib.request.urlopen(r, timeout=400) as f:
             return json.loads(f.read())
     except urllib.error.HTTPError as e:
         return {"ok": False, "status": e.code, "error": e.read().decode(errors="ignore")[:800]}

@@ -501,7 +501,7 @@ func _paint_fighter(lab: Label, bar: ColorRect, pips: HBoxContainer, snap: Label
 	if state and lemon_slot:
 		lives = "   LIVES %d" % state.lives
 	lab.text = "%s%s" % [title.to_upper(), lives]
-	var plate: Variant = _plates.get(f.role)
+	var plate: Variant = _plates.get(_slot_of(f))
 	if plate is Control:
 		(plate as Control).visible = true
 	if lemon_slot:
@@ -666,8 +666,20 @@ func _show_bar(bar: ColorRect, on: bool) -> void:
 
 ## The corner portrait: blood builds up with damage, it flinches and flashes
 ## on every hit, and goes grey when down.
+## Solo Father plays in the left (first) plate: his face goes into it and
+## the right plate stays hidden.
+func _slot_of(f: Fighter) -> String:
+	if son == null and f == father:
+		var face: Variant = _faces.get("son")
+		if face is TextureRect and not (face as TextureRect).has_meta("father"):
+			(face as TextureRect).texture = SpriteBook.bust("father")
+			(face as TextureRect).set_meta("father", true)
+		return "son"
+	return f.role
+
+
 func _paint_face(f: Fighter) -> void:
-	var face: Variant = _faces.get(f.role)
+	var face: Variant = _faces.get(_slot_of(f))
 	if not (face is TextureRect):
 		return
 	var tr := face as TextureRect

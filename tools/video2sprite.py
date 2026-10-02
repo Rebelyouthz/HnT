@@ -131,6 +131,13 @@ def despill(k: np.ndarray) -> np.ndarray:
     """Magenta left over from pink source boards (the video model keeps it as
     a purple belt or rim). Nothing on these characters is magenta: grey it."""
     r, g, b = k[..., 0], k[..., 1], k[..., 2]
+    # Green-screen spill on hands, shoes and hair edges: nothing on these
+    # characters is green, so clamp green to the brighter of red/blue.
+    spill = (g > np.maximum(r, b) + 0.02) & (k[..., 3] > 0.0)
+    if spill.any():
+        k = k.copy()
+        k[..., 1][spill] = np.maximum(r, b)[spill]
+        r, g, b = k[..., 0], k[..., 1], k[..., 2]
     m = (r - g > 0.1) & (b - g > 0.08) & (k[..., 3] > 0.0)
     if not m.any():
         return k
@@ -143,6 +150,10 @@ def despill(k: np.ndarray) -> np.ndarray:
 
 def build(keys: list[np.ndarray], idx: list[int], stand_h: int, anchor: str = "feet", scale: float = 0.0) -> tuple[list, tuple[int, int]]:
     sel = [despill(keys[i]) for i in idx]
+    # Ground anchor: the floor is the lowest the feet ever get in the source;
+    # each frame keeps its real height above it (jumps, flips, kip-ups).
+    src_bottom = [S.bbox(k)[3] if S.bbox(k) else 0 for k in sel]
+    ground = max((S.bbox(k)[3] for k in keys if S.bbox(k)), default=0)
     heights = []
     for k in sel:
         bb = S.bbox(k)
@@ -174,7 +185,11 @@ def build(keys: list[np.ndarray], idx: list[int], stand_h: int, anchor: str = "f
     cw = int(np.ceil(max(ref.shape[1] * 0.5 + max_side, S.MIN_WHO_CELL * 0.5))) * 2
     ch = max(S.MIN_WHO_CELL, int(np.ceil((max_h + 4) / 2.0)) * 2)
     left = cw // 2 - ref.shape[1] // 2
-    if anchor == "center":
+    if anchor == "ground":
+        lift = [int(round((ground - b) * scale)) for b in src_bottom]
+        ch = max(S.MIN_WHO_CELL, int(np.ceil((max(im.shape[0] + up for (im, _), up in zip(placed, lift)) + 4) / 2.0)) * 2)
+        frames = [(im, int(np.clip(left + dx, 0, cw - im.shape[1])), max(0, ch - 2 - im.shape[0] - up)) for (im, dx), up in zip(placed, lift)]
+    elif anchor == "center":
         # Airborne: hold the body's vertical centre still (physics moves the
         # actor); the cell is tall enough for the widest tuck/extension.
         ch = max(S.MIN_WHO_CELL, int(np.ceil((max_h + 4) / 2.0)) * 2 + 40)
@@ -211,9 +226,11 @@ def main() -> None:
     ap.add_argument("--max-cycle", type=float, default=1.6, help="longest loop in seconds")
     ap.add_argument("--out", default=str(S.OUT))
     ap.add_argument("--retract", type=int, default=0, help="strike: append N frames playing the extension back to guard")
-    ap.add_argument("--anchor", default="feet", choices=["feet", "center"], help="center for airborne clips")
+    ap.add_argument("--anchor", default="feet", choices=["feet", "center", "ground"], help="center for airborne clips")
     ap.add_argument("--hold", type=int, default=0, help="strike: repeat the peak frame N extra times (impact hold)")
     ap.add_argument("--scale-ref", default="", help="use the body scale stored in this clip's JSON (one scale per character)")
+    ap.add_argument("--stand-frame", type=int, default=-999, help="scale so the body in this source frame (-1 = last) is --stand px tall")
+    ap.add_argument("--hit-at", type=float, default=-1.0, help="contact moment in the source (seconds): marks the hit frame")
     ap.add_argument("--start", type=float, default=-1.0, help="force start (seconds)")
     ap.add_argument("--end", type=float, default=-1.0, help="force end (seconds)")
     a = ap.parse_args()
@@ -237,6 +254,9 @@ def main() -> None:
         idx = idx + [idx[-1]] * a.hold
         back = [int(round(e - (e - s) * ((i + 1) / a.retract) ** 1.6)) for i in range(a.retract)] if a.retract else []
         idx = idx + back
+    if a.hit_at >= 0 and hit < 0:
+        target = a.hit_at * vfps
+        hit = int(np.argmin([abs(i - target) for i in idx]))
     # One body size per character: every clip is scaled against a reference
     # clip by body AREA of its first frame (pose-invariant, unlike height:
     # a crouch or a raised fist would otherwise change the scale).
@@ -245,6 +265,9 @@ def main() -> None:
     if a.scale_ref:
         ref = json.loads(Path(a.scale_ref).read_text())
         scale = float(ref["scale"]) * float(np.sqrt(float(ref["src_area"]) / src_area))
+    if a.stand_frame != -999:
+        bb = S.bbox(keys[a.stand_frame])
+        scale = a.stand / float(bb[3] - bb[1])
     frames, cell = build(keys, idx, a.stand, a.anchor, scale)
     fps = a.fps or a.frames / max(1e-3, (e - s) / vfps)
     dest = Path(a.out) / a.who

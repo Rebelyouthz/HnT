@@ -238,7 +238,7 @@ func _pick_bounty() -> void:
 		return
 	var pool: Array = []
 	for n in get_tree().get_nodes_in_group("enemies"):
-		if n is Punk and not (n is ActBoss) and is_instance_valid(n) and (n as Punk).hp > 0:
+		if n is Punk and not (n is ActBoss) and not (n is TrainingDummy) and is_instance_valid(n) and (n as Punk).hp > 0:
 			pool.append(n)
 	if pool.is_empty():
 		get_tree().create_timer(4.0).timeout.connect(_pick_bounty)

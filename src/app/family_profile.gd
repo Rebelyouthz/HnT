@@ -883,6 +883,12 @@ func try_dojo(id: String) -> bool:
 			spec = row
 			break
 	if spec.is_empty():
+		# Combos live in their own book (data/combos.json).
+		spec = ComboBook.by_id(id)
+		if not spec.is_empty():
+			spec = spec.duplicate()
+			spec["kind"] = "combat"
+	if spec.is_empty():
 		return false
 	var rank := dojo_rank(id)
 	if rank >= 3:
