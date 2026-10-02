@@ -59,18 +59,50 @@
       "sub": "Coping hour. The magnet is the love language.",
       "lines": [
         {
+          "who": "",
+          "text": "DOCK STREET. GANT'S INVOICES BLOW DOWN THE GUTTER LIKE CONFETTI."
+        },
+        {
+          "who": "benny",
+          "text": "You two actually came for me. Nobody comes for the co-signer."
+        },
+        {
+          "who": "father",
+          "text": "You built us a home. That makes you family. Family shows up. Eventually."
+        },
+        {
+          "who": "son",
+          "text": "Where's Rico?"
+        },
+        {
+          "who": "benny",
+          "text": "Intake Lot impound. They put him in a car boot. With a boot on the car."
+        },
+        {
+          "who": "father",
+          "text": "Then that's next. Benny, go home. Fix the hideout. Make it a home again."
+        },
+        {
+          "who": "benny",
+          "text": "Bring me gold and I'll build you a palace with a fridge in every room."
+        },
+        {
           "who": "son",
           "text": "We filed Dock Street. The lot is the waiting list with teeth."
         },
         {
-          "who": "father",
-          "text": "I validate parking. Then I park on the feeling."
-        },
-        {
           "who": "",
-          "text": "EIGHTY-EIGHT SECONDS. ELITES AT THIRTY-TWO. NOBODY GETS A TICKET OUT."
+          "text": "THE HIDEOUT FIRST. THEN THE LOT. EIGHTY-EIGHT SECONDS. NOBODY GETS A TICKET OUT."
         }
-      ]
+      ],
+      "stage": {
+        "theme": "dock",
+        "cast": [
+          "father",
+          "son",
+          "benny"
+        ]
+      }
     },
     "intake_lot->fire_escapes": {
       "chapter": "CHAPTER 3",

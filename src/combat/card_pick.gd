@@ -10,6 +10,7 @@ var ids: Array = []
 var _row: HBoxContainer
 var _table: Array = []
 var _reroll_btn: Button
+var _ui: Control
 
 
 func _ready() -> void:
@@ -20,30 +21,45 @@ func _ready() -> void:
 	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/cards.json"))
 	if typeof(parsed) == TYPE_ARRAY:
 		_table = parsed
+	# Design space like every other HUD layer (it drew at 2x before).
+	_ui = PixelStage.attach_canvas(self)
 	var dim := ColorRect.new()
-	dim.color = Color(0.02, 0.02, 0.04, 0.42)
-	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.color = Color(0.02, 0.02, 0.05, 0.6)
+	dim.size = Vector2(1280, 720)
 	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(dim)
+	_ui.add_child(dim)
+	var title := UiKit.title("LEVEL UP!", 54, Palette.EDGE)
+	title.position = Vector2(0, 28)
+	title.size = Vector2(1280, 64)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_ui.add_child(title)
+	title.pivot_offset = Vector2(640, 32)
+	title.scale = Vector2(1.5, 1.5)
+	title.create_tween().set_ignore_time_scale(true).set_trans(Tween.TRANS_BACK).tween_property(title, "scale", Vector2.ONE, 0.25)
 	_clock = Label.new()
-	_clock.position = Vector2(480, 88)
-	_clock.size = Vector2(320, 40)
+	_clock.position = Vector2(0, 92)
+	_clock.size = Vector2(1280, 30)
 	_clock.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	UiKit.apply_label(_clock, 18, Palette.LEMON)
-	add_child(_clock)
+	_clock.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(_clock, 18, Palette.TEXT)
+	_ui.add_child(_clock)
 	_row = HBoxContainer.new()
-	_row.position = Vector2(40, 140)
-	_row.add_theme_constant_override("separation", 16)
-	add_child(_row)
+	_row.position = Vector2(70, 140)
+	_row.size = Vector2(1140, 420)
+	_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	_row.add_theme_constant_override("separation", 26)
+	_ui.add_child(_row)
 	if ids.is_empty():
 		for c in _table:
 			if bool(c.get("fixed", false)):
 				ids.append(c["id"])
 	_paint_cards()
 	var tools := HBoxContainer.new()
-	tools.position = Vector2(360, 430)
+	tools.position = Vector2(0, 590)
+	tools.size = Vector2(1280, 50)
+	tools.alignment = BoxContainer.ALIGNMENT_CENTER
 	tools.add_theme_constant_override("separation", 14)
-	add_child(tools)
+	_ui.add_child(tools)
 	var skip := UiKit.button(Copy.SKIP, Vector2(240, 44))
 	skip.pressed.connect(func() -> void:
 		_choose("skip")
@@ -54,13 +70,13 @@ func _ready() -> void:
 	tools.add_child(_reroll_btn)
 	_sync_reroll()
 	var note := Label.new()
-	note.position = Vector2(180, 500)
+	note.position = Vector2(180, 650)
 	note.size = Vector2(920, 48)
 	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	note.text = "World is slow. Enemies are not paused. Die in the menu. That's the bit. Border is rarity. Legendary shouts. Skip banks nothing."
 	UiKit.apply_label(note, 14, Palette.MUTED)
-	add_child(note)
+	_ui.add_child(note)
 	_focus_middle()
 
 
@@ -90,52 +106,93 @@ func _border_for(rarity: String, mid: bool) -> Color:
 	return c
 
 
+func _glyph(info: Dictionary) -> String:
+	var tag := (str(info.get("tag", "")) + " " + str(info.get("id", ""))).to_lower()
+	for pair in [["air", "boot"], ["steam", "drop"], ["gold", "gold"], ["gem", "gems"], ["snap", "bolt"], ["block", "shield"], ["parry", "shield"], ["heal", "heart"], ["hp", "heart"], ["gun", "star"], ["throw", "fist"], ["heavy", "fist"], ["light", "fist"]]:
+		if str(pair[0]) in tag:
+			return str(pair[1])
+	return "star"
+
+
+## A tall pixel card: thick rarity-coloured frame on a 3D base, a big icon
+## medallion, the rule's name, what it does, the rarity ribbon, TAKE IT.
 func _card(info: Dictionary, mid: bool) -> Control:
 	var rarity := Rarity.normalize(str(info.get("rarity", "common")))
+	var rc := _border_for(rarity, mid)
 	var wrap := PanelContainer.new()
-	wrap.custom_minimum_size = Vector2(360, 270)
-	wrap.add_theme_stylebox_override("panel", UiKit.panel(Rarity.fill(rarity), _border_for(rarity, mid)))
+	wrap.custom_minimum_size = Vector2(330, 420)
+	var st := preload("res://src/ui/clinic_featured.gd").card_style(mid)
+	st.border_color = rc
+	st.shadow_color = Color(rc.r, rc.g, rc.b, 0.45) if mid else Color(0, 0, 0.02, 0.9)
+	st.content_margin_left = 18
+	st.content_margin_right = 18
+	st.content_margin_top = 16
+	wrap.add_theme_stylebox_override("panel", st)
 	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 6)
+	col.add_theme_constant_override("separation", 10)
 	wrap.add_child(col)
-	var head := HBoxContainer.new()
-	if Rarity.rank(rarity) >= 3:
-		var mark := LogoMark.new()
-		mark.custom_minimum_size = Vector2(36, 36)
-		head.add_child(mark)
-	var stamp := StampMark.new()
-	stamp.accent = Rarity.color(rarity)
-	head.add_child(stamp)
-	var t := Label.new()
-	t.text = str(info.get("name", "?"))
-	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	UiKit.apply_label(t, 18, Rarity.color(rarity) if Rarity.rank(rarity) >= 2 else Palette.LEMON)
-	head.add_child(t)
-	col.add_child(head)
+	var ribbon := Label.new()
+	ribbon.text = Rarity.label(rarity)
+	ribbon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	ribbon.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(ribbon, 14, rc)
+	col.add_child(ribbon)
+	var medal := Control.new()
+	medal.custom_minimum_size = Vector2(0, 110)
+	col.add_child(medal)
+	var disc := Panel.new()
+	var ds := StyleBoxFlat.new()
+	ds.bg_color = Color(0.1, 0.13, 0.24)
+	ds.border_color = rc
+	ds.set_border_width_all(4)
+	ds.set_corner_radius_all(52)
+	ds.shadow_color = Color(0, 0, 0.02, 0.85)
+	ds.shadow_size = 1
+	ds.shadow_offset = Vector2(0, 5)
+	disc.add_theme_stylebox_override("panel", ds)
+	disc.size = Vector2(104, 104)
+	disc.position = Vector2(95, 2)
+	medal.add_child(disc)
+	var ic := PixelIcon.new()
+	ic.kind = _glyph(info)
+	ic.size = Vector2(64, 64)
+	ic.position = Vector2(115, 22)
+	medal.add_child(ic)
+	var t := UiKit.title(str(info.get("name", "?")), 24, rc if Rarity.rank(rarity) >= 2 else Palette.EDGE)
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	t.custom_minimum_size = Vector2(290, 0)
+	col.add_child(t)
 	var b := Label.new()
 	b.text = str(info.get("blurb", ""))
 	b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	b.custom_minimum_size = Vector2(320, 0)
-	UiKit.apply_label(b, 13, Palette.TEXT)
+	b.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	b.custom_minimum_size = Vector2(290, 0)
+	b.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	UiKit.apply_label(b, 15, Palette.TEXT)
 	col.add_child(b)
-	col.add_child(StatPanel.new([
-		{"name": "TAG", "value": str(info.get("tag", "RULE")), "color": Palette.LEMON},
-		{"name": "RARITY", "value": Rarity.label(rarity), "color": Rarity.color(rarity)},
-		{"name": "KEEP", "value": "THIS RUN", "color": Palette.READY},
-		{"name": "JUICE", "value": _card_stat(info), "color": Palette.EDGE}
-	]))
-	var go := UiKit.button("TAKE IT", Vector2(160, 44))
+	var stat := Label.new()
+	stat.text = _card_stat(info)
+	stat.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	stat.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(stat, 14, UiKit.GOLD)
+	col.add_child(stat)
+	var go := UiKit.button("TAKE IT", Vector2(200, 50))
 	go.name = "Pick"
+	go.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	go.pressed.connect(func() -> void:
 		_choose(str(info.get("id", "")))
 	)
 	col.add_child(go)
 	if mid:
 		UiKit.pulse_ready(go)
-	if Rarity.rank(rarity) >= 3:
-		wrap.scale = Vector2(0.92, 0.92)
-		var tw := wrap.create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-		tw.tween_property(wrap, "scale", Vector2.ONE, 0.22)
+	wrap.pivot_offset = Vector2(165, 210)
+	wrap.scale = Vector2(0.7, 0.7)
+	wrap.modulate.a = 0.0
+	var tw := wrap.create_tween().set_ignore_time_scale(true).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_interval(0.08 * float(_row.get_child_count()))
+	tw.tween_property(wrap, "scale", Vector2.ONE, 0.25)
+	tw.parallel().tween_property(wrap, "modulate:a", 1.0, 0.15)
 	return wrap
 
 

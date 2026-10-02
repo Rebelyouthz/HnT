@@ -43,27 +43,36 @@ func _ready() -> void:
 	UiKit.apply_label(_fps, 12, Palette.LEMON)
 	_put(_fps)
 
+	# Player plates: chunky pixel frame, portrait, name, heart row, steam.
+	_plate(Vector2(10, 8), "son")
 	_son = Label.new()
-	_son.position = Vector2(12, 22)
-	UiKit.apply_label(_son, 14, Palette.LEMON)
+	_son.position = Vector2(100, 18)
+	_son.add_theme_font_override("font", UiKit.title_font())
+	UiKit.apply_label(_son, 18, Palette.LEMON)
+	_son.add_theme_constant_override("outline_size", 6)
+	_son.add_theme_color_override("font_outline_color", UiKit.INK)
 	_put(_son)
-	_hp_a = _pips_row(Vector2(12, 64), Palette.LEMON)
-	_steam_a = _bar(Vector2(12, 76), Palette.LEMON)
+	_hp_a = _pips_row(Vector2(100, 46), Palette.LEMON)
+	_steam_a = _bar(Vector2(100, 80), Palette.LEMON)
 
+	_plate(Vector2(930, 8), "father")
 	_dad = Label.new()
-	_dad.position = Vector2(900, 22)
-	_dad.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_dad.size = Vector2(368, 22)
-	UiKit.apply_label(_dad, 14, Palette.BRICK)
+	_dad.position = Vector2(1020, 18)
+	_dad.size = Vector2(240, 24)
+	_dad.add_theme_font_override("font", UiKit.title_font())
+	UiKit.apply_label(_dad, 18, Palette.BRICK)
+	_dad.add_theme_constant_override("outline_size", 6)
+	_dad.add_theme_color_override("font_outline_color", UiKit.INK)
 	_put(_dad)
-	_hp_b = _pips_row(Vector2(1048, 64), Palette.BRICK)
-	_steam_b = _bar(Vector2(1048, 76), Palette.BRICK)
+	_hp_b = _pips_row(Vector2(1020, 46), Palette.BRICK)
+	_steam_b = _bar(Vector2(1020, 80), Palette.BRICK)
 
 	_lives = Label.new()
-	_lives.position = Vector2(300, 26)
+	_lives.position = Vector2(300, 690)
 	_lives.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_lives.size = Vector2(680, 16)
-	UiKit.apply_label(_lives, 12, Palette.TEXT)
+	_lives.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(_lives, 13, Palette.TEXT)
 	_put(_lives)
 
 	_scrap = Label.new()
@@ -80,30 +89,34 @@ func _ready() -> void:
 	_put(_act)
 
 	_score = Label.new()
-	_score.position = Vector2(360, 688)
+	_score.position = Vector2(360, 666)
 	_score.size = Vector2(560, 22)
 	_score.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	UiKit.apply_label(_score, 14, Palette.EDGE)
 	_put(_score)
 
 	_boss_wrap = Control.new()
-	_boss_wrap.position = Vector2(280, 72)
+	# Between the two plates, a chunky framed bar (it crossed the plates).
+	_boss_wrap.position = Vector2(370, 46)
 	_boss_wrap.visible = false
 	_put(_boss_wrap)
-	var bb := ColorRect.new()
-	bb.size = Vector2(720, 14)
-	bb.color = Color(0, 0, 0, 0.7)
+	var bb := Panel.new()
+	var bst := UiKit.panel(Color(0.04, 0.03, 0.05, 0.92), Palette.BRICK)
+	bb.add_theme_stylebox_override("panel", bst)
+	bb.size = Vector2(540, 22)
 	_boss_wrap.add_child(bb)
 	_boss_fill = ColorRect.new()
-	_boss_fill.position = Vector2(2, 2)
-	_boss_fill.size = Vector2(716, 10)
+	_boss_fill.position = Vector2(5, 5)
+	_boss_fill.size = Vector2(530, 12)
 	_boss_fill.color = Palette.BRICK
 	_boss_wrap.add_child(_boss_fill)
 	_boss_lab = Label.new()
-	_boss_lab.position = Vector2(0, -20)
-	_boss_lab.size = Vector2(720, 20)
+	_boss_lab.position = Vector2(0, -28)
+	_boss_lab.size = Vector2(540, 26)
 	_boss_lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	UiKit.apply_label(_boss_lab, 13, Palette.LEMON)
+	_boss_lab.add_theme_font_override("font", UiKit.title_font())
+	UiKit.apply_label(_boss_lab, 18, UiKit.GOLD)
+	_boss_lab.add_theme_color_override("font_outline_color", UiKit.INK)
 	_boss_wrap.add_child(_boss_lab)
 
 	_combo = Label.new()
@@ -152,9 +165,8 @@ func _put(n: Node) -> void:
 
 
 func _place_banners() -> void:
-	_banner_at(Vector2(0, 0), "son")
-	if App.two_bodies():
-		_banner_at(Vector2(1128, 0), "father")
+	# Cosmetic banners live on the player plates now.
+	pass
 
 
 func _banner_at(pos: Vector2, role: String) -> void:
@@ -175,30 +187,59 @@ func _banner_at(pos: Vector2, role: String) -> void:
 		_put(d)
 
 
-func _pips_row(pos: Vector2, color: Color) -> HBoxContainer:
+var _plates := {}
+
+
+func _plate(pos: Vector2, role: String) -> void:
+	var p := Panel.new()
+	var st := UiKit.panel(UiKit.NAVY, Palette.LEMON.darkened(0.25) if role == "son" else Palette.BRICK)
+	p.add_theme_stylebox_override("panel", st)
+	p.position = pos
+	p.size = Vector2(340, 100)
+	p.visible = role == "son"
+	_put(p)
+	var face := UiKit.portrait(SpriteBook.bust(role), Vector2(76, 84))
+	face.position = Vector2(8, 8)
+	face.size = Vector2(76, 84)
+	p.add_child(face)
+	_plates[role] = p
+
+
+func _pips_row(pos: Vector2, _color: Color) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.position = pos
-	row.add_theme_constant_override("separation", 3)
+	row.add_theme_constant_override("separation", 2)
 	for i in 8:
-		var pip := ColorRect.new()
-		pip.custom_minimum_size = Vector2(24, 8)
-		pip.color = color
+		var pip := PixelIcon.new()
+		pip.kind = "heart"
+		pip.custom_minimum_size = Vector2(28, 28)
 		row.add_child(pip)
 	_put(row)
 	return row
 
 
 func _bar(pos: Vector2, color: Color) -> ColorRect:
-	var bg := ColorRect.new()
-	bg.position = pos
-	bg.size = Vector2(220, 8)
-	bg.color = Color(0, 0, 0, 0.55)
+	var bg := Panel.new()
+	var st := StyleBoxFlat.new()
+	st.bg_color = Color(0.02, 0.03, 0.06)
+	st.border_color = UiKit.INK
+	st.set_border_width_all(2)
+	st.set_corner_radius_all(3)
+	bg.add_theme_stylebox_override("panel", st)
+	bg.position = pos - Vector2(2, 2)
+	bg.size = Vector2(224, 12)
 	_put(bg)
 	var fill := ColorRect.new()
 	fill.position = pos
 	fill.size = Vector2(220, 8)
-	fill.color = color
+	fill.color = Color(0.4, 0.75, 1.0)
+	fill.set_meta("bg", bg)
 	_put(fill)
+	var shine := ColorRect.new()
+	shine.position = Vector2(0, 0)
+	shine.size = Vector2(220, 2)
+	shine.color = Color(1, 1, 1, 0.35)
+	fill.add_child(shine)
 	return fill
 
 
@@ -221,7 +262,6 @@ func bind(p_son: Fighter, p_dad: Fighter, p_state: RunState = null) -> void:
 	if joining:
 		_join_grace = 18
 	if father != null and not _dad_banner:
-		_banner_at(Vector2(1128, 0), "father")
 		_dad_banner = true
 
 
@@ -333,7 +373,7 @@ func _paint_boss() -> void:
 		return
 	_boss_wrap.visible = true
 	var frac := clampf(float(best_hp) / float(best_max), 0.0, 1.0)
-	_boss_fill.size.x = 716.0 * frac
+	_boss_fill.size.x = 530.0 * frac
 	_boss_fill.color = Palette.EDGE if plates > 0 else (Palette.BRICK if frac < 0.33 else Palette.LEMON)
 	if plates >= 0:
 		_boss_lab.text = "%s  ·  ARMOR %d  ·  %d" % [best_name.to_upper(), plates, best_hp]
@@ -346,13 +386,17 @@ func _paint_fighter(lab: Label, bar: ColorRect, pips: HBoxContainer, snap: Label
 		lab.text = ""
 		bar.size.x = 0
 		snap.visible = false
-		for pip in pips.get_children():
-			(pip as ColorRect).color = Color(0.12, 0.12, 0.14, 0.6)
+		pips.visible = false
+		_show_bar(bar, false)
 		return
-	var kit := ("BATWING %d" % f.ammo) if f.role == "son" else ("WEB SHOT %d" % f.ammo)
+	pips.visible = true
+	_show_bar(bar, true)
+	var kit := ("x%d" % f.ammo)
 	var title := FamilyProfile.son_name() if f.role == "son" else FamilyProfile.father_name()
-	var role := "THE SON" if f.role == "son" else "THE FATHER"
-	lab.text = "%s\n%s   STEAM %d  %s" % [title, role, int(f.steam), kit]
+	lab.text = "%s   %s" % [title.to_upper(), kit]
+	var plate: Variant = _plates.get(f.role)
+	if plate is Control:
+		(plate as Control).visible = true
 	if lemon_slot:
 		lab.add_theme_color_override("font_color", Palette.LEMON)
 	else:
@@ -366,12 +410,20 @@ func _paint_pips(row: HBoxContainer, f: Fighter, lemon_slot: bool) -> void:
 	var filled := int(round((float(f.hp) / float(maxi(f.max_hp, 1))) * 8.0))
 	var on := Palette.LEMON if lemon_slot else Palette.BRICK
 	var i := 0
+	var low := f.hp <= int(float(f.max_hp) * 0.3)
 	for pip in row.get_children():
-		var r := pip as ColorRect
-		if i < filled:
-			r.color = on if f.hp > int(float(f.max_hp) * 0.3) else Palette.BADGE
-		else:
-			r.color = Color(0.12, 0.12, 0.14, 0.65)
+		var h := pip as PixelIcon
+		var want := i >= filled
+		if h.dim != want:
+			h.dim = want
+			h.queue_redraw()
+			if want:
+				# Losing a heart: it pops.
+				h.pivot_offset = Vector2(14, 14)
+				h.scale = Vector2(1.5, 1.5)
+				h.create_tween().tween_property(h, "scale", Vector2.ONE, 0.2)
+		# Low HP: the last hearts beat.
+		h.modulate.a = 1.0 if not low or want else 0.6 + 0.4 * absf(sin(_blink_t * 7.0))
 		i += 1
 
 
@@ -495,3 +547,10 @@ func _toggle_pause() -> void:
 		UiKit.apply_label(lead, 13, Palette.MUTED)
 		col.add_child(lead)
 	r.grab_focus()
+
+
+func _show_bar(bar: ColorRect, on: bool) -> void:
+	bar.visible = on
+	var bg: Variant = bar.get_meta("bg", null)
+	if bg is Control:
+		(bg as Control).visible = on

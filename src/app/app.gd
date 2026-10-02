@@ -23,6 +23,9 @@ var film_kind: String = ""
 ## hub tab the hideout should open on arrival (results -> awards, ...).
 var camp_next: String = ""
 var camp_open_tab: String = ""
+## The bridge film already played on the way into the hideout.
+var film_to_camp := false
+var _film_seen := ""
 
 const SCENES := {
 	"intro_flow": "res://scenes/levels/intro_flow.tscn",
@@ -142,6 +145,15 @@ func advance(next_id: String, state: RunState) -> void:
 	if not online and next_id != "ending" and current_map != "camp":
 		camp_next = next_id
 		film_from = current_map
+		# Outro film of this map first (if the story has one), then the
+		# hideout; the portal there leads on to next_id.
+		var skip := bool(FamilyProfile.data.get("skip_films", false))
+		if not skip and StoryBook.has_bridge(film_from, next_id):
+			film_kind = "bridge"
+			film_next = next_id
+			film_to_camp = true
+			enter_map("act_film")
+			return
 		get_tree().change_scene_to_file(str(SCENES["camp"]))
 		return
 	_advance_core(next_id)
@@ -155,7 +167,20 @@ func leave_camp() -> void:
 		start_run()
 		return
 	current_map = film_from
+	if _film_seen == film_from + "->" + next_id:
+		_film_seen = ""
+		film_kind = ""
+		_hop(next_id)
+		return
 	_advance_core(next_id)
+
+
+## act_film calls this when a bridge film that leads into the hideout ends.
+func film_done_to_camp() -> void:
+	film_to_camp = false
+	_film_seen = film_from + "->" + film_next
+	film_kind = ""
+	get_tree().change_scene_to_file(str(SCENES["camp"]))
 
 
 func _advance_core(next_id: String) -> void:

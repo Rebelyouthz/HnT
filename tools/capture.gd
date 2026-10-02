@@ -26,7 +26,13 @@ func _prepare() -> void:
 		if str(d.get("son_name", "")) == "":
 			d["son_name"] = "Kid"
 	var app := root.get_node_or_null("App")
-	if app != null and _tab != "" and not _tab.begins_with("title") and not _tab.begins_with("camp") and not _tab.begins_with("tower"):
+	if app != null and _tab.begins_with("film_"):
+		var pair := _tab.substr(5)
+		app.set("film_from", pair.get_slice("->", 0))
+		app.set("film_next", pair.get_slice("->", 1))
+		app.set("film_kind", "bridge")
+		app.set("film_to_camp", true)
+	if app != null and _tab != "" and not _tab.begins_with("title") and not _tab.begins_with("camp") and not _tab.begins_with("tower") and not _tab.begins_with("film") and not _tab.begins_with("ui"):
 		app.set("pending_tab", _tab)
 	# Hideout shots: both brothers home and lumber money.
 	if _tab.begins_with("camp_") and fp != null:
@@ -71,8 +77,16 @@ func _initialize() -> void:
 	_left = args.size() > 3 and args[3] == "left"
 	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
 	DisplayServer.window_set_size(Vector2i(1920, 1080))
+	# ui:<what> on Dock Street: results | cards | toasts
+	if target.begins_with("ui:"):
+		_tab = "ui_" + target.substr(3)
+		target = "res://scenes/levels/dock_street.tscn"
+	# film:<from>-><to> plays a bridge film.
+	elif target.begins_with("film:"):
+		_tab = "film_" + target.substr(5)
+		target = "res://scenes/levels/act_film.tscn"
 	# tower:<map> plays the giant tower film on autopilot.
-	if target.begins_with("tower:"):
+	elif target.begins_with("tower:"):
 		_tab = "tower_" + target.get_slice(":", 1)
 		target = "res://scenes/levels/%s.tscn" % target.get_slice(":", 1)
 	# camp:hub / camp:dojo open a hideout menu over the camp.
@@ -98,6 +112,18 @@ func _process(_delta: float) -> bool:
 		_prepare()
 	if _tab == "stats" and _n == 40 and current_scene != null and current_scene.has_method("_open_stats"):
 		current_scene.call("_open_stats")
+	if _tab.begins_with("ui_") and _n == 80 and current_scene != null:
+		match _tab.substr(3):
+			"results":
+				current_scene.call("_banner", "DOCK STREET FILED", "Gant is down. Benny is free.", true, false)
+			"cards":
+				var cp: Node = load("res://src/combat/card_pick.gd").new()
+				current_scene.add_child(cp)
+			"toasts":
+				var j := root.get_node("Juice")
+				j.call("toast", "reward", "SECRET FOUND", "The Harbour Clock  ·  128 metres")
+				j.call("toast", "quest", "CHECKPOINT", "Gant's office is ahead")
+				j.call("toast", "challenge", "LOCKED", "Buy Thick Skin at the therapy couch")
 	if _tab.begins_with("tower_") and _n == 60:
 		load("res://src/ui/timing_ring.gd").set("autoplay", true)
 		root.get_tree().paused = true
