@@ -27,12 +27,17 @@ func _configure() -> void:
 
 func build_world() -> void:
 	NightStreet.parallax(self, map_w, "cyber")
-	NightStreet.wet_floor(self, map_w)
-	NightStreet.tenement(self, Rect2(40, 20, 280, 300), Color(0.16, 0.06, 0.2))
-	NightStreet.tenement(self, Rect2(620, 10, 320, 250), Color(0.1, 0.08, 0.22))
-	NightStreet.tenement(self, Rect2(1400, 0, 360, 240), Color(0.14, 0.05, 0.18))
-	NightStreet.tenement(self, Rect2(3360, 20, 300, 260), Color(0.08, 0.12, 0.22))
-	NightStreet.tenement(self, Rect2(3680, 10, 280, 250), Color(0.18, 0.06, 0.16))
+	# Painted sections (backdrops/cyber_strip) replace the blockout
+	# buildings; the painted wet street is the floor.
+	if NightStreet.has_backdrop("cyber") and WetStreet.available():
+		WetStreet.lay(self, map_w)
+	else:
+		NightStreet.wet_floor(self, map_w)
+		NightStreet.tenement(self, Rect2(40, 20, 280, 300), Color(0.16, 0.06, 0.2))
+		NightStreet.tenement(self, Rect2(620, 10, 320, 250), Color(0.1, 0.08, 0.22))
+		NightStreet.tenement(self, Rect2(1400, 0, 360, 240), Color(0.14, 0.05, 0.18))
+		NightStreet.tenement(self, Rect2(3360, 20, 300, 260), Color(0.08, 0.12, 0.22))
+		NightStreet.tenement(self, Rect2(3680, 10, 280, 250), Color(0.18, 0.06, 0.16))
 	Blockout.solid(self, Rect2(480, 248, 520, 18), true)
 	Blockout.poly(self, Rect2(480, 248, 520, 18), Color(0.28, 0.12, 0.32), 2)
 	Blockout.solid(self, Rect2(1680, 208, 360, 18), true)
