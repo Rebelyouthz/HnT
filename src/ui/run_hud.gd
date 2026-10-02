@@ -43,31 +43,38 @@ func _ready() -> void:
 	UiKit.apply_label(_fps, 12, Palette.LEMON)
 	_put(_fps)
 
-	# Player plates: chunky pixel frame, portrait, name, heart row, steam.
+	# Player plates: one chunky frame per fighter with the avatar baked into
+	# a socket on the left, the name, the hearts, a thin steam line; the lead
+	# plate also carries the XP bar and the purse (gold, gems, scrap). Nothing
+	# of this is repeated anywhere else on screen.
 	_plate(Vector2(10, 8), "son")
 	_son = Label.new()
-	_son.position = Vector2(100, 18)
+	_son.position = Vector2(118, 12)
+	_son.size = Vector2(250, 24)
 	_son.add_theme_font_override("font", UiKit.title_font())
 	UiKit.apply_label(_son, 18, Palette.LEMON)
 	_son.add_theme_constant_override("outline_size", 6)
 	_son.add_theme_color_override("font_outline_color", UiKit.INK)
 	_put(_son)
-	_hp_a = _pips_row(Vector2(100, 46), Palette.LEMON)
-	_steam_a = _bar(Vector2(100, 80), Palette.LEMON)
+	_hp_a = _pips_row(Vector2(116, 38), Palette.LEMON)
+	_steam_a = _bar(Vector2(118, 68), Palette.LEMON)
+	_build_xp(Vector2(118, 82))
+	_build_purse(Vector2(116, 98))
 
-	_plate(Vector2(930, 8), "father")
+	_plate(Vector2(890, 8), "father")
 	_dad = Label.new()
-	_dad.position = Vector2(1020, 18)
-	_dad.size = Vector2(240, 24)
+	_dad.position = Vector2(998, 12)
+	_dad.size = Vector2(250, 24)
 	_dad.add_theme_font_override("font", UiKit.title_font())
 	UiKit.apply_label(_dad, 18, Palette.BRICK)
 	_dad.add_theme_constant_override("outline_size", 6)
 	_dad.add_theme_color_override("font_outline_color", UiKit.INK)
 	_put(_dad)
-	_hp_b = _pips_row(Vector2(1020, 46), Palette.BRICK)
-	_steam_b = _bar(Vector2(1020, 80), Palette.BRICK)
+	_hp_b = _pips_row(Vector2(996, 38), Palette.BRICK)
+	_steam_b = _bar(Vector2(998, 68), Palette.BRICK)
 
 	_lives = Label.new()
+	_lives.visible = false
 	_lives.position = Vector2(300, 690)
 	_lives.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_lives.size = Vector2(680, 16)
@@ -89,6 +96,7 @@ func _ready() -> void:
 	_put(_act)
 
 	_score = Label.new()
+	_score.visible = false
 	_score.position = Vector2(360, 666)
 	_score.size = Vector2(560, 22)
 	_score.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -97,22 +105,22 @@ func _ready() -> void:
 
 	_boss_wrap = Control.new()
 	# Between the two plates, a chunky framed bar (it crossed the plates).
-	_boss_wrap.position = Vector2(370, 46)
+	_boss_wrap.position = Vector2(400, 34)
 	_boss_wrap.visible = false
 	_put(_boss_wrap)
 	var bb := Panel.new()
 	var bst := UiKit.panel(Color(0.04, 0.03, 0.05, 0.92), Palette.BRICK)
 	bb.add_theme_stylebox_override("panel", bst)
-	bb.size = Vector2(540, 22)
+	bb.size = Vector2(480, 22)
 	_boss_wrap.add_child(bb)
 	_boss_fill = ColorRect.new()
 	_boss_fill.position = Vector2(5, 5)
-	_boss_fill.size = Vector2(530, 12)
+	_boss_fill.size = Vector2(470, 12)
 	_boss_fill.color = Palette.BRICK
 	_boss_wrap.add_child(_boss_fill)
 	_boss_lab = Label.new()
 	_boss_lab.position = Vector2(0, -28)
-	_boss_lab.size = Vector2(540, 26)
+	_boss_lab.size = Vector2(480, 26)
 	_boss_lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_boss_lab.add_theme_font_override("font", UiKit.title_font())
 	UiKit.apply_label(_boss_lab, 18, UiKit.GOLD)
@@ -194,26 +202,111 @@ var _last_hp := {}
 
 func _plate(pos: Vector2, role: String) -> void:
 	var p := Panel.new()
-	var st := UiKit.panel(UiKit.NAVY, Palette.LEMON.darkened(0.25) if role == "son" else Palette.BRICK)
+	var accent := Palette.LEMON.darkened(0.2) if role == "son" else Palette.BRICK
+	var st := preload("res://src/ui/clinic_featured.gd").card_style(false)
+	st.border_color = accent
+	st.set_border_width_all(4)
+	st.shadow_offset = Vector2(0, 5)
 	p.add_theme_stylebox_override("panel", st)
 	p.position = pos
-	p.size = Vector2(340, 100)
+	p.size = Vector2(380, 132 if role == "son" else 92)
 	p.visible = role == "son"
 	_put(p)
-	var face := UiKit.portrait(SpriteBook.bust(role), Vector2(76, 84))
-	face.position = Vector2(8, 8)
-	face.size = Vector2(76, 84)
-	face.pivot_offset = Vector2(38, 42)
+	# Avatar socket: a sunk frame the portrait sits in.
+	var sock := Panel.new()
+	var ss := StyleBoxFlat.new()
+	ss.bg_color = Color(0.02, 0.03, 0.06)
+	ss.border_color = accent.darkened(0.3)
+	ss.set_border_width_all(3)
+	ss.border_width_top = 5
+	ss.border_width_left = 5
+	ss.set_corner_radius_all(4)
+	sock.add_theme_stylebox_override("panel", ss)
+	sock.position = Vector2(8, 8)
+	sock.size = Vector2(92, 76 if role == "father" else 116)
+	p.add_child(sock)
+	var face := UiKit.portrait(SpriteBook.bust(role), sock.size - Vector2(10, 10))
+	face.position = Vector2(13, 13)
+	face.size = sock.size - Vector2(10, 10)
+	face.pivot_offset = face.size * 0.5
 	p.add_child(face)
 	# Doom-style: the face in the corner bleeds more as the hearts go.
 	var wm := ShaderMaterial.new()
 	wm.shader = preload("res://src/shaders/wound.gdshader")
-	wm.set_shader_parameter("head", Vector3(38, 34, 24))
+	wm.set_shader_parameter("head", Vector3(face.size.x * 0.5, face.size.y * 0.38, face.size.x * 0.3))
 	wm.set_shader_parameter("seed", 3.0 if role == "son" else 9.0)
 	wm.set_shader_parameter("holes", PackedVector2Array([Vector2.ZERO, Vector2.ZERO, Vector2.ZERO, Vector2.ZERO, Vector2.ZERO, Vector2.ZERO]))
 	face.material = wm
 	_faces[role] = face
 	_plates[role] = p
+
+
+var _xp_fill: ColorRect
+var _xp_lab: Label
+var _gold_l: Label
+var _gem_l: Label
+var _scrap_l: Label
+
+
+func _build_xp(pos: Vector2) -> void:
+	var bg := Panel.new()
+	var st := StyleBoxFlat.new()
+	st.bg_color = Color(0.02, 0.03, 0.06)
+	st.border_color = UiKit.INK
+	st.set_border_width_all(2)
+	bg.add_theme_stylebox_override("panel", st)
+	bg.position = pos - Vector2(2, 2)
+	bg.size = Vector2(204, 12)
+	_plates["son"].add_child(bg)
+	bg.position -= (_plates["son"] as Control).position
+	_xp_fill = ColorRect.new()
+	_xp_fill.position = Vector2(2, 2)
+	_xp_fill.size = Vector2(0, 8)
+	_xp_fill.color = UiKit.GOLD
+	bg.add_child(_xp_fill)
+	_xp_lab = Label.new()
+	_xp_lab.position = Vector2(210, -6)
+	_xp_lab.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(_xp_lab, 12, UiKit.GOLD)
+	bg.add_child(_xp_lab)
+
+
+func _build_purse(pos: Vector2) -> void:
+	var row := HBoxContainer.new()
+	row.position = pos - (_plates["son"] as Control).position
+	row.add_theme_constant_override("separation", 6)
+	_plates["son"].add_child(row)
+	for pair: Array in [["gold", "_gold_l"], ["gem", "_gem_l"], ["bolt", "_scrap_l"]]:
+		var ic := PixelIcon.new()
+		ic.kind = str(pair[0])
+		ic.custom_minimum_size = Vector2(22, 22)
+		row.add_child(ic)
+		var l := Label.new()
+		l.custom_minimum_size = Vector2(54, 0)
+		l.add_theme_font_override("font", UiKit.title_font())
+		UiKit.apply_label(l, 15, Palette.TEXT)
+		row.add_child(l)
+		set(str(pair[1]), l)
+
+
+const XP_STEPS := [0, 70, 160, 260, 380, 520]
+
+
+func _paint_purse() -> void:
+	if _gold_l == null:
+		return
+	_gold_l.text = str(int(FamilyProfile.data.get("gold", 0)))
+	_gem_l.text = str(int(FamilyProfile.data.get("gems", 0)))
+	_scrap_l.text = str(state.scrap if state else 0)
+	var xp := state.xp if state else 0
+	var lv := 0
+	while lv < XP_STEPS.size() - 1 and xp >= int(XP_STEPS[lv + 1]):
+		lv += 1
+	var lo := float(XP_STEPS[lv])
+	var hi := float(XP_STEPS[mini(lv + 1, XP_STEPS.size() - 1)])
+	var frac := 1.0 if hi <= lo else clampf((float(xp) - lo) / (hi - lo), 0.0, 1.0)
+	_xp_fill.size.x = 200.0 * frac
+	_xp_lab.text = "XP  LV %d" % (lv + 1)
 
 
 func _pips_row(pos: Vector2, _color: Color) -> HBoxContainer:
@@ -238,17 +331,17 @@ func _bar(pos: Vector2, color: Color) -> ColorRect:
 	st.set_corner_radius_all(3)
 	bg.add_theme_stylebox_override("panel", st)
 	bg.position = pos - Vector2(2, 2)
-	bg.size = Vector2(224, 12)
+	bg.size = Vector2(244, 8)
 	_put(bg)
 	var fill := ColorRect.new()
 	fill.position = pos
-	fill.size = Vector2(220, 8)
+	fill.size = Vector2(240, 4)
 	fill.color = Color(0.4, 0.75, 1.0)
 	fill.set_meta("bg", bg)
 	_put(fill)
 	var shine := ColorRect.new()
 	shine.position = Vector2(0, 0)
-	shine.size = Vector2(220, 2)
+	shine.size = Vector2(240, 1)
 	shine.color = Color(1, 1, 1, 0.35)
 	fill.add_child(shine)
 	return fill
@@ -311,6 +404,7 @@ func _process(delta: float) -> void:
 		scrap = "  ·  SCRAP %d  XP %d%s" % [state.scrap, state.xp, "  LUNCH" if state.lunch > 0 else ""]
 		act = "  ·  " + str(App.current_map).replace("_", " ").to_upper()
 	_lives.text = "LIVES  " + stamps + scrap + act
+	_paint_purse()
 	if Juice.combo < 2:
 		_combo.text = ""
 		_rank.text = ""
@@ -384,7 +478,7 @@ func _paint_boss() -> void:
 		return
 	_boss_wrap.visible = true
 	var frac := clampf(float(best_hp) / float(best_max), 0.0, 1.0)
-	_boss_fill.size.x = 530.0 * frac
+	_boss_fill.size.x = 470.0 * frac
 	_boss_fill.color = Palette.EDGE if plates > 0 else (Palette.BRICK if frac < 0.33 else Palette.LEMON)
 	if plates >= 0:
 		_boss_lab.text = "%s  ·  ARMOR %d  ·  %d" % [best_name.to_upper(), plates, best_hp]
@@ -402,9 +496,11 @@ func _paint_fighter(lab: Label, bar: ColorRect, pips: HBoxContainer, snap: Label
 		return
 	pips.visible = true
 	_show_bar(bar, true)
-	var kit := ("x%d" % f.ammo)
 	var title := FamilyProfile.son_name() if f.role == "son" else FamilyProfile.father_name()
-	lab.text = "%s   %s" % [title.to_upper(), kit]
+	var lives := ""
+	if state and lemon_slot:
+		lives = "   LIVES %d" % state.lives
+	lab.text = "%s%s" % [title.to_upper(), lives]
 	var plate: Variant = _plates.get(f.role)
 	if plate is Control:
 		(plate as Control).visible = true
@@ -412,7 +508,7 @@ func _paint_fighter(lab: Label, bar: ColorRect, pips: HBoxContainer, snap: Label
 		lab.add_theme_color_override("font_color", Palette.LEMON)
 	else:
 		lab.add_theme_color_override("font_color", Palette.BRICK)
-	bar.size.x = 220.0 * (f.steam / Fighter.STEAM_MAX)
+	bar.size.x = 240.0 * (f.steam / Fighter.STEAM_MAX)
 	_paint_pips(pips, f, lemon_slot)
 	_paint_face(f)
 	_place_snap(snap, f)

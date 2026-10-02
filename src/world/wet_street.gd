@@ -9,7 +9,9 @@ extends Node2D
 
 const TEX := "res://assets/backdrops/street.png"
 const MASK := "res://assets/backdrops/street_wet.png"
-const TEXEL := 4.0 / 3.0
+## The paving is painted top-down: squashed 2:1 vertically it lies flat.
+const TEXEL := 0.14
+const TEXEL_Y := 0.075
 const TOP := 426.0
 
 var map_w := 3200.0
@@ -33,15 +35,15 @@ static func lay(host: Node, width: float) -> WetStreet:
 
 func _ready() -> void:
 	var tex := load(TEX) as Texture2D
-	var region := Rect2(0, 0, ceilf(map_w / TEXEL) + 4.0, float(tex.get_height()))
+	var region := Rect2(0, 0, ceilf(map_w / TEXEL) + 4.0, ceilf(300.0 / TEXEL_Y))
 	var base := Sprite2D.new()
 	base.texture = tex
 	base.centered = false
 	base.region_enabled = true
 	base.region_rect = region
 	base.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
-	base.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	base.scale = Vector2(TEXEL, TEXEL)
+	base.scale = Vector2(TEXEL, TEXEL_Y)
+	base.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	base.position = Vector2(0, TOP)
 	base.z_index = 0
 	add_child(base)
@@ -137,7 +139,9 @@ func _process(delta: float) -> void:
 	var kerb := ct * Vector2(0, TOP)
 	var mat := _fx.material as ShaderMaterial
 	mat.set_shader_parameter("mirror_y", kerb.y / vis.y)
-	var sc := ct.get_scale().y * TEXEL
+	# Reflections snap to a fine block (about a world unit) so they read
+	# as liquid without breaking the painted look.
+	var sc := ct.get_scale().y * 0.75
 	mat.set_shader_parameter("uv_block", Vector2(sc / vis.x, sc / vis.y))
 	for i in _streaks.size():
 		var sp := _streaks[i] as Sprite2D

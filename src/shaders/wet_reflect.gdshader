@@ -10,8 +10,8 @@ uniform sampler2D screen_tex : hint_screen_texture, filter_linear_mipmap;
 uniform sampler2D wet_mask : filter_nearest, repeat_enable;
 uniform float mirror_y = 0.5;      // kerb line, screen uv
 uniform vec2 uv_block = vec2(0.003, 0.0055); // one art texel in screen uv
-uniform float sheen = 0.3;         // reflectivity of damp stone
-uniform float pool = 0.85;         // reflectivity of a puddle
+uniform float sheen = 0.22;        // reflectivity of damp stone
+uniform float pool = 0.6;         // reflectivity of a puddle
 uniform float rain = 1.0;
 uniform vec2 tex_size = vec2(331.0, 200.0);
 
@@ -49,7 +49,7 @@ void fragment() {
 	// Bright things (lamps, neon) carry; dark walls barely show.
 	float lum = dot(refl, vec3(0.3, 0.55, 0.15));
 	refl *= 0.6 + lum * 1.4;
-	float k = mix(sheen, pool, wet) * mix(1.0, 0.45, depth);
+	float k = mix(sheen, pool, wet) * mix(1.0, 0.12, depth);
 	vec3 col = refl + vec3(0.55, 0.7, 0.9) * ring * wet * 0.6;
 	COLOR = vec4(col, clamp(k * (0.35 + lum * 1.2) + ring * wet * 0.5, 0.0, 0.92));
 }

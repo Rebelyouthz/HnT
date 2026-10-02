@@ -117,6 +117,24 @@ static func _backdrop(pb: ParallaxBackground, theme: String) -> void:
 		if meta is Dictionary:
 			ground = float((meta as Dictionary).get("ground", ground))
 			texel = float((meta as Dictionary).get("texel", texel))
+	# Far layer (skyline, moon, cranes) slides slowly behind the facade.
+	var far_path := "res://assets/backdrops/%s_far.png" % theme
+	if ResourceLoader.exists(far_path):
+		var ft := load(far_path) as Texture2D
+		var far := ParallaxLayer.new()
+		far.name = "BackdropFar"
+		far.motion_scale = Vector2(0.25, 0.6)
+		var ftexel := 0.45
+		far.motion_mirroring = Vector2(float(ft.get_width()) * ftexel, 0.0)
+		pb.add_child(far)
+		var fs := Sprite2D.new()
+		fs.texture = ft
+		fs.centered = false
+		fs.scale = Vector2(ftexel, ftexel)
+		fs.position = Vector2(0.0, 330.0 - float(ft.get_height()) * ftexel)
+		fs.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+		fs.z_index = -5
+		far.add_child(fs)
 	var layer := ParallaxLayer.new()
 	layer.name = "Backdrop"
 	layer.motion_scale = Vector2(0.9, 1.0)
@@ -127,7 +145,9 @@ static func _backdrop(pb: ParallaxBackground, theme: String) -> void:
 	s.centered = false
 	s.scale = Vector2(texel, texel)
 	s.position = Vector2(0.0, KERB_Y - ground * texel)
-	s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	# Fine paintings (texel under a world unit) filter smoothly; chunky
+	# pixel boards stay nearest.
+	s.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR if texel < 1.0 else CanvasItem.TEXTURE_FILTER_NEAREST
 	s.z_index = -3
 	layer.add_child(s)
 
@@ -775,7 +795,7 @@ static func pixel_dock(host: Node, map_w: float, harbour: bool = true) -> void:
 			r += 1
 		x += tw
 		n += 1
-	if water and harbour:
+	if water and harbour and not painted:
 		x = 0.0
 		var ww := float(water.get_width()) * SpriteBook.DRAW_SCALE
 		while x < 300.0:
