@@ -104,6 +104,10 @@ var stance := "guard"
 var stance_t := 0.0
 var _strike_id := 0
 var _strike_clip := ""
+## Who and what last hurt this fighter: the death screen names it.
+var last_hit_by := ""
+var last_hit_kind := ""
+var _splat := 0.0
 var _strike_phase := 0
 var _strike_hit := false
 var _strike_grade := ""
@@ -1450,6 +1454,7 @@ func take_hit(kind: String, from: Node) -> void:
 	if from is Node2D:
 		var dir := signf(global_position.x - (from as Node2D).global_position.x)
 		global_position.x += dir * (6.0 if kind == "light" else 16.0)
+		_bleed_from(kind, from, dir)
 	if hp <= int(round(float(max_hp) * 0.3)) and bandage > 0:
 		bandage -= 1
 		hp = mini(max_hp, hp + int(round(float(max_hp) * 0.3)))
@@ -1927,3 +1932,28 @@ func _apply_lamp() -> void:
 	var rig := get_tree().get_first_node_in_group("light_rig")
 	if rig and rig.has_method("tint_at"):
 		squash_root.modulate = rig.tint_at(global_position)
+
+
+## Getting hit: blood from the face or the gut, the sprite gets bloodier as
+## the hearts go (like the portrait in the corner), and the hit is
+## remembered for the death screen.
+func _bleed_from(kind: String, from: Node, dir: float) -> void:
+	if from is Punk:
+		last_hit_by = (from as Punk).title
+	elif from is KitShot:
+		last_hit_by = str(from.get("owner_title")) if from.get("owner_title") != null else "a stray round"
+	elif from is Node:
+		last_hit_by = str(from.get("title")) if from.get("title") != null else from.name
+	last_hit_kind = "bullet" if from is KitShot else kind
+	var hurt := 1.0 - float(hp) / float(maxi(max_hp, 1))
+	var zone := "bullet" if from is KitShot else ("head" if kind == "light" or kind == "heavy" else "gut")
+	var power := 0.3 if kind == "light" else 0.75
+	var blood := get_tree().get_first_node_in_group("blood_sim")
+	if blood and blood.has_method("hit"):
+		blood.hit(self, zone, dir, power, hurt)
+	if _anim != null:
+		_splat = minf(1.0, _splat + power * 0.15)
+		BloodSim.wound(_anim, hurt * 1.1, _splat, -dir * float(facing))
+		if zone == "bullet":
+			var head := BloodSim.head_of(_anim)
+			BloodSim.add_hole(_anim, Vector2(head.x + randf_range(-6.0, 6.0), head.y + head.z * randf_range(2.6, 5.0)))

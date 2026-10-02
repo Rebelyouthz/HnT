@@ -40,6 +40,8 @@ var flung_dir := -1.0
 var flung_t := 0.0
 var flung_ground := false
 var _grenade_cd := 0.0
+var _last_zone := "head"
+var _splat := 0.0
 signal died
 signal finish_ready
 
@@ -730,12 +732,11 @@ func take_hit(kind: String, from: Node) -> void:
 			global_position.y -= 80.0
 	if from is Node2D:
 		var dir := signf(global_position.x - (from as Node2D).global_position.x)
+		if dir == 0.0:
+			dir = -float(facing)
 		global_position.x += dir * (8.0 if kind == "light" else 20.0)
+		_gore(kind, from, dir)
 		var blood := get_tree().get_first_node_in_group("blood_sim")
-		if blood and kind != "light" and blood.has_method("spray"):
-			blood.spray(global_position, kind, dir)
-			if kind == "bam" or kind == "gut-punch" or kind == "stomp3":
-				blood.pump(global_position, dir)
 		if not crush and hp > 0 and hp <= int(round(float(max_hp) * 0.12)):
 			crush = true
 			finish_ready.emit()
@@ -753,18 +754,21 @@ func take_hit(kind: String, from: Node) -> void:
 
 
 func _die(kind: String, from: Node) -> void:
+	var dir := -float(facing)
+	if from is Node2D and (from as Node2D).global_position.x != global_position.x:
+		dir = signf(global_position.x - (from as Node2D).global_position.x)
 	if kind != "light" and kind != "snap":
 		Juice.kill_burst(global_position, kind)
-		Juice.play("res://assets/audio/kill.wav")
 		if kind == "finish" or kind == "stomp3":
 			Juice.kill_cam(global_position)
-		var blood := get_tree().get_first_node_in_group("blood_sim")
-		if blood and blood.has_method("pump"):
-			var dir := -1.0
-			if from is Node2D:
-				dir = signf(global_position.x - (from as Node2D).global_position.x)
-			blood.pump(global_position, dir)
-		StreetRagdoll.burst(get_parent(), global_position, -1.0 if from is Node2D else 1.0, _base_mod)
+	Juice.play("res://assets/audio/kill.wav")
+	var blood := get_tree().get_first_node_in_group("blood_sim")
+	if blood and blood.has_method("pump") and _last_zone != "low":
+		blood.pump(global_position, dir)
+	if _anim != null and not FamilyProfile.less_gore():
+		HitReact.corpse(get_parent(), _anim, global_position, _last_zone, dir, facing)
+	elif kind != "light" and kind != "snap":
+		StreetRagdoll.burst(get_parent(), global_position, dir, _base_mod)
 	var rs_heat := get_tree().get_first_node_in_group("run_state")
 	InvoiceHeat.bump(rs_heat, 2 if cop else 1)
 	if cop:
@@ -836,3 +840,43 @@ func _drops(from: Node) -> void:
 		host.add_child(drop)
 	if from is Fighter and rs and rs.has_method("has_card") and rs.has_card("head_trampoline"):
 		pass
+
+
+## Where the blow landed decides the blood, the body reaction and later the
+## death: face cuts and spray for head shots, a cough and a fold for the gut,
+## legs swept for slides, a hole and an exit spray for bullets.
+func _gore(kind: String, from: Node, dir: float) -> void:
+	var clip := ""
+	if from is Fighter:
+		clip = str((from as Fighter).get("_strike_clip"))
+	var hit_kind := kind
+	if from is KitShot:
+		hit_kind = "bullet"
+	var zone := HitReact.zone_of(hit_kind, clip)
+	var power := HitReact.power_of(kind)
+	if clip == "cross":
+		power = maxf(power, 0.4)
+	elif clip == "roundhouse" or clip == "side_kick":
+		power = maxf(power, 0.8)
+	_last_zone = zone
+	var hurt := 1.0 - float(hp) / float(maxi(max_hp, 1))
+	var blood := get_tree().get_first_node_in_group("blood_sim")
+	if blood and blood.has_method("hit"):
+		blood.hit(self, zone, dir, power, hurt)
+		if kind == "bam" or kind == "gut-punch" or kind == "stomp3":
+			blood.pump(global_position, dir)
+		# Big blows splash the camera glass on the side the blood flies.
+		if power >= 0.85 and randf() < 0.35:
+			blood.screen(dir, power)
+	if _anim != null:
+		_splat = minf(1.0, _splat + power * 0.22)
+		var face := hurt * 1.15 if zone != "low" else hurt * 0.6
+		BloodSim.wound(_anim, face, _splat, -dir * float(facing))
+		if zone == "bullet":
+			var head := BloodSim.head_of(_anim)
+			BloodSim.add_hole(_anim, Vector2(head.x + randf_range(-7.0, 7.0), head.y + head.z * randf_range(2.4, 5.2)))
+	if hp > 0 and not flung:
+		var busy := HitReact.react(visual, facing, zone, dir, power)
+		if busy > 0.3:
+			telegraph = 0.0
+		recover = maxf(recover, busy)

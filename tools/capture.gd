@@ -124,6 +124,26 @@ func _process(_delta: float) -> bool:
 				j.call("toast", "reward", "SECRET FOUND", "The Harbour Clock  ·  128 metres")
 				j.call("toast", "quest", "CHECKPOINT", "Gant's office is ahead")
 				j.call("toast", "challenge", "LOCKED", "Buy Thick Skin at the therapy couch")
+	# ui:gore - the nearest thug eats a jab, cross, gut, uppercut, a bullet
+	# and a slide, then a heavy finish: blood, wounds, reactions, a body.
+	if _tab == "ui_gore" and _n >= 70 and _n % 14 == 0 and _n <= 70 + 14 * 9 and current_scene != null:
+		var p1: Node2D = null
+		for n in root.get_tree().get_nodes_in_group("players"):
+			p1 = n
+			break
+		var best: Node2D = null
+		for n in root.get_tree().get_nodes_in_group("enemies"):
+			if best == null or (n as Node2D).global_position.distance_to(p1.global_position) < best.global_position.distance_to(p1.global_position):
+				best = n
+		if best != null and p1 != null:
+			best.global_position = p1.global_position + Vector2(40, 0)
+			var step := (_n - 70) / 14
+			var seq := [["light", "jab"], ["light", "cross"], ["heavy", "gut"], ["light", "jab"], ["uppercut", "uppercut"], ["heavy", "cross"], ["slide", "slide"], ["light", "jab"], ["heavy", "roundhouse"], ["heavy", "heavy"]]
+			var row: Array = seq[mini(step, seq.size() - 1)]
+			p1.set("_strike_clip", row[1])
+			if step >= 8:
+				best.set("hp", 4)
+			best.call("take_hit", row[0], p1)
 	if _tab.begins_with("tower_") and _n == 60:
 		load("res://src/ui/timing_ring.gd").set("autoplay", true)
 		root.get_tree().paused = true

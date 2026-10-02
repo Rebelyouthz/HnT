@@ -644,7 +644,8 @@ func impact(at: Vector2, weight: float, dir: int) -> void:
 	var star := Polygon2D.new()
 	var pts := PackedVector2Array()
 	var spikes := 8
-	var r_out := 10.0 + 12.0 * w
+	# No debris: the blood sim throws what a blow really throws.
+	var r_out := 6.0 + 8.0 * w
 	for i in spikes * 2:
 		var ang := TAU * float(i) / float(spikes * 2) + 0.2
 		var r := r_out if i % 2 == 0 else r_out * 0.38
@@ -673,25 +674,8 @@ func impact(at: Vector2, weight: float, dir: int) -> void:
 	var tr := ring.create_tween().set_parallel(true)
 	tr.tween_property(ring, "scale", Vector2.ONE * (3.0 + 4.0 * w), life * 1.4).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
 	tr.tween_property(ring, "modulate:a", 0.0, life * 1.4)
-	var p := CPUParticles2D.new()
-	p.global_position = at
-	p.one_shot = true
-	p.explosiveness = 1.0
-	p.amount = 8 + int(14.0 * w)
-	p.lifetime = 0.18 + 0.16 * w
-	p.direction = Vector2(float(dir), -0.25)
-	p.spread = 38.0
-	p.gravity = Vector2(0, 520)
-	p.initial_velocity_min = 120.0 + 80.0 * w
-	p.initial_velocity_max = 260.0 + 160.0 * w
-	p.scale_amount_min = 1.5
-	p.scale_amount_max = 3.0 + 2.0 * w
-	p.color = Color(1.0, 0.86, 0.5)
-	p.z_index = 41
-	p.emitting = true
-	host.add_child(p)
 	get_tree().create_timer(0.7, true, false, true).timeout.connect(func() -> void:
-		for n: Node in [star, ring, p]:
+		for n: Node in [star, ring]:
 			if is_instance_valid(n):
 				n.queue_free()
 	)
