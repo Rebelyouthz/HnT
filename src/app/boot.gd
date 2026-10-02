@@ -6,6 +6,17 @@ func _enter_tree() -> void:
 	_bind_keyboard()
 
 
+func _ready() -> void:
+	# Video options and the pixel cursor once the profile is loaded.
+	call_deferred("_apply_settings")
+
+
+func _apply_settings() -> void:
+	if DisplayServer.get_name() != "headless":
+		Gfx.apply(get_tree())
+	PixelCursor.install(get_tree())
+
+
 ## F11 / Alt+Enter: fullscreen <-> window. The game boots fullscreen.
 func _unhandled_key_input(event: InputEvent) -> void:
 	var k := event as InputEventKey

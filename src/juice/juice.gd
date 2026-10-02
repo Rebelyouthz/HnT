@@ -74,7 +74,8 @@ func add_trauma(amount: float) -> void:
 
 
 func shake_offset() -> Vector2:
-	var shake := trauma * trauma
+	# Options: SCREEN SHAKE scales every shake (0 turns it off).
+	var shake := trauma * trauma * float(Gfx.get_v("shake")) * 1.25
 	if shake <= 0.002:
 		return Vector2.ZERO
 	return Vector2(

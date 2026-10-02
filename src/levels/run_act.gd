@@ -239,6 +239,10 @@ func _place_rescue() -> void:
 
 func _ready() -> void:
 	_configure()
+	if App.resume_map == map_id and App.resume_pos != Vector2.ZERO:
+		spawn_at = App.resume_pos
+	App.resume_map = ""
+	_save_resume(spawn_at, false)
 	add_to_group("dock_world")
 	add_to_group("run_act")
 	_state = RunState.new()
@@ -315,7 +319,10 @@ func _process(_delta: float) -> void:
 	_tick_talk(lead_x)
 	_tick_boss_intro(lead_x)
 	if check_x > 0.0 and lead_x > check_x:
-		_state.mark_checkpoint(check_pos if check_pos != Vector2.ZERO else Vector2(check_x, spawn_at.y))
+		var cp := check_pos if check_pos != Vector2.ZERO else Vector2(check_x, spawn_at.y)
+		if _state.checkpoint != cp:
+			_save_resume(cp, true)
+		_state.mark_checkpoint(cp)
 	if win_mode == "boss":
 		return
 	if _boss_down and next_id != "":
@@ -429,7 +436,24 @@ func _on_wanted() -> void:
 		Juice.toast("challenge", "WANTED 5", "Spotlight. Hide under a ledge or eat it.")
 
 
+## Save to continue later: the map and where to stand. CONTINUE on the title
+## screen drops you back here.
+func _save_resume(at: Vector2, announce: bool) -> void:
+	if App.remote_coop or App.versus:
+		return
+	FamilyProfile.data["resume"] = {"map": map_id, "x": at.x, "y": at.y}
+	FamilyProfile.save()
+	if announce:
+		Juice.toast("quest", "GAME SAVED", "Checkpoint. CONTINUE starts here.")
+
+
+func _clear_resume() -> void:
+	FamilyProfile.data.erase("resume")
+	FamilyProfile.save()
+
+
 func _on_fail() -> void:
+	_clear_resume()
 	FamilyProfile.mark_run_finished(false)
 	var g := 0
 	if _state:
@@ -441,6 +465,10 @@ func _on_fail() -> void:
 
 
 func _on_gate() -> void:
+	# Filed: CONTINUE picks up at the start of the next street.
+	if next_id != "":
+		FamilyProfile.data["resume"] = {"map": next_id, "x": 0.0, "y": 0.0}
+		FamilyProfile.save()
 	if _missions:
 		_missions.complete_main()
 	match map_id:
@@ -458,6 +486,7 @@ func _on_gate() -> void:
 
 
 func _on_clear() -> void:
+	_clear_resume()
 	FamilyProfile.mark_run_finished(true)
 	FamilyProfile.mark_map_filed(map_id)
 	if App.is_solo_density():

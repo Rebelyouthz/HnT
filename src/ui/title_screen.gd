@@ -227,6 +227,13 @@ func _start_game() -> void:
 
 
 func _continue() -> void:
+	var r: Variant = FamilyProfile.data.get("resume", {})
+	if r is Dictionary and str((r as Dictionary).get("map", "")) != "":
+		var d := r as Dictionary
+		App.resume_map = str(d["map"])
+		App.resume_pos = Vector2(float(d.get("x", 0.0)), float(d.get("y", 490.0)))
+		_leave(func() -> void: App.enter_map(App.resume_map))
+		return
 	_leave(func() -> void: App.back_to_hub("clinic"))
 
 

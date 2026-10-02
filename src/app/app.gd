@@ -25,6 +25,9 @@ var camp_next: String = ""
 var camp_open_tab: String = ""
 ## The bridge film already played on the way into the hideout.
 var film_to_camp := false
+## CONTINUE from the title: the map and checkpoint the last session saved.
+var resume_map := ""
+var resume_pos := Vector2.ZERO
 var _film_seen := ""
 
 const SCENES := {

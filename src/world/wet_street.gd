@@ -66,6 +66,8 @@ func _ready() -> void:
 	mat.set_shader_parameter("tex_size", Vector2(tex.get_width(), tex.get_height()))
 	_fx.material = mat
 	add_child(_fx)
+	# LOW quality: no screen-space reflection pass.
+	_fx.visible = Gfx.reflections()
 	call_deferred("_lamp_streaks")
 
 
