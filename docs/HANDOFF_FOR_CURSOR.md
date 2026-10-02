@@ -126,3 +126,19 @@ pay-as-you-go enabled.
    builds the same Setup.exe (needs `makensis`).
 8. Crew sprites are single painted frames animated in code; a proper sheet
    (idle/walk/hammer) via the video pipeline is a good next upgrade.
+
+## Update: art pipeline and new systems (Oct 2026)
+
+- **Sorceress Tool API** (`tools/sorceress.py`): base `https://sorceress.games/api/v1`, Bearer key read from
+  `$SORCERESS_KEY` or `~/.config/sorceress/key` (never commit it). Animation flow that worked:
+  character on a solid green plate → `autosprite_create_character` → `autosprite_animate` (imagine-1.5,
+  ~4 credits/s) → poll `/jobs/:id` → download the MP4 → slice locally with `tools/video2sprite.py`
+  (free keying). Prompts with "hit in the face" get flagged; describe stunt falls instead.
+- **Backdrops** are now high-res paintings (`assets/backdrops/<theme>.png`, `"texel": 0.26` in the json,
+  linear filter, `neon_backdrop.gdshader`) plus an optional `<theme>_far.png` skyline layer.
+  Street ground is `street.png` (top-down paving squashed 2:1 in `WetStreet`) + `street_wet.png` mask.
+- **Canvas shaders**: in Godot 4 the fragment `COLOR` already holds the texel; multiply by the vertex
+  colour (`varying vcol`) instead, or colours get squared (dark).
+- New systems: `BloodSim` (src/juice/blood.gd), `HitReact`, wound shader (wounds/suits/tears),
+  `SmashProp` stages + `ShardBurst` + `LootDrop`, `LevelUpFx` + `CardPick`/`PixelCard`, `Gfx` options,
+  `PixelCursor`, `Suits`, `Charms`, `DogBuddy`, `SprayCan`, `PhotoMode`, `StreetLife`, fighter `knock_t`.
