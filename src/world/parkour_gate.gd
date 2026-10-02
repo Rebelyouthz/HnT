@@ -51,7 +51,10 @@ func _ready() -> void:
 
 func _idle() -> String:
 	var t := _pick_trick()
-	return "%s  ·  %s" % [str(t.get("title", "JUMP")), str(TimingRing.NAMES.get(str(t.get("input", "jump")), "JUMP"))]
+	var keys: PackedStringArray = []
+	for k in t.get("combo", [t.get("input", "jump")]):
+		keys.append(str(TimingRing.NAMES.get(str(k), str(k).to_upper())))
+	return "%s  ·  %s" % [str(t.get("title", "JUMP")), " + ".join(keys)]
 
 
 ## Learned tricks that fit this gate (data/parkour.json, learn = dojo id).
@@ -108,9 +111,22 @@ func _attempt(f: Fighter) -> void:
 		return
 	_used = true
 	var trick := _pick_trick()
-	var ring := TimingRing.spawn(get_tree().current_scene, str(trick.get("input", "jump")), f, 0.62, str(trick.get("title", "JUMP")))
-	ring.slow = 0.45
-	var grade: String = await ring.resolved
+	# A trick is a button combo: each press timed in its own shrinking ring,
+	# one straight after the other. The worst press grades the trick.
+	var combo: Array = trick.get("combo", [trick.get("input", "jump")])
+	var grade := "perfect"
+	var order := ["perfect", "good", "ok", "miss", "big_miss"]
+	for i in combo.size():
+		var step_title := str(trick.get("title", "JUMP")) if combo.size() == 1 else "%s  %d/%d" % [str(trick.get("title", "JUMP")), i + 1, combo.size()]
+		var ring := TimingRing.spawn(get_tree().current_scene, str(combo[i]), f, 0.62 if i == 0 else 0.42, step_title)
+		ring.slow = 0.45
+		var g: String = await ring.resolved
+		if not is_instance_valid(f):
+			return
+		if order.find(g) > order.find(grade):
+			grade = g
+		if not TimingRing.is_success(g):
+			break
 	if not is_instance_valid(f):
 		return
 	_next = {}
@@ -159,6 +175,7 @@ func _attempt(f: Fighter) -> void:
 		f.hop = -1.0
 	f.velocity.x = float(f.facing) * 340.0 * spd
 	f.parkour_lock = 0.22
+	TrickMove.play(f, str(row.get("anim", "hop")), perfect)
 	var rs := get_tree().get_first_node_in_group("run_state")
 	if rs and rs.has_method("add_points"):
 		rs.add_points(f.role, pts, "trick")

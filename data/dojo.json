@@ -154,5 +154,161 @@
    96
   ],
   "kind": "parkour"
+ },
+ {
+  "id": "lazy_vault",
+  "title": "LAZY VAULT",
+  "blurb": "Hand on, swing the legs over sideways. Lazy is a lie, it's efficient.",
+  "rarity": "rare",
+  "gold": [
+   20,
+   34,
+   52
+  ],
+  "kind": "parkour"
+ },
+ {
+  "id": "reverse_vault",
+  "title": "REVERSE VAULT",
+  "blurb": "Turn your back to the box mid-air, hand plant, land facing forward.",
+  "rarity": "rare",
+  "gold": [
+   26,
+   42,
+   64
+  ],
+  "kind": "parkour"
+ },
+ {
+  "id": "double_kong",
+  "title": "DOUBLE KONG",
+  "blurb": "Two hand plants on one long box. The Son's party trick.",
+  "rarity": "epic",
+  "gold": [
+   38,
+   58,
+   88
+  ],
+  "kind": "parkour"
+ },
+ {
+  "id": "cat_leap",
+  "title": "CAT LEAP",
+  "blurb": "Jump, catch the wall edge with hands and feet. Hang like a cat.",
+  "rarity": "rare",
+  "gold": [
+   26,
+   42,
+   64
+  ],
+  "kind": "parkour"
+ },
+ {
+  "id": "dive_roll",
+  "title": "DIVE ROLL",
+  "blurb": "Dive over, hands first, roll out on the shoulder. Never on the head.",
+  "rarity": "rare",
+  "gold": [
+   26,
+   42,
+   64
+  ],
+  "kind": "parkour"
+ },
+ {
+  "id": "front_flip",
+  "title": "FRONT FLIP",
+  "blurb": "Tuck forward, spot the landing, legs under you.",
+  "rarity": "rare",
+  "gold": [
+   32,
+   50,
+   76
+  ],
+  "kind": "parkour"
+ },
+ {
+  "id": "back_flip",
+  "title": "BACK FLIP",
+  "blurb": "Arms up, chest up, tuck back. Don't look for the floor too early.",
+  "rarity": "rare",
+  "gold": [
+   32,
+   50,
+   76
+  ],
+  "kind": "parkour"
+ },
+ {
+  "id": "side_flip",
+  "title": "SIDE FLIP",
+  "blurb": "Kick the lead leg, rotate sideways, land facing the way you went.",
+  "rarity": "rare",
+  "gold": [
+   32,
+   50,
+   76
+  ],
+  "kind": "parkour"
+ },
+ {
+  "id": "palm_spin",
+  "title": "PALM SPIN",
+  "blurb": "Hand on the obstacle, spin a full turn around it.",
+  "rarity": "rare",
+  "gold": [
+   32,
+   50,
+   76
+  ],
+  "kind": "parkour"
+ },
+ {
+  "id": "webster",
+  "title": "WEBSTER",
+  "blurb": "Front flip off one leg. Coach-level.",
+  "rarity": "epic",
+  "gold": [
+   38,
+   58,
+   88
+  ],
+  "kind": "parkour"
+ },
+ {
+  "id": "gainer",
+  "title": "GAINER",
+  "blurb": "A back flip that travels forward. Running gainer = legends.",
+  "rarity": "epic",
+  "gold": [
+   38,
+   58,
+   88
+  ],
+  "kind": "parkour"
+ },
+ {
+  "id": "cork",
+  "title": "CORK",
+  "blurb": "Back flip with a full twist. The Son says don't try this at home.",
+  "rarity": "legendary",
+  "gold": [
+   44,
+   66,
+   100
+  ],
+  "kind": "parkour"
+ },
+ {
+  "id": "aerial",
+  "title": "AERIAL",
+  "blurb": "A cartwheel with no hands. Fly sideways.",
+  "rarity": "epic",
+  "gold": [
+   38,
+   58,
+   88
+  ],
+  "kind": "parkour"
  }
 ]
