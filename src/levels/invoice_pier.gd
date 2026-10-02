@@ -35,6 +35,8 @@ func build_world() -> void:
 	Blockout.poly(self, Rect2(1980, 220, 280, 18), Color(0.24, 0.3, 0.2), 2)
 	Blockout.solid(self, Rect2(2420, 492, 980, 18), true)
 	Blockout.poly(self, Rect2(2420, 492, 980, 18), Color(0.22, 0.18, 0.12), 2)
+	# Painted pier sections (backdrops/pier_strip) are the scenery;
+	# the flat blockout buildings only without them.
 	NightStreet.crane(self, Vector2(860, 80), 340.0)
 	NightStreet.crane(self, Vector2(2040, 40), 380.0)
 	NightStreet.chapel(self, Rect2(2680, 160, 420, 340))

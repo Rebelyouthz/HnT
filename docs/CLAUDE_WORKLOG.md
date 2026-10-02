@@ -34,6 +34,48 @@ The rest is in English, like the code. Newest work first. Each block says
 
 ---
 
+## 0a. Painted backdrops on every map but one (latest)
+
+Every map now has its own painted, stitched backdrop strip
+(`assets/backdrops/<theme>_strip_*.png` + `.json`, built with
+`tools/street_strip.py` from FLUX.1-Krea-dev paintings on Hugging Face
+ZeroGPU), in the same rainy painterly style as Dock Street:
+
+| map | theme | sections |
+|---|---|---|
+| intake_lot | lot | clinic INTAKE ramp, ambulance fence, pay booth, FEEL BETTER PAY LATER billboard, parking garage, medical waste + painted wet asphalt floor |
+| group_circle | circle | SUPPORT GROUP TONIGHT, laundromat, church, OPEN TIL 4 liquor, playground, FEELINGS NOT COVERED pharmacy |
+| neon_exchange | neon | EXCHANGE, karaoke/pachinko, ARCADE, WE BUY GOLD, motel, CLUB HEMORRHAGE, FIX IT, CASH ONLY FEELINGS |
+| waiting_room | waiting | TAKE A NUMBER 9900, NO REFUNDS ON HOPE, PAY BEFORE PAIN, pill counter + mopped tile floor |
+| rail_bridge | rail | platform, signal box, depot, graffiti subway cars, RAVEN LINE tunnel, wagon yard |
+| city_hall | hall | steps, justice court, records office, RAVEN CARES banner, PUBLIC SERVICE fountain, clock tower, gate |
+| copay_orchard | farm | barn, orchard, yurts (MINDFULNESS EXTRA FEE), lake, farmhouse, greenhouse |
+| sleet_hour | snow | RETREAT CLOSED FOR WELLNESS lodge, chalets, frozen lake, chairlift, NO REFUNDS IN THE SAUNA, pylons |
+| raven_grid | cyber | ramen under a holo koi, night market, UPGRADES ON CREDIT, drone alley, capsule tower |
+| ledger_dive | vault | LEDGER vault door, flooded archive, brine spa, pipes, PAY ON TIME cenote, invoice altar |
+| invoice_pier | pier | INVOICE PIER warehouse, boathouse, sinking chapel, FINES PAYABLE HERE, lighthouse |
+| processing_floor | processing | desks, DENIED stamp press, shredder, records vault, THE FAMILY PLAN desk + concrete floor |
+
+Not done: **fire_escapes** (rooftop skyline): the ZeroGPU daily quota ran
+out after one of its six paintings (`/tmp` spec was "roofs"); its
+tenements stay until `assets/backdrops/roofs_strip.json` exists.
+
+How a map uses it: `NightStreet.parallax(theme)` → `_backdrop` → `_far_layer`
+(shared harbour skyline when the theme has none) + `_strip`. Maps with
+street floors lay `WetStreet` (cobbles, or a named painted ground:
+`lot_ground`, `clinic_floor`, `concrete_floor`); maps with water/grass/snow
+floors keep their own. Blockout tenements are drawn only when the theme has
+no backdrop. Repeated moons are painted out per section (one moon per map).
+Paintings with strong one-point perspective were dropped or regenerated with
+"strictly flat orthographic front elevation" in the prompt: those cannot be
+stitched. `street_strip.py name.png@ROW` sets the ground row by hand when the
+painting has a big foreground.
+
+Also fixed: a crash in `BloodSim.add_hole` when a sprite's wound material
+had no holes array yet.
+
+---
+
 ## 0b. Enemies, brutal gore, voices, music, sound (latest)
 
 **What.**
