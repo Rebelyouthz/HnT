@@ -53,6 +53,9 @@ func _on_dead() -> void:
 	if act is RunAct and (act as RunAct).map_id == "dock_street":
 		Suits.grant("bat")
 		Suits.grant("spider")
+	var charm := Charms.roll()
+	if charm != "":
+		Charms.grant(charm)
 	if act and act.has_method("finish_boss"):
 		act.finish_boss()
 

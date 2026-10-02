@@ -676,6 +676,10 @@ func take_hit(kind: String, from: Node) -> void:
 		dmg = int(round(float(dmg) * 1.25))
 	if from is Fighter:
 		dmg += int(FamilyProfile.gear_stat_bonus((from as Fighter).role).get("dmg", 0))
+	if from is Fighter and Charms.has("rabbit_foot") and randf() < 0.12:
+		dmg *= 2
+		Juice.popup_number(global_position + Vector2(0, -60), "CRIT", UiKit.GOLD)
+		Juice.hitstop(3)
 	hp = maxi(0, hp - dmg)
 	if kind == "light":
 		var rs := get_tree().get_first_node_in_group("run_state")
@@ -796,6 +800,9 @@ func _die(kind: String, from: Node) -> void:
 		var rs := get_tree().get_first_node_in_group("run_state")
 		if rs and rs.has_method("add_points"):
 			rs.add_points((from as Fighter).role, 100 if title != "Bag Snatch" else 70, "kill")
+		if Charms.has("fight_tape"):
+			var ff := from as Fighter
+			ff.hp = mini(ff.max_hp, ff.hp + 3)
 	_drops(from)
 	died.emit()
 	queue_free()

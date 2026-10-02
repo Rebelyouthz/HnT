@@ -1049,6 +1049,12 @@ func _attack(kind: String, charged: bool) -> void:
 			hop_v = -280.0 - 40.0 * float(FamilyProfile.dojo_rank("uppercut"))
 			hop = -1.0
 		Juice.shout("UPPERCUT")
+		# Drive up from the legs and lean back through the finish.
+		if _anim != null:
+			var tw := _anim.create_tween()
+			tw.tween_property(_anim, "rotation", 0.12, 0.08)
+			tw.tween_property(_anim, "rotation", -0.16, 0.12).set_trans(Tween.TRANS_BACK)
+			tw.tween_property(_anim, "rotation", 0.0, 0.18)
 	elif kind == "roundhouse":
 		size = Vector2(86, 44)
 		attack_cd = 18

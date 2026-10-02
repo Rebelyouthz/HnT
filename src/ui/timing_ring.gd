@@ -129,7 +129,7 @@ func _process(_delta: float) -> void:
 		return
 	var hit := _just(action) or (autoplay and t >= lead)
 	if hit:
-		var err := absf(t - lead)
+		var err := absf(t - lead) / _wide()
 		if t < lead * 0.45:
 			_finish("big_miss")
 		elif err <= PERFECT:
@@ -245,6 +245,11 @@ func _burst(col: Color, n: int) -> void:
 		var tw := p.create_tween().set_ignore_time_scale(true).set_parallel(true)
 		tw.tween_property(p, "position", p.position + Vector2(cos(ang), sin(ang)) * d, 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 		tw.tween_property(p, "modulate:a", 0.0, 0.35)
+
+
+## Grandpa's Watch widens every window.
+static func _wide() -> float:
+	return 1.25 if Charms.has("old_watch") else 1.0
 
 
 static func is_success(grade: String) -> bool:

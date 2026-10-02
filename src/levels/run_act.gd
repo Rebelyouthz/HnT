@@ -81,6 +81,7 @@ func _place_parkour() -> void:
 	_place_smash()
 	_place_towers()
 	_place_secrets()
+	_place_extras()
 
 
 func _place_toys() -> void:
@@ -147,7 +148,10 @@ func _place_smash() -> void:
 	if not placed.is_empty():
 		var rng := RandomNumberGenerator.new()
 		rng.seed = hash(map_id)
-		(placed[rng.randi() % placed.size()] as Node).set_meta("syringe", true)
+		var first := rng.randi() % placed.size()
+		(placed[first] as Node).set_meta("syringe", true)
+		if Charms.has("moms_ring") and placed.size() > 1:
+			(placed[(first + 1 + rng.randi() % (placed.size() - 1)) % placed.size()] as Node).set_meta("syringe", true)
 	_place_weapons()
 	_place_life()
 
@@ -206,6 +210,56 @@ func _place_life() -> void:
 		NightStreet.neon(self, Vector2(1680, 120), "AFTER HOURS  ·  THE CLIPBOARD NEVER CLOCKS OUT", Palette.BRICK)
 	elif map_id == "city_hall":
 		NightStreet.neon(self, Vector2(240, 120), "EVICTION PROCESSED HERE", Palette.EDGE)
+
+
+## Spray cans, Rufus the dog, photo mode and tonight's bounty.
+func _place_extras() -> void:
+	SprayCan.place_all(self, map_id)
+	add_child(PhotoMode.new())
+	if DogBuddy.joined():
+		var dog := DogBuddy.new()
+		dog.position = spawn_at + Vector2(-30, 6)
+		add_child(dog)
+	elif map_id == "dock_street":
+		var stray := StrayDog.new()
+		stray.position = Vector2(1320, 494)
+		add_child(stray)
+	get_tree().create_timer(3.0).timeout.connect(_pick_bounty)
+
+
+## One ordinary thug per street is WANTED: tougher, crowned, and worth
+## gems and gold when he drops.
+func _pick_bounty() -> void:
+	if not is_inside_tree() or get_tree().get_first_node_in_group("bounty"):
+		return
+	var pool: Array = []
+	for n in get_tree().get_nodes_in_group("enemies"):
+		if n is Punk and not (n is ActBoss) and is_instance_valid(n) and (n as Punk).hp > 0:
+			pool.append(n)
+	if pool.is_empty():
+		get_tree().create_timer(4.0).timeout.connect(_pick_bounty)
+		return
+	var p := pool[randi() % pool.size()] as Punk
+	p.add_to_group("bounty")
+	p.max_hp = int(round(float(p.max_hp) * 1.6))
+	p.hp = p.max_hp
+	var crown := Polygon2D.new()
+	crown.polygon = PackedVector2Array([Vector2(-8, 0), Vector2(-8, -6), Vector2(-4, -2), Vector2(0, -8), Vector2(4, -2), Vector2(8, -6), Vector2(8, 0)])
+	crown.color = UiKit.GOLD
+	crown.position = Vector2(0, -52)
+	var cm := CanvasItemMaterial.new()
+	cm.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+	crown.material = cm
+	p.add_child(crown)
+	var tw := crown.create_tween().set_loops()
+	tw.tween_property(crown, "position:y", -55.0, 0.5).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(crown, "position:y", -52.0, 0.5).set_trans(Tween.TRANS_SINE)
+	Juice.toast("challenge", "WANTED: %s" % p.title.to_upper(), "The crowned one. 2 gems and 40 gold on his head.")
+	p.died.connect(func() -> void:
+		FamilyProfile.add_gems(2)
+		FamilyProfile.add_gold(40)
+		Juice.unlock_logo("BOUNTY CLAIMED", "%s won't collect anything again." % p.title, "+2 GEMS  ·  +40 GOLD")
+	)
 
 
 func _place_towers() -> void:

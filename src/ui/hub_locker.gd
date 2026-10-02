@@ -62,6 +62,7 @@ func _paint() -> void:
 		roles.add_child(b)
 	_col.add_child(roles)
 	_suit_row()
+	_charm_row()
 	var slots := HBoxContainer.new()
 	slots.add_theme_constant_override("separation", 8)
 	for pair in [["clothes", "CLOTHES"], ["hat", "HATS"], ["shoes", "SHOES"]]:
@@ -198,3 +199,56 @@ func _suit_row() -> void:
 			)
 			h.add_child(btn)
 		_col.add_child(p)
+
+
+## Lucky charms: wear up to three (shared by both of you).
+func _charm_row() -> void:
+	var h := Label.new()
+	h.text = "LUCKY CHARMS  ·  %d / %d WORN" % [Charms.worn().size(), Charms.MAX_WORN]
+	UiKit.apply_label(h, 18, UiKit.GOLD)
+	_col.add_child(h)
+	var grid := GridContainer.new()
+	grid.columns = 3
+	grid.add_theme_constant_override("h_separation", 8)
+	grid.add_theme_constant_override("v_separation", 8)
+	_col.add_child(grid)
+	for id: String in Charms.LIST.keys():
+		var row: Dictionary = Charms.LIST[id]
+		var has := Charms.owned().has(id)
+		var on := Charms.has(id)
+		var b := Button.new()
+		b.custom_minimum_size = Vector2(300, 74)
+		var r := str(row["rarity"])
+		b.add_theme_stylebox_override("normal", UiKit.panel(Rarity.fill(r), Rarity.color(r) if on else Palette.MUTED))
+		b.add_theme_stylebox_override("hover", UiKit.panel(Rarity.fill(r), UiKit.GOLD))
+		b.add_theme_stylebox_override("focus", UiKit.panel(Rarity.fill(r), UiKit.GOLD))
+		var icon := TextureRect.new()
+		icon.texture = load("res://assets/sprites/loot/charm.png") if has else null
+		icon.position = Vector2(8, 10)
+		icon.size = Vector2(40, 54)
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		b.add_child(icon)
+		var t := Label.new()
+		t.text = (str(row["title"]) + ("  ✓" if on else "")) if has else "???"
+		t.position = Vector2(56, 8)
+		UiKit.apply_label(t, 15, Rarity.color(r) if has else Palette.MUTED)
+		t.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		b.add_child(t)
+		var d := Label.new()
+		d.text = str(row["blurb"]) if has else "Not found yet. Bosses carry them."
+		d.position = Vector2(56, 30)
+		d.size = Vector2(236, 40)
+		d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		UiKit.apply_label(d, 12, Palette.TEXT)
+		d.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		b.add_child(d)
+		b.disabled = not has
+		b.pressed.connect(func() -> void:
+			Charms.toggle(id)
+			Juice.play("res://assets/audio/ui_click.wav")
+			_paint()
+		)
+		grid.add_child(b)

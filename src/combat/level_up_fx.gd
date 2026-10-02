@@ -131,7 +131,7 @@ func _wave() -> void:
 			continue
 		var e := n as Punk
 		var src: Node2D = null
-		var best := RADIUS
+		var best := RADIUS * (1.4 if Charms.has("dog_tag") else 1.0)
 		for p in _players:
 			if p is Node2D:
 				var d := (p as Node2D).global_position.distance_to(e.global_position)
