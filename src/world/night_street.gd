@@ -148,6 +148,10 @@ static func _backdrop(pb: ParallaxBackground, theme: String) -> void:
 	# Fine paintings (texel under a world unit) filter smoothly; chunky
 	# pixel boards stay nearest.
 	s.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR if texel < 1.0 else CanvasItem.TEXTURE_FILTER_NEAREST
+	if texel < 1.0:
+		var nm := ShaderMaterial.new()
+		nm.shader = preload("res://src/shaders/neon_backdrop.gdshader")
+		s.material = nm
 	s.z_index = -3
 	layer.add_child(s)
 

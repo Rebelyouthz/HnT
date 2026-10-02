@@ -42,6 +42,12 @@ vec3 cells(vec2 p) {
 	return vec3(d2 - d1, id);
 }
 
+varying vec4 vcol;
+
+void vertex() {
+	vcol = COLOR;
+}
+
 void fragment() {
 	vec2 px = TEXTURE_PIXEL_SIZE;
 	vec2 t = floor(UV / px);
@@ -83,5 +89,5 @@ void fragment() {
 		}
 	}
 	col = mix(col, vec3(1.0, 0.95, 0.85), flash);
-	COLOR = vec4(col, a) * COLOR;
+	COLOR = vec4(col, a) * vcol;
 }

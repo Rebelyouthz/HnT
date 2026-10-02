@@ -215,6 +215,10 @@ func _place_life() -> void:
 ## Spray cans, Rufus the dog, photo mode and tonight's bounty.
 func _place_extras() -> void:
 	SprayCan.place_all(self, map_id)
+	if map_id == "dock_street":
+		StreetLife.dress(self, [380.0, 1180.0, 1700.0, 2600.0])
+	elif map_id == "tutorial_alley":
+		StreetLife.dress(self, [520.0, 1050.0])
 	add_child(PhotoMode.new())
 	if DogBuddy.joined():
 		var dog := DogBuddy.new()

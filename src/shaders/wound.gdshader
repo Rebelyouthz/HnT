@@ -20,9 +20,12 @@ uniform int hole_n = 0;
 uniform vec4 blood : source_color = vec4(0.58, 0.03, 0.05, 1.0);
 
 varying vec2 lp;
+// The node's modulate only (COLOR in fragment already holds the texel).
+varying vec4 vcol;
 
 void vertex() {
 	lp = VERTEX;
+	vcol = COLOR;
 }
 
 float hash(vec2 p) {
@@ -162,5 +165,5 @@ void fragment() {
 			}
 		}
 	}
-	COLOR = vec4(col, base.a) * COLOR;
+	COLOR = vec4(col, base.a) * vcol;
 }
