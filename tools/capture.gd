@@ -117,8 +117,7 @@ func _process(_delta: float) -> bool:
 			"results":
 				current_scene.call("_banner", "DOCK STREET FILED", "Gant is down. Benny is free.", true, false)
 			"cards":
-				var cp: Node = load("res://src/combat/card_pick.gd").new()
-				current_scene.add_child(cp)
+				current_scene.call("_cards")
 			"toasts":
 				var j := root.get_node("Juice")
 				j.call("toast", "reward", "SECRET FOUND", "The Harbour Clock  ·  128 metres")

@@ -332,7 +332,17 @@ func _process(_delta: float) -> void:
 
 
 func _cards() -> void:
-	if get_node_or_null("CardPick"):
+	if get_node_or_null("CardPick") or get_node_or_null("LevelUpFx"):
+		return
+	# Glow, LEVEL UP over the heads and the force wave first; then the cards.
+	var fighters: Array = []
+	for n in get_tree().get_nodes_in_group("players"):
+		if n is Fighter and not (n as Fighter).downed:
+			fighters.append(n)
+	var fx := LevelUpFx.play(self, fighters)
+	fx.name = "LevelUpFx"
+	await fx.done
+	if not is_inside_tree():
 		return
 	var pick := CardPick.new()
 	pick.name = "CardPick"
