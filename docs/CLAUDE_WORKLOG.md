@@ -34,6 +34,56 @@ The rest is in English, like the code. Newest work first. Each block says
 
 ---
 
+## 0b. Enemies, brutal gore, voices, music, sound (latest)
+
+**What.**
+- **Enemies re-animated** with Sorceress AutoSprite from their own pixel art
+  (same look, real motion): Bag Snatch / street thugs (`punk`), Mohawk Bo,
+  the beat cop, the Shift Lead and Collector Gant. Each has `idle`, `walk`,
+  `punch_high`, `punch_mid`, `kick_low`, `hurt`, `death` (the cop keeps his
+  old hurt and has no drawn death yet). The swing they play matches the
+  height marker over their head, timed so the contact frame lands at the end
+  of the wind-up (`Punk._pick_swing`). Ordinary deaths use the drawn fall
+  (`HitReact.corpse`, "drawn" branch); launches, blasts and crushes keep the
+  tweened ragdoll.
+- **Brutal gore** (`BloodSim.gore`): meat chunks, teeth and bone splinters
+  that fly, bounce, smear and stay on the street; an **overkill** (a finisher
+  or a blow far past the last HP) takes the body apart with a neck fountain,
+  a big pool and blood on the camera glass, plus the announcer. Heavy blows
+  crack bone and knock teeth out. "Less gore" in options turns all of it off.
+- **Voices** (`data/vo_lines.json`, `assets/audio/vo/*.ogg`, `VoBank.line`):
+  53 barks in a dry, absurd, dark-comedy tone (original writing): Son and
+  Father kill/combo/hurt/block quips, thug/Mohawk/cop/Shift Lead/Gant
+  taunts, hurt and death lines, and an announcer (PERFECT, COMBO, COUNTER,
+  GUARD BREAK, BRUTAL, OVERKILL). Cooldowns stop spam (1.4 s between any two
+  barks, 3 s per speaker).
+- **Music** (Suno via Sorceress, instrumental): street, boss, hideout,
+  dojo, tension, chase as `assets/audio/music_*.ogg`. `Mixer.play_music`
+  plays the `.ogg` when it exists next to the old `.wav` name, looping.
+- **Sound effects** (`assets/audio/sfx/*.ogg`): punches, kicks, bone crack,
+  skull crunch, squelch, blood spray, gib splat, teeth, body fall, block,
+  parry ring, roll, spin whoosh, combo and perfect stings, and a rain bed
+  that loops wherever it rains.
+- **The user's own clips:** two jump roundhouse takes the user made on
+  Sorceress are in. The 360 spinning heel is the Father's new **air attack
+  (jump, then heavy)**, the Son got the same air attack cut from his jumping
+  roundhouse, and the Father has two new dojo combos: TORNADO HEEL
+  (down + light, up + heavy) and HIGH TIDE (jab, cross, forward + light).
+  All 17 combos land in `tools/combo_test.gd`.
+
+**Tools:** `tools/vo_gen.py`, `tools/music_gen.py`, `tools/sfx_gen.py`
+(Sorceress speech / music / sfx; skip files that exist),
+`tools/autoplay.gd` (bot plays a map; with `--write-movie` Godot records
+video and audio), `tools/street_tour.gd`.
+
+**Credits:** the Sorceress balance ran down to about 15-27 credits. Earlier
+"orphan" animation jobs that were never polled appear to have been billed
+after all, on top of their resubmission. Rule for the next agent: always
+save the jobIds of every submit before doing anything else, and never
+resubmit a batch that may still be running.
+
+---
+
 ## 1. Fighting styles, timed combos, guard heights, roll, get-up attacks (latest)
 
 **What.** The two fighters now fight differently:
