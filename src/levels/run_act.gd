@@ -134,13 +134,20 @@ func _place_smash() -> void:
 	var list: Variant = rows.get(map_id, [])
 	if typeof(list) != TYPE_ARRAY:
 		return
+	var placed: Array = []
 	for row in list:
 		if typeof(row) != TYPE_ARRAY or (row as Array).size() < 2:
 			continue
 		var x := float(row[0])
 		if map_id == "raven_grid" and x > 2200.0:
 			continue
-		SmashProp.place(self, Vector2(x, 500.0), str(row[1]))
+		var sp := SmashProp.place(self, Vector2(x, 500.0), str(row[1]))
+		placed.append(sp)
+	# One adrenaline syringe per street, inside one of the breakables.
+	if not placed.is_empty():
+		var rng := RandomNumberGenerator.new()
+		rng.seed = hash(map_id)
+		(placed[rng.randi() % placed.size()] as Node).set_meta("syringe", true)
 	_place_weapons()
 	_place_life()
 

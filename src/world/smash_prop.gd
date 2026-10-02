@@ -7,6 +7,12 @@ extends Area2D
 var hp := 2
 var exploding := false
 var _box: Polygon2D
+## Breaks in stages: every blow chips it (lights 1, heavies 3), the art
+## cracks, dents, sheds chunks and soots up until it bursts.
+var _dur := 6
+var _dmg := 0
+var _art: CanvasItem
+var _mat: ShaderMaterial
 
 
 static func place(host: Node, at: Vector2, style: String) -> SmashProp:
@@ -97,7 +103,11 @@ func _ready() -> void:
 
 
 func _mount_sprite() -> void:
+	_dur = hp * 3
 	if SpriteBook.attach_living(self, kind):
+		for c in get_children():
+			if c is AnimatedSprite2D:
+				_dress(c)
 		return
 	var tex := SpriteBook.prop(kind)
 	if tex == null:
@@ -114,6 +124,67 @@ func _mount_sprite() -> void:
 	s.position = Vector2(-float(tex.get_width()) * 0.5 * SpriteBook.DRAW_SCALE, -float(tex.get_height()) * SpriteBook.DRAW_SCALE)
 	s.texture_filter = SpriteBook.world_filter()
 	add_child(s)
+	_dress(s)
+
+
+func _dress(art: CanvasItem) -> void:
+	_art = art
+	_mat = ShaderMaterial.new()
+	_mat.shader = preload("res://src/shaders/prop_damage.gdshader")
+	_mat.set_shader_parameter("seed", randf() * 40.0)
+	art.material = _mat
+
+
+## A blow lands: chips off, a flash, the prop rocks on its base.
+func _chip(n: int, from: Node) -> void:
+	_dmg += n
+	var frac := clampf(float(_dmg) / float(maxi(_dur, 1)), 0.0, 1.0)
+	if _mat:
+		_mat.set_shader_parameter("damage", frac)
+		_mat.set_shader_parameter("flash", 0.8)
+		var tf := create_tween()
+		tf.tween_method(func(v: float) -> void: _mat.set_shader_parameter("flash", v), 0.8, 0.0, 0.12)
+	var dir := 1.0
+	if from is Node2D:
+		dir = signf(global_position.x - (from as Node2D).global_position.x)
+		if dir == 0.0:
+			dir = 1.0
+	var tw := create_tween()
+	tw.tween_property(self, "rotation", dir * 0.08 * float(mini(n, 3)), 0.04)
+	tw.tween_property(self, "rotation", -dir * 0.04, 0.06)
+	tw.tween_property(self, "rotation", 0.0, 0.08)
+	_splinters(dir, n)
+
+
+## A few chips of the prop's own colour fly off the blow.
+func _splinters(dir: float, n: int) -> void:
+	var host := get_parent()
+	if host == null:
+		return
+	var col := _box.color if _box else Color(0.4, 0.3, 0.2)
+	var tex: Texture2D = (_art as Sprite2D).texture if _art is Sprite2D else null
+	if tex != null:
+		var img := tex.get_image()
+		if img != null:
+			col = img.get_pixel(img.get_width() / 2, img.get_height() / 2)
+	for i in 2 + n * 2:
+		var bit := Polygon2D.new()
+		var sz := randf_range(1.0, 2.5)
+		bit.polygon = PackedVector2Array([Vector2(-sz, -sz * 0.5), Vector2(sz, -sz * 0.6), Vector2(sz * 0.6, sz * 0.5), Vector2(-sz * 0.8, sz * 0.4)])
+		bit.color = col.darkened(randf() * 0.4)
+		bit.global_position = global_position + Vector2(randf_range(-12, 12), randf_range(-40, -14))
+		bit.z_index = 5
+		host.add_child(bit)
+		var land := global_position.y + randf_range(-4.0, 8.0)
+		var end := Vector2(bit.global_position.x + dir * randf_range(14.0, 46.0), land)
+		var tw := bit.create_tween().set_parallel(true)
+		tw.tween_property(bit, "global_position:x", end.x, 0.4)
+		tw.tween_property(bit, "global_position:y", bit.global_position.y - randf_range(10.0, 26.0), 0.15).set_ease(Tween.EASE_OUT)
+		tw.chain().tween_property(bit, "global_position:y", land, 0.25).set_ease(Tween.EASE_IN)
+		tw.parallel().tween_property(bit, "rotation", randf_range(-6.0, 6.0), 0.4)
+		tw.chain().tween_interval(5.0)
+		tw.chain().tween_property(bit, "modulate:a", 0.0, 1.0)
+		tw.chain().tween_callback(bit.queue_free)
 
 
 func take_hit(hit: String, from: Node) -> void:
@@ -131,14 +202,16 @@ func take_hit(hit: String, from: Node) -> void:
 			var rs0 := get_tree().get_first_node_in_group("run_state")
 			if rs0 and rs0.has_method("add_points"):
 				rs0.add_points((from as Fighter).role, 4, "prop")
+		_chip(1, from)
+		if _dmg >= _dur:
+			_pop(from)
 		return
-	if kind == "barrel":
+	if kind == "barrel" and _dmg + 3 >= _dur:
 		_explode(from)
 		return
-	hp -= 1
-	Juice.sparks(global_position + Vector2(0, -28))
+	_chip(4 if hit == "throw" or hit == "finish" else 3, from)
 	Juice.pulse_shake(2.5)
-	if hp > 0:
+	if _dmg < _dur:
 		return
 	_pop(from)
 
@@ -248,10 +321,32 @@ func _pop(from: Node) -> void:
 				if global_position.distance_to((n as Node2D).global_position) > 78.0:
 					continue
 				(n as Punk).take_hit("light", from if from != null else self)
-	var blood := get_tree().get_first_node_in_group("blood_sim")
-	if blood and blood.has_method("spray"):
-		blood.spray(global_position, "manhole" if kind == "manhole" else "smash", 1.0)
+	_burst_apart(from)
 	queue_free()
+
+
+## Shards of the sprite, and what was inside: cash always, sometimes a
+## flask, and on one prop per street the adrenaline syringe.
+func _burst_apart(from: Node) -> void:
+	var host := get_parent()
+	var dir := 1.0
+	if from is Node2D:
+		dir = signf(global_position.x - (from as Node2D).global_position.x)
+		if dir == 0.0:
+			dir = 1.0
+	if _art != null:
+		ShardBurst.shatter(host, _art, global_position, dir)
+	Juice.play("res://assets/audio/smash.wav" if ResourceLoader.exists("res://assets/audio/smash.wav") else "res://assets/audio/hit_heavy.wav")
+	var cash := 3 + randi() % 6
+	if kind in ["kiosk", "vending", "cop_car"]:
+		cash += 8
+	LootDrop.spawn(host, global_position, "cash", cash)
+	for i in randi_range(1, 3):
+		LootDrop.spawn(host, global_position + Vector2(randf_range(-8, 8), 0), "coin", 1, 1.4)
+	if randf() < 0.22 or kind == "fridge":
+		LootDrop.spawn(host, global_position, "flask")
+	if has_meta("syringe"):
+		LootDrop.spawn(host, global_position, "syringe", 0, 0.4)
 
 
 func _drop_pipe(host: Node) -> void:
@@ -324,9 +419,6 @@ func _explode(from: Node) -> void:
 	Juice.boom(global_position)
 	VoBank.barrel()
 	Juice.unlock_logo("OIL DRUM", "SoR4 threw bodies into barrels. We bill the crater.", "NAMED PROP")
-	var blood := get_tree().get_first_node_in_group("blood_sim")
-	if blood and blood.has_method("spray"):
-		blood.spray(global_position, "barrel", 0.0)
 	for n in get_tree().get_nodes_in_group("enemies"):
 		if not (n is Punk) or not is_instance_valid(n):
 			continue
@@ -355,6 +447,7 @@ func _explode(from: Node) -> void:
 		other._explode(from)
 	_spawn_named(host, "Oil Ghost", 32, "street")
 	Juice.toast("challenge", "OIL GHOST", "You popped the drum. The slick learned to throw invoices.")
+	_burst_apart(from)
 	queue_free()
 
 

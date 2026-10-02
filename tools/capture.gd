@@ -144,6 +144,19 @@ func _process(_delta: float) -> bool:
 			if step >= 8:
 				best.set("hp", 4)
 			best.call("take_hit", row[0], p1)
+	# ui:smash - the nearest breakable takes blow after blow: stages, shards, loot.
+	if _tab == "ui_smash" and _n >= 70 and _n % 10 == 0 and current_scene != null:
+		var p1: Node2D = root.get_tree().get_nodes_in_group("players")[0]
+		var best: Node2D = null
+		for n in root.get_tree().get_nodes_in_group("smashables"):
+			if not n.has_method("_chip"):
+				continue
+			if best == null or absf((n as Node2D).global_position.x - p1.global_position.x) < absf(best.global_position.x - p1.global_position.x):
+				best = n
+		if best != null:
+			p1.global_position = best.global_position + Vector2(-50, 4)
+			best.set_meta("syringe", true)
+			best.call("take_hit", "light", p1)
 	if _tab.begins_with("tower_") and _n == 60:
 		load("res://src/ui/timing_ring.gd").set("autoplay", true)
 		root.get_tree().paused = true
