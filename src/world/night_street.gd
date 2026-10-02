@@ -588,6 +588,9 @@ static func wind(host: Node, cx: float) -> void:
 
 
 static func wet_floor(host: Node, map_w: float, skip_fill: bool = false) -> void:
+	if skip_fill and WetStreet.available():
+		# The painted road and its reflection pass replace the old wet band.
+		return
 	if not skip_fill:
 		Blockout.poly(host, Rect2(0, 430, map_w, 290), Color(0.10, 0.10, 0.12), 0)
 	var wet := Blockout.poly(host, Rect2(0, 520, map_w, 90), Color(0.18, 0.2, 0.28, 0.38), 1)
@@ -748,9 +751,12 @@ static func pixel_dock(host: Node, map_w: float, harbour: bool = true) -> void:
 	var water := SpriteBook.tile("water")
 	if cobble == null:
 		return
+	var painted := WetStreet.available()
+	if painted:
+		WetStreet.lay(host, map_w)
 	var tw := float(cobble.get_width()) * SpriteBook.DRAW_SCALE
 	var th := float(cobble.get_height()) * SpriteBook.DRAW_SCALE
-	var x := 0.0
+	var x := map_w if painted else 0.0
 	var n := 0
 	while x < map_w:
 		# Pave the whole walkable band (430-520) down to the floor at 600.
