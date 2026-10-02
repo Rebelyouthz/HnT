@@ -173,8 +173,12 @@ static func add_hole(anim: CanvasItem, local: Vector2) -> void:
 	if anim == null or FamilyProfile.less_gore():
 		return
 	var mat := _wound_mat(anim)
-	var n := int(mat.get_shader_parameter("hole_n"))
-	var holes: PackedVector2Array = mat.get_shader_parameter("holes")
+	var nv: Variant = mat.get_shader_parameter("hole_n")
+	var n: int = int(nv) if nv != null else 0
+	var hv: Variant = mat.get_shader_parameter("holes")
+	var holes := PackedVector2Array(hv) if hv is PackedVector2Array or hv is Array else PackedVector2Array()
+	while holes.size() < 6:
+		holes.append(Vector2.ZERO)
 	holes[n % 6] = local
 	mat.set_shader_parameter("holes", holes)
 	mat.set_shader_parameter("hole_n", mini(n + 1, 6))

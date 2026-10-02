@@ -15,26 +15,30 @@ const TEXEL_Y := 0.075
 const TOP := 426.0
 
 var map_w := 3200.0
+## Which painted ground: "street" (cobbles) or e.g. "lot_ground" (asphalt);
+## <name>.png + <name>_wet.png in assets/backdrops.
+var ground := "street"
 var _fx: Sprite2D
 var _mirrors := {}
 var _streaks: Array[Node2D] = []
 var _t := 0.0
 
 
-static func available() -> bool:
-	return ResourceLoader.exists(TEX) and ResourceLoader.exists(MASK)
+static func available(name: String = "street") -> bool:
+	return ResourceLoader.exists("res://assets/backdrops/%s.png" % name) and ResourceLoader.exists("res://assets/backdrops/%s_wet.png" % name)
 
 
-static func lay(host: Node, width: float) -> WetStreet:
+static func lay(host: Node, width: float, name: String = "street") -> WetStreet:
 	var w := WetStreet.new()
 	w.map_w = width
+	w.ground = name
 	w.name = "WetStreet"
 	host.add_child(w)
 	return w
 
 
 func _ready() -> void:
-	var tex := load(TEX) as Texture2D
+	var tex := load("res://assets/backdrops/%s.png" % ground) as Texture2D
 	var region := Rect2(0, 0, ceilf(map_w / TEXEL) + 4.0, ceilf(300.0 / TEXEL_Y))
 	var base := Sprite2D.new()
 	base.texture = tex
@@ -64,7 +68,7 @@ func _ready() -> void:
 	_fx.z_index = 1
 	var mat := ShaderMaterial.new()
 	mat.shader = preload("res://src/shaders/wet_reflect.gdshader")
-	mat.set_shader_parameter("wet_mask", load(MASK))
+	mat.set_shader_parameter("wet_mask", load("res://assets/backdrops/%s_wet.png" % ground))
 	mat.set_shader_parameter("tex_size", Vector2(tex.get_width(), tex.get_height()))
 	_fx.material = mat
 	add_child(_fx)

@@ -20,12 +20,16 @@ static func parallax(host: Node, map_w: float, theme: String = "dock") -> void:
 	pb.add_child(moon_l)
 	var moon := Polygon2D.new()
 	moon.color = pal["moon"]
-	moon.polygon = PackedVector2Array([
-		Vector2(980, 36), Vector2(1050, 36), Vector2(1050, 106), Vector2(980, 106)
-	])
+	var mp := PackedVector2Array()
+	for k in 32:
+		var ang := TAU * float(k) / 32.0
+		mp.append(Vector2(1015, 71) + Vector2(cos(ang), sin(ang)) * 35.0)
+	moon.polygon = mp
+	# Behind the painted backdrops (z -3) and their skyline (z -5).
+	moon.z_index = -8
 	Blockout.add_glow(moon)
 	moon_l.add_child(moon)
-	if theme == "pier" or theme == "lot":
+	if (theme == "pier" or theme == "lot") and not has_backdrop(theme):
 		var moon2 := Polygon2D.new()
 		moon2.color = pal["moon"].darkened(0.25)
 		moon2.polygon = PackedVector2Array([
@@ -100,11 +104,16 @@ const KERB_Y := 430.0
 
 
 static func has_backdrop(theme: String) -> bool:
-	return ResourceLoader.exists("res://assets/backdrops/%s.png" % theme)
+	return ResourceLoader.exists("res://assets/backdrops/%s.png" % theme) or FileAccess.file_exists("res://assets/backdrops/%s_strip.json" % theme)
 
 
 static func _backdrop(pb: ParallaxBackground, theme: String) -> void:
 	if not has_backdrop(theme):
+		return
+	if not ResourceLoader.exists("res://assets/backdrops/%s.png" % theme):
+		# Strip-only theme: far skyline (shared) + the stitched sections.
+		_far_layer(pb, theme)
+		_strip(pb, theme)
 		return
 	var tex := load("res://assets/backdrops/%s.png" % theme) as Texture2D
 	var ground := float(tex.get_height()) * 0.86
@@ -117,24 +126,7 @@ static func _backdrop(pb: ParallaxBackground, theme: String) -> void:
 		if meta is Dictionary:
 			ground = float((meta as Dictionary).get("ground", ground))
 			texel = float((meta as Dictionary).get("texel", texel))
-	# Far layer (skyline, moon, cranes) slides slowly behind the facade.
-	var far_path := "res://assets/backdrops/%s_far.png" % theme
-	if ResourceLoader.exists(far_path):
-		var ft := load(far_path) as Texture2D
-		var far := ParallaxLayer.new()
-		far.name = "BackdropFar"
-		far.motion_scale = Vector2(0.25, 0.6)
-		var ftexel := 0.45
-		far.motion_mirroring = Vector2(float(ft.get_width()) * ftexel, 0.0)
-		pb.add_child(far)
-		var fs := Sprite2D.new()
-		fs.texture = ft
-		fs.centered = false
-		fs.scale = Vector2(ftexel, ftexel)
-		fs.position = Vector2(0.0, 330.0 - float(ft.get_height()) * ftexel)
-		fs.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-		fs.z_index = -5
-		far.add_child(fs)
+	_far_layer(pb, theme)
 	# A stitched street (<theme>_strip.json): different shops along the whole
 	# map, laid left to right instead of one facade on repeat.
 	if _strip(pb, theme):
@@ -158,6 +150,31 @@ static func _backdrop(pb: ParallaxBackground, theme: String) -> void:
 		s.material = nm
 	s.z_index = -3
 	layer.add_child(s)
+
+
+## Far layer (skyline, moon, cranes) slides slowly behind the facade. A
+## theme without its own uses the harbour skyline.
+static func _far_layer(pb: ParallaxBackground, theme: String) -> void:
+	var far_path := "res://assets/backdrops/%s_far.png" % theme
+	if not ResourceLoader.exists(far_path):
+		far_path = "res://assets/backdrops/dock_far.png"
+	if not ResourceLoader.exists(far_path):
+		return
+	var ft := load(far_path) as Texture2D
+	var far := ParallaxLayer.new()
+	far.name = "BackdropFar"
+	far.motion_scale = Vector2(0.25, 0.6)
+	var ftexel := 0.45
+	far.motion_mirroring = Vector2(float(ft.get_width()) * ftexel, 0.0)
+	pb.add_child(far)
+	var fs := Sprite2D.new()
+	fs.texture = ft
+	fs.centered = false
+	fs.scale = Vector2(ftexel, ftexel)
+	fs.position = Vector2(0.0, 330.0 - float(ft.get_height()) * ftexel)
+	fs.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	fs.z_index = -5
+	far.add_child(fs)
 
 
 static func _strip(pb: ParallaxBackground, theme: String) -> bool:
@@ -911,9 +928,13 @@ static func pixel_lot(host: Node, map_w: float) -> void:
 	var wet := SpriteBook.tile("asphalt_wet")
 	if asphalt == null:
 		return
+	# Painted wet asphalt with puddle reflections when it exists.
+	var painted := WetStreet.available("lot_ground")
+	if painted:
+		WetStreet.lay(host, map_w, "lot_ground")
 	var tw := float(asphalt.get_width()) * SpriteBook.DRAW_SCALE
 	var th := float(asphalt.get_height()) * SpriteBook.DRAW_SCALE
-	var x := 0.0
+	var x := map_w if painted else 0.0
 	var n := 0
 	while x < map_w:
 		var y := 430.0
