@@ -1,0 +1,93 @@
+{
+ "moves": {
+  "idle": [
+   2.5,
+   "{d} stands in a loose fighting stance, breathing heavily and bouncing slightly, shifting his weight, ready to brawl."
+  ],
+  "walk": [
+   2.5,
+   "{d} walks forward to the right with a menacing swagger, fists ready, steady pace."
+  ],
+  "punch_high": [
+   2.5,
+   "{d} throws a hard right hook at head height with a big shoulder turn, then returns to his fighting stance."
+  ],
+  "punch_mid": [
+   2.5,
+   "{d} steps in and throws a heavy straight punch at stomach height, leaning forward, then returns to his fighting stance."
+  ],
+  "kick_low": [
+   2.5,
+   "{d} snaps a low kick at shin height with his right leg, then puts the foot back down in his fighting stance."
+  ],
+  "hurt": [
+   2.0,
+   "{d} flinches hard as if shoved, his head jerks back and he staggers one step backward, then recovers his balance."
+  ],
+  "death": [
+   3.0,
+   "Like a movie stuntman, {d} goes limp, collapses and falls backward flat onto the ground, and lies completely still."
+  ],
+  "npc_idle": [
+   2.5,
+   "{d} stands on the pavement waiting, shifting weight, glancing around and gesturing a little, calm, not fighting."
+  ]
+ },
+ "who": {
+  "bailiff": {
+   "desc": "The armored bailiff in the black vest and helmet",
+   "moves": [
+    "punch_mid",
+    "kick_low"
+   ]
+  },
+  "clamp_king": {
+   "desc": "The burly man with the giant golden wheel clamp",
+   "moves": [
+    "death"
+   ]
+  },
+  "clipboard_flier": {
+   "desc": "The office clerk with the clipboard",
+   "moves": [
+    "death",
+    "punch_high",
+    "kick_low"
+   ]
+  },
+  "coping_imp": {
+   "desc": "The skinny kid in the green hoodie",
+   "moves": [
+    "death",
+    "punch_high",
+    "kick_low"
+   ]
+  },
+  "lot_hydra": {
+   "desc": "The huge man with the golden claw arm",
+   "moves": [
+    "death",
+    "punch_high",
+    "kick_low"
+   ]
+  },
+  "npc_old_woman": {
+   "desc": "The old woman in the purple raincoat",
+   "moves": [
+    "npc_idle"
+   ]
+  },
+  "npc_sanitation": {
+   "desc": "The sanitation worker in the green vest",
+   "moves": [
+    "npc_idle"
+   ]
+  },
+  "npc_old_man": {
+   "desc": "The old man with the cane",
+   "moves": [
+    "npc_idle"
+   ]
+  }
+ }
+}
