@@ -315,6 +315,9 @@ func _ready() -> void:
 	if not App.run_bag.is_empty():
 		_state.unpack(App.run_bag)
 	build_world()
+	# The halfway cart on every story stage.
+	if App.ORDER.has(map_id) and not StoryBook.is_survive(map_id):
+		ShopCart.place(self, map_w * 0.5)
 	_place_parkour()
 	_place_rescue()
 	_rig = LightRig.new()

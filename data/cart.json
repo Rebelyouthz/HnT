@@ -1,0 +1,20 @@
+[
+  {"id": "gun_oil", "name": "GUN OIL", "kind": "weapon", "price": 220, "max": 3, "icon": "gun",
+   "blurb": "Every gun hits 25% harder tonight. Smells like a bad decision, lubricated."},
+  {"id": "long_mag", "name": "EXTENDED MAG", "kind": "weapon", "price": 180, "max": 2, "icon": "mag",
+   "blurb": "Picked-up guns carry 50% more rounds. More of the same, faster."},
+  {"id": "brass_knuckles", "name": "BRASS KNUCKLES", "kind": "weapon", "price": 260, "max": 3, "icon": "fist",
+   "blurb": "Punches and kicks +15%. Technically jewellery."},
+  {"id": "energy_drink", "name": "COPE COLA", "kind": "booster", "price": 160, "max": 2, "icon": "can",
+   "blurb": "Move 12% faster and steam refills quicker this night. Tastes like a deadline."},
+  {"id": "insight_lens", "name": "INSIGHT LENS", "kind": "booster", "price": 240, "max": 2, "icon": "lens",
+   "blurb": "+25% XP from every gem. You will learn something whether you like it or not."},
+  {"id": "magnet_charm", "name": "FRIDGE MAGNET", "kind": "booster", "price": 150, "max": 2, "icon": "magnet",
+   "blurb": "XP gems fly to you from further away tonight. Keeps the drawings up, too."},
+  {"id": "med_kit", "name": "MED KIT", "kind": "hp", "price": 140, "max": 9, "icon": "med",
+   "blurb": "Full health, both of you, right now. The copay is the price tag."},
+  {"id": "iron_lungs", "name": "SECOND HEART", "kind": "hp", "price": 320, "max": 2, "icon": "heart",
+   "blurb": "+20 max health for the night. Borrowed from somebody who needed it less."},
+  {"id": "adrenaline", "name": "ADRENALINE SHOT", "kind": "hp", "price": 280, "max": 1, "icon": "syringe",
+   "blurb": "The next time you drop, you stand straight back up. Once."}
+]

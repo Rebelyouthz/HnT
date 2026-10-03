@@ -222,6 +222,38 @@ static func make_anim(who: String) -> AnimatedSprite2D:
 	return a
 
 
+## How much bigger than the base scale each side is drawn, so bodies match
+## the painted doors and the thugs loom over the family a little.
+const FIGHTER_SCALE := 1.12
+const ENEMY_SCALE := 1.25
+
+
+## Playback rate that makes a locomotion clip's feet travel exactly as far
+## as the body does: one loop of a clip is one full stride (two steps) of
+## STRIDE body heights (walk ~1.25, run ~2.4). ~200 texel bodies.
+const STRIDE := {"walk": 1.25, "parkour_run": 2.4, "run": 2.4}
+
+
+static func stride_rate(a: AnimatedSprite2D, clip: String, vx: float) -> float:
+	if a == null or a.sprite_frames == null or not a.sprite_frames.has_animation(clip):
+		return 1.0
+	var sf := a.sprite_frames
+	var n := float(sf.get_frame_count(clip))
+	var fps := maxf(1.0, sf.get_animation_speed(clip))
+	var body := 200.0 * absf(a.scale.y)
+	var stride := body * float(STRIDE.get(clip, 1.25))
+	return clampf(absf(vx) * (n / fps) / maxf(stride, 1.0), 0.45, 2.6)
+
+
+## Scale a body made by make_anim, keeping its feet where they were.
+static func grow(a: Node2D, k: float) -> void:
+	if a == null:
+		return
+	var feet := 4.0
+	a.position.y = feet - (feet - a.position.y) * k
+	a.scale *= k
+
+
 static func hide_polys(n: Node) -> void:
 	if n == null:
 		return

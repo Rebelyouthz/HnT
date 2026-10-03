@@ -118,6 +118,18 @@ func _process(_delta: float) -> bool:
 				current_scene.call("_banner", "DOCK STREET FILED", "Gant is down. Benny is free.", true, false)
 			"cards":
 				current_scene.call("_cards")
+			"cart", "cartworld":
+				var cart: Node = null
+				for n in current_scene.get_children():
+					if n.has_method("_enemy_near"):
+						cart = n
+				var p1: Node2D = root.get_tree().get_first_node_in_group("players")
+				for e in root.get_tree().get_nodes_in_group("enemies"):
+					e.queue_free()
+				if cart and p1:
+					p1.global_position = (cart as Node2D).global_position + Vector2(-50, 40)
+					if _tab == "ui_cart":
+						cart.call("_open", p1)
 			"pause":
 				var hud := root.get_tree().get_first_node_in_group("run_hud")
 				if hud == null:

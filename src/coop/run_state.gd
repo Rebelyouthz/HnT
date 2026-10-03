@@ -19,6 +19,8 @@ var score_dad: int = 0
 var score_total: int = 0
 var heat: int = 0
 var lunch: int = 0
+## Cart buys for the night: id -> stacks (see data/cart.json).
+var buffs: Dictionary = {}
 
 signal lives_changed
 signal points_changed
@@ -82,7 +84,14 @@ func add_scrap(n: int) -> void:
 	add_points(Juice.last_hitter, n * 4, "scrap")
 
 
+## Stacks of a cart buy this night.
+func buff(id: String) -> int:
+	return int(buffs.get(id, 0))
+
+
 func add_xp(n: int) -> void:
+	if buff("insight_lens") > 0:
+		n = int(ceil(float(n) * (1.0 + 0.25 * buff("insight_lens"))))
 	xp += n
 	xp_changed.emit()
 	if level_ups == 0 and xp >= 70:
@@ -190,7 +199,8 @@ func pack() -> Dictionary:
 		"score_dad": score_dad,
 		"score_total": score_total,
 		"heat": heat,
-		"lunch": lunch
+		"lunch": lunch,
+		"buffs": buffs.duplicate()
 	}
 
 
@@ -208,6 +218,7 @@ func unpack(d: Dictionary) -> void:
 	score_total = int(d.get("score_total", score_total))
 	heat = int(d.get("heat", heat))
 	lunch = int(d.get("lunch", lunch))
+	buffs = (d.get("buffs", {}) as Dictionary).duplicate()
 	gated = false
 	cleared = false
 	failed = false

@@ -265,6 +265,7 @@ func _mount_sprite() -> void:
 	if not SpriteBook.has_who(who):
 		who = "punk"
 	_anim = SpriteBook.make_anim(who)
+	SpriteBook.grow(_anim, SpriteBook.ENEMY_SCALE)
 	visual.add_child(_anim)
 
 
@@ -290,7 +291,7 @@ func _tick_sprite() -> void:
 		_anim.play(clip)
 		_anim.speed_scale = _swing_rate if clip == _swing_clip else 1.0
 	if clip == "walk":
-		_anim.speed_scale = clampf(absf(velocity.x) / 42.0, 0.6, 1.6)
+		_anim.speed_scale = SpriteBook.stride_rate(_anim, "walk", velocity.x)
 
 
 func _fling(delta: float) -> void:
@@ -383,7 +384,7 @@ func _physics_process(delta: float) -> void:
 		var d := t.global_position.x - global_position.x
 		facing = 1 if d > 0.0 else -1
 		visual.scale.x = float(facing)
-		if absf(d) < 46.0:
+		if absf(d) < 46.0 * SpriteBook.ENEMY_SCALE * 0.9:
 			if vehicle != "" and str(kit.get("attack", "")) == "ram":
 				_ram_hit(t as Fighter)
 				velocity.x = 0
@@ -788,6 +789,10 @@ func take_hit(kind: String, from: Node) -> void:
 		dmg += 8
 	if FamilyProfile.has_cbt("night_eyes") and kind == "snap":
 		dmg += 12
+	if from is Fighter and kind != "gun":
+		var knuckles := int((from as Fighter).call("_cart", "brass_knuckles"))
+		if knuckles > 0:
+			dmg = int(round(float(dmg) * (1.0 + 0.15 * float(knuckles))))
 	if from is Fighter and (from as Fighter).buff_t > 0.0:
 		dmg = int(round(float(dmg) * 1.25))
 	if from is Fighter:
@@ -1029,8 +1034,12 @@ func _show_brain() -> void:
 func _drops(from: Node) -> void:
 	var host := get_parent()
 	var rs := get_tree().get_first_node_in_group("run_state")
-	if rs and rs.has_method("add_xp"):
-		rs.add_xp(30 if title == "Bailiff" else (18 if title == "Mohawk Bo" or title == "Repo Goon" else 10))
+	# XP leaves as insight gems to pick up; gold as coins.
+	var xp_n := 30 if title == "Bailiff" else (18 if title == "Mohawk Bo" or title == "Repo Goon" else 10)
+	XpOrb.burst(host, global_position, xp_n, tier == "elite" or tier == "boss" or title == "Bailiff")
+	var coins := 6 if title == "Bailiff" else (2 if title == "Mohawk Bo" or title == "Repo Goon" else (1 if randf() < 0.6 else 0))
+	for i in coins:
+		LootDrop.spawn(host, global_position + Vector2(randf_range(-8, 8), 0), "coin", 1, 1.2)
 	var orb := ScrapOrb.new()
 	orb.amount = 8 if title == "Bailiff" else (5 if title == "Mohawk Bo" or title == "Repo Goon" else 3)
 	orb.global_position = global_position + Vector2(0, -20)

@@ -4,7 +4,7 @@ func _initialize() -> void:
 	var failed := 0
 	failed += _check_json("res://data/buildings.json", 28)
 	failed += _check_json("res://data/awards.json", 49)
-	failed += _check_json("res://data/cbt.json", 18)
+	failed += _check_json("res://data/cbt.json", 19)
 	failed += _check_json("res://data/cards.json", 42)
 	var gear: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/gear.json"))
 	if typeof(gear) != TYPE_DICTIONARY or ((gear as Dictionary).get("items", []) as Array).size() < 12:

@@ -134,19 +134,22 @@ func _tick() -> void:
 			if _beat_wait > 90:
 				_log.append("timeout@%d" % _step)
 				_phase = "press"
-			elif cb.ring_t >= 0.0 and _f._clock - cb.ring_t >= _CB.PERFECT_AT - 0.01 and _f.attack_cd == 0:
+			elif cb.ring_t >= 0.0 and _f._clock - cb.ring_t >= _CB.PERFECT_AT - 0.01 and (_f.attack_cd == 0 or str((_cur["steps"] as Array)[_step]).ends_with("H")):
 				_phase = "press"
 			elif cb.ring_t >= 0.0 and _f._clock - cb.ring_t > _CB.WINDOW:
 				_phase = "press"
 		"settle":
 			var id: String = str(_cur["id"])
-			print("COMBO_%s %s %s %s" % ["OK" if _landed.has(id) else "MISS", id, "perfect" if bool(_landed.get(id, false)) else "", " ".join(_log)])
+			var dd := -1.0
+			for e in get_nodes_in_group("dummies"):
+				dd = (e as Node2D).global_position.x - (_f as Node2D).global_position.x
+			print("COMBO_%s %s %s %s dummy_dx=%d" % ["OK" if _landed.has(id) else "MISS", id, "perfect" if bool(_landed.get(id, false)) else "", " ".join(_log), int(dd)])
 			_log.clear()
 			_phase = "next"
 
 
 func _press(tok: String) -> void:
-	_log.append("%s(cd%d,h%d)" % [tok, _f.attack_cd, _f._combo.hist.size()])
+	_log.append("%s(cd%d,h%d,t%.2f,ring%.2f)" % [tok, _f.attack_cd, _f._combo.hist.size(), _f._clock, _f._combo.ring_t])
 	var parts := tok.split("+")
 	var btn := parts[parts.size() - 1]
 	var dir := parts[0] if parts.size() > 1 else ""

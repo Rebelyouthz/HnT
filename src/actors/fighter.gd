@@ -265,6 +265,7 @@ func _mount_sprite() -> void:
 		return
 	SpriteBook.hide_polys(squash_root)
 	_anim = SpriteBook.make_anim(role)
+	SpriteBook.grow(_anim, SpriteBook.FIGHTER_SCALE)
 	squash_root.add_child(_anim)
 	Suits.dress(_anim, role)
 
@@ -396,10 +397,10 @@ func _tick_sprite() -> void:
 func _drive_clip(clip: String) -> void:
 	match clip:
 		"walk":
-			_anim.speed_scale = clampf(absf(velocity.x) / 80.0, 0.55, 1.5)
+			_anim.speed_scale = SpriteBook.stride_rate(_anim, "walk", velocity.x)
 		"parkour_run":
 			var spd := maxf(absf(velocity.x), 420.0 if dashing else 0.0)
-			_anim.speed_scale = clampf(spd / speed, 0.7, 1.6)
+			_anim.speed_scale = SpriteBook.stride_rate(_anim, "parkour_run", spd)
 		"jump":
 			if anim_atk == "jump":
 				return
@@ -595,7 +596,7 @@ func _tick_meters(delta: float) -> void:
 		var regen := 22.0
 		if FamilyProfile.has_cbt("second_lungs"):
 			regen *= 1.15
-		steam = minf(STEAM_MAX, steam + regen * delta)
+		steam = minf(STEAM_MAX, steam + regen * (1.0 + 0.3 * float(_cart("energy_drink"))) * delta)
 	blocking = _pressed("block") and steam > 2.0 and not downed
 	if tape_t > 0.0:
 		tape_t -= delta
@@ -743,7 +744,7 @@ func _process_street(delta: float) -> void:
 		var combo_spd := 1.0 + clampf(float(Juice.combo) * 0.008, 0.0, 0.14)
 		if stumble_t > 0.0:
 			limp *= 0.4
-		velocity.x = x * speed * limp * trick_boost * combo_spd
+		velocity.x = x * speed * limp * trick_boost * combo_spd * (1.0 + 0.12 * float(_cart("energy_drink")))
 		if _street_grounded():
 			velocity.y = y * depth_speed * limp
 		else:
@@ -1644,6 +1645,26 @@ func _hand_point() -> Vector2:
 	return out
 
 
+## Stacks of a halfway-cart buy this night (0 outside a run).
+func _cart(id: String) -> int:
+	var rs := get_tree().get_first_node_in_group("run_state") if is_inside_tree() else null
+	return int(rs.call("buff", id)) if rs != null and rs.has_method("buff") else 0
+
+
+## Radius that pulls insight gems (XP) in: grows with every level-up of the
+## run, faster with the XP MAGNET upgrade.
+func xp_magnet() -> float:
+	var r := 60.0 + (magnet_r - 72.0) + 60.0 * float(_cart("magnet_charm"))
+	var per := 14.0
+	if FamilyProfile.has_cbt("xp_magnet"):
+		r += 50.0
+		per = 30.0
+	var rs := get_tree().get_first_node_in_group("run_state") if is_inside_tree() else null
+	if rs != null:
+		r += per * float(rs.get("level_ups"))
+	return r
+
+
 func _mount_gun(kind: String) -> void:
 	if _anim == null:
 		return
@@ -1717,7 +1738,7 @@ func _fire_gun() -> void:
 		var r := Round.new()
 		r.weapon = id
 		r.round_kind = str(spec.get("round", "bullet"))
-		r.dmg = int(spec.get("dmg", 10))
+		r.dmg = int(round(float(spec.get("dmg", 10)) * (1.0 + 0.25 * float(_cart("gun_oil")))))
 		r.owner_role = role
 		r.shooter = self
 		r.lane_y = global_position.y
@@ -2347,7 +2368,7 @@ func equip_pickup(kind: String) -> void:
 	pickup = kind
 	if kind in GUNS:
 		var spec := WeaponBook.spec(kind)
-		pistol_shots = int(spec.get("mag", spec.get("ammo", 6)))
+		pistol_shots = int(round(float(spec.get("mag", spec.get("ammo", 6))) * (1.0 + 0.5 * float(_cart("long_mag")))))
 		ammo = maxi(ammo, 3)
 		_mount_gun(kind)
 		Juice.toast("reward", str(spec.get("title", kind)).to_upper(), "%s  ·  %d rounds  ·  stick up: head, down: legs" % [str(spec.get("caliber", "")), pistol_shots])
