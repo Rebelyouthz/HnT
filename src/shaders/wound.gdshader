@@ -18,6 +18,12 @@ uniform vec3 head = vec3(0.0, -60.0, 14.0);  // centre x, centre y, radius
 uniform vec2 holes[6];
 uniform int hole_n = 0;
 uniform vec4 blood : source_color = vec4(0.58, 0.03, 0.05, 1.0);
+// Dismemberment (guns). Body landmarks come from the head circle: the body
+// is ~11.8 head radii tall, hips at +6 r below the head centre.
+uniform float cut_head = 0.0;   // 1: head gone above the neck
+uniform float cut_leg = 0.0;    // +1 / -1: the leg on that side gone below the hip
+uniform vec3 gape = vec3(0.0, 0.0, 0.0); // see-through hole: x, y, radius
+uniform int only = 0;           // 1: draw only the head, 2: only the cut leg (flying pieces)
 
 varying vec2 lp;
 // The node's modulate only (COLOR in fragment already holds the texel).
@@ -113,6 +119,18 @@ void fragment() {
 	vec4 base = texture(TEXTURE, UV);
 	vec2 t = floor(lp);
 	vec3 col = base.rgb;
+	float r0 = max(head.z, 1.0);
+	float neck = head.y + r0 * 1.15;
+	float hip = head.y + r0 * 6.0;
+	bool is_head = t.y < neck && abs(t.x - head.x) < r0 * 2.4;
+	bool is_leg = cut_leg != 0.0 && t.y > hip && (t.x - head.x) * cut_leg > -r0 * 1.2;
+	if (only == 1 && !is_head) { base.a = 0.0; }
+	if (only == 2 && !(t.y > hip && (t.x - head.x) * (cut_leg == 0.0 ? 1.0 : cut_leg) > -r0 * 1.2)) { base.a = 0.0; }
+	if (only == 0) {
+		if (cut_head > 0.5 && is_head) { base.a = 0.0; }
+		if (is_leg) { base.a = 0.0; }
+		if (gape.z > 0.0 && distance(t, gape.xy) < gape.z) { base.a = 0.0; }
+	}
 	if (base.a > 0.5) {
 		vec2 hv = (t - head.xy) / max(head.z, 1.0);
 		float in_head = 1.0 - smoothstep(0.9, 1.25, length(hv * vec2(1.0, 0.85)));
@@ -149,6 +167,27 @@ void fragment() {
 				col = mix(vec3(0.62, 0.4, 0.32), vec3(0.42, 0.12, 0.12), step(0.5, hash(t)) * 0.6);
 			} else if (r > 1.0 - tear * 0.68) {
 				col = vec3(0.06, 0.03, 0.04);
+			}
+		}
+		// Stumps and the hole rim: meat, a white fleck of bone.
+		if (only == 0 && cut_head > 0.5 && t.y >= neck && t.y < neck + 3.0 && abs(t.x - head.x) < r0 * 1.2) {
+			col = mix(blood.rgb * 0.55, vec3(0.92, 0.86, 0.78), step(0.86, hash(t * 1.7)));
+		}
+		if (only == 0 && cut_leg != 0.0 && t.y > hip - 3.0 && t.y <= hip && (t.x - head.x) * cut_leg > -r0 * 1.2) {
+			col = mix(blood.rgb * 0.6, vec3(0.92, 0.86, 0.78), step(0.85, hash(t * 2.3)));
+		}
+		if (only == 2 && t.y > hip && t.y < hip + 3.0) {
+			col = mix(blood.rgb * 0.6, vec3(0.92, 0.86, 0.78), step(0.8, hash(t * 2.3)));
+		}
+		if (only == 1 && t.y > neck - 3.0) {
+			col = mix(blood.rgb * 0.5, vec3(0.9, 0.84, 0.76), step(0.85, hash(t * 1.3)));
+		}
+		if (only == 0 && gape.z > 0.0) {
+			float dg = distance(t, gape.xy);
+			if (dg < gape.z + 3.0) {
+				col = mix(blood.rgb * (0.45 + 0.4 * hash(t)), vec3(0.9, 0.8, 0.75), step(0.9, hash(t * 3.1)));
+			} else if (dg < gape.z + 6.0) {
+				col = mix(col, blood.rgb * 0.7, 0.8);
 			}
 		}
 		// Bullet holes.

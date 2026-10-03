@@ -220,13 +220,20 @@ static func head_of_tex(tex: Texture2D) -> Vector3:
 			var body := float(bottom - top)
 			var cx := 0.0
 			var cnt := 0.0
-			var hy := top + int(body * 0.08)
+			var hy := top + int(body * 0.1)
 			for x in w:
 				if img.get_pixel(x, hy).a > 0.5:
 					cx += float(x)
 					cnt += 1.0
 			cx = cx / cnt if cnt > 0.0 else float(w) * 0.5
-			out = Vector3(cx - float(w) * 0.5, float(top) + body * 0.085 - float(h) * 0.5, maxf(10.0, body * 0.085))
+			# get_image() of an AtlasTexture is only its region: shift by the
+			# margin and centre on the full (padded) frame the sprite draws.
+			var off := Vector2.ZERO
+			var full := Vector2(w, h)
+			if tex is AtlasTexture:
+				off = (tex as AtlasTexture).margin.position
+				full = tex.get_size()
+			out = Vector3(cx + off.x - full.x * 0.5, float(top) + off.y + body * 0.1 - full.y * 0.5, maxf(10.0, body * 0.08))
 	_heads[key] = out
 	return out
 

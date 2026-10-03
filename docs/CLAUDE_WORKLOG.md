@@ -34,6 +34,46 @@ The rest is in English, like the code. Newest work first. Each block says
 
 ---
 
+## 0c. Guns: held in the fist, five weapons that fire differently, gunshot gore (latest)
+
+**Svenska:** Alla skjutvapen hålls i handen och skjuter på riktigt. Fem vapen
+som varken beter sig eller ser likadana ut: pistol (nästan osynlig het strimma),
+hagelgevär (svärm av små grå hagel, rött patronhylsa), kpist (auto, tunna
+strimmor), spikpistol (synlig spik som fastnar i kroppar och väggar) och
+FINAL NOTICE (påhittad: långsam pulserande röd bläckboll med kvittoremsor som
+går genom alla). Sikta med spaken: upp = huvud, ner = ben, annars bröst.
+Huvudskott = blodmoln och hål; hagel på nära håll i huvudet = huvudet flyger
+av med fontän ur halsen; i bröstet = genomskjutet hål; i benen = benet skjuts
+av och flyger. Kulhål blöder på kroppen.
+
+- **Weapons** (`data/weapons.json`): pistol (bullet, 8 rounds), nailgun (nail),
+  shotgun "REPO 12" (9 pellets, spread, two hands), smg "OVERTIME" (auto,
+  30 rounds), ray "FINAL NOTICE" (orb, pierces, legendary). Pickups placed
+  on Dock Street and the Intake Lot (`run_act.gd _place_weapons`); the pickup
+  shows the gun sprite.
+- **Art**: `tools/gun_art.py` draws the five pixel guns into
+  `assets/sprites/guns/*.png` plus `guns.json` (grip and muzzle points).
+- **Holding** (`fighter.gd`): `_mount_gun`, `_place_gun` (grip on the fist of the
+  cross hit frame, recoil lift), `_muzzle_global`, `_fire_gun` (zones, spread,
+  recoil, flash, casings, empty = drop). Light attack fires when armed; SMG
+  auto-fires while held. `_hand_point` finds the fist in the frame.
+- **Rounds** (`src/combat/round.gd`, class `Round`): swept lane hit test
+  against Punks, per-kind look and flight (bullet, pellet, nail, orb).
+- **Muzzle fx** (`src/combat/gun_fx.gd`): per-gun flash shape, smoke, brass or
+  red shells that bounce and clink.
+- **Gore** (`src/juice/gun_gore.gd`): `wound()` on hits (holes, exit spray,
+  reactions), `death()` picks HEADSHOT / DECAPITATED / CLEAN THROUGH / LEG
+  DAY / dissolve (ray), with flying head and leg pieces. Shader uniforms
+  `cut_head`, `cut_leg`, `gape`, `only` in `wound.gdshader`.
+- **Important fix**: `AtlasTexture.get_image()` returns only the region,
+  without the margins. Both `BloodSim.head_of_tex` and `_hand_point` now add
+  `margin.position` and centre on `tex.get_size()`. Before this the head
+  circle was ~30 texels too high on every padded sprite, so face wounds and
+  every head-based landmark were off.
+- **Tests**: `tools/gun_test.gd -- outdir weapon:zone:dist ...` (frames plus 2x
+  crops in the dojo), `tools/gore_shader_test.gd -- out.png` (all shader cut
+  states on a punk, deterministic).
+
 ## 0a. Painted backdrops on every map but one (latest)
 
 Every map now has its own painted, stitched backdrop strip

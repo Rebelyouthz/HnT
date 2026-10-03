@@ -56,6 +56,19 @@ func _ready() -> void:
 	p.color = Rarity.color(Rarity.of_pickup(kind))
 	if SpriteBook.attach_living(self, kind):
 		p.visible = false
+	elif ResourceLoader.exists("res://assets/sprites/guns/%s.png" % kind):
+		# Hand guns lie on the street as their own art, glinting.
+		var g := Sprite2D.new()
+		g.texture = load("res://assets/sprites/guns/%s.png" % kind)
+		g.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE) * 1.3
+		g.position = Vector2(0, -4)
+		g.rotation = -0.12
+		g.texture_filter = SpriteBook.world_filter()
+		add_child(g)
+		var tw := g.create_tween().set_loops()
+		tw.tween_property(g, "position:y", -7.0, 0.7).set_trans(Tween.TRANS_SINE)
+		tw.tween_property(g, "position:y", -4.0, 0.7).set_trans(Tween.TRANS_SINE)
+		p.visible = false
 	body_entered.connect(_grab)
 
 

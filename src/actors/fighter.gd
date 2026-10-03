@@ -78,6 +78,13 @@ var _breath := 0.0
 var vs_mode := false
 var magnet_r := 72.0
 var pistol_shots := 0
+## Hand guns (data/weapons.json "gun"): the held sprite, cooldown, and how
+## long the arm stays up after a shot.
+const GUNS := ["pistol", "nailgun", "shotgun", "smg", "ray"]
+var gun_cd := 0.0
+var aim_t := 0.0
+var _gun: Sprite2D
+static var _hands := {}
 var trick_boost := 1.0
 var trick_t := 0.0
 var stumble_t := 0.0
@@ -331,6 +338,8 @@ func _tick_sprite() -> void:
 		clip = "hurt"
 	elif anim_atk != "" and _atk_t > 0.0:
 		clip = anim_atk
+	elif aim_t > 0.0 and _gun != null and _anim.sprite_frames.has_animation("cross"):
+		clip = "cross"
 	elif blocking and _anim.sprite_frames.has_animation("block_" + block_height):
 		clip = "block_" + block_height
 	elif snap_ready:
@@ -362,6 +371,17 @@ func _tick_sprite() -> void:
 			clip = "idle"
 		else:
 			return
+	if clip == "cross" and aim_t > 0.0 and anim_atk == "":
+		# Arm out, gun level: hold the extension frame of the cross.
+		var hi := _hand_frame()
+		if _anim.animation != "cross":
+			_anim.play("cross")
+		_anim.pause()
+		_anim.frame = hi
+		_place_gun()
+		return
+	if _gun != null:
+		_gun.visible = false
 	if _anim.animation != clip:
 		_anim.speed_scale = 1.0
 		_anim.play(clip)
@@ -541,6 +561,13 @@ func _tick_meters(delta: float) -> void:
 		wall_run -= delta
 	if parry_win > 0:
 		parry_win -= 1
+	if gun_cd > 0.0:
+		gun_cd -= delta
+	if aim_t > 0.0:
+		aim_t -= delta
+	# OVERTIME is automatic: hold shoot (or light) and it keeps going.
+	if pickup == "smg" and pistol_shots > 0 and (_pressed("shoot") or _pressed("light")) and gun_cd <= 0.0 and not downed:
+		_fire_gun()
 	if _light_buf > 0:
 		_light_buf -= 1
 	if revenge_win > 0:
@@ -1178,11 +1205,10 @@ func _attack(kind: String, charged: bool) -> void:
 			kind = "blade"
 	elif pickup == "can":
 		size += Vector2(8, 4)
-	elif (pickup == "pistol" or pickup == "nailgun") and (kind == "light" or kind == "gut-punch") and pistol_shots > 0:
-		pistol_shots -= 1
-		_fire_shot()
-		if pistol_shots <= 0:
-			pickup = ""
+	elif pickup in GUNS and (kind == "light" or kind == "gut-punch") and pistol_shots > 0:
+		# A gun in hand: light pulls the trigger instead of punching.
+		_fire_gun()
+		return
 	if charged and kind == "heavy":
 		size = Vector2(78, 50)
 	if kind != "light":
@@ -1553,6 +1579,9 @@ func _shoot() -> void:
 		Juice.shout("BOUNDARY")
 		Juice.pulse_shake(7.0)
 		return
+	if pickup in GUNS:
+		_fire_gun()
+		return
 	if ammo <= 0 or attack_cd > 0:
 		return
 	ammo -= 1
@@ -1563,6 +1592,166 @@ func _shoot() -> void:
 	if rs and rs.has_method("has_card") and rs.has_card("tutoring") and lights_clean > 0 and lights_clean % 8 == 0:
 		_fire_shot(Vector2(0, -12))
 		Juice.shout("TUTORING")
+
+
+## The frame of the cross where the arm is fully out (the aim pose).
+func _hand_frame() -> int:
+	var info := SpriteBook.clip_info(role, "cross")
+	return clampi(int(info.get("hit", 6)), 0, maxi(0, int(info.get("count", 1)) - 1))
+
+
+## Where the fist is in that frame, in the AnimatedSprite's local texels:
+## the furthest-forward solid pixel in the shoulder band of the body.
+func _hand_point() -> Vector2:
+	if _hands.has(role):
+		return _hands[role]
+	var out := Vector2(40, -60)
+	var tex := _anim.sprite_frames.get_frame_texture("cross", _hand_frame()) if _anim != null else null
+	if tex != null:
+		var img := tex.get_image()
+		if img != null:
+			var w := img.get_width()
+			var h := img.get_height()
+			var top := -1
+			var bot := -1
+			for y in range(0, h, 2):
+				for x in range(0, w, 3):
+					if img.get_pixel(x, y).a > 0.5:
+						if top < 0:
+							top = y
+						bot = y
+						break
+			if top >= 0:
+				var body := float(bot - top)
+				var best := Vector2(-1, -1)
+				for y in range(int(top + body * 0.16), int(top + body * 0.42)):
+					for x in range(w - 1, -1, -1):
+						if img.get_pixel(x, y).a > 0.5:
+							if x > best.x:
+								best = Vector2(x, y)
+							break
+				if best.x >= 0:
+					# get_image() is only the atlas region: add the margin
+					# offset and centre on the full padded cell.
+					var off := Vector2.ZERO
+					var full := Vector2(w, h)
+					if tex is AtlasTexture:
+						var at := tex as AtlasTexture
+						off = at.margin.position
+						full = at.get_size()
+					out = best + off - full * 0.5
+	_hands[role] = out
+	return out
+
+
+func _mount_gun(kind: String) -> void:
+	if _anim == null:
+		return
+	if _gun == null:
+		_gun = Sprite2D.new()
+		_gun.centered = false
+		_gun.texture_filter = SpriteBook.world_filter()
+		_gun.z_index = 1
+		squash_root.add_child(_gun)
+	var path := "res://assets/sprites/guns/%s.png" % kind
+	_gun.texture = load(path) if ResourceLoader.exists(path) else null
+	_gun.set_meta("kind", kind)
+	_gun.visible = false
+
+
+static var _gun_cache: Dictionary = {}
+
+
+func _gun_meta(kind: String) -> Dictionary:
+	if _gun_cache.is_empty():
+		var all: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://assets/sprites/guns/guns.json"))
+		if all is Dictionary:
+			_gun_cache = all
+	return _gun_cache.get(kind, {}) as Dictionary
+
+
+## Gun in the fist: grip on the hand point, a touch of recoil lift.
+func _place_gun() -> void:
+	if _gun == null or _anim == null or _gun.texture == null:
+		return
+	var m := _gun_meta(str(_gun.get_meta("kind", "pistol")))
+	var grip: Array = m.get("grip", [8, 12])
+	var hand := _anim.position + _hand_point() * _anim.scale
+	_gun.scale = _anim.scale
+	var kick := clampf(gun_cd * 4.0, 0.0, 1.0) * 0.18
+	_gun.rotation = -kick
+	_gun.position = hand - Vector2(float(grip[0]), float(grip[1])).rotated(-kick) * _gun.scale
+	_gun.visible = true
+
+
+func _muzzle_global() -> Vector2:
+	if _gun != null and _gun.texture != null:
+		var m := _gun_meta(str(_gun.get_meta("kind", "pistol")))
+		var mz: Array = m.get("muzzle", [28, 5])
+		return _gun.to_global(Vector2(float(mz[0]), float(mz[1])))
+	return global_position + Vector2(float(facing) * 30.0, -44.0 + hop)
+
+
+## Pull the trigger of the gun in hand: rounds per the weapon (one, a fan of
+## pellets, a nail, an orb), aimed at head / chest / legs with the stick.
+func _fire_gun() -> void:
+	if gun_cd > 0.0 or pistol_shots <= 0 or downed:
+		return
+	var id := pickup
+	var spec := WeaponBook.spec(id)
+	gun_cd = float(spec.get("rate", 0.3))
+	aim_t = maxf(aim_t, gun_cd + 0.45)
+	attack_cd = maxi(attack_cd, int(gun_cd * 60.0))
+	pistol_shots -= 1
+	if _gun == null or str(_gun.get_meta("kind", "")) != id:
+		_mount_gun(id)
+	_tick_sprite()
+	var y := _stick().y
+	var zone := "head" if y < -0.4 else ("legs" if y > 0.4 else "chest")
+	var at := _muzzle_global()
+	var host := get_parent()
+	var n := int(spec.get("pellets", 1))
+	var spread := float(spec.get("spread", 0.0))
+	var spd := float(spec.get("speed", 2000.0))
+	for i in n:
+		var r := Round.new()
+		r.weapon = id
+		r.round_kind = str(spec.get("round", "bullet"))
+		r.dmg = int(spec.get("dmg", 10))
+		r.owner_role = role
+		r.shooter = self
+		r.lane_y = global_position.y
+		r.range_left = float(spec.get("range", 900.0))
+		r.pierce = r.round_kind == "orb"
+		var z := zone
+		if spread > 0.0 and randf() < spread * 4.0:
+			# Spray: some rounds land a zone off.
+			z = ["head", "chest", "gut", "legs"][randi() % 4]
+		r.zone = z
+		var ang := randf_range(-spread, spread)
+		r.vel = Vector2(float(facing) * spd, 0.0).rotated(ang * float(facing))
+		r.global_position = at
+		host.add_child(r)
+	var recoil := float(spec.get("recoil", 6))
+	velocity.x -= float(facing) * recoil * 9.0
+	GunFx.flash(host, at, id, facing)
+	GunFx.casing(host, at + Vector2(-float(facing) * 10.0, 0), id, facing, global_position.y + 6.0)
+	var snd := str(spec.get("sfx", "res://assets/audio/pistol.wav"))
+	if not ResourceLoader.exists(snd):
+		snd = "res://assets/audio/pistol.wav"
+	Mixer.play_sfx(snd, randf_range(0.95, 1.05), -2.0 if id != "smg" else -6.0)
+	Juice.pulse_shake({"shotgun": 6.0, "ray": 4.0, "pistol": 2.0, "smg": 0.8, "nailgun": 1.2}.get(id, 2.0))
+	if id == "shotgun":
+		Juice.hitstop(2)
+	if pistol_shots <= 0:
+		# Dry: the empty gun is tossed aside.
+		get_tree().create_timer(0.35).timeout.connect(func() -> void:
+			if is_instance_valid(self) and pickup == id:
+				pickup = ""
+				if _gun != null:
+					_gun.visible = false
+				Juice.popup_number(global_position + Vector2(0, -84), "EMPTY", Color(0.8, 0.8, 0.8))
+		)
 
 
 func _fire_shot(extra := Vector2.ZERO) -> void:
@@ -2089,7 +2278,7 @@ func _try_catch() -> bool:
 
 
 func _throw_held_weapon() -> bool:
-	if pickup == "" or pickup == "pistol" or pickup == "nailgun":
+	if pickup == "" or pickup in GUNS:
 		return false
 	attack_cd = 16
 	var tw := ThrownWeapon.new()
@@ -2156,10 +2345,12 @@ func _throw() -> void:
 
 func equip_pickup(kind: String) -> void:
 	pickup = kind
-	if kind == "pistol" or kind == "nailgun":
+	if kind in GUNS:
 		var spec := WeaponBook.spec(kind)
-		pistol_shots = maxi(3, int(spec.get("ammo", 6)))
+		pistol_shots = int(spec.get("mag", spec.get("ammo", 6)))
 		ammo = maxi(ammo, 3)
+		_mount_gun(kind)
+		Juice.toast("reward", str(spec.get("title", kind)).to_upper(), "%s  ·  %d rounds  ·  stick up: head, down: legs" % [str(spec.get("caliber", "")), pistol_shots])
 	if kind == "invoice_star":
 		Juice.unlock_logo("INVOICE STAR", "Legendary paperwork. Throw it like you mean the copay.", "SECRET  ·  LEGENDARY")
 	Juice.shout(kind.to_upper())

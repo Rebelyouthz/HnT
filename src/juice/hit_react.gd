@@ -208,7 +208,7 @@ static func corpse(host: Node, art: AnimatedSprite2D, feet: Vector2, zone: Strin
 			tw.set_parallel(false)
 			tw.tween_property(body, "position:y", feet.y - 9.0, 0.08)
 			tw.tween_property(body, "position:y", feet.y - 4.0, 0.08)
-		"bullet":
+		"bullet", "shot":
 			# Jolt, sag, crumple where they stood. The pool does the rest.
 			tw.tween_property(body, "position:x", feet.x + away * 5.0, 0.06)
 			tw.tween_property(body, "scale", Vector2(1.05, 0.82), 0.25)

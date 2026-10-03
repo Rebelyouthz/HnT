@@ -158,8 +158,8 @@ func _place_smash() -> void:
 
 func _place_weapons() -> void:
 	var rows: Dictionary = {
-		"dock_street": [[900.0, 500.0, "chain"]],
-		"intake_lot": [[760.0, 500.0, "crowbar"]],
+		"dock_street": [[900.0, 500.0, "chain"], [1160.0, 500.0, "pistol"], [1740.0, 500.0, "shotgun"], [2180.0, 500.0, "smg"], [2560.0, 500.0, "nailgun"]],
+		"intake_lot": [[760.0, 500.0, "crowbar"], [980.0, 500.0, "shotgun"], [1340.0, 500.0, "smg"], [1760.0, 500.0, "ray"]],
 		"fire_escapes": [[860.0, 248.0, "stapler"]],
 		"group_circle": [[1180.0, 500.0, "clipboard"]],
 		"neon_exchange": [[1480.0, 248.0, "nailgun"]],

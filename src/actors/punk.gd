@@ -50,6 +50,8 @@ var _height_mark: Polygon2D
 ## the playback rate that puts its contact frame on the end of the wind-up.
 var _swing_clip := ""
 var _overkill := false
+## The last round that hit (weapon, zone, distance): decides the gun death.
+var _shot: Dictionary = {}
 var _swing_rate := 1.0
 signal died
 signal finish_ready
@@ -679,7 +681,7 @@ func take_hit(kind: String, from: Node) -> void:
 		if get_tree().get_first_node_in_group("chase_crash") == null:
 			_clash(from as Fighter)
 			return
-	if guarding and kind != "throw" and kind != "snap" and kind != "finish" and kind != "web-slam":
+	if guarding and kind != "throw" and kind != "snap" and kind != "finish" and kind != "web-slam" and kind != "gun":
 		var high_beats_low := guard_low and (kind == "jump-kick" or kind == "dive" or kind == "heavy" or kind == "launcher")
 		var low_beats_high := (not guard_low) and (kind == "slide" or kind == "jump-kick")
 		if not high_beats_low and not low_beats_high:
@@ -763,6 +765,12 @@ func take_hit(kind: String, from: Node) -> void:
 	elif kind == "snare":
 		dmg = 4
 		snared = 1.1
+	elif kind == "gun" and from is Round:
+		# Where it lands matters: the head takes three times the round.
+		var rd := from as Round
+		var mul: float = {"head": 3.0, "chest": 1.0, "gut": 0.9, "legs": 0.65}.get(rd.zone, 1.0)
+		dmg = int(round(float(rd.dmg) * mul))
+		_shot = {"weapon": rd.weapon, "zone": rd.zone, "dist": rd.dist, "kind": rd.round_kind}
 	elif kind == "combo":
 		dmg = int(from.get("combo_dmg")) if from != null and from.get("combo_dmg") != null else 24
 	if FamilyProfile.has_cbt("pocket_sand") and kind == "throw":
@@ -914,11 +922,15 @@ func _die(kind: String, from: Node) -> void:
 	var dir := -float(facing)
 	if from is Node2D and (from as Node2D).global_position.x != global_position.x:
 		dir = signf(global_position.x - (from as Node2D).global_position.x)
+	# Shot dead: the gun death (headshot, decap, leg off, through the chest).
+	var gunned: bool = from is Round and not _shot.is_empty() and GunGore.death(self, _shot, dir)
 	# Brutal: the body comes apart on an overkill, chunks and teeth otherwise.
 	var gb := get_tree().get_first_node_in_group("blood_sim")
-	if gb and gb.has_method("gore"):
+	if gb and gb.has_method("gore") and not gunned:
 		gb.gore(global_position, dir, "overkill" if _overkill else "kill")
-	if _overkill:
+	if gunned:
+		pass
+	elif _overkill:
 		_last_zone = "blast"
 		Mixer.play_sfx("res://assets/audio/sfx/gib_splat.ogg")
 		Mixer.play_sfx("res://assets/audio/sfx/skull_crunch.ogg", 1.0, -2.0)
@@ -932,10 +944,14 @@ func _die(kind: String, from: Node) -> void:
 		Mixer.play_sfx("res://assets/audio/sfx/body_fall.ogg", 1.0, -3.0)
 	)
 	VoBank.line(VoBank.who_of(self), "death", 0.55)
+	var killer := ""
 	if from is Fighter:
-		var role := (from as Fighter).role
+		killer = (from as Fighter).role
+	elif from is Round:
+		killer = (from as Round).owner_role
+	if killer == "son" or killer == "father":
 		get_tree().create_timer(1.1).timeout.connect(func() -> void:
-			VoBank.line(role, "kill", 0.35)
+			VoBank.line(killer, "kill", 0.35)
 		)
 	if kind != "light" and kind != "snap":
 		Juice.kill_burst(global_position, kind)
@@ -945,7 +961,9 @@ func _die(kind: String, from: Node) -> void:
 	var blood := get_tree().get_first_node_in_group("blood_sim")
 	if blood and blood.has_method("pump") and _last_zone != "low":
 		blood.pump(global_position, dir)
-	if _anim != null and not FamilyProfile.less_gore():
+	if gunned:
+		pass
+	elif _anim != null and not FamilyProfile.less_gore():
 		HitReact.corpse(get_parent(), _anim, global_position, _last_zone, dir, facing)
 	elif kind != "light" and kind != "snap":
 		StreetRagdoll.burst(get_parent(), global_position, dir, _base_mod)
@@ -1029,6 +1047,12 @@ func _drops(from: Node) -> void:
 ## death: face cuts and spray for head shots, a cough and a fold for the gut,
 ## legs swept for slides, a hole and an exit spray for bullets.
 func _gore(kind: String, from: Node, dir: float) -> void:
+	if from is Round:
+		# Rounds: zone wounds (GunGore), not the punch zones.
+		_last_zone = "bullet"
+		if hp > 0:
+			GunGore.wound(self, _shot, dir)
+		return
 	var clip := ""
 	if from is Fighter:
 		clip = str((from as Fighter).get("_strike_clip"))
