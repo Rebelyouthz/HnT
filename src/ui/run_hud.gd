@@ -597,25 +597,56 @@ func _toggle_pause() -> void:
 	dim.color = Color(0, 0, 0, 0.7)
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	layer.add_child(dim)
+	# A framed card: actions on the left, the night's numbers on the right.
+	var card := PanelContainer.new()
+	card.add_theme_stylebox_override("panel", UiKit.panel(Palette.PANEL, UiKit.GOLD))
+	card.position = Vector2(200, 70)
+	card.custom_minimum_size = Vector2(880, 0)
+	layer.add_child(card)
+	var pad := MarginContainer.new()
+	for side in ["left", "right", "top", "bottom"]:
+		pad.add_theme_constant_override("margin_" + side, 22)
+	card.add_child(pad)
+	var cols := HBoxContainer.new()
+	cols.add_theme_constant_override("separation", 28)
+	pad.add_child(cols)
 	var col := VBoxContainer.new()
-	col.position = Vector2(440, 88)
 	col.add_theme_constant_override("separation", 10)
-	layer.add_child(col)
+	col.custom_minimum_size = Vector2(400, 0)
+	cols.add_child(col)
+	var right := VBoxContainer.new()
+	right.add_theme_constant_override("separation", 8)
+	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	cols.add_child(right)
 	var t := Label.new()
 	t.text = Copy.PAUSE
 	UiKit.apply_label(t, 28, Palette.LEMON)
 	col.add_child(t)
 	var hint := Label.new()
-	hint.text = "C ducks. Stick down walks into the street, it does not crouch. Tap BLOCK to PARRY. THROW pipes, tap THROW to CATCH. HEAVY vs a wind-up is a CLASH. Pause never skips the Raven Grid crash."
+	hint.text = "C ducks. Stick down walks into the street, it does not crouch. Tap BLOCK to PARRY. THROW pipes, tap THROW to CATCH. HEAVY vs a wind-up is a CLASH. Holding a gun: light fires, stick up aims at the head, down at the legs. Pause never skips the Raven Grid crash."
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.custom_minimum_size = Vector2(380, 0)
 	UiKit.apply_label(hint, 13, Palette.MUTED)
 	col.add_child(hint)
-	var r := UiKit.button("RESUME", Vector2(220, 48))
+	var r := UiKit.button("RESUME", Vector2(400, 48))
 	r.process_mode = Node.PROCESS_MODE_ALWAYS
 	r.pressed.connect(_toggle_pause)
 	col.add_child(r)
-	var end := UiKit.button("END SESSION", Vector2(220, 48))
+	var opts := UiKit.button("OPTIONS", Vector2(400, 48))
+	opts.process_mode = Node.PROCESS_MODE_ALWAYS
+	opts.pressed.connect(func() -> void:
+		var sheet := preload("res://src/ui/settings_sheet.gd").new()
+		sheet.process_mode = Node.PROCESS_MODE_ALWAYS
+		sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
+		layer.add_child(sheet)
+		sheet.closed.connect(func() -> void:
+			sheet.queue_free()
+			if is_instance_valid(opts):
+				opts.grab_focus()
+		)
+	)
+	col.add_child(opts)
+	var end := UiKit.button("END SESSION", Vector2(400, 48))
 	end.process_mode = Node.PROCESS_MODE_ALWAYS
 	end.pressed.connect(func() -> void:
 		Juice.restore_time()
@@ -628,7 +659,7 @@ func _toggle_pause() -> void:
 	if state:
 		var son_n := FamilyProfile.son_name()
 		var dad_n := FamilyProfile.father_name()
-		col.add_child(StatPanel.new([
+		right.add_child(StatPanel.new([
 			{"name": son_n, "value": "%06d" % state.score_son, "color": Palette.LEMON},
 			{"name": dad_n, "value": "%06d" % state.score_dad, "color": Palette.BRICK},
 			{"name": "TABLE", "value": "%06d" % state.score_total, "color": Palette.EDGE},
@@ -651,9 +682,9 @@ func _toggle_pause() -> void:
 		else:
 			lead.text = "%s is winning the night. The tutoring license winced." % dad_n
 		lead.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		lead.custom_minimum_size = Vector2(400, 0)
+		lead.custom_minimum_size = Vector2(380, 0)
 		UiKit.apply_label(lead, 13, Palette.MUTED)
-		col.add_child(lead)
+		right.add_child(lead)
 	r.grab_focus()
 
 

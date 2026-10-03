@@ -118,6 +118,14 @@ func _process(_delta: float) -> bool:
 				current_scene.call("_banner", "DOCK STREET FILED", "Gant is down. Benny is free.", true, false)
 			"cards":
 				current_scene.call("_cards")
+			"pause":
+				var hud := root.get_tree().get_first_node_in_group("run_hud")
+				if hud == null:
+					for n in current_scene.find_children("*", "CanvasLayer", true, false):
+						if n.has_method("_toggle_pause"):
+							hud = n
+				if hud:
+					hud.call("_toggle_pause")
 			"toasts":
 				var j := root.get_node("Juice")
 				j.call("toast", "reward", "SECRET FOUND", "The Harbour Clock  ·  128 metres")
