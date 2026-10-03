@@ -35,26 +35,50 @@ func covers(pos: Vector2) -> bool:
 	return pos.y >= top_y - 18.0 and pos.y <= bottom_y + 24.0
 
 
+## Iron ladder at the same fine detail as the characters and the painted
+## street: thin rails with a lit edge and a shadow edge, rungs every 6 u
+## with rivets, rust streaks, a railed landing at the roof line and a
+## drop-shadow on the wall behind.
 func _paint() -> void:
 	var h := bottom_y - top_y
-	var rail := Polygon2D.new()
-	rail.color = Color(0.28, 0.16, 0.14)
-	rail.polygon = PackedVector2Array([
-		Vector2(-16, -h * 0.5), Vector2(-10, -h * 0.5),
-		Vector2(-10, h * 0.5), Vector2(-16, h * 0.5)
-	])
-	add_child(rail)
-	var rail2 := rail.duplicate() as Polygon2D
-	rail2.position.x = 26
-	add_child(rail2)
-	var y := -h * 0.5
-	while y < h * 0.5:
-		var rung := Polygon2D.new()
-		rung.color = Color(0.42, 0.24, 0.2)
-		rung.polygon = PackedVector2Array([
-			Vector2(-16, y), Vector2(16, y), Vector2(16, y + 5), Vector2(-16, y + 5)
-		])
-		add_child(rung)
-		y += 22.0
-	var span := maxf(96.0, h)
-	SpriteBook.attach_scaled(self, "fire_escape", 0.0, Vector2(0.85, clampf(span / 96.0, 1.4, 3.2)))
+	var top := -h * 0.5
+	var iron := Color(0.09, 0.09, 0.11)
+	var mid := Color(0.2, 0.19, 0.21)
+	var lit := Color(0.48, 0.45, 0.46)
+	var rust := Color(0.42, 0.2, 0.12)
+	# Shadow cast on the wall.
+	_rect(Rect2(-12, top - 4.0, 28, h + 4.0), Color(0, 0, 0.02, 0.28), 0)
+	for x in [-13.0, 10.0]:
+		_rect(Rect2(x, top - 6.0, 3, h + 6.0), iron)
+		_rect(Rect2(x + 0.5, top - 6.0, 1.0, h + 6.0), mid)
+		_rect(Rect2(x, top - 6.0, 0.5, h + 6.0), lit)
+	var y := top + 3.0
+	var n := 0
+	while y < h * 0.5 - 1.0:
+		_rect(Rect2(-10, y, 20, 1.5), iron)
+		_rect(Rect2(-10, y, 20, 0.5), lit if n % 4 != 2 else rust)
+		_rect(Rect2(-12.5, y - 0.25, 1.5, 1.5), mid)
+		_rect(Rect2(10.5, y - 0.25, 1.5, 1.5), mid)
+		if n % 5 == 3:
+			_rect(Rect2(-9.0 + float(n % 7) * 2.0, y + 1.5, 0.8, 3.0), Color(rust.r, rust.g, rust.b, 0.6))
+		y += 6.0
+		n += 1
+	# Landing: grate deck, handrail, posts.
+	_rect(Rect2(-24, top - 9.0, 48, 2.5), iron)
+	_rect(Rect2(-24, top - 9.0, 48, 0.5), lit)
+	var bx := -23.0
+	while bx < 24.0:
+		_rect(Rect2(bx, top - 6.5, 0.8, 4.0), mid)
+		bx += 3.0
+	_rect(Rect2(-24, top - 22.0, 48, 1.2), iron)
+	_rect(Rect2(-24, top - 22.0, 48, 0.4), lit)
+	for px in [-24.0, -8.0, 8.0, 23.0]:
+		_rect(Rect2(px, top - 22.0, 1.2, 13.0), iron)
+
+
+func _rect(r: Rect2, c: Color, z: int = 1) -> void:
+	var p := Polygon2D.new()
+	p.color = c
+	p.polygon = PackedVector2Array([r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)])
+	p.z_index = z
+	add_child(p)

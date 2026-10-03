@@ -14,6 +14,9 @@ var _modal: Control
 var _safe: MarginContainer
 var _pill_vals := {"gold": "", "gems": "", "rep": ""}
 var _avatar_btn: Button
+var _avatar_names: Label
+var _avatar_lv: Label
+var _avatar_xp: ProgressBar
 var _avatar_dot: ColorRect
 var _logo_dot: ColorRect
 var _tab_dots: Dictionary = {}
@@ -38,10 +41,24 @@ func _build_chrome() -> void:
 	bg.color = Palette.BG
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
+	# The wharf at night behind every menu (reference board), dimmed so the
+	# navy cards read on top; 8/3 design px per texel = 4 screen px.
+	if ResourceLoader.exists("res://assets/backdrops/dock.png"):
+		var city := TextureRect.new()
+		city.texture = load("res://assets/backdrops/dock.png")
+		city.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		city.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		city.stretch_mode = TextureRect.STRETCH_SCALE
+		var tw := float(city.texture.get_width()) * 8.0 / 3.0
+		city.size = Vector2(tw, float(city.texture.get_height()) * 8.0 / 3.0)
+		city.position = Vector2((1280.0 - tw) * 0.5, 0.0)
+		city.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(city)
 
 	var night := ColorRect.new()
-	night.color = Color(0.22, 0.25, 0.38, 0.35)
+	night.color = Color(0.02, 0.03, 0.08, 0.62)
 	night.set_anchors_preset(Control.PRESET_FULL_RECT)
+	night.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(night)
 
 	_safe = MarginContainer.new()
@@ -64,25 +81,73 @@ func _build_chrome() -> void:
 
 func _make_top() -> Control:
 	var bar := PanelContainer.new()
-	bar.add_theme_stylebox_override("panel", UiKit.panel(Palette.PANEL, Palette.EDGE))
+	# No slab across the top: the city shows through (reference board).
+	bar.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 12)
+	row.add_theme_constant_override("separation", 8)
 	bar.add_child(row)
 
 	var avatar_wrap := Control.new()
-	avatar_wrap.custom_minimum_size = Vector2(228, 56)
-	var avatar := UiKit.button("", Vector2(220, 56))
+	avatar_wrap.custom_minimum_size = Vector2(246, 64)
+	var avatar := UiKit.button("", Vector2(240, 64))
 	_avatar_btn = avatar
-	avatar.text = "%s  LV %d\nTHE SON\n%s\nTHE FATHER" % [
-		FamilyProfile.son_name(), int(FamilyProfile.data.get("account_level", 1)), FamilyProfile.father_name()
-	]
 	avatar.pressed.connect(_open_profile)
 	avatar.set_anchors_preset(Control.PRESET_FULL_RECT)
 	avatar_wrap.add_child(avatar)
+	# Profile card: both patients, names, account level and XP to next.
+	var card := HBoxContainer.new()
+	card.set_anchors_preset(Control.PRESET_FULL_RECT)
+	card.offset_left = 8
+	card.offset_right = -8
+	card.add_theme_constant_override("separation", 6)
+	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for who in ["son", "father"]:
+		var pic := UiKit.portrait(SpriteBook.bust(who), Vector2(44, 56))
+		pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		card.add_child(pic)
+	var info := VBoxContainer.new()
+	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info.alignment = BoxContainer.ALIGNMENT_CENTER
+	info.add_theme_constant_override("separation", 2)
+	info.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_avatar_names = UiKit.title("", 15, Palette.TEXT)
+	_avatar_names.clip_text = true
+	_avatar_names.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_avatar_names.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	info.add_child(_avatar_names)
+	var lv_row := HBoxContainer.new()
+	lv_row.add_theme_constant_override("separation", 6)
+	lv_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_avatar_lv = Label.new()
+	UiKit.apply_label(_avatar_lv, 13, Palette.LEMON)
+	lv_row.add_child(_avatar_lv)
+	_avatar_xp = UiKit.glow_bar(0.0, Palette.READY, Vector2(96, 8))
+	_avatar_xp.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	lv_row.add_child(_avatar_xp)
+	info.add_child(lv_row)
+	card.add_child(info)
+	avatar.add_child(card)
 	_avatar_dot = UiKit.new_dot()
-	_avatar_dot.position = Vector2(206, -2)
+	_avatar_dot.position = Vector2(232, -2)
 	avatar_wrap.add_child(_avatar_dot)
 	row.add_child(avatar_wrap)
+	var log_btn := UiKit.button("LOG", Vector2(64, 38))
+	log_btn.pressed.connect(_open_log)
+	var log_wrap := Control.new()
+	log_wrap.custom_minimum_size = Vector2(66, 40)
+	log_btn.set_anchors_preset(Control.PRESET_FULL_RECT)
+	log_wrap.add_child(log_btn)
+	_log_bang = UiKit.bang()
+	_log_bang.position = Vector2(48, -4)
+	log_wrap.add_child(_log_bang)
+	row.add_child(log_wrap)
+	var stats := UiKit.button("STATS", Vector2(84, 38))
+	stats.pressed.connect(_open_stats)
+	row.add_child(stats)
+	var gear := UiKit.button(Copy.OPTIONS, Vector2(110, 38))
+	gear.pressed.connect(_open_settings)
+	row.add_child(gear)
+
 
 	var logo_box := VBoxContainer.new()
 	logo_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -95,60 +160,55 @@ func _make_top() -> Control:
 	_logo_dot = UiKit.new_dot()
 	_logo_dot.position = Vector2(48, -2)
 	logo_wrap.add_child(_logo_dot)
-	var title := Label.new()
-	title.text = "%s  ·  %s" % [Copy.LOGO, Copy.SUB]
-	UiKit.apply_label(title, 22, Palette.LEMON)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	var tag := Label.new()
-	tag.text = Copy.TAGLINE
-	UiKit.apply_label(tag, 13, Palette.MUTED)
-	tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	var brand := HBoxContainer.new()
-	brand.alignment = BoxContainer.ALIGNMENT_CENTER
-	brand.add_child(logo_wrap)
-	var names := VBoxContainer.new()
-	names.add_child(title)
-	names.add_child(tag)
-	brand.add_child(names)
-	logo_box.add_child(brand)
+	logo_wrap.visible = false
+	logo_box.add_child(logo_wrap)
 	row.add_child(logo_box)
-
+	# Currency exactly like the reference board: big pixel icon, the name and
+	# the number in cream pixel caps, no boxes, spaced out at the top right.
+	var purse := HBoxContainer.new()
+	purse.add_theme_constant_override("separation", 26)
+	purse.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_gold_pill = UiKit.pill("GOLD", "0", Palette.EDGE)
 	_gems_pill = UiKit.pill("GEMS", "0", Palette.LEMON)
 	_rep_pill = UiKit.pill("REP", "0", Palette.BRICK)
-	row.add_child(_gold_pill)
-	row.add_child(_gems_pill)
-	row.add_child(_rep_pill)
+	purse.add_child(_gold_pill)
+	purse.add_child(_gems_pill)
+	purse.add_child(_rep_pill)
 
-	var log_btn := UiKit.button("LOG", Vector2(72, 52))
-	log_btn.pressed.connect(_open_log)
-	var log_wrap := Control.new()
-	log_wrap.custom_minimum_size = Vector2(80, 52)
-	log_btn.set_anchors_preset(Control.PRESET_FULL_RECT)
-	log_wrap.add_child(log_btn)
-	_log_bang = UiKit.bang()
-	_log_bang.position = Vector2(56, -4)
-	log_wrap.add_child(_log_bang)
-	row.add_child(log_wrap)
-	var gear := UiKit.button(Copy.OPTIONS, Vector2(96, 52))
-	gear.pressed.connect(_open_settings)
-	row.add_child(gear)
+	row.add_child(purse)
 
 	_refresh_pills()
 	return bar
 
 
+## Bottom tab bar like the reference: one framed strip, an icon + pixel
+## caps per tab, the open tab in a lit gold box.
+const TAB_ICON := {"clinic": "front_desk", "run": "street_map", "build": "therapy_couch", "locker": "wardrobe_cage", "awards": "trophy_cabinet"}
+
+
 func _make_tabs() -> Control:
+	var center := CenterContainer.new()
 	var bar := PanelContainer.new()
-	bar.add_theme_stylebox_override("panel", UiKit.panel(Palette.PANEL, Palette.EDGE))
+	var st := UiKit.panel(UiKit.NAVY, UiKit.RIM)
+	st.content_margin_left = 6
+	st.content_margin_right = 6
+	st.content_margin_top = 5
+	st.content_margin_bottom = 5
+	bar.add_theme_stylebox_override("panel", st)
+	bar.custom_minimum_size = Vector2(1000, 0)
+	center.add_child(bar)
 	_tab_bar = HBoxContainer.new()
-	_tab_bar.add_theme_constant_override("separation", 8)
+	_tab_bar.add_theme_constant_override("separation", 4)
 	bar.add_child(_tab_bar)
 	for id in TABS:
 		var wrap := Control.new()
 		wrap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		wrap.custom_minimum_size = Vector2(0, 64)
-		var b := UiKit.button(_tab_title(id), Vector2(0, 64))
+		wrap.custom_minimum_size = Vector2(0, 52)
+		var b := UiKit.button(_tab_title(id), Vector2(0, 52))
+		b.icon = SpriteBook.icon(str(TAB_ICON.get(id, "")))
+		b.expand_icon = true
+		b.add_theme_constant_override("icon_max_width", 34)
+		b.add_theme_constant_override("h_separation", 10)
 		b.name = id
 		b.set_anchors_preset(Control.PRESET_FULL_RECT)
 		b.pressed.connect(_show_tab.bind(id))
@@ -165,7 +225,7 @@ func _make_tabs() -> Control:
 		_tab_dots[id] = dot
 		_tab_bar.add_child(wrap)
 	_refresh_tab_locks()
-	return bar
+	return center
 
 
 func _tab_title(id: String) -> String:
@@ -226,15 +286,17 @@ func _after_page() -> void:
 
 
 func _refresh_pills() -> void:
-	_set_pill(_gold_pill, str(FamilyProfile.data["gold"]), "gold")
-	_set_pill(_gems_pill, str(FamilyProfile.data["gems"]), "gems")
-	_set_pill(_rep_pill, str(FamilyProfile.data["rep"]), "rep")
+	_set_pill(_gold_pill, UiKit.num(FamilyProfile.data["gold"]), "gold")
+	_set_pill(_gems_pill, UiKit.num(FamilyProfile.data["gems"]), "gems")
+	_set_pill(_rep_pill, UiKit.num(FamilyProfile.data["rep"]), "rep")
 	_log_bang.visible = FamilyProfile.unread_log_count() > 0
 	_refresh_new_dots()
-	if _avatar_btn:
-		_avatar_btn.text = "%s  LV %d\nTHE SON\n%s\nTHE FATHER" % [
-			FamilyProfile.son_name(), int(FamilyProfile.data.get("account_level", 1)), FamilyProfile.father_name()
-		]
+	if _avatar_names:
+		_avatar_names.text = "%s  &  %s" % [FamilyProfile.son_name(), FamilyProfile.father_name()]
+		var need := maxf(1.0, float(FamilyProfile.account_need()))
+		var xp := float(FamilyProfile.data.get("account_xp", 0))
+		_avatar_lv.text = "LV %d" % int(FamilyProfile.data.get("account_level", 1))
+		_avatar_xp.value = clampf(xp / need, 0.0, 1.0)
 	if _log_bang.visible:
 		if not _log_bang.has_meta("pulsing"):
 			_log_bang.set_meta("pulsing", true)
@@ -276,9 +338,16 @@ func _refresh_tab_locks() -> void:
 				if dot:
 					dot.visible = FamilyProfile.has_menu_alert()
 				if id == _current:
-					btn.add_theme_stylebox_override("normal", UiKit.panel(Palette.BRICK, Palette.LEMON))
+					var on := UiKit.panel(UiKit.NAVY_HI, UiKit.GOLD)
+					on.shadow_color = Color(UiKit.GOLD.r, UiKit.GOLD.g, UiKit.GOLD.b, 0.45)
+					on.shadow_size = 10
+					btn.add_theme_stylebox_override("normal", on)
 				else:
-					btn.add_theme_stylebox_override("normal", UiKit.panel(Palette.PANEL_2, Palette.EDGE))
+					var off := StyleBoxFlat.new()
+					off.bg_color = Color(0, 0, 0, 0)
+					off.border_color = Color(UiKit.RIM.r, UiKit.RIM.g, UiKit.RIM.b, 0.35)
+					off.border_width_right = 1
+					btn.add_theme_stylebox_override("normal", off)
 
 
 func _has_claim() -> bool:
@@ -337,52 +406,20 @@ func _open_profile() -> void:
 		)
 
 
+func _open_stats() -> void:
+	_clear_modal()
+	var sheet := preload("res://src/ui/stats_sheet.gd").new()
+	sheet.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(sheet)
+	_modal = sheet
+	sheet.closed.connect(_clear_modal)
+
+
 func _open_camp_sheet(id: String) -> void:
 	_clear_modal()
-	var path := ""
-	match id:
-		"pawn_shop":
-			path = "res://src/ui/dopamine_shop.gd"
-		"patrol_desk":
-			path = "res://src/ui/patrol_sheet.gd"
-		"research_lab":
-			path = "res://src/ui/research_sheet.gd"
-		"dojo":
-			path = "res://src/ui/dojo_sheet.gd"
-		"workshop":
-			path = "res://src/ui/workshop_sheet.gd"
-		"bounty_board":
-			path = "res://src/ui/bounty_sheet.gd"
-		"radio_tower":
-			path = "res://src/ui/radio_sheet.gd"
-		"album_wall":
-			path = "res://src/ui/album_sheet.gd"
-		"blood_fridge":
-			path = "res://src/ui/fridge_sheet.gd"
-		"streak_locker":
-			path = "res://src/ui/streak_sheet.gd"
-		"invoice_wheel":
-			path = "res://src/ui/lottery_sheet.gd"
-		"punching_bag":
-			path = "res://src/ui/bag_sheet.gd"
-		"warrant_fax":
-			path = "res://src/ui/fax_sheet.gd"
-		"tip_jar":
-			path = "res://src/ui/tip_sheet.gd"
-		"lost_found":
-			path = "res://src/ui/lost_sheet.gd"
-		"payphone":
-			path = "res://src/ui/phone_sheet.gd"
-		"water_cooler":
-			path = "res://src/ui/cooler_sheet.gd"
-		"coat_check":
-			path = "res://src/ui/coat_sheet.gd"
-		"time_clock":
-			path = "res://src/ui/clock_sheet.gd"
-		"bleach_closet":
-			path = "res://src/ui/bleach_sheet.gd"
-		_:
-			return
+	var path := CampSheets.path(id)
+	if path == "":
+		return
 	var sheet: Control = load(path).new()
 	sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(sheet)

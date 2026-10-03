@@ -20,18 +20,28 @@ static func parallax(host: Node, map_w: float, theme: String = "dock") -> void:
 	pb.add_child(moon_l)
 	var moon := Polygon2D.new()
 	moon.color = pal["moon"]
-	moon.polygon = PackedVector2Array([
-		Vector2(980, 36), Vector2(1050, 36), Vector2(1050, 106), Vector2(980, 106)
-	])
+	var mp := PackedVector2Array()
+	for k in 32:
+		var ang := TAU * float(k) / 32.0
+		mp.append(Vector2(1015, 71) + Vector2(cos(ang), sin(ang)) * 35.0)
+	moon.polygon = mp
+	# Behind the painted backdrops (z -3) and their skyline (z -5).
+	moon.z_index = -8
 	Blockout.add_glow(moon)
 	moon_l.add_child(moon)
-	if theme == "pier" or theme == "lot":
+	if (theme == "pier" or theme == "lot") and not has_backdrop(theme):
 		var moon2 := Polygon2D.new()
 		moon2.color = pal["moon"].darkened(0.25)
 		moon2.polygon = PackedVector2Array([
 			Vector2(420, 50), Vector2(460, 50), Vector2(460, 88), Vector2(420, 88)
 		])
 		moon_l.add_child(moon2)
+	# A painted backdrop already is the city: the procedural layers (fog,
+	# skyline, mid/near props, mist band, foreground slabs) would draw boxes
+	# over it, so only sky + moon stay behind it.
+	if has_backdrop(theme):
+		_backdrop(pb, theme)
+		return
 	var stars := ParallaxLayer.new()
 	stars.motion_scale = Vector2(0.06, 0.03)
 	pb.add_child(stars)
@@ -81,6 +91,128 @@ static func parallax(host: Node, map_w: float, theme: String = "dock") -> void:
 	Blockout.poly(fg, Rect2(map_w * 0.7, 622, 200, 36), pal["fg"], 13)
 	if theme == "pier" or theme == "lot":
 		Blockout.poly(fg, Rect2(80, 640, map_w, 30), pal["water"], 13)
+	_backdrop(pb, theme)
+
+
+## Painted street backdrop (assets/backdrops/<theme>.png, from
+## tools/backdrop.py): native pixel grid drawn at BACKDROP_TEXEL world units
+## per texel = 6 screen px on 1080p under the 1.5x couch camera. Its ground
+## line sits on the kerb (y 430); it scrolls a touch slower than the street
+## and mirrors across the map.
+const BACKDROP_TEXEL := 4.0 / 3.0
+const KERB_Y := 430.0
+
+
+static func has_backdrop(theme: String) -> bool:
+	return ResourceLoader.exists("res://assets/backdrops/%s.png" % theme) or FileAccess.file_exists("res://assets/backdrops/%s_strip.json" % theme)
+
+
+static func _backdrop(pb: ParallaxBackground, theme: String) -> void:
+	if not has_backdrop(theme):
+		return
+	if not ResourceLoader.exists("res://assets/backdrops/%s.png" % theme):
+		# Strip-only theme: far skyline (shared) + the stitched sections.
+		_far_layer(pb, theme)
+		_strip(pb, theme)
+		return
+	var tex := load("res://assets/backdrops/%s.png" % theme) as Texture2D
+	var ground := float(tex.get_height()) * 0.86
+	# Per-backdrop texel size: close-up paintings use 2/3 u (3 screen px on
+	# 1080p, still integer) so more of the wall fits above the street.
+	var texel := BACKDROP_TEXEL
+	var meta_path := "res://assets/backdrops/%s.json" % theme
+	if FileAccess.file_exists(meta_path):
+		var meta: Variant = JSON.parse_string(FileAccess.get_file_as_string(meta_path))
+		if meta is Dictionary:
+			ground = float((meta as Dictionary).get("ground", ground))
+			texel = float((meta as Dictionary).get("texel", texel))
+	_far_layer(pb, theme)
+	# A stitched street (<theme>_strip.json): different shops along the whole
+	# map, laid left to right instead of one facade on repeat.
+	if _strip(pb, theme):
+		return
+	var layer := ParallaxLayer.new()
+	layer.name = "Backdrop"
+	layer.motion_scale = Vector2(0.9, 1.0)
+	layer.motion_mirroring = Vector2(float(tex.get_width()) * texel, 0.0)
+	pb.add_child(layer)
+	var s := Sprite2D.new()
+	s.texture = tex
+	s.centered = false
+	s.scale = Vector2(texel, texel)
+	s.position = Vector2(0.0, KERB_Y - ground * texel)
+	# Fine paintings (texel under a world unit) filter smoothly; chunky
+	# pixel boards stay nearest.
+	s.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR if texel < 1.0 else CanvasItem.TEXTURE_FILTER_NEAREST
+	if texel < 1.0:
+		var nm := ShaderMaterial.new()
+		nm.shader = preload("res://src/shaders/neon_backdrop.gdshader")
+		s.material = nm
+	s.z_index = -3
+	layer.add_child(s)
+
+
+## Far layer (skyline, moon, cranes) slides slowly behind the facade. A
+## theme without its own uses the harbour skyline.
+static func _far_layer(pb: ParallaxBackground, theme: String) -> void:
+	var far_path := "res://assets/backdrops/%s_far.png" % theme
+	if not ResourceLoader.exists(far_path):
+		far_path = "res://assets/backdrops/dock_far.png"
+	if not ResourceLoader.exists(far_path):
+		return
+	var ft := load(far_path) as Texture2D
+	var far := ParallaxLayer.new()
+	far.name = "BackdropFar"
+	far.motion_scale = Vector2(0.25, 0.6)
+	var ftexel := 0.45
+	far.motion_mirroring = Vector2(float(ft.get_width()) * ftexel, 0.0)
+	pb.add_child(far)
+	var fs := Sprite2D.new()
+	fs.texture = ft
+	fs.centered = false
+	fs.scale = Vector2(ftexel, ftexel)
+	fs.position = Vector2(0.0, 330.0 - float(ft.get_height()) * ftexel)
+	fs.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	fs.z_index = -5
+	far.add_child(fs)
+
+
+static func _strip(pb: ParallaxBackground, theme: String) -> bool:
+	var meta_path := "res://assets/backdrops/%s_strip.json" % theme
+	if not FileAccess.file_exists(meta_path):
+		return false
+	var meta: Variant = JSON.parse_string(FileAccess.get_file_as_string(meta_path))
+	if not (meta is Dictionary):
+		return false
+	var m := meta as Dictionary
+	var texel := float(m.get("texel", 0.26))
+	var ground := float(m.get("ground", 791))
+	var layer := ParallaxLayer.new()
+	layer.name = "Backdrop"
+	layer.motion_scale = Vector2(0.9, 1.0)
+	pb.add_child(layer)
+	var nm := ShaderMaterial.new()
+	nm.shader = preload("res://src/shaders/neon_backdrop.gdshader")
+	var x := 0.0
+	var i := 0
+	for w in m.get("parts", []):
+		var path := "res://assets/backdrops/%s_strip_%d.png" % [theme, i]
+		i += 1
+		if not ResourceLoader.exists(path):
+			continue
+		var s := Sprite2D.new()
+		s.texture = load(path) as Texture2D
+		s.centered = false
+		s.scale = Vector2(texel, texel)
+		s.position = Vector2(x, KERB_Y - ground * texel)
+		s.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+		s.material = nm
+		s.z_index = -3
+		layer.add_child(s)
+		x += float(w) * texel
+	# Past the last shop the street repeats from the first.
+	layer.motion_mirroring = Vector2(x, 0.0)
+	return true
 
 
 static func _theme_pal(theme: String) -> Dictionary:
@@ -233,7 +365,7 @@ static func _tile_fill(host: Node, rect: Rect2, kind: String, z: int, mod: Color
 			s.position = Vector2(x, y)
 			s.z_index = z
 			s.modulate = mod
-			s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			s.texture_filter = SpriteBook.world_filter()
 			host.add_child(s)
 			x += tw
 		y += th
@@ -257,7 +389,7 @@ static func _skyline(far: Node, map_w: float, color: Color, theme: String) -> vo
 				s.position = Vector2(x, 200)
 				s.z_index = -6
 				s.modulate = Color(0.62, 0.42, 0.28)
-				s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+				s.texture_filter = SpriteBook.world_filter()
 				far.add_child(s)
 			else:
 				Blockout.poly(far, Rect2(x, 200, 110, 140), color, -6)
@@ -444,7 +576,7 @@ static func water_band(host: Node, map_w: float, y: float = 560.0, tile_kind: St
 				s.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
 				s.position = Vector2(x, y)
 				s.z_index = 1
-				s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+				s.texture_filter = SpriteBook.world_filter()
 				host.add_child(s)
 				x += tw
 			return
@@ -469,6 +601,18 @@ static func tenement(host: Node, rect: Rect2, color: Color) -> void:
 
 
 static func rain(host: Node, cx: float) -> void:
+	# Rain you can hear: one quiet looping bed per map.
+	if ResourceLoader.exists("res://assets/audio/sfx/rain_loop.ogg") and host.get_node_or_null("RainBed") == null:
+		var bed := AudioStreamPlayer.new()
+		bed.name = "RainBed"
+		var st := load("res://assets/audio/sfx/rain_loop.ogg") as AudioStreamOggVorbis
+		if st != null:
+			st.loop = true
+			bed.stream = st
+			bed.volume_db = -14.0
+			bed.bus = "sfx" if AudioServer.get_bus_index("sfx") >= 0 else "Master"
+			bed.autoplay = true
+			host.add_child(bed)
 	var rain := GPUParticles2D.new()
 	rain.position = Vector2(cx, -20)
 	var mat := ParticleProcessMaterial.new()
@@ -539,6 +683,9 @@ static func wind(host: Node, cx: float) -> void:
 
 
 static func wet_floor(host: Node, map_w: float, skip_fill: bool = false) -> void:
+	if skip_fill and WetStreet.available():
+		# The painted road and its reflection pass replace the old wet band.
+		return
 	if not skip_fill:
 		Blockout.poly(host, Rect2(0, 430, map_w, 290), Color(0.10, 0.10, 0.12), 0)
 	var wet := Blockout.poly(host, Rect2(0, 520, map_w, 90), Color(0.18, 0.2, 0.28, 0.38), 1)
@@ -558,10 +705,17 @@ static func bounds(host: Node, map_w: float) -> void:
 	wall_r.collision_layer = 1
 
 
+## World-space text. Font sizes were picked for the old 640x360 render;
+## under the 1.5x camera at full resolution they came out 4.5x, so world
+## labels draw at WORLD_TEXT scale (fonts oversample, still crisp).
+const WORLD_TEXT := 0.5
+
+
 static func plaque(host: Node, at: Vector2, text: String, color: Color, size: int = 16) -> Label:
 	var lab := Label.new()
 	lab.text = text
 	lab.position = at
+	lab.scale = Vector2(WORLD_TEXT, WORLD_TEXT)
 	UiKit.apply_label(lab, size, color)
 	host.add_child(lab)
 	return lab
@@ -677,7 +831,7 @@ static func pixel_tenement(host: Node, rect: Rect2) -> void:
 			s.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
 			s.position = Vector2(x, y)
 			s.z_index = 0
-			s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			s.texture_filter = SpriteBook.world_filter()
 			host.add_child(s)
 			x += tw
 			col += 1
@@ -685,37 +839,38 @@ static func pixel_tenement(host: Node, rect: Rect2) -> void:
 		row += 1
 
 
-static func pixel_dock(host: Node, map_w: float) -> void:
+static func pixel_dock(host: Node, map_w: float, harbour: bool = true) -> void:
 	var cobble := SpriteBook.tile("cobble")
 	var wet := SpriteBook.tile("cobble_wet")
 	var plank := SpriteBook.tile("plank")
 	var water := SpriteBook.tile("water")
 	if cobble == null:
 		return
+	var painted := WetStreet.available()
+	if painted:
+		WetStreet.lay(host, map_w)
 	var tw := float(cobble.get_width()) * SpriteBook.DRAW_SCALE
 	var th := float(cobble.get_height()) * SpriteBook.DRAW_SCALE
-	var x := 0.0
+	var x := map_w if painted else 0.0
 	var n := 0
 	while x < map_w:
-		var s := Sprite2D.new()
-		s.texture = wet if wet != null and n % 4 == 2 else cobble
-		s.centered = false
-		s.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
-		s.position = Vector2(x, 430.0)
-		s.z_index = 0
-		s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		host.add_child(s)
-		var s2 := Sprite2D.new()
-		s2.texture = cobble
-		s2.centered = false
-		s2.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
-		s2.position = Vector2(x, 430.0 + th)
-		s2.z_index = 0
-		s2.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		host.add_child(s2)
+		# Pave the whole walkable band (430-520) down to the floor at 600.
+		var y := 430.0
+		var r := 0
+		while y < 680.0:
+			var s := Sprite2D.new()
+			s.texture = wet if wet != null and (n + r * 3) % 4 == 2 else cobble
+			s.centered = false
+			s.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
+			s.position = Vector2(x, y)
+			s.z_index = 0
+			s.texture_filter = SpriteBook.world_filter()
+			host.add_child(s)
+			y += th
+			r += 1
 		x += tw
 		n += 1
-	if water:
+	if water and harbour and not painted:
 		x = 0.0
 		var ww := float(water.get_width()) * SpriteBook.DRAW_SCALE
 		while x < 300.0:
@@ -725,7 +880,7 @@ static func pixel_dock(host: Node, map_w: float) -> void:
 			w.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
 			w.position = Vector2(x, 560.0)
 			w.z_index = 1
-			w.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			w.texture_filter = SpriteBook.world_filter()
 			host.add_child(w)
 			x += ww
 		if plank:
@@ -738,9 +893,11 @@ static func pixel_dock(host: Node, map_w: float) -> void:
 				p.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
 				p.position = Vector2(x, 500.0)
 				p.z_index = 1
-				p.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+				p.texture_filter = SpriteBook.world_filter()
 				host.add_child(p)
 				x += pw
+	if not harbour:
+		return
 	for lx in [420.0, 900.0, 1480.0, 2100.0, 2680.0]:
 		AmbientProp.lamp(host, Vector2(lx, 500.0), 3)
 
@@ -761,7 +918,7 @@ static func pixel_roof(host: Node, rect: Rect2, kind: String = "roof") -> void:
 		s.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
 		s.position = Vector2(x, rect.position.y)
 		s.z_index = 2
-		s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		s.texture_filter = SpriteBook.world_filter()
 		host.add_child(s)
 		x += tw
 
@@ -771,27 +928,28 @@ static func pixel_lot(host: Node, map_w: float) -> void:
 	var wet := SpriteBook.tile("asphalt_wet")
 	if asphalt == null:
 		return
+	# Painted wet asphalt with puddle reflections when it exists.
+	var painted := WetStreet.available("lot_ground")
+	if painted:
+		WetStreet.lay(host, map_w, "lot_ground")
 	var tw := float(asphalt.get_width()) * SpriteBook.DRAW_SCALE
 	var th := float(asphalt.get_height()) * SpriteBook.DRAW_SCALE
-	var x := 0.0
+	var x := map_w if painted else 0.0
 	var n := 0
 	while x < map_w:
-		var s := Sprite2D.new()
-		s.texture = wet if wet != null and n % 5 == 2 else asphalt
-		s.centered = false
-		s.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
-		s.position = Vector2(x, 430.0)
-		s.z_index = 0
-		s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		host.add_child(s)
-		var s2 := Sprite2D.new()
-		s2.texture = asphalt
-		s2.centered = false
-		s2.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
-		s2.position = Vector2(x, 430.0 + th)
-		s2.z_index = 0
-		s2.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		host.add_child(s2)
+		var y := 430.0
+		var r := 0
+		while y < 680.0:
+			var s := Sprite2D.new()
+			s.texture = wet if wet != null and (n + r * 2) % 5 == 2 else asphalt
+			s.centered = false
+			s.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
+			s.position = Vector2(x, y)
+			s.z_index = 0
+			s.texture_filter = SpriteBook.world_filter()
+			host.add_child(s)
+			y += th
+			r += 1
 		x += tw
 		n += 1
 	var stall := SpriteBook.tile("stall")
@@ -803,7 +961,7 @@ static func pixel_lot(host: Node, map_w: float) -> void:
 			st.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
 			st.position = Vector2(80.0 + float(i) * 260.0, 470.0)
 			st.z_index = 1
-			st.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			st.texture_filter = SpriteBook.world_filter()
 			host.add_child(st)
 	for lx in [200.0, 700.0, 1100.0, 1500.0, 1880.0]:
 		AmbientProp.place(host, "sodium_lamp", Vector2(lx, 500.0), 3)

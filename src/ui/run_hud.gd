@@ -43,27 +43,43 @@ func _ready() -> void:
 	UiKit.apply_label(_fps, 12, Palette.LEMON)
 	_put(_fps)
 
+	# Player plates: one chunky frame per fighter with the avatar baked into
+	# a socket on the left, the name, the hearts, a thin steam line; the lead
+	# plate also carries the XP bar and the purse (gold, gems, scrap). Nothing
+	# of this is repeated anywhere else on screen.
+	_plate(Vector2(10, 8), "son")
 	_son = Label.new()
-	_son.position = Vector2(12, 22)
-	UiKit.apply_label(_son, 14, Palette.LEMON)
+	_son.position = Vector2(118, 12)
+	_son.size = Vector2(250, 24)
+	_son.add_theme_font_override("font", UiKit.title_font())
+	UiKit.apply_label(_son, 18, Palette.LEMON)
+	_son.add_theme_constant_override("outline_size", 6)
+	_son.add_theme_color_override("font_outline_color", UiKit.INK)
 	_put(_son)
-	_hp_a = _pips_row(Vector2(12, 44), Palette.LEMON)
-	_steam_a = _bar(Vector2(12, 56), Palette.LEMON)
+	_hp_a = _pips_row(Vector2(116, 38), Palette.LEMON)
+	_steam_a = _bar(Vector2(118, 68), Palette.LEMON)
+	_build_xp(Vector2(118, 82))
+	_build_purse(Vector2(116, 98))
 
+	_plate(Vector2(890, 8), "father")
 	_dad = Label.new()
-	_dad.position = Vector2(900, 22)
-	_dad.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_dad.size = Vector2(368, 22)
-	UiKit.apply_label(_dad, 14, Palette.BRICK)
+	_dad.position = Vector2(998, 12)
+	_dad.size = Vector2(250, 24)
+	_dad.add_theme_font_override("font", UiKit.title_font())
+	UiKit.apply_label(_dad, 18, Palette.BRICK)
+	_dad.add_theme_constant_override("outline_size", 6)
+	_dad.add_theme_color_override("font_outline_color", UiKit.INK)
 	_put(_dad)
-	_hp_b = _pips_row(Vector2(1048, 44), Palette.BRICK)
-	_steam_b = _bar(Vector2(1048, 56), Palette.BRICK)
+	_hp_b = _pips_row(Vector2(996, 38), Palette.BRICK)
+	_steam_b = _bar(Vector2(998, 68), Palette.BRICK)
 
 	_lives = Label.new()
-	_lives.position = Vector2(300, 22)
+	_lives.visible = false
+	_lives.position = Vector2(300, 690)
 	_lives.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_lives.size = Vector2(680, 16)
-	UiKit.apply_label(_lives, 12, Palette.TEXT)
+	_lives.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(_lives, 13, Palette.TEXT)
 	_put(_lives)
 
 	_scrap = Label.new()
@@ -71,7 +87,7 @@ func _ready() -> void:
 	_put(_scrap)
 
 	_wanted = Label.new()
-	_wanted.position = Vector2(12, 68)
+	_wanted.position = Vector2(12, 88)
 	UiKit.apply_label(_wanted, 12, Palette.BRICK)
 	_put(_wanted)
 
@@ -80,53 +96,58 @@ func _ready() -> void:
 	_put(_act)
 
 	_score = Label.new()
-	_score.position = Vector2(360, 688)
+	_score.visible = false
+	_score.position = Vector2(360, 666)
 	_score.size = Vector2(560, 22)
 	_score.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	UiKit.apply_label(_score, 14, Palette.EDGE)
 	_put(_score)
 
 	_boss_wrap = Control.new()
-	_boss_wrap.position = Vector2(280, 40)
+	# Between the two plates, a chunky framed bar (it crossed the plates).
+	_boss_wrap.position = Vector2(400, 34)
 	_boss_wrap.visible = false
 	_put(_boss_wrap)
-	var bb := ColorRect.new()
-	bb.size = Vector2(720, 14)
-	bb.color = Color(0, 0, 0, 0.7)
+	var bb := Panel.new()
+	var bst := UiKit.panel(Color(0.04, 0.03, 0.05, 0.92), Palette.BRICK)
+	bb.add_theme_stylebox_override("panel", bst)
+	bb.size = Vector2(480, 22)
 	_boss_wrap.add_child(bb)
 	_boss_fill = ColorRect.new()
-	_boss_fill.position = Vector2(2, 2)
-	_boss_fill.size = Vector2(716, 10)
+	_boss_fill.position = Vector2(5, 5)
+	_boss_fill.size = Vector2(470, 12)
 	_boss_fill.color = Palette.BRICK
 	_boss_wrap.add_child(_boss_fill)
 	_boss_lab = Label.new()
-	_boss_lab.position = Vector2(0, -20)
-	_boss_lab.size = Vector2(720, 20)
+	_boss_lab.position = Vector2(0, -28)
+	_boss_lab.size = Vector2(480, 26)
 	_boss_lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	UiKit.apply_label(_boss_lab, 13, Palette.LEMON)
+	_boss_lab.add_theme_font_override("font", UiKit.title_font())
+	UiKit.apply_label(_boss_lab, 18, UiKit.GOLD)
+	_boss_lab.add_theme_color_override("font_outline_color", UiKit.INK)
 	_boss_wrap.add_child(_boss_lab)
 
 	_combo = Label.new()
-	_combo.position = Vector2(12, 84)
+	_combo.position = Vector2(12, 104)
 	UiKit.apply_label(_combo, 16, Palette.EDGE)
 	_put(_combo)
 	_rank = Label.new()
-	_rank.position = Vector2(12, 102)
+	_rank.position = Vector2(12, 122)
 	UiKit.apply_label(_rank, 12, Palette.LEMON)
 	_put(_rank)
 	_combo_bg = ColorRect.new()
-	_combo_bg.position = Vector2(12, 120)
+	_combo_bg.position = Vector2(12, 140)
 	_combo_bg.size = Vector2(180, 5)
 	_combo_bg.color = Color(0, 0, 0, 0.55)
 	_put(_combo_bg)
 	_combo_fill = ColorRect.new()
-	_combo_fill.position = Vector2(12, 120)
+	_combo_fill.position = Vector2(12, 140)
 	_combo_fill.size = Vector2(180, 5)
 	_combo_fill.color = Palette.LEMON
 	_put(_combo_fill)
 
 	_call = Label.new()
-	_call.position = Vector2(280, 40)
+	_call.position = Vector2(280, 96)
 	_call.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_call.size = Vector2(720, 22)
 	UiKit.apply_label(_call, 16, Palette.LEMON)
@@ -152,9 +173,8 @@ func _put(n: Node) -> void:
 
 
 func _place_banners() -> void:
-	_banner_at(Vector2(0, 0), "son")
-	if App.two_bodies():
-		_banner_at(Vector2(1128, 0), "father")
+	# Cosmetic banners live on the player plates now.
+	pass
 
 
 func _banner_at(pos: Vector2, role: String) -> void:
@@ -175,30 +195,155 @@ func _banner_at(pos: Vector2, role: String) -> void:
 		_put(d)
 
 
-func _pips_row(pos: Vector2, color: Color) -> HBoxContainer:
+var _plates := {}
+var _faces := {}
+var _last_hp := {}
+
+
+func _plate(pos: Vector2, role: String) -> void:
+	var p := Panel.new()
+	var accent := Palette.LEMON.darkened(0.2) if role == "son" else Palette.BRICK
+	var st := preload("res://src/ui/clinic_featured.gd").card_style(false)
+	st.border_color = accent
+	st.set_border_width_all(4)
+	st.shadow_offset = Vector2(0, 5)
+	p.add_theme_stylebox_override("panel", st)
+	p.position = pos
+	p.size = Vector2(380, 132 if role == "son" else 92)
+	p.visible = role == "son"
+	_put(p)
+	# Avatar socket: a sunk frame the portrait sits in.
+	var sock := Panel.new()
+	var ss := StyleBoxFlat.new()
+	ss.bg_color = Color(0.02, 0.03, 0.06)
+	ss.border_color = accent.darkened(0.3)
+	ss.set_border_width_all(3)
+	ss.border_width_top = 5
+	ss.border_width_left = 5
+	ss.set_corner_radius_all(4)
+	sock.add_theme_stylebox_override("panel", ss)
+	sock.position = Vector2(8, 8)
+	sock.size = Vector2(92, 76 if role == "father" else 116)
+	p.add_child(sock)
+	var face := UiKit.portrait(SpriteBook.bust(role), sock.size - Vector2(10, 10))
+	face.position = Vector2(13, 13)
+	face.size = sock.size - Vector2(10, 10)
+	face.pivot_offset = face.size * 0.5
+	p.add_child(face)
+	# Doom-style: the face in the corner bleeds more as the hearts go.
+	var wm := ShaderMaterial.new()
+	wm.shader = preload("res://src/shaders/wound.gdshader")
+	wm.set_shader_parameter("head", Vector3(face.size.x * 0.5, face.size.y * 0.38, face.size.x * 0.3))
+	wm.set_shader_parameter("seed", 3.0 if role == "son" else 9.0)
+	wm.set_shader_parameter("holes", PackedVector2Array([Vector2.ZERO, Vector2.ZERO, Vector2.ZERO, Vector2.ZERO, Vector2.ZERO, Vector2.ZERO]))
+	face.material = wm
+	_faces[role] = face
+	_plates[role] = p
+
+
+var _xp_fill: ColorRect
+var _xp_lab: Label
+var _gold_l: Label
+var _gem_l: Label
+var _scrap_l: Label
+
+
+func _build_xp(pos: Vector2) -> void:
+	var bg := Panel.new()
+	var st := StyleBoxFlat.new()
+	st.bg_color = Color(0.02, 0.03, 0.06)
+	st.border_color = UiKit.INK
+	st.set_border_width_all(2)
+	bg.add_theme_stylebox_override("panel", st)
+	bg.position = pos - Vector2(2, 2)
+	bg.size = Vector2(204, 12)
+	_plates["son"].add_child(bg)
+	bg.position -= (_plates["son"] as Control).position
+	_xp_fill = ColorRect.new()
+	_xp_fill.position = Vector2(2, 2)
+	_xp_fill.size = Vector2(0, 8)
+	_xp_fill.color = UiKit.GOLD
+	bg.add_child(_xp_fill)
+	_xp_lab = Label.new()
+	_xp_lab.position = Vector2(210, -6)
+	_xp_lab.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(_xp_lab, 12, UiKit.GOLD)
+	bg.add_child(_xp_lab)
+
+
+func _build_purse(pos: Vector2) -> void:
+	var row := HBoxContainer.new()
+	row.position = pos - (_plates["son"] as Control).position
+	row.add_theme_constant_override("separation", 6)
+	_plates["son"].add_child(row)
+	for pair: Array in [["gold", "_gold_l"], ["gem", "_gem_l"], ["bolt", "_scrap_l"]]:
+		var ic := PixelIcon.new()
+		ic.kind = str(pair[0])
+		ic.custom_minimum_size = Vector2(22, 22)
+		row.add_child(ic)
+		var l := Label.new()
+		l.custom_minimum_size = Vector2(54, 0)
+		l.add_theme_font_override("font", UiKit.title_font())
+		UiKit.apply_label(l, 15, Palette.TEXT)
+		row.add_child(l)
+		set(str(pair[1]), l)
+
+
+const XP_STEPS := [0, 70, 160, 260, 380, 520]
+
+
+func _paint_purse() -> void:
+	if _gold_l == null:
+		return
+	_gold_l.text = str(int(FamilyProfile.data.get("gold", 0)))
+	_gem_l.text = str(int(FamilyProfile.data.get("gems", 0)))
+	_scrap_l.text = str(state.scrap if state else 0)
+	var xp := state.xp if state else 0
+	var lv := 0
+	while lv < XP_STEPS.size() - 1 and xp >= int(XP_STEPS[lv + 1]):
+		lv += 1
+	var lo := float(XP_STEPS[lv])
+	var hi := float(XP_STEPS[mini(lv + 1, XP_STEPS.size() - 1)])
+	var frac := 1.0 if hi <= lo else clampf((float(xp) - lo) / (hi - lo), 0.0, 1.0)
+	_xp_fill.size.x = 200.0 * frac
+	_xp_lab.text = "XP  LV %d" % (lv + 1)
+
+
+func _pips_row(pos: Vector2, _color: Color) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.position = pos
-	row.add_theme_constant_override("separation", 3)
+	row.add_theme_constant_override("separation", 2)
 	for i in 8:
-		var pip := ColorRect.new()
-		pip.custom_minimum_size = Vector2(24, 8)
-		pip.color = color
+		var pip := PixelIcon.new()
+		pip.kind = "heart"
+		pip.custom_minimum_size = Vector2(28, 28)
 		row.add_child(pip)
 	_put(row)
 	return row
 
 
 func _bar(pos: Vector2, color: Color) -> ColorRect:
-	var bg := ColorRect.new()
-	bg.position = pos
-	bg.size = Vector2(220, 8)
-	bg.color = Color(0, 0, 0, 0.55)
+	var bg := Panel.new()
+	var st := StyleBoxFlat.new()
+	st.bg_color = Color(0.02, 0.03, 0.06)
+	st.border_color = UiKit.INK
+	st.set_border_width_all(2)
+	st.set_corner_radius_all(3)
+	bg.add_theme_stylebox_override("panel", st)
+	bg.position = pos - Vector2(2, 2)
+	bg.size = Vector2(244, 8)
 	_put(bg)
 	var fill := ColorRect.new()
 	fill.position = pos
-	fill.size = Vector2(220, 8)
-	fill.color = color
+	fill.size = Vector2(240, 4)
+	fill.color = Color(0.4, 0.75, 1.0)
+	fill.set_meta("bg", bg)
 	_put(fill)
+	var shine := ColorRect.new()
+	shine.position = Vector2(0, 0)
+	shine.size = Vector2(240, 1)
+	shine.color = Color(1, 1, 1, 0.35)
+	fill.add_child(shine)
 	return fill
 
 
@@ -221,7 +366,6 @@ func bind(p_son: Fighter, p_dad: Fighter, p_state: RunState = null) -> void:
 	if joining:
 		_join_grace = 18
 	if father != null and not _dad_banner:
-		_banner_at(Vector2(1128, 0), "father")
 		_dad_banner = true
 
 
@@ -260,6 +404,7 @@ func _process(delta: float) -> void:
 		scrap = "  ·  SCRAP %d  XP %d%s" % [state.scrap, state.xp, "  LUNCH" if state.lunch > 0 else ""]
 		act = "  ·  " + str(App.current_map).replace("_", " ").to_upper()
 	_lives.text = "LIVES  " + stamps + scrap + act
+	_paint_purse()
 	if Juice.combo < 2:
 		_combo.text = ""
 		_rank.text = ""
@@ -333,7 +478,7 @@ func _paint_boss() -> void:
 		return
 	_boss_wrap.visible = true
 	var frac := clampf(float(best_hp) / float(best_max), 0.0, 1.0)
-	_boss_fill.size.x = 716.0 * frac
+	_boss_fill.size.x = 470.0 * frac
 	_boss_fill.color = Palette.EDGE if plates > 0 else (Palette.BRICK if frac < 0.33 else Palette.LEMON)
 	if plates >= 0:
 		_boss_lab.text = "%s  ·  ARMOR %d  ·  %d" % [best_name.to_upper(), plates, best_hp]
@@ -346,19 +491,26 @@ func _paint_fighter(lab: Label, bar: ColorRect, pips: HBoxContainer, snap: Label
 		lab.text = ""
 		bar.size.x = 0
 		snap.visible = false
-		for pip in pips.get_children():
-			(pip as ColorRect).color = Color(0.12, 0.12, 0.14, 0.6)
+		pips.visible = false
+		_show_bar(bar, false)
 		return
-	var kit := ("BATWING %d" % f.ammo) if f.role == "son" else ("WEB SHOT %d" % f.ammo)
+	pips.visible = true
+	_show_bar(bar, true)
 	var title := FamilyProfile.son_name() if f.role == "son" else FamilyProfile.father_name()
-	var role := "THE SON" if f.role == "son" else "THE FATHER"
-	lab.text = "%s\n%s   STEAM %d  %s" % [title, role, int(f.steam), kit]
+	var lives := ""
+	if state and lemon_slot:
+		lives = "   LIVES %d" % state.lives
+	lab.text = "%s%s" % [title.to_upper(), lives]
+	var plate: Variant = _plates.get(_slot_of(f))
+	if plate is Control:
+		(plate as Control).visible = true
 	if lemon_slot:
 		lab.add_theme_color_override("font_color", Palette.LEMON)
 	else:
 		lab.add_theme_color_override("font_color", Palette.BRICK)
-	bar.size.x = 220.0 * (f.steam / Fighter.STEAM_MAX)
+	bar.size.x = 240.0 * (f.steam / Fighter.STEAM_MAX)
 	_paint_pips(pips, f, lemon_slot)
+	_paint_face(f)
 	_place_snap(snap, f)
 
 
@@ -366,12 +518,20 @@ func _paint_pips(row: HBoxContainer, f: Fighter, lemon_slot: bool) -> void:
 	var filled := int(round((float(f.hp) / float(maxi(f.max_hp, 1))) * 8.0))
 	var on := Palette.LEMON if lemon_slot else Palette.BRICK
 	var i := 0
+	var low := f.hp <= int(float(f.max_hp) * 0.3)
 	for pip in row.get_children():
-		var r := pip as ColorRect
-		if i < filled:
-			r.color = on if f.hp > int(float(f.max_hp) * 0.3) else Palette.BADGE
-		else:
-			r.color = Color(0.12, 0.12, 0.14, 0.65)
+		var h := pip as PixelIcon
+		var want := i >= filled
+		if h.dim != want:
+			h.dim = want
+			h.queue_redraw()
+			if want:
+				# Losing a heart: it pops.
+				h.pivot_offset = Vector2(14, 14)
+				h.scale = Vector2(1.5, 1.5)
+				h.create_tween().tween_property(h, "scale", Vector2.ONE, 0.2)
+		# Low HP: the last hearts beat.
+		h.modulate.a = 1.0 if not low or want else 0.6 + 0.4 * absf(sin(_blink_t * 7.0))
 		i += 1
 
 
@@ -437,25 +597,56 @@ func _toggle_pause() -> void:
 	dim.color = Color(0, 0, 0, 0.7)
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	layer.add_child(dim)
+	# A framed card: actions on the left, the night's numbers on the right.
+	var card := PanelContainer.new()
+	card.add_theme_stylebox_override("panel", UiKit.panel(Palette.PANEL, UiKit.GOLD))
+	card.position = Vector2(200, 70)
+	card.custom_minimum_size = Vector2(880, 0)
+	layer.add_child(card)
+	var pad := MarginContainer.new()
+	for side in ["left", "right", "top", "bottom"]:
+		pad.add_theme_constant_override("margin_" + side, 22)
+	card.add_child(pad)
+	var cols := HBoxContainer.new()
+	cols.add_theme_constant_override("separation", 28)
+	pad.add_child(cols)
 	var col := VBoxContainer.new()
-	col.position = Vector2(440, 88)
 	col.add_theme_constant_override("separation", 10)
-	layer.add_child(col)
+	col.custom_minimum_size = Vector2(400, 0)
+	cols.add_child(col)
+	var right := VBoxContainer.new()
+	right.add_theme_constant_override("separation", 8)
+	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	cols.add_child(right)
 	var t := Label.new()
 	t.text = Copy.PAUSE
 	UiKit.apply_label(t, 28, Palette.LEMON)
 	col.add_child(t)
 	var hint := Label.new()
-	hint.text = "C ducks. Stick down walks into the street, it does not crouch. Tap BLOCK to PARRY. THROW pipes, tap THROW to CATCH. HEAVY vs a wind-up is a CLASH. Pause never skips the Raven Grid crash."
+	hint.text = "C ducks. Stick down walks into the street, it does not crouch. Tap BLOCK to PARRY. THROW pipes, tap THROW to CATCH. HEAVY vs a wind-up is a CLASH. Holding a gun: light fires, stick up aims at the head, down at the legs. Pause never skips the Raven Grid crash."
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.custom_minimum_size = Vector2(380, 0)
 	UiKit.apply_label(hint, 13, Palette.MUTED)
 	col.add_child(hint)
-	var r := UiKit.button("RESUME", Vector2(220, 48))
+	var r := UiKit.button("RESUME", Vector2(400, 48))
 	r.process_mode = Node.PROCESS_MODE_ALWAYS
 	r.pressed.connect(_toggle_pause)
 	col.add_child(r)
-	var end := UiKit.button("END SESSION", Vector2(220, 48))
+	var opts := UiKit.button("OPTIONS", Vector2(400, 48))
+	opts.process_mode = Node.PROCESS_MODE_ALWAYS
+	opts.pressed.connect(func() -> void:
+		var sheet := preload("res://src/ui/settings_sheet.gd").new()
+		sheet.process_mode = Node.PROCESS_MODE_ALWAYS
+		sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
+		layer.add_child(sheet)
+		sheet.closed.connect(func() -> void:
+			sheet.queue_free()
+			if is_instance_valid(opts):
+				opts.grab_focus()
+		)
+	)
+	col.add_child(opts)
+	var end := UiKit.button("END SESSION", Vector2(400, 48))
 	end.process_mode = Node.PROCESS_MODE_ALWAYS
 	end.pressed.connect(func() -> void:
 		Juice.restore_time()
@@ -468,7 +659,7 @@ func _toggle_pause() -> void:
 	if state:
 		var son_n := FamilyProfile.son_name()
 		var dad_n := FamilyProfile.father_name()
-		col.add_child(StatPanel.new([
+		right.add_child(StatPanel.new([
 			{"name": son_n, "value": "%06d" % state.score_son, "color": Palette.LEMON},
 			{"name": dad_n, "value": "%06d" % state.score_dad, "color": Palette.BRICK},
 			{"name": "TABLE", "value": "%06d" % state.score_total, "color": Palette.EDGE},
@@ -491,7 +682,53 @@ func _toggle_pause() -> void:
 		else:
 			lead.text = "%s is winning the night. The tutoring license winced." % dad_n
 		lead.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		lead.custom_minimum_size = Vector2(400, 0)
+		lead.custom_minimum_size = Vector2(380, 0)
 		UiKit.apply_label(lead, 13, Palette.MUTED)
-		col.add_child(lead)
+		right.add_child(lead)
 	r.grab_focus()
+
+
+func _show_bar(bar: ColorRect, on: bool) -> void:
+	bar.visible = on
+	var bg: Variant = bar.get_meta("bg", null)
+	if bg is Control:
+		(bg as Control).visible = on
+
+
+## The corner portrait: blood builds up with damage, it flinches and flashes
+## on every hit, and goes grey when down.
+## Solo Father plays in the left (first) plate: his face goes into it and
+## the right plate stays hidden.
+func _slot_of(f: Fighter) -> String:
+	if son == null and f == father:
+		var face: Variant = _faces.get("son")
+		if face is TextureRect and not (face as TextureRect).has_meta("father"):
+			(face as TextureRect).texture = SpriteBook.bust("father")
+			(face as TextureRect).set_meta("father", true)
+		return "son"
+	return f.role
+
+
+func _paint_face(f: Fighter) -> void:
+	var face: Variant = _faces.get(_slot_of(f))
+	if not (face is TextureRect):
+		return
+	var tr := face as TextureRect
+	var hurt := 1.0 - float(f.hp) / float(maxi(f.max_hp, 1))
+	var m := tr.material as ShaderMaterial
+	if m and not FamilyProfile.less_gore():
+		m.set_shader_parameter("wound", clampf(hurt * 1.2, 0.0, 1.0))
+		m.set_shader_parameter("splat", clampf(hurt * 0.8, 0.0, 1.0))
+	var was := int(_last_hp.get(f.role, f.hp))
+	_last_hp[f.role] = f.hp
+	if f.hp < was:
+		tr.modulate = Color(1.6, 0.5, 0.45)
+		var tw := tr.create_tween()
+		tw.tween_property(tr, "position:x", 8.0 + 4.0, 0.03)
+		tw.tween_property(tr, "position:x", 8.0 - 3.0, 0.04)
+		tw.tween_property(tr, "position:x", 8.0, 0.05)
+		tw.parallel().tween_property(tr, "modulate", Color.WHITE, 0.25)
+	if f.downed:
+		tr.modulate = Color(0.45, 0.4, 0.42)
+	elif f.hp >= was and tr.modulate == Color(0.45, 0.4, 0.42):
+		tr.modulate = Color.WHITE

@@ -40,6 +40,19 @@ var flung_dir := -1.0
 var flung_t := 0.0
 var flung_ground := false
 var _grenade_cd := 0.0
+var _last_zone := "head"
+var _splat := 0.0
+## Where the swing being wound up will land (high / mid / low), read by the
+## fighter's guard. A marker over the head shows it during the wind-up.
+var atk_height := ""
+var _height_mark: Polygon2D
+## The drawn swing for this wind-up (punch_high / punch_mid / kick_low) and
+## the playback rate that puts its contact frame on the end of the wind-up.
+var _swing_clip := ""
+var _overkill := false
+## The last round that hit (weapon, zone, distance): decides the gun death.
+var _shot: Dictionary = {}
+var _swing_rate := 1.0
 signal died
 signal finish_ready
 
@@ -229,6 +242,11 @@ func _sprite_who() -> String:
 		return "lot_hydra"
 	if title == "Clipboard":
 		return "clipboard_flier"
+	# New faces fall back to the punk until their own clips are cut.
+	if title == "Repo Goon" and FileAccess.file_exists("res://assets/sprites/repo_goon/idle.json"):
+		return "repo_goon"
+	if title == "Bailiff" and FileAccess.file_exists("res://assets/sprites/bailiff/idle.json"):
+		return "bailiff"
 	return "punk"
 
 
@@ -247,6 +265,7 @@ func _mount_sprite() -> void:
 	if not SpriteBook.has_who(who):
 		who = "punk"
 	_anim = SpriteBook.make_anim(who)
+	SpriteBook.grow(_anim, SpriteBook.ENEMY_SCALE)
 	visual.add_child(_anim)
 
 
@@ -254,16 +273,25 @@ func _tick_sprite() -> void:
 	if _anim == null or _anim.sprite_frames == null:
 		return
 	var clip := "idle"
+	if telegraph <= 0.0 and recover <= 0.0:
+		_swing_clip = ""
 	if _hurt_t > 0.0:
 		clip = "hurt"
-	elif telegraph > 0.0 or recover > 0.0:
-		clip = "attack"
+	elif telegraph > 0.0 or (recover > 0.0 and _swing_clip != ""):
+		clip = _swing_clip if _swing_clip != "" else "attack"
+	elif recover > 0.0:
+		clip = "idle"
 	elif absf(velocity.x) > 8.0:
 		clip = "walk"
 	if not _anim.sprite_frames.has_animation(clip):
-		return
+		clip = "attack" if clip.begins_with("punch") or clip == "kick_low" else clip
+		if not _anim.sprite_frames.has_animation(clip):
+			return
 	if _anim.animation != clip:
 		_anim.play(clip)
+		_anim.speed_scale = _swing_rate if clip == _swing_clip else 1.0
+	if clip == "walk":
+		_anim.speed_scale = SpriteBook.stride_rate(_anim, "walk", velocity.x)
 
 
 func _fling(delta: float) -> void:
@@ -356,7 +384,7 @@ func _physics_process(delta: float) -> void:
 		var d := t.global_position.x - global_position.x
 		facing = 1 if d > 0.0 else -1
 		visual.scale.x = float(facing)
-		if absf(d) < 46.0:
+		if absf(d) < 46.0 * SpriteBook.ENEMY_SCALE * 0.9:
 			if vehicle != "" and str(kit.get("attack", "")) == "ram":
 				_ram_hit(t as Fighter)
 				velocity.x = 0
@@ -474,6 +502,80 @@ func _start_telegraph() -> void:
 		"finals":
 			t *= 0.7
 	telegraph = t
+	VoBank.line(VoBank.who_of(self), "taunt", 0.1)
+	atk_height = _pick_height(atk)
+	_show_height()
+	_pick_swing()
+
+
+func _pick_swing() -> void:
+	_swing_clip = ""
+	if _anim == null or _anim.sprite_frames == null:
+		return
+	var c := "punch_high" if atk_height == "high" else ("kick_low" if atk_height == "low" else "punch_mid")
+	if not _anim.sprite_frames.has_animation(c):
+		return
+	_swing_clip = c
+	var who := _sprite_who()
+	var info := SpriteBook.clip_info(who if SpriteBook.has_who(who) else "punk", c)
+	var hit_f := maxi(1, int(info.get("hit", 6)))
+	var fps := maxf(1.0, float(info.get("fps", 10.0)))
+	_swing_rate = clampf((float(hit_f) / fps) / maxf(0.08, telegraph), 0.8, 3.5)
+	_anim.play(c)
+	_anim.frame = 0
+	_anim.speed_scale = _swing_rate
+
+
+## Light swings go for the face or the body; heavies the body or a low
+## kick; spinning kicks are high, slides low. Brawlers mix in leg kicks.
+func _pick_height(atk: String) -> String:
+	match atk:
+		"slide":
+			return "low"
+		"roundhouse", "jump-kick":
+			return "high"
+		"heavy":
+			return "low" if randf() < 0.3 else "mid"
+		"blade":
+			return "mid"
+		"gun", "grenade", "ram":
+			return ""
+	var r := randf()
+	return "high" if r < 0.45 else ("mid" if r < 0.8 else "low")
+
+
+func _show_height() -> void:
+	if atk_height == "":
+		return
+	if _height_mark == null:
+		_height_mark = Polygon2D.new()
+		_height_mark.z_index = 12
+		var m := CanvasItemMaterial.new()
+		m.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+		_height_mark.material = m
+		add_child(_height_mark)
+	var pts := PackedVector2Array()
+	match atk_height:
+		"high":
+			pts = PackedVector2Array([Vector2(0, -6), Vector2(6, 3), Vector2(-6, 3)])
+			_height_mark.color = Color(1.0, 0.3, 0.25)
+		"low":
+			pts = PackedVector2Array([Vector2(-6, -3), Vector2(6, -3), Vector2(0, 6)])
+			_height_mark.color = Color(1.0, 0.85, 0.2)
+		_:
+			pts = PackedVector2Array([Vector2(-5, -5), Vector2(5, -5), Vector2(5, 5), Vector2(-5, 5)])
+			_height_mark.color = Color(1.0, 0.6, 0.2)
+	_height_mark.polygon = pts
+	_height_mark.position = Vector2(0, -92)
+	_height_mark.visible = true
+	_height_mark.scale = Vector2(1.6, 1.6)
+	var tw := _height_mark.create_tween()
+	tw.tween_property(_height_mark, "scale", Vector2.ONE, 0.1)
+	tw.tween_interval(maxf(0.05, telegraph))
+	tw.tween_callback(func() -> void:
+		if is_instance_valid(_height_mark):
+			_height_mark.visible = false
+	)
 
 
 func _clash(from: Fighter) -> void:
@@ -547,6 +649,7 @@ func _swing() -> void:
 				continue
 			if absf(f.global_position.x - global_position.x) < 50.0 and absf(f.global_position.y - global_position.y) < 70.0:
 				f.take_hit(kind, self)
+	atk_height = ""
 
 
 func _shuriken() -> void:
@@ -568,7 +671,8 @@ func _mix_mod() -> void:
 		lamp = rig.tint_at(global_position)
 	var frac := clampf(float(hp) / float(maxi(max_hp, 1)), 0.0, 1.0)
 	var hurt := Color(0.72, 0.32, 0.28)
-	var body := _base_mod.lerp(hurt, (1.0 - frac) * 0.7)
+	# Sprites show damage as blood and wounds; only a hint of flush here.
+	var body := _base_mod.lerp(hurt, (1.0 - frac) * (0.18 if _anim != null else 0.7))
 	visual.modulate = body * _alert * lamp
 	speed = _walk * (0.55 if frac < 0.4 else 1.0)
 	if frac < 0.4 and visual:
@@ -583,7 +687,7 @@ func take_hit(kind: String, from: Node) -> void:
 		if get_tree().get_first_node_in_group("chase_crash") == null:
 			_clash(from as Fighter)
 			return
-	if guarding and kind != "throw" and kind != "snap" and kind != "finish" and kind != "web-slam":
+	if guarding and kind != "throw" and kind != "snap" and kind != "finish" and kind != "web-slam" and kind != "gun":
 		var high_beats_low := guard_low and (kind == "jump-kick" or kind == "dive" or kind == "heavy" or kind == "launcher")
 		var low_beats_high := (not guard_low) and (kind == "slide" or kind == "jump-kick")
 		if not high_beats_low and not low_beats_high:
@@ -660,20 +764,47 @@ func take_hit(kind: String, from: Node) -> void:
 		dmg = 12
 	elif kind == "jump-kick":
 		dmg = 11
+	elif kind == "air-spin":
+		dmg = 22
 	elif kind == "slide":
 		dmg = 10
 	elif kind == "snare":
 		dmg = 4
 		snared = 1.1
+	elif kind == "gun" and from is Round:
+		# Where it lands matters: the head takes three times the round.
+		var rd := from as Round
+		var mul: float = {"head": 3.0, "chest": 1.0, "gut": 0.9, "legs": 0.65}.get(rd.zone, 1.0)
+		# The Bailiff's vest: body rounds spark off it (a close shotgun or the
+		# ink orb still gets through). Aim for the face.
+		if title == "Bailiff" and (rd.zone == "chest" or rd.zone == "gut") and not (rd.weapon == "shotgun" and rd.dist < 110.0) and rd.weapon != "ray":
+			mul *= 0.2
+			Juice.popup_number(global_position + Vector2(0, -58), "VEST", Palette.EDGE)
+			Mixer.play_sfx("res://assets/audio/cling.wav", randf_range(1.2, 1.5), -6.0)
+		dmg = int(round(float(rd.dmg) * mul))
+		_shot = {"weapon": rd.weapon, "zone": rd.zone, "dist": rd.dist, "kind": rd.round_kind}
+	elif kind == "combo":
+		dmg = int(from.get("combo_dmg")) if from != null and from.get("combo_dmg") != null else 24
 	if FamilyProfile.has_cbt("pocket_sand") and kind == "throw":
 		dmg += 8
 	if FamilyProfile.has_cbt("night_eyes") and kind == "snap":
 		dmg += 12
+	if from is Fighter and kind != "gun":
+		var knuckles := int((from as Fighter).call("_cart", "brass_knuckles"))
+		if knuckles > 0:
+			dmg = int(round(float(dmg) * (1.0 + 0.15 * float(knuckles))))
 	if from is Fighter and (from as Fighter).buff_t > 0.0:
 		dmg = int(round(float(dmg) * 1.25))
 	if from is Fighter:
 		dmg += int(FamilyProfile.gear_stat_bonus((from as Fighter).role).get("dmg", 0))
+	if from is Fighter and Charms.has("rabbit_foot") and randf() < 0.12:
+		dmg *= 2
+		Juice.popup_number(global_position + Vector2(0, -60), "CRIT", UiKit.GOLD)
+		Juice.hitstop(3)
+	var before_hp := hp
 	hp = maxi(0, hp - dmg)
+	_overkill = hp <= 0 and (dmg - before_hp >= 14 or kind in ["combo", "finish", "stomp3", "snap", "air-spin", "web-slam"])
+	_hit_noise(kind, from)
 	if kind == "light":
 		var rs := get_tree().get_first_node_in_group("run_state")
 		if rs and rs.has_method("has_card") and rs.has_card("office_rage"):
@@ -730,12 +861,11 @@ func take_hit(kind: String, from: Node) -> void:
 			global_position.y -= 80.0
 	if from is Node2D:
 		var dir := signf(global_position.x - (from as Node2D).global_position.x)
+		if dir == 0.0:
+			dir = -float(facing)
 		global_position.x += dir * (8.0 if kind == "light" else 20.0)
+		_gore(kind, from, dir)
 		var blood := get_tree().get_first_node_in_group("blood_sim")
-		if blood and kind != "light" and blood.has_method("spray"):
-			blood.spray(global_position, kind, dir)
-			if kind == "bam" or kind == "gut-punch" or kind == "stomp3":
-				blood.pump(global_position, dir)
 		if not crush and hp > 0 and hp <= int(round(float(max_hp) * 0.12)):
 			crush = true
 			finish_ready.emit()
@@ -748,23 +878,112 @@ func take_hit(kind: String, from: Node) -> void:
 		finish_ready.emit()
 		Juice.freeze_frames(8)
 		Juice.shout("FINISH")
+	if kind == "combo" and hp > 0 and from is Fighter:
+		_combo_fx(str((from as Fighter).combo_fx), from as Fighter)
 	if hp <= 0:
 		_die(kind, from)
 
 
+## What a dojo finisher does to a body that survives it.
+func _combo_fx(fx: String, from: Fighter) -> void:
+	var dir := signf(global_position.x - from.global_position.x)
+	if dir == 0.0:
+		dir = float(from.facing)
+	telegraph = 0.0
+	atk_height = ""
+	match fx:
+		"launch":
+			flung = true
+			flung_dir = dir
+			flung_t = 0.18
+			flung_ground = false
+		"fling":
+			flung = true
+			flung_dir = dir
+			flung_t = 0.34
+			flung_ground = false
+		"knockdown", "crush":
+			recover = maxf(recover, 1.2)
+		"stun":
+			recover = maxf(recover, 0.95)
+			Juice.shout("STUNNED")
+
+
+## The sound of the blow landing, layered on the old hit sounds: bone and
+## teeth on the big ones, meat on the finishers; a grunt now and then.
+func _hit_noise(kind: String, from: Node) -> void:
+	var dir := -float(facing)
+	if from is Node2D:
+		dir = signf(global_position.x - (from as Node2D).global_position.x)
+	var big := kind in ["heavy", "combo", "uppercut", "air-upper", "roundhouse", "air-spin", "launcher", "dive", "finish", "web-slam"]
+	var blood := get_tree().get_first_node_in_group("blood_sim")
+	if kind == "light" or kind == "jab" or kind == "cross" or kind == "jump-kick":
+		Mixer.play_sfx("res://assets/audio/sfx/punch_light.ogg", 1.0, -4.0)
+	elif big:
+		Mixer.play_sfx("res://assets/audio/sfx/kick_heavy.ogg" if kind in ["roundhouse", "air-spin", "jump-kick"] else "res://assets/audio/sfx/punch_heavy.ogg")
+		if randf() < 0.45:
+			Mixer.play_sfx("res://assets/audio/sfx/bone_crack.ogg", 1.0, -3.0)
+			if blood and blood.has_method("gore"):
+				blood.gore(global_position, dir, "crack")
+		if randf() < 0.3 and blood and blood.has_method("gore"):
+			blood.gore(global_position, dir, "teeth")
+			Mixer.play_sfx("res://assets/audio/sfx/teeth.ogg", 1.0, -6.0)
+	if kind == "combo":
+		Mixer.play_sfx("res://assets/audio/sfx/gore_squelch.ogg", 1.0, -2.0)
+	if hp > 0:
+		VoBank.line(VoBank.who_of(self), "hurt", 0.14)
+
+
 func _die(kind: String, from: Node) -> void:
+	var dir := -float(facing)
+	if from is Node2D and (from as Node2D).global_position.x != global_position.x:
+		dir = signf(global_position.x - (from as Node2D).global_position.x)
+	# Shot dead: the gun death (headshot, decap, leg off, through the chest).
+	var gunned: bool = from is Round and not _shot.is_empty() and GunGore.death(self, _shot, dir)
+	# Brutal: the body comes apart on an overkill, chunks and teeth otherwise.
+	var gb := get_tree().get_first_node_in_group("blood_sim")
+	if gb and gb.has_method("gore") and not gunned:
+		gb.gore(global_position, dir, "overkill" if _overkill else "kill")
+	if gunned:
+		pass
+	elif _overkill:
+		_last_zone = "blast"
+		Mixer.play_sfx("res://assets/audio/sfx/gib_splat.ogg")
+		Mixer.play_sfx("res://assets/audio/sfx/skull_crunch.ogg", 1.0, -2.0)
+		Mixer.play_sfx("res://assets/audio/vo/ann_overkill.ogg", 1.0, -1.0)
+		Juice.freeze_frames(5)
+	else:
+		Mixer.play_sfx("res://assets/audio/sfx/gore_squelch.ogg", 1.0, -4.0)
+		if randf() < 0.25:
+			Mixer.play_sfx("res://assets/audio/vo/ann_brutal.ogg", 1.0, -3.0)
+	get_tree().create_timer(0.55).timeout.connect(func() -> void:
+		Mixer.play_sfx("res://assets/audio/sfx/body_fall.ogg", 1.0, -3.0)
+	)
+	VoBank.line(VoBank.who_of(self), "death", 0.55)
+	QuestGiver.note(get_tree(), "kill", title)
+	var killer := ""
+	if from is Fighter:
+		killer = (from as Fighter).role
+	elif from is Round:
+		killer = (from as Round).owner_role
+	if killer == "son" or killer == "father":
+		get_tree().create_timer(1.1).timeout.connect(func() -> void:
+			VoBank.line(killer, "kill", 0.35)
+		)
 	if kind != "light" and kind != "snap":
 		Juice.kill_burst(global_position, kind)
-		Juice.play("res://assets/audio/kill.wav")
 		if kind == "finish" or kind == "stomp3":
 			Juice.kill_cam(global_position)
-		var blood := get_tree().get_first_node_in_group("blood_sim")
-		if blood and blood.has_method("pump"):
-			var dir := -1.0
-			if from is Node2D:
-				dir = signf(global_position.x - (from as Node2D).global_position.x)
-			blood.pump(global_position, dir)
-		StreetRagdoll.burst(get_parent(), global_position, -1.0 if from is Node2D else 1.0, _base_mod)
+	Juice.play("res://assets/audio/kill.wav")
+	var blood := get_tree().get_first_node_in_group("blood_sim")
+	if blood and blood.has_method("pump") and _last_zone != "low":
+		blood.pump(global_position, dir)
+	if gunned:
+		pass
+	elif _anim != null and not FamilyProfile.less_gore():
+		HitReact.corpse(get_parent(), _anim, global_position, _last_zone, dir, facing)
+	elif kind != "light" and kind != "snap":
+		StreetRagdoll.burst(get_parent(), global_position, dir, _base_mod)
 	var rs_heat := get_tree().get_first_node_in_group("run_state")
 	InvoiceHeat.bump(rs_heat, 2 if cop else 1)
 	if cop:
@@ -791,6 +1010,9 @@ func _die(kind: String, from: Node) -> void:
 		var rs := get_tree().get_first_node_in_group("run_state")
 		if rs and rs.has_method("add_points"):
 			rs.add_points((from as Fighter).role, 100 if title != "Bag Snatch" else 70, "kill")
+		if Charms.has("fight_tape"):
+			var ff := from as Fighter
+			ff.hp = mini(ff.max_hp, ff.hp + 3)
 	_drops(from)
 	died.emit()
 	queue_free()
@@ -813,10 +1035,14 @@ func _show_brain() -> void:
 func _drops(from: Node) -> void:
 	var host := get_parent()
 	var rs := get_tree().get_first_node_in_group("run_state")
-	if rs and rs.has_method("add_xp"):
-		rs.add_xp(18 if title == "Mohawk Bo" else 10)
+	# XP leaves as insight gems to pick up; gold as coins.
+	var xp_n := 30 if title == "Bailiff" else (18 if title == "Mohawk Bo" or title == "Repo Goon" else 10)
+	XpOrb.burst(host, global_position, xp_n, tier == "elite" or tier == "boss" or title == "Bailiff")
+	var coins := 6 if title == "Bailiff" else (2 if title == "Mohawk Bo" or title == "Repo Goon" else (1 if randf() < 0.6 else 0))
+	for i in coins:
+		LootDrop.spawn(host, global_position + Vector2(randf_range(-8, 8), 0), "coin", 1, 1.2)
 	var orb := ScrapOrb.new()
-	orb.amount = 5 if title == "Mohawk Bo" else 3
+	orb.amount = 8 if title == "Bailiff" else (5 if title == "Mohawk Bo" or title == "Repo Goon" else 3)
 	orb.global_position = global_position + Vector2(0, -20)
 	host.add_child(orb)
 	if title == "Lottery Goon":
@@ -836,3 +1062,49 @@ func _drops(from: Node) -> void:
 		host.add_child(drop)
 	if from is Fighter and rs and rs.has_method("has_card") and rs.has_card("head_trampoline"):
 		pass
+
+
+## Where the blow landed decides the blood, the body reaction and later the
+## death: face cuts and spray for head shots, a cough and a fold for the gut,
+## legs swept for slides, a hole and an exit spray for bullets.
+func _gore(kind: String, from: Node, dir: float) -> void:
+	if from is Round:
+		# Rounds: zone wounds (GunGore), not the punch zones.
+		_last_zone = "bullet"
+		if hp > 0:
+			GunGore.wound(self, _shot, dir)
+		return
+	var clip := ""
+	if from is Fighter:
+		clip = str((from as Fighter).get("_strike_clip"))
+	var hit_kind := kind
+	if from is KitShot:
+		hit_kind = "bullet"
+	var zone := HitReact.zone_of(hit_kind, clip)
+	var power := HitReact.power_of(kind)
+	if clip == "cross":
+		power = maxf(power, 0.4)
+	elif clip == "roundhouse" or clip == "side_kick":
+		power = maxf(power, 0.8)
+	_last_zone = zone
+	var hurt := 1.0 - float(hp) / float(maxi(max_hp, 1))
+	var blood := get_tree().get_first_node_in_group("blood_sim")
+	if blood and blood.has_method("hit"):
+		blood.hit(self, zone, dir, power, hurt)
+		if kind == "bam" or kind == "gut-punch" or kind == "stomp3":
+			blood.pump(global_position, dir)
+		# Big blows splash the camera glass on the side the blood flies.
+		if power >= 0.85 and randf() < 0.35:
+			blood.screen(dir, power)
+	if _anim != null:
+		_splat = minf(1.0, _splat + power * 0.22)
+		var face := hurt * 1.15 if zone != "low" else hurt * 0.6
+		BloodSim.wound(_anim, face, _splat, -dir * float(facing))
+		if zone == "bullet":
+			var head := BloodSim.head_of(_anim)
+			BloodSim.add_hole(_anim, Vector2(head.x + randf_range(-7.0, 7.0), head.y + head.z * randf_range(2.4, 5.2)))
+	if hp > 0 and not flung:
+		var busy := HitReact.react(visual, facing, zone, dir, power)
+		if busy > 0.3:
+			telegraph = 0.0
+		recover = maxf(recover, busy)

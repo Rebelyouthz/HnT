@@ -1,0 +1,92 @@
+# One-click Windows installer on GitHub Releases.
+# Push a tag like v0.3.0, push a commit whose message contains [release], or
+# run it from the Actions tab. It builds the
+# game with Godot 4.7.2, checks the shipped pack boots, wraps it in the NSIS
+# FatherAndSonSetup.exe and attaches it (plus a portable zip and the Web
+# build) to a GitHub Release. Players need nothing installed: the exe carries
+# the engine and every asset.
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+    branches: ["**"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag (e.g. v0.3.0)"
+        required: true
+        default: "v0.3.0"
+
+permissions:
+  contents: write
+
+env:
+  GODOT_VER: "4.7.2"
+
+jobs:
+  build:
+    # Tags and manual runs always build; branch pushes only when asked.
+    if: github.event_name != 'push' || startsWith(github.ref, 'refs/tags/') || contains(github.event.head_commit.message, '[release]')
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Tools (NSIS, Pillow)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y nsis python3-pil unzip
+
+      - name: Godot + export templates
+        run: |
+          URL="https://github.com/godotengine/godot/releases/download/${GODOT_VER}-stable"
+          curl -fsSL "$URL/Godot_v${GODOT_VER}-stable_linux.x86_64.zip" -o godot.zip
+          unzip -q godot.zip -d "$HOME/godot"
+          echo "GODOT=$HOME/godot/Godot_v${GODOT_VER}-stable_linux.x86_64" >> "$GITHUB_ENV"
+          T="$HOME/.local/share/godot/export_templates/${GODOT_VER}.stable"
+          mkdir -p "$T"
+          curl -fsSL "$URL/Godot_v${GODOT_VER}-stable_export_templates.tpz" -o tpl.tpz
+          unzip -q tpl.tpz -d tpl
+          cp tpl/templates/* "$T/"
+          rm -rf tpl tpl.tpz godot.zip
+
+      - name: Import + tests
+        run: |
+          chmod +x "$GODOT"
+          "$GODOT" --headless --path . --import --quit || true
+          "$GODOT" --headless --path . --import --quit || true
+          "$GODOT" --headless --path . --script res://tests/smoke.gd 2>&1 | tail -3
+          "$GODOT" --headless --path . --script res://tests/smoke.gd 2>&1 | grep -q "SMOKE OK"
+
+      - name: Windows build + installer
+        run: |
+          mkdir -p build/windows
+          python3 tools/windows/make_icon.py
+          "$GODOT" --headless --path . --export-release "Windows Desktop" build/windows/FatherAndSon.exe
+          test -f build/windows/FatherAndSon.exe
+          (cd /tmp && "$GODOT" --headless --main-pack "$GITHUB_WORKSPACE/build/windows/FatherAndSon.exe" --script res://tests/export_pack.gd) 2>&1 | tee build/windows/export_pack.log
+          grep -q EXPORT_PACK_OK build/windows/export_pack.log
+          makensis tools/windows/FatherAndSon.nsi
+          (cd build/windows && zip -q FatherAndSon-portable.zip FatherAndSon.exe)
+          ls -lh build/windows
+
+      - name: Web build
+        continue-on-error: true
+        run: |
+          mkdir -p build/web
+          "$GODOT" --headless --path . --export-release "Web" build/web/index.html
+          (cd build/web && zip -qr ../FatherAndSon-web.zip .)
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.inputs.tag || (startsWith(github.ref, 'refs/tags/') && github.ref_name) || format('v0.3.{0}', github.run_number) }}
+        run: |
+          cat > notes.md <<'NOTES'
+          **Windows:** download `FatherAndSonSetup.exe`, run it, press Install. Nothing else needed (no Godot, no runtimes); it adds a desktop and Start-menu shortcut and an uninstaller.
+          **Portable:** `FatherAndSon-portable.zip` - unzip and run `FatherAndSon.exe`.
+          **Browser:** `FatherAndSon-web.zip` (itch.io / any static host).
+          NOTES
+          FILES="build/windows/FatherAndSonSetup.exe build/windows/FatherAndSon-portable.zip"
+          [ -f build/FatherAndSon-web.zip ] && FILES="$FILES build/FatherAndSon-web.zip"
+          gh release create "$TAG" $FILES --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "Father & Son $TAG" --notes-file notes.md --latest

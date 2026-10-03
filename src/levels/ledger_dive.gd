@@ -27,8 +27,6 @@ func _ready() -> void:
 
 
 func build_world() -> void:
-	var sky := Blockout.poly(self, Rect2(0, 0, map_w, 720), Color(0.04, 0.08, 0.1), -8)
-	sky.z_index = -8
 	NightStreet.parallax(self, map_w, "vault")
 	NightStreet.water_band(self, map_w, 540.0)
 	Blockout.poly(self, Rect2(0, 430, map_w, 40), Color(0.18, 0.16, 0.12), 1)
@@ -39,7 +37,10 @@ func build_world() -> void:
 	Blockout.solid(self, Rect2(1700, 180, 260, 16), true)
 	Blockout.poly(self, Rect2(1700, 180, 260, 16), Color(0.24, 0.3, 0.26), 2)
 	NightStreet.chapel(self, Rect2(1880, 200, 280, 300))
-	NightStreet.tenement(self, Rect2(40, 40, 240, 220), Color(0.1, 0.16, 0.16))
+	# Painted vault sections (backdrops/vault_strip) are the scenery;
+	# the flat blockout buildings only without them.
+	if not NightStreet.has_backdrop("vault"):
+		NightStreet.tenement(self, Rect2(40, 40, 240, 220), Color(0.1, 0.16, 0.16))
 	fire_escape(420.0, 200.0)
 	fire_escape(1180.0, 248.0)
 	fire_escape(1760.0, 180.0)

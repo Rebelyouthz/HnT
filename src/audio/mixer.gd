@@ -90,6 +90,11 @@ func _duck(on: bool) -> void:
 
 
 func play_music(path: String) -> void:
+	# Composed tracks (tools/music_gen.py) sit next to the old synth loops as
+	# .ogg with the same name and win when present.
+	var ogg := path.get_basename() + ".ogg"
+	if ResourceLoader.exists(ogg):
+		path = ogg
 	if not ResourceLoader.exists(path):
 		return
 	var incoming := _music_b if _using_a else _music_a
@@ -99,6 +104,8 @@ func play_music(path: String) -> void:
 	incoming.stream = load(path)
 	if incoming.stream is AudioStreamWAV:
 		(incoming.stream as AudioStreamWAV).loop_mode = AudioStreamWAV.LOOP_FORWARD
+	elif incoming.stream is AudioStreamOggVorbis:
+		(incoming.stream as AudioStreamOggVorbis).loop = true
 	incoming.volume_db = -40.0
 	incoming.play()
 	var tw := create_tween().set_parallel(true).set_ignore_time_scale(true)

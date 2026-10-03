@@ -81,6 +81,7 @@ func _place_parkour() -> void:
 	_place_smash()
 	_place_towers()
 	_place_secrets()
+	_place_extras()
 
 
 func _place_toys() -> void:
@@ -134,21 +135,31 @@ func _place_smash() -> void:
 	var list: Variant = rows.get(map_id, [])
 	if typeof(list) != TYPE_ARRAY:
 		return
+	var placed: Array = []
 	for row in list:
 		if typeof(row) != TYPE_ARRAY or (row as Array).size() < 2:
 			continue
 		var x := float(row[0])
 		if map_id == "raven_grid" and x > 2200.0:
 			continue
-		SmashProp.place(self, Vector2(x, 500.0), str(row[1]))
+		var sp := SmashProp.place(self, Vector2(x, 500.0), str(row[1]))
+		placed.append(sp)
+	# One adrenaline syringe per street, inside one of the breakables.
+	if not placed.is_empty():
+		var rng := RandomNumberGenerator.new()
+		rng.seed = hash(map_id)
+		var first := rng.randi() % placed.size()
+		(placed[first] as Node).set_meta("syringe", true)
+		if Charms.has("moms_ring") and placed.size() > 1:
+			(placed[(first + 1 + rng.randi() % (placed.size() - 1)) % placed.size()] as Node).set_meta("syringe", true)
 	_place_weapons()
 	_place_life()
 
 
 func _place_weapons() -> void:
 	var rows: Dictionary = {
-		"dock_street": [[900.0, 500.0, "chain"]],
-		"intake_lot": [[760.0, 500.0, "crowbar"]],
+		"dock_street": [[900.0, 500.0, "chain"], [1160.0, 500.0, "pistol"], [1740.0, 500.0, "shotgun"], [2180.0, 500.0, "smg"], [2560.0, 500.0, "nailgun"]],
+		"intake_lot": [[760.0, 500.0, "crowbar"], [980.0, 500.0, "shotgun"], [1340.0, 500.0, "smg"], [1760.0, 500.0, "ray"]],
 		"fire_escapes": [[860.0, 248.0, "stapler"]],
 		"group_circle": [[1180.0, 500.0, "clipboard"]],
 		"neon_exchange": [[1480.0, 248.0, "nailgun"]],
@@ -201,6 +212,60 @@ func _place_life() -> void:
 		NightStreet.neon(self, Vector2(240, 120), "EVICTION PROCESSED HERE", Palette.EDGE)
 
 
+## Spray cans, Rufus the dog, photo mode and tonight's bounty.
+func _place_extras() -> void:
+	SprayCan.place_all(self, map_id)
+	if map_id == "dock_street":
+		StreetLife.dress(self, [380.0, 1180.0, 1700.0, 2600.0])
+	elif map_id == "tutorial_alley":
+		StreetLife.dress(self, [520.0, 1050.0])
+	add_child(PhotoMode.new())
+	if DogBuddy.joined():
+		var dog := DogBuddy.new()
+		dog.position = spawn_at + Vector2(-30, 6)
+		add_child(dog)
+	elif map_id == "dock_street":
+		var stray := StrayDog.new()
+		stray.position = Vector2(1320, 494)
+		add_child(stray)
+	get_tree().create_timer(3.0).timeout.connect(_pick_bounty)
+
+
+## One ordinary thug per street is WANTED: tougher, crowned, and worth
+## gems and gold when he drops.
+func _pick_bounty() -> void:
+	if not is_inside_tree() or get_tree().get_first_node_in_group("bounty"):
+		return
+	var pool: Array = []
+	for n in get_tree().get_nodes_in_group("enemies"):
+		if n is Punk and not (n is ActBoss) and not (n is TrainingDummy) and is_instance_valid(n) and (n as Punk).hp > 0:
+			pool.append(n)
+	if pool.is_empty():
+		get_tree().create_timer(4.0).timeout.connect(_pick_bounty)
+		return
+	var p := pool[randi() % pool.size()] as Punk
+	p.add_to_group("bounty")
+	p.max_hp = int(round(float(p.max_hp) * 1.6))
+	p.hp = p.max_hp
+	var crown := Polygon2D.new()
+	crown.polygon = PackedVector2Array([Vector2(-8, 0), Vector2(-8, -6), Vector2(-4, -2), Vector2(0, -8), Vector2(4, -2), Vector2(8, -6), Vector2(8, 0)])
+	crown.color = UiKit.GOLD
+	crown.position = Vector2(0, -52)
+	var cm := CanvasItemMaterial.new()
+	cm.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+	crown.material = cm
+	p.add_child(crown)
+	var tw := crown.create_tween().set_loops()
+	tw.tween_property(crown, "position:y", -55.0, 0.5).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(crown, "position:y", -52.0, 0.5).set_trans(Tween.TRANS_SINE)
+	Juice.toast("challenge", "WANTED: %s" % p.title.to_upper(), "The crowned one. 2 gems and 40 gold on his head.")
+	p.died.connect(func() -> void:
+		FamilyProfile.add_gems(2)
+		FamilyProfile.add_gold(40)
+		Juice.unlock_logo("BOUNTY CLAIMED", "%s won't collect anything again." % p.title, "+2 GEMS  ·  +40 GOLD")
+	)
+
+
 func _place_towers() -> void:
 	ViewpointTower.place(self, map_id)
 
@@ -213,8 +278,30 @@ func boss_filed() -> bool:
 	return _boss_down
 
 
+## A crew member waiting in an impound cage on this map (data/story.json
+## acts.<map>.rescue), until the family breaks them out once.
+func _place_rescue() -> void:
+	var r := StoryBook.rescue(map_id)
+	if r.is_empty():
+		return
+	var who := str(r.get("who", ""))
+	if who == "" or StoryBook.has_crew(who):
+		return
+	var cage := RescueCage.new()
+	cage.who = who
+	var v: Variant = r.get("lines", [])
+	cage.lines = v if v is Array else []
+	cage.position = Vector2(float(r.get("x", spawn_at.x + 600.0)), 498.0)
+	add_child(cage)
+
+
 func _ready() -> void:
 	_configure()
+	var resumed := App.resume_map == map_id and App.resume_pos != Vector2.ZERO
+	if resumed:
+		spawn_at = App.resume_pos
+	App.resume_map = ""
+	_save_resume(spawn_at, false)
 	add_to_group("dock_world")
 	add_to_group("run_act")
 	_state = RunState.new()
@@ -228,7 +315,12 @@ func _ready() -> void:
 	if not App.run_bag.is_empty():
 		_state.unpack(App.run_bag)
 	build_world()
+	# The halfway cart on every story stage.
+	if App.ORDER.has(map_id) and not StoryBook.is_survive(map_id):
+		ShopCart.place(self, map_w * 0.5)
+		QuestGiver.place_for(self, map_id, map_w)
 	_place_parkour()
+	_place_rescue()
 	_rig = LightRig.new()
 	_rig.preset = light_preset
 	add_child(_rig)
@@ -264,6 +356,9 @@ func _ready() -> void:
 		body = Copy.COUCH_HINT if App.density_coop else Copy.SOLO_HINT
 	Juice.toast("quest", toast_title, body)
 	_boot_story()
+	# Fresh entry: the stage's title card over the painted street.
+	if not resumed:
+		StageCard.show_for(self, map_id)
 
 
 func _targets() -> Array[Node2D]:
@@ -290,7 +385,10 @@ func _process(_delta: float) -> void:
 	_tick_talk(lead_x)
 	_tick_boss_intro(lead_x)
 	if check_x > 0.0 and lead_x > check_x:
-		_state.mark_checkpoint(check_pos if check_pos != Vector2.ZERO else Vector2(check_x, spawn_at.y))
+		var cp := check_pos if check_pos != Vector2.ZERO else Vector2(check_x, spawn_at.y)
+		if _state.checkpoint != cp:
+			_save_resume(cp, true)
+		_state.mark_checkpoint(cp)
 	if win_mode == "boss":
 		return
 	if _boss_down and next_id != "":
@@ -307,7 +405,17 @@ func _process(_delta: float) -> void:
 
 
 func _cards() -> void:
-	if get_node_or_null("CardPick"):
+	if get_node_or_null("CardPick") or get_node_or_null("LevelUpFx"):
+		return
+	# Glow, LEVEL UP over the heads and the force wave first; then the cards.
+	var fighters: Array = []
+	for n in get_tree().get_nodes_in_group("players"):
+		if n is Fighter and not (n as Fighter).downed:
+			fighters.append(n)
+	var fx := LevelUpFx.play(self, fighters)
+	fx.name = "LevelUpFx"
+	await fx.done
+	if not is_inside_tree():
 		return
 	var pick := CardPick.new()
 	pick.name = "CardPick"
@@ -394,16 +502,39 @@ func _on_wanted() -> void:
 		Juice.toast("challenge", "WANTED 5", "Spotlight. Hide under a ledge or eat it.")
 
 
+## Save to continue later: the map and where to stand. CONTINUE on the title
+## screen drops you back here.
+func _save_resume(at: Vector2, announce: bool) -> void:
+	if App.remote_coop or App.versus:
+		return
+	FamilyProfile.data["resume"] = {"map": map_id, "x": at.x, "y": at.y}
+	FamilyProfile.save()
+	if announce:
+		Juice.toast("quest", "GAME SAVED", "Checkpoint. CONTINUE starts here.")
+
+
+func _clear_resume() -> void:
+	FamilyProfile.data.erase("resume")
+	FamilyProfile.save()
+
+
 func _on_fail() -> void:
+	_clear_resume()
 	FamilyProfile.mark_run_finished(false)
 	var g := 0
 	if _state:
 		FamilyProfile.note_score(_state.score_total)
 		g = FamilyProfile.cash_fail(_state.scrap, _state.score_total)
 	_banner(Copy.FAIL, fail_sub if fail_sub != "" else Copy.FAIL_GOLD, false, false, g)
+	if _end is ResultsSheet:
+		(_end as ResultsSheet).death_line = DeathCause.for_run(get_tree())
 
 
 func _on_gate() -> void:
+	# Filed: CONTINUE picks up at the start of the next street.
+	if next_id != "":
+		FamilyProfile.data["resume"] = {"map": next_id, "x": 0.0, "y": 0.0}
+		FamilyProfile.save()
 	if _missions:
 		_missions.complete_main()
 	match map_id:
@@ -421,6 +552,7 @@ func _on_gate() -> void:
 
 
 func _on_clear() -> void:
+	_clear_resume()
 	FamilyProfile.mark_run_finished(true)
 	FamilyProfile.mark_map_filed(map_id)
 	if App.is_solo_density():

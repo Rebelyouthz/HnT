@@ -40,6 +40,28 @@ func _ready() -> void:
 	var table: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/dojo.json"))
 	for row in table:
 		col.add_child(_row(row))
+	# Combos: one style per fighter, learned here, drilled on the dummy.
+	for who in ["son", "father"]:
+		var st := ComboBook.style(who)
+		var hh := Label.new()
+		hh.text = "%s COMBOS  ·  %s STYLE" % ["THE SON'S" if who == "son" else "THE FATHER'S", str(st.get("name", ""))]
+		UiKit.apply_label(hh, 20, UiKit.GOLD)
+		col.add_child(hh)
+		var sb := Label.new()
+		sb.text = str(st.get("blurb", "")) + "  The ring on your body is the beat: press the next button as it closes for PERFECT."
+		sb.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		UiKit.apply_label(sb, 12, Palette.MUTED)
+		col.add_child(sb)
+		var go := UiKit.button("PRACTICE ON THE DUMMY AS %s" % ("THE SON" if who == "son" else "THE FATHER"), Vector2(420, 40))
+		go.pressed.connect(_practice.bind(who))
+		col.add_child(go)
+		for c: Dictionary in ComboBook.all_for(who):
+			var info := c.duplicate()
+			info["kind"] = "combo"
+			info["blurb"] = ComboBook.steps_label(c, PadRouter.last_kind == "pad") + "   ·   " + str(c.get("blurb", ""))
+			if bool(c.get("starter", false)):
+				info["blurb"] = "KNOWN FROM THE START   ·   " + str(info["blurb"])
+			col.add_child(_row(info))
 	var close := UiKit.button("CLOSE", Vector2(140, 44))
 	close.pressed.connect(func() -> void:
 		closed.emit()
@@ -47,6 +69,40 @@ func _ready() -> void:
 	)
 	col.add_child(close)
 	close.grab_focus()
+
+
+## Which animation shows each school move in the list.
+const MOVE_ART := {
+	"uppercut": ["son", "uppercut"], "roundhouse": ["son", "roundhouse"],
+	"stomp_finish": ["father", "snap"], "speed_vault": ["son", "parkour_run"],
+	"kong": ["son", "dive"], "dash_vault": ["son", "slide"], "land_roll": ["son", "roll"],
+	"grab_slam": ["father", "hammer"], "wall_bounce": ["son", "jump_roundhouse"],
+	"air_mix": ["son", "air_mix"], "tic_tac": ["son", "flying_knee"],
+	"wall_kick": ["son", "side_kick"], "king_kong": ["father", "dive"],
+	"lazy_vault": ["father", "parkour_run"], "reverse_vault": ["son", "cartwheel_kick"],
+	"double_kong": ["son", "superman_punch"], "cat_leap": ["son", "jump"],
+	"dive_roll": ["father", "roll"], "front_flip": ["son", "air_spin_kick"],
+	"back_flip": ["son", "backflip_kick"], "side_flip": ["father", "jump_spin_kick"],
+	"palm_spin": ["son", "sweep"], "webster": ["father", "air_spin_kick"],
+	"gainer": ["son", "dropkick"], "cork": ["father", "jump_high_kick"],
+	"aerial": ["son", "getup_kick"],
+}
+
+
+func _art(info: Dictionary) -> Texture2D:
+	var id := str(info.get("id", ""))
+	var t: Texture2D = null
+	if str(info.get("kind", "")) == "combo":
+		t = SpriteBook.move_icon(str(info.get("who", "son")), str(info.get("clip", "")))
+	elif MOVE_ART.has(id):
+		t = SpriteBook.move_icon(str(MOVE_ART[id][0]), str(MOVE_ART[id][1]))
+	return t if t != null else SpriteBook.icon("dojo")
+
+
+func _practice(who: String) -> void:
+	App.set_meta("dojo_role", who)
+	closed.emit()
+	App.enter_map("dojo_practice")
 
 
 func _row(info: Dictionary) -> Control:
@@ -57,7 +113,7 @@ func _row(info: Dictionary) -> Control:
 	p.add_theme_stylebox_override("panel", UiKit.panel(Rarity.fill(rarity), Rarity.color(rarity)))
 	var row := HBoxContainer.new()
 	p.add_child(row)
-	row.add_child(UiKit.portrait(SpriteBook.icon("dojo"), Vector2(48, 48)))
+	row.add_child(UiKit.portrait(_art(info), Vector2(56, 56)))
 	if FamilyProfile.is_unseen("dojo_%s" % id):
 		row.add_child(UiKit.new_dot())
 	var v := VBoxContainer.new()

@@ -19,11 +19,17 @@ func _configure() -> void:
 
 
 func build_world() -> void:
-	var sky := Blockout.poly(self, Rect2(0, 0, map_w, 720), Color(0.11, 0.12, 0.13), -8)
-	sky.z_index = -8
 	NightStreet.parallax(self, map_w, "waiting")
-	NightStreet.wet_floor(self, map_w)
-	Blockout.poly(self, Rect2(0, 80, map_w, 40), Color(0.82, 0.84, 0.78, 0.35), -2)
+	# Painted sections (backdrops/waiting_strip) replace the blockout
+	# buildings; the painted wet street is the floor.
+	if NightStreet.has_backdrop("waiting") and WetStreet.available():
+		# Indoors: a mopped floor, not cobbles.
+		WetStreet.lay(self, map_w, "clinic_floor" if WetStreet.available("clinic_floor") else "street")
+	else:
+		NightStreet.wet_floor(self, map_w)
+		Blockout.poly(self, Rect2(0, 80, map_w, 40), Color(0.82, 0.84, 0.78, 0.35), -2)
+		NightStreet.tenement(self, Rect2(20, 20, 200, 180), Color(0.18, 0.18, 0.2))
+		NightStreet.tenement(self, Rect2(1640, 20, 220, 190), Color(0.16, 0.18, 0.18))
 	for i in 8:
 		var x := 80.0 + i * 210.0
 		Blockout.poly(self, Rect2(x, 470, 70, 28), Color(0.28, 0.28, 0.3), 2)
@@ -32,8 +38,6 @@ func build_world() -> void:
 	Blockout.poly(self, Rect2(420, 248, 240, 18), Color(0.3, 0.3, 0.32), 2)
 	Blockout.solid(self, Rect2(1100, 228, 260, 18), true)
 	Blockout.poly(self, Rect2(1100, 228, 260, 18), Color(0.26, 0.28, 0.28), 2)
-	NightStreet.tenement(self, Rect2(20, 20, 200, 180), Color(0.18, 0.18, 0.2))
-	NightStreet.tenement(self, Rect2(1640, 20, 220, 190), Color(0.16, 0.18, 0.18))
 	fire_escape(460.0, 248.0)
 	fire_escape(1180.0, 228.0)
 	var crate := VaultCrate.new()

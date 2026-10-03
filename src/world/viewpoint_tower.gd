@@ -36,6 +36,9 @@ func _ready() -> void:
 	cs.shape = sh
 	cs.position = Vector2(0, -40)
 	add_child(cs)
+	if TowerBook.map_row(map_id).has("film"):
+		_build_giant()
+		return
 	_mast = Polygon2D.new()
 	_mast.color = Color(0.28, 0.22, 0.18)
 	_mast.polygon = PackedVector2Array([
@@ -106,6 +109,44 @@ func _ready() -> void:
 	NightStreet.plaque(get_parent(), global_position + Vector2(-90, -470), "140M  ·  HELL IS BELOW", Palette.LEMON, 13)
 
 
+var _giant := false
+
+
+## The Harbour Clock in the street: the painted tower's base and shaft rising
+## out of frame behind the pavement (the rest is seen during the climb). A
+## secret: no marker, just a quiet plaque and a lit door.
+func _build_giant() -> void:
+	_giant = true
+	var base := load("res://assets/ui/tower/base.png") as Texture2D
+	var mid := load("res://assets/ui/tower/mid.png") as Texture2D
+	var k := 2.0 / 3.0
+	var y := 0.0
+	var holder := Node2D.new()
+	holder.z_index = -2
+	add_child(holder)
+	for tex in [base, mid, mid, mid, mid, mid, mid, mid, mid, mid]:
+		if tex == null:
+			continue
+		var sp := Sprite2D.new()
+		sp.texture = tex
+		sp.centered = false
+		sp.scale = Vector2(k, k)
+		var h := float(tex.get_height()) * k
+		sp.position = Vector2(-float(tex.get_width()) * k * 0.5, y - h)
+		sp.texture_filter = SpriteBook.world_filter()
+		holder.add_child(sp)
+		y -= h - 1.0
+	_hint = Label.new()
+	_hint.scale = Vector2(NightStreet.WORLD_TEXT, NightStreet.WORLD_TEXT)
+	_hint.position = Vector2(-120, -96)
+	_hint.size = Vector2(480, 40)
+	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	UiKit.apply_label(_hint, 13, Palette.LEMON)
+	_hint.text = "???"
+	add_child(_hint)
+	NightStreet.plaque(self, Vector2(-38, -112), "%d M" % int(TowerBook.map_row(map_id).get("height_m", 132)), Palette.MUTED, 12)
+
+
 func _guy_wire(a: Vector2, b: Vector2) -> void:
 	var w := Line2D.new()
 	w.width = 2.0
@@ -136,6 +177,9 @@ func _wind_mist() -> void:
 
 func _process(delta: float) -> void:
 	_wind_t += delta
+	if _giant:
+		_process_giant()
+		return
 	_mast.rotation = 0.03 * sin(_wind_t * 1.7)
 	_beacon.modulate.a = 0.4 + 0.6 * (0.5 + 0.5 * sin(_wind_t * 7.0))
 	_creak_t -= delta
@@ -155,6 +199,48 @@ func _process(delta: float) -> void:
 				_start(f)
 			return
 	_hint.modulate = Color.WHITE
+
+
+func _process_giant() -> void:
+	if _busy:
+		return
+	for n in get_overlapping_bodies():
+		if n is Fighter:
+			var f: Fighter = n
+			if f.downed or f.van_seat != "":
+				continue
+			_hint.text = "%s  ·  UP / JUMP TO CLIMB" % str(TowerBook.map_row(map_id).get("label", "TOWER"))
+			_hint.modulate = Color(1.2, 1.15, 0.7)
+			if f._just("up") or f._just("jump"):
+				_start_film()
+			return
+	_hint.text = "???" if not FamilyProfile.data.get("tower_" + map_id, false) else str(TowerBook.map_row(map_id).get("label", "TOWER"))
+	_hint.modulate = Color.WHITE
+
+
+func _start_film() -> void:
+	_busy = true
+	if not bool(FamilyProfile.data.get("tower_" + map_id, false)):
+		Juice.toast("reward", "SECRET FOUND", "%s  ·  %d metres of bad decisions" % [str(TowerBook.map_row(map_id).get("label", "TOWER")), int(TowerBook.map_row(map_id).get("height_m", 132))])
+	get_tree().paused = true
+	var film := GiantTowerFilm.new()
+	film.map_id = map_id
+	get_tree().root.add_child(film)
+	var res: Dictionary = await film.finished
+	get_tree().paused = false
+	FamilyProfile.data["tower_" + map_id] = true
+	FamilyProfile.save()
+	for n in get_tree().get_nodes_in_group("players"):
+		if n is Fighter and is_instance_valid(n):
+			(n as Fighter).global_position = Vector2(global_position.x + 90.0 + (20.0 if (n as Fighter).role == "son" else 0.0), global_position.y)
+			(n as Fighter).velocity = Vector2.ZERO
+	var rs := get_tree().get_first_node_in_group("run_state")
+	var pts := 120 + int(res.get("score", 0)) + 40 * int(res.get("perfects", 0))
+	if rs and rs.has_method("add_points"):
+		rs.add_points("father", pts, "tower")
+	FamilyProfile.add_gold(25)
+	Juice.toast("reward", "VIEWPOINT SYNCED", "+%d points  ·  +25 gold  ·  %s" % [pts, str(res.get("descent", "")).to_upper()])
+	_busy = false
 
 
 func _nearest_x() -> float:

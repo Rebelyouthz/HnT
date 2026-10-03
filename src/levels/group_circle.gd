@@ -19,10 +19,15 @@ func _configure() -> void:
 
 
 func build_world() -> void:
-	var sky := Blockout.poly(self, Rect2(0, 0, map_w, 720), Color(0.07, 0.08, 0.1), -8)
-	sky.z_index = -8
 	NightStreet.parallax(self, map_w, "circle")
-	NightStreet.wet_floor(self, map_w)
+	# Painted sections (backdrops/circle_strip) replace the blockout
+	# buildings; the painted wet street is the floor.
+	if NightStreet.has_backdrop("circle") and WetStreet.available():
+		WetStreet.lay(self, map_w)
+	else:
+		NightStreet.wet_floor(self, map_w)
+		NightStreet.tenement(self, Rect2(40, 40, 220, 200), Color(0.14, 0.16, 0.12))
+		NightStreet.tenement(self, Rect2(1600, 30, 240, 210), Color(0.12, 0.14, 0.12))
 	Blockout.poly(self, Rect2(620, 430, 280, 90), Color(0.18, 0.24, 0.16, 0.55), 1)
 	Blockout.poly(self, Rect2(720, 400, 80, 24), Color(0.35, 0.55, 0.7, 0.5), 2)
 	for i in 5:
@@ -34,8 +39,6 @@ func build_world() -> void:
 	Blockout.poly(self, Rect2(200, 248, 260, 18), Color(0.2, 0.24, 0.18), 2)
 	Blockout.solid(self, Rect2(1180, 228, 300, 18), true)
 	Blockout.poly(self, Rect2(1180, 228, 300, 18), Color(0.22, 0.2, 0.16), 2)
-	NightStreet.tenement(self, Rect2(40, 40, 220, 200), Color(0.14, 0.16, 0.12))
-	NightStreet.tenement(self, Rect2(1600, 30, 240, 210), Color(0.12, 0.14, 0.12))
 	fire_escape(240.0, 248.0)
 	fire_escape(1240.0, 228.0)
 	var crate := VaultCrate.new()

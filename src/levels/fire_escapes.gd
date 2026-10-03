@@ -35,7 +35,9 @@ func build_world() -> void:
 		Rect2(2520, 50, 240, 160)
 	]:
 		Blockout.occluder(self, r)
-		NightStreet.pixel_tenement(self, r)
+		# The painted skyline (roofs_strip) is the view; drawn tenements only without it.
+		if not NightStreet.has_backdrop("roofs"):
+			NightStreet.pixel_tenement(self, r)
 	Blockout.solid(self, Rect2(0, ROOF_Y, 520, 22), true)
 	NightStreet.pixel_roof(self, Rect2(0, ROOF_Y, 520, 22))
 	Blockout.solid(self, Rect2(700, ROOF_Y, 420, 22), true)

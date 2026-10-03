@@ -1,145 +1,570 @@
 {
-  "descents": ["parachute", "zip", "water", "ledge"],
-  "maps": {
-    "dock_street": { "x": 1180, "y": 248, "talk": "mornings", "rings": 3, "window": 0.24, "label": "WHARF TOWER" },
-    "intake_lot": { "x": 880, "y": 500, "talk": "mornings", "rings": 3, "window": 0.24, "label": "LOT TOWER" },
-    "fire_escapes": { "x": 1040, "y": 248, "talk": "mornings", "rings": 3, "window": 0.22, "label": "ROOF TOWER" },
-    "group_circle": { "x": 720, "y": 500, "talk": "nerf", "rings": 3, "window": 0.22, "label": "COURTYARD TOWER" },
-    "neon_exchange": { "x": 1240, "y": 248, "talk": "nerf", "rings": 4, "window": 0.20, "label": "NEON TOWER" },
-    "waiting_room": { "x": 860, "y": 500, "talk": "nerf", "rings": 4, "window": 0.20, "label": "FLUORESCENT TOWER" },
-    "rail_bridge": { "x": 1040, "y": 500, "talk": "school", "rings": 4, "window": 0.18, "label": "TOLL TOWER" },
-    "city_hall": { "x": 620, "y": 500, "talk": "school", "rings": 4, "window": 0.18, "label": "HALL TOWER" },
-    "copay_orchard": { "x": 1520, "y": 500, "talk": "school", "rings": 4, "window": 0.18, "label": "SILO TOWER" },
-    "sleet_hour": { "x": 840, "y": 500, "talk": "sundays", "rings": 5, "window": 0.16, "label": "ICE TOWER" },
-    "raven_grid": { "x": 1640, "y": 500, "talk": "sundays", "rings": 5, "window": 0.16, "label": "GRID TOWER" },
-    "ledger_dive": { "x": 900, "y": 500, "talk": "sundays", "rings": 5, "window": 0.15, "label": "VAULT TOWER" },
-    "invoice_pier": { "x": 1380, "y": 500, "talk": "sundays", "rings": 5, "window": 0.14, "label": "PIER TOWER" },
-    "processing_floor": { "x": 760, "y": 500, "talk": "sundays", "rings": 5, "window": 0.14, "label": "LAST TOWER" }
+ "descents": [
+  "parachute",
+  "zip",
+  "water",
+  "ledge"
+ ],
+ "maps": {
+  "dock_street": {
+   "x": 2150,
+   "y": 500,
+   "talk": "mornings",
+   "rings": 3,
+   "window": 0.24,
+   "label": "THE HARBOUR CLOCK",
+   "height_m": 132,
+   "holds": 12,
+   "film": "wharf_first",
+   "secret": true
   },
-  "talks": {
-    "mornings": {
-      "id": "mornings",
-      "title": "KINDERGARTEN MORNINGS",
-      "music": "res://assets/audio/music_summit.wav",
-      "eat_joke": "If this is a copay, I want the sandwich in writing.",
-      "opener": [
-        { "who": "father", "text": "We lived together then. Kindergarten mornings. I'd come home from work and you were still small enough to fit under my arm." },
-        { "who": "father", "text": "Do you remember that, son?" }
-      ],
-      "prompt": "Do you remember the mornings?",
-      "yes": [
-        { "who": "son", "text": "Yeah. I remember." },
-        { "who": "father", "text": "Skylanders. Grandpa's room. Every other weekend." },
-        { "who": "father", "text": "I miss that time. I'm glad we had the time we had." },
-        { "who": "father", "text": "It's always been easy to talk to you. I'm proud of you." },
-        { "who": "father", "text": "Best son a dad could ask for. You've shown that." }
-      ],
-      "no": [
-        { "who": "son", "text": "I was little." },
-        { "who": "father", "text": "That's alright. You were little. I remember enough for both of us." },
-        { "who": "father", "text": "Still proud. That's the whole sentence." }
-      ],
-      "deflect": [
-        { "who": "son", "text": "Wind's loud up here." },
-        { "who": "father", "text": "Alright." }
-      ]
-    },
-    "nerf": {
-      "id": "nerf",
-      "title": "ONE-DAY WAR",
-      "music": "res://assets/audio/music_summit.wav",
-      "eat_joke": "Ammo's foam. Lunch is real. That's growth.",
-      "opener": [
-        { "who": "father", "text": "Remember the Nerf war that lasted one day? Until Mom came home." }
-      ],
-      "prompt": "You remember the Nerf war?",
-      "yes": [
-        { "who": "son", "text": "The one that lasted until the door opened." },
-        { "who": "father", "text": "Ha. Yeah. That one." }
-      ],
-      "no": [
-        { "who": "son", "text": "I remember the darts. Not the sequel." },
-        { "who": "father", "text": "Ha. Maybe that's a mercy." }
-      ],
-      "deflect": [
-        { "who": "son", "text": "Foam doesn't count as a war." },
-        { "who": "father", "text": "Alright." }
-      ],
-      "bubbles": true,
-      "bubble_yes_only": true
-    },
-    "school": {
-      "id": "school",
-      "title": "MILK CARTON",
-      "music": "res://assets/audio/music_summit.wav",
-      "eat_joke": "I packed this. That's the one assignment I finished.",
-      "opener": [
-        { "who": "father", "text": "Glad school's going well now." },
-        { "who": "father", "text": "Remember I was at school a lot?" }
-      ],
-      "prompt": "You remember me at school?",
-      "yes": [
-        { "who": "son", "text": "You were there. Then you weren't. Then you were laughing." },
-        { "who": "father", "text": "I'd gone home to fetch something. Came back. You showed me a little man you'd made. I thought you were so clever." },
-        { "who": "father", "text": "After class the teacher wanted me alone. You stepped out. I said you'd made a really nice little man." },
-        { "who": "father", "text": "She had both hands on her head. THAT'S NOT WHAT THEY WERE SUPPOSED TO MAKE. LOOK. Everyone did the same milk-carton project. Except you." },
-        { "who": "father", "text": "I gave him a Nintendo. I've tried everything." },
-        { "who": "father", "text": "I couldn't stop laughing. Funny and uncomfortable. I knew myself in that." },
-        { "who": "father", "text": "I saw it wouldn't go well if it stayed like this. Still proud you only did what you liked. And how happy you were showing it." }
-      ],
-      "no": [
-        { "who": "son", "text": "I remember the little man. Not the meeting." },
-        { "who": "father", "text": "She had both hands on her head. Everyone made a milk carton. You made a person." },
-        { "who": "father", "text": "I laughed. It was uncomfortable. I was still proud." }
-      ],
-      "deflect": [
-        { "who": "son", "text": "The Nintendo was the assignment." },
-        { "who": "father", "text": "Alright." }
-      ]
-    },
-    "sundays": {
-      "id": "sundays",
-      "title": "EVERY SUNDAY",
-      "music": "res://assets/audio/music_summit.wav",
-      "eat_joke": "Last quiet meal before we jump. Chew like we mean it.",
-      "opener": [
-        { "who": "father", "text": "I'm glad you've called every Sunday since we talked." },
-        { "who": "father", "text": "You understood more than I wanted you to. How much I miss you. How sad I am I wasn't who I wanted to be." },
-        { "who": "father", "text": "I tried everything. Work. Be a dad the right way. It still wasn't enough." },
-        { "who": "father", "text": "I'm sorry I failed at the most important thing I ever had. I didn't want you to notice. You read me like an open book." },
-        { "who": "father", "text": "From then: we talk every Sunday. You've kept it. It means more than you know." },
-        { "who": "father", "text": "I love you. I hope you know. I would never have left if I didn't have to." },
-        { "who": "father", "text": "One day I'll tell you more. I thought I'd made it so it couldn't happen. I was wrong. Rest of that story another day." },
-        { "who": "father", "text": "Still doesn't feel good. I'm sorry I failed you." }
-      ],
-      "prompt": "You know I love you?",
-      "yes": [
-        { "who": "son", "text": "I know. I kept Sunday." },
-        { "who": "father", "text": "Then we finish this together. I've got a feeling we'll get back together. All the time in the world." }
-      ],
-      "no": [
-        { "who": "son", "text": "I kept Sunday. That's the sentence I can say." },
-        { "who": "father", "text": "That's enough. I'm still proud. We finish this together." }
-      ],
-      "deflect": [
-        { "who": "son", "text": "Wind's loud. Let's not do the whole novel." },
-        { "who": "father", "text": "Alright." }
-      ],
-      "second": {
-        "prompt": "Maybe one day I make a game that makes us some money. Grandpa's house. Your old room. You the animals. Me the crops. You want that talk?",
-        "yes": [
-          { "who": "son", "text": "Animals. You can have the crops." },
-          { "who": "father", "text": "Deal. Then we jump the hell down. Last push. So close I can taste it. Come on. Let's kick it, son." }
-        ],
-        "no": [
-          { "who": "son", "text": "Not the farm. Not today." },
-          { "who": "father", "text": "Different dream. Same Sunday. Then we jump the hell down. Last push. Come on. Let's kick it, son." }
-        ],
-        "deflect": [
-          { "who": "son", "text": "Finish the game first. Then we argue about chickens." },
-          { "who": "father", "text": "Alright. Jump the hell down. Last push. Come on. Let's kick it, son." }
-        ]
-      }
-    }
+  "intake_lot": {
+   "x": 880,
+   "y": 500,
+   "talk": "mornings",
+   "rings": 3,
+   "window": 0.24,
+   "label": "LOT TOWER"
+  },
+  "fire_escapes": {
+   "x": 1040,
+   "y": 248,
+   "talk": "mornings",
+   "rings": 3,
+   "window": 0.22,
+   "label": "ROOF TOWER"
+  },
+  "group_circle": {
+   "x": 720,
+   "y": 500,
+   "talk": "nerf",
+   "rings": 3,
+   "window": 0.22,
+   "label": "COURTYARD TOWER"
+  },
+  "neon_exchange": {
+   "x": 1240,
+   "y": 248,
+   "talk": "nerf",
+   "rings": 4,
+   "window": 0.2,
+   "label": "NEON TOWER"
+  },
+  "waiting_room": {
+   "x": 860,
+   "y": 500,
+   "talk": "nerf",
+   "rings": 4,
+   "window": 0.2,
+   "label": "FLUORESCENT TOWER"
+  },
+  "rail_bridge": {
+   "x": 1040,
+   "y": 500,
+   "talk": "school",
+   "rings": 4,
+   "window": 0.18,
+   "label": "TOLL TOWER"
+  },
+  "city_hall": {
+   "x": 620,
+   "y": 500,
+   "talk": "school",
+   "rings": 4,
+   "window": 0.18,
+   "label": "HALL TOWER"
+  },
+  "copay_orchard": {
+   "x": 1520,
+   "y": 500,
+   "talk": "school",
+   "rings": 4,
+   "window": 0.18,
+   "label": "SILO TOWER"
+  },
+  "sleet_hour": {
+   "x": 840,
+   "y": 500,
+   "talk": "sundays",
+   "rings": 5,
+   "window": 0.16,
+   "label": "ICE TOWER"
+  },
+  "raven_grid": {
+   "x": 1640,
+   "y": 500,
+   "talk": "sundays",
+   "rings": 5,
+   "window": 0.16,
+   "label": "GRID TOWER"
+  },
+  "ledger_dive": {
+   "x": 900,
+   "y": 500,
+   "talk": "sundays",
+   "rings": 5,
+   "window": 0.15,
+   "label": "VAULT TOWER"
+  },
+  "invoice_pier": {
+   "x": 1380,
+   "y": 500,
+   "talk": "sundays",
+   "rings": 5,
+   "window": 0.14,
+   "label": "PIER TOWER"
+  },
+  "processing_floor": {
+   "x": 760,
+   "y": 500,
+   "talk": "sundays",
+   "rings": 5,
+   "window": 0.14,
+   "label": "LAST TOWER"
   }
+ },
+ "talks": {
+  "mornings": {
+   "id": "mornings",
+   "title": "KINDERGARTEN MORNINGS",
+   "music": "res://assets/audio/music_summit.wav",
+   "eat_joke": "If this is a copay, I want the sandwich in writing.",
+   "opener": [
+    {
+     "who": "father",
+     "text": "We lived together then. Kindergarten mornings. I'd come home from work and you were still small enough to fit under my arm."
+    },
+    {
+     "who": "father",
+     "text": "Do you remember that, son?"
+    }
+   ],
+   "prompt": "Do you remember the mornings?",
+   "yes": [
+    {
+     "who": "son",
+     "text": "Yeah. I remember."
+    },
+    {
+     "who": "father",
+     "text": "Skylanders. Grandpa's room. Every other weekend."
+    },
+    {
+     "who": "father",
+     "text": "I miss that time. I'm glad we had the time we had."
+    },
+    {
+     "who": "father",
+     "text": "It's always been easy to talk to you. I'm proud of you."
+    },
+    {
+     "who": "father",
+     "text": "Best son a dad could ask for. You've shown that."
+    }
+   ],
+   "no": [
+    {
+     "who": "son",
+     "text": "I was little."
+    },
+    {
+     "who": "father",
+     "text": "That's alright. You were little. I remember enough for both of us."
+    },
+    {
+     "who": "father",
+     "text": "Still proud. That's the whole sentence."
+    }
+   ],
+   "deflect": [
+    {
+     "who": "son",
+     "text": "Wind's loud up here."
+    },
+    {
+     "who": "father",
+     "text": "Alright."
+    }
+   ]
+  },
+  "nerf": {
+   "id": "nerf",
+   "title": "ONE-DAY WAR",
+   "music": "res://assets/audio/music_summit.wav",
+   "eat_joke": "Ammo's foam. Lunch is real. That's growth.",
+   "opener": [
+    {
+     "who": "father",
+     "text": "Remember the Nerf war that lasted one day? Until Mom came home."
+    }
+   ],
+   "prompt": "You remember the Nerf war?",
+   "yes": [
+    {
+     "who": "son",
+     "text": "The one that lasted until the door opened."
+    },
+    {
+     "who": "father",
+     "text": "Ha. Yeah. That one."
+    }
+   ],
+   "no": [
+    {
+     "who": "son",
+     "text": "I remember the darts. Not the sequel."
+    },
+    {
+     "who": "father",
+     "text": "Ha. Maybe that's a mercy."
+    }
+   ],
+   "deflect": [
+    {
+     "who": "son",
+     "text": "Foam doesn't count as a war."
+    },
+    {
+     "who": "father",
+     "text": "Alright."
+    }
+   ],
+   "bubbles": true,
+   "bubble_yes_only": true
+  },
+  "school": {
+   "id": "school",
+   "title": "MILK CARTON",
+   "music": "res://assets/audio/music_summit.wav",
+   "eat_joke": "I packed this. That's the one assignment I finished.",
+   "opener": [
+    {
+     "who": "father",
+     "text": "Glad school's going well now."
+    },
+    {
+     "who": "father",
+     "text": "Remember I was at school a lot?"
+    }
+   ],
+   "prompt": "You remember me at school?",
+   "yes": [
+    {
+     "who": "son",
+     "text": "You were there. Then you weren't. Then you were laughing."
+    },
+    {
+     "who": "father",
+     "text": "I'd gone home to fetch something. Came back. You showed me a little man you'd made. I thought you were so clever."
+    },
+    {
+     "who": "father",
+     "text": "After class the teacher wanted me alone. You stepped out. I said you'd made a really nice little man."
+    },
+    {
+     "who": "father",
+     "text": "She had both hands on her head. THAT'S NOT WHAT THEY WERE SUPPOSED TO MAKE. LOOK. Everyone did the same milk-carton project. Except you."
+    },
+    {
+     "who": "father",
+     "text": "I gave him a Nintendo. I've tried everything."
+    },
+    {
+     "who": "father",
+     "text": "I couldn't stop laughing. Funny and uncomfortable. I knew myself in that."
+    },
+    {
+     "who": "father",
+     "text": "I saw it wouldn't go well if it stayed like this. Still proud you only did what you liked. And how happy you were showing it."
+    }
+   ],
+   "no": [
+    {
+     "who": "son",
+     "text": "I remember the little man. Not the meeting."
+    },
+    {
+     "who": "father",
+     "text": "She had both hands on her head. Everyone made a milk carton. You made a person."
+    },
+    {
+     "who": "father",
+     "text": "I laughed. It was uncomfortable. I was still proud."
+    }
+   ],
+   "deflect": [
+    {
+     "who": "son",
+     "text": "The Nintendo was the assignment."
+    },
+    {
+     "who": "father",
+     "text": "Alright."
+    }
+   ]
+  },
+  "sundays": {
+   "id": "sundays",
+   "title": "EVERY SUNDAY",
+   "music": "res://assets/audio/music_summit.wav",
+   "eat_joke": "Last quiet meal before we jump. Chew like we mean it.",
+   "opener": [
+    {
+     "who": "father",
+     "text": "I'm glad you've called every Sunday since we talked."
+    },
+    {
+     "who": "father",
+     "text": "You understood more than I wanted you to. How much I miss you. How sad I am I wasn't who I wanted to be."
+    },
+    {
+     "who": "father",
+     "text": "I tried everything. Work. Be a dad the right way. It still wasn't enough."
+    },
+    {
+     "who": "father",
+     "text": "I'm sorry I failed at the most important thing I ever had. I didn't want you to notice. You read me like an open book."
+    },
+    {
+     "who": "father",
+     "text": "From then: we talk every Sunday. You've kept it. It means more than you know."
+    },
+    {
+     "who": "father",
+     "text": "I love you. I hope you know. I would never have left if I didn't have to."
+    },
+    {
+     "who": "father",
+     "text": "One day I'll tell you more. I thought I'd made it so it couldn't happen. I was wrong. Rest of that story another day."
+    },
+    {
+     "who": "father",
+     "text": "Still doesn't feel good. I'm sorry I failed you."
+    }
+   ],
+   "prompt": "You know I love you?",
+   "yes": [
+    {
+     "who": "son",
+     "text": "I know. I kept Sunday."
+    },
+    {
+     "who": "father",
+     "text": "Then we finish this together. I've got a feeling we'll get back together. All the time in the world."
+    }
+   ],
+   "no": [
+    {
+     "who": "son",
+     "text": "I kept Sunday. That's the sentence I can say."
+    },
+    {
+     "who": "father",
+     "text": "That's enough. I'm still proud. We finish this together."
+    }
+   ],
+   "deflect": [
+    {
+     "who": "son",
+     "text": "Wind's loud. Let's not do the whole novel."
+    },
+    {
+     "who": "father",
+     "text": "Alright."
+    }
+   ],
+   "second": {
+    "prompt": "Maybe one day I make a game that makes us some money. Grandpa's house. Your old room. You the animals. Me the crops. You want that talk?",
+    "yes": [
+     {
+      "who": "son",
+      "text": "Animals. You can have the crops."
+     },
+     {
+      "who": "father",
+      "text": "Deal. Then we jump the hell down. Last push. So close I can taste it. Come on. Let's kick it, son."
+     }
+    ],
+    "no": [
+     {
+      "who": "son",
+      "text": "Not the farm. Not today."
+     },
+     {
+      "who": "father",
+      "text": "Different dream. Same Sunday. Then we jump the hell down. Last push. Come on. Let's kick it, son."
+     }
+    ],
+    "deflect": [
+     {
+      "who": "son",
+      "text": "Finish the game first. Then we argue about chickens."
+     },
+     {
+      "who": "father",
+      "text": "Alright. Jump the hell down. Last push. Come on. Let's kick it, son."
+     }
+    ]
+   }
+  },
+  "wharf_first": {
+   "id": "wharf_first",
+   "title": "132 METRES",
+   "music": "res://assets/audio/music_summit.wav",
+   "beats": [
+    {
+     "lines": [
+      {
+       "who": "son",
+       "text": "...Okay. That's high."
+      },
+      {
+       "who": "father",
+       "text": "Sit down. Legs over the edge. It's less scary when you stop pretending you're not scared."
+      },
+      {
+       "who": "son",
+       "text": "You can see the clinic from here. The little lemon sign."
+      },
+      {
+       "who": "father",
+       "text": "Twelve sessions. We never went to one. I kept telling myself I'd go next week."
+      }
+     ]
+    },
+    {
+     "choice": "Why didn't you go?",
+     "options": [
+      {
+       "label": "ASK HIM",
+       "lines": [
+        {
+         "who": "son",
+         "text": "Why didn't you? Honestly."
+        },
+        {
+         "who": "father",
+         "text": "Because sitting in a room and saying I got things wrong... that's harder than any of those guys down there."
+        },
+        {
+         "who": "father",
+         "text": "Punching I can do. Saying sorry out loud, I'm still practising."
+        }
+       ]
+      },
+      {
+       "label": "SAY NOTHING",
+       "lines": [
+        {
+         "who": "son",
+         "text": "..."
+        },
+        {
+         "who": "father",
+         "text": "You don't have to say anything. I know. I should have gone."
+        }
+       ]
+      },
+      {
+       "label": "MAKE A JOKE",
+       "lines": [
+        {
+         "who": "son",
+         "text": "Maybe we should've booked the session up here. Better view. Worse insurance."
+        },
+        {
+         "who": "father",
+         "text": "Ha. The wind would bill us by the gust."
+        },
+        {
+         "who": "father",
+         "text": "...But yeah. Up here I can actually say things."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "lines": [
+      {
+       "who": "father",
+       "text": "Benny and Rico are down there because they signed for us. For a family that didn't show up for itself."
+      },
+      {
+       "who": "son",
+       "text": "We're showing up now."
+      }
+     ]
+    },
+    {
+     "choice": "What do you tell him?",
+     "options": [
+      {
+       "label": "I'M PROUD OF US",
+       "lines": [
+        {
+         "who": "son",
+         "text": "I'm kind of proud of us. Is that weird?"
+        },
+        {
+         "who": "father",
+         "text": "It's the least weird thing anyone's said all night."
+        },
+        {
+         "who": "father",
+         "text": "I'm proud of you. Not for the fighting. For staying."
+        }
+       ]
+      },
+      {
+       "label": "I WAS ANGRY",
+       "lines": [
+        {
+         "who": "son",
+         "text": "I was angry at you. For a long time."
+        },
+        {
+         "who": "father",
+         "text": "You were allowed to be. Still are."
+        },
+        {
+         "who": "father",
+         "text": "I'd rather you be angry next to me than fine somewhere else."
+        }
+       ]
+      },
+      {
+       "label": "LET'S GET THEM BACK",
+       "lines": [
+        {
+         "who": "son",
+         "text": "Less talking. Let's get Benny and Rico back. Then we talk. For real."
+        },
+        {
+         "who": "father",
+         "text": "Deal. A real session. I'll even take my shoes off."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "lines": [
+      {
+       "who": "father",
+       "text": "Look at it. Whole city full of people who owe someone something."
+      },
+      {
+       "who": "son",
+       "text": "And us, sitting on the clock, ignoring the time."
+      },
+      {
+       "who": "father",
+       "text": "Best kind of time. Come on. Pick a way down."
+      }
+     ]
+    }
+   ]
+  }
+ }
 }

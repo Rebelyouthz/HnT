@@ -87,12 +87,6 @@ func _hit_punk(p: Punk) -> void:
 		hit = "heavy"
 	if hollow and kind != "snare":
 		hit = "heavy"
+	# The target bleeds and gets the hole (Punk._gore); no sparks off flesh.
 	p.take_hit(hit, self)
-	Juice.sparks(p.global_position)
-	Juice.hole(p.global_position + Vector2(0, -28))
-	var blood := get_tree().get_first_node_in_group("blood_sim")
-	if blood and blood.has_method("spray"):
-		blood.spray(p.global_position, "blade" if hollow else hit, signf(vel.x))
-	if blood and blood.has_method("run_pool") and hit != "light":
-		blood.run_pool(p.global_position, signf(vel.x))
 	queue_free()

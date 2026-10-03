@@ -144,6 +144,18 @@
     "stat": "wanted -"
   },
   {
+    "id": "xp_magnet",
+    "trunk": "STREET",
+    "branch": "right",
+    "requires": "quiet_hands",
+    "name": "XP MAGNET",
+    "blurb": "Insight gems fly to you from much further, and the pull doubles its growth every level of the night. Growth was never this lazy.",
+    "gold": 90,
+    "rep": 3,
+    "rarity": "epic",
+    "stat": "xp pull ++"
+  },
+  {
     "id": "crown",
     "trunk": "SHOW",
     "branch": "core",

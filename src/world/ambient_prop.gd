@@ -14,6 +14,8 @@ static func place(host: Node, who: String, at: Vector2, z: int = 3) -> void:
 		n.z_index = z
 		n.global_position = at
 		n.add_child(SpriteBook.make_anim(who))
+		if who == "lamp":
+			n.add_to_group("street_lamps")
 		host.add_child(n)
 		return
 	SpriteBook.stamp(host, who, at, z)

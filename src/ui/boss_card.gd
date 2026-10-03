@@ -48,14 +48,14 @@ func flash(title: String, sub: String, accent: Color, full: bool) -> void:
 	bot.size = Vector2(1280, 70)
 	ui.add_child(bot)
 	var who := _who_for(title)
-	var face := SpriteBook.tex("res://assets/sprites/%s/idle/00.png" % who)
+	var face := SpriteBook.face(who)
 	var portrait := TextureRect.new()
 	portrait.custom_minimum_size = Vector2(220, 280)
 	portrait.size = Vector2(220, 280)
 	portrait.position = Vector2(-240, 200)
 	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	portrait.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	portrait.texture_filter = SpriteBook.UI_FILTER
 	if face:
 		portrait.texture = face
 	ui.add_child(portrait)

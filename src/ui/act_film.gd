@@ -1,192 +1,190 @@
 extends Node2D
 
-## SoR4 comic-between-stages. Pause skips the current beat. Light/jump advances a line.
+## Between-acts film, staged on the street: the painted backdrop of the map
+## just filed, the Father and Son (plus any crew the story brings in) as real
+## sprites, lines as speech bubbles, a pixel chapter card first. Used for
+## bridges (outros), the ending, and anything StoryBook.film_lines returns.
+## JUMP / ENTER next line, PAUSE skips.
 
-enum Beat { CHAPTER, FILM, DONE }
+const BACKDROPS := {"dock_street": "dock", "tutorial_alley": "tutorial"}
 
-var _beat: Beat = Beat.CHAPTER
-var _i := 0
-var _lines: Array = []
-var _layer: CanvasLayer
-var _ui: Control
-var _caption: Label
-var _who: Label
-var _skip: Label
-var _chapter: Label
-var _sub: Label
-var _sil_a: ColorRect
-var _sil_b: ColorRect
 var _kind := "bridge"
+var _talk: Talk
+var _ui: Control
+var _cam: Camera2D
+var _done := false
+var _card: Control
 
 
 func _ready() -> void:
 	_kind = App.film_kind if App.film_kind != "" else "bridge"
-	var sky := ColorRect.new()
-	sky.color = Color(0.035, 0.04, 0.065)
-	sky.position = Vector2.ZERO
-	sky.size = Vector2(1280, 720)
-	add_child(sky)
-	_layer = CanvasLayer.new()
-	_layer.layer = 50
-	_layer.process_mode = Node.PROCESS_MODE_ALWAYS
-	add_child(_layer)
-	_ui = PixelStage.attach_canvas(_layer)
-	var letter_t := ColorRect.new()
-	letter_t.color = Color(0, 0, 0, 1)
-	letter_t.position = Vector2(0, 0)
-	letter_t.size = Vector2(1280, 90)
-	_ui.add_child(letter_t)
-	var letter_b := ColorRect.new()
-	letter_b.color = Color(0, 0, 0, 1)
-	letter_b.position = Vector2(0, 630)
-	letter_b.size = Vector2(1280, 90)
-	_ui.add_child(letter_b)
-	_sil_a = ColorRect.new()
-	_sil_a.color = Palette.BRICK
-	_sil_a.size = Vector2(78, 176)
-	_sil_a.position = Vector2(400, 348)
-	_ui.add_child(_sil_a)
-	_sil_b = ColorRect.new()
-	_sil_b.color = Palette.LEMON
-	_sil_b.size = Vector2(56, 158)
-	_sil_b.position = Vector2(790, 366)
-	_ui.add_child(_sil_b)
-	_chapter = Label.new()
-	_chapter.position = Vector2(80, 220)
-	_chapter.size = Vector2(1120, 70)
-	_chapter.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	UiKit.apply_label(_chapter, 36, Palette.LEMON)
-	_ui.add_child(_chapter)
-	_sub = Label.new()
-	_sub.position = Vector2(80, 300)
-	_sub.size = Vector2(1120, 48)
-	_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	UiKit.apply_label(_sub, 18, Palette.EDGE)
-	_ui.add_child(_sub)
-	_who = Label.new()
-	_who.position = Vector2(80, 520)
-	_who.size = Vector2(1120, 28)
-	UiKit.apply_label(_who, 14, Palette.EDGE)
-	_ui.add_child(_who)
-	_caption = Label.new()
-	_caption.position = Vector2(80, 552)
-	_caption.size = Vector2(1120, 70)
-	_caption.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	UiKit.apply_label(_caption, 22, Palette.TEXT)
-	_ui.add_child(_caption)
-	_skip = Label.new()
-	_skip.position = Vector2(40, 24)
-	_skip.text = Copy.SKIP_FILM
-	UiKit.apply_label(_skip, 14, Palette.MUTED)
-	_ui.add_child(_skip)
-	_lines = StoryBook.film_lines(_kind, App.film_from, App.film_next)
-	var ch := StoryBook.chapter_card(_kind, App.film_from, App.film_next)
-	_chapter.text = str(ch.get("title", "NEXT SESSION"))
-	_sub.text = str(ch.get("sub", ""))
+	_build_set()
+	_build_ui()
 	Mixer.play_music("res://assets/audio/music_clinic.wav")
-	if _kind == "ending":
-		Juice.play("res://assets/audio/sting_intro.wav")
-		Juice.unlock_logo("THE NIGHT CLOSES", "The invoice is a corpse. The fridge stays.")
-	else:
-		Juice.play("res://assets/audio/sting_intro.wav")
-	_paint_chapter()
+	Juice.play("res://assets/audio/sting_intro.wav")
+	_talk = Talk.new()
+	add_child(_talk)
+	_talk.closed.connect(_leave)
+	await _chapter_card()
+	if _done:
+		return
+	var lines := StoryBook.film_lines(_kind, App.film_from, App.film_next)
+	if lines.is_empty():
+		_leave()
+		return
+	_talk.play(lines, true)
+
+
+func _stage() -> Dictionary:
+	var b := StoryBook.bridge(App.film_from, App.film_next)
+	var v: Variant = b.get("stage", {})
+	return v if v is Dictionary else {}
+
+
+func _build_set() -> void:
+	var st := _stage()
+	var theme := str(st.get("theme", BACKDROPS.get(App.film_from, "dock")))
+	var map_w := 1400.0
+	NightStreet.parallax(self, map_w, theme)
+	NightStreet.wet_floor(self, map_w, true)
+	NightStreet.pixel_dock(self, map_w, false)
+	NightStreet.rain(self, 700.0)
+	AmbientProp.lamp(self, Vector2(520.0, 500.0), 3)
+	var mod := CanvasModulate.new()
+	mod.color = Palette.NIGHT
+	add_child(mod)
+	var cast: Array = st.get("cast", ["father", "son"])
+	var xs := [560.0, 610.0, 680.0, 730.0]
+	for i in cast.size():
+		var who := str(cast[i])
+		var at := Vector2(float(xs[mini(i, xs.size() - 1)]), 494.0 + float(i % 2) * 2.0)
+		if SpriteBook.has_who(who):
+			var a := Node2D.new()
+			a.set_script(preload("res://src/world/film_actor.gd"))
+			a.set("role", who)
+			a.position = at
+			a.add_to_group("players")
+			add_child(a)
+			a.call("build")
+			var anim: AnimatedSprite2D = a.get("anim")
+			if anim and i >= 2:
+				anim.flip_h = true
+		else:
+			var c := CrewNPC.new()
+			c.setup(who)
+			c.position = at
+			c.face(-1)
+			add_child(c)
+	_cam = Camera2D.new()
+	_cam.zoom = Vector2(2.2, 2.2)
+	_cam.position = Vector2(640, 446)
+	add_child(_cam)
+	_cam.make_current()
+
+
+func _build_ui() -> void:
+	var layer := CanvasLayer.new()
+	layer.layer = 50
+	layer.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(layer)
+	_ui = PixelStage.attach_canvas(layer)
+	_ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for y in [0.0, 650.0]:
+		var bar := ColorRect.new()
+		bar.color = Color.BLACK
+		bar.position = Vector2(0, y)
+		bar.size = Vector2(1280, 70)
+		_ui.add_child(bar)
+	var skip := Label.new()
+	skip.position = Vector2(40, 22)
+	skip.text = "JUMP  ·  NEXT LINE        PAUSE  ·  SKIP"
+	UiKit.apply_label(skip, 13, Palette.MUTED)
+	_ui.add_child(skip)
+
+
+## Pixel chapter card: CHAPTER n, the title in big gold caps, the sub line;
+## slams in, holds, fades.
+func _chapter_card() -> void:
+	var ch := StoryBook.chapter_card(_kind, App.film_from, App.film_next)
+	var b := StoryBook.bridge(App.film_from, App.film_next)
+	_card = Control.new()
+	_card.size = Vector2(1280, 720)
+	_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui.add_child(_card)
+	var dim := ColorRect.new()
+	dim.color = Color(0, 0, 0.02, 0.8)
+	dim.size = Vector2(1280, 720)
+	_card.add_child(dim)
+	var panel := PanelContainer.new()
+	var ps := preload("res://src/ui/clinic_featured.gd").card_style(true)
+	ps.content_margin_left = 60
+	ps.content_margin_right = 60
+	ps.content_margin_top = 26
+	ps.content_margin_bottom = 26
+	panel.add_theme_stylebox_override("panel", ps)
+	panel.position = Vector2(240, 220)
+	panel.custom_minimum_size = Vector2(800, 0)
+	_card.add_child(panel)
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 8)
+	panel.add_child(col)
+	var chap := Label.new()
+	chap.text = str(b.get("chapter", "THE NIGHT CONTINUES" if _kind != "ending" else "EPILOGUE"))
+	chap.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	chap.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(chap, 18, Palette.MUTED)
+	col.add_child(chap)
+	var t := UiKit.title(str(ch.get("title", "NEXT SESSION")), 50, Palette.EDGE)
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(t)
+	var sub := Label.new()
+	sub.text = str(ch.get("sub", ""))
+	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	UiKit.apply_label(sub, 18, Palette.TEXT)
+	col.add_child(sub)
+	panel.scale = Vector2(1.4, 1.4)
+	panel.pivot_offset = Vector2(400, 90)
+	panel.modulate.a = 0.0
+	var tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(panel, "scale", Vector2.ONE, 0.3)
+	tw.parallel().tween_property(panel, "modulate:a", 1.0, 0.2)
+	Juice.play("res://assets/audio/card.wav")
+	Juice.pulse_shake(4.0)
+	var held := 0.0
+	while held < 2.4 and not _done:
+		held += get_process_delta_time()
+		if held > 0.4 and (Input.is_action_just_pressed("p1_jump") or Input.is_action_just_pressed("p1_light") or Input.is_action_just_pressed("ui_accept")):
+			break
+		await get_tree().process_frame
+	var out := create_tween()
+	out.tween_property(_card, "modulate:a", 0.0, 0.35)
+	await out.finished
+	_card.queue_free()
 
 
 func _process(_delta: float) -> void:
-	_sil_a.position.y = 348.0 + 6.0 * sin(Time.get_ticks_msec() * 0.004)
-	_sil_b.position.y = 366.0 + 5.0 * sin(Time.get_ticks_msec() * 0.005 + 1.2)
+	if _done:
+		return
+	if _cam:
+		_cam.position.x = lerpf(_cam.position.x, 650.0, 0.004)
 	if Input.is_action_just_pressed("p1_pause") or Input.is_action_just_pressed("p2_pause"):
-		_advance_hard()
-		return
-	if Input.is_action_just_pressed("p1_light") or Input.is_action_just_pressed("p1_jump") or Input.is_action_just_pressed("p2_light") or Input.is_action_just_pressed("p2_jump"):
-		_advance()
-
-
-func _paint_chapter() -> void:
-	_beat = Beat.CHAPTER
-	_who.text = ""
-	_caption.text = Copy.SKIP_FILM
-	_sil_a.visible = false
-	_sil_b.visible = false
-	_chapter.visible = true
-	_sub.visible = true
-	_chapter.modulate.a = 0.0
-	_sub.modulate.a = 0.0
-	var tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tw.tween_property(_chapter, "modulate:a", 1.0, 0.22)
-	tw.parallel().tween_property(_sub, "modulate:a", 1.0, 0.28)
-	Juice.play("res://assets/audio/card.wav")
-
-
-func _paint_film() -> void:
-	_chapter.visible = false
-	_sub.visible = false
-	_sil_a.visible = true
-	_sil_b.visible = true
-	if _i >= _lines.size():
-		_leave()
-		return
-	var row: Variant = _lines[_i]
-	if typeof(row) != TYPE_DICTIONARY:
-		_i += 1
-		_paint_film()
-		return
-	var d: Dictionary = row
-	var who := str(d.get("who", ""))
-	_who.text = StoryBook.who_name(who) if who != "" else "THE STREET"
-	_caption.text = str(d.get("text", ""))
-	_caption.modulate.a = 0.0
-	_tint_speakers(who)
-	var tw := create_tween()
-	tw.tween_property(_caption, "modulate:a", 1.0, 0.16)
-
-
-func _tint_speakers(who: String) -> void:
-	if who == "father":
-		_sil_a.modulate = Color(1.35, 1.1, 1.05)
-		_sil_b.modulate = Color(0.32, 0.32, 0.34, 0.5)
-		_who.add_theme_color_override("font_color", Palette.BRICK)
-	elif who == "son":
-		_sil_a.modulate = Color(0.32, 0.32, 0.34, 0.5)
-		_sil_b.modulate = Color(1.25, 1.28, 0.85)
-		_who.add_theme_color_override("font_color", Palette.LEMON)
-	else:
-		_sil_a.modulate = Color(1, 1, 1)
-		_sil_b.modulate = Color(1, 1, 1)
-		_who.add_theme_color_override("font_color", Palette.EDGE)
-
-
-func _advance() -> void:
-	if _beat == Beat.CHAPTER:
-		_beat = Beat.FILM
-		_i = 0
-		_paint_film()
-		return
-	if _beat == Beat.FILM:
-		_i += 1
-		_paint_film()
-
-
-func _advance_hard() -> void:
-	if _beat == Beat.CHAPTER:
-		_beat = Beat.FILM
-		_i = 0
-		_paint_film()
-		return
-	if _beat == Beat.FILM:
 		_leave()
 
 
 func _leave() -> void:
-	if _beat == Beat.DONE:
+	if _done:
 		return
-	_beat = Beat.DONE
+	_done = true
 	if _kind == "ending" or App.film_next == "" or App.film_next == "hub":
 		FamilyProfile.mark_ending()
 		Mixer.play_music("res://assets/audio/music_clinic.wav")
 		if App.remote_coop:
 			NetSession.shutdown()
 		App.back_to_hub("awards")
+		return
+	if App.film_to_camp:
+		App.film_done_to_camp()
 		return
 	var nxt := App.film_next
 	App.film_kind = ""
