@@ -34,6 +34,31 @@ The rest is in English, like the code. Newest work first. Each block says
 
 ---
 
+## 0d. Menus audit, new enemies, the GPU queue (latest)
+
+**Svenska:** Alla menyer och undermenyer genomgångna med skärmdumpar (titel,
+options, credits, alla hubb-flikar, statistik, gömstället, dojo, resultat,
+kort, paus). Fixat: varje dojo-move och combo visar sin egen pose; kistor
+ritade för AWARDS; radiotornet har riktig bild; paus är en ram med OPTIONS.
+Två nya fiender på Dock Street: Repo Goon (vanlig) och Bailiff (elit, västen
+tar kulor i kroppen, sikta på ansiktet). Deras animationer väntar på HF-kvoten.
+
+- **Dojo icons**: `SpriteBook.move_icon(who, clip)` crops the clip's hit frame;
+  `dojo_sheet.gd MOVE_ART` maps every school move to a clip, combos use their
+  own finisher clip.
+- **Chests**: `tools/chest_art.py` makes `assets/sprites/hub/chest_{locked,ready,open}.png`;
+  `hub_awards.gd` shows them above the buttons (ready ones bob).
+- **Pause** (`run_hud.gd _toggle_pause`): framed card, OPTIONS opens the
+  settings sheet while paused. `tools/capture.gd -- ui:pause out.png` shoots it.
+- **Repo Goon / Bailiff**: `data/kits.json`, `party.gd` speeds, `encounters.json`
+  (dock_street now 5 solo / 9 co-op; smoke test updated), vest logic in
+  `punk.gd` gun damage. `_sprite_who` uses `assets/sprites/repo_goon|bailiff`
+  as soon as `idle.json` exists; until then they draw as the punk.
+- **GPU queue**: `tools/hf_batch.py` (copy of /tmp/claude-0/hfv/batch.py):
+  cop death, FLUX designs, 7 clips per new enemy, map 2 deaths and attack
+  clips. Start images for map 2 enemies are their idle frame scaled onto
+  green 832x672. ZeroGPU Pro is ~25 min/day; a clip is ~41-69 s.
+
 ## 0c. Guns: held in the fist, five weapons that fire differently, gunshot gore (latest)
 
 **Svenska:** Alla skjutvapen hålls i handen och skjuter på riktigt. Fem vapen
