@@ -79,20 +79,86 @@ func _stop() -> void:
 		_move.kill()
 
 
-func sit_at(p: Vector2) -> void:
+## Sit on an edge: the real torso with one leg laid over the ledge and the
+## shin hanging (assets/sprites/<role>/sit_*.png, cut by tools/sit_pose.py),
+## the far leg a shade darker behind it. p is the edge (where the knees
+## bend); face is the side the legs dangle over. The shins swing.
+var _sit: Node2D
+var _knees: Array[Node2D] = []
+
+
+func sit_at(p: Vector2, face: int = 1) -> void:
 	_stop()
 	_mode = "sit"
 	position = p
+	rotation = 0.0
 	_shadow(false)
+	var meta_path := "res://assets/sprites/%s/sit.json" % role
+	if not FileAccess.file_exists(meta_path):
+		if anim:
+			anim.play("idle")
+			anim.speed_scale = 0.6
+			anim.position.y += 9.0
+		return
+	var m: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(meta_path))
 	if anim:
-		anim.play("idle")
-		anim.speed_scale = 0.6
-		# Sunk behind the parapet: only the upper body shows, like sitting.
-		anim.position.y += 9.0
+		anim.visible = false
+	if _sit:
+		_sit.queue_free()
+	_knees.clear()
+	_sit = Node2D.new()
+	var k := SpriteBook.DRAW_SCALE * SpriteBook.FIGHTER_SCALE
+	_sit.scale = Vector2(k * float(face), k)
+	add_child(_sit)
+	var hip: Array = m["hip"]
+	var th: Array = m["thigh"]
+	var st: Array = m["shin_top"]
+	# Origin = the knee at the edge; the hip sits a thigh's length back.
+	var hip_x := -(float(th[0]) - 6.0)
+	for far in [true, false]:
+		var shade := Color(0.55, 0.55, 0.62) if far else Color.WHITE
+		var off := Vector2(-4, -2) if far else Vector2.ZERO
+		var thigh := _part("sit_thigh", shade)
+		thigh.position = Vector2(hip_x - 6.0, -float(th[1]) * 0.5) + off
+		_sit.add_child(thigh)
+		var knee := Node2D.new()
+		knee.position = Vector2(-2.0, 0.0) + off
+		var shin := _part("sit_shin", shade)
+		shin.position = Vector2(-float(st[0]), -2.0)
+		knee.add_child(shin)
+		_sit.add_child(knee)
+		_knees.append(knee)
+		if far:
+			# The torso goes between the far and the near leg.
+			var torso := _part("sit_torso", Color.WHITE)
+			torso.position = Vector2(hip_x - float(hip[0]), -float(hip[1]))
+			_sit.add_child(torso)
+
+
+func _part(name: String, shade: Color) -> Sprite2D:
+	var sp := Sprite2D.new()
+	sp.texture = load("res://assets/sprites/%s/%s.png" % [role, name])
+	sp.centered = false
+	sp.texture_filter = SpriteBook.world_filter()
+	sp.modulate = shade
+	return sp
+
+
+func _swing(_delta: float) -> void:
+	var amp := 0.32 if role == "son" else 0.14
+	var spd := 3.2 if role == "son" else 1.7
+	for i in _knees.size():
+		_knees[i].rotation = sin(_t * spd + float(i) * 1.9) * amp
 
 
 func stand_at(p: Vector2) -> void:
 	_stop()
+	if _sit:
+		_sit.queue_free()
+		_sit = null
+		_knees.clear()
+	if anim:
+		anim.visible = true
 	_mode = "idle"
 	position = p
 	rotation = 0.0
@@ -123,6 +189,15 @@ func hang_pose() -> void:
 
 func _process(delta: float) -> void:
 	_t += delta
+	if _sit and _mode != "sit":
+		# Any other pose stands him back up.
+		_sit.queue_free()
+		_sit = null
+		_knees.clear()
+		if anim:
+			anim.visible = true
+	if _mode == "sit":
+		_swing(delta)
 	if anim == null:
 		return
 	match _mode:

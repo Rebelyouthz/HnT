@@ -88,7 +88,7 @@ func _initialize() -> void:
 	# tower:<map> plays the giant tower film on autopilot.
 	elif target.begins_with("tower:"):
 		_tab = "tower_" + target.get_slice(":", 1)
-		target = "res://scenes/levels/%s.tscn" % target.get_slice(":", 1)
+		target = "res://scenes/levels/%s.tscn" % target.get_slice(":", 1).trim_suffix("@summit")
 	# camp:hub / camp:dojo open a hideout menu over the camp.
 	elif target.begins_with("camp:"):
 		_tab = "camp_" + target.get_slice(":", 1)
@@ -184,11 +184,18 @@ func _process(_delta: float) -> bool:
 			p1.global_position = best.global_position + Vector2(-50, 4)
 			best.set_meta("syringe", true)
 			best.call("take_hit", "light", p1)
+	if _tab.begins_with("tower_") and _n == 58:
+		# Skip the stage title card so it can't unpause under the film.
+		for c in current_scene.get_children():
+			if c.has_method("_close") and c.get("map_id") != null and c is CanvasLayer:
+				c.queue_free()
 	if _tab.begins_with("tower_") and _n == 60:
 		load("res://src/ui/timing_ring.gd").set("autoplay", true)
 		root.get_tree().paused = true
 		var film: Node = load("res://src/world/giant_tower_film.gd").new()
-		film.set("map_id", _tab.substr(6))
+		film.set("map_id", _tab.substr(6).trim_suffix("@summit"))
+		if _tab.ends_with("@summit"):
+			film.set_meta("skip_climb", true)
 		root.add_child(film)
 	if _tab.begins_with("camp_") and _n == 90 and current_scene != null:
 		var what := _tab.substr(5)

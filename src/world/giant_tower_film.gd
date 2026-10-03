@@ -51,6 +51,8 @@ const LADDER_X := -40.0
 var _balcony_y := 0.0
 const BALCONY_TEXEL_Y := 262.0
 const BALCONY_X := Vector2(-66.0, -14.0)
+## The balcony's outer railing (where the knees hang over), world units.
+const RAIL_X := -63.0
 
 
 func _ready() -> void:
@@ -270,6 +272,17 @@ func _process(delta: float) -> void:
 	_world.scale = Vector2(_cam_zoom, _cam_zoom)
 	_world.position = (view - _cam * _cam_zoom).round()
 	_wind.position = Vector2(_cam.x - 230.0, _cam.y)
+	if _sway:
+		# A slow sway: wind at the top of a tower moves the stomach.
+		var t := Time.get_ticks_msec() * 0.001
+		_world.position += Vector2(sin(t * 0.7) * 2.0, sin(t * 1.1) * 1.2).round()
+	for b in _birds:
+		if is_instance_valid(b):
+			var ph := float(b.get_meta("phase")) + delta * 0.6
+			b.set_meta("phase", ph)
+			var c: Vector2 = b.get_meta("c")
+			b.position = c + Vector2(cos(ph) * float(b.get_meta("r")), sin(ph * 2.0) * 6.0)
+			b.queue_redraw()
 	for c in _clouds:
 		c.position.x += delta * 14.0
 		if c.position.x > 700.0:
@@ -301,6 +314,10 @@ func _run() -> void:
 	_ui.add_child(fade)
 	fade.create_tween().tween_property(fade, "color:a", 0.0, 0.6)
 	await get_tree().create_timer(0.5).timeout
+	if has_meta("skip_climb"):
+		_set_height(-_height)
+		await _summit()
+		return
 	_talker.play([{"who": "son", "text": "How high does that go?"}, {"who": "father", "text": "Only one way to find out. Hands, feet, timing. Don't look down."}], true)
 	await _talker.closed
 	await _climb()
@@ -367,10 +384,12 @@ func _climb() -> void:
 
 func _summit() -> void:
 	var top_y := _balcony_y
-	_dad.call("sit_at", Vector2(BALCONY_X.x + 10.0, top_y))
-	_kid.call("sit_at", Vector2(BALCONY_X.x + 34.0, top_y))
-	# The painted balcony railing is already in the art; they sit on its
-	# edge with their legs over the city.
+	# On the outer rail of the balcony, legs over the drop (the city side).
+	# The painted rail climbs away from the camera to the right, so the
+	# Father sits a little further along it and higher.
+	_kid.call("sit_at", Vector2(RAIL_X, top_y + 7.0), -1)
+	_dad.call("sit_at", Vector2(RAIL_X + 17.0, top_y - 5.0), -1)
+	_kid.z_index = _dad.z_index + 1
 	Juice.unlock_logo("SYNCHRONISED", "%d metres. The whole city owes someone something." % int(_height / U_PER_M), str(_row.get("label", "TOWER")))
 	FamilyProfile.note_tower()
 	var vt := create_tween()
@@ -380,8 +399,12 @@ func _summit() -> void:
 		hb.create_tween().tween_property(hb, "modulate:a", 0.0, 1.0).set_delay(2.0)
 	await _cam_to(Vector2(BALCONY_X.x + 30.0, top_y - 30.0), 1.6, 1.0)
 	await get_tree().create_timer(2.2).timeout
+	# Vertigo: the camera drops off the ledge down the face of the tower to
+	# the street, holds on how small everything is, and climbs back up.
+	await _look_down(top_y)
 	# Then close in on the two of them on the edge.
 	await _cam_to(Vector2(BALCONY_X.x + 26.0, top_y - 22.0), 1.4, 2.6)
+	_sway = true
 	for beat: Dictionary in _talk.get("beats", []):
 		if beat.has("lines"):
 			_talker.play(beat["lines"], true)
@@ -393,6 +416,54 @@ func _summit() -> void:
 			await _talker.closed
 	vt = create_tween()
 	vt.tween_property(_vista, "modulate:a", 0.0, 0.6)
+
+
+var _sway := false
+var _birds: Array[Node2D] = []
+
+
+func _look_down(top_y: float) -> void:
+	Juice.play("res://assets/audio/wind.wav")
+	_talker.play([{"who": "son", "text": "Don't look down, he says."}], true)
+	await _talker.closed
+	_spawn_birds(top_y)
+	var m := int(_height / U_PER_M)
+	var tag := Label.new()
+	tag.text = "%d M  ↓" % m
+	tag.position = Vector2(560, 320)
+	tag.size = Vector2(160, 40)
+	tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	UiKit.apply_label(tag, 30, Palette.LEMON)
+	tag.add_theme_color_override("font_outline_color", Color(0, 0, 0))
+	tag.add_theme_constant_override("outline_size", 8)
+	tag.modulate.a = 0.0
+	_ui.add_child(tag)
+	tag.create_tween().tween_property(tag, "modulate:a", 1.0, 0.4).set_delay(0.6)
+	await _cam_to(Vector2(RAIL_X - 40.0, top_y * 0.55), 1.8, 0.42)
+	Juice.play("res://assets/audio/whoosh_heavy.wav")
+	await get_tree().create_timer(1.4).timeout
+	var tw := tag.create_tween()
+	tw.tween_property(tag, "modulate:a", 0.0, 0.4)
+	tw.tween_callback(tag.queue_free)
+	await _cam_to(Vector2(BALCONY_X.x + 30.0, top_y - 30.0), 1.6, 1.0)
+	_talker.play([{"who": "father", "text": "I said don't. I didn't say I wasn't going to."}], true)
+	await _talker.closed
+
+
+## A few gulls circling well below the balcony: proof of the drop.
+func _spawn_birds(top_y: float) -> void:
+	for i in 5:
+		var b := Node2D.new()
+		b.position = Vector2(RAIL_X - 60.0 - randf() * 140.0, top_y + 70.0 + randf() * 220.0)
+		b.set_meta("phase", randf() * TAU)
+		b.set_meta("r", 20.0 + randf() * 40.0)
+		b.set_meta("c", b.position)
+		b.draw.connect(func() -> void:
+			var flap := sin(Time.get_ticks_msec() * 0.012 + float(b.get_meta("phase"))) * 2.5
+			b.draw_polyline(PackedVector2Array([Vector2(-6, flap), Vector2(0, 0), Vector2(6, flap)]), Color(0.85, 0.88, 0.95, 0.9), 1.2)
+		)
+		_world.add_child(b)
+		_birds.append(b)
 
 
 ## Pixel choice cards under the conversation; LEFT/RIGHT + JUMP/ENTER, or
