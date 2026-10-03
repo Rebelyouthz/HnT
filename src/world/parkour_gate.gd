@@ -75,8 +75,13 @@ static func known_tricks(gate_kind: String) -> Array:
 var _next: Dictionary = {}
 
 
-## The move this gate will ask for: one of the two best learned ones, so a
-## run shows off the whole repertoire instead of the same vault.
+## How many times each trick has been asked for this run, so the gates walk
+## through the whole learned repertoire before repeating one.
+static var _shown: Dictionary = {}
+
+
+## The move this gate will ask for: the least-shown learned trick that fits
+## (ties go to the harder one), so a run shows every trick you own.
 func _pick_trick() -> Dictionary:
 	if not _next.is_empty():
 		return _next
@@ -84,8 +89,16 @@ func _pick_trick() -> Dictionary:
 	if list.is_empty():
 		_next = {"id": "jump", "title": "JUMP", "input": "jump", "points": 8, "speed": 1.0, "tier": 0}
 		return _next
-	list.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a.get("tier", 0)) > int(b.get("tier", 0)))
-	_next = list[randi() % mini(2, list.size())]
+	list.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		var na := int(_shown.get(str(a.get("id", "")), 0))
+		var nb := int(_shown.get(str(b.get("id", "")), 0))
+		if na != nb:
+			return na < nb
+		return int(a.get("tier", 0)) > int(b.get("tier", 0))
+	)
+	_next = list[0]
+	var id := str(_next.get("id", ""))
+	_shown[id] = int(_shown.get(id, 0)) + 1
 	return _next
 
 

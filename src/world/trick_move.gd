@@ -80,6 +80,24 @@ static func play(f: Fighter, anim: String, perfect: bool) -> void:
 			_clip(f, "jump", 0.2)
 			spin.call(-0.5, dur * 0.4, tw)
 			tw.tween_method(func(a: float) -> void: _turn(art, a, face), -0.5, 0.0, dur * 0.6)
+		"webster":
+			# One-leg take-off front flip: a lean in, then a fast forward turn.
+			_clip(f, "air_spin_kick" if (f.get("_anim") as AnimatedSprite2D).sprite_frames.has_animation("air_spin_kick") else "jump", 0.3)
+			spin.call(0.35, dur * 0.2, tw)
+			tw.tween_method(func(a: float) -> void: _turn(art, a, face), 0.35, TAU, dur * 0.8)
+		"gainer":
+			# Back flip while travelling forward: a long, floaty backward turn.
+			_clip(f, "jump", 0.55)
+			spin.call(-TAU, dur * 1.3, tw)
+			f.velocity.x += float(f.facing) * 120.0
+		"aerial":
+			# No-hands cartwheel: sideways turn, the body squashed flat mid-air.
+			_clip(f, "cartwheel_kick" if (f.get("_anim") as AnimatedSprite2D).sprite_frames.has_animation("cartwheel_kick") else "jump", 0.5)
+			spin.call(TAU, dur * 0.9, tw)
+			var sq2 := art.create_tween()
+			var sx: float = (art.get_meta("base_scale") as Vector2).x
+			sq2.tween_property(art, "scale:x", sx * 0.55, dur * 0.45)
+			sq2.tween_property(art, "scale:x", sx, dur * 0.45)
 		"precision":
 			var sq := art.create_tween()
 			var sy: float = (art.get_meta("base_scale") as Vector2).y

@@ -376,7 +376,7 @@
    "points": 70,
    "speed": 1.1,
    "tier": 4,
-   "anim": "front_flip"
+   "anim": "webster"
   },
   {
    "id": "gainer",
@@ -396,7 +396,7 @@
    "points": 76,
    "speed": 1.1,
    "tier": 4,
-   "anim": "back_flip"
+   "anim": "gainer"
   },
   {
    "id": "cork",
@@ -435,7 +435,7 @@
    "points": 66,
    "speed": 1.1,
    "tier": 4,
-   "anim": "side_flip"
+   "anim": "aerial"
   }
  ]
 }
