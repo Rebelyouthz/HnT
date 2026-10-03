@@ -242,6 +242,11 @@ func _sprite_who() -> String:
 		return "lot_hydra"
 	if title == "Clipboard":
 		return "clipboard_flier"
+	# New faces fall back to the punk until their own clips are cut.
+	if title == "Repo Goon" and FileAccess.file_exists("res://assets/sprites/repo_goon/idle.json"):
+		return "repo_goon"
+	if title == "Bailiff" and FileAccess.file_exists("res://assets/sprites/bailiff/idle.json"):
+		return "bailiff"
 	return "punk"
 
 
@@ -769,6 +774,12 @@ func take_hit(kind: String, from: Node) -> void:
 		# Where it lands matters: the head takes three times the round.
 		var rd := from as Round
 		var mul: float = {"head": 3.0, "chest": 1.0, "gut": 0.9, "legs": 0.65}.get(rd.zone, 1.0)
+		# The Bailiff's vest: body rounds spark off it (a close shotgun or the
+		# ink orb still gets through). Aim for the face.
+		if title == "Bailiff" and (rd.zone == "chest" or rd.zone == "gut") and not (rd.weapon == "shotgun" and rd.dist < 110.0) and rd.weapon != "ray":
+			mul *= 0.2
+			Juice.popup_number(global_position + Vector2(0, -58), "VEST", Palette.EDGE)
+			Mixer.play_sfx("res://assets/audio/cling.wav", randf_range(1.2, 1.5), -6.0)
 		dmg = int(round(float(rd.dmg) * mul))
 		_shot = {"weapon": rd.weapon, "zone": rd.zone, "dist": rd.dist, "kind": rd.round_kind}
 	elif kind == "combo":
@@ -1019,9 +1030,9 @@ func _drops(from: Node) -> void:
 	var host := get_parent()
 	var rs := get_tree().get_first_node_in_group("run_state")
 	if rs and rs.has_method("add_xp"):
-		rs.add_xp(18 if title == "Mohawk Bo" else 10)
+		rs.add_xp(30 if title == "Bailiff" else (18 if title == "Mohawk Bo" or title == "Repo Goon" else 10))
 	var orb := ScrapOrb.new()
-	orb.amount = 5 if title == "Mohawk Bo" else 3
+	orb.amount = 8 if title == "Bailiff" else (5 if title == "Mohawk Bo" or title == "Repo Goon" else 3)
 	orb.global_position = global_position + Vector2(0, -20)
 	host.add_child(orb)
 	if title == "Lottery Goon":

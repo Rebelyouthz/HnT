@@ -3,7 +3,9 @@
     "solo": [
       {"title": "Bag Snatch", "x": 800, "y": 500, "home": "street", "hp": 40, "pmin": 720, "pmax": 980},
       {"title": "Roof Runner", "x": 1620, "y": 248, "home": "roof", "hp": 36, "pmin": 1480, "pmax": 1880},
-      {"title": "Mohawk Bo", "x": 2240, "y": 500, "home": "street", "hp": 70, "pmin": 2040, "pmax": 2480}
+      {"title": "Repo Goon", "x": 1960, "y": 500, "home": "street", "hp": 58, "pmin": 1820, "pmax": 2160},
+      {"title": "Mohawk Bo", "x": 2240, "y": 500, "home": "street", "hp": 70, "pmin": 2040, "pmax": 2480},
+      {"title": "Bailiff", "x": 2800, "y": 500, "home": "street", "hp": 120, "pmin": 2640, "pmax": 2980, "armored": true}
     ],
     "coop": [
       {"title": "Bag Snatch", "x": 800, "y": 500, "home": "street", "hp": 40, "pmin": 720, "pmax": 980},
@@ -11,7 +13,10 @@
       {"title": "Roof Runner", "x": 1620, "y": 248, "home": "roof", "hp": 36, "pmin": 1480, "pmax": 1880},
       {"title": "Beat Cop", "x": 1880, "y": 500, "home": "street", "hp": 48, "pmin": 1700, "pmax": 2100, "cop": true},
       {"title": "Mohawk Bo", "x": 2240, "y": 500, "home": "street", "hp": 70, "pmin": 2040, "pmax": 2480},
-      {"title": "Bag Snatch", "x": 2720, "y": 500, "home": "street", "hp": 40, "pmin": 2560, "pmax": 2920}
+      {"title": "Repo Goon", "x": 1440, "y": 500, "home": "street", "hp": 58, "pmin": 1300, "pmax": 1640},
+      {"title": "Bag Snatch", "x": 2720, "y": 500, "home": "street", "hp": 40, "pmin": 2560, "pmax": 2920},
+      {"title": "Bailiff", "x": 2860, "y": 500, "home": "street", "hp": 140, "pmin": 2700, "pmax": 3040, "armored": true},
+      {"title": "Repo Goon", "x": 2980, "y": 500, "home": "street", "hp": 58, "pmin": 2820, "pmax": 3140}
     ]
   },
   "fire_escapes": {

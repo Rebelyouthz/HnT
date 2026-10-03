@@ -608,7 +608,7 @@ func _encounters() -> int:
 		push_error("encounters.json missing")
 		return 1
 	var n := 0
-	n += _map_counts(parsed, "dock_street", 3, 6)
+	n += _map_counts(parsed, "dock_street", 5, 9)
 	n += _map_counts(parsed, "fire_escapes", 3, 6)
 	n += _map_counts(parsed, "neon_exchange", 3, 6)
 	n += _map_counts(parsed, "rail_bridge", 3, 6)

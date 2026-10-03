@@ -119,6 +119,11 @@ static func spawn_row(host: Node, row: Dictionary, hp_mul: float) -> Punk:
 	match p.title:
 		"Mohawk Bo":
 			p.speed = 28.0
+		"Repo Goon":
+			p.speed = 36.0
+		"Bailiff":
+			p.speed = 30.0
+			p.armored = true
 		"Roof Runner":
 			p.speed = 56.0
 		"Vest Ollie":
