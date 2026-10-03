@@ -212,4 +212,7 @@ func _to_tutorial() -> void:
 	if _beat == Beat.DONE:
 		return
 	_beat = Beat.DONE
-	App.enter_map("tutorial_alley")
+	# Straight from the film into Stage 1 (its title card plays there).
+	# The tutorial alley is still in the dojo menu as TRAINING ALLEY.
+	FamilyProfile.mark_intro()
+	App.enter_map("dock_street")

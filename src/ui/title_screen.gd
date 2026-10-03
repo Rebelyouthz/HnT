@@ -168,9 +168,9 @@ func _build_menu() -> void:
 	_menu.add_theme_constant_override("separation", 12)
 	add_child(_menu)
 	var has_save := bool(FamilyProfile.data.get("intro_done", false))
+	_add_item("PLAY GAME", _play)
 	if has_save:
 		_add_item("CONTINUE", _continue)
-	_add_item("NEW NIGHT" if has_save else "HIT THE STREETS", _start_game)
 	_add_item("OPTIONS", _options)
 	_add_item("CREDITS", _credits)
 	if not OS.has_feature("web") and not OS.has_feature("mobile"):
@@ -217,6 +217,23 @@ func _process(delta: float) -> void:
 		var tw := _flash.create_tween()
 		tw.tween_property(_flash, "color:a", 0.16, 0.05)
 		tw.tween_property(_flash, "color:a", 0.0, 0.5)
+
+
+## PLAY GAME: the character select (mode, online guide, the stage button).
+func _play() -> void:
+	_clear_modal()
+	_seed_names()
+	var sheet := preload("res://src/ui/character_select.gd").new()
+	add_child(sheet)
+	_modal = sheet
+	_menu.visible = false
+	sheet.closed.connect(func() -> void:
+		_modal = null
+		_menu.visible = true
+		var first := _menu.get_child(0) as Button
+		if first:
+			first.grab_focus()
+	)
 
 
 func _start_game() -> void:

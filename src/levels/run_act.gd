@@ -297,7 +297,8 @@ func _place_rescue() -> void:
 
 func _ready() -> void:
 	_configure()
-	if App.resume_map == map_id and App.resume_pos != Vector2.ZERO:
+	var resumed := App.resume_map == map_id and App.resume_pos != Vector2.ZERO
+	if resumed:
 		spawn_at = App.resume_pos
 	App.resume_map = ""
 	_save_resume(spawn_at, false)
@@ -351,6 +352,9 @@ func _ready() -> void:
 		body = Copy.COUCH_HINT if App.density_coop else Copy.SOLO_HINT
 	Juice.toast("quest", toast_title, body)
 	_boot_story()
+	# Fresh entry: the stage's title card over the painted street.
+	if not resumed:
+		StageCard.show_for(self, map_id)
 
 
 func _targets() -> Array[Node2D]:
