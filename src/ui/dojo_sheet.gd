@@ -71,6 +71,34 @@ func _ready() -> void:
 	close.grab_focus()
 
 
+## Which animation shows each school move in the list.
+const MOVE_ART := {
+	"uppercut": ["son", "uppercut"], "roundhouse": ["son", "roundhouse"],
+	"stomp_finish": ["father", "snap"], "speed_vault": ["son", "parkour_run"],
+	"kong": ["son", "dive"], "dash_vault": ["son", "slide"], "land_roll": ["son", "roll"],
+	"grab_slam": ["father", "hammer"], "wall_bounce": ["son", "jump_roundhouse"],
+	"air_mix": ["son", "air_mix"], "tic_tac": ["son", "flying_knee"],
+	"wall_kick": ["son", "side_kick"], "king_kong": ["father", "dive"],
+	"lazy_vault": ["father", "parkour_run"], "reverse_vault": ["son", "cartwheel_kick"],
+	"double_kong": ["son", "superman_punch"], "cat_leap": ["son", "jump"],
+	"dive_roll": ["father", "roll"], "front_flip": ["son", "air_spin_kick"],
+	"back_flip": ["son", "backflip_kick"], "side_flip": ["father", "jump_spin_kick"],
+	"palm_spin": ["son", "sweep"], "webster": ["father", "air_spin_kick"],
+	"gainer": ["son", "dropkick"], "cork": ["father", "jump_high_kick"],
+	"aerial": ["son", "getup_kick"],
+}
+
+
+func _art(info: Dictionary) -> Texture2D:
+	var id := str(info.get("id", ""))
+	var t: Texture2D = null
+	if str(info.get("kind", "")) == "combo":
+		t = SpriteBook.move_icon(str(info.get("who", "son")), str(info.get("clip", "")))
+	elif MOVE_ART.has(id):
+		t = SpriteBook.move_icon(str(MOVE_ART[id][0]), str(MOVE_ART[id][1]))
+	return t if t != null else SpriteBook.icon("dojo")
+
+
 func _practice(who: String) -> void:
 	App.set_meta("dojo_role", who)
 	closed.emit()
@@ -85,7 +113,7 @@ func _row(info: Dictionary) -> Control:
 	p.add_theme_stylebox_override("panel", UiKit.panel(Rarity.fill(rarity), Rarity.color(rarity)))
 	var row := HBoxContainer.new()
 	p.add_child(row)
-	row.add_child(UiKit.portrait(SpriteBook.icon("dojo"), Vector2(48, 48)))
+	row.add_child(UiKit.portrait(_art(info), Vector2(56, 56)))
 	if FamilyProfile.is_unseen("dojo_%s" % id):
 		row.add_child(UiKit.new_dot())
 	var v := VBoxContainer.new()

@@ -47,7 +47,9 @@ static func card_art(id: String) -> Texture2D:
 				return tight
 			return fr
 	var p := "res://assets/ui/cards/%s.png" % id
-	if ResourceLoader.exists(p):
+	# The radio card art is a bare antenna; the hub icon (tower, dish, moon)
+	# reads far better on the card.
+	if id != "radio_tower" and ResourceLoader.exists(p):
 		return load(p) as Texture2D
 	return SpriteBook.icon(id)
 

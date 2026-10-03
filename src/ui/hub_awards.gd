@@ -69,10 +69,20 @@ func _chest(kind: String, chest: Dictionary, value: int) -> Control:
 	var claimed: Array = FamilyProfile.data[key]
 	var at := int(chest["at"])
 	var wrap := Control.new()
-	wrap.custom_minimum_size = Vector2(128, 48)
+	wrap.custom_minimum_size = Vector2(128, 120)
 	var b := UiKit.button("CHEST %d" % at, Vector2(120, 40))
+	b.position = Vector2(0, 76)
 	var already := claimed.has(at)
 	var ready := value >= at and not already
+	# The chest itself: locked, glowing when it can be claimed, open after.
+	var pic := UiKit.portrait(SpriteBook.icon("chest_open" if already else ("chest_ready" if ready else "chest_locked")), Vector2(80, 80))
+	pic.position = Vector2(20, -4)
+	pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	wrap.add_child(pic)
+	if ready:
+		var tw := pic.create_tween().set_loops()
+		tw.tween_property(pic, "position:y", -10.0, 0.45).set_trans(Tween.TRANS_SINE)
+		tw.tween_property(pic, "position:y", -4.0, 0.45).set_trans(Tween.TRANS_SINE)
 	if already:
 		b.text = Copy.CLAIMED
 		b.disabled = true
@@ -93,7 +103,7 @@ func _chest(kind: String, chest: Dictionary, value: int) -> Control:
 	wrap.add_child(b)
 	if ready:
 		var bang := UiKit.bang()
-		bang.position = Vector2(100, -6)
+		bang.position = Vector2(100, 0)
 		wrap.add_child(bang)
 	return wrap
 

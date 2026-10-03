@@ -284,6 +284,33 @@ static func icon(id: String) -> Texture2D:
 	return tex("res://assets/sprites/hub/%s.png" % id)
 
 
+static var _move_icons: Dictionary = {}
+
+
+## A menu picture of a move: the clip's hit frame (the pose that sells it),
+## cropped tight to the body so it fills a portrait slot.
+static func move_icon(who: String, clip: String) -> Texture2D:
+	var key := who + "/" + clip
+	if _move_icons.has(key):
+		return _move_icons[key]
+	var out: Texture2D = null
+	var sf := frames(who)
+	if sf != null and sf.has_animation(clip):
+		var n := sf.get_frame_count(clip)
+		var info := clip_info(who, clip)
+		var at := sf.get_frame_texture(clip, clampi(int(info.get("hit", n / 2)), 0, maxi(0, n - 1)))
+		if at is AtlasTexture:
+			var crop := AtlasTexture.new()
+			crop.atlas = (at as AtlasTexture).atlas
+			crop.region = (at as AtlasTexture).region
+			crop.filter_clip = true
+			out = crop
+		else:
+			out = at
+	_move_icons[key] = out
+	return out
+
+
 static func stamp(host: Node, kind: String, at: Vector2, z: int = 2) -> Sprite2D:
 	var t := prop(kind)
 	if t == null:
