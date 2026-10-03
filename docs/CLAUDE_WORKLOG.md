@@ -34,6 +34,45 @@ The rest is in English, like the code. Newest work first. Each block says
 
 ---
 
+## 0e. Start flow, economy, side jobs, tower, coping hour, five new systems (latest)
+
+**Svenska:** PLAY GAME → välj karaktär (solo / soffa / online med guide för två
+städer, resten mörklagt tills Dock Street är klar) → START · DOCK STREET →
+introfilm → stage-bild med namn → spelet. Fiender större, gången synkad mot
+animationen. XP-kristaller och mynt från fiender, XP-MAGNET i BUILD, en
+uppgraderingsvagn halvvägs på varje bana (för dyr på första). Sidouppdrag från
+folk på gatan (gult !). I tornet sitter de på räcket med benen över stupet,
+kameran tittar ner. Parkour går igenom alla trick. Överlevnadsdelen är nu
+Halls of Torment-djup. Fem nya system: nattens villkor, miljödödningar,
+nemesis, Rufus hämtar, kombo-rank ger mer loot. Lokal animationsmaskin för
+Ally X i tools/local_gpu.
+
+- **Start flow**: `src/ui/character_select.gd` (from title PLAY GAME),
+  `src/ui/stage_card.gd` (every story stage, after any film), intro film goes
+  straight to Dock Street (`intro_flow.gd`).
+- **Scale / stride**: `SpriteBook.FIGHTER_SCALE` 1.12, `ENEMY_SCALE` 1.25,
+  `SpriteBook.grow()`; `SpriteBook.stride_rate()` drives walk / run playback.
+- **Economy**: `src/world/xp_orb.gd`, coins via `LootDrop` from `Punk._drops`;
+  `Fighter.xp_magnet()`; cbt node `xp_magnet`; `src/world/shop_cart.gd` +
+  `src/ui/cart_sheet.gd` + `data/cart.json` (buys in `RunState.buffs`).
+- **Side jobs**: `src/world/quest_giver.gd`, `quest_item.gd`,
+  `data/side_quests.json`, `MissionHud.quest_line()`, NPC recolour
+  `src/shaders/npc_tint.gdshader` until NPC art lands (queued).
+- **Tower**: real sitting pose (`tools/sit_pose.py` → sit_*.png parts,
+  `FilmActor.sit_at(p, face)`), look-down shot, gulls, sway.
+- **Parkour**: gates cycle the learned repertoire (`ParkourGate._shown`).
+- **Coping hour**: `data/survive.json`, `src/survive/survive_run.gd`
+  (build/levels/picks/well), `survive_ability.gd`, `surv_proj.gd`,
+  `survive_pick.gd`, `survive_hud.gd`, `horde.gd` (phases, elites),
+  icons from `tools/survive_art.py`. Punk hit kind `"skill"`.
+- **New systems**: `night_condition.gd`, `hazard.gd`, `nemesis.gd`, Rufus
+  fetch in `dog_buddy.gd`, rank multiplier in `Punk._drops`.
+- **Art**: Repo Goon + Bailiff animated (FLUX + Wan), cop death.
+- **Combo test**: run it headless (`--headless`); under xvfb the slow
+  renderer stretches the button holds past the chain window and it reports
+  false misses.
+- **Local GPU**: `tools/local_gpu/` (README in Swedish).
+
 ## 0d. Menus audit, new enemies, the GPU queue (latest)
 
 **Svenska:** Alla menyer och undermenyer genomgångna med skärmdumpar (titel,
