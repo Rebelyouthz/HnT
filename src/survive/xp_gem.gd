@@ -32,6 +32,9 @@ func _physics_process(delta: float) -> void:
 		if n is Fighter and not (n as Fighter).downed:
 			var d: float = global_position.distance_to((n as Node2D).global_position)
 			var reach: float = (n as Fighter).magnet_r
+			var srun := SurviveRun.get_run(get_tree())
+			if srun:
+				reach *= srun.pickup_mul()
 			if d < best_d and d < reach:
 				best_d = d
 				best = n
@@ -48,7 +51,10 @@ func _eat(b: Node) -> void:
 	var amt := amount
 	if FamilyProfile.has_cbt("group_rate"):
 		amt += 2
-	if rs and rs.has_method("add_xp"):
+	var srun := SurviveRun.get_run(get_tree())
+	if srun:
+		srun.add_xp(amt)
+	elif rs and rs.has_method("add_xp"):
 		rs.add_xp(amt)
 	Juice.keep_combo()
 	Juice.popup_number(global_position, "+%d XP" % amt, Palette.READY)

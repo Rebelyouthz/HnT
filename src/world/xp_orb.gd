@@ -83,7 +83,8 @@ func _process(delta: float) -> void:
 	for n in get_tree().get_nodes_in_group("players"):
 		if n is Fighter and not (n as Fighter).downed:
 			var f := n as Fighter
-			if global_position.distance_to(f.global_position) < f.xp_magnet():
+			var srun := SurviveRun.get_run(get_tree())
+			if global_position.distance_to(f.global_position) < f.xp_magnet() * (srun.pickup_mul() if srun else 1.0):
 				_pull = f
 				_t = 0.0
 				break
@@ -92,8 +93,11 @@ func _process(delta: float) -> void:
 
 
 func _take() -> void:
+	var srun := SurviveRun.get_run(get_tree())
 	var rs := get_tree().get_first_node_in_group("run_state")
-	if rs and rs.has_method("add_xp"):
+	if srun:
+		srun.add_xp(amount)
+	elif rs and rs.has_method("add_xp"):
 		rs.add_xp(amount)
 	Juice.popup_number(global_position, "+%d XP" % amount, Color(0.5, 1.0, 0.6))
 	Mixer.play_sfx("res://assets/audio/ui_click.wav", randf_range(1.6, 2.0), -12.0)

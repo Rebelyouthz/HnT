@@ -28,7 +28,7 @@ func _open(b: Node) -> void:
 	var rs := get_tree().get_first_node_in_group("run_state")
 	if rs and rs.has_method("add_scrap"):
 		rs.add_scrap(8)
-	if rs and rs.has_method("add_xp"):
+	if rs and rs.has_method("add_xp") and SurviveRun.get_run(get_tree()) == null:
 		rs.add_xp(22)
 	if rs and rs.has_method("add_points"):
 		rs.add_points((b as Fighter).role, 80, "chest")
@@ -36,6 +36,9 @@ func _open(b: Node) -> void:
 	Juice.unlock_logo("COPING CHEST", "Halls of Torment called. It wants its loot table back.")
 	Juice.toast("reward", "CHEST  ·  RARE", "Scrap, XP, and a worse personality.")
 	Juice.play("res://assets/audio/chest.wav")
-	if rs and rs.has_signal("need_cards"):
+	var srun := SurviveRun.get_run(get_tree())
+	if srun:
+		srun.open_item_chest()
+	elif rs and rs.has_signal("need_cards"):
 		rs.emit_signal("need_cards")
 	queue_free()

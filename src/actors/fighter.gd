@@ -744,7 +744,7 @@ func _process_street(delta: float) -> void:
 		var combo_spd := 1.0 + clampf(float(Juice.combo) * 0.008, 0.0, 0.14)
 		if stumble_t > 0.0:
 			limp *= 0.4
-		velocity.x = x * speed * limp * trick_boost * combo_spd * (1.0 + 0.12 * float(_cart("energy_drink")))
+		velocity.x = x * speed * limp * trick_boost * combo_spd * (1.0 + 0.12 * float(_cart("energy_drink"))) * _surv_speed()
 		if _street_grounded():
 			velocity.y = y * depth_speed * limp
 		else:
@@ -1645,6 +1645,12 @@ func _hand_point() -> Vector2:
 	return out
 
 
+## Coping-hour move speed (traits / items), 1 outside the hour.
+func _surv_speed() -> float:
+	var srun := SurviveRun.get_run(get_tree()) if is_inside_tree() else null
+	return srun.speed_mul() if srun else 1.0
+
+
 ## Stacks of a halfway-cart buy this night (0 outside a run).
 func _cart(id: String) -> int:
 	var rs := get_tree().get_first_node_in_group("run_state") if is_inside_tree() else null
@@ -1907,6 +1913,9 @@ func take_hit(kind: String, from: Node) -> void:
 		dmg = int(round(float(dmg) * 0.85))
 	if wrong_guard:
 		dmg = maxi(1, int(round(float(dmg) * 0.7)))
+	var srun := SurviveRun.get_run(get_tree())
+	if srun and srun.armor() > 0.0:
+		dmg = maxi(1, int(round(float(dmg) * (1.0 - srun.armor()))))
 	hp = maxi(0, hp - dmg)
 	_hurt_t = 0.32
 	VoBank.line(role, "hurt", 0.22)

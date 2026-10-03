@@ -17,7 +17,7 @@ func _configure() -> void:
 	next_label = Copy.NEXT_FIRE
 	gate_sub = Copy.GATE_FIRE
 	win_mode = "boss"
-	duration = 88.0
+	duration = 300.0
 
 
 func build_world() -> void:

@@ -1,0 +1,70 @@
+{
+  "_doc": "The coping hour (Halls of Torment style). abilities auto-fire from every fighter and level 1-7; traits stack (max); items drop from elites (pick 1 of 3, four slots) and one can be carried out through the Lost & Found well into later hours. Numbers are per level unless noted.",
+  "xp_curve": {"base": 14, "growth": 1.22},
+  "abilities": [
+    {"id": "invoice_toss", "name": "INVOICE TOSS", "icon": "invoice", "cd": 1.1, "dmg": 9, "per": 3, "proj": 1, "proj_at": [3, 5, 7],
+     "blurb": "Throws a spinning invoice at the nearest thug. Paper cuts are still cuts."},
+    {"id": "stapler", "name": "STAPLER SPRAY", "icon": "stapler", "cd": 1.6, "dmg": 5, "per": 2, "proj": 4, "proj_at": [2, 4, 6, 7],
+     "blurb": "A cone of staples where you face. Office supplies, weaponised."},
+    {"id": "coffee", "name": "COFFEE SPILL", "icon": "coffee", "cd": 3.2, "dmg": 4, "per": 2, "area": 34, "life": 3.0,
+     "blurb": "Leaves a scalding puddle that burns whoever stands in it. Contents hot."},
+    {"id": "clipboards", "name": "ORBITING CLIPBOARDS", "icon": "clipboard", "cd": 0.0, "dmg": 7, "per": 3, "proj": 2, "proj_at": [3, 5, 7], "area": 44,
+     "blurb": "Clipboards circle you and slap anything they pass. Paperwork orbits you now."},
+    {"id": "late_fee", "name": "LATE FEE LIGHTNING", "icon": "bolt", "cd": 2.2, "dmg": 14, "per": 5, "chain": 2, "chain_per": 1,
+     "blurb": "Lightning jumps between thugs. Every jump adds interest."},
+    {"id": "dad_joke", "name": "DAD JOKE SHOCKWAVE", "icon": "wave", "cd": 4.0, "dmg": 16, "per": 6, "area": 90,
+     "blurb": "A ground-shaking pun knocks everyone around you flat. Groaning is damage."},
+    {"id": "hold_music", "name": "HOLD MUSIC", "icon": "note", "cd": 2.6, "dmg": 11, "per": 4, "pierce": 99,
+     "blurb": "A wave of hold music pierces the whole line. Your call is important to us."},
+    {"id": "magnet_mines", "name": "FRIDGE MAGNET MINES", "icon": "mine", "cd": 2.8, "dmg": 22, "per": 7, "area": 46, "proj": 1, "proj_at": [3, 6],
+     "blurb": "Drops magnets that blow up when a thug steps close. The drawings survive."},
+    {"id": "photo_flash", "name": "FAMILY PHOTO FLASH", "icon": "camera", "cd": 5.0, "dmg": 8, "per": 3, "area": 120, "stun": 0.9,
+     "blurb": "Say cheese: a flash that stuns and singes the room."},
+    {"id": "drip", "name": "IV DRIP AURA", "icon": "drip", "cd": 0.5, "dmg": 3, "per": 1, "area": 54,
+     "blurb": "A cold drip aura that hurts everything close, all the time. Hydration with intent."}
+  ],
+  "traits": [
+    {"id": "t_dmg", "name": "SPITE", "icon": "t_dmg", "max": 5, "blurb": "+12% ability damage per stack."},
+    {"id": "t_area", "name": "PERSONAL SPACE", "icon": "t_area", "max": 5, "blurb": "+14% ability area per stack."},
+    {"id": "t_cd", "name": "CAFFEINE", "icon": "t_cd", "max": 5, "blurb": "-8% ability cooldowns per stack."},
+    {"id": "t_proj", "name": "OVERCOMMIT", "icon": "t_proj", "max": 2, "blurb": "+1 projectile on every ability that throws things."},
+    {"id": "t_speed", "name": "NERVOUS ENERGY", "icon": "t_speed", "max": 4, "blurb": "+7% move speed per stack."},
+    {"id": "t_hp", "name": "STRESS EATING", "icon": "t_hp", "max": 5, "blurb": "+12 max health per stack, healed now."},
+    {"id": "t_regen", "name": "DENIAL", "icon": "t_regen", "max": 4, "blurb": "Regenerate 0.6 health a second per stack."},
+    {"id": "t_armor", "name": "THICK FILE", "icon": "t_armor", "max": 4, "blurb": "-7% damage taken per stack."},
+    {"id": "t_pickup", "name": "NEEDY", "icon": "t_pickup", "max": 4, "blurb": "+30% gem pickup range per stack."},
+    {"id": "t_crit", "name": "LUCKY BREAK", "icon": "t_crit", "max": 5, "blurb": "+6% chance for abilities to crit for double."},
+    {"id": "t_xp", "name": "OVERACHIEVER", "icon": "t_xp", "max": 3, "blurb": "+12% XP from gems per stack."}
+  ],
+  "items": [
+    {"id": "lucky_coin", "name": "LUCKY COIN", "rarity": "uncommon", "icon": "i_coin", "blurb": "+10% crit chance. Heads you win, tails they lose teeth.", "mods": {"crit": 0.10}},
+    {"id": "gym_card", "name": "GYM MEMBERSHIP", "rarity": "common", "icon": "i_card", "blurb": "+25 max health. You went once. It counts.", "mods": {"hp": 25}},
+    {"id": "parking_ticket", "name": "PARKING TICKET", "rarity": "rare", "icon": "i_ticket", "blurb": "Ability hits slow thugs by 30% for a second.", "mods": {"slow": 0.3}},
+    {"id": "hug_amulet", "name": "GROUP HUG AMULET", "rarity": "rare", "icon": "i_amulet", "blurb": "Every level up heals 20% of max health.", "mods": {"lvl_heal": 0.2}},
+    {"id": "bike_bell", "name": "BIKE BELL", "rarity": "common", "icon": "i_bell", "blurb": "+12% move speed. Ding.", "mods": {"speed": 0.12}},
+    {"id": "thermos", "name": "BOTTOMLESS THERMOS", "rarity": "uncommon", "icon": "i_thermos", "blurb": "-15% cooldowns. The coffee never ends. Neither does the shift.", "mods": {"cd": 0.15}},
+    {"id": "loud_shirt", "name": "LOUD SHIRT", "rarity": "uncommon", "icon": "i_shirt", "blurb": "+20% ability area. People make room.", "mods": {"area": 0.2}},
+    {"id": "brass_tooth", "name": "BRASS TOOTH", "rarity": "rare", "icon": "i_tooth", "blurb": "+25% ability damage. Bite the bill.", "mods": {"dmg": 0.25}},
+    {"id": "magnet_glove", "name": "MAGNET GLOVE", "rarity": "common", "icon": "i_glove", "blurb": "Gems fly in from twice as far.", "mods": {"pickup": 1.0}},
+    {"id": "vampire_mug", "name": "WORLD'S BEST DAD MUG", "rarity": "epic", "icon": "i_mug", "blurb": "Kills heal 1 health. The mug was a gift. From himself.", "mods": {"kill_heal": 1}},
+    {"id": "extra_hands", "name": "SECOND PAIR OF HANDS", "rarity": "epic", "icon": "i_hands", "blurb": "+1 projectile on every throwing ability.", "mods": {"proj": 1}},
+    {"id": "receipt_roll", "name": "ENDLESS RECEIPT", "rarity": "legendary", "icon": "i_receipt", "blurb": "Abilities fire twice as often for 5s after every level up. Itemised fury.", "mods": {"frenzy": 5.0}}
+  ],
+  "elite_mods": [
+    {"id": "swift", "name": "SWIFT", "color": [0.4, 0.9, 1.0]},
+    {"id": "armored", "name": "ARMORED", "color": [0.75, 0.75, 0.8]},
+    {"id": "vampiric", "name": "VAMPIRIC", "color": [0.9, 0.15, 0.25]},
+    {"id": "splitter", "name": "SPLITTER", "color": [0.7, 1.0, 0.4]},
+    {"id": "bomber", "name": "BOMBER", "color": [1.0, 0.6, 0.15]}
+  ],
+  "phases": [
+    {"at": 0, "titles": ["Coping Imp"], "rate": 1.0, "cap": 9},
+    {"at": 45, "titles": ["Coping Imp", "Bag Snatch"], "rate": 1.25, "cap": 12},
+    {"at": 90, "titles": ["Coping Imp", "Bag Snatch", "Clipboard"], "rate": 1.5, "cap": 14, "elite_every": 30},
+    {"at": 150, "titles": ["Bag Snatch", "Clipboard", "Repo Goon"], "rate": 1.8, "cap": 16, "elite_every": 25, "mini": true},
+    {"at": 210, "titles": ["Coping Imp", "Clipboard", "Repo Goon", "Mohawk Bo"], "rate": 2.2, "cap": 18, "elite_every": 18, "swarm": true},
+    {"at": 270, "titles": ["Repo Goon", "Mohawk Bo", "Coping Imp"], "rate": 2.6, "cap": 20, "elite_every": 14}
+  ],
+  "duration": 300,
+  "boss_at": 285
+}

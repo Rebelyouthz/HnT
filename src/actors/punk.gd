@@ -35,6 +35,8 @@ var attack_style := "brawl"
 var vehicle := ""
 var armor_grade := "none"
 var tier := "light"
+## Survive elites: "" or swift / armored / vampiric / splitter / bomber.
+var elite_mod := ""
 var flung := false
 var flung_dir := -1.0
 var flung_t := 0.0
@@ -687,7 +689,7 @@ func take_hit(kind: String, from: Node) -> void:
 		if get_tree().get_first_node_in_group("chase_crash") == null:
 			_clash(from as Fighter)
 			return
-	if guarding and kind != "throw" and kind != "snap" and kind != "finish" and kind != "web-slam" and kind != "gun":
+	if guarding and kind != "throw" and kind != "snap" and kind != "finish" and kind != "web-slam" and kind != "gun" and kind != "skill":
 		var high_beats_low := guard_low and (kind == "jump-kick" or kind == "dive" or kind == "heavy" or kind == "launcher")
 		var low_beats_high := (not guard_low) and (kind == "slide" or kind == "jump-kick")
 		if not high_beats_low and not low_beats_high:
@@ -785,6 +787,11 @@ func take_hit(kind: String, from: Node) -> void:
 		_shot = {"weapon": rd.weapon, "zone": rd.zone, "dist": rd.dist, "kind": rd.round_kind}
 	elif kind == "combo":
 		dmg = int(from.get("combo_dmg")) if from != null and from.get("combo_dmg") != null else 24
+	elif kind == "skill":
+		# Survive abilities carry their own number (and crit).
+		dmg = int(from.get("skill_dmg")) if from != null and from.get("skill_dmg") != null else 6
+		if elite_mod == "armored":
+			dmg = int(ceil(float(dmg) * 0.5))
 	if FamilyProfile.has_cbt("pocket_sand") and kind == "throw":
 		dmg += 8
 	if FamilyProfile.has_cbt("night_eyes") and kind == "snap":
