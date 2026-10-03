@@ -10,6 +10,8 @@ var _main_done := false
 var _lunch_done := false
 var _wrap: Control
 var _fold: Tween
+var _col: VBoxContainer
+var _quests: Dictionary = {}
 
 
 ## Show the full card for a while, then fold it down to just the title and
@@ -57,6 +59,7 @@ func _ready() -> void:
 	UiKit.apply_label(head, 16, UiKit.GOLD)
 	head.add_theme_color_override("font_outline_color", UiKit.INK)
 	col.add_child(head)
+	_col = col
 	_main = _line(col)
 	_side = _line(col)
 	_lunch = _line(col)
@@ -103,6 +106,20 @@ func _process(_delta: float) -> void:
 		_paint()
 		_peek(4.0)
 		Juice.toast("challenge", "LUNCH PACKED", "Sit at 140m. The wind does not get a bite.")
+
+
+## A street quest's line on the card (added on accept, ticked when paid).
+func quest_line(id: String, text: String, state: String) -> void:
+	if _col == null:
+		return
+	var l: Label = _quests.get(id) as Label
+	if l == null:
+		l = _line(_col)
+		_quests[id] = l
+	var mark := "☑  " if state == "paid" else ("➜  " if state == "ready" else "◆  ")
+	l.text = mark + text
+	l.add_theme_color_override("font_color", Palette.READY if state == "paid" else (UiKit.GOLD if state == "ready" else Color(0.75, 0.85, 1.0)))
+	_peek(5.0)
 
 
 func complete_side() -> void:

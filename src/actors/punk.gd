@@ -960,6 +960,7 @@ func _die(kind: String, from: Node) -> void:
 		Mixer.play_sfx("res://assets/audio/sfx/body_fall.ogg", 1.0, -3.0)
 	)
 	VoBank.line(VoBank.who_of(self), "death", 0.55)
+	QuestGiver.note(get_tree(), "kill", title)
 	var killer := ""
 	if from is Fighter:
 		killer = (from as Fighter).role

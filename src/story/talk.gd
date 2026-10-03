@@ -134,6 +134,9 @@ static func accent(who: String) -> Color:
 func _speaker(who: String) -> Node2D:
 	if who == "":
 		return null
+	for n in get_tree().get_nodes_in_group("talkers"):
+		if n is Node2D and str(n.get_meta("who", "")) == who:
+			return n as Node2D
 	for n in get_tree().get_nodes_in_group("players"):
 		if n is Node2D and str(n.get("role")) == who and (n as Node2D).is_visible_in_tree():
 			if n.has_meta("film"):

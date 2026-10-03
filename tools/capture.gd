@@ -130,6 +130,14 @@ func _process(_delta: float) -> bool:
 					p1.global_position = (cart as Node2D).global_position + Vector2(-50, 40)
 					if _tab == "ui_cart":
 						cart.call("_open", p1)
+			"quest":
+				var g: Node2D = root.get_tree().get_first_node_in_group("quest_givers")
+				var p1: Node2D = root.get_tree().get_first_node_in_group("players")
+				for e in root.get_tree().get_nodes_in_group("enemies"):
+					e.queue_free()
+				if g and p1:
+					p1.global_position = g.global_position + Vector2(-46, 20)
+					g.call("_talk_to")
 			"pause":
 				var hud := root.get_tree().get_first_node_in_group("run_hud")
 				if hud == null:

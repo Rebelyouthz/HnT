@@ -28,7 +28,13 @@ static func is_survive(map_id: String) -> bool:
 	return bool(act(map_id).get("survive", false))
 
 
+## Names of the street people who talk (quest givers), by speaker key.
+static var npc_names: Dictionary = {}
+
+
 static func who_name(who: String) -> String:
+	if npc_names.has(who):
+		return str(npc_names[who])
 	if who == "father":
 		return FamilyProfile.father_name()
 	if who == "son":

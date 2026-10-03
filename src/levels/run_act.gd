@@ -318,6 +318,7 @@ func _ready() -> void:
 	# The halfway cart on every story stage.
 	if App.ORDER.has(map_id) and not StoryBook.is_survive(map_id):
 		ShopCart.place(self, map_w * 0.5)
+		QuestGiver.place_for(self, map_id, map_w)
 	_place_parkour()
 	_place_rescue()
 	_rig = LightRig.new()

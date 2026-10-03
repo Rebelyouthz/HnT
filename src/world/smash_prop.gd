@@ -336,6 +336,7 @@ func _burst_apart(from: Node) -> void:
 			dir = 1.0
 	if _art != null:
 		ShardBurst.shatter(host, _art, global_position, dir)
+		QuestGiver.note(get_tree(), "smash")
 	Juice.play("res://assets/audio/smash.wav" if ResourceLoader.exists("res://assets/audio/smash.wav") else "res://assets/audio/hit_heavy.wav")
 	var cash := 3 + randi() % 6
 	if kind in ["kiosk", "vending", "cop_car"]:
