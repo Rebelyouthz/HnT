@@ -317,8 +317,10 @@ func _ready() -> void:
 	build_world()
 	# The halfway cart on every story stage.
 	if App.ORDER.has(map_id) and not StoryBook.is_survive(map_id):
+		NightCondition.dress(self, map_id)
 		ShopCart.place(self, map_w * 0.5)
 		QuestGiver.place_for(self, map_id, map_w)
+		Hazard.place_for(self, map_w)
 	_place_parkour()
 	_place_rescue()
 	_rig = LightRig.new()
@@ -337,8 +339,12 @@ func _ready() -> void:
 				f.plane = "roof"
 				f._enter_roof()
 	NetSession.bind_run(_son, _dad)
+	if App.ORDER.has(map_id) and not StoryBook.is_survive(map_id):
+		Nemesis.maybe_spawn(self, map_id, map_w, _state.hp_mul())
 	for row in Party.encounters(map_id):
-		Party.spawn_row(self, row, _state.hp_mul())
+		var pk := Party.spawn_row(self, row, _state.hp_mul() * NightCondition.mul(map_id, "hp"))
+		if pk:
+			pk.speed *= NightCondition.mul(map_id, "speed")
 	_cam = CouchCamera.new()
 	_cam.limit_right = int(map_w)
 	_cam.targets = _targets()
@@ -371,6 +377,7 @@ func _targets() -> Array[Node2D]:
 
 
 func _process(_delta: float) -> void:
+	NightCondition.follow(self, _cam)
 	if _join_grace > 0:
 		_join_grace -= 1
 	if _state.failed or _state.cleared or _state.gated:

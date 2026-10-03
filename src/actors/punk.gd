@@ -1044,8 +1044,16 @@ func _drops(from: Node) -> void:
 	var rs := get_tree().get_first_node_in_group("run_state")
 	# XP leaves as insight gems to pick up; gold as coins.
 	var xp_n := 30 if title == "Bailiff" else (18 if title == "Mohawk Bo" or title == "Repo Goon" else 10)
+	# Night condition and the combo rank bend the payout.
+	var cond_xp := NightCondition.mul(App.current_map, "xp")
+	var cond_coin := NightCondition.mul(App.current_map, "coins")
+	var rank_mul: float = {"S+": 2.0, "S": 1.75, "A": 1.5, "B": 1.3, "C": 1.15}.get(Juice.combo_rank(), 1.0)
+	xp_n = int(round(float(xp_n) * cond_xp * rank_mul))
 	XpOrb.burst(host, global_position, xp_n, tier == "elite" or tier == "boss" or title == "Bailiff")
 	var coins := 6 if title == "Bailiff" else (2 if title == "Mohawk Bo" or title == "Repo Goon" else (1 if randf() < 0.6 else 0))
+	coins = int(round(float(coins) * cond_coin * rank_mul))
+	if rank_mul > 1.0 and coins > 0:
+		Juice.popup_number(global_position + Vector2(0, -76), "RANK %s  x%.2f" % [Juice.combo_rank(), rank_mul], UiKit.GOLD)
 	for i in coins:
 		LootDrop.spawn(host, global_position + Vector2(randf_range(-8, 8), 0), "coin", 1, 1.2)
 	var orb := ScrapOrb.new()

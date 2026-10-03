@@ -2042,6 +2042,7 @@ func _revived() -> void:
 
 
 func _life_lost() -> void:
+	Nemesis.note_death(last_hit_by)
 	var rs := get_tree().get_first_node_in_group("run_state")
 	if rs and rs.has_method("spend_life"):
 		rs.spend_life()

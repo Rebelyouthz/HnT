@@ -92,6 +92,14 @@ func _ready() -> void:
 	job.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	UiKit.apply_label(job, 16, Palette.TEXT)
 	_root.add_child(job)
+	var cond := NightCondition.of(map_id)
+	if str(cond.get("id", "")) != "quiet":
+		var cl := Label.new()
+		cl.text = "TONIGHT:  %s  ·  %s" % [str(cond.get("name", "")), str(cond.get("line", ""))]
+		cl.position = Vector2(90, 562)
+		cl.size = Vector2(1100, 24)
+		UiKit.apply_label(cl, 15, Color(0.6, 0.85, 1.0))
+		_root.add_child(cl)
 	var skip := Label.new()
 	skip.text = "JUMP / ENTER TO SKIP"
 	skip.position = Vector2(0, 600)

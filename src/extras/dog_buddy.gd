@@ -61,6 +61,14 @@ func _process(delta: float) -> void:
 		return
 	var face := float((target as Node2D).get("facing")) if target.get("facing") != null else 1.0
 	var want := target.global_position + Vector2(-26.0 * face, 6.0)
+	# Fetch: with nobody to bite close by, Rufus runs for loose coins and
+	# gems and carries them back (they fly to the Son from his mouth).
+	if foe == null or foe.global_position.distance_to(global_position) > 200.0:
+		var loot := _nearest_loot()
+		if loot:
+			want = loot.global_position
+			if loot.global_position.distance_to(global_position) < 14.0:
+				_fetch(loot)
 	var d := want - global_position
 	var moving := d.length() > 6.0
 	if moving:
@@ -69,6 +77,36 @@ func _process(delta: float) -> void:
 	_sp.texture = _run if moving and d.length() > 14.0 else _stand
 	_sp.offset = Vector2(0, -float(_sp.texture.get_height()) * 0.5)
 	_sp.position.y = -absf(sin(_t * 14.0)) * 2.5 if _sp.texture == _run else 0.0
+
+
+func _nearest_loot() -> Node2D:
+	var best: Node2D = null
+	var bd := 240.0
+	for grp in ["loot", "xp_orbs", "xp_gems"]:
+		for n in get_tree().get_nodes_in_group(grp):
+			if not (n is Node2D) or n.get("_taken") == true or n.get("_pull") != null and is_instance_valid(n.get("_pull")):
+				continue
+			if n is LootDrop and not ((n as LootDrop).kind in ["coin", "cash"]):
+				continue
+			var d := (n as Node2D).global_position.distance_to(global_position)
+			if d < bd:
+				bd = d
+				best = n as Node2D
+	return best
+
+
+func _fetch(loot: Node2D) -> void:
+	var son := target as Fighter
+	if son == null:
+		return
+	if loot is XpOrb:
+		loot.set("_pull", son)
+	elif loot is LootDrop:
+		loot.global_position = son.global_position + Vector2(0, -4)
+	else:
+		loot.global_position = son.global_position + Vector2(0, -10)
+	if randf() < 0.3:
+		Juice.popup_number(global_position + Vector2(0, -18), "FETCH", Palette.LEMON)
 
 
 func _nearest_foe() -> Node2D:
