@@ -677,23 +677,26 @@ func _toggle_pause() -> void:
 	if state:
 		var son_n := FamilyProfile.son_name()
 		var dad_n := FamilyProfile.father_name()
-		right.add_child(StatPanel.new([
-			{"name": son_n, "value": "%06d" % state.score_son, "color": Palette.LEMON},
-			{"name": dad_n, "value": "%06d" % state.score_dad, "color": Palette.BRICK},
-			{"name": "TABLE", "value": "%06d" % state.score_total, "color": Palette.EDGE},
-			{"name": "LIVES", "value": str(state.lives), "color": Palette.READY},
-			{"name": "SCRAP", "value": str(state.scrap), "color": Palette.EDGE},
-			{"name": "XP", "value": str(state.xp), "color": Palette.LEMON},
-			{"name": "WANTED", "value": str(state.wanted), "color": Palette.BRICK},
-			{"name": "HEAT", "value": str(state.heat), "color": Palette.BRICK},
-			{"name": "CARDS", "value": str(state.cards.size()), "color": Palette.TEXT},
-			{"name": "COMBO", "value": str(Juice.combo), "color": Palette.EDGE},
-			{"name": "ACT", "value": str(App.current_map).replace("_", " ").to_upper(), "color": Palette.LEMON},
-			{"name": "MODE", "value": ("REMOTE" if App.remote_coop else ("COUCH" if App.density_coop else "SOLO")), "color": Palette.TEXT},
-			{"name": "ACCOUNT", "value": "LV %d" % int(FamilyProfile.data.get("account_level", 1)), "color": Palette.TEXT}
-		]))
+		# Only what means something right now: one score in solo, and the
+		# side tallies once they have moved off zero.
+		var duo := App.density_coop or App.remote_coop
+		var rows: Array = []
+		if duo:
+			rows.append({"name": son_n, "value": "%06d" % state.score_son, "color": Palette.LEMON})
+			rows.append({"name": dad_n, "value": "%06d" % state.score_dad, "color": Palette.BRICK})
+		rows.append({"name": "TABLE", "value": "%06d" % state.score_total, "color": Palette.EDGE})
+		rows.append({"name": "LIVES", "value": str(state.lives), "color": Palette.READY})
+		rows.append({"name": "XP", "value": str(state.xp), "color": Palette.LEMON})
+		for extra in [["SCRAP", state.scrap, Palette.EDGE], ["WANTED", state.wanted, Palette.BRICK], ["HEAT", state.heat, Palette.BRICK], ["CARDS", state.cards.size(), Palette.TEXT]]:
+			if int(extra[1]) > 0:
+				rows.append({"name": str(extra[0]), "value": str(extra[1]), "color": extra[2]})
+		rows.append({"name": "STAGE", "value": StageCard.title_of(App.current_map), "color": Palette.LEMON})
+		rows.append({"name": "MODE", "value": ("REMOTE" if App.remote_coop else ("COUCH" if App.density_coop else "SOLO")), "color": Palette.TEXT})
+		right.add_child(StatPanel.new(rows))
 		var lead := Label.new()
-		if state.score_son == state.score_dad:
+		if not duo:
+			lead.text = "Paused. The street waits. The clinic's meter does not."
+		elif state.score_son == state.score_dad:
 			lead.text = "TIE on the table. The clinic bills you both."
 		elif state.score_son > state.score_dad:
 			lead.text = "%s is winning the night. %s will workshop that." % [son_n, dad_n]
