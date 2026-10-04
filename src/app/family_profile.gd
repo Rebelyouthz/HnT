@@ -641,13 +641,35 @@ func note_score(total: int) -> void:
 		save()
 
 
+## A clean slate: every save, backup, open room and photo is deleted and the
+## profile goes back to defaults. Only the options (graphics, volumes) stay.
+## Call restart_clean() after it so nothing from the old run lives on in
+## memory either.
 func reset_progress() -> void:
-	var stamp := Time.get_datetime_string_from_system().replace(":", "-").replace("T", "_")
-	backup_to("user://family.json.bak")
-	backup_to("user://family-%s.bak.json" % stamp)
+	var keep := {}
+	for k in data.keys():
+		var key := str(k)
+		if key == "gfx" or key.begins_with("vol_"):
+			keep[key] = data[k]
+	var dir := DirAccess.open("user://")
+	if dir != null:
+		for f in dir.get_files():
+			if f.begins_with("family") or f == "open_room.json":
+				dir.remove(f)
+	var shots := DirAccess.open("user://photos")
+	if shots != null:
+		for f in shots.get_files():
+			shots.remove(f)
 	data = _defaults()
+	for k in keep.keys():
+		data[k] = keep[k]
 	save()
-	Juice.toast("challenge", "PROGRESS WIPED", "Backup kept. The fridge does not remember you.")
+
+
+## Start the whole game again (fresh autoloads, no leftover run state).
+func restart_clean() -> void:
+	OS.set_restart_on_exit(true)
+	get_tree().quit()
 
 
 func mark_ending() -> void:

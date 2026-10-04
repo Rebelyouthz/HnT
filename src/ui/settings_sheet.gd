@@ -123,7 +123,7 @@ func _show(i: int) -> void:
 			_toggle("LESS GORE", func() -> bool: return FamilyProfile.less_gore(), func(v: bool) -> void: _flag("less_gore", v))
 			_toggle("SKIP STORY FILMS", func() -> bool: return bool(FamilyProfile.data.get("skip_films", false)), func(v: bool) -> void: _flag("skip_films", v))
 			_toggle("SPEECH BUBBLES AUTO", func() -> bool: return bool(FamilyProfile.data.get("talk_auto", false)), func(v: bool) -> void: _flag("talk_auto", v))
-			_action("RESET GAME", "Wipe the save (a backup is written first)", _confirm_reset, Palette.BRICK)
+			_action("RESET GAME PROGRESS", "Start completely over on a clean save (options kept)", _confirm_reset, Palette.BRICK)
 		"CONTROLS":
 			for line in PadRouter.map_lines():
 				var l := Label.new()
@@ -369,10 +369,9 @@ func _confirm_reset() -> void:
 	yes.add_theme_stylebox_override("normal", UiKit.panel(Palette.BRICK, UiKit.GOLD))
 	yes.pressed.connect(func() -> void:
 		FamilyProfile.reset_progress()
-		Juice.unlock_logo("WIPED", "Backup at user://family.json.bak. The night starts over.")
-		need_refresh.emit()
-		closed.emit()
-		queue_free()
+		Juice.unlock_logo("WIPED", "Clean save. Restarting the night...")
+		var t := get_tree().create_timer(1.2, true, false, true)
+		t.timeout.connect(FamilyProfile.restart_clean)
 	)
 	var no := UiKit.button("NO, KEEP IT", Vector2(230, 50))
 	no.pressed.connect(wrap.queue_free)
