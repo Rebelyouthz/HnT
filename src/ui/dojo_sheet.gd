@@ -131,11 +131,16 @@ func _row(info: Dictionary) -> Control:
 	row.add_child(v)
 	var costs: Array = info.get("gold", [20, 35, 55])
 	var cost := int(costs[mini(rank, costs.size() - 1)])
-	var go := UiKit.button("MASTERED" if rank >= 3 else "TRAIN  %dG" % cost, Vector2(150, 40))
+	var gem_cost := FamilyProfile.dojo_gem_cost(rank)
+	var label := "TRAIN  %dG" % cost if gem_cost == 0 else "MASTER  %dG + %d GEM" % [cost, gem_cost]
+	var go := UiKit.button("MASTERED" if rank >= 3 else label, Vector2(150, 40))
 	go.disabled = rank >= 3
 	if rank < 3 and int(FamilyProfile.data.get("gold", 0)) < cost:
 		go.disabled = true
 		go.text = "NEED %d GOLD" % cost
+	elif rank < 3 and int(FamilyProfile.data.get("gems", 0)) < gem_cost:
+		go.disabled = true
+		go.text = "NEED %d GEM" % gem_cost
 	go.pressed.connect(func() -> void:
 		if FamilyProfile.try_dojo(id):
 			FamilyProfile.mark_seen("dojo_%s" % id)

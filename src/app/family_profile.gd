@@ -439,6 +439,11 @@ func has_cbt(id: String) -> bool:
 	return (data["cbt"] as Array).has(id)
 
 
+## Gems for the step from rank `rank` to the next: only the master rank.
+static func dojo_gem_cost(rank: int) -> int:
+	return 1 if rank == 2 else 0
+
+
 func try_cbt(id: String) -> bool:
 	if has_cbt(id):
 		return false
@@ -457,7 +462,11 @@ func try_cbt(id: String) -> bool:
 		return false
 	if int(data.get("rep", 0)) < int(spec.get("rep", 0)):
 		return false
+	if int(data.get("gems", 0)) < int(spec.get("gems", 0)):
+		return false
 	data["gold"] = int(data["gold"]) - int(spec.get("gold", 0))
+	# Capstones also take a gem: gems buy the late, special stuff.
+	data["gems"] = int(data.get("gems", 0)) - int(spec.get("gems", 0))
 	(data["cbt"] as Array).append(id)
 	save()
 	Rarity.juice(str(spec.get("rarity", "common")), str(spec.get("name", id)))
@@ -897,7 +906,12 @@ func try_dojo(id: String) -> bool:
 	var cost := int(costs[mini(rank, costs.size() - 1)])
 	if int(data.get("gold", 0)) < cost:
 		return false
+	# Master rank (the badge) also costs a gem.
+	var gem_cost := dojo_gem_cost(rank)
+	if int(data.get("gems", 0)) < gem_cost:
+		return false
 	data["gold"] = int(data["gold"]) - cost
+	data["gems"] = int(data.get("gems", 0)) - gem_cost
 	var d: Dictionary = data.get("dojo", {})
 	d[id] = rank + 1
 	data["dojo"] = d

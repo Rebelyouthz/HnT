@@ -176,7 +176,7 @@ func _state(node: Dictionary) -> String:
 	var req := str(node.get("requires", ""))
 	if req != "" and not FamilyProfile.has_cbt(req):
 		return "locked"
-	if int(FamilyProfile.data["gold"]) >= int(node["gold"]) and int(FamilyProfile.data["rep"]) >= int(node["rep"]):
+	if int(FamilyProfile.data["gold"]) >= int(node["gold"]) and int(FamilyProfile.data["rep"]) >= int(node["rep"]) and int(FamilyProfile.data["gems"]) >= int(node.get("gems", 0)):
 		return "can"
 	return "poor"
 
@@ -265,7 +265,7 @@ func _show_tip(node: Dictionary, _at: Vector2) -> void:
 	var right := VBoxContainer.new()
 	right.custom_minimum_size = Vector2(190, 0)
 	var cost := Label.new()
-	cost.text = "%d GOLD%s" % [int(node["gold"]), ("  ·  %d REP" % int(node["rep"])) if int(node["rep"]) > 0 else ""]
+	cost.text = "%d GOLD%s%s" % [int(node["gold"]), ("  ·  %d REP" % int(node["rep"])) if int(node["rep"]) > 0 else "", ("  ·  %d GEM" % int(node.get("gems", 0))) if int(node.get("gems", 0)) > 0 else ""]
 	cost.add_theme_font_override("font", UiKit.pixel_font())
 	UiKit.apply_label(cost, 13, Palette.TEXT)
 	right.add_child(cost)
@@ -284,7 +284,7 @@ func _show_tip(node: Dictionary, _at: Vector2) -> void:
 			right.add_child(l)
 		"poor":
 			var p := Label.new()
-			p.text = "NEED GOLD" if int(FamilyProfile.data["gold"]) < int(node["gold"]) else "NEED REP"
+			p.text = "NEED GOLD" if int(FamilyProfile.data["gold"]) < int(node["gold"]) else ("NEED REP" if int(FamilyProfile.data["rep"]) < int(node["rep"]) else "NEED GEM")
 			p.add_theme_font_override("font", UiKit.pixel_font())
 			UiKit.apply_label(p, 16, Color(0.95, 0.25, 0.22))
 			right.add_child(p)
