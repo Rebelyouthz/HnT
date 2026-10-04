@@ -107,7 +107,7 @@ func sit_at(p: Vector2, face: int = 1) -> void:
 		_sit.queue_free()
 	_knees.clear()
 	_sit = Node2D.new()
-	var k := SpriteBook.DRAW_SCALE * SpriteBook.FIGHTER_SCALE
+	var k := SpriteBook.DRAW_SCALE * SpriteBook.FILM_SCALE
 	_sit.scale = Vector2(k * float(face), k)
 	add_child(_sit)
 	var hip: Array = m["hip"]

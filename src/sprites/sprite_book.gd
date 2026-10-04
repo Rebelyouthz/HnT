@@ -224,8 +224,14 @@ static func make_anim(who: String) -> AnimatedSprite2D:
 
 ## How much bigger than the base scale each side is drawn, so bodies match
 ## the painted doors and the thugs loom over the family a little.
-const FIGHTER_SCALE := 1.12
-const ENEMY_SCALE := 1.25
+## ACTOR_K: measured against the painted streets (doors, kerb, bikes) the
+## people were ~20% too small; everything that fights is scaled by it, and
+## hitboxes/reach follow (Fighter._spawn_hit, Punk hurtbox and swing range).
+const ACTOR_K := 1.25
+const FIGHTER_SCALE := 1.12 * ACTOR_K
+const ENEMY_SCALE := 1.25 * ACTOR_K
+## Cutscenes were composed at the old size (tower ledge, intro film).
+const FILM_SCALE := 1.12
 
 
 ## Playback rate that makes a locomotion clip's feet travel exactly as far

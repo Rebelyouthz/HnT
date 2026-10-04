@@ -87,9 +87,9 @@ func _ready() -> void:
 	hurt.collision_mask = 8
 	var hc := CollisionShape2D.new()
 	var hr := RectangleShape2D.new()
-	hr.size = Vector2(28, 60)
+	hr.size = Vector2(28, 60) * SpriteBook.ACTOR_K
 	hc.shape = hr
-	hc.position = Vector2(0, -30)
+	hc.position = Vector2(0, -30 * SpriteBook.ACTOR_K)
 	hurt.add_child(hc)
 	add_child(hurt)
 	_walk = speed
@@ -649,7 +649,8 @@ func _swing() -> void:
 			var f: Fighter = n
 			if f.downed:
 				continue
-			if absf(f.global_position.x - global_position.x) < 50.0 and absf(f.global_position.y - global_position.y) < 70.0:
+			# Reach a little past where it stops to swing (engage distance).
+			if absf(f.global_position.x - global_position.x) < 46.0 * SpriteBook.ENEMY_SCALE * 0.9 + 10.0 and absf(f.global_position.y - global_position.y) < 70.0:
 				f.take_hit(kind, self)
 	atk_height = ""
 

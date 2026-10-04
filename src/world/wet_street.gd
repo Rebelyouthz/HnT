@@ -10,8 +10,8 @@ extends Node2D
 const TEX := "res://assets/backdrops/street.png"
 const MASK := "res://assets/backdrops/street_wet.png"
 ## The paving is painted top-down: squashed 2:1 vertically it lies flat.
-const TEXEL := 0.14
-const TEXEL_Y := 0.075
+const TEXEL := 0.09
+const TEXEL_Y := 0.048
 const TOP := 426.0
 
 var map_w := 3200.0

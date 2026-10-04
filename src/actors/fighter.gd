@@ -180,6 +180,8 @@ func _ready() -> void:
 		max_hp += 4
 	hp = max_hp
 	speed += float(int(bonus.get("speed", 0))) * 1.6
+	# Bigger bodies at the old pace read as slow motion.
+	speed *= 1.1
 	steam = mini(STEAM_MAX, steam + float(int(bonus.get("steam", 0))))
 	if FamilyProfile.has_research("mag_plus"):
 		if role == "son":
@@ -204,10 +206,10 @@ func _ready() -> void:
 	add_child(_shadow)
 	var cap := CollisionShape2D.new()
 	var shape := CapsuleShape2D.new()
-	shape.radius = 14
-	shape.height = 64
+	shape.radius = 14 * SpriteBook.ACTOR_K
+	shape.height = 64 * SpriteBook.ACTOR_K
 	cap.shape = shape
-	cap.position = Vector2(0, -32)
+	cap.position = Vector2(0, -32 * SpriteBook.ACTOR_K)
 	add_child(cap)
 	web_line = Line2D.new()
 	web_line.width = 2.0
@@ -1284,7 +1286,7 @@ func _begin_strike(kind: String, size: Vector2, life: float, reach: float) -> vo
 	_lunge_v = 0.0
 	if _anim != null and _anim.animation == clip:
 		_anim.speed_scale = 1.0
-	_spawn_hit(kind, size, life, Vector2(reach * facing, _hit_y + hop))
+	_spawn_hit(kind, size, life, Vector2(reach * facing, _hit_y + hop / SpriteBook.ACTOR_K))
 	_hit_y = -34.0
 	if _combo != null:
 		_combo.beat(_clock)
@@ -1414,7 +1416,7 @@ func _dive() -> void:
 	else:
 		velocity.y = 520.0
 	Juice.shout(Copy.DIVE)
-	_spawn_hit("dive", Vector2(58, 44), 0.24, Vector2(20 * facing, -18 + hop))
+	_spawn_hit("dive", Vector2(58, 44), 0.24, Vector2(20 * facing, -18 + hop / SpriteBook.ACTOR_K))
 
 
 ## One press as a combo token: button plus stick, forward/back measured
@@ -1839,9 +1841,11 @@ func _spawn_hit(kind: String, size: Vector2, life: float, offset: Vector2) -> vo
 	box.monitoring = true
 	var cs := CollisionShape2D.new()
 	var r := RectangleShape2D.new()
-	r.size = size
+	# Strike boxes were tuned for the old body size: grow them with it so
+	# what you see reach is what reaches.
+	r.size = size * SpriteBook.ACTOR_K
 	cs.shape = r
-	box.position = offset
+	box.position = offset * SpriteBook.ACTOR_K
 	box.add_child(cs)
 	add_child(box)
 	var hits: Array[Node] = []

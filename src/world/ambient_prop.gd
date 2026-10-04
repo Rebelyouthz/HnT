@@ -16,6 +16,8 @@ static func place(host: Node, who: String, at: Vector2, z: int = 3) -> void:
 		n.add_child(SpriteBook.make_anim(who))
 		if who == "lamp":
 			n.add_to_group("street_lamps")
+			# A street lamp stands well over a grown man.
+			n.scale = Vector2(1.9, 1.9)
 		host.add_child(n)
 		return
 	SpriteBook.stamp(host, who, at, z)
