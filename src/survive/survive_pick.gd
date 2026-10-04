@@ -171,25 +171,18 @@ func _card(o: Dictionary) -> Button:
 	n2.text = str(r.get("name", "?"))
 	n2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	n2.add_theme_font_override("font", UiKit.title_font())
-	UiKit.apply_label(n2, 20, Palette.LEMON)
+	UiKit.apply_label(n2, 20, col.lerp(Color.WHITE, 0.15))
 	v.add_child(n2)
-	var bl := Label.new()
-	bl.text = str(r.get("blurb", ""))
-	bl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	bl.custom_minimum_size = Vector2(288, 0)
-	bl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	UiKit.apply_label(bl, 13, Palette.TEXT)
+	var bl := UiKit.rich(str(r.get("blurb", "")), 288, 13, Palette.TEXT)
 	v.add_child(bl)
 	if kind == "ability":
-		var st := Label.new()
 		var lv := int(run.abilities.get(str(o["id"]), 0))
 		var dmg := float(r.get("dmg", 0)) + float(r.get("per", 0)) * float(maxi(0, lv))
-		st.text = "DMG %d  ·  EVERY %.1fs" % [int(dmg), float(r.get("cd", 1.0))]
+		var txt := "DMG %d  ·  EVERY %.1fs" % [int(dmg), float(r.get("cd", 1.0))]
 		if lv > 0:
-			st.text = "DMG %d › %d  ·  EVERY %.1fs" % [int(dmg - float(r.get("per", 0))), int(dmg), float(r.get("cd", 1.0))]
-		st.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		UiKit.apply_label(st, 12, col)
-		st.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			txt = "DMG %d › [color=%s]%d (+%d)[/color]  ·  EVERY %.1fs" % [int(dmg - float(r.get("per", 0))), UiKit.UP_COL, int(dmg), int(r.get("per", 0)), float(r.get("cd", 1.0))]
+		var st := UiKit.rich("", 288, 12, col)
+		st.text = "[center]" + txt + "[/center]"
 		v.add_child(st)
 	if kind == "ability" and int(run.abilities.get(str(o["id"]), 0)) > 0:
 		var pips := HBoxContainer.new()

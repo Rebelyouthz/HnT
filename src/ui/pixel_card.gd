@@ -108,12 +108,28 @@ func _build_face() -> void:
 	_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_icon)
 	_labels.append(_icon)
-	_label(str(info.get("name", "?")), Vector2(22, 210), W - 44, 22, Palette.TEXT if rarity() == "common" else p[1], true)
+	# The thing's own name gets its own colour: weapons hot orange, skills
+	# cyan, the rest in their rarity colour (common ones in gold, not grey).
+	_label(str(info.get("name", "?")), Vector2(22, 210), W - 44, 22, _name_col(p), true)
 	_label(Rarity.label(rarity()) + "  ·  " + tag(), Vector2(22, 244), W - 44, 12, p[1])
 	var stats := stat_rows()
 	for i in stats.size():
 		_label(str(stats[i][0]), Vector2(30, 280 + i * 22), 110, 12, Palette.TEXT).horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_label(str(info.get("blurb", "")), Vector2(26, 334), W - 52, 13, Color(0.86, 0.86, 0.82))
+	var bl := UiKit.rich(str(info.get("blurb", "")), W - 52, 13, Color(0.86, 0.86, 0.82), UiKit.pixel_font())
+	bl.position = Vector2(26, 334)
+	add_child(bl)
+	_labels.append(bl)
+
+
+func _name_col(p: Array) -> Color:
+	var t := tag()
+	if t in ["SHOT", "THROW"]:
+		return Color(1.0, 0.58, 0.25)
+	if t in ["AIR", "PARKOUR", "COMBO", "SNAP", "STEAM"]:
+		return Color(0.45, 0.9, 1.0)
+	if rarity() == "common":
+		return UiKit.GOLD
+	return p[1]
 
 
 func _glyph() -> String:

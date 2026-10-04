@@ -603,7 +603,7 @@ func level_up(grant: Dictionary) -> void:
 	rewards.alignment = BoxContainer.ALIGNMENT_CENTER
 	rewards.add_theme_constant_override("separation", 14)
 	col.add_child(rewards)
-	for pair: Array in [["gold", "+8 GOLD"], ["star", "LV %d" % int(grant.get("level", 1))], ["gem", "FRAME CHECK"]]:
+	for pair: Array in [["gold", "+8 GOLD", UiKit.GOLD], ["star", "LV %d" % int(grant.get("level", 1)), Color(0.45, 1.0, 0.55)], ["gem", "FRAME CHECK", Color(0.45, 0.85, 1.0)]]:
 		var tile := PanelContainer.new()
 		tile.add_theme_stylebox_override("panel", UiKit.panel(Color(0.08, 0.1, 0.2), UiKit.GOLD))
 		var tv := VBoxContainer.new()
@@ -618,7 +618,7 @@ func level_up(grant: Dictionary) -> void:
 		tl.text = str(pair[1])
 		tl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		tl.add_theme_font_override("font", UiKit.title_font())
-		UiKit.apply_label(tl, 14, Palette.TEXT)
+		UiKit.apply_label(tl, 14, pair[2] as Color)
 		tv.add_child(tl)
 		tile.custom_minimum_size = Vector2(150, 84)
 		rewards.add_child(tile)

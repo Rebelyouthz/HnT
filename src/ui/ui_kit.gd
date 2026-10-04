@@ -143,6 +143,44 @@ static func num(v: Variant) -> String:
 	return str(v)
 
 
+const UP_COL := "#5dff8a"
+const DOWN_COL := "#ff5a4a"
+
+
+## Stat text for cards: gains (+12%, +3) in green, costs (-10%, -2) in red.
+static func stat_bbcode(text: String) -> String:
+	var re := RegEx.new()
+	re.compile("([+\\-\u2212]\\d+(?:\\.\\d+)?%?)")
+	var out := ""
+	var last := 0
+	for m in re.search_all(text):
+		out += text.substr(last, m.get_start() - last)
+		var tok := m.get_string()
+		out += "[color=%s]%s[/color]" % [UP_COL if tok.begins_with("+") else DOWN_COL, tok]
+		last = m.get_end()
+	return out + text.substr(last)
+
+
+## A centred, outlined rich label for card text with coloured stats.
+static func rich(text: String, w: float, size: int, color: Color, font: Font = null) -> RichTextLabel:
+	var r := RichTextLabel.new()
+	r.bbcode_enabled = true
+	r.fit_content = true
+	r.scroll_active = false
+	r.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	r.custom_minimum_size = Vector2(w, 0)
+	r.size = Vector2(w, 0)
+	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if font != null:
+		r.add_theme_font_override("normal_font", font)
+	r.add_theme_font_size_override("normal_font_size", size)
+	r.add_theme_color_override("default_color", color)
+	r.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+	r.add_theme_constant_override("outline_size", 4)
+	r.text = "[center]" + stat_bbcode(text) + "[/center]"
+	return r
+
+
 static func apply_label(lab: Label, size: int = 16, color: Color = Palette.TEXT) -> void:
 	lab.add_theme_font_size_override("font_size", size)
 	lab.add_theme_color_override("font_color", color)

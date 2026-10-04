@@ -54,7 +54,25 @@ func _draw() -> void:
 	elif GLYPHS.has(kind):
 		grid = GLYPHS[kind]
 	var px := floorf(minf(size.x, size.y) / 11.0)
-	var off := ((size - Vector2(px * 11.0, px * 11.0)) * 0.5).floor()
+	# Centre the glyph's real pixels, not the 11x11 grid: many glyphs sit
+	# off-centre in their grid and looked shifted inside round frames.
+	var x0 := 99
+	var x1 := -1
+	var y0 := 99
+	var y1 := -1
+	for gy in grid.size():
+		var grow_: String = grid[gy]
+		for gx in grow_.length():
+			if COL.has(grow_[gx]):
+				x0 = mini(x0, gx)
+				x1 = maxi(x1, gx)
+				y0 = mini(y0, gy)
+				y1 = maxi(y1, gy)
+	if x1 < 0:
+		return
+	var bw := float(x1 - x0 + 1) * px
+	var bh := float(y1 - y0 + 1) * px
+	var off := ((size - Vector2(bw, bh)) * 0.5).floor() - Vector2(x0, y0) * px
 	for y in grid.size():
 		var row: String = grid[y]
 		for x in row.length():
