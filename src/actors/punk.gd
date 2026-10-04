@@ -1002,6 +1002,13 @@ func _die(kind: String, from: Node) -> void:
 		if kind == "finish" or kind == "stomp3":
 			Juice.kill_cam(global_position)
 	Juice.play("res://assets/audio/kill.wav")
+	# Every kill lands with a beat; the last body of a fight gets the slow
+	# motion moment.
+	Juice.kick(Vector2(dir, 0.3), 4.0)
+	if get_tree().get_nodes_in_group("enemies").size() <= 1 and get_tree().get_first_node_in_group("horde") == null:
+		Juice.last_kill()
+	else:
+		Juice.hitstop(3)
 	var blood := get_tree().get_first_node_in_group("blood_sim")
 	if blood and blood.has_method("pump") and _last_zone != "low":
 		blood.pump(global_position, dir)

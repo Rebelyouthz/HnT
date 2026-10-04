@@ -849,6 +849,24 @@ func smash_burst(at: Vector2, kind: String) -> void:
 	play("res://assets/audio/smash.wav" if ResourceLoader.exists("res://assets/audio/smash.wav") else "res://assets/audio/hit_heavy.wav")
 
 
+## The last thug of a fight drops in slow motion for a moment.
+func last_kill() -> void:
+	if get_tree().get_first_node_in_group("chase_crash"):
+		return
+	# Let the killing blow's own hitstop finish first.
+	var guard := 0
+	while _hitstop_depth > 0 and guard < 40:
+		guard += 1
+		await get_tree().process_frame
+	_hitstop_depth += 1
+	Engine.time_scale = 0.25
+	pulse_shake(6.0)
+	await get_tree().create_timer(0.5, true, false, true).timeout
+	_hitstop_depth = maxi(0, _hitstop_depth - 1)
+	if _hitstop_depth == 0:
+		Engine.time_scale = _base_scale
+
+
 func kill_cam(at: Vector2) -> void:
 	if get_tree().get_first_node_in_group("chase_crash"):
 		return

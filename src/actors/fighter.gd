@@ -1960,6 +1960,10 @@ func take_hit(kind: String, from: Node) -> void:
 	if from is Node2D:
 		var dir := signf(global_position.x - (from as Node2D).global_position.x)
 		global_position.x += dir * (6.0 if kind == "light" else 16.0)
+		# Getting hit should hurt to watch: the view jolts the way you are
+		# knocked and the body crumples a little.
+		Juice.kick(Vector2(dir, 0.35), 2.5 if kind == "light" else 6.0)
+		_squash_to(Vector2(0.9, 1.06) if kind == "light" else Vector2(0.84, 1.1))
 		_bleed_from(kind, from, dir)
 	if hp <= int(round(float(max_hp) * 0.3)) and bandage > 0:
 		bandage -= 1
