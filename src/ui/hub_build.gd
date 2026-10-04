@@ -29,8 +29,18 @@ func _ready() -> void:
 		room.texture_filter = SpriteBook.UI_FILTER
 		room.position = Vector2(-16, -8)
 		room.size = Vector2(1280, 580)
-		room.modulate = Color(0.62, 0.62, 0.72)
+		room.modulate = Color(0.42, 0.42, 0.52)
 		_stage.add_child(room)
+		# A soft dark well behind the three trees so the nodes, not the
+		# bedroom, carry the screen.
+		var well := TextureRect.new()
+		well.texture = LightRig.radial_tex()
+		well.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		well.position = Vector2(80, 40)
+		well.size = Vector2(1100, 560)
+		well.modulate = Color(0.0, 0.0, 0.03, 0.75)
+		well.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_stage.add_child(well)
 	var frame := Panel.new()
 	var fs := StyleBoxFlat.new()
 	fs.bg_color = Color(0, 0, 0, 0)

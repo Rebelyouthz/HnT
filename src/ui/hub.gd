@@ -214,7 +214,7 @@ func _make_tabs() -> Control:
 		b.pressed.connect(_show_tab.bind(id))
 		wrap.add_child(b)
 		var bang := UiKit.bang()
-		bang.position = Vector2(12, 6)
+		bang.position = Vector2(2, -12)
 		bang.visible = false
 		wrap.add_child(bang)
 		_tab_bangs[id] = bang
@@ -326,17 +326,16 @@ func _refresh_tab_locks() -> void:
 				wrap = child
 				var unlocked := FamilyProfile.tab_unlocked(id)
 				btn.disabled = false
-				if unlocked:
-					btn.text = _tab_title(id)
-				else:
-					btn.text = "%s  LOCK" % _tab_title(id)
+				btn.text = _tab_title(id)
+				# Locked tabs read as dark, not as a word glued on the label.
+				btn.modulate = Color.WHITE if unlocked else Color(0.45, 0.45, 0.52)
 				var bang: Control = _tab_bangs[id]
 				var unseen: bool = unlocked and not bool(FamilyProfile.data["seen"].get(id, false))
 				var awards_ready: bool = id == "awards" and unlocked and _has_claim()
 				bang.visible = unseen or awards_ready
 				var dot: Control = _tab_dots.get(id)
 				if dot:
-					dot.visible = FamilyProfile.has_menu_alert()
+					dot.visible = id == "clinic" and FamilyProfile.has_menu_alert() and not bang.visible
 				if id == _current:
 					var on := UiKit.panel(UiKit.NAVY_HI, UiKit.GOLD)
 					on.shadow_color = Color(UiKit.GOLD.r, UiKit.GOLD.g, UiKit.GOLD.b, 0.45)
@@ -382,10 +381,13 @@ func _refresh_new_dots() -> void:
 		_avatar_dot.visible = alert
 	if _logo_dot:
 		_logo_dot.visible = alert
+	# One global alert reads on the home tab only (and never next to a "!"),
+	# not as a red square on every tab.
 	for id in _tab_dots.keys():
 		var d: Control = _tab_dots[id]
+		var bg: Control = _tab_bangs.get(id)
 		if d:
-			d.visible = alert
+			d.visible = alert and id == "clinic" and not (bg != null and bg.visible)
 
 
 func _open_profile() -> void:

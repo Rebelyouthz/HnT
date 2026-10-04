@@ -37,8 +37,11 @@ func _ready() -> void:
 	_pick = App.solo_role if App.solo_role in WHO else "son"
 	_mode = "couch" if App.couch else "solo"
 	var dim := ColorRect.new()
-	dim.color = Color(0.01, 0.01, 0.03, 0.94)
-	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.color = Color(0.01, 0.01, 0.03, 0.9)
+	# Explicit size: the screen's own rect may not be laid out yet, and the
+	# title art (logo, idle fighters) must not show through the sheet.
+	dim.position = Vector2(-40, -40)
+	dim.size = Vector2(1360, 800)
 	add_child(dim)
 	var head := UiKit.title("CHOOSE YOUR FIGHTER", 34, Palette.LEMON)
 	head.position = Vector2(0, 26)
@@ -79,7 +82,7 @@ func _card(who: String, at: Vector2) -> Button:
 		a.play()
 		a.texture_filter = SpriteBook.UI_FILTER
 		a.scale = Vector2(1.05, 1.05)
-		a.position = Vector2(100, 150)
+		a.position = Vector2(100, 122)
 		a.name = "Anim"
 		stage.add_child(a)
 	var col := VBoxContainer.new()
@@ -240,7 +243,9 @@ func _paint() -> void:
 		var c := _cards[who] as Button
 		var on: bool = who == _pick
 		c.add_theme_stylebox_override("normal", UiKit.panel(Palette.PANEL, UiKit.GOLD if on else Palette.MUTED))
-		c.modulate = Color(1, 1, 1) if on else Color(0.55, 0.55, 0.62)
+		c.modulate = Color(1, 1, 1) if on else Color(0.42, 0.42, 0.5)
+		c.pivot_offset = c.size * 0.5
+		c.create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT).tween_property(c, "scale", Vector2(1.02, 1.02) if on else Vector2(0.97, 0.97), 0.16)
 		var a := c.find_child("Anim", true, false) as AnimatedSprite2D
 		if a:
 			a.animation = "idle" if on else "idle"
