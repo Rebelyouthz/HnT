@@ -231,6 +231,27 @@ func _place_extras() -> void:
 	get_tree().create_timer(3.0).timeout.connect(_pick_bounty)
 
 
+var _banter_t := 18.0
+
+
+## Father and son talk while they walk: a line every 25-45 s when nobody is
+## swinging at them.
+func _banter(delta: float) -> void:
+	_banter_t -= delta
+	if _banter_t > 0.0:
+		return
+	_banter_t = randf_range(25.0, 45.0)
+	var players := get_tree().get_nodes_in_group("players")
+	if players.is_empty():
+		return
+	var p := players[0] as Node2D
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if e is Node2D and (e as Node2D).global_position.distance_to(p.global_position) < 260.0:
+			_banter_t = 6.0
+			return
+	VoBank.line("son" if randf() < 0.5 else "father", "banter", 1.0)
+
+
 ## One ordinary thug per street is WANTED: tougher, crowned, and worth
 ## gems and gold when he drops.
 func _pick_bounty() -> void:
@@ -397,6 +418,7 @@ func _targets() -> Array[Node2D]:
 
 func _process(_delta: float) -> void:
 	NightCondition.follow(self, _cam)
+	_banter(_delta)
 	if _join_grace > 0:
 		_join_grace -= 1
 	if _state.failed or _state.cleared or _state.gated:

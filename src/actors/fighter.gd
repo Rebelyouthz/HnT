@@ -159,6 +159,7 @@ var _getup_done := false
 ## moment the body is free, so chains don't eat presses.
 var _light_buf := 0
 var _heavy_buf := 0
+var _run_breath := 0
 
 signal died
 signal hit_landed(kind: String, global_pos: Vector2)
@@ -1297,6 +1298,7 @@ func _begin_strike(kind: String, size: Vector2, life: float, reach: float) -> vo
 	_drift_t = 0.0
 	stance_t = 0.0
 	_whoosh(clip, float(mv["weight"]))
+	VoBank.effort(role, float(mv["weight"]))
 	if startup > 0.0:
 		await get_tree().create_timer(startup, false).timeout
 	if id != _strike_id or downed or not is_inside_tree():
@@ -1356,6 +1358,10 @@ func _strike_whiff(mv: Dictionary) -> void:
 	_drift_v = float(mv["whiff_drift"])
 	_drift_t = 0.18
 	Juice.whiff(global_position + Vector2(float(facing) * 10.0, -34.0 + hop), facing, 40.0 + 30.0 * float(mv["weight"]), _strike_clip == "uppercut")
+	var kick := _strike_clip.ends_with("kick") or _strike_clip == "roundhouse"
+	var wp := "res://assets/audio/sfx/whiff_%s.ogg" % ("kick" if kick else "punch")
+	if ResourceLoader.exists(wp):
+		Mixer.play_sfx(wp, randf_range(0.92, 1.08) * (1.08 if role == "son" else 0.92), -8.0)
 	attack_cd = maxi(attack_cd, int(mv["whiff_cd"]))
 	if _anim != null and _anim.animation == _strike_clip:
 		_anim.speed_scale = float(mv["whiff_rate"])
@@ -1917,6 +1923,7 @@ func start_reload() -> void:
 		Mixer.play_sfx(_sfx_or("res://assets/audio/sfx/mag_out.ogg", "res://assets/audio/cling.wav"), randf_range(0.95, 1.05), -5.0)
 	reload_t = _reload_len
 	Juice.popup_number(global_position + Vector2(0, -96), "RELOAD", Color(0.85, 0.85, 0.9))
+	VoBank.line(role, "reload", 0.5)
 
 
 func _tick_reload(delta: float) -> void:
@@ -2211,6 +2218,7 @@ func _revived() -> void:
 
 
 func _life_lost() -> void:
+	VoBank.line(role, "death", 1.0)
 	Nemesis.note_death(last_hit_by)
 	var rs := get_tree().get_first_node_in_group("run_state")
 	if rs and rs.has_method("spend_life"):
@@ -2382,6 +2390,13 @@ func _footsteps(delta: float, spd: float) -> void:
 		return
 	_foot_cd = clampf(0.34 - spd / 900.0, 0.14, 0.34)
 	KitSfx.foot(role, clampf(spd / 280.0, 0.2, 1.2), stumble_t > 0.0)
+	# Running a while: you hear them breathe.
+	if spd > 220.0:
+		_run_breath += 1
+		if _run_breath % 9 == 0 and ResourceLoader.exists("res://assets/audio/sfx/breath_run.ogg"):
+			Mixer.play_sfx("res://assets/audio/sfx/breath_run.ogg", 1.1 if role == "son" else 0.85, -14.0)
+	else:
+		_run_breath = 0
 
 
 func _try_stomp() -> bool:

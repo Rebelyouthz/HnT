@@ -171,6 +171,24 @@ static func line(who: String, ev: String, chance: float = 1.0) -> void:
 	Mixer.play_vo(path)
 
 
+static var _effort_last: Dictionary = {}
+
+
+## A short fighting shout (hah! hyah! hngh!) on a swing: its own clock so it
+## never waits behind a bark, and never on every single jab.
+static func effort(role: String, weight: float) -> void:
+	var now := Time.get_ticks_msec() / 1000.0
+	if now - float(_effort_last.get(role, -10.0)) < 0.35:
+		return
+	if randf() > 0.35 + 0.55 * weight:
+		return
+	var n := 6
+	var path := "res://assets/audio/vo/%s_effort_%d.ogg" % [role, 1 + randi() % n]
+	if ResourceLoader.exists(path):
+		_effort_last[role] = now
+		Mixer.play_vo(path)
+
+
 ## Speaker key for an enemy (matches vo_lines.json).
 static func who_of(p: Node) -> String:
 	if p == null:
@@ -184,6 +202,18 @@ static func who_of(p: Node) -> String:
 			return "shift_lead"
 		"Collector Gant":
 			return "gant"
+		"Repo Goon":
+			return "repo"
+		"Bailiff":
+			return "bailiff"
+		"Roof Runner":
+			return "runner"
+		"Bag Snatch":
+			return "snatch"
+		"Coping Imp", "Sleet Imp":
+			return "imp"
+		"Valet":
+			return "valet"
 	return "thug"
 
 

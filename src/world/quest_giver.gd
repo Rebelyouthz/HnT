@@ -120,9 +120,20 @@ func _process(delta: float) -> void:
 			return
 
 
+const VOICE := {"lost_dog": "npc_woman", "bin_rage": "npc_sal", "repo_revenge": "npc_old"}
+
+
+func _say(n: int) -> void:
+	var v := str(VOICE.get(str(quest.get("id", "")), ""))
+	var path := "res://assets/audio/vo/%s_talk_%d.ogg" % [v, n]
+	if v != "" and ResourceLoader.exists(path):
+		Mixer.play_vo(path)
+
+
 func _talk_to() -> void:
 	var talk := _talk_node()
 	var who := str(get_meta("who"))
+	_say(2 if state == "ready" else 1)
 	match state:
 		"offer":
 			var lines: Array = []

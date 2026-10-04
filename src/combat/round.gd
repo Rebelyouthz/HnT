@@ -116,6 +116,8 @@ func _test(a: Vector2, b: Vector2) -> bool:
 func _land(p: Punk, at: Vector2) -> void:
 	p.set_meta("shot_at", at)
 	p.take_hit("gun", self)
+	if round_kind != "orb" and ResourceLoader.exists("res://assets/audio/sfx/bullet_flesh.ogg"):
+		Mixer.play_sfx("res://assets/audio/sfx/bullet_flesh.ogg", randf_range(0.9, 1.15), -5.0)
 	if round_kind == "nail" and is_instance_valid(p):
 		_stick_body(p, at)
 	if round_kind == "orb":

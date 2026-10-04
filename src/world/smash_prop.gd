@@ -187,9 +187,23 @@ func _splinters(dir: float, n: int) -> void:
 		tw.chain().tween_callback(bit.queue_free)
 
 
+## What it is made of decides what you hear.
+func _material_sfx(final: bool) -> void:
+	var mat := "wood"
+	if kind in ["kiosk", "vending", "cop_car", "booth", "dumpster", "drum", "hydrant", "mail", "news", "barrier"]:
+		mat = "metal"
+	elif kind in ["window", "glass", "bottle"]:
+		mat = "glass"
+	var path := {"wood": "res://assets/audio/sfx/crate_break.ogg", "metal": "res://assets/audio/sfx/metal_bang.ogg", "glass": "res://assets/audio/sfx/glass_break.ogg"}[mat] as String
+	if ResourceLoader.exists(path):
+		Mixer.play_sfx(path, randf_range(0.9, 1.1) * (0.85 if final else 1.15), -2.0 if final else -8.0)
+	else:
+		Juice.play("res://assets/audio/smash.wav" if ResourceLoader.exists("res://assets/audio/smash.wav") else "res://assets/audio/hit_light.wav")
+
+
 func take_hit(hit: String, from: Node) -> void:
 	Juice.keep_combo()
-	Juice.play("res://assets/audio/smash.wav" if ResourceLoader.exists("res://assets/audio/smash.wav") else "res://assets/audio/hit_light.wav")
+	_material_sfx(false)
 	if _box:
 		_box.modulate = Color(1.35, 1.1, 0.85)
 		get_tree().create_timer(0.08, true, false, true).timeout.connect(func() -> void:
@@ -337,7 +351,7 @@ func _burst_apart(from: Node) -> void:
 	if _art != null:
 		ShardBurst.shatter(host, _art, global_position, dir)
 		QuestGiver.note(get_tree(), "smash")
-	Juice.play("res://assets/audio/smash.wav" if ResourceLoader.exists("res://assets/audio/smash.wav") else "res://assets/audio/hit_heavy.wav")
+	_material_sfx(true)
 	var cash := 3 + randi() % 6
 	if kind in ["kiosk", "vending", "cop_car"]:
 		cash += 8

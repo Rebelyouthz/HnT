@@ -515,7 +515,7 @@ func _start_telegraph() -> void:
 		"finals":
 			t *= 0.7
 	telegraph = t
-	VoBank.line(VoBank.who_of(self), "taunt", 0.1)
+	VoBank.line(VoBank.who_of(self), "taunt", 0.22)
 	atk_height = _pick_height(atk)
 	_show_height()
 	_pick_swing()
@@ -981,7 +981,7 @@ func _hit_noise(kind: String, from: Node) -> void:
 	if kind == "combo":
 		Mixer.play_sfx("res://assets/audio/sfx/gore_squelch.ogg", 1.0, -2.0)
 	if hp > 0:
-		VoBank.line(VoBank.who_of(self), "hurt", 0.14)
+		VoBank.line(VoBank.who_of(self), "hurt", 0.2)
 
 
 func _die(kind: String, from: Node) -> void:
@@ -1025,6 +1025,11 @@ func _die(kind: String, from: Node) -> void:
 		if kind == "finish" or kind == "stomp3":
 			Juice.kill_cam(global_position)
 	Juice.play("res://assets/audio/kill.wav")
+	if ResourceLoader.exists("res://assets/audio/sfx/kill_hit.ogg"):
+		Mixer.play_sfx("res://assets/audio/sfx/kill_hit.ogg", randf_range(0.9, 1.05), -3.0)
+	if ResourceLoader.exists("res://assets/audio/body_fall.wav"):
+		var bf := get_tree().create_timer(0.45)
+		bf.timeout.connect(func() -> void: Mixer.play_sfx("res://assets/audio/body_fall.wav", randf_range(0.9, 1.1), -6.0))
 	# Every kill lands with a beat; the last body of a fight gets the slow
 	# motion moment.
 	Juice.kick(Vector2(dir, 0.3), 4.0)
