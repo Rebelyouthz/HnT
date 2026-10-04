@@ -369,6 +369,9 @@ func _ready() -> void:
 	add_child(SnapDirector.new())
 	add_child(DuoDirector.new())
 	add_child(BloodSim.new())
+	# The coping hour has its own driving track.
+	if self is SurviveAct and ResourceLoader.exists("res://assets/audio/music_survive.wav"):
+		music = "res://assets/audio/music_survive.wav"
 	Mixer.play_music(music)
 	var party: Dictionary = Party.spawn(self, spawn_at)
 	_son = party.get("son") as Fighter
