@@ -33,6 +33,9 @@ static func lay(host: Node, width: float, name: String = "street") -> WetStreet:
 	w.map_w = width
 	w.ground = name
 	w.name = "WetStreet"
+	# The whole floor (road, reflections, lamp streaks, actor mirrors) draws
+	# under the actors (z 0) and blood on the ground (-1).
+	w.z_index = -3
 	host.add_child(w)
 	return w
 

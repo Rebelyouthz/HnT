@@ -236,6 +236,11 @@ func _process(_delta: float) -> bool:
 				keep.global_position = p1.global_position + Vector2(40, 0)
 				keep.set("facing", -1)
 				keep.set("recover", 99.0)
+		if _n == 90:
+			for b in root.get_tree().get_nodes_in_group("bounty"):
+				b.remove_from_group("bounty")
+			if current_scene.has_method("_pick_bounty"):
+				current_scene.call("_pick_bounty")
 		if _n >= 100 and _n < 190:
 			var k := (_n - 100) % 14
 			var heavy := _n >= 156

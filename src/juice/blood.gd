@@ -35,11 +35,11 @@ func _ready() -> void:
 	add_to_group("blood_sim")
 	z_index = 9
 	_stain_layer = Node2D.new()
-	_stain_layer.z_index = 2
+	_stain_layer.z_index = -1
 	_stain_layer.z_as_relative = false
 	_stain_layer.draw.connect(_draw_stains)
 	_pool_layer = Node2D.new()
-	_pool_layer.z_index = 2
+	_pool_layer.z_index = -1
 	_pool_layer.z_as_relative = false
 	_pool_layer.draw.connect(_draw_pools)
 	# Siblings so the floor layers draw under the actors, not over them.
