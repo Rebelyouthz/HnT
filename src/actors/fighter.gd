@@ -1368,6 +1368,19 @@ func _strike_impact(at: Vector2) -> void:
 	_strike_grade = ""
 
 
+## Blocked: a guard spark and a short clack, no impact burst, no damage
+## shout - a blocked blow must read differently from a hit.
+func _strike_blocked(at: Vector2) -> void:
+	if _strike_hit:
+		return
+	_strike_hit = true
+	Juice.sparks(at + Vector2(0, -28))
+	Juice.hitstop(2)
+	velocity.x -= float(facing) * 70.0
+	attack_cd = maxi(attack_cd, 10)
+	_strike_grade = ""
+
+
 ## Got hit mid-swing: the strike never lands, the stance is gone.
 func _cancel_strike() -> void:
 	_strike_id += 1
@@ -1876,6 +1889,9 @@ func _spawn_hit(kind: String, size: Vector2, life: float, offset: Vector2) -> vo
 					hit_kind = "heavy"
 				_spend_revenge(victim as Punk)
 			victim.take_hit(hit_kind, self)
+			if victim is Punk and (victim as Punk).blocked_last:
+				_strike_blocked((node as Node2D).global_position)
+				return
 			hit_landed.emit(hit_kind, (node as Node2D).global_position)
 	box.area_entered.connect(func(a: Area2D) -> void:
 		land.call(a)

@@ -208,13 +208,12 @@ func _finish(grade: String) -> void:
 			col = Palette.BADGE
 			text = "MISS"
 			Juice.play("res://assets/audio/cling_fail.wav")
-			Juice.pulse_shake(6.0)
+			# A miss deflates; shaking the screen is for hits.
 		_:
 			col = Color(0.6, 0.05, 0.08)
 			text = "BIG MISS"
 			Juice.play("res://assets/audio/stumble.wav")
-			Juice.pulse_shake(11.0)
-			Juice.hitstop(3)
+			Juice.pulse_shake(2.0)
 	_verdict.text = text
 	_verdict.add_theme_color_override("font_color", col)
 	_verdict.visible = true
@@ -224,6 +223,7 @@ func _finish(grade: String) -> void:
 	tw.tween_property(_verdict, "scale", Vector2(1.15, 1.15), 0.09).set_trans(Tween.TRANS_BACK)
 	tw.tween_property(_verdict, "scale", Vector2.ONE, 0.07)
 	if grade == "miss" or grade == "big_miss":
+		_ring.modulate = Color(0.55, 0.55, 0.6)
 		for k in 4:
 			tw.tween_property(_ring, "position:x", _ring.position.x + (6.0 if k % 2 == 0 else -6.0), 0.03)
 	tw.tween_interval(0.35)

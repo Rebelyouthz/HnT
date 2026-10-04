@@ -684,19 +684,26 @@ func _mix_mod() -> void:
 		_brain.visible = stomp_hits >= 3 or (crush and frac <= 0.0)
 
 
+## True when the last blow was blocked or clashed (the attacker shows a
+## block spark, not a hit).
+var blocked_last := false
+
+
 func take_hit(kind: String, from: Node) -> void:
+	blocked_last = false
 	_hurt_t = 0.28
 	if telegraph > 0.0 and from is Fighter and (kind == "heavy" or kind == "roundhouse" or kind == "blade" or kind == "special"):
 		if get_tree().get_first_node_in_group("chase_crash") == null:
 			_clash(from as Fighter)
+			blocked_last = true
 			return
 	if guarding and kind != "throw" and kind != "snap" and kind != "finish" and kind != "web-slam" and kind != "gun" and kind != "skill":
 		var high_beats_low := guard_low and (kind == "jump-kick" or kind == "dive" or kind == "heavy" or kind == "launcher")
 		var low_beats_high := (not guard_low) and (kind == "slide" or kind == "jump-kick")
 		if not high_beats_low and not low_beats_high:
 			Juice.play("res://assets/audio/block.wav")
-			Juice.flash_red(visual, 1)
 			guarding = false
+			blocked_last = true
 			return
 		guarding = false
 	if plates > 0 and (kind == "light" or kind == "jump-kick" or kind == "slide"):
