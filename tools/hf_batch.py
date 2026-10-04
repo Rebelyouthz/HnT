@@ -34,7 +34,8 @@ START = {'cop': '/tmp/claude-0/en/cop.png', 'repo_goon': D + '/repo_goon.png', '
 Q = [('clip', 'cop', 'death')]
 Q += [('design', 'repo_goon'), ('design', 'bailiff')]
 for w in ['repo_goon', 'bailiff']:
-    Q += [('clip', w, m) for m in ['idle', 'walk', 'punch_high', 'hurt', 'death', 'punch_mid', 'kick_low']]
+    Q += [('clip', w, m) for m in ['idle', 'walk', 'punch_high', 'hurt', 'death', 'punch_mid', 'kick_low']
+          if not (w == 'bailiff' and m in ('punch_mid', 'kick_low'))]  # these hang the Space: local queue
 Q += [('clip', w, 'death') for w in ['clipboard_flier', 'coping_imp', 'lot_hydra', 'clamp_king']]
 Q += [('clip', w, m) for w in ['coping_imp', 'clipboard_flier', 'lot_hydra'] for m in ['punch_high', 'kick_low']]
 for w in ['npc_old_woman', 'npc_sanitation', 'npc_old_man']:
