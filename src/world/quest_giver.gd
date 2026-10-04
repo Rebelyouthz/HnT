@@ -58,7 +58,14 @@ func _ready() -> void:
 	r.size = Vector2(70, 60)
 	cs.shape = r
 	add_child(cs)
-	if SpriteBook.has_who("bystander"):
+	var own := str(quest.get("sprite", ""))
+	if own != "" and SpriteBook.has_who(own):
+		# A drawn character of their own: no tint needed.
+		_anim = SpriteBook.make_anim(own)
+		SpriteBook.grow(_anim, SpriteBook.FIGHTER_SCALE)
+		_anim.flip_h = true
+		add_child(_anim)
+	elif SpriteBook.has_who("bystander"):
 		_anim = SpriteBook.make_anim("bystander")
 		SpriteBook.grow(_anim, SpriteBook.FIGHTER_SCALE)
 		var tint: Array = quest.get("tint", [1, 1, 1])
