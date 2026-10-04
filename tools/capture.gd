@@ -212,6 +212,44 @@ func _process(_delta: float) -> bool:
 		var page := _tab.substr(6)
 		if page != "" and current_scene.has_method("_" + page):
 			current_scene.call("_" + page)
+	# ui:fight - one thug squared up in front of the Son, a jab-jab-heavy
+	# string, frames saved around every contact (<out>_NNN.png).
+	if _tab == "ui_fight" and current_scene != null:
+		if _n == 80:
+			get_root().get_tree().paused = false
+			for c in current_scene.get_children():
+				if c.has_method("show_for") or c.get_class() == "CanvasLayer" and c.get_script() != null and str(c.get_script().resource_path).ends_with("stage_card.gd"):
+					c.queue_free()
+			var p1: Node2D = root.get_tree().get_first_node_in_group("players")
+			var keep: Node2D = null
+			var pool := root.get_tree().get_nodes_in_group("enemies")
+			for want in ["Repo Goon", "Mohawk Bo", "Roof Runner", "Beat Cop", ""]:
+				for e in pool:
+					if keep == null and e is Node2D and (want == "" or str(e.get("title")) == want) and str(e.get("title")) not in ["Drone", "Bag Snatch"]:
+						keep = e
+			for e in pool:
+				if e != keep:
+					e.queue_free()
+			for d in root.get_tree().get_nodes_in_group("dog_buddy"):
+				d.queue_free()
+			if keep and p1:
+				keep.global_position = p1.global_position + Vector2(40, 0)
+				keep.set("facing", -1)
+				keep.set("recover", 99.0)
+		if _n >= 100 and _n < 190:
+			var k := (_n - 100) % 14
+			var heavy := _n >= 156
+			var act := "p1_heavy" if heavy else "p1_light"
+			if k == 0:
+				Input.action_press(act)
+				var pp: Node2D = root.get_tree().get_first_node_in_group("players")
+				for e in root.get_tree().get_nodes_in_group("enemies"):
+					if pp and e is Node2D:
+						print("FIGHT_DIST ", _n, " dx=", snappedf((e as Node2D).global_position.x - pp.global_position.x, 0.1), " dy=", snappedf((e as Node2D).global_position.y - pp.global_position.y, 0.1), " title=", e.get("title"), " hp=", e.get("hp"))
+			elif k == 2:
+				Input.action_release(act)
+			if (_n - 100) % 2 == 0:
+				root.get_texture().get_image().save_png(_out.get_basename() + "_%03d.png" % _n)
 	if _walk and _n > 20:
 		Input.action_press("p1_left" if _left else "p1_right")
 	if _n == _frames:

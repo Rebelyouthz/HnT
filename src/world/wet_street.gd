@@ -220,10 +220,13 @@ func _copy(anim: AnimatedSprite2D, m: Sprite2D, feet: float) -> void:
 	m.offset = anim.offset
 	m.flip_h = anim.flip_h
 	var gs := anim.global_scale
-	m.global_scale = Vector2(gs.x, -gs.y)
+	# Wet cobbles give a short, faint reflection - a full-length copy read as
+	# a second body lying in the road.
+	var k := 0.55
+	m.global_scale = Vector2(gs.x, -gs.y * k)
 	m.global_rotation = -anim.global_rotation
-	m.global_position = Vector2(gp.x, 2.0 * feet - gp.y + 2.0)
-	var a := 0.34
+	m.global_position = Vector2(gp.x, feet + (feet - gp.y) * k + 2.0)
+	var a := 0.2
 	if anim.modulate.a < 1.0:
 		a *= anim.modulate.a
 	m.modulate = Color(0.55, 0.62, 0.85, a)

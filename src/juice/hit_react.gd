@@ -148,6 +148,13 @@ static func corpse(host: Node, art: AnimatedSprite2D, feet: Vector2, zone: Strin
 	var flip := Node2D.new()
 	flip.scale.x = float(facing)
 	if drawn:
+		# The fall moves the head every frame, but the wound shader's head
+		# point is fixed: keep only a light splash so the body does not drown
+		# in pixel blood.
+		var dm := sp.material as ShaderMaterial
+		if dm != null and dm.shader == preload("res://src/shaders/wound.gdshader"):
+			dm.set_shader_parameter("wound", 0.3)
+			dm.set_shader_parameter("splat", 0.2)
 		var an := AnimatedSprite2D.new()
 		an.sprite_frames = art.sprite_frames
 		an.position = art.position

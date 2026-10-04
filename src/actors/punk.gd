@@ -390,7 +390,7 @@ func _physics_process(delta: float) -> void:
 		var d := t.global_position.x - global_position.x
 		facing = 1 if d > 0.0 else -1
 		visual.scale.x = float(facing)
-		if absf(d) < 46.0 * SpriteBook.ENEMY_SCALE * 0.9:
+		if absf(d) < Punk.ENGAGE:
 			if vehicle != "" and str(kit.get("attack", "")) == "ram":
 				_ram_hit(t as Fighter)
 				velocity.x = 0
@@ -654,7 +654,7 @@ func _swing() -> void:
 			if f.downed:
 				continue
 			# Reach a little past where it stops to swing (engage distance).
-			if absf(f.global_position.x - global_position.x) < 46.0 * SpriteBook.ENEMY_SCALE * 0.9 + 10.0 and absf(f.global_position.y - global_position.y) < 70.0:
+			if absf(f.global_position.x - global_position.x) < Punk.ENGAGE + 10.0 and absf(f.global_position.y - global_position.y) < 70.0:
 				f.take_hit(kind, self)
 	atk_height = ""
 
@@ -687,6 +687,10 @@ func _mix_mod() -> void:
 	if _brain:
 		_brain.visible = stomp_hits >= 3 or (crush and frac <= 0.0)
 
+
+## How close a thug steps in to swing (world units, centre to centre): a
+## punch's drawn reach plus a body's half width, so fists meet bodies.
+const ENGAGE := 38.0
 
 ## True when the last blow was blocked or clashed (the attacker shows a
 ## block spark, not a hit).

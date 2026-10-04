@@ -1286,6 +1286,12 @@ func _begin_strike(kind: String, size: Vector2, life: float, reach: float) -> vo
 	_lunge_v = 0.0
 	if _anim != null and _anim.animation == clip:
 		_anim.speed_scale = 1.0
+	# The box's front edge sits just past the drawn fist/foot on the contact
+	# frame, so a blow only lands where the art visibly reaches.
+	var art := _art_reach(clip, hit_f)
+	if art > 0.0:
+		var front := maxf(art + 6.0, 26.0)
+		reach = (front - size.x * SpriteBook.ACTOR_K * 0.5) / SpriteBook.ACTOR_K
 	_spawn_hit(kind, size, life, Vector2(reach * facing, _hit_y + hop / SpriteBook.ACTOR_K))
 	_hit_y = -34.0
 	if _combo != null:
@@ -1296,6 +1302,21 @@ func _begin_strike(kind: String, size: Vector2, life: float, reach: float) -> vo
 	_strike_phase = 3
 	if not _strike_hit:
 		_strike_whiff(mv)
+
+
+## How far (world units, from the body's centre) the limb reaches on frame
+## `f` of `clip`, measured from the sprite sheet; 0 when unknown.
+func _art_reach(clip: String, f: int) -> float:
+	if _anim == null or f < 0:
+		return 0.0
+	var meta := SpriteBook.clip_meta(role, clip)
+	var frames: Array = meta.get("frames", [])
+	var cell: Array = meta.get("cell", [0, 0])
+	if f >= frames.size() or cell.size() < 1:
+		return 0.0
+	var fr: Dictionary = frames[f]
+	var tex := float(fr.get("ox", 0)) + float(fr.get("w", 0)) - float(cell[0]) * 0.5
+	return maxf(0.0, tex) * absf(_anim.scale.x)
 
 
 ## Physics of a strike on the street: feet planted (stick input mostly
