@@ -108,7 +108,7 @@ func _process(delta: float) -> void:
 			var f := n as Fighter
 			if _anim:
 				_anim.flip_h = f.global_position.x < global_position.x
-			if f._just("up") or f._just("light"):
+			if _wants(f):
 				_talk_to()
 			return
 
@@ -232,3 +232,11 @@ static func note(tree: SceneTree, kind: String, arg: String = "") -> void:
 		return
 	for g in tree.get_nodes_in_group("quest_givers"):
 		g.call("on_event", kind, arg)
+
+
+## Talk / shop only on a deliberate press: standing still (UP while walking
+## past just walks you up the street).
+func _wants(f: Fighter) -> bool:
+	if absf(f.velocity.x) > 30.0 or absf(f._stick().x) > 0.35:
+		return false
+	return f._just("up") or f._just("light")

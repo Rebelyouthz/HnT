@@ -4,7 +4,7 @@ signal need_refresh
 
 var _focus: Dictionary = {}
 var _tip: PanelContainer
-var _tip_box: VBoxContainer
+var _tip_box: HBoxContainer
 var _stage: Control
 
 ## BUILD page after Timmie's reference board: the clinic room behind, three
@@ -72,8 +72,8 @@ func _ready() -> void:
 	_tip.add_theme_stylebox_override("panel", UiKit.frame(UiKit.GOLD, 0.3))
 	_tip.visible = false
 	_stage.add_child(_tip)
-	_tip_box = VBoxContainer.new()
-	_tip_box.add_theme_constant_override("separation", 4)
+	_tip_box = HBoxContainer.new()
+	_tip_box.add_theme_constant_override("separation", 22)
 	_tip.add_child(_tip_box)
 
 
@@ -150,15 +150,13 @@ func _tree(trunk: String, list: Array) -> void:
 	_stage.add_child(name_l)
 	for n: Dictionary in nodes:
 		_stage.add_child(_node_button(n, pos[str(n["id"])]))
-	var bar := UiKit.glow_bar(float(owned_n) / float(maxi(1, nodes.size())), UiKit.GOLD, Vector2(220, 12))
-	bar.position = Vector2(cx - 110, TOP + STEP * 3.0 + 92.0)
+	# Progress sits with the tree's name (the band below holds the info strip).
+	name_l.text = "%s  %d/%d" % [trunk, owned_n, nodes.size()]
+	name_l.position = Vector2(cx - 110, TOP - 66)
+	name_l.size = Vector2(220, 28)
+	var bar := UiKit.glow_bar(float(owned_n) / float(maxi(1, nodes.size())), UiKit.GOLD, Vector2(150, 6))
+	bar.position = Vector2(cx - 75, TOP - 36)
 	_stage.add_child(bar)
-	var cnt := Label.new()
-	cnt.text = "%d / %d" % [owned_n, nodes.size()]
-	cnt.add_theme_font_override("font", UiKit.pixel_font())
-	UiKit.apply_label(cnt, 12, Palette.MUTED)
-	cnt.position = Vector2(cx - 20, TOP + STEP * 3.0 + 106.0)
-	_stage.add_child(cnt)
 
 
 func _state(node: Dictionary) -> String:
@@ -227,61 +225,66 @@ func _node_button(node: Dictionary, at: Vector2) -> Control:
 	return b
 
 
-func _show_tip(node: Dictionary, at: Vector2) -> void:
+func _show_tip(node: Dictionary, _at: Vector2) -> void:
+	# One fixed info strip under the trees (it never covers the nodes).
 	_focus = node
 	for c in _tip_box.get_children():
 		c.queue_free()
 	var st := _state(node)
+	var left := VBoxContainer.new()
+	left.custom_minimum_size = Vector2(190, 0)
 	var name_l := Label.new()
 	name_l.text = str(node["name"])
 	name_l.add_theme_font_override("font", UiKit.pixel_font())
 	UiKit.apply_label(name_l, 17, Palette.TEXT)
-	_tip_box.add_child(name_l)
+	left.add_child(name_l)
 	var stat := Label.new()
 	stat.text = str(node.get("stat", ""))
 	stat.add_theme_font_override("font", UiKit.pixel_font())
 	UiKit.apply_label(stat, 15, UiKit.GOLD)
-	_tip_box.add_child(stat)
+	left.add_child(stat)
+	_tip_box.add_child(left)
 	var blurb := Label.new()
 	blurb.text = str(node.get("blurb", ""))
 	blurb.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	blurb.custom_minimum_size = Vector2(210, 0)
-	UiKit.apply_label(blurb, 12, Palette.MUTED)
+	blurb.custom_minimum_size = Vector2(380, 0)
+	blurb.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	UiKit.apply_label(blurb, 13, Palette.MUTED)
 	_tip_box.add_child(blurb)
+	var right := VBoxContainer.new()
+	right.custom_minimum_size = Vector2(190, 0)
 	var cost := Label.new()
-	cost.text = "COST: %d GOLD%s" % [int(node["gold"]), ("  ·  %d REP" % int(node["rep"])) if int(node["rep"]) > 0 else ""]
+	cost.text = "%d GOLD%s" % [int(node["gold"]), ("  ·  %d REP" % int(node["rep"])) if int(node["rep"]) > 0 else ""]
 	cost.add_theme_font_override("font", UiKit.pixel_font())
 	UiKit.apply_label(cost, 13, Palette.TEXT)
-	_tip_box.add_child(cost)
+	right.add_child(cost)
 	match st:
 		"owned":
 			var o := Label.new()
 			o.text = "OWNED"
 			o.add_theme_font_override("font", UiKit.pixel_font())
 			UiKit.apply_label(o, 15, Palette.READY)
-			_tip_box.add_child(o)
+			right.add_child(o)
 		"locked":
 			var l := Label.new()
 			l.text = "BUY %s FIRST" % str(node.get("requires", "")).replace("_", " ").to_upper()
 			l.add_theme_font_override("font", UiKit.pixel_font())
 			UiKit.apply_label(l, 13, Palette.MUTED)
-			_tip_box.add_child(l)
+			right.add_child(l)
 		"poor":
 			var p := Label.new()
 			p.text = "NEED GOLD" if int(FamilyProfile.data["gold"]) < int(node["gold"]) else "NEED REP"
 			p.add_theme_font_override("font", UiKit.pixel_font())
 			UiKit.apply_label(p, 16, Color(0.95, 0.25, 0.22))
-			_tip_box.add_child(p)
+			right.add_child(p)
 		_:
-			var buy := UiKit.button("BUY", Vector2(120, 32))
+			var buy := UiKit.button("BUY", Vector2(150, 34))
 			buy.pressed.connect(func() -> void: _buy(node))
-			_tip_box.add_child(buy)
+			right.add_child(buy)
+	_tip_box.add_child(right)
 	_tip.visible = true
 	_tip.size = Vector2.ZERO
-	var x := at.x + 44.0
-	if x + 250.0 > 1240.0:
-		x = at.x - 44.0 - 250.0
-	_tip.position = Vector2(x, clampf(at.y - 50.0, 70.0, 420.0))
+	_tip.position = Vector2(170, 470)
 
 
 func _buy(node: Dictionary) -> void:

@@ -122,6 +122,29 @@ func _build_room() -> void:
 	add_child(s)
 	_w = float(tex.get_width()) * texel
 	_room_h = ground * texel
+	# The painting ends at _w but the portal and the camera reach past it:
+	# carry the room on with its own right edge, mirrored and shaded, so the
+	# portal stands in a dim back corner instead of a black void.
+	var strip_px := 180.0
+	var at := AtlasTexture.new()
+	at.atlas = tex
+	at.region = Rect2(float(tex.get_width()) - strip_px, 0.0, strip_px, float(tex.get_height()))
+	var ext := Sprite2D.new()
+	ext.texture = at
+	ext.centered = false
+	ext.flip_h = true
+	ext.scale = Vector2(texel, texel)
+	ext.position = Vector2(_w, s.position.y)
+	ext.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	ext.modulate = Color(0.55, 0.52, 0.6)
+	ext.z_index = -5
+	add_child(ext)
+	var shade := Polygon2D.new()
+	var ex := _w + strip_px * texel
+	shade.polygon = PackedVector2Array([Vector2(_w, s.position.y), Vector2(ex, s.position.y), Vector2(ex, WALK_Y + 200.0), Vector2(_w, WALK_Y + 200.0)])
+	shade.vertex_colors = PackedColorArray([Color(0, 0, 0, 0.0), Color(0, 0, 0, 0.75), Color(0, 0, 0, 0.75), Color(0, 0, 0, 0.0)])
+	shade.z_index = -4
+	add_child(shade)
 	# Warm lamp pools that breathe a little.
 	for i in 6:
 		var glow := PointLight2D.new()

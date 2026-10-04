@@ -71,7 +71,7 @@ func _process(delta: float) -> void:
 			var hot := _enemy_near()
 			_hint.text = "CLOSED WHILE YOU BLEED" if hot else "UPGRADES  ·  UP / LIGHT"
 			_hint.modulate = Color(1.2, 1.15, 0.7)
-			if not hot and (f._just("up") or f._just("light")):
+			if not hot and _wants(f):
 				_open(f)
 			return
 	_hint.text = "UPGRADES"
@@ -95,3 +95,11 @@ func _open(f: Fighter) -> void:
 	sheet.closed.connect(func() -> void:
 		_busy = false
 	)
+
+
+## Talk / shop only on a deliberate press: standing still (UP while walking
+## past just walks you up the street).
+func _wants(f: Fighter) -> bool:
+	if absf(f.velocity.x) > 30.0 or absf(f._stick().x) > 0.35:
+		return false
+	return f._just("up") or f._just("light")
