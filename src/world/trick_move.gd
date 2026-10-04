@@ -17,6 +17,9 @@ const HIP := Vector2(0, -30)
 
 
 static func play(f: Fighter, anim: String, perfect: bool) -> void:
+	if ResourceLoader.exists("res://assets/audio/sfx/flip.ogg"):
+		Mixer.play_sfx("res://assets/audio/sfx/flip.ogg", randf_range(0.95, 1.1) * (1.2 if perfect else 1.0), -6.0)
+	VoBank.effort(str(f.role), 0.5)
 	# The sprite itself turns (the art node above it is driven by the hop).
 	var art := f.get("_anim") as Node2D
 	if art == null:

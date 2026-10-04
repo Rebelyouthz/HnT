@@ -733,6 +733,8 @@ func _process_street(delta: float) -> void:
 			Juice.shout(Copy.WALL_KICK)
 			Juice.named_slowmo()
 			KitSfx.hit(role, "jump")
+			if ResourceLoader.exists("res://assets/audio/sfx/wall_kick.ogg"):
+				Mixer.play_sfx("res://assets/audio/sfx/wall_kick.ogg", randf_range(0.95, 1.05), -4.0)
 			FamilyProfile.mark_wallkick()
 			FamilyProfile.mark_trick()
 			return
@@ -809,6 +811,8 @@ func _process_street(delta: float) -> void:
 		if hop_v > 0.0:
 			g *= FALL_MUL
 		if role == "son" and hop < 0.0 and _pressed("jump") and hop_v > -80.0:
+			if not gliding and ResourceLoader.exists("res://assets/audio/sfx/glide.ogg"):
+				Mixer.play_sfx("res://assets/audio/sfx/glide.ogg", 1.0, -10.0)
 			gliding = true
 			g = GRAV * 0.22
 			hop_v = minf(hop_v, 90.0)

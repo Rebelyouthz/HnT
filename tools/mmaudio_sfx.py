@@ -25,16 +25,16 @@ SFX = {
     "shutter.wav": ("camera shutter click and film wind, close", 1),
     "spray.wav": ("spray paint can rattle and hiss, short burst", 1.5),
     "zap.wav": ("electric zap, crackling high voltage spark burst", 1),
-    "sfx/mag_drop.ogg": ("empty pistol magazine falling and clattering on concrete", 1),
+    "sfx/mag_drop.ogg": ("empty pistol magazine falling and clattering on concrete", 0.6),
     "sfx/mag_in.ogg": ("pistol magazine inserted and slide racked, sharp metallic click clack", 1),
-    "sfx/mag_out.ogg": ("pistol magazine release, metal click and slide out", 1),
+    "sfx/mag_out.ogg": ("pistol magazine release, metal click and slide out", 0.6),
     "sfx/ricochet.ogg": ("bullet ricochet whine off a brick wall, sharp ping", 1),
     "sfx/shell_in.ogg": ("shotgun shell pushed into the tube, single metallic click", 1),
     "sfx/shotgun_pump.ogg": ("pump action shotgun racking, metallic slide clack, close up, dry", 1),
-    "sfx/foot_1.ogg": ("single sneaker footstep on wet cobblestone street, close", 1),
-    "sfx/foot_2.ogg": ("single running footstep on wet asphalt, light splash", 1),
-    "sfx/foot_3.ogg": ("single heavy boot step on wet pavement, close", 1),
-    "sfx/foot_4.ogg": ("quick sneaker step scuff on wet stone, close", 1),
+    "sfx/foot_1.ogg": ("single sneaker footstep on wet cobblestone street, close", 0.4),
+    "sfx/foot_2.ogg": ("single running footstep on wet asphalt, light splash", 0.4),
+    "sfx/foot_3.ogg": ("single heavy boot step on wet pavement, close", 0.4),
+    "sfx/foot_4.ogg": ("quick sneaker step scuff on wet stone, close", 0.4),
     "sfx/breath_run.ogg": ("young man breathing hard while running, two heavy breaths", 2),
     "sfx/jump.ogg": ("athlete jumping, cloth whoosh and sneaker push off, short exhale", 1),
     "sfx/land.ogg": ("person landing a jump on wet street, sneaker thud and small splash", 1),
@@ -72,9 +72,10 @@ def main() -> None:
             print("ERR", rel, str(e)[:160], flush=True)
             continue
         codec = ["-c:a", "libvorbis", "-q:a", "5"] if rel.endswith(".ogg") else ["-c:a", "pcm_s16le"]
-        af = ("silenceremove=start_periods=1:start_threshold=-50dB,areverse,"
-              "silenceremove=start_periods=1:start_threshold=-50dB,areverse,"
-              f"atrim=0:{sec},afade=t=out:st={max(0.05, sec - 0.08)}:d=0.08,loudnorm=I=-14:TP=-1.0")
+        # Normalise first so quiet takes are not trimmed away, then cut the
+        # leading silence, keep `sec`, fade the tail.
+        af = ("loudnorm=I=-14:TP=-1.0,silenceremove=start_periods=1:start_threshold=-40dB,"
+              f"atrim=0:{sec},afade=t=out:st={max(0.05, sec * 0.7)}:d={max(0.03, sec * 0.3):.3f}")
         subprocess.run([ffmpeg(), "-y", "-loglevel", "error", "-i", str(src), "-af", af, "-ac", "1",
                         "-ar", "44100", *codec, str(out)], check=True)
         print("OK", rel, flush=True)
