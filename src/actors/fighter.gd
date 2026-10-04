@@ -78,6 +78,14 @@ var _breath := 0.0
 var vs_mode := false
 var magnet_r := 72.0
 var pistol_shots := 0
+## Rounds left outside the gun (spare mags / shells) and the reload clock.
+var gun_reserve := 0
+var reload_t := 0.0
+var _reload_len := 0.0
+var _shell_t := 0.0
+var _pump_t := 0.0
+## Per gun: reload time (shotgun: per shell), spare mags carried.
+const RELOAD := {"pistol": [0.85, 1], "smg": [1.15, 1], "shotgun": [0.34, 1], "nailgun": [1.0, 1], "ray": [1.3, 1]}
 ## Hand guns (data/weapons.json "gun"): the held sprite, cooldown, and how
 ## long the arm stays up after a shot.
 const GUNS := ["pistol", "nailgun", "shotgun", "smg", "ray"]
@@ -211,6 +219,13 @@ func _ready() -> void:
 	cap.shape = shape
 	cap.position = Vector2(0, -32 * SpriteBook.ACTOR_K)
 	add_child(cap)
+	# Feet occluder: a muzzle flash (shadow-casting light) throws this body's
+	# shadow along the street, away from the light.
+	var occ := LightOccluder2D.new()
+	var op := OccluderPolygon2D.new()
+	op.polygon = PackedVector2Array([Vector2(-9, -2), Vector2(9, -2), Vector2(9, 2), Vector2(-9, 2)])
+	occ.occluder = op
+	add_child(occ)
 	web_line = Line2D.new()
 	web_line.width = 2.0
 	web_line.default_color = Color(0.85, 0.9, 1.0, 0.9)
@@ -567,10 +582,14 @@ func _tick_meters(delta: float) -> void:
 		parry_win -= 1
 	if gun_cd > 0.0:
 		gun_cd -= delta
+	if _pump_t > 0.0:
+		_pump_t -= delta
+	if reload_t > 0.0:
+		_tick_reload(delta)
 	if aim_t > 0.0:
 		aim_t -= delta
 	# OVERTIME is automatic: hold shoot (or light) and it keeps going.
-	if pickup == "smg" and pistol_shots > 0 and (_pressed("shoot") or _pressed("light")) and gun_cd <= 0.0 and not downed:
+	if pickup == "smg" and pistol_shots > 0 and reload_t <= 0.0 and (_pressed("shoot") or _pressed("light")) and gun_cd <= 0.0 and not downed:
 		_fire_gun()
 	if _light_buf > 0:
 		_light_buf -= 1
@@ -1225,7 +1244,7 @@ func _attack(kind: String, charged: bool) -> void:
 			kind = "blade"
 	elif pickup == "can":
 		size += Vector2(8, 4)
-	elif pickup in GUNS and (kind == "light" or kind == "gut-punch") and pistol_shots > 0:
+	elif pickup in GUNS and (kind == "light" or kind == "gut-punch") and (pistol_shots > 0 or reload_t > 0.0):
 		# A gun in hand: light pulls the trigger instead of punching.
 		_fire_gun()
 		return
@@ -1639,7 +1658,10 @@ func _shoot() -> void:
 		Juice.pulse_shake(7.0)
 		return
 	if pickup in GUNS:
-		_fire_gun()
+		if pistol_shots <= 0:
+			start_reload()
+		else:
+			_fire_gun()
 		return
 	if ammo <= 0 or attack_cd > 0:
 		return
@@ -1763,9 +1785,21 @@ func _place_gun() -> void:
 	var grip: Array = m.get("grip", [8, 12])
 	var hand := _anim.position + _hand_point() * _anim.scale
 	_gun.scale = _anim.scale
-	var kick := clampf(gun_cd * 4.0, 0.0, 1.0) * 0.18
+	# Recoil per gun: muzzle climbs and the gun slides back with its kick;
+	# reloads tilt it (mag guns muzzle-up, the shotgun down for shells).
+	var spec := WeaponBook.spec(str(_gun.get_meta("kind", "pistol")))
+	var rec := float(spec.get("recoil", 6.0))
+	var k := clampf(gun_cd / maxf(0.05, float(spec.get("rate", 0.3))), 0.0, 1.0)
+	k = k * k
+	var kick := k * rec * 0.016 + (0.12 if _pump_t > 0.0 else 0.0)
+	var back := k * rec * 0.35 + (5.0 if _pump_t > 0.0 else 0.0)
+	if reload_t > 0.0 and _reload_len > 0.0:
+		var ph := 1.0 - reload_t / _reload_len
+		var env := sin(clampf(ph, 0.0, 1.0) * PI)
+		kick += (-0.55 if str(_gun.get_meta("kind", "")) == "shotgun" else 0.9) * env
+		back += 4.0 * env
 	_gun.rotation = -kick
-	_gun.position = hand - Vector2(float(grip[0]), float(grip[1])).rotated(-kick) * _gun.scale
+	_gun.position = hand - Vector2(float(grip[0]) + back, float(grip[1])).rotated(-kick) * _gun.scale
 	_gun.visible = true
 
 
@@ -1780,7 +1814,10 @@ func _muzzle_global() -> Vector2:
 ## Pull the trigger of the gun in hand: rounds per the weapon (one, a fan of
 ## pellets, a nail, an orb), aimed at head / chest / legs with the stick.
 func _fire_gun() -> void:
-	if gun_cd > 0.0 or pistol_shots <= 0 or downed:
+	# Shells already fed can be fired: a shot cuts the shotgun's reload.
+	if pickup == "shotgun" and reload_t > 0.0 and pistol_shots > 0:
+		reload_t = 0.0
+	if gun_cd > 0.0 or pistol_shots <= 0 or downed or reload_t > 0.0:
 		return
 	var id := pickup
 	var spec := WeaponBook.spec(id)
@@ -1820,7 +1857,19 @@ func _fire_gun() -> void:
 	var recoil := float(spec.get("recoil", 6))
 	velocity.x -= float(facing) * recoil * 9.0
 	GunFx.flash(host, at, id, facing)
-	GunFx.casing(host, at + Vector2(-float(facing) * 10.0, 0), id, facing, global_position.y + 6.0)
+	if id == "shotgun":
+		# Pump-action: the shell comes out on the pump, a beat after the shot.
+		get_tree().create_timer(0.24).timeout.connect(func() -> void:
+			if not is_instance_valid(self) or pickup != "shotgun":
+				return
+			_pump_t = 0.2
+			Mixer.play_sfx(_sfx_or("res://assets/audio/sfx/shotgun_pump.ogg", "res://assets/audio/cling.wav"), randf_range(0.95, 1.05), -4.0)
+			GunFx.casing(get_parent(), _muzzle_global() - Vector2(float(facing) * 30.0, 0), "shotgun", facing, global_position.y + 6.0)
+		)
+	else:
+		GunFx.casing(host, at + Vector2(-float(facing) * 10.0, 0), id, facing, global_position.y + 6.0)
+	# Each gun kicks the body its own way.
+	_squash_to(Vector2(0.97 - 0.004 * recoil, 1.0 + 0.003 * recoil))
 	var snd := str(spec.get("sfx", "res://assets/audio/pistol.wav"))
 	if not ResourceLoader.exists(snd):
 		snd = "res://assets/audio/pistol.wav"
@@ -1828,7 +1877,12 @@ func _fire_gun() -> void:
 	Juice.pulse_shake({"shotgun": 6.0, "ray": 4.0, "pistol": 2.0, "smg": 0.8, "nailgun": 1.2}.get(id, 2.0))
 	if id == "shotgun":
 		Juice.hitstop(2)
-	if pistol_shots <= 0:
+	if pistol_shots <= 0 and gun_reserve > 0:
+		get_tree().create_timer(maxf(0.12, gun_cd)).timeout.connect(func() -> void:
+			if is_instance_valid(self) and pickup == id:
+				start_reload()
+		)
+	elif pistol_shots <= 0:
 		# Dry: the empty gun is tossed aside.
 		get_tree().create_timer(0.35).timeout.connect(func() -> void:
 			if is_instance_valid(self) and pickup == id:
@@ -1837,6 +1891,54 @@ func _fire_gun() -> void:
 					_gun.visible = false
 				Juice.popup_number(global_position + Vector2(0, -84), "EMPTY", Color(0.8, 0.8, 0.8))
 		)
+
+
+func _sfx_or(path: String, fallback: String) -> String:
+	return path if ResourceLoader.exists(path) else fallback
+
+
+func _clip_size() -> int:
+	var spec := WeaponBook.spec(pickup)
+	return int(round(float(spec.get("mag", spec.get("ammo", 6))) * (1.0 + 0.5 * float(_cart("long_mag")))))
+
+
+## Reload: magazine guns drop the empty mag and slap in a new one; the
+## shotgun feeds shells one by one (you can fire between them) and pumps.
+func start_reload() -> void:
+	if reload_t > 0.0 or gun_reserve <= 0 or not (pickup in GUNS) or pistol_shots >= _clip_size():
+		return
+	var spec_t: Array = RELOAD.get(pickup, [1.0, 1])
+	if pickup == "shotgun":
+		_reload_len = float(spec_t[0]) * float(mini(gun_reserve, _clip_size() - pistol_shots)) + 0.25
+		_shell_t = float(spec_t[0])
+	else:
+		_reload_len = float(spec_t[0])
+		GunFx.mag(get_parent(), _muzzle_global() - Vector2(float(facing) * 18.0, -6.0), pickup, facing, global_position.y + 6.0)
+		Mixer.play_sfx(_sfx_or("res://assets/audio/sfx/mag_out.ogg", "res://assets/audio/cling.wav"), randf_range(0.95, 1.05), -5.0)
+	reload_t = _reload_len
+	Juice.popup_number(global_position + Vector2(0, -96), "RELOAD", Color(0.85, 0.85, 0.9))
+
+
+func _tick_reload(delta: float) -> void:
+	reload_t -= delta
+	if pickup == "shotgun":
+		_shell_t -= delta
+		if _shell_t <= 0.0 and gun_reserve > 0 and pistol_shots < _clip_size():
+			_shell_t = float((RELOAD["shotgun"] as Array)[0])
+			gun_reserve -= 1
+			pistol_shots += 1
+			Mixer.play_sfx(_sfx_or("res://assets/audio/sfx/shell_in.ogg", "res://assets/audio/cling.wav"), randf_range(0.9, 1.1), -6.0)
+		if reload_t <= 0.0:
+			_pump_t = 0.2
+			Mixer.play_sfx(_sfx_or("res://assets/audio/sfx/shotgun_pump.ogg", "res://assets/audio/cling.wav"), 1.0, -4.0)
+	elif reload_t <= 0.0:
+		var take := mini(gun_reserve, _clip_size() - pistol_shots)
+		gun_reserve -= take
+		pistol_shots += take
+		Mixer.play_sfx(_sfx_or("res://assets/audio/sfx/mag_in.ogg", "res://assets/audio/cling.wav"), randf_range(0.95, 1.05), -4.0)
+		_squash_to(Vector2(1.03, 0.97))
+	if reload_t <= 0.0:
+		reload_t = 0.0
 
 
 func _fire_shot(extra := Vector2.ZERO) -> void:
@@ -2453,6 +2555,8 @@ func equip_pickup(kind: String) -> void:
 	if kind in GUNS:
 		var spec := WeaponBook.spec(kind)
 		pistol_shots = int(round(float(spec.get("mag", spec.get("ammo", 6))) * (1.0 + 0.5 * float(_cart("long_mag")))))
+		gun_reserve = pistol_shots * int((RELOAD.get(kind, [1.0, 1]) as Array)[1])
+		reload_t = 0.0
 		ammo = maxi(ammo, 3)
 		_mount_gun(kind)
 		Juice.toast("reward", str(spec.get("title", kind)).to_upper(), "%s  ·  %d rounds  ·  stick up: head, down: legs" % [str(spec.get("caliber", "")), pistol_shots])

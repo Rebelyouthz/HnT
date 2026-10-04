@@ -78,6 +78,10 @@ func _physics_process(delta: float) -> void:
 	if range_left <= 0.0:
 		if round_kind == "nail":
 			_stick_world(global_position)
+		elif round_kind == "bullet" or round_kind == "pellet":
+			# A miss hits the street or a wall: sparks and maybe a whine.
+			if round_kind == "bullet" or randf() < 0.25:
+				GunFx.ricochet(get_parent(), global_position, int(signf(vel.x)))
 		queue_free()
 		return
 	queue_redraw()

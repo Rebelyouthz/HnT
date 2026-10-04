@@ -214,7 +214,7 @@ func _process(_delta: float) -> bool:
 			current_scene.call("_" + page)
 	# ui:fight - one thug squared up in front of the Son, a jab-jab-heavy
 	# string, frames saved around every contact (<out>_NNN.png).
-	if _tab == "ui_fight" and current_scene != null:
+	if (_tab == "ui_fight" or _tab.begins_with("ui_gun_")) and current_scene != null:
 		if _n == 80:
 			get_root().get_tree().paused = false
 			for c in current_scene.get_children():
@@ -233,7 +233,7 @@ func _process(_delta: float) -> bool:
 			for d in root.get_tree().get_nodes_in_group("dog_buddy"):
 				d.queue_free()
 			if keep and p1:
-				keep.global_position = p1.global_position + Vector2(40, 0)
+				keep.global_position = p1.global_position + Vector2(40 if not _tab.begins_with("ui_gun_") else 260, 0)
 				keep.set("facing", -1)
 				keep.set("recover", 99.0)
 		if _n == 90:
@@ -241,10 +241,15 @@ func _process(_delta: float) -> bool:
 				b.remove_from_group("bounty")
 			if current_scene.has_method("_pick_bounty"):
 				current_scene.call("_pick_bounty")
+		var gun := _tab.substr(7) if _tab.begins_with("ui_gun_") else ""
+		if _n == 95 and gun != "":
+			var pg: Node = root.get_tree().get_first_node_in_group("players")
+			if pg:
+				pg.call("equip_pickup", gun)
 		if _n >= 100 and _n < 190:
-			var k := (_n - 100) % 14
-			var heavy := _n >= 156
-			var act := "p1_heavy" if heavy else "p1_light"
+			var k := (_n - 100) % (6 if gun == "smg" else 14)
+			var heavy := _n >= 156 and gun == ""
+			var act := "p1_heavy" if heavy else ("p1_shoot" if gun != "" else "p1_light")
 			if k == 0:
 				Input.action_press(act)
 				var pp: Node2D = root.get_tree().get_first_node_in_group("players")
@@ -253,7 +258,7 @@ func _process(_delta: float) -> bool:
 						print("FIGHT_DIST ", _n, " dx=", snappedf((e as Node2D).global_position.x - pp.global_position.x, 0.1), " dy=", snappedf((e as Node2D).global_position.y - pp.global_position.y, 0.1), " title=", e.get("title"), " hp=", e.get("hp"))
 			elif k == 2:
 				Input.action_release(act)
-			if (_n - 100) % 2 == 0:
+			if (_n - 100) % 2 == 0 or gun != "":
 				root.get_texture().get_image().save_png(_out.get_basename() + "_%03d.png" % _n)
 	if _walk and _n > 20:
 		Input.action_press("p1_left" if _left else "p1_right")

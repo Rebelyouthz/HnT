@@ -92,6 +92,13 @@ func _ready() -> void:
 	hc.position = Vector2(0, -30 * SpriteBook.ACTOR_K)
 	hurt.add_child(hc)
 	add_child(hurt)
+	# Feet occluder: a muzzle flash (shadow-casting light) throws this body's
+	# shadow along the street, away from the light.
+	var occ := LightOccluder2D.new()
+	var op := OccluderPolygon2D.new()
+	op.polygon = PackedVector2Array([Vector2(-9, -2), Vector2(9, -2), Vector2(9, 2), Vector2(-9, 2)])
+	occ.occluder = op
+	add_child(occ)
 	_walk = speed
 	KitBook.apply(self)
 	_dress_vehicle()

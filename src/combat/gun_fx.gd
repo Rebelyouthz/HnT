@@ -15,6 +15,7 @@ var _floor := 500.0
 var _spin := 0.0
 var _bounces := 0
 var _seed := 0
+var _frames := 0
 
 
 static func flash(host: Node, at: Vector2, w: String, face: int) -> void:
@@ -33,6 +34,13 @@ static func flash(host: Node, at: Vector2, w: String, face: int) -> void:
 	l.texture_scale = 0.55 if w == "shotgun" else 0.35
 	l.color = Color(1.0, 0.2, 0.2) if w == "ray" else Color(1.0, 0.78, 0.45)
 	l.energy = 2.2 if w == "shotgun" else 1.4
+	# A real light: it washes the street and walls, and things cast shadows.
+	l.texture_scale *= 2.2
+	l.energy *= 1.3
+	l.shadow_enabled = true
+	l.shadow_filter = PointLight2D.SHADOW_FILTER_PCF5
+	l.shadow_color = Color(0, 0, 0, 0.55)
+	f.set_meta("light", l)
 	f.add_child(l)
 	if w == "shotgun" or w == "pistol":
 		var s := GunFx.new()
@@ -41,6 +49,44 @@ static func flash(host: Node, at: Vector2, w: String, face: int) -> void:
 		s._life = 0.9 if w == "shotgun" else 0.5
 		s.global_position = at
 		host.add_child(s)
+
+
+## The empty magazine (or battery) drops out of the grip and clatters.
+static func mag(host: Node, at: Vector2, w: String, face: int, floor_y: float) -> void:
+	if host == null or w == "shotgun":
+		return
+	var c := GunFx.new()
+	c.kind = "mag"
+	c.weapon = w
+	c.facing = face
+	c._life = 12.0
+	c._floor = floor_y + randf_range(-2.0, 4.0)
+	c._v = Vector2(-float(face) * randf_range(10.0, 30.0), randf_range(-60.0, -20.0))
+	c._spin = randf_range(-6.0, 6.0)
+	c.global_position = at
+	host.add_child(c)
+
+
+## A miss: sparks off the street or a wall, sometimes a ricochet whine.
+static func ricochet(host: Node, at: Vector2, face: int) -> void:
+	if host == null:
+		return
+	var c := GunFx.new()
+	c.kind = "spark"
+	c.facing = face
+	c._seed = randi()
+	c._life = 0.16
+	c.global_position = at
+	host.add_child(c)
+	var l := PointLight2D.new()
+	l.texture = LightRig.radial_tex()
+	l.texture_scale = 0.12
+	l.color = Color(1.0, 0.8, 0.5)
+	l.energy = 1.2
+	c.add_child(l)
+	if randf() < 0.6:
+		var p := "res://assets/audio/sfx/ricochet.ogg"
+		Mixer.play_sfx(p if ResourceLoader.exists(p) else "res://assets/audio/cling.wav", randf_range(0.85, 1.2), -9.0)
 
 
 static func casing(host: Node, at: Vector2, w: String, face: int, floor_y: float) -> void:
@@ -59,8 +105,11 @@ static func casing(host: Node, at: Vector2, w: String, face: int, floor_y: float
 
 
 func _ready() -> void:
-	z_index = 9 if kind != "casing" else 3
-	if kind != "casing":
+	# Drawn for the old body size: grow with the actors (flashes a bit more,
+	# they should punch).
+	scale = Vector2.ONE * SpriteBook.ACTOR_K * (1.6 if kind == "flash" else 1.2)
+	z_index = 9 if kind != "casing" and kind != "mag" else 3
+	if kind != "casing" and kind != "mag":
 		var m := CanvasItemMaterial.new()
 		m.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
 		if kind == "flash":
@@ -69,8 +118,17 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	_frames += 1
 	_t += delta
-	if kind == "casing":
+	# A flash is always seen for at least three drawn frames, whatever the
+	# frame rate.
+	if (kind == "flash" or kind == "spark") and _frames <= 3:
+		_t = minf(_t, _life * 0.6)
+	if kind == "flash" and has_meta("light"):
+		var lt := get_meta("light") as PointLight2D
+		if is_instance_valid(lt):
+			lt.energy *= 0.82 if weapon != "smg" else randf_range(0.6, 1.0)
+	if kind == "casing" or kind == "mag":
 		if _bounces < 3:
 			_v.y += 900.0 * delta
 			position += _v * delta
@@ -80,7 +138,9 @@ func _process(delta: float) -> void:
 				_bounces += 1
 				_v = Vector2(_v.x * 0.5, -_v.y * 0.35)
 				_spin *= 0.5
-				if _bounces == 1:
+				if _bounces == 1 and kind == "mag":
+					Mixer.play_sfx("res://assets/audio/sfx/mag_drop.ogg" if ResourceLoader.exists("res://assets/audio/sfx/mag_drop.ogg") else "res://assets/audio/block.wav", randf_range(0.9, 1.1), -10.0)
+				elif _bounces == 1:
 					Mixer.play_sfx("res://assets/audio/sfx/casing.ogg" if ResourceLoader.exists("res://assets/audio/sfx/casing.ogg") else "res://assets/audio/cling.wav", randf_range(1.1, 1.4), -14.0)
 				if _bounces >= 3:
 					rotation = round(rotation / PI) * PI
@@ -126,6 +186,21 @@ func _draw() -> void:
 			for i in 3:
 				var c := Vector2((6.0 + 10.0 * k2 + float(i) * 3.0) * f, -6.0 * k2 - float(i) * 2.0)
 				draw_circle(c, 2.0 + 5.0 * k2, Color(0.75, 0.75, 0.78, 0.22 * (1.0 - k2)))
+		"mag":
+			var dark := Color(0.12, 0.12, 0.14)
+			var w2 := 2.0 if weapon == "smg" else 1.6
+			var h2 := 5.0 if weapon == "smg" else 3.4
+			draw_rect(Rect2(Vector2(-w2 * 0.5, -h2 * 0.5), Vector2(w2, h2)), dark)
+			draw_rect(Rect2(Vector2(-w2 * 0.5, -h2 * 0.5), Vector2(w2, 0.6)), Color(0.4, 0.4, 0.45))
+		"spark":
+			var k3 := 1.0 - _t / _life
+			var rng2 := RandomNumberGenerator.new()
+			rng2.seed = _seed
+			for i in 7:
+				var a2 := rng2.randf_range(-PI, 0.0)
+				var l2 := rng2.randf_range(3.0, 9.0) * (0.4 + 0.6 * (1.0 - k3))
+				draw_line(Vector2.ZERO, Vector2(cos(a2), sin(a2)) * l2, Color(1.0, 0.85, 0.5, k3), 1.0)
+			draw_circle(Vector2.ZERO, 1.5 * k3, Color(1, 1, 0.9, k3))
 		"casing":
 			var red := weapon == "shotgun"
 			var col := Color(0.75, 0.15, 0.12) if red else Color(0.86, 0.66, 0.26)
