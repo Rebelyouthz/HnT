@@ -34,7 +34,32 @@ The rest is in English, like the code. Newest work first. Each block says
 
 ---
 
-## 0g. Scale, colours, misses, economy, more HF faces, project skills (latest)
+## 0h. Clean reset, guns, full audio pass, COPAY + bowling (latest)
+
+- **Reset**: Options -> RESET GAME PROGRESS deletes the save, every backup,
+  open_room.json and photos, keeps gfx/vol_ options, restarts the game
+  (`FamilyProfile.reset_progress()` + `restart_clean()`, tests/reset_test.gd).
+- **Bounty crown** rides the measured head per frame; floor (WetStreet z -3,
+  blood -1) draws under the actors (a lamp streak used to paint over faces).
+- **Guns**: mags + reserve (`Fighter.RELOAD`, `gun_reserve`, `start_reload`,
+  `_tick_reload`); shotgun feeds shells, a shot cuts the reload, pump ejects
+  the shell; per-gun recoil climb/slide in `_place_gun`; `GunFx.mag`,
+  `GunFx.ricochet`, shadow-casting muzzle light (feet LightOccluder2D on
+  fighters and punks), flashes last >= 3 drawn frames. Capture:
+  `ui:gun_<id>`.
+- **Audio**: Sorceress credits ran out -> voices with Kokoro offline
+  (`tools/kokoro_vo.py`, voice map inside), effects with the MMAudio HF Space
+  (`tools/mmaudio_sfx.py`). New events: `effort` (VoBank.effort on swings),
+  `banter` (RunAct._banter), `reload`, `death`, NPC `talk`, bystander `react`,
+  new enemy speakers in `VoBank.who_of`. Footsteps x4 + breathing, jump/land,
+  whiffs, flips, wall kick, glide, kill thump + body fall, bullet flesh,
+  breakables by material, coping hour music. Every referenced audio path
+  exists (check: grep res://assets/audio in src vs files).
+- **COPAY** (`Fighter.copay`): half of each hit is billable, drains after
+  1.2 s at 6/s, landing hits refunds it; gold-glowing hearts in the HUD.
+- **Bowling**: `Punk._fling` knocks over and damages thugs in its path.
+
+## 0g. Scale, colours, misses, economy, more HF faces, project skills 
 
 - **Project skills** in `.claude/skills/`: godot-dev, beat-em-up-feel,
   pixel-art-sprites, parallax-backdrops, game-economy. Read them first.
