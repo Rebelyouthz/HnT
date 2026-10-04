@@ -34,7 +34,32 @@ The rest is in English, like the code. Newest work first. Each block says
 
 ---
 
-## 0f. Two polish rounds: punch, maps, menus, more HF art (latest)
+## 0g. Scale, colours, misses, economy, more HF faces, project skills (latest)
+
+- **Project skills** in `.claude/skills/`: godot-dev, beat-em-up-feel,
+  pixel-art-sprites, parallax-backdrops, game-economy. Read them first.
+- **60 fps**: render capped at 60 (`Gfx` default `fps_cap` 60,
+  `application/run/max_fps=60`) to match the 60 Hz physics.
+- **World scale**: measured against painted doors/kerb/bike the people were
+  ~20% small. `SpriteBook.ACTOR_K = 1.25` scales fighters/enemies/quest
+  givers; strike boxes (`Fighter._spawn_hit`, hop compensated), hurtboxes,
+  body capsules and enemy swing range follow; walk speed +10%; street lamps
+  x1.9; road stones smaller (`WetStreet.TEXEL 0.09 / 0.048`). Cutscenes keep
+  `FILM_SCALE` 1.12.
+- **UI**: `PixelIcon` centres a glyph by its real pixels; `UiKit.stat_bbcode`
+  / `UiKit.rich` colour gains green and costs red on level-up cards; card
+  names have their own colour (`PixelCard._name_col`).
+- **Miss vs hit**: a blow the enemy blocks/clashes sets `Punk.blocked_last`
+  and the fighter plays `_strike_blocked` (spark, clack, push) instead of the
+  full impact; timing-ring misses deflate instead of shaking.
+- **Economy**: gems now buy BUILD capstones (`"gems": 1` in cbt.json for
+  rep-4 nodes) and dojo master rank (`FamilyProfile.dojo_gem_cost`); halfway
+  cart prices x0.45 (were 3-5x a permanent node). All cart buffs verified to
+  be read by gameplay.
+- **HF**: Roof Runner and Bag Snatch have their own sprites (were the punk);
+  Valet death + high/low attacks; Bailiff mid baton + low kick.
+
+## 0f. Two polish rounds: punch, maps, menus, more HF art 
 
 **Combat feel**
 - Son strike boards had no contact frame, so hits landed 0.05 s in while the
