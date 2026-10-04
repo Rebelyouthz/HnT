@@ -50,7 +50,17 @@ func _ready() -> void:
 	base.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	base.position = Vector2(0, TOP)
 	base.z_index = 0
+	# The painted road is very dark (mean ~10%): lift it so the stones read
+	# under the night lights instead of sinking into one black mass.
+	base.modulate = Color(1.5, 1.45, 1.6)
 	add_child(base)
+	# Depth: the near edge of the road falls off into shadow, which keeps
+	# the eye on the fighting line and gives the floor a little perspective.
+	var near := Polygon2D.new()
+	near.polygon = PackedVector2Array([Vector2(0, TOP + 150), Vector2(map_w, TOP + 150), Vector2(map_w, TOP + 300), Vector2(0, TOP + 300)])
+	near.vertex_colors = PackedColorArray([Color(0, 0, 0.03, 0.0), Color(0, 0, 0.03, 0.0), Color(0, 0, 0.03, 0.55), Color(0, 0, 0.03, 0.55)])
+	near.z_index = 1
+	add_child(near)
 	# A soft kerb shadow where the backdrop's sidewalk meets the road.
 	var lip := Polygon2D.new()
 	lip.polygon = PackedVector2Array([Vector2(0, TOP), Vector2(map_w, TOP), Vector2(map_w, TOP + 10), Vector2(0, TOP + 10)])

@@ -27,13 +27,13 @@ func _ready() -> void:
 	get_tree().paused = true
 	_root = PixelStage.attach_canvas(self)
 	var dim := ColorRect.new()
-	dim.color = Color(0.02, 0.0, 0.04, 0.78)
+	dim.color = Color(0.02, 0.0, 0.04, 0.88)
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_root.add_child(dim)
 	var title: String = {"level": "LEVEL %d" % run.level, "item": "ELITE CHEST", "stash": "LOST & FOUND", "well": "THE WELL"}.get(mode, "PICK ONE")
 	var sub: String = {"level": "Pick one. The rest goes back in the drawer.", "item": "The elite dropped something. Take one.", "stash": "Things you kept from other hours. Take one in with you.", "well": "Drop one item down the well: it waits for you in the next hour."}.get(mode, "")
 	var t := UiKit.title(str(title), 44, Palette.LEMON)
-	t.position = Vector2(0, 70)
+	t.position = Vector2(0, 92)
 	t.size = Vector2(1280, 56)
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	t.add_theme_color_override("font_outline_color", Color(0, 0, 0))
@@ -41,17 +41,17 @@ func _ready() -> void:
 	_root.add_child(t)
 	var s := Label.new()
 	s.text = str(sub)
-	s.position = Vector2(0, 128)
+	s.position = Vector2(0, 150)
 	s.size = Vector2(1280, 24)
 	s.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	UiKit.apply_label(s, 15, Palette.MUTED)
 	_root.add_child(s)
 	_row = HBoxContainer.new()
-	_row.position = Vector2(120, 180)
+	_row.position = Vector2(120, 196)
 	_row.add_theme_constant_override("separation", 26)
 	_root.add_child(_row)
 	_info = Label.new()
-	_info.position = Vector2(0, 620)
+	_info.position = Vector2(0, 580)
 	_info.size = Vector2(1280, 24)
 	_info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	UiKit.apply_label(_info, 13, Palette.MUTED)
@@ -59,7 +59,7 @@ func _ready() -> void:
 	if mode == "level":
 		_offers = run.offers(3)
 		var tools := HBoxContainer.new()
-		tools.position = Vector2(420, 560)
+		tools.position = Vector2(430, 520)
 		tools.add_theme_constant_override("separation", 20)
 		_root.add_child(tools)
 		var rr := UiKit.button("REROLL (%d)" % run.rerolls, Vector2(200, 44))
@@ -86,7 +86,7 @@ func _ready() -> void:
 			_offers.append({"kind": "item", "id": str(r.get("id", "")), "row": r})
 		if mode == "stash" or mode == "well":
 			var skip := UiKit.button("NONE", Vector2(200, 44))
-			skip.position = Vector2(540, 560)
+			skip.position = Vector2(540, 520)
 			skip.pressed.connect(_close)
 			_root.add_child(skip)
 	_fill()
@@ -102,10 +102,23 @@ func _fill() -> void:
 		_row.add_child(b)
 		if first == null:
 			first = b
-		var tw := b.create_tween()
+		# Deal the cards in: drop and settle, one after another.
+		var tw := b.create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		b.modulate.a = 0.0
-		tw.tween_interval(0.06 * i)
-		tw.tween_property(b, "modulate:a", 1.0, 0.15)
+		b.pivot_offset = Vector2(160, 150)
+		b.scale = Vector2(0.85, 0.85)
+		tw.tween_interval(0.07 * i)
+		tw.tween_property(b, "modulate:a", 1.0, 0.12)
+		tw.parallel().tween_property(b, "scale", Vector2.ONE, 0.22)
+		b.focus_entered.connect(func() -> void:
+			b.create_tween().tween_property(b, "scale", Vector2(1.04, 1.04), 0.08)
+			Mixer.play_sfx("res://assets/audio/ui_click.wav", 1.4, -14.0)
+		)
+		b.focus_exited.connect(func() -> void:
+			b.create_tween().tween_property(b, "scale", Vector2.ONE, 0.08)
+		)
+	var n := _offers.size()
+	_row.position.x = (1280.0 - (float(n) * 320.0 + float(maxi(0, n - 1)) * 26.0)) * 0.5
 	if first:
 		first.call_deferred("grab_focus")
 
@@ -134,7 +147,7 @@ func _card(o: Dictionary) -> Button:
 			r = {"name": "10 GOLD", "blurb": "Nothing left to learn. Have some money.", "icon": "i_coin"}
 			lv_text = "CONSOLATION"
 	var b := Button.new()
-	b.custom_minimum_size = Vector2(320, 360)
+	b.custom_minimum_size = Vector2(320, 300)
 	b.focus_mode = Control.FOCUS_ALL
 	b.add_theme_stylebox_override("normal", UiKit.panel(Palette.PANEL, col.darkened(0.3)))
 	b.add_theme_stylebox_override("hover", UiKit.panel(Palette.PANEL, col))
@@ -142,7 +155,7 @@ func _card(o: Dictionary) -> Button:
 	b.add_theme_stylebox_override("pressed", UiKit.panel(Palette.PANEL, col))
 	var v := VBoxContainer.new()
 	v.position = Vector2(16, 16)
-	v.size = Vector2(288, 330)
+	v.size = Vector2(288, 270)
 	v.add_theme_constant_override("separation", 10)
 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	b.add_child(v)
@@ -167,6 +180,17 @@ func _card(o: Dictionary) -> Button:
 	bl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	UiKit.apply_label(bl, 13, Palette.TEXT)
 	v.add_child(bl)
+	if kind == "ability":
+		var st := Label.new()
+		var lv := int(run.abilities.get(str(o["id"]), 0))
+		var dmg := float(r.get("dmg", 0)) + float(r.get("per", 0)) * float(maxi(0, lv))
+		st.text = "DMG %d  ·  EVERY %.1fs" % [int(dmg), float(r.get("cd", 1.0))]
+		if lv > 0:
+			st.text = "DMG %d › %d  ·  EVERY %.1fs" % [int(dmg - float(r.get("per", 0))), int(dmg), float(r.get("cd", 1.0))]
+		st.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		UiKit.apply_label(st, 12, col)
+		st.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		v.add_child(st)
 	if kind == "ability" and int(run.abilities.get(str(o["id"]), 0)) > 0:
 		var pips := HBoxContainer.new()
 		pips.alignment = BoxContainer.ALIGNMENT_CENTER

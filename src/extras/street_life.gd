@@ -74,5 +74,11 @@ func _draw() -> void:
 	for p in _puffs:
 		var u := float(p["life"]) / float(p["max"])
 		var a := sin(u * PI) * 0.16
-		draw_circle(p["p"] as Vector2, float(p["r"]), Color(0.75, 0.8, 0.88, a))
-		draw_circle((p["p"] as Vector2) + Vector2(float(p["r"]) * 0.4, -2), float(p["r"]) * 0.7, Color(0.85, 0.88, 0.95, a * 0.7))
+		# Soft-edged puffs (a radial falloff, not hard discs) so steam reads
+		# as vapour.
+		var soft := LightRig.radial_tex()
+		var r := float(p["r"]) * 1.7
+		var c := p["p"] as Vector2
+		draw_texture_rect(soft, Rect2(c - Vector2(r, r), Vector2(r, r) * 2.0), false, Color(0.75, 0.8, 0.88, a * 1.4))
+		var c2 := c + Vector2(float(p["r"]) * 0.4, -2)
+		draw_texture_rect(soft, Rect2(c2 - Vector2(r, r) * 0.7, Vector2(r, r) * 1.4), false, Color(0.85, 0.88, 0.95, a))

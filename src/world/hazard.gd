@@ -120,7 +120,9 @@ func _draw() -> void:
 			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 			for k in 3:
 				var ph := fmod(_t * 0.5 + float(k) * 0.33, 1.0)
-				draw_circle(Vector2(sin(_t + k) * 4.0, -ph * 40.0), 4.0 + ph * 8.0, Color(0.8, 0.82, 0.86, 0.18 * (1.0 - ph)))
+				var rr := (4.0 + ph * 8.0) * 1.8
+				var cc := Vector2(sin(_t + k) * 4.0, -ph * 40.0)
+				draw_texture_rect(LightRig.radial_tex(), Rect2(cc - Vector2(rr, rr), Vector2(rr, rr) * 2.0), false, Color(0.8, 0.82, 0.86, 0.26 * (1.0 - ph)))
 		"wire":
 			draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, 0.35))
 			draw_circle(Vector2.ZERO, 34.0, Color(0.15, 0.2, 0.3, 0.55))
