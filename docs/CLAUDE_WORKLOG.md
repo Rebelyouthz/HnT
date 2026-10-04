@@ -34,7 +34,43 @@ The rest is in English, like the code. Newest work first. Each block says
 
 ---
 
-## 0e. Start flow, economy, side jobs, tower, coping hour, five new systems (latest)
+## 0f. Two polish rounds: punch, maps, menus, more HF art (latest)
+
+**Combat feel**
+- Son strike boards had no contact frame, so hits landed 0.05 s in while the
+  drawn fist arrived ~0.35 s later. `tools/strike_timing.py` (idempotent,
+  marks `"timed": true`) sets `hit`/`fps`, drops off-model grey-hoodie frames,
+  trims long extended holds and closes the cross back to guard. Father
+  slide/dive got hit frames too.
+- `Juice.kick(dir, px)`: directional camera shove, springs back in world time
+  (holds through hitstop). Used on every connect, on kills and when hurt.
+- Fighter squash/stretch is live again on the sprite path (`_sq`,
+  `_squash_to()`); `Juice.squash()` routes to it. Hits stretch into the
+  blow, landings and getting hit crumple.
+- Enemy hit-shake + head snap (`Punk._recoil`), heavy input buffered through
+  recovery (`_heavy_buf`), short freeze + shove on every kill,
+  `Juice.last_kill()` slow-mo on the last thug of a fight (not in the horde).
+- Lens blood is a rare edge accent (3.5 s cooldown, max 3 blobs, outer edge).
+
+**HUD / menus**
+- Toasts at (960, 92), max 2. Combo counter big, bottom-left, kicks per hit,
+  colour heats with the count. Pause shows only meaningful rows in solo.
+- Character select: explicit-size dim (title art no longer shows through),
+  picked card lifts, other dims. BUILD: dark well behind the trees, info
+  strip under them. Tab alerts: one dot on CLINIC only; locked tabs dim.
+- Hideout: room continues past the painting (mirrored strip) so the portal
+  is in a corner, not a void. Room sheets open centred over a dim.
+- Level-up picks: centred, compact, DMG/cooldown line, dealt in, focus lift.
+
+**Maps**: painted road lifted (modulate 1.5) with a near-edge shadow; steam
+is soft radial vapour (street life + manholes).
+
+**HF art (Space back up)**: deaths for Coping Imp, Clipboard Flier, Lot
+Hydra, Clamp King; high/low attacks for Imp, Flier, Hydra (contact frames set
+by eye where the held prop fooled the reach heuristic); drawn idles for the
+three Dock Street side-job givers (`"sprite"` key in side_quests.json).
+
+## 0e. Start flow, economy, side jobs, tower, coping hour, five new systems 
 
 **Svenska:** PLAY GAME → välj karaktär (solo / soffa / online med guide för två
 städer, resten mörklagt tills Dock Street är klar) → START · DOCK STREET →
