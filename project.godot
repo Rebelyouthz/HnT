@@ -7,6 +7,7 @@ config/name="HnT"
 config/version="0.1.0"
 config/description="Revenge & Therapy"
 run/main_scene="res://scenes/ui/title.tscn"
+run/max_fps=60
 config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.svg"
 

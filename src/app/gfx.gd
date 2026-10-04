@@ -13,7 +13,7 @@ const AA := ["OFF", "FXAA", "MSAA 2X", "MSAA 4X"]
 
 const DEFAULTS := {
 	"mode": 1, "res": 2, "vsync": true, "aa": 1, "bloom": 0.45, "blur": 0.6,
-	"bright": 0.5, "shake": 0.8, "crt": 0.0, "quality": 2, "fps_cap": 0,
+	"bright": 0.5, "shake": 0.8, "crt": 0.0, "quality": 2, "fps_cap": 60,
 }
 
 static var _env: WorldEnvironment
