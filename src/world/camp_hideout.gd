@@ -620,9 +620,15 @@ func _open_sheet(path: String) -> void:
 	var wrap := Control.new()
 	_overlay_layer.add_child(wrap)
 	PixelStage.apply_control(wrap)
+	var dim := ColorRect.new()
+	dim.color = Color(0.01, 0.01, 0.03, 0.72)
+	dim.position = Vector2(-40, -40)
+	dim.size = Vector2(1360, 800)
+	wrap.add_child(dim)
 	var sheet: Control = load(path).new()
 	sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
 	wrap.add_child(sheet)
+	_center_sheet.call_deferred(sheet)
 	_overlay = wrap
 	if sheet.has_signal("closed"):
 		sheet.closed.connect(_close_overlay)
@@ -630,6 +636,20 @@ func _open_sheet(path: String) -> void:
 		sheet.need_refresh.connect(_refresh_locks)
 	FamilyProfile.peek_menu()
 	_add_back_button()
+
+
+## Room sheets lay their panel out from the top-left corner: slide it to
+## the middle of the screen once it has a size.
+func _center_sheet(sheet: Control) -> void:
+	if not is_instance_valid(sheet):
+		return
+	var w := 0.0
+	for c in sheet.get_children():
+		if c is Control and (c as Control).visible:
+			var cc := c as Control
+			w = maxf(w, cc.position.x + maxf(cc.size.x, cc.get_combined_minimum_size().x))
+	if w > 200.0 and w < 1100.0:
+		sheet.position.x += (1280.0 - w) * 0.5
 
 
 func _add_back_button() -> void:
