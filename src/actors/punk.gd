@@ -249,6 +249,10 @@ func _sprite_who() -> String:
 		return "repo_goon"
 	if title == "Bailiff" and FileAccess.file_exists("res://assets/sprites/bailiff/idle.json"):
 		return "bailiff"
+	if title == "Roof Runner" and FileAccess.file_exists("res://assets/sprites/roof_runner/idle.json"):
+		return "roof_runner"
+	if title == "Bag Snatch" and FileAccess.file_exists("res://assets/sprites/bag_snatch/idle.json"):
+		return "bag_snatch"
 	return "punk"
 
 
