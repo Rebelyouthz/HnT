@@ -534,6 +534,7 @@ func _paint_fighter(lab: Label, bar: ColorRect, pips: HBoxContainer, snap: Label
 
 func _paint_pips(row: HBoxContainer, f: Fighter, lemon_slot: bool) -> void:
 	var filled := int(round((float(f.hp) / float(maxi(f.max_hp, 1))) * 8.0))
+	var billable := int(round(((float(f.hp) + f.copay) / float(maxi(f.max_hp, 1))) * 8.0))
 	var on := Palette.LEMON if lemon_slot else Palette.BRICK
 	var i := 0
 	var low := f.hp <= int(float(f.max_hp) * 0.3)
@@ -548,8 +549,11 @@ func _paint_pips(row: HBoxContainer, f: Fighter, lemon_slot: bool) -> void:
 				h.pivot_offset = Vector2(14, 14)
 				h.scale = Vector2(1.5, 1.5)
 				h.create_tween().tween_property(h, "scale", Vector2.ONE, 0.2)
-		# Low HP: the last hearts beat.
-		h.modulate.a = 1.0 if not low or want else 0.6 + 0.4 * absf(sin(_blink_t * 7.0))
+		# Low HP: the last hearts beat. Billable (COPAY) hearts glow gold:
+		# hit someone to get them back before they fade.
+		h.modulate = Color(1, 1, 1, 1.0 if not low or want else 0.6 + 0.4 * absf(sin(_blink_t * 7.0)))
+		if want and i < billable:
+			h.modulate = Color(1.6, 1.3, 0.4, 0.55 + 0.35 * absf(sin(_blink_t * 9.0)))
 		i += 1
 
 

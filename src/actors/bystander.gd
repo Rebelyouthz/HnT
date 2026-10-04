@@ -6,6 +6,8 @@ extends CharacterBody2D
 
 var home := Vector2.ZERO
 var spook := 0.0
+var _spoke := false
+var _female := randf() < 0.45
 var visual: Node2D
 
 
@@ -43,6 +45,13 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	# Bystanders react out loud the first time a fight comes close.
+	if not _spoke:
+		for e in get_tree().get_nodes_in_group("enemies"):
+			if e is Node2D and (e as Node2D).global_position.distance_to(global_position) < 160.0:
+				_spoke = true
+				VoBank.line("bystander_f" if _female else "bystander", "react", 0.7)
+				break
 	var scare := Vector2.ZERO
 	for n in get_tree().get_nodes_in_group("players"):
 		if n is Fighter and not (n as Fighter).downed:

@@ -307,7 +307,12 @@ func _tick_sprite() -> void:
 		_anim.speed_scale = SpriteBook.stride_rate(_anim, "walk", velocity.x)
 
 
+var _bowled: Dictionary = {}
+
+
 func _fling(delta: float) -> void:
+	if flung_t > 0.0 and not flung_ground and _bowled.size() > 0 and flung_t > 0.3:
+		_bowled.clear()
 	flung_t -= delta
 	velocity.x = flung_dir * 400.0
 	velocity.y = 0.0
@@ -328,6 +333,27 @@ func _fling(delta: float) -> void:
 		FamilyProfile.mark_bounce()
 		Juice.named_slowmo()
 		break
+	# A body flying through the crowd bowls the others over.
+	for o in get_tree().get_nodes_in_group("enemies"):
+		if o == self or not (o is Punk) or not is_instance_valid(o):
+			continue
+		var q := o as Punk
+		if q.flung or q.hp <= 0 or _bowled.has(q.get_instance_id()):
+			continue
+		if absf(q.global_position.x - global_position.x) < 30.0 and absf(q.global_position.y - global_position.y) < 24.0:
+			_bowled[q.get_instance_id()] = true
+			q.hp = maxi(0, q.hp - 10)
+			q.flung = true
+			q.flung_dir = flung_dir
+			q.flung_t = 0.2
+			q.flung_ground = false
+			Juice.hitstop(3)
+			Juice.kick(Vector2(flung_dir, 0.2), 4.0)
+			Juice.shout("STRIKE!" if _bowled.size() >= 2 else "BOWLED")
+			Juice.register_hit("heavy", q.global_position, 10)
+			Mixer.play_sfx("res://assets/audio/sfx/punch_heavy.ogg", randf_range(0.85, 1.0), -2.0)
+			if q.hp <= 0:
+				q._die("heavy", self)
 	if flung_t <= 0.0:
 		if not flung_ground:
 			flung_ground = true
@@ -340,6 +366,7 @@ func _fling(delta: float) -> void:
 			FamilyProfile.mark_bounce()
 			return
 		flung = false
+		_bowled.clear()
 		velocity.x = 0.0
 
 

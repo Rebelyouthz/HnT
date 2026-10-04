@@ -25,6 +25,7 @@ VOICE = {
     "bailiff": ("bm_daniel", 1.0, 0.88), "runner": ("am_liam", 1.15, 1.08),
     "snatch": ("am_adam", 1.2, 1.1), "imp": ("am_puck", 1.15, 1.18),
     "valet": ("am_eric", 1.1, 1.02),
+    "bystander": ("am_michael", 1.05, 1.0), "bystander_f": ("af_bella", 1.05, 1.0),
 }
 
 

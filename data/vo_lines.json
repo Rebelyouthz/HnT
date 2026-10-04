@@ -85,6 +85,16 @@
    "voice": "Friendly_Person",
    "pitch": 0,
    "speed": 1.1
+  },
+  "bystander": {
+   "voice": "Casual_Guy",
+   "pitch": 0,
+   "speed": 1.05
+  },
+  "bystander_f": {
+   "voice": "Wise_Woman",
+   "pitch": 1,
+   "speed": 1.05
   }
  },
  "lines": [
@@ -920,6 +930,69 @@
    "ev": "death",
    "emotion": "sad",
    "text": "Keys... on the hook..."
+  },
+  {
+   "id": "bystander_react_1",
+   "who": "bystander",
+   "ev": "react",
+   "emotion": "surprised",
+   "text": "Hey! Take it somewhere else!"
+  },
+  {
+   "id": "bystander_react_2",
+   "who": "bystander",
+   "ev": "react",
+   "emotion": "surprised",
+   "text": "Somebody call the clinic!"
+  },
+  {
+   "id": "bystander_react_3",
+   "who": "bystander",
+   "ev": "react",
+   "emotion": "surprised",
+   "text": "Oh, not again."
+  },
+  {
+   "id": "bystander_react_4",
+   "who": "bystander",
+   "ev": "react",
+   "emotion": "surprised",
+   "text": "Is that the dad and the kid? Run!"
+  },
+  {
+   "id": "bystander_react_5",
+   "who": "bystander",
+   "ev": "react",
+   "emotion": "surprised",
+   "text": "I'm filming this. For insurance."
+  },
+  {
+   "id": "bystander_f_react_1",
+   "who": "bystander_f",
+   "ev": "react",
+   "emotion": "surprised",
+   "text": "Oh my god, are you okay?"
+  },
+  {
+   "id": "bystander_f_react_2",
+   "who": "bystander_f",
+   "ev": "react",
+   "emotion": "surprised",
+   "text": "Not on my clean street!"
+  },
+  {
+   "id": "bystander_f_react_3",
+   "who": "bystander_f",
+   "ev": "react",
+   "emotion": "surprised",
+   "text": "Go get them, sweetie!"
+  },
+  {
+   "id": "bystander_f_react_4",
+   "who": "bystander_f",
+   "ev": "react",
+   "emotion": "surprised",
+   "text": "I'm calling somebody. Anybody."
   }
  ]
 }

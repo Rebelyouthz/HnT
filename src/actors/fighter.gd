@@ -160,6 +160,11 @@ var _getup_done := false
 var _light_buf := 0
 var _heavy_buf := 0
 var _run_breath := 0
+## COPAY: part of every hit you take is billable - it drains away over a
+## few seconds unless you bill it back by landing hits (risk / reward, like
+## Streets of Rage 4's green health, but earned from defence, not specials).
+var copay := 0.0
+var _copay_hold := 0.0
 
 signal died
 signal hit_landed(kind: String, global_pos: Vector2)
@@ -585,6 +590,11 @@ func _tick_meters(delta: float) -> void:
 		gun_cd -= delta
 	if _pump_t > 0.0:
 		_pump_t -= delta
+	if copay > 0.0:
+		if _copay_hold > 0.0:
+			_copay_hold -= delta
+		else:
+			copay = maxf(0.0, copay - 6.0 * delta)
 	if reload_t > 0.0:
 		_tick_reload(delta)
 	if aim_t > 0.0:
@@ -1395,6 +1405,12 @@ func _strike_impact(at: Vector2) -> void:
 	Juice.kick(Vector2(float(facing), 0.2 + 0.3 * wt), 2.0 + 5.0 * wt)
 	_squash_to(Vector2(1.06 + 0.08 * wt, 0.96 - 0.05 * wt))
 	Juice.impact(at, float(mv["weight"]), facing)
+	if copay >= 1.0 and hp > 0:
+		var back := int(minf(copay, 2.0 + 4.0 * wt))
+		hp = mini(max_hp, hp + back)
+		copay -= float(back)
+		_copay_hold = 0.6
+		Juice.popup_number(global_position + Vector2(0, -100), "+%d COPAY" % back, Color(1.0, 0.85, 0.3))
 	velocity.x -= float(facing) * float(mv["push"])
 	_drift_t = 0.0
 	attack_cd = mini(attack_cd, int(mv["hit_cd"]))
@@ -2093,6 +2109,9 @@ func take_hit(kind: String, from: Node) -> void:
 	if srun and srun.armor() > 0.0:
 		dmg = maxi(1, int(round(float(dmg) * (1.0 - srun.armor()))))
 	hp = maxi(0, hp - dmg)
+	if hp > 0:
+		copay = minf(float(max_hp - hp), copay + float(dmg) * 0.5)
+		_copay_hold = 1.2
 	_hurt_t = 0.32
 	VoBank.line(role, "hurt", 0.22)
 	_cancel_strike()
