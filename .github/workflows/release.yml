@@ -68,7 +68,19 @@ jobs:
           grep -q EXPORT_PACK_OK build/windows/export_pack.log
           makensis tools/windows/FatherAndSon.nsi
           (cd build/windows && zip -q FatherAndSon-portable.zip FatherAndSon.exe)
+          # The one to download: installer + Swedish install guide in one zip.
+          cp tools/windows/INSTALLERA.txt build/windows/
+          (cd build/windows && zip -q FatherAndSon_Windows.zip FatherAndSonSetup.exe INSTALLERA.txt)
           ls -lh build/windows
+
+      - name: Installer as a build artifact (backup download)
+        uses: actions/upload-artifact@v4
+        with:
+          name: FatherAndSon_Windows
+          path: |
+            build/windows/FatherAndSonSetup.exe
+            build/windows/INSTALLERA.txt
+          retention-days: 30
 
       - name: Web build
         continue-on-error: true
@@ -83,10 +95,10 @@ jobs:
           TAG: ${{ github.event.inputs.tag || (startsWith(github.ref, 'refs/tags/') && github.ref_name) || format('v0.3.{0}', github.run_number) }}
         run: |
           cat > notes.md <<'NOTES'
-          **Windows:** download `FatherAndSonSetup.exe`, run it, press Install. Nothing else needed (no Godot, no runtimes); it adds a desktop and Start-menu shortcut and an uninstaller.
+          **Windows (easiest):** download `FatherAndSon_Windows.zip`, unzip, run `FatherAndSonSetup.exe` (guide in `INSTALLERA.txt`). Or download `FatherAndSonSetup.exe` directly, run it, press Install. Nothing else needed (no Godot, no runtimes); it adds a desktop and Start-menu shortcut and an uninstaller.
           **Portable:** `FatherAndSon-portable.zip` - unzip and run `FatherAndSon.exe`.
           **Browser:** `FatherAndSon-web.zip` (itch.io / any static host).
           NOTES
-          FILES="build/windows/FatherAndSonSetup.exe build/windows/FatherAndSon-portable.zip"
+          FILES="build/windows/FatherAndSon_Windows.zip build/windows/FatherAndSonSetup.exe build/windows/FatherAndSon-portable.zip"
           [ -f build/FatherAndSon-web.zip ] && FILES="$FILES build/FatherAndSon-web.zip"
           gh release create "$TAG" $FILES --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "Father & Son $TAG" --notes-file notes.md --latest
