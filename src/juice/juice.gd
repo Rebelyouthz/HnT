@@ -1,6 +1,7 @@
 extends Node
 
 var trauma := 0.0
+var _kick := Vector2.ZERO
 var combo := 0
 var combo_ttl := 0.0
 var combo_peak := 0
@@ -16,7 +17,7 @@ var _toast_box: VBoxContainer
 var _toast_at: Dictionary = {}
 
 const TOAST_COOL_MS := 2800
-const TOAST_MAX := 3
+const TOAST_MAX := 2
 
 const DECAY := 1.35
 const MAX_OFFSET := Vector2(12, 8)
@@ -35,8 +36,8 @@ func _ready() -> void:
 	var toast_root := PixelStage.attach_canvas(_overlay)
 	toast_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_toast_box = VBoxContainer.new()
-	_toast_box.position = Vector2(930, 250)
-	_toast_box.size = Vector2(340, 300)
+	_toast_box.position = Vector2(960, 92)
+	_toast_box.size = Vector2(310, 200)
 	_toast_box.add_theme_constant_override("separation", 4)
 	_toast_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	toast_root.add_child(_toast_box)
@@ -49,6 +50,10 @@ func _process(delta: float) -> void:
 	if trauma > 0.0:
 		trauma = maxf(trauma - DECAY * delta, 0.0)
 	_noise_t += delta * 30.0
+	if _kick != Vector2.ZERO:
+		_kick = _kick.lerp(Vector2.ZERO, 1.0 - exp(-14.0 * delta))
+		if _kick.length() < 0.05:
+			_kick = Vector2.ZERO
 	if combo > 0:
 		_combo_clock(delta)
 	if _callout_t > 0.0:
@@ -68,12 +73,18 @@ func add_trauma(amount: float) -> void:
 	trauma = clampf(trauma + amount, 0.0, 1.0)
 
 
+## Directional camera shove (a blow pushes the view the way it travels),
+## springing back in world time so it holds through hitstop.
+func kick(dir: Vector2, px: float) -> void:
+	_kick = (_kick + dir.normalized() * px * float(Gfx.get_v("shake"))).limit_length(12.0)
+
+
 func shake_offset() -> Vector2:
 	# Options: SCREEN SHAKE scales every shake (0 turns it off).
 	var shake := trauma * trauma * float(Gfx.get_v("shake")) * 1.25
 	if shake <= 0.002:
-		return Vector2.ZERO
-	return Vector2(
+		return _kick
+	return _kick + Vector2(
 		MAX_OFFSET.x * shake * sin(_noise_t * 1.7),
 		MAX_OFFSET.y * shake * sin(_noise_t * 2.3)
 	)
@@ -152,6 +163,12 @@ func flash_white_red(node: CanvasItem) -> void:
 
 func squash(node: Node2D, facing: int) -> void:
 	if node == null:
+		return
+	var owner_f := node.get_parent()
+	while owner_f != null and not owner_f.has_method("_squash_to") and not (owner_f is Window):
+		owner_f = owner_f.get_parent()
+	if owner_f != null and owner_f.has_method("_squash_to") and owner_f.get("_anim") != null:
+		owner_f.call("_squash_to", Vector2(1.16, 0.84))
 		return
 	node.scale = Vector2(1.28 * float(facing), 0.7)
 	var tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
@@ -459,7 +476,7 @@ func toast(kind: String, title: String, body: String) -> void:
 	st.content_margin_top = 5
 	st.content_margin_bottom = 5
 	wrap.add_theme_stylebox_override("panel", st)
-	wrap.custom_minimum_size = Vector2(340, 0)
+	wrap.custom_minimum_size = Vector2(310, 0)
 	_toast_box.add_child(wrap)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)

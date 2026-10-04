@@ -28,6 +28,7 @@ var _screen_blobs: Array[Dictionary] = []
 ## smear a stain and lie on the street with the bodies.
 var _gibs: Array[Dictionary] = []
 const MAX_GIBS := 90
+var _screen_next := 0
 
 
 func _ready() -> void:
@@ -122,17 +123,25 @@ func pool(at: Vector2, size: float) -> void:
 func screen(side: float, amount: float) -> void:
 	if FamilyProfile.less_gore() or _screen == null:
 		return
+	# A rare accent, not wallpaper: one splash every few seconds at most,
+	# kept to the outer edge of the glass so the fight stays readable.
+	var now := Time.get_ticks_msec()
+	if now < _screen_next or _screen_blobs.size() >= 3:
+		return
+	_screen_next = now + 3500
+	if side == 0.0:
+		side = 1.0
 	var vs := _screen.get_viewport_rect().size
-	var n := 2 + int(amount * 4.0)
+	var n := 1 + int(amount * 2.0)
 	for i in n:
-		var x := vs.x * (0.5 + side * randf_range(0.18, 0.46))
-		var y := vs.y * randf_range(0.12, 0.72)
-		var r := vs.y * randf_range(0.012, 0.03) * (0.6 + amount)
+		var x := vs.x * (0.5 + signf(side) * randf_range(0.40, 0.48))
+		var y := vs.y * randf_range(0.18, 0.6)
+		var r := vs.y * randf_range(0.01, 0.02) * (0.6 + amount)
 		var drops := []
 		for k in randi_range(2, 6):
 			var a := randf() * TAU
 			drops.append([Vector2(cos(a), sin(a) * 0.8) * r * randf_range(0.9, 1.9), r * randf_range(0.12, 0.35)])
-		_screen_blobs.append({"p": Vector2(x, y), "r": r, "life": 2.6 + randf() * 0.8, "age": 0.0,
+		_screen_blobs.append({"p": Vector2(x, y), "r": r, "life": 1.5 + randf() * 0.5, "age": 0.0,
 			"run": randf_range(0.0, r * 3.0), "drops": drops, "tint": _biome()})
 	_screen.queue_redraw()
 

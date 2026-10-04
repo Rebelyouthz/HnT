@@ -128,20 +128,26 @@ func _ready() -> void:
 	_boss_wrap.add_child(_boss_lab)
 
 	_combo = Label.new()
-	_combo.position = Vector2(12, 104)
-	UiKit.apply_label(_combo, 16, Palette.EDGE)
+	_combo.position = Vector2(16, 150)
+	_combo.pivot_offset = Vector2(0, 20)
+	_combo.add_theme_font_override("font", UiKit.title_font())
+	UiKit.apply_label(_combo, 34, Palette.LEMON)
+	_combo.add_theme_color_override("font_outline_color", Color(0, 0, 0))
+	_combo.add_theme_constant_override("outline_size", 8)
 	_put(_combo)
 	_rank = Label.new()
-	_rank.position = Vector2(12, 122)
+	_rank.position = Vector2(18, 192)
+	_rank.add_theme_color_override("font_outline_color", Color(0, 0, 0))
+	_rank.add_theme_constant_override("outline_size", 4)
 	UiKit.apply_label(_rank, 12, Palette.LEMON)
 	_put(_rank)
 	_combo_bg = ColorRect.new()
-	_combo_bg.position = Vector2(12, 140)
+	_combo_bg.position = Vector2(18, 212)
 	_combo_bg.size = Vector2(180, 5)
 	_combo_bg.color = Color(0, 0, 0, 0.55)
 	_put(_combo_bg)
 	_combo_fill = ColorRect.new()
-	_combo_fill.position = Vector2(12, 140)
+	_combo_fill.position = Vector2(18, 212)
 	_combo_fill.size = Vector2(180, 5)
 	_combo_fill.color = Palette.LEMON
 	_put(_combo_fill)
@@ -407,11 +413,23 @@ func _process(delta: float) -> void:
 	_paint_purse()
 	if Juice.combo < 2:
 		_combo.text = ""
+		_combo.set_meta("n", 0)
 		_rank.text = ""
 		_combo_fill.size.x = 0
 		_combo_bg.visible = false
 	else:
-		_combo.text = "%d HIT" % Juice.combo
+		_combo.text = "%d HITS" % Juice.combo
+		# Every new hit kicks the counter; colour climbs with the count.
+		if int(_combo.get_meta("n", 0)) != Juice.combo:
+			_combo.set_meta("n", Juice.combo)
+			_combo.scale = Vector2(1.35, 1.35)
+			_combo.modulate = Color(1.6, 1.6, 1.6)
+			var kt := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+			kt.set_ignore_time_scale(true)
+			kt.tween_property(_combo, "scale", Vector2.ONE, 0.14)
+			kt.parallel().tween_property(_combo, "modulate", Color.WHITE, 0.14)
+		var heat := clampf(float(Juice.combo) / 30.0, 0.0, 1.0)
+		_combo.add_theme_color_override("font_color", Palette.LEMON.lerp(Color(1.0, 0.3, 0.2), heat))
 		_rank.text = Juice.combo_rank() + "  ·  CASH OUT IF THE BAR DIES"
 		_combo_bg.visible = true
 		_combo_fill.size.x = 180.0 * Juice.combo_frac()

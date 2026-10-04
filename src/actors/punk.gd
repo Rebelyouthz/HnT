@@ -871,6 +871,7 @@ func take_hit(kind: String, from: Node) -> void:
 		if dir == 0.0:
 			dir = -float(facing)
 		global_position.x += dir * (8.0 if kind == "light" else 20.0)
+		_recoil(dir, 1.0 if kind == "light" else 2.0)
 		_gore(kind, from, dir)
 		var blood := get_tree().get_first_node_in_group("blood_sim")
 		if not crush and hp > 0 and hp <= int(round(float(max_hp) * 0.12)):
@@ -889,6 +890,25 @@ func take_hit(kind: String, from: Node) -> void:
 		_combo_fx(str((from as Fighter).combo_fx), from as Fighter)
 	if hp <= 0:
 		_die(kind, from)
+
+
+## Hit shake: the body jolts with the blow and rattles through the hitstop
+## (real time, so it reads while the world is frozen), head snapping back.
+var _recoil_tw: Tween
+
+
+func _recoil(dir: float, k: float) -> void:
+	if visual == null:
+		return
+	if _recoil_tw and _recoil_tw.is_valid():
+		_recoil_tw.kill()
+	visual.position.x = dir * 5.0 * k
+	visual.skew = -dir * float(facing) * 0.08 * k
+	_recoil_tw = create_tween().set_ignore_time_scale(true)
+	_recoil_tw.tween_property(visual, "position:x", -dir * 2.0 * k, 0.035)
+	_recoil_tw.tween_property(visual, "position:x", dir * 1.0 * k, 0.035)
+	_recoil_tw.tween_property(visual, "position:x", 0.0, 0.05)
+	_recoil_tw.parallel().tween_property(visual, "skew", 0.0, 0.12)
 
 
 ## What a dojo finisher does to a body that survives it.

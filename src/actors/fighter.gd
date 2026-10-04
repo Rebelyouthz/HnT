@@ -150,6 +150,7 @@ var _getup_done := false
 ## A light pressed during recovery is kept for a few frames and thrown the
 ## moment the body is free, so chains don't eat presses.
 var _light_buf := 0
+var _heavy_buf := 0
 
 signal died
 signal hit_landed(kind: String, global_pos: Vector2)
@@ -571,6 +572,8 @@ func _tick_meters(delta: float) -> void:
 		_fire_gun()
 	if _light_buf > 0:
 		_light_buf -= 1
+	if _heavy_buf > 0:
+		_heavy_buf -= 1
 	if revenge_win > 0:
 		revenge_win -= 1
 	if cart_t > 0.0:
@@ -658,7 +661,10 @@ func _tick_meters(delta: float) -> void:
 	ducking = _street_grounded() and _pressed("duck") and not dashing and not sliding
 	if squash_root:
 		if _anim:
-			squash_root.scale = Vector2.ONE
+			# Squash/stretch springs back to rest in world time, so it
+			# holds through a hitstop and snaps out after it.
+			_sq = _sq.lerp(Vector2.ONE, 1.0 - exp(-15.0 * delta))
+			squash_root.scale = _sq
 			squash_root.position.y = 0.0
 		elif ducking:
 			squash_root.scale.y = 0.62
@@ -1019,6 +1025,12 @@ func _combat() -> void:
 				_attack("heavy", charge_frames >= charge_need)
 		else:
 			_attack("heavy", charge_frames >= charge_need)
+	elif attack_cd == 0 and _heavy_buf > 0 and not airborne:
+		_heavy_buf = 0
+		if string_n >= 2 and FamilyProfile.dojo_learned("roundhouse"):
+			_attack("roundhouse", false)
+		else:
+			_attack("heavy", false)
 	elif _just("light") and attack_cd > 0:
 		_light_buf = 9
 	elif attack_cd == 0 and (_just("light") or _light_buf > 0):
@@ -1140,8 +1152,13 @@ func _special() -> void:
 
 func _attack(kind: String, charged: bool) -> void:
 	if attack_cd > 0 and kind == "heavy" and not charged:
+		# Released during recovery: keep it and throw it the moment the
+		# body is free, so a light-into-heavy press never gets eaten.
 		charge_frames = 0
+		_heavy_buf = 9
 		return
+	if kind == "heavy":
+		_heavy_buf = 0
 	if (kind == "heavy" or kind == "launcher") and charged and not _spend(12.0):
 		charge_frames = 0
 		return
@@ -1318,8 +1335,13 @@ func _strike_impact(at: Vector2) -> void:
 		return
 	_strike_hit = true
 	var mv := MoveBook.move(_strike_clip)
+	var wt := float(mv["weight"])
 	Juice.hitstop(int(mv["stop"]))
 	Juice.pulse_shake(float(mv["shake"]))
+	# The camera gets shoved the way the blow travels, and the body
+	# stretches into it: every connect reads, light ones included.
+	Juice.kick(Vector2(float(facing), 0.2 + 0.3 * wt), 2.0 + 5.0 * wt)
+	_squash_to(Vector2(1.06 + 0.08 * wt, 0.96 - 0.05 * wt))
 	Juice.impact(at, float(mv["weight"]), facing)
 	velocity.x -= float(facing) * float(mv["push"])
 	_drift_t = 0.0
@@ -2146,6 +2168,13 @@ func _find_ladder() -> FireEscape:
 		if n is FireEscape and (n as FireEscape).covers(global_position):
 			return n
 	return null
+
+
+var _sq := Vector2.ONE
+
+
+func _squash_to(v: Vector2) -> void:
+	_sq = v
 
 
 func stumble() -> void:
