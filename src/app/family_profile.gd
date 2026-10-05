@@ -489,6 +489,7 @@ func try_cbt(id: String) -> bool:
 
 func note_tower() -> void:
 	data["towers_climbed"] = int(data.get("towers_climbed", 0)) + 1
+	Trees.add_flow(15)
 	save()
 
 
@@ -1081,12 +1082,16 @@ func claim_patrol() -> Dictionary:
 
 func mark_trick() -> void:
 	data["tricks"] = int(data.get("tricks", 0)) + 1
+	Trees.add_flow(int(round(1.0 * Meta.trick_flow_mul())))
+	_trick_perks(false)
 	sync_cosmetics(true)
 	save()
 
 
 func mark_perfect() -> void:
 	data["perfect_tricks"] = int(data.get("perfect_tricks", 0)) + 1
+	Trees.add_flow(int(round(2.0 * Meta.trick_flow_mul())))
+	_trick_perks(true)
 	save()
 
 
@@ -1313,6 +1318,7 @@ func mark_pole() -> void:
 
 func mark_wallkick() -> void:
 	data["wallkicks"] = int(data.get("wallkicks", 0)) + 1
+	Trees.add_flow(1)
 	save()
 
 
@@ -1554,3 +1560,30 @@ func try_craft(id: String) -> bool:
 	Juice.unlock_logo(str(spec.get("title", id)), str(spec.get("blurb", "Crafted. Filed.")), "CRAFT  ·  %s" % Rarity.label(str(spec.get("rarity", "common"))))
 	Rarity.juice(str(spec.get("rarity", "common")), str(spec.get("title", id)))
 	return true
+
+
+
+## PARKOUR tree perks that fire on every trick (all living fighters).
+func _trick_perks(perfect: bool) -> void:
+	var tree := get_tree()
+	if tree == null:
+		return
+	for n in tree.get_nodes_in_group("players"):
+		if not (n is Fighter) or (n as Fighter).downed:
+			continue
+		var f := n as Fighter
+		if Trees.has("p_trick_steam"):
+			f.steam = minf(Fighter.STEAM_MAX, f.steam + 10.0)
+		if perfect and Trees.has("p_flow_heal"):
+			f.hp = mini(f.max_hp, f.hp + 4)
+			Juice.popup_number(f.global_position + Vector2(0, -100), "+4", Palette.READY)
+		if Trees.has("p_ghost"):
+			f.invuln = maxi(f.invuln, 30)
+		if Trees.has("p_chain"):
+			f.trick_t *= 1.5
+		if Trees.has("p_combo_keep"):
+			Juice.keep_combo()
+		var rs := tree.get_first_node_in_group("run_state")
+		if Trees.has("p_score") and rs and rs.has_method("add_points"):
+			rs.add_points(f.role, 50, "trick")
+

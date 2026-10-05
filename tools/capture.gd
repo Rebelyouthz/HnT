@@ -20,6 +20,9 @@ func _prepare() -> void:
 	if _tab == "locker_gear":
 		Engine.set_meta("locker_slot", "clothes")
 		_tab = "locker"
+	if _tab == "build_surv" or _tab == "build_park":
+		Engine.set_meta("build_mode", "survivor" if _tab == "build_surv" else "parkour")
+		_tab = "build"
 	if fp != null and fp.get("data") is Dictionary:
 		var d := fp.data as Dictionary
 		d["intro_done"] = true
@@ -73,6 +76,13 @@ func _prepare() -> void:
 			(fp.data as Dictionary)["suit_son_" + p] = sid
 		(fp.data as Dictionary)["suits_split"] = true
 		(fp.data as Dictionary)["suit_parts"] = owned
+	if (_tab == "codex" or _tab == "build") and fp != null:
+		(fp.data as Dictionary)["tokens"] = 240
+		(fp.data as Dictionary)["flow"] = 130
+		(fp.data as Dictionary)["tree_survivor"] = ["u_cart", "u_bag", "s_slot", "s_reroll", "s_evolve", "f_start"]
+		(fp.data as Dictionary)["tree_parkour"] = ["p_trick_steam", "p_air_jump", "p_stomp", "p_float"]
+		(fp.data as Dictionary)["evolutions_seen"] = ["invoice_toss"]
+		(fp.data as Dictionary)["surv_best_kills"] = 412
 	if _tab == "heroes" and fp != null:
 		(fp.data as Dictionary)["gold"] = 900
 		(fp.data as Dictionary)["gems"] = 12
@@ -122,7 +132,7 @@ func _initialize() -> void:
 	# ui:<what> on Dock Street: results | cards | toasts
 	if target.begins_with("ui:"):
 		_tab = "ui_" + target.substr(3)
-		target = "res://scenes/levels/dock_street.tscn"
+		target = "res://scenes/levels/intake_lot.tscn" if _tab == "ui_surv" else "res://scenes/levels/dock_street.tscn"
 	# film:<from>-><to> plays a bridge film.
 	elif target.begins_with("film:"):
 		_tab = "film_" + target.substr(5)
@@ -156,6 +166,8 @@ func _process(_delta: float) -> bool:
 		current_scene.call("_open_stats")
 	if _tab == "armory" and _n == 40 and current_scene != null and current_scene.has_method("_open_armory"):
 		current_scene.call("_open_armory")
+	if _tab == "codex" and _n == 40 and current_scene != null and current_scene.has_method("_open_codex"):
+		current_scene.call("_open_codex")
 	if _tab.begins_with("ui_") and _n == 80 and current_scene != null:
 		match _tab.substr(3):
 			"results":
@@ -267,6 +279,28 @@ func _process(_delta: float) -> bool:
 		var page := _tab.substr(6)
 		if page != "" and current_scene.has_method("_" + page):
 			current_scene.call("_" + page)
+	# ui:surv (on a survive map) - every new ability at LV 7, two evolved,
+	# then the ultimate; frames every 6 ticks.
+	if _tab == "ui_surv" and current_scene != null:
+		var sr: Node = root.get_tree().get_first_node_in_group("survive_run")
+		if _n == 90 and sr:
+			get_root().get_tree().paused = false
+			for id in ["cart", "bag", "hydrant", "mailbomb", "sprinkler", "audit", "gravy"]:
+				sr.get("abilities")[id] = 7
+				sr.call("_mount", id)
+			sr.get("evolved")["cart"] = true
+			sr.get("evolved")["sprinkler"] = true
+			sr.call("emit_signal", "changed")
+		if _n == 200 and sr:
+			sr.set("ult_charge", 60.0)
+			var pl: Node = root.get_tree().get_first_node_in_group("players")
+			sr.call("fire_ult", pl)
+		if _n >= 96 and _n % 6 == 0:
+			for c in current_scene.get_children():
+				if c is CanvasLayer and c.get_script() != null and str(c.get_script().resource_path).ends_with("survive_pick.gd"):
+					c.queue_free()
+					get_root().get_tree().paused = false
+			root.get_texture().get_image().save_png(_out.get_basename() + "_%03d.png" % _n)
 	# ui:boss_<move> - the map's boss next to the Son runs one pattern;
 	# frames every 4 ticks (<out>_NNN.png).
 	if _tab.begins_with("ui_boss_") and current_scene != null:

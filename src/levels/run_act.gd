@@ -583,6 +583,8 @@ func _clear_resume() -> void:
 
 func _on_fail() -> void:
 	_clear_resume()
+	if SurviveRun.get_run(get_tree()):
+		SurviveRun.get_run(get_tree()).award_tokens(false)
 	FamilyProfile.mark_run_finished(false)
 	var g := 0
 	if _state:
@@ -616,6 +618,8 @@ func _on_gate() -> void:
 			FamilyProfile.mark_city_clear()
 		"intake_lot", "group_circle", "waiting_room", "sleet_hour", "ledger_dive":
 			FamilyProfile.mark_survive(map_id)
+			if SurviveRun.get_run(get_tree()):
+				SurviveRun.get_run(get_tree()).award_tokens(true)
 		"invoice_pier":
 			FamilyProfile.mark_annex()
 	FamilyProfile.mark_map_filed(map_id)
@@ -639,6 +643,8 @@ func _on_clear() -> void:
 		FamilyProfile.mark_family_plan()
 	if map_id in ["intake_lot", "group_circle", "waiting_room", "sleet_hour", "ledger_dive"]:
 		FamilyProfile.mark_survive(map_id)
+	if SurviveRun.get_run(get_tree()):
+		SurviveRun.get_run(get_tree()).award_tokens(true)
 	if App.remote_coop:
 		FamilyProfile.mark_remote_clear()
 	if _missions:

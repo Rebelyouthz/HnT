@@ -830,7 +830,7 @@ func _process_street(delta: float) -> void:
 		var combo_spd := 1.0 + clampf(float(Juice.combo) * 0.008, 0.0, 0.14)
 		if stumble_t > 0.0:
 			limp *= 0.4
-		velocity.x = x * speed * limp * (1.0 + (trick_boost - 1.0) * Meta.flow_mul()) * combo_spd * (1.0 + 0.12 * float(_cart("energy_drink"))) * _surv_speed()
+		velocity.x = x * speed * limp * (1.0 + (trick_boost - 1.0) * Meta.flow_mul()) * Meta.run_speed_mul() * combo_spd * (1.0 + 0.12 * float(_cart("energy_drink"))) * _surv_speed()
 		if _street_grounded():
 			velocity.y = y * depth_speed * limp
 		else:
@@ -849,9 +849,12 @@ func _process_street(delta: float) -> void:
 		velocity.x = _roll_dir * 330.0 * clampf(roll_t / 0.2, 0.35, 1.0)
 		velocity.y = y * depth_speed * 0.5
 	if _street_grounded():
-		coyote = COYOTE
+		coyote = COYOTE * (2 if Trees.has("p_coyote") else 1)
 		if suit_part("top") == "bat":
 			extra_jump = maxi(extra_jump, 1)
+		# PARKOUR tree DOUBLE JUMP: the Father gets one, the Son a third.
+		if Trees.has("p_air_jump"):
+			extra_jump = maxi(extra_jump, 1 if role == "father" else 2)
 		_footsteps(delta, absf(velocity.x))
 	if jump_buf > 0 and coyote > 0:
 		hop_v = JUMP * (1.12 if suit_part("bottom") == "spider" else 1.0) * Meta.jump_mul()
@@ -870,7 +873,10 @@ func _process_street(delta: float) -> void:
 		var g := GRAV
 		if hop_v > 0.0:
 			g *= FALL_MUL
-		if (role == "son" or suit_part("top") == "bat") and hop < 0.0 and _pressed("jump") and hop_v > -80.0:
+		# HANG TIME: the top of the jump floats.
+		if Trees.has("p_hang") and absf(hop_v) < 70.0:
+			g *= 0.45
+		if (role == "son" or suit_part("top") == "bat" or Trees.has("p_float")) and hop < 0.0 and _pressed("jump") and hop_v > -80.0:
 			if not gliding and ResourceLoader.exists("res://assets/audio/sfx/glide.ogg"):
 				Mixer.play_sfx("res://assets/audio/sfx/glide.ogg", 1.0, -10.0)
 			gliding = true
@@ -911,7 +917,7 @@ func _process_roof(delta: float) -> void:
 		var g := GRAV
 		if velocity.y > 0.0:
 			g *= FALL_MUL
-		if (role == "son" or suit_part("top") == "bat") and _pressed("jump") and velocity.y > -90.0:
+		if (role == "son" or suit_part("top") == "bat" or Trees.has("p_float")) and _pressed("jump") and velocity.y > -90.0:
 			gliding = true
 			g = GRAV * 0.18
 			velocity.y = minf(velocity.y, 10.0)
@@ -923,9 +929,12 @@ func _process_roof(delta: float) -> void:
 		velocity.y += g * delta
 	else:
 		gliding = false
-		coyote = COYOTE
+		coyote = COYOTE * (2 if Trees.has("p_coyote") else 1)
 		if suit_part("top") == "bat":
 			extra_jump = maxi(extra_jump, 1)
+		# PARKOUR tree DOUBLE JUMP: the Father gets one, the Son a third.
+		if Trees.has("p_air_jump"):
+			extra_jump = maxi(extra_jump, 1 if role == "father" else 2)
 		if hop_v != 0.0:
 			_on_land(absf(hop_v) if velocity.y >= 0.0 else 0.0)
 		hop_v = 0.0
@@ -1710,7 +1719,7 @@ func _roll() -> void:
 		return
 	var x := _stick().x
 	_roll_dir = signf(x) if absf(x) > 0.3 else -float(facing)
-	roll_t = 0.42
+	roll_t = 0.42 * (1.5 if Trees.has("p_roll") else 1.0)
 	invuln = maxi(invuln, 22)
 	blocking = false
 	_cancel_strike()
@@ -2240,6 +2249,10 @@ func take_hit(kind: String, from: Node) -> void:
 	var srun := SurviveRun.get_run(get_tree())
 	if srun and srun.armor() > 0.0:
 		dmg = maxi(1, int(round(float(dmg) * (1.0 - srun.armor()))))
+	# THORNS: whoever hit you gets some back.
+	if srun and srun.trait_n("t_thorns") > 0 and from is Punk:
+		(from as Punk).hp = maxi(1, (from as Punk).hp - 6 * srun.trait_n("t_thorns"))
+		Juice.popup_number((from as Punk).global_position + Vector2(0, -80), str(6 * srun.trait_n("t_thorns")), Color(0.5, 1.0, 0.5))
 	hp = maxi(0, hp - dmg)
 	if hp > 0:
 		copay = minf(float(max_hp - hp), copay + float(dmg) * 0.5)
@@ -2510,6 +2523,7 @@ func _on_land(fall: float) -> void:
 	Juice.squash(squash_root, facing)
 	Juice.land_puff(global_position)
 	rolling = false
+	_land_perks(fall)
 	if fall < 280.0:
 		KitSfx.hit(role, "land")
 		return
@@ -2527,7 +2541,7 @@ func _on_land(fall: float) -> void:
 	# A full jump lands at JUMP * sqrt(FALL_MUL) (~800): legs absorb that.
 	# Only drops beyond what a jump can produce stagger or hurt.
 	var full_jump := absf(JUMP) * sqrt(FALL_MUL)
-	if fall <= full_jump + 30.0 or Meta.rank("iron_ankles") >= 1:
+	if fall <= full_jump + 30.0 or Meta.rank("iron_ankles") >= 1 or Trees.has("p_iron"):
 		KitSfx.hit(role, "land")
 		return
 	KitSfx.foot(role, 1.0, true)
@@ -2577,7 +2591,7 @@ func _try_stomp() -> bool:
 	if best == null:
 		return false
 	stomp_n = mini(stomp_n + 1, 3)
-	stomp_cd = 1.1
+	stomp_cd = 2.2 if Trees.has("p_bounce") else 1.1
 	attack_cd = 16
 	var kind := "stomp%d" % stomp_n
 	_spawn_hit(kind, Vector2(52, 36), 0.18, Vector2(8 * facing, 8))
@@ -3371,3 +3385,22 @@ func _take_crush(from: Node) -> void:
 		_go_down()
 		return
 	_maybe_knockdown("heavy", from)
+
+
+
+## PARKOUR tree landings: GROUND POUND hits everyone near a hard landing,
+## METEOR stuns the whole crowd after a big drop.
+func _land_perks(fall: float) -> void:
+	if fall > 300.0 and Trees.has("p_quake"):
+		SuitFx.spawn(global_position, "ring", 80.0, 1.0, Color(1.0, 0.85, 0.6))
+		Juice.pulse_shake(4.0)
+		for n in get_tree().get_nodes_in_group("enemies"):
+			if n is Punk and (n as Punk).global_position.distance_to(global_position) < 80.0:
+				(n as Punk).take_hit("heavy", self)
+	if fall > 620.0 and Trees.has("p_meteor"):
+		Juice.shout("METEOR")
+		SuitFx.spawn(global_position, "ring", 170.0, 1.0, Color(1.0, 0.6, 0.3))
+		Juice.hitstop(6)
+		for n in get_tree().get_nodes_in_group("enemies"):
+			if n is Punk and (n as Punk).global_position.distance_to(global_position) < 170.0:
+				(n as Punk).recover = maxf((n as Punk).recover, 1.3)

@@ -826,9 +826,14 @@ func take_hit(kind: String, from: Node) -> void:
 		dmg = 20 + FamilyProfile.dojo_rank("roundhouse") * 4
 	elif kind == "air-mix":
 		dmg = 16
+	elif kind == "slide" and Trees.has("p_slide_kick") and recover < 0.6:
+		recover = 0.9
+		dmg = 8
 	elif kind.begins_with("stomp"):
 		stomp_hits += 1
 		dmg = 12 + stomp_hits * 10
+		if Trees.has("p_stomp"):
+			dmg = int(round(float(dmg) * 1.5))
 		if stomp_hits >= 3:
 			dmg = maxi(dmg, hp)
 			_show_brain()

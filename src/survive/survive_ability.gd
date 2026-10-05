@@ -28,13 +28,13 @@ func _process(delta: float) -> void:
 		return
 	_t += delta
 	var r := run.row("abilities", id)
-	if id == "clipboards":
+	if id == "clipboards" or id == "bag":
 		_tick_orbit(run, r, delta)
 		return
 	_cd -= delta
 	if _cd > 0.0:
 		return
-	_cd = float(r.get("cd", 1.5)) * run.cd_mul()
+	_cd = float(r.get("cd", 1.5)) * run.cd_mul() * (0.65 if run.evolved.has(id) else 1.0)
 	_fire(run, r, f)
 
 
@@ -113,6 +113,62 @@ func _fire(run: SurviveRun, r: Dictionary, f: Fighter) -> void:
 					SurvProj.strike(e, id, self)
 					e.set("recover", maxf(float(e.get("recover")), float(r.get("stun", 0.9))))
 			Mixer.play_sfx("res://assets/audio/card.wav", 1.5, -6.0)
+		"cart":
+			var n := 1 + (2 if run.evolved.has(id) else 0)
+			for i in n:
+				var dir := (1.0 if f.facing > 0 else -1.0) * (1.0 if i % 2 == 0 else -1.0)
+				SurvProj.shoot(_host(), "cart", id, f.global_position + Vector2(-dir * 60.0, randf_range(-20, 20)), Vector2(dir * 300.0, 0), 99)
+			Mixer.play_sfx("res://assets/audio/sfx/metal_bang.ogg", 1.4, -12.0)
+		"hydrant":
+			SurvProj.ring(_host(), f.global_position, area, Color(0.45, 0.75, 1.0))
+			for e in get_tree().get_nodes_in_group("enemies"):
+				if e is Node2D and (e as Node2D).global_position.distance_to(f.global_position) < area:
+					SurvProj.strike(e, id, self)
+					var away := ((e as Node2D).global_position - f.global_position).normalized()
+					(e as Node2D).global_position += away * 46.0
+			Mixer.play_sfx("res://assets/audio/whoosh.wav" if ResourceLoader.exists("res://assets/audio/whoosh.wav") else "res://assets/audio/sfx/throw_whoosh.ogg", 0.6, -8.0)
+		"mailbomb":
+			for i in run.proj_count(id):
+				var t := _nearest(at, 380.0)
+				var p := (t.global_position if t else f.global_position + Vector2(float(f.facing) * 120.0, 0)) + Vector2(randf_range(-30, 30), randf_range(-10, 10))
+				SurvProj.bomb(_host(), id, p, area)
+		"sprinkler":
+			var n := run.proj_count(id) * (2 if run.evolved.has(id) else 1)
+			for i in n:
+				var a := TAU * float(i) / float(n) + _t
+				SurvProj.shoot(_host(), "staple", id, at, Vector2.from_angle(a) * 420.0, 1)
+		"audit":
+			var chain := int(r.get("chain", 5)) + int(r.get("chain_per", 1)) * (int(run.abilities.get(id, 1)) - 1) + (99 if run.evolved.has(id) else 0)
+			var hit: Array = []
+			var from := at
+			for i in chain:
+				var t := _nearest(from, 320.0, hit)
+				if t == null:
+					break
+				hit.append(t)
+				SurvProj.bolt(_host(), from, t.global_position + Vector2(0, -26))
+				SurvProj.strike(t, id, self)
+				from = t.global_position + Vector2(0, -26)
+		"gravy":
+			# Under the biggest crowd: the enemy with the most others near it.
+			var best: Node2D = null
+			var bn := -1
+			for e in get_tree().get_nodes_in_group("enemies"):
+				if not (e is Node2D):
+					continue
+				var c := 0
+				for o in get_tree().get_nodes_in_group("enemies"):
+					if o is Node2D and (o as Node2D).global_position.distance_to((e as Node2D).global_position) < 70.0:
+						c += 1
+				if c > bn and (e as Node2D).global_position.distance_to(f.global_position) < 420.0:
+					bn = c
+					best = e
+			var gp := best.global_position if best else f.global_position
+			SurvProj.puddle(_host(), id, gp, area, float(r.get("life", 4.0)))
+			if run.evolved.has(id):
+				for ff in get_tree().get_nodes_in_group("players"):
+					if ff is Fighter:
+						(ff as Fighter).hp = mini((ff as Fighter).max_hp, (ff as Fighter).hp + 2)
 		"drip":
 			if not has_node("DripRing"):
 				var ring := Node2D.new()
@@ -139,7 +195,14 @@ func _tick_orbit(run: SurviveRun, r: Dictionary, delta: float) -> void:
 	while _orbit.size() < n:
 		var b := Node2D.new()
 		b.z_index = 6
+		var is_bag := id == "bag"
 		b.draw.connect(func() -> void:
+			if is_bag:
+				b.draw_line(Vector2.ZERO, -b.position, Color(0.85, 0.75, 0.3, 0.6), 1.0)
+				b.draw_circle(Vector2(0, 2), 8.0, Color(0.16, 0.17, 0.2))
+				b.draw_rect(Rect2(Vector2(-3, -8), Vector2(6, 4)), Color(0.25, 0.26, 0.3))
+				b.draw_circle(Vector2(-3, 0), 1.5, Color(0.4, 0.42, 0.48))
+				return
 			b.draw_rect(Rect2(Vector2(-5, -7), Vector2(10, 14)), Color(0.55, 0.36, 0.2))
 			b.draw_rect(Rect2(Vector2(-4, -5), Vector2(8, 11)), Color(0.95, 0.94, 0.88))
 			b.draw_rect(Rect2(Vector2(-2, -8), Vector2(4, 3)), Color(0.7, 0.72, 0.78))
@@ -150,11 +213,14 @@ func _tick_orbit(run: SurviveRun, r: Dictionary, delta: float) -> void:
 		_orbit.append(b)
 	var rad := float(r.get("area", 44)) * run.area_mul()
 	for i in _orbit.size():
-		var a := _t * 3.2 + float(i) * TAU / float(_orbit.size())
+		var spin := 3.2 if id != "bag" else 1.8
+		var a := _t * spin + float(i) * TAU / float(_orbit.size())
 		var b := _orbit[i]
 		b.visible = i < n
 		b.position = Vector2(cos(a) * rad, -30.0 + sin(a) * rad * 0.45)
-		b.rotation = a
+		b.rotation = a if id != "bag" else 0.0
+		if id == "bag":
+			b.queue_redraw()
 	for k in _hit_cd.keys():
 		_hit_cd[k] = float(_hit_cd[k]) - delta
 	for e in get_tree().get_nodes_in_group("enemies"):
@@ -164,7 +230,7 @@ func _tick_orbit(run: SurviveRun, r: Dictionary, delta: float) -> void:
 		if float(_hit_cd.get(key, 0.0)) > 0.0:
 			continue
 		for b in _orbit:
-			if b.visible and b.global_position.distance_to((e as Node2D).global_position + Vector2(0, -26)) < 18.0:
+			if b.visible and b.global_position.distance_to((e as Node2D).global_position + Vector2(0, -26)) < (24.0 if id == "bag" else 18.0):
 				SurvProj.strike(e, id, self)
 				_hit_cd[key] = 0.5
 				break

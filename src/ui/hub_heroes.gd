@@ -156,10 +156,10 @@ func _meta_panel() -> void:
 	head.position = Vector2(610, 68)
 	head.add_theme_constant_override("separation", 8)
 	_root.add_child(head)
-	var t := UiKit.title("META", 26, Palette.EDGE)
+	var t := UiKit.title("META", 24, Palette.EDGE)
 	head.add_child(t)
-	for pair in [["body", "BODY"], ["parkour", "PARKOUR"]]:
-		var b := UiKit.button(pair[1], Vector2(130, 34))
+	for pair in [["body", "BRAWL"], ["survivor", "SURVIVOR"], ["parkour", "PARKOUR"]]:
+		var b := UiKit.button(pair[1], Vector2(124, 34))
 		b.set_meta("key", "br_" + pair[0])
 		if _branch == pair[0]:
 			b.add_theme_stylebox_override("normal", UiKit.panel(Palette.BRICK, Palette.LEMON))
@@ -170,7 +170,8 @@ func _meta_panel() -> void:
 		)
 		head.add_child(b)
 	var tl := Label.new()
-	tl.text = "  TRICKS %d" % Meta.tricks_done() if _branch == "parkour" else ""
+	var cur := str(Meta.BRANCH_CUR.get(_branch, "gold"))
+	tl.text = "  %s %d" % [cur.to_upper(), int(FamilyProfile.data.get(cur, 0))]
 	UiKit.apply_label(tl, 13, Palette.MUTED)
 	head.add_child(tl)
 	var sc := ScrollContainer.new()
@@ -214,9 +215,8 @@ func _meta_row(id: String) -> Control:
 	var c := Meta.cost(id)
 	var txt := "MAXED"
 	if r < mx:
-		txt = "%dG%s" % [int(c["gold"]), ("  %d GEMS" % int(c["gems"])) if int(c["gems"]) > 0 else ""]
-		if why.begins_with("NEED") and why.contains("TRICKS"):
-			txt = why
+		var unit: String = {"gold": "G", "tokens": " TOK", "flow": " FLOW"}.get(str(c["cur"]), "")
+		txt = "%d%s%s" % [int(c["price"]), unit, ("  %d GEMS" % int(c["gems"])) if int(c["gems"]) > 0 else ""]
 	var b := UiKit.button(txt, Vector2(170, 40))
 	b.set_meta("key", "meta_" + id)
 	b.disabled = why != ""

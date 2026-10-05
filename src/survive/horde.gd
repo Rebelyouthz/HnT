@@ -74,6 +74,9 @@ func _process(delta: float) -> void:
 	if spawn_cd <= 0.0:
 		_wave()
 		var rate := float(_phase.get("rate", 1.0)) * (1.0 if App.is_solo_density() else 1.7)
+		var srun := SurviveRun.get_run(get_tree())
+		if srun:
+			rate *= 1.0 + 0.1 * float(srun.trait_n("t_curse"))
 		spawn_cd = 1.6 / maxf(rate, 0.2)
 	var every := float(_phase.get("elite_every", 0))
 	if every > 0.0:
@@ -100,7 +103,9 @@ func _alive() -> int:
 
 
 func _cap() -> int:
-	return int(_phase.get("cap", 9)) * (1 if App.is_solo_density() else 2)
+	var srun := SurviveRun.get_run(get_tree())
+	var curse := 1.0 + (0.1 * float(srun.trait_n("t_curse")) if srun else 0.0)
+	return int(round(float(_phase.get("cap", 9)) * (1 if App.is_solo_density() else 2) * curse))
 
 
 func _wave(elite := false, force := false) -> void:
@@ -201,6 +206,11 @@ func _elite_death(p: Punk) -> void:
 	var chest := SurviveChest.new()
 	chest.global_position = at + Vector2(18, 0)
 	get_parent().add_child.call_deferred(chest)
+	# TWO FOR ONE: a second chest a third of the time.
+	if Trees.has("f_chest") and randf() < 0.33:
+		var c2 := SurviveChest.new()
+		c2.global_position = at + Vector2(-22, 6)
+		get_parent().add_child.call_deferred(c2)
 
 
 func _gem(at: Vector2, big := false) -> void:

@@ -26,6 +26,19 @@ static func shoot(host: Node, k: String, ab: String, at: Vector2, v: Vector2, pi
 	p.vel = v
 	p.pierce = pierce_n
 	p.life = 1.6 if k != "note" else 2.2
+	if k == "cart":
+		p.life = 3.0
+	p.global_position = at
+	host.add_child(p)
+
+
+## A parcel that goes off almost at once where it lands.
+static func bomb(host: Node, ab: String, at: Vector2, r: float) -> void:
+	var p := SurvProj.new()
+	p.kind = "mine"
+	p.ability = ab
+	p.radius = r
+	p.life = 0.45
 	p.global_position = at
 	host.add_child(p)
 
@@ -85,6 +98,8 @@ static func strike(e: Node, ab: String, src: Node) -> void:
 	if run == null or not is_instance_valid(e) or int(e.get("hp")) <= 0:
 		return
 	var h := run.hit(ab)
+	if ab == "gravy" and e.get("recover") != null:
+		e.set("recover", maxf(float(e.get("recover")), 0.3))
 	src.set("skill_dmg", int(h["dmg"]))
 	e.call("take_hit", "skill", src)
 	run.note_hit(e, int(h["dmg"]))
@@ -120,13 +135,13 @@ func _physics_process(delta: float) -> void:
 		queue_free()
 		return
 	match kind:
-		"invoice", "staple", "note":
+		"invoice", "staple", "note", "cart":
 			global_position += vel * delta
 			for e in get_tree().get_nodes_in_group("enemies"):
 				if not (e is Node2D) or _hits.has(e.get_instance_id()) or int(e.get("hp")) <= 0:
 					continue
 				var c := (e as Node2D).global_position + Vector2(0, -26)
-				var reach := 26.0 if kind == "note" else 16.0
+				var reach := 26.0 if kind == "note" else (30.0 if kind == "cart" else 16.0)
 				if absf(c.x - global_position.x) < reach and absf(c.y - global_position.y) < 30.0:
 					_hits[e.get_instance_id()] = true
 					SurvProj.strike(e, ability, self)
@@ -167,6 +182,16 @@ func _draw() -> void:
 			draw_line(Vector2(-3, -2), Vector2(3, -2), Color(0.6, 0.6, 0.65), 0.7)
 			draw_line(Vector2(-3, 1), Vector2(2, 1), Color(0.6, 0.6, 0.65), 0.7)
 			draw_rect(Rect2(Vector2(1, 2), Vector2(2, 2)), Color(0.85, 0.15, 0.15))
+		"cart":
+			var f := signf(vel.x)
+			draw_rect(Rect2(Vector2(-14, -22), Vector2(28, 14)), Color(0.62, 0.65, 0.72))
+			for x in [-10.0, -4.0, 2.0, 8.0]:
+				draw_line(Vector2(x, -21), Vector2(x, -9), Color(0.4, 0.42, 0.48), 1.0)
+			draw_line(Vector2(-14 * f, -22), Vector2(-19 * f, -28), Color(0.62, 0.65, 0.72), 2.0)
+			draw_circle(Vector2(-9, -4), 3.0, Color(0.12, 0.12, 0.14))
+			draw_circle(Vector2(9, -4), 3.0, Color(0.12, 0.12, 0.14))
+			for k in 3:
+				draw_line(Vector2(-f * (18.0 + 6.0 * k), -14 + k * 4), Vector2(-f * (26.0 + 8.0 * k), -14 + k * 4), Color(1, 1, 1, 0.4 - 0.1 * k), 1.0)
 		"staple":
 			var d := vel.normalized()
 			draw_line(-d * 3.0, d * 3.0, Color(0.85, 0.87, 0.92), 1.0)
@@ -180,6 +205,8 @@ func _draw() -> void:
 		"puddle":
 			var a := clampf(life, 0.0, 1.0)
 			draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, 0.42))
+			if ability == "gravy":
+				draw_circle(Vector2.ZERO, radius, Color(0.55, 0.3, 0.12, 0.6 * a))
 			draw_circle(Vector2.ZERO, radius, Color(0.32, 0.18, 0.08, 0.55 * a))
 			draw_circle(Vector2(-radius * 0.2, -radius * 0.1), radius * 0.6, Color(0.45, 0.27, 0.12, 0.5 * a))
 			for k in 4:

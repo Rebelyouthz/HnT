@@ -6,17 +6,22 @@ var _focus: Dictionary = {}
 var _tip: PanelContainer
 var _tip_box: HBoxContainer
 var _stage: Control
+## Which of the three trees is open (Trees.MODES); kept between visits.
+static var mode := "brawl"
 
 ## BUILD page after Timmie's reference board: the clinic room behind, three
 ## vine trees (BODY / STREET / SHOW) of round skill nodes, a tooltip with the
 ## price and BUY / NEED GOLD, a legend box, a progress bar under each tree.
-const CENTERS := {"BODY": 300.0, "STREET": 640.0, "SHOW": 980.0}
+const CENTER_X := [300.0, 640.0, 980.0]
 const TOP := 128.0
 const STEP := 84.0
 const ARM := 74.0
 
 
 func _ready() -> void:
+	if Engine.has_meta("build_mode"):
+		mode = str(Engine.get_meta("build_mode"))
+		Engine.remove_meta("build_mode")
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	_stage = Control.new()
 	_stage.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -69,15 +74,41 @@ func _ready() -> void:
 	var couch := UiKit.portrait(SpriteBook.icon("therapy_couch"), Vector2(56, 56))
 	couch.position = Vector2(118, 10)
 	_stage.add_child(couch)
-	var list: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/cbt.json"))
-	for trunk in ["BODY", "STREET", "SHOW"]:
-		_tree(trunk, list)
+	var list: Array = Trees.nodes(mode)
+	var trunks: Array = Trees.TRUNKS[mode]
+	for i in trunks.size():
+		_tree(str(trunks[i]), list, CENTER_X[i])
 	_legend()
-	var compare := UiKit.button("BUILD COMPARE", Vector2(170, 32))
-	compare.add_theme_font_size_override("font_size", 12)
-	compare.position = Vector2(1062, 16)
-	compare.pressed.connect(_compare)
-	_stage.add_child(compare)
+	# One tree per way of playing: BRAWL / SURVIVOR / PARKOUR.
+	var tabs := VBoxContainer.new()
+	tabs.position = Vector2(14, 120)
+	tabs.add_theme_constant_override("separation", 6)
+	_stage.add_child(tabs)
+	for m: String in Trees.MODES:
+		var tb := UiKit.button(str(Trees.TITLES[m]), Vector2(150, 34))
+		tb.add_theme_font_size_override("font_size", 12)
+		if m == mode:
+			tb.add_theme_stylebox_override("normal", UiKit.panel(Palette.BRICK, Palette.LEMON))
+		tb.pressed.connect(func() -> void:
+			mode = m
+			Juice.play("res://assets/audio/ui_click.wav")
+			need_refresh.emit()
+		)
+		tabs.add_child(tb)
+	var wallet := Label.new()
+	wallet.text = "%s %d" % [Trees.cur_label(mode), Trees.balance(mode)]
+	wallet.position = Vector2(1000, 50)
+	wallet.size = Vector2(240, 20)
+	wallet.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	wallet.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(wallet, 15, UiKit.GOLD)
+	_stage.add_child(wallet)
+	if mode == "brawl":
+		var compare := UiKit.button("BUILD COMPARE", Vector2(170, 32))
+		compare.add_theme_font_size_override("font_size", 12)
+		compare.position = Vector2(1062, 16)
+		compare.pressed.connect(_compare)
+		_stage.add_child(compare)
 	_tip = PanelContainer.new()
 	_tip.add_theme_stylebox_override("panel", UiKit.frame(UiKit.GOLD, 0.3))
 	_tip.visible = false
@@ -99,6 +130,27 @@ func _depth(node: Dictionary, by_id: Dictionary) -> int:
 
 func _glyph(node: Dictionary) -> String:
 	var st := (str(node.get("stat", "")) + " " + str(node.get("id", ""))).to_lower()
+	# SURVIVOR / PARKOUR nodes.
+	if "+ability" in st:
+		return "fist"
+	if "slot" in st or "item" in st:
+		return "shield"
+	if "reroll" in st or "banish" in st:
+		return "eye"
+	if "evolution" in st or "ultimate" in st or "stun" in st:
+		return "bolt"
+	if "trait" in st or "luck" in st:
+		return "gems"
+	if "chest" in st or "token" in st or "+50% gold" in st:
+		return "gold"
+	if "revive" in st or "heal" in st:
+		return "heart"
+	if "jump" in st or "glide" in st or "hang" in st or "air" in st or "coyote" in st or "wall" in st or "speed" in st:
+		return "boot"
+	if "stomp" in st or "slide" in st or "quake" in st or "roll" in st or "falls" in st:
+		return "fist"
+	if "i-frames" in st or "combo" in st or "score" in st or "boost" in st:
+		return "star"
 	if "hp" in st:
 		return "heart"
 	if "steam" in st:
@@ -122,8 +174,7 @@ func _glyph(node: Dictionary) -> String:
 	return "star"
 
 
-func _tree(trunk: String, list: Array) -> void:
-	var cx: float = CENTERS[trunk]
+func _tree(trunk: String, list: Array, cx: float) -> void:
 	var by_id := {}
 	var nodes: Array = []
 	for n: Dictionary in list:
@@ -139,7 +190,7 @@ func _tree(trunk: String, list: Array) -> void:
 		if d > 0:
 			x += -ARM if br == "left" else ARM
 		pos[str(n["id"])] = Vector2(x, TOP + float(d) * STEP + (0.0 if d == 0 else 26.0))
-		if FamilyProfile.has_cbt(str(n["id"])):
+		if Trees.owned(mode, str(n["id"])):
 			owned_n += 1
 	var vines := VineDraw.new()
 	vines.position = Vector2.ZERO
@@ -149,7 +200,7 @@ func _tree(trunk: String, list: Array) -> void:
 		var req := str(n.get("requires", ""))
 		var a: Vector2 = pos[str(n["id"])]
 		var b: Vector2 = pos[req] if pos.has(req) else Vector2(cx, a.y + 60.0)
-		vines.links.append([b, a, FamilyProfile.has_cbt(str(n["id"]))])
+		vines.links.append([b, a, Trees.owned(mode, str(n["id"]))])
 	vines.trunk_x = cx
 	vines.trunk_top = TOP
 	vines.trunk_bottom = TOP + STEP * 3.0 + 70.0
@@ -171,15 +222,7 @@ func _tree(trunk: String, list: Array) -> void:
 
 
 func _state(node: Dictionary) -> String:
-	var id := str(node.get("id", ""))
-	if FamilyProfile.has_cbt(id):
-		return "owned"
-	var req := str(node.get("requires", ""))
-	if req != "" and not FamilyProfile.has_cbt(req):
-		return "locked"
-	if int(FamilyProfile.data["gold"]) >= int(node["gold"]) and int(FamilyProfile.data["rep"]) >= int(node["rep"]) and int(FamilyProfile.data["gems"]) >= int(node.get("gems", 0)):
-		return "can"
-	return "poor"
+	return Trees.state(mode, node)
 
 
 func _node_button(node: Dictionary, at: Vector2) -> Control:
@@ -266,7 +309,7 @@ func _show_tip(node: Dictionary, _at: Vector2) -> void:
 	var right := VBoxContainer.new()
 	right.custom_minimum_size = Vector2(190, 0)
 	var cost := Label.new()
-	cost.text = "%d GOLD%s%s" % [int(node["gold"]), ("  ·  %d REP" % int(node["rep"])) if int(node["rep"]) > 0 else "", ("  ·  %d GEM" % int(node.get("gems", 0))) if int(node.get("gems", 0)) > 0 else ""]
+	cost.text = "%d %s%s%s" % [int(node["gold"]), Trees.cur_label(mode), ("  ·  %d REP" % int(node["rep"])) if int(node["rep"]) > 0 else "", ("  ·  %d GEM" % int(node.get("gems", 0))) if int(node.get("gems", 0)) > 0 else ""]
 	cost.add_theme_font_override("font", UiKit.pixel_font())
 	UiKit.apply_label(cost, 13, Palette.TEXT)
 	right.add_child(cost)
@@ -279,13 +322,13 @@ func _show_tip(node: Dictionary, _at: Vector2) -> void:
 			right.add_child(o)
 		"locked":
 			var l := Label.new()
-			l.text = "BUY %s FIRST" % str(node.get("requires", "")).replace("_", " ").to_upper()
+			l.text = "BUY %s FIRST" % str(Trees.node(mode, str(node.get("requires", ""))).get("name", str(node.get("requires", "")))).to_upper()
 			l.add_theme_font_override("font", UiKit.pixel_font())
 			UiKit.apply_label(l, 13, Palette.MUTED)
 			right.add_child(l)
 		"poor":
 			var p := Label.new()
-			p.text = "NEED GOLD" if int(FamilyProfile.data["gold"]) < int(node["gold"]) else ("NEED REP" if int(FamilyProfile.data["rep"]) < int(node["rep"]) else "NEED GEM")
+			p.text = ("NEED " + Trees.cur_label(mode)) if Trees.balance(mode) < int(node["gold"]) else ("NEED REP" if int(FamilyProfile.data["rep"]) < int(node["rep"]) else "NEED GEM")
 			p.add_theme_font_override("font", UiKit.pixel_font())
 			UiKit.apply_label(p, 16, Color(0.95, 0.25, 0.22))
 			right.add_child(p)
@@ -300,11 +343,11 @@ func _show_tip(node: Dictionary, _at: Vector2) -> void:
 
 
 func _buy(node: Dictionary) -> void:
-	if FamilyProfile.try_cbt(str(node["id"])):
+	if Trees.try_buy(mode, str(node["id"])):
 		Juice.play("res://assets/audio/claim.wav")
 		need_refresh.emit()
 	else:
-		Juice.claim_burst(get_viewport_rect().size * 0.5, "GOLD AND PARENTS FIRST", 0, 0)
+		Juice.claim_burst(get_viewport_rect().size * 0.5, "NOT ENOUGH " + Trees.cur_label(mode), 0, 0)
 
 
 func _legend() -> void:

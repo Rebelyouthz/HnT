@@ -129,6 +129,9 @@ func _ready() -> void:
 	if bw != "":
 		var run_k: Dictionary = Engine.get_meta("run_weapon_kills", {})
 		rewards.add_child(_reward("fist", str(WeaponBook.spec(bw).get("title", bw)).to_upper(), "%d KO" % int(run_k.get(bw, 0))))
+	var tk := int(Engine.get_meta("run_tokens", 0))
+	if tk > 0:
+		rewards.add_child(_reward("star", "TOKENS", "+%d" % tk))
 	var rs_n := int(Engine.get_meta("run_shards", 0))
 	if rs_n > 0:
 		rewards.add_child(_reward("star", "SHARDS", "+%d" % rs_n))

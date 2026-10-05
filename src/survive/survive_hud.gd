@@ -13,6 +13,9 @@ var _bar_bg: ColorRect
 var _icons: HBoxContainer
 var _items: HBoxContainer
 var _dirty := true
+var _ult: ColorRect
+var _ult_lab: Label
+var _t := 0.0
 
 
 func _ready() -> void:
@@ -60,6 +63,25 @@ func _ready() -> void:
 	_items.position = Vector2(860, 650)
 	_items.add_theme_constant_override("separation", 6)
 	root.add_child(_items)
+	# ULTIMATE: kills charge it; SPECIAL fires it when the bar is full.
+	var ubg := ColorRect.new()
+	ubg.color = Color(0, 0, 0, 0.6)
+	ubg.position = Vector2(540, 228)
+	ubg.size = Vector2(200, 8)
+	root.add_child(ubg)
+	_ult = ColorRect.new()
+	_ult.color = Color(1.0, 0.56, 0.12)
+	_ult.position = ubg.position
+	_ult.size = Vector2(0, 8)
+	root.add_child(_ult)
+	_ult_lab = Label.new()
+	_ult_lab.position = Vector2(440, 236)
+	_ult_lab.size = Vector2(400, 18)
+	_ult_lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	UiKit.apply_label(_ult_lab, 11, Color(1.0, 0.7, 0.35))
+	_ult_lab.add_theme_color_override("font_outline_color", Color(0, 0, 0))
+	_ult_lab.add_theme_constant_override("outline_size", 4)
+	root.add_child(_ult_lab)
 
 
 func _process(_d: float) -> void:
@@ -75,6 +97,16 @@ func _process(_d: float) -> void:
 	if not run.changed.is_connected(_mark):
 		run.changed.connect(_mark)
 	_lv.text = "LV %d" % run.level
+	_t += _d
+	var k := clampf(run.ult_charge / SurviveRun.ULT_NEED, 0.0, 1.0)
+	_ult.size.x = 200.0 * k
+	var uname := str(run.row("ultimates", run.ult).get("name", "ULTIMATE"))
+	if k >= 1.0:
+		_ult.color = Color(1.0, 0.56, 0.12).lerp(Color.WHITE, 0.5 + 0.5 * sin(_t * 10.0))
+		_ult_lab.text = "%s READY  ·  SPECIAL" % uname
+	else:
+		_ult.color = Color(1.0, 0.56, 0.12)
+		_ult_lab.text = uname
 	_bar.size.x = 800.0 * clampf(float(run.xp) / float(maxi(1, run.need())), 0.0, 1.0)
 	if _dirty:
 		_dirty = false

@@ -30,8 +30,8 @@ func _ready() -> void:
 	dim.color = Color(0.02, 0.0, 0.04, 0.88)
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_root.add_child(dim)
-	var title: String = {"level": "LEVEL %d" % run.level, "item": "ELITE CHEST", "stash": "LOST & FOUND", "well": "THE WELL"}.get(mode, "PICK ONE")
-	var sub: String = {"level": "Pick one. The rest goes back in the drawer.", "item": "The elite dropped something. Take one.", "stash": "Things you kept from other hours. Take one in with you.", "well": "Drop one item down the well: it waits for you in the next hour."}.get(mode, "")
+	var title: String = {"level": "LEVEL %d" % run.level, "item": "ELITE CHEST", "stash": "LOST & FOUND", "well": "THE WELL", "evolve": "EVOLUTION"}.get(mode, "PICK ONE")
+	var sub: String = {"evolve": "LV 7 and its partner item: it grows into something worse.", "level": "Pick one. The rest goes back in the drawer.", "item": "The elite dropped something. Take one.", "stash": "Things you kept from other hours. Take one in with you.", "well": "Drop one item down the well: it waits for you in the next hour."}.get(mode, "")
 	var t := UiKit.title(str(title), 44, Palette.LEMON)
 	t.position = Vector2(0, 92)
 	t.size = Vector2(1280, 56)
@@ -81,6 +81,9 @@ func _ready() -> void:
 			_info.text = "Pick a card to banish it for the rest of the hour." if _banish else ""
 		)
 		tools.add_child(bn)
+	elif mode == "evolve":
+		for r in item_rows:
+			_offers.append(r)
 	else:
 		for r in item_rows:
 			_offers.append({"kind": "item", "id": str(r.get("id", "")), "row": r})
@@ -143,6 +146,10 @@ func _card(o: Dictionary) -> Button:
 			r = o["row"]
 			lv_text = str(r.get("rarity", "common")).to_upper() + " ITEM"
 			col = RARITY_COL.get(str(r.get("rarity", "common")), Palette.EDGE)
+		"evolve":
+			r = o
+			lv_text = "EVOLVE  ·  " + str(run.row("abilities", str(o["id"])).get("name", "")).to_upper()
+			col = Color(1.0, 0.56, 0.12)
 		_:
 			r = {"name": "10 GOLD", "blurb": "Nothing left to learn. Have some money.", "icon": "i_coin"}
 			lv_text = "CONSOLATION"

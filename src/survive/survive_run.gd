@@ -27,6 +27,17 @@ var frenzy_t := 0.0
 var _pending := 0
 var _picking := false
 var _regen_acc := 0.0
+## Evolved abilities (id -> true): an ability at LV 7 with its partner item
+## turns into its evolution in the next chest (needs the EVOLUTION node).
+var evolved: Dictionary = {}
+## The ultimate: kills charge it, SPECIAL fires it when full.
+var ult := "copay_crash"
+var ult_charge := 0.0
+const ULT_NEED := 60.0
+var revives := 0
+var time_alive := 0.0
+var _vamp_kills := 0
+var _awarded := false
 
 
 static func get_run(tree: SceneTree) -> SurviveRun:
@@ -42,6 +53,16 @@ func _ready() -> void:
 	# Father's coffee (solo picks by role).
 	var start := "invoice_toss" if App.solo_role == "son" else "coffee"
 	call_deferred("_grant", start)
+	# SURVIVOR meta + tree: extra rerolls, banishes, revives, a free trait.
+	rerolls += Meta.rank("s_reroll") + (2 if Trees.has("s_reroll") else 0)
+	banishes += Meta.rank("s_banish") + (2 if Trees.has("s_banish") else 0)
+	revives = Meta.rank("s_revival") + (1 if Trees.has("f_revive") else 0)
+	var chosen := str(FamilyProfile.data.get("surv_ult", "copay_crash"))
+	if ult_unlocked(chosen):
+		ult = chosen
+	call_deferred("_meta_body")
+	if Trees.has("f_start"):
+		call_deferred("_free_trait")
 	# A carried item from the Lost & Found well.
 	call_deferred("_offer_stash")
 
@@ -73,36 +94,76 @@ func trait_n(id: String) -> int:
 
 
 func dmg_mul() -> float:
-	return 1.0 + 0.12 * trait_n("t_dmg") + _item_mod("dmg")
+	return 1.0 + 0.12 * trait_n("t_dmg") + _item_mod("dmg") + 0.05 * Meta.rank("s_might")
 
 
 func area_mul() -> float:
-	return 1.0 + 0.14 * trait_n("t_area") + _item_mod("area")
+	return 1.0 + 0.14 * trait_n("t_area") + _item_mod("area") + 0.05 * Meta.rank("s_area")
 
 
 func cd_mul() -> float:
-	var m := maxf(0.35, 1.0 - 0.08 * trait_n("t_cd") - _item_mod("cd"))
+	var m := maxf(0.35, 1.0 - 0.08 * trait_n("t_cd") - _item_mod("cd") - 0.03 * Meta.rank("s_cooldown"))
 	return m * (0.5 if frenzy_t > 0.0 else 1.0)
 
 
 func proj_bonus() -> int:
-	return trait_n("t_proj") + int(_item_mod("proj"))
+	return trait_n("t_proj") + int(_item_mod("proj")) + Meta.rank("s_amount")
 
 
 func crit() -> float:
-	return 0.06 * trait_n("t_crit") + _item_mod("crit")
+	return 0.06 * trait_n("t_crit") + _item_mod("crit") + 0.04 * trait_n("t_luck") + 0.03 * Meta.rank("s_luck")
 
 
 func speed_mul() -> float:
-	return 1.0 + 0.07 * trait_n("t_speed") + _item_mod("speed")
+	return 1.0 + 0.07 * trait_n("t_speed") + _item_mod("speed") + 0.04 * Meta.rank("s_speed")
 
 
 func armor() -> float:
-	return minf(0.6, 0.07 * trait_n("t_armor"))
+	return minf(0.7, 0.07 * trait_n("t_armor") + 0.04 * Meta.rank("s_armor"))
 
 
 func pickup_mul() -> float:
-	return 1.0 + 0.3 * trait_n("t_pickup") + _item_mod("pickup")
+	return 1.0 + 0.3 * trait_n("t_pickup") + _item_mod("pickup") + 0.15 * Meta.rank("s_magnet") + (0.4 if Trees.has("f_magnet") else 0.0)
+
+
+func max_abilities() -> int:
+	return MAX_ABILITIES + (1 if Trees.has("s_slot") else 0)
+
+
+func max_items() -> int:
+	return MAX_ITEMS + (1 if Trees.has("s_item_slot") else 0)
+
+
+func luck() -> float:
+	return 0.05 * trait_n("t_luck") + 0.04 * Meta.rank("s_luck") + (0.15 if Trees.has("f_luck") else 0.0)
+
+
+func ult_unlocked(id: String) -> bool:
+	var r := row("ultimates", id)
+	return not r.is_empty() and (str(r.get("unlock", "")) == "" or Trees.has(str(r.get("unlock", ""))))
+
+
+func ability_unlocked(id: String) -> bool:
+	var r := row("abilities", id)
+	return str(r.get("unlock", "")) == "" or Trees.has(str(r.get("unlock", "")))
+
+
+func _meta_body() -> void:
+	var hp := 10 * Meta.rank("s_maxhp")
+	for f in _fighters():
+		f.max_hp += hp
+		f.hp += hp
+
+
+func _free_trait() -> void:
+	var pool: Array = []
+	for r: Dictionary in book.get("traits", []):
+		pool.append(str(r["id"]))
+	if pool.is_empty():
+		return
+	var id: String = pool[randi() % pool.size()]
+	take({"kind": "trait", "id": id})
+	Juice.toast("reward", "HEAD START", str(row("traits", id).get("name", id)))
 
 
 func slow() -> float:
@@ -113,7 +174,7 @@ func slow() -> float:
 func hit(id: String) -> Dictionary:
 	var r := row("abilities", id)
 	var lv := int(abilities.get(id, 1))
-	var d := (float(r.get("dmg", 6)) + float(r.get("per", 1)) * float(lv - 1)) * dmg_mul()
+	var d := (float(r.get("dmg", 6)) + float(r.get("per", 1)) * float(lv - 1)) * dmg_mul() * (2.2 if evolved.has(id) else 1.0)
 	var c := randf() < crit()
 	if c:
 		d *= 2.0
@@ -129,6 +190,8 @@ func proj_count(id: String) -> int:
 			n += 1
 	if int(r.get("proj", 0)) > 0:
 		n += proj_bonus()
+		if evolved.has(id):
+			n += 2
 	return n
 
 
@@ -140,7 +203,7 @@ func need() -> int:
 
 
 func add_xp(n: int) -> void:
-	n = int(ceil(float(n) * (1.0 + 0.12 * trait_n("t_xp"))))
+	n = int(ceil(float(n) * (1.0 + 0.12 * trait_n("t_xp") + 0.15 * trait_n("t_curse") + 0.05 * Meta.rank("s_growth"))))
 	xp += n
 	while xp >= need():
 		xp -= need()
@@ -167,6 +230,13 @@ func note_hit(e: Node, dmg: int) -> void:
 
 func note_kill() -> void:
 	kills += 1
+	ult_charge = minf(ULT_NEED, ult_charge + 1.0)
+	if trait_n("t_vamp") > 0:
+		_vamp_kills += 1
+		if _vamp_kills >= 25:
+			_vamp_kills = 0
+			for f in _fighters():
+				f.hp = mini(f.max_hp, f.hp + 3 * trait_n("t_vamp"))
 	var kh := int(_item_mod("kill_heal"))
 	if kh > 0:
 		for f in _fighters():
@@ -175,7 +245,10 @@ func note_kill() -> void:
 
 func _process(delta: float) -> void:
 	frenzy_t = maxf(0.0, frenzy_t - delta)
-	var rg := 0.6 * trait_n("t_regen")
+	time_alive += delta
+	_tick_ult()
+	_tick_revive()
+	var rg := 0.6 * trait_n("t_regen") + 0.25 * Meta.rank("s_recovery")
 	if rg > 0.0:
 		_regen_acc += rg * delta
 		if _regen_acc >= 1.0:
@@ -202,12 +275,12 @@ func offers(n: int = 3) -> Array:
 	var pool: Array = []
 	for r: Dictionary in book.get("abilities", []):
 		var id := str(r["id"])
-		if id in banned:
+		if id in banned or not ability_unlocked(id):
 			continue
 		if abilities.has(id):
 			if int(abilities[id]) < MAX_LV:
 				pool.append({"kind": "ability", "id": id, "w": 3.0})
-		elif abilities.size() < MAX_ABILITIES:
+		elif abilities.size() < max_abilities():
 			pool.append({"kind": "ability", "id": id, "w": 1.6})
 	for r: Dictionary in book.get("traits", []):
 		var id := str(r["id"])
@@ -248,10 +321,20 @@ func take(o: Dictionary) -> void:
 					f.max_hp += 12
 					f.hp += 12
 		"item":
-			if items.size() < MAX_ITEMS:
+			if items.size() < max_items():
 				items.append(o["row"])
 			else:
-				items[randi() % MAX_ITEMS] = o["row"]
+				items[randi() % items.size()] = o["row"]
+		"evolve":
+			var eid := str(o["id"])
+			evolved[eid] = true
+			var ev := evolution_of(eid)
+			Juice.unlock_logo(str(ev.get("name", "EVOLVED")), str(ev.get("blurb", "")), "EVOLUTION")
+			Rarity.juice("legendary", str(ev.get("name", "")))
+			var ab: Array = FamilyProfile.data.get("evolutions_seen", [])
+			if not ab.has(eid):
+				ab.append(eid)
+				FamilyProfile.data["evolutions_seen"] = ab
 			var hp := int(((o["row"] as Dictionary).get("mods", {}) as Dictionary).get("hp", 0))
 			for f in _fighters():
 				f.max_hp += hp
@@ -286,10 +369,50 @@ func _next_pick() -> void:
 	)
 
 
-## Elite chest: pick one of three items.
+func evolution_of(id: String) -> Dictionary:
+	for e: Dictionary in book.get("evolutions", []):
+		if str(e.get("ability", "")) == id:
+			return e
+	return {}
+
+
+func has_item(id: String) -> bool:
+	for it: Dictionary in items:
+		if str(it.get("id", "")) == id:
+			return true
+	return false
+
+
+## An ability ready to evolve: LV 7, partner item held, EVOLUTION owned.
+func evolve_ready() -> String:
+	if not Trees.has("s_evolve"):
+		return ""
+	for id in abilities:
+		if int(abilities[id]) >= MAX_LV and not evolved.has(id):
+			var e := evolution_of(str(id))
+			if not e.is_empty() and has_item(str(e.get("item", ""))):
+				return str(id)
+	return ""
+
+
+## Elite chest: pick one of three items (or an evolution when one is ready).
 func open_item_chest() -> void:
+	var ready := evolve_ready()
+	if ready != "":
+		var e := evolution_of(ready)
+		var sh := preload("res://src/survive/survive_pick.gd").new()
+		sh.run = self
+		sh.mode = "evolve"
+		sh.item_rows = [{"kind": "evolve", "id": ready, "name": str(e.get("name", "")), "blurb": str(e.get("blurb", "")), "icon": "evolve"}]
+		get_tree().current_scene.add_child(sh)
+		return
 	var pool: Array = (book.get("items", []) as Array).duplicate()
 	pool.shuffle()
+	# LUCK: rarer items float to the front.
+	if luck() > 0.0:
+		pool.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+			return Rarity.rank(str(a.get("rarity", "common"))) * luck() + randf() > Rarity.rank(str(b.get("rarity", "common"))) * luck() + randf()
+		)
 	var sheet := preload("res://src/survive/survive_pick.gd").new()
 	sheet.run = self
 	sheet.mode = "item"
@@ -337,3 +460,87 @@ func keep(row_: Dictionary) -> void:
 		stash.pop_front()
 	FamilyProfile.data["lost_found"] = stash
 	FamilyProfile.save()
+
+
+
+# --- ultimate, revives, tokens -----------------------------------------------
+
+func _tick_ult() -> void:
+	if ult_charge < ULT_NEED:
+		return
+	for f in _fighters():
+		if not f.downed and Input.is_action_just_pressed(str(f.prefix) + "special"):
+			fire_ult(f)
+			return
+
+
+func fire_ult(f: Fighter) -> void:
+	ult_charge = 0.0
+	var r := row("ultimates", ult)
+	Juice.shout(str(r.get("name", "ULTIMATE")))
+	Juice.hitstop(8)
+	Juice.pulse_shake(12.0)
+	Mixer.play_sfx("res://assets/audio/boss_roar.wav" if ResourceLoader.exists("res://assets/audio/boss_roar.wav") else "res://assets/audio/kill.wav", 1.2, -2.0)
+	var cam := f.get_viewport().get_camera_2d()
+	var c := cam.global_position if cam else f.global_position
+	match ult:
+		"panic_room":
+			for ff in _fighters():
+				ff.invuln = maxi(ff.invuln, 360)
+			SurvProj.ring(f.get_parent(), f.global_position, 120.0, Color(0.4, 0.75, 1.0))
+			var t := 0
+			while t < 12 and is_inside_tree():
+				for e in get_tree().get_nodes_in_group("enemies"):
+					if e is Punk and (e as Node2D).global_position.distance_to(f.global_position) < 120.0:
+						(e as Punk).take_hit("skill", f)
+						(e as Node2D).global_position += ((e as Node2D).global_position - f.global_position).normalized() * 20.0
+				SurvProj.ring(f.get_parent(), f.global_position, 120.0, Color(0.4, 0.75, 1.0, 0.5))
+				await get_tree().create_timer(0.5).timeout
+				t += 1
+		"black_friday":
+			for e in get_tree().get_nodes_in_group("enemies"):
+				if e is Punk and absf((e as Node2D).global_position.x - c.x) < 700.0:
+					(e as Punk).take_hit("skill", f)
+					LootDrop.spawn(f.get_parent(), (e as Node2D).global_position, "coin", 1, 1.0)
+					add_xp(4)
+		_:
+			SurvProj.ring(f.get_parent(), f.global_position, 340.0, Color(1.0, 0.6, 0.2))
+			for e in get_tree().get_nodes_in_group("enemies"):
+				if e is Punk and absf((e as Node2D).global_position.x - c.x) < 700.0:
+					for i in 3:
+						(e as Punk).take_hit("skill", f)
+					(e as Punk).recover = maxf((e as Punk).recover, 1.0)
+
+
+func _tick_revive() -> void:
+	if revives <= 0:
+		return
+	for f in _fighters():
+		if f.downed:
+			revives -= 1
+			f._revived()
+			f.hp = int(round(float(f.max_hp) * 0.5))
+			Juice.shout("SECOND SHIFT")
+			SurvProj.ring(f.get_parent(), f.global_position, 140.0, Color(0.5, 1.0, 0.6))
+			for e in get_tree().get_nodes_in_group("enemies"):
+				if e is Punk and (e as Node2D).global_position.distance_to(f.global_position) < 140.0:
+					(e as Punk).take_hit("skill", f)
+			return
+
+
+## Tokens for the SURVIVOR tree and meta: kills, minutes held, level, boss.
+func award_tokens(won: bool) -> int:
+	if _awarded:
+		return 0
+	_awarded = true
+	var n := int(kills / 15) + int(time_alive / 60.0 * 8.0) + level * 2 + (40 if won else 0)
+	n = int(round(float(n) * (1.0 + 0.1 * trait_n("t_curse"))))
+	var before := int(FamilyProfile.data.get("tokens", 0))
+	Trees.add_tokens(n)
+	var got := int(FamilyProfile.data.get("tokens", 0)) - before
+	Engine.set_meta("run_tokens", got)
+	FamilyProfile.data["surv_best_kills"] = maxi(int(FamilyProfile.data.get("surv_best_kills", 0)), kills)
+	FamilyProfile.data["surv_best_level"] = maxi(int(FamilyProfile.data.get("surv_best_level", 0)), level)
+	FamilyProfile.data["surv_best_time"] = maxi(int(FamilyProfile.data.get("surv_best_time", 0)), int(time_alive))
+	FamilyProfile.save()
+	return got

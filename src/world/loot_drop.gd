@@ -179,6 +179,8 @@ func _take(f: Fighter) -> void:
 			if Charms.has("lucky_coin"):
 				g = int(ceil(float(g) * 1.5))
 			g = int(ceil(float(g) * Meta.gold_mul()))
+			if Trees.has("f_gold") and SurviveRun.get_run(get_tree()) != null:
+				g = int(ceil(float(g) * 1.5))
 			FamilyProfile.add_gold(g)
 			Juice.popup_number(global_position + Vector2(0, -24), "+%d" % g, UiKit.GOLD)
 			Juice.fly_pills(global_position, g, 0)
