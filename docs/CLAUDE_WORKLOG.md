@@ -93,6 +93,13 @@ The rest is in English, like the code. Newest work first. Each block says
   milestone chests, panic cry, edge arrows), LIMIT BREAK, DPS share on
   results, harder scaling, six new survivor tree nodes (s_boxes, s_four,
   f_gear, f_wheel, u_limit, u_start2).
+- Per-map things: race clock on roof maps, survivor map events (tow truck,
+  talking stick, now serving, blizzard, audit); item-card STARTING DRAW.
+- `BodySense`: body separation, roof/thug footsteps, parkour sounds.
+- Skill nodes: own sprite icon each (`NODE_ICON`); deep trees squeeze rows.
+  MOVES › LIBRARY previews the highlighted strike on the hero.
+- Windows installer rebuilt and pushed. **Next agent: read
+  docs/HANDOFF_NEXT_AGENT.md** (owner's message and what is wanted next).
 
 ## 0l. Bosses, three trees + metas, survivor depth, weapon mods, night extras
 
