@@ -21,7 +21,7 @@ VOICE = {
     "bystander_f": "EXAVITQu4vr4xnSDxMaL",
 }
 # Shouts and pain want more style / less stability than talk.
-STYLE = {"effort": (0.25, 0.75), "hurt": (0.25, 0.7), "death": (0.35, 0.5), "kill": (0.35, 0.6), "taunt": (0.4, 0.55)}
+STYLE = {"attack": (0.25, 0.75), "effort": (0.25, 0.75), "hurt": (0.25, 0.7), "death": (0.35, 0.5), "kill": (0.35, 0.6), "taunt": (0.4, 0.55)}
 
 
 def key() -> str:

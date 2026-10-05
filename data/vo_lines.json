@@ -993,6 +993,160 @@
    "ev": "react",
    "emotion": "surprised",
    "text": "I'm calling somebody. Anybody."
+  },
+  {
+   "id": "thug_attack_1",
+   "who": "thug",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Hyah!"
+  },
+  {
+   "id": "thug_attack_2",
+   "who": "thug",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Take this!"
+  },
+  {
+   "id": "mohawk_attack_1",
+   "who": "mohawk",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "RAAH!"
+  },
+  {
+   "id": "mohawk_attack_2",
+   "who": "mohawk",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Eat it!"
+  },
+  {
+   "id": "cop_attack_1",
+   "who": "cop",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Freeze!"
+  },
+  {
+   "id": "cop_attack_2",
+   "who": "cop",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Stop resisting!"
+  },
+  {
+   "id": "gant_attack_1",
+   "who": "gant",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Pay up!"
+  },
+  {
+   "id": "gant_attack_2",
+   "who": "gant",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Collection time!"
+  },
+  {
+   "id": "repo_attack_1",
+   "who": "repo",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Hrrgh!"
+  },
+  {
+   "id": "repo_attack_2",
+   "who": "repo",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Repossessed!"
+  },
+  {
+   "id": "bailiff_attack_1",
+   "who": "bailiff",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Order!"
+  },
+  {
+   "id": "bailiff_attack_2",
+   "who": "bailiff",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Hah!"
+  },
+  {
+   "id": "runner_attack_1",
+   "who": "runner",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Hup!"
+  },
+  {
+   "id": "runner_attack_2",
+   "who": "runner",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Too slow!"
+  },
+  {
+   "id": "snatch_attack_1",
+   "who": "snatch",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Gimme!"
+  },
+  {
+   "id": "snatch_attack_2",
+   "who": "snatch",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Hah!"
+  },
+  {
+   "id": "imp_attack_1",
+   "who": "imp",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Wheee!"
+  },
+  {
+   "id": "imp_attack_2",
+   "who": "imp",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Cope!"
+  },
+  {
+   "id": "valet_attack_1",
+   "who": "valet",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Valet!"
+  },
+  {
+   "id": "valet_attack_2",
+   "who": "valet",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Hyah!"
+  },
+  {
+   "id": "shift_lead_attack_1",
+   "who": "shift_lead",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Clock out!"
+  },
+  {
+   "id": "shift_lead_attack_2",
+   "who": "shift_lead",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Hngh!"
   }
  ]
 }

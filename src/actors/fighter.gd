@@ -2113,7 +2113,7 @@ func take_hit(kind: String, from: Node) -> void:
 		copay = minf(float(max_hp - hp), copay + float(dmg) * 0.5)
 		_copay_hold = 1.2
 	_hurt_t = 0.32
-	VoBank.line(role, "hurt", 0.22)
+	VoBank.line(role, "hurt", 0.45)
 	_cancel_strike()
 	var rs := get_tree().get_first_node_in_group("run_state")
 	if rs and rs.has_method("has_card") and rs.has_card("family_discount"):

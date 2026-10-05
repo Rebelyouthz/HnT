@@ -189,6 +189,21 @@ static func effort(role: String, weight: float) -> void:
 		Mixer.play_vo(path)
 
 
+static var _attack_last: Dictionary = {}
+
+
+## An enemy's shout as it swings: own short clock per speaker, never on
+## every swing.
+static func attack(who: String, chance: float = 0.45) -> void:
+	var now := Time.get_ticks_msec() / 1000.0
+	if now - float(_attack_last.get(who, -10.0)) < 1.2 or randf() > chance:
+		return
+	var path := "res://assets/audio/vo/%s_attack_%d.ogg" % [who, 1 + randi() % 2]
+	if ResourceLoader.exists(path):
+		_attack_last[who] = now
+		Mixer.play_vo(path)
+
+
 ## Speaker key for an enemy (matches vo_lines.json).
 static func who_of(p: Node) -> String:
 	if p == null:

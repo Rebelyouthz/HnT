@@ -663,6 +663,7 @@ func _lob() -> void:
 
 
 func _swing() -> void:
+	VoBank.attack(VoBank.who_of(self))
 	recover = 0.42 if title != "Mohawk Bo" else 0.62
 	var atk := str(kit.get("attack", "heavy" if title == "Mohawk Bo" else "light"))
 	if atk == "gun":
