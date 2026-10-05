@@ -31,9 +31,9 @@ static func flash(host: Node, at: Vector2, w: String, face: int) -> void:
 	host.add_child(f)
 	var l := PointLight2D.new()
 	l.texture = LightRig.radial_tex()
-	l.texture_scale = 0.55 if w == "shotgun" or w == "revolver" else 0.35
+	l.texture_scale = 0.55 if w == "shotgun" else (0.44 if w == "revolver" else 0.35)
 	l.color = Color(1.0, 0.2, 0.2) if w == "ray" else (Color(1.0, 0.4, 0.2) if w == "flare_gun" else Color(1.0, 0.78, 0.45))
-	l.energy = 2.2 if w == "shotgun" or w == "revolver" else 1.4
+	l.energy = 2.2 if w == "shotgun" else (1.7 if w == "revolver" else 1.4)
 	# A real light: it washes the street and walls, and things cast shadows.
 	l.texture_scale *= 2.2
 	l.energy *= 1.3

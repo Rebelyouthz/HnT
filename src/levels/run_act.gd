@@ -289,6 +289,9 @@ func _pick_bounty() -> void:
 		var follow := func() -> void:
 			if not is_instance_valid(crown) or not is_instance_valid(anim):
 				return
+			# Lying down (knockdown / death) the silhouette top is not the
+			# head: tuck the crown away until he is up again.
+			crown.visible = not (str(anim.animation) in ["knockdown", "death", "getup"])
 			var h2 := BloodSim.head_of(anim)
 			var fx := -1.0 if anim.flip_h else 1.0
 			var vis := anim.get_parent() as Node2D

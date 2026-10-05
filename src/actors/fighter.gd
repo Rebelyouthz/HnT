@@ -2727,7 +2727,7 @@ func equip_pickup(kind: String) -> void:
 		Juice.toast("reward", str(spec.get("title", kind)).to_upper(), "%s  ·  %d rounds  ·  stick up: head, down: legs" % [str(spec.get("caliber", "")), pistol_shots])
 	if kind == "invoice_star":
 		Juice.unlock_logo("INVOICE STAR", "Legendary paperwork. Throw it like you mean the copay.", "SECRET  ·  LEGENDARY")
-	Juice.shout(kind.to_upper())
+	Juice.shout(str(WeaponBook.spec(kind).get("title", kind.replace("_", " "))).to_upper())
 
 
 func _apply_snack(kind: String) -> void:
@@ -3213,6 +3213,7 @@ func _place_melee(delta: float) -> void:
 	if str(_melee.get_meta("kind", "")) != pickup:
 		_melee.texture = load(path)
 		_melee.set_meta("kind", pickup)
+		_melee.modulate = Color.WHITE
 	var m := _held_meta(pickup)
 	var grip: Array = m.get("grip", [6, 6])
 	var tip: Array = m.get("tip", [40, 6])
@@ -3254,6 +3255,10 @@ func _wear_melee(at: Vector2) -> void:
 	if pickup == "" or pickup in GUNS or not Arsenal.USES.has(pickup):
 		return
 	melee_uses -= 1
+	# The weapon wears the fight: every blow leaves it a little bloodier.
+	if _melee != null:
+		var worn := 1.0 - float(melee_uses) / float(maxi(1, Arsenal.uses(pickup)))
+		_melee.modulate = Color(1.0, 1.0 - 0.45 * worn, 1.0 - 0.5 * worn)
 	if melee_uses == 3:
 		Juice.popup_number(global_position + Vector2(0, -104), "CRACKING", Color(1.0, 0.7, 0.3))
 	if melee_uses > 0:

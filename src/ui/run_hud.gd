@@ -153,10 +153,14 @@ func _ready() -> void:
 	_put(_combo_fill)
 
 	_call = Label.new()
-	_call.position = Vector2(280, 96)
+	_call.position = Vector2(280, 196)
 	_call.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_call.size = Vector2(720, 22)
-	UiKit.apply_label(_call, 16, Palette.LEMON)
+	_call.size = Vector2(720, 30)
+	_call.pivot_offset = Vector2(360, 15)
+	_call.add_theme_font_override("font", UiKit.title_font())
+	UiKit.apply_label(_call, 22, Palette.LEMON)
+	_call.add_theme_constant_override("outline_size", 7)
+	_call.add_theme_color_override("font_outline_color", UiKit.INK)
 	_put(_call)
 
 	_snap_a = _snap_lab()
@@ -441,7 +445,14 @@ func _process(delta: float) -> void:
 			tw.set_ignore_time_scale(true)
 			tw.tween_property(_combo, "scale", Vector2.ONE, 0.18)
 			tw.parallel().tween_property(_rank, "modulate", Palette.LEMON, 0.08)
-	_call.text = Juice.callout
+	if _call.text != Juice.callout:
+		_call.text = Juice.callout
+		if Juice.callout != "":
+			# Every call-out lands: pops big and settles.
+			_call.scale = Vector2(1.5, 1.5)
+			var ctw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+			ctw.set_ignore_time_scale(true)
+			ctw.tween_property(_call, "scale", Vector2.ONE, 0.2)
 	if state:
 		_scrap.text = ""
 		var w := ""

@@ -34,7 +34,53 @@ The rest is in English, like the code. Newest work first. Each block says
 
 ---
 
-## 0i. Music per place, ElevenLabs voices, four suits, paperdoll GEAR (latest)
+## 0j. Suits in three parts, five new weapons, ARMORY, polish (latest)
+
+**Suits in parts (what / how / why).** Every suit (Bat, Spider, Shaolin,
+Ninja) is now MASK + TOP + BOTTOM, each unlocked on its own, mixable, with a
+set bonus when all three match. `src/app/suits.gd` holds the data
+(`LIST[suit].parts[part]` = title, perk, how, stats; `set`), the save keys
+(`suit_parts` owned list, `suit_<role>_<part>` worn) and `_migrate()` for old
+whole-suit saves. The wound shader paints per body region (`suit_head`,
+`suit_body`, `suit_legs`; legs below `hv.y > 5.2` head radii).
+- Perks live in `Fighter` (`suit_part()`, `suit_set()`, `refresh_suit()`):
+  bat mask BATWING boomerang (`KitShot.boomerang/pierce`), bat top glide +
+  double jump with a drawn flapping cape (`src/actors/cape_fx.gd`, also the
+  cowl ears), bat boots BAT DIVE; spider mask dodge 20% (`_sense_dodge`),
+  spider top web snare, spider legs jump + WEB SLAM; shaolin head steam x2,
+  robe parry +50%, wraps HUNDRED KICKS; ninja hood 3 shuriken, gi vanish
+  dash, tabi SHADOW STEP. Sets: bat +20% dmg (Punk.take_hit), spider 40%
+  dodge, shaolin -30% damage taken, ninja smoke bomb stun.
+- Gadgets fire on THROW when nobody is in grab reach; specials replace the
+  default SPECIAL when a bottom is worn. Effects: `src/juice/suit_fx.gd`
+  (ring, web, smoke, kick arcs, ghost, slash). New sfx via MMAudio.
+- GEAR (`hub_locker.gd`): MASK/TOP/BOTTOM slots, SET meter, one-press full
+  sets, part pictures from the idle frame framed per part.
+- Unlock counters: `wanted_claimed` (run_act bounty), `side_jobs_done`
+  (quest_giver), checked in `Suits.check_progress()` after every save.
+
+**Weapons.** New melee: `baseball_bat`, `machete`, `sledgehammer`
+(data/weapons.json `reach`, `slow`, `blurb`); new guns `revolver` (pierces one)
+and `flare_gun` (Round kind `flare`, `FireFx`, `Punk.ignite`). Kill
+reactions in `Punk._die`: HOME RUN corpse flight, FLATTENED crush,
+`GunGore.decap` for the machete, charred `burn` corpse.
+- Melee is drawn in the hand now: `tools/held_art.py` -> `assets/sprites/held/`
+  + `held.json` (grip/tip); `Fighter._place_melee` rides the frame's leading
+  hand (`_front_hand`) and swings by strike phase with an additive trail.
+- `src/app/arsenal.gd`: weapons found, kills per weapon, MASTERY (25 kills =
+  +15% dmg), melee durability (`USES`, breaks with splinters / bent metal).
+- ARMORY sheet (`src/ui/armory_sheet.gd`, hub header), ARSENAL & SUITS stats
+  section, weapon of the night on results, LOADOUT in pause, weapon + ammo /
+  hits left on the HUD, set toast at the start of a night.
+
+**Polish.** Per-weapon contact (sparks / splinters / red slash / sledge
+ring), revolver + flare muzzle flashes and smoke, water splashes where
+bullets come down on the wet street.
+
+**Capture modes added:** `ui:suit_<id>` (gadget, double jump/glide,
+special), `ui:gun_<melee id>` (melee string), `hub:armory`.
+
+## 0i. Music per place, ElevenLabs voices, four suits, paperdoll GEAR
 
 - **Music** (`tools/ace_music.py`, ACE-Step HF Space, free): assets/audio/music/
   music_dock (the player's own track, Dock Street), music_survive + music_boss
