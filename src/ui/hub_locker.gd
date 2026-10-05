@@ -1,22 +1,24 @@
 extends Control
 
 ## GEAR: a paperdoll. The fighter stands in the middle in what he wears (his
-## hero suit drawn live), the slots sit around him (hat, clothes, shoes, the
-## suit and three lucky charms). Pick a slot and the pieces for it list on
+## hero suit parts drawn live), the slots sit around him (hat, clothes,
+## shoes and charms on the left; the suit's MASK, TOP and BOTTOM on the right,
+## mixable, with the set bonus under them). Pick a slot and the pieces for it list on
 ## the right with a picture, the name in its rarity colour and every stat as
 ## a change against what is worn now: green up, red down.
 
 signal need_refresh
 
 var _role := "son"
-var _slot := "clothes"
+var _slot := "top"
 var _root: Control
 var _list: VBoxContainer
 
 const SLOT_POS := {
-	"hat": Vector2(40, 96), "clothes": Vector2(40, 214), "shoes": Vector2(40, 332),
-	"suit": Vector2(392, 96), "charm": Vector2(392, 214),
+	"hat": Vector2(36, 70), "clothes": Vector2(36, 164), "shoes": Vector2(36, 258), "charm": Vector2(36, 352),
+	"mask": Vector2(396, 70), "top": Vector2(396, 164), "bottom": Vector2(396, 258),
 }
+const SLOT_SIZE := Vector2(108, 88)
 const STAT_NAMES := {"hp": "HP", "dmg": "DMG", "steam": "STEAM", "speed": "SPD"}
 
 
@@ -85,20 +87,71 @@ func _paperdoll() -> void:
 		a.scale *= 4.4
 		a.position *= 4.4
 		a.texture_filter = SpriteBook.UI_FILTER
+		if Suits.worn_part(_role, "top") == "bat" or Suits.worn_part(_role, "mask") == "bat":
+			var cape := CapeFx.new()
+			cape.anim = a
+			cape.draw_cape = Suits.worn_part(_role, "top") == "bat"
+			cape.draw_ears = Suits.worn_part(_role, "mask") == "bat"
+			stage.add_child(cape)
 		stage.add_child(a)
 		Suits.dress(a, _role)
 		a.play("idle")
-	var suit := Suits.worn(_role)
+	var suit := Suits.full_set(_role)
 	var srow: Dictionary = Suits.LIST.get(suit, {})
+	var mixed := suit == "" and (Suits.worn_part(_role, "mask") + Suits.worn_part(_role, "top") + Suits.worn_part(_role, "bottom")) != ""
 	var cap := Label.new()
-	cap.text = str(srow.get("title", "STREET CLOTHES"))
+	cap.text = ("FULL " + str(srow["title"])) if suit != "" else ("MIX & MATCH" if mixed else "STREET CLOTHES")
 	cap.position = Vector2(140, 444)
 	cap.size = Vector2(260, 24)
 	cap.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	UiKit.apply_label(cap, 14, Rarity.color(str(srow.get("rarity", "common"))))
 	_root.add_child(cap)
-	for slot in ["hat", "clothes", "shoes", "suit", "charm"]:
+	for slot in SLOT_POS.keys():
 		_root.add_child(_slot_box(slot))
+	_root.add_child(_set_box())
+
+
+## Under the suit slots: which set the parts add up to.
+func _set_box() -> Control:
+	var full := Suits.full_set(_role)
+	var p := Panel.new()
+	p.position = Vector2(396, 352)
+	p.size = SLOT_SIZE
+	p.add_theme_stylebox_override("panel", UiKit.panel(Color(0.08, 0.09, 0.16), UiKit.GOLD if full != "" else Palette.MUTED))
+	var best := ""
+	var n := 0
+	for id: String in Suits.LIST.keys():
+		var c := 0
+		for part in Suits.PARTS:
+			if Suits.worn_part(_role, part) == id:
+				c += 1
+		if c > n:
+			n = c
+			best = id
+	var t := Label.new()
+	t.text = "SET"
+	t.position = Vector2(0, 6)
+	t.size = Vector2(SLOT_SIZE.x, 18)
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	UiKit.apply_label(t, 12, Palette.MUTED)
+	p.add_child(t)
+	var big := Label.new()
+	big.text = "%s %d/3" % [str(Suits.LIST[best]["title"]), n] if best != "" else "NONE"
+	big.position = Vector2(0, 28)
+	big.size = Vector2(SLOT_SIZE.x, 24)
+	big.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	big.add_theme_font_override("font", UiKit.title_font())
+	UiKit.apply_label(big, 16, UiKit.GOLD if full != "" else Palette.TEXT)
+	p.add_child(big)
+	var pips := Label.new()
+	pips.text = ("■ ".repeat(n) + "□ ".repeat(3 - n)).strip_edges()
+	pips.position = Vector2(0, 56)
+	pips.size = Vector2(SLOT_SIZE.x, 20)
+	pips.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	UiKit.apply_label(pips, 14, Rarity.color(str(Suits.LIST[best]["rarity"])) if best != "" else Palette.MUTED)
+	p.add_child(pips)
+	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return p
 
 
 func _slot_box(slot: String) -> Control:
@@ -106,8 +159,8 @@ func _slot_box(slot: String) -> Control:
 	b.set_meta("slot", slot)
 	b.focus_mode = Control.FOCUS_ALL
 	b.position = SLOT_POS[slot]
-	b.custom_minimum_size = Vector2(108, 100)
-	b.size = Vector2(108, 100)
+	b.custom_minimum_size = SLOT_SIZE
+	b.size = SLOT_SIZE
 	var col := Palette.MUTED
 	var item := {}
 	var label := slot.to_upper()
@@ -115,8 +168,11 @@ func _slot_box(slot: String) -> Control:
 		item = GearBook.item(FamilyProfile.equipped_id(_role, slot))
 		if not item.is_empty():
 			col = Rarity.color(Rarity.normalize(str(item.get("rarity", "common"))))
-	elif slot == "suit" and Suits.LIST.has(Suits.worn(_role)):
-		col = Rarity.color(str(Suits.LIST[Suits.worn(_role)]["rarity"]))
+	elif slot in Suits.PARTS:
+		var sid := Suits.worn_part(_role, slot)
+		label = Suits.PART_NAMES[slot]
+		if Suits.LIST.has(sid):
+			col = Rarity.color(str(Suits.LIST[sid]["rarity"]))
 	elif slot == "charm":
 		label = "CHARMS %d/%d" % [Charms.worn().size(), Charms.MAX_WORN]
 		if not Charms.worn().is_empty():
@@ -126,8 +182,8 @@ func _slot_box(slot: String) -> Control:
 	for st in ["hover", "focus", "pressed"]:
 		b.add_theme_stylebox_override(st, UiKit.panel(Color(0.1, 0.12, 0.2), UiKit.GOLD))
 	var pic: Control
-	if slot == "suit":
-		pic = _suit_pic(Suits.worn(_role), Vector2(64, 64))
+	if slot in Suits.PARTS:
+		pic = _part_pic(Suits.worn_part(_role, slot), slot, Vector2(56, 56))
 	else:
 		var gi := GearIcon.new()
 		gi.slot = slot
@@ -138,13 +194,13 @@ func _slot_box(slot: String) -> Control:
 			var t: Array = item.get("tint", [0.6, 0.6, 0.65])
 			gi.tint = Color(float(t[0]), float(t[1]), float(t[2]))
 		pic = gi
-	pic.position = Vector2(22, 8)
-	pic.size = Vector2(64, 64)
+	pic.position = Vector2(26, 6)
+	pic.size = Vector2(56, 56)
 	pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	b.add_child(pic)
 	var l := Label.new()
 	l.text = label
-	l.position = Vector2(0, 74)
+	l.position = Vector2(0, 64)
 	l.size = Vector2(108, 20)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -158,7 +214,53 @@ func _slot_box(slot: String) -> Control:
 	return b
 
 
-## The fighter's own bust in a suit (the real shader), for the suit slot.
+## The fighter wearing just one suit part (the real shader on the idle
+## frame, as in game), framed on what the part covers: the head for a mask,
+## the torso for a top, the whole body for a bottom.
+func _part_pic(id: String, part: String, sz: Vector2) -> Control:
+	var box := Control.new()
+	box.custom_minimum_size = sz
+	box.size = sz
+	box.clip_contents = true
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var tex := _body_tex()
+	if tex == null:
+		return box
+	var h := BloodSim.head_of_tex(tex)
+	var r := h.z
+	var focus := {"mask": [0.7, 4.6], "top": [3.6, 8.5], "bottom": [5.0, 13.5]}.get(part, [5.0, 13.5]) as Array
+	var spr := Sprite2D.new()
+	spr.texture = tex
+	spr.texture_filter = SpriteBook.UI_FILTER
+	var k := sz.y / (r * float(focus[1]))
+	spr.scale = Vector2(k, k)
+	spr.position = sz * 0.5 - Vector2(h.x, h.y + r * float(focus[0])) * k
+	if id != "" and Suits.LIST.has(id):
+		var c := Suits.code_of(id)
+		var m := ShaderMaterial.new()
+		m.shader = preload("res://src/shaders/wound.gdshader")
+		m.set_shader_parameter("suit_head", c if part == "mask" else 0)
+		m.set_shader_parameter("suit_body", c if part == "top" else 0)
+		m.set_shader_parameter("suit_legs", c if part == "bottom" else 0)
+		m.set_shader_parameter("head", h)
+		spr.material = m
+	box.add_child(spr)
+	return box
+
+
+var _body_cache := {}
+
+
+func _body_tex() -> Texture2D:
+	if not _body_cache.has(_role) and SpriteBook.has_who(_role):
+		var a := SpriteBook.make_anim(_role)
+		if a.sprite_frames.has_animation("idle"):
+			_body_cache[_role] = a.sprite_frames.get_frame_texture("idle", 0)
+		a.free()
+	return _body_cache.get(_role) as Texture2D
+
+
+## The fighter's own bust in a whole suit (the real shader).
 func _suit_pic(id: String, sz: Vector2) -> Control:
 	var tr := TextureRect.new()
 	tr.texture = SpriteBook.bust(_role)
@@ -193,10 +295,11 @@ func _items_panel() -> void:
 	_list.add_theme_constant_override("separation", 8)
 	sc.add_child(_list)
 	match _slot:
-		"suit":
-			_list.add_child(_suit_card(""))
+		"mask", "top", "bottom":
+			_set_strip()
+			_list.add_child(_part_card("", _slot))
 			for id: String in Suits.LIST.keys():
-				_list.add_child(_suit_card(id))
+				_list.add_child(_part_card(id, _slot))
 		"charm":
 			for id: String in Charms.LIST.keys():
 				_list.add_child(_charm_card(id))
@@ -328,14 +431,49 @@ func _gear_card(item: Dictionary) -> Control:
 	return pair[0]
 
 
-func _suit_card(id: String) -> Control:
-	var row: Dictionary = Suits.LIST.get(id, {"title": "STREET CLOTHES", "rarity": "common", "blurb": "Just you. No cape, no cowl.", "how": "", "stats": {}})
-	var have := id == "" or Suits.owned(id)
-	var worn := Suits.worn(_role) == id
-	var r := str(row["rarity"])
+## Over the part list: one press to put on every suit you own in full.
+func _set_strip() -> void:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	var t := Label.new()
+	t.text = "FULL SET:"
+	UiKit.apply_label(t, 13, Palette.MUTED)
+	row.add_child(t)
+	var any := false
+	for id: String in Suits.LIST.keys():
+		var all := true
+		for part in Suits.PARTS:
+			all = all and Suits.owned_part(id, part)
+		if not all:
+			continue
+		any = true
+		var b := UiKit.button(str(Suits.LIST[id]["title"]), Vector2(120, 32))
+		b.disabled = Suits.full_set(_role) == id
+		b.pressed.connect(func() -> void:
+			Suits.wear(_role, id)
+			Rarity.juice(str(Suits.LIST[id]["rarity"]), str(Suits.LIST[id]["title"]))
+			need_refresh.emit()
+			_paint()
+		)
+		row.add_child(b)
+	if not any:
+		var n := Label.new()
+		n.text = "collect all three parts of a suit for its set bonus"
+		UiKit.apply_label(n, 12, Palette.MUTED)
+		row.add_child(n)
+	_list.add_child(row)
+
+
+func _part_card(id: String, part: String) -> Control:
+	var suit: Dictionary = Suits.LIST.get(id, {})
+	var row: Dictionary = Suits.part_row(id, part) if id != "" else {"title": "NO " + str(Suits.PART_NAMES[part]), "perk": "Street clothes. No perk.", "how": "", "stats": {}}
+	var have := id == "" or Suits.owned_part(id, part)
+	var worn := Suits.worn_part(_role, part) == id
+	var r := str(suit.get("rarity", "common"))
 	var pair := _card(UiKit.GOLD if worn else (Rarity.color(r) if have else Palette.MUTED))
 	var h: HBoxContainer = pair[1]
-	var pic := _suit_pic(id, Vector2(72, 72))
+	var pic := _part_pic(id, part, Vector2(72, 72))
+	pic.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	if not have:
 		pic.modulate = Color(0.12, 0.12, 0.16)
 	h.add_child(pic)
@@ -346,18 +484,32 @@ func _suit_card(id: String) -> Control:
 	nm.add_theme_font_override("font", UiKit.title_font())
 	UiKit.apply_label(nm, 18, Rarity.color(r) if have else Palette.MUTED)
 	v.add_child(nm)
-	v.add_child(_delta_row(row.get("stats", {}), Suits.stats(_role)))
-	var bl := Label.new()
-	bl.text = (str(row["blurb"]) + ("\n" + str(row.get("perk", "")) if str(row.get("perk", "")) != "" else "")) if have else "LOCKED  ·  " + str(row["how"]) + "\n" + str(row.get("perk", ""))
-	bl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	bl.custom_minimum_size = Vector2(380, 0)
-	UiKit.apply_label(bl, 12, Palette.TEXT if have else Palette.BRICK)
-	v.add_child(bl)
+	if id != "":
+		var tag := Label.new()
+		var c := 0
+		for p in Suits.PARTS:
+			if p == part or Suits.worn_part(_role, p) == id:
+				c += 1
+		tag.text = "%s  ·  %s SUIT  ·  SET %d/3 IF WORN" % [Rarity.label(r), str(suit["title"]), c]
+		UiKit.apply_label(tag, 11, Palette.MUTED)
+		v.add_child(tag)
+	var cur: Dictionary = Suits.part_row(Suits.worn_part(_role, part), part).get("stats", {})
+	v.add_child(_delta_row(row.get("stats", {}), cur))
+	var perk := "[color=#ffd75e]PERK[/color]  " + str(row.get("perk", ""))
+	if not have:
+		perk = "[color=%s]LOCKED  ·  %s[/color]\n%s" % [UiKit.DOWN_COL, str(row.get("how", "")), perk]
+	if id != "":
+		perk += "\n[color=#9aa3c7]SET  ·  %s[/color]" % str(suit.get("set", ""))
+	var pr := UiKit.rich(perk, 400, 12, Palette.TEXT)
+	pr.text = pr.text.trim_prefix("[center]").trim_suffix("[/center]")
+	v.add_child(pr)
 	h.add_child(v)
 	var btn := UiKit.button("WEARING" if worn else ("WEAR" if have else "LOCKED"), Vector2(150, 40))
 	btn.disabled = worn or not have
 	btn.pressed.connect(func() -> void:
-		Suits.wear(_role, id)
+		Suits.wear_part(_role, part, id)
+		if id != "" and Suits.full_set(_role) == id:
+			Juice.unlock_logo(str(suit["title"]) + " SET", str(suit.get("set", "")), "FULL SUIT BONUS")
 		Juice.play("res://assets/audio/claim.wav")
 		need_refresh.emit()
 		_paint()
@@ -421,3 +573,8 @@ func _totals_row() -> void:
 		l.add_theme_font_override("font", UiKit.title_font())
 		UiKit.apply_label(l, 18, Color(0.36, 1.0, 0.54) if v > 0 else (Color(1.0, 0.35, 0.29) if v < 0 else Palette.TEXT))
 		row.add_child(l)
+	var full := Suits.full_set(_role)
+	if full != "":
+		var sb := UiKit.rich("[color=#ffd75e]SET BONUS[/color]  " + str(Suits.LIST[full]["set"]), 700, 13, Palette.TEXT)
+		sb.position = Vector2(20, 520)
+		_root.add_child(sb)

@@ -300,6 +300,7 @@ func _pick_bounty() -> void:
 		follow.call()
 	Juice.toast("challenge", "WANTED: %s" % p.title.to_upper(), "The crowned one. 2 gems and 40 gold on his head.")
 	p.died.connect(func() -> void:
+		FamilyProfile.data["wanted_claimed"] = int(FamilyProfile.data.get("wanted_claimed", 0)) + 1
 		FamilyProfile.add_gems(2)
 		FamilyProfile.add_gold(40)
 		Juice.unlock_logo("BOUNTY CLAIMED", "%s won't collect anything again." % p.title, "+2 GEMS  ·  +40 GOLD")

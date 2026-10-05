@@ -12,7 +12,11 @@ uniform float wound : hint_range(0.0, 1.0) = 0.0;
 uniform float splat : hint_range(0.0, 1.0) = 0.0;
 uniform float side = 1.0;
 uniform float tear : hint_range(0.0, 1.0) = 0.0;  // ripped clothes (bosses)
-uniform int suit = 0;  // 1 bat, 2 spider, 3 shaolin, 4 ninja (either fighter)
+uniform int suit = 0;  // whole suit (old): 1 bat, 2 spider, 3 shaolin, 4 ninja
+// Suit parts per region, mixable: mask (head), top (torso + arms), bottom.
+uniform int suit_head = 0;
+uniform int suit_body = 0;
+uniform int suit_legs = 0;
 uniform float seed = 0.0;
 uniform vec3 head = vec3(0.0, -60.0, 14.0);  // centre x, centre y, radius
 uniform vec2 holes[6];
@@ -50,11 +54,11 @@ bool skin(vec3 c) {
 }
 
 // Suits recolour the clothes by brightness so folds and shading survive.
-vec3 suit_col(vec3 c, vec2 t, vec2 hv, float in_head) {
+vec3 suit_col(vec3 c, vec2 t, vec2 hv, float in_head, int sk) {
 	float l = dot(c, vec3(0.3, 0.59, 0.11));
 	float shade = 0.55 + 0.9 * l;
 	float yrel = hv.y;
-	if (suit == 1) {
+	if (sk == 1) {
 		vec3 cloth = mix(vec3(0.07, 0.07, 0.1), vec3(0.24, 0.25, 0.31), smoothstep(0.1, 0.7, l));
 		vec3 o = cloth;
 		// Cowl over the head, the jaw stays bare.
@@ -66,7 +70,7 @@ vec3 suit_col(vec3 c, vec2 t, vec2 hv, float in_head) {
 			o = vec3(0.07, 0.07, 0.1);
 		}
 		// White eye slits.
-		if (in_head > 0.5 && abs(yrel + 0.12) < 0.1 && hv.x > 0.15 && hv.x < 0.7) {
+		if (in_head > 0.5 && abs(yrel + 0.1 + (hv.x - 0.5) * 0.25) < 0.075 && hv.x > 0.38 && hv.x < 0.72) {
 			o = vec3(0.92, 0.94, 1.0);
 		}
 		// Utility belt.
@@ -84,7 +88,7 @@ vec3 suit_col(vec3 c, vec2 t, vec2 hv, float in_head) {
 		}
 		return o;
 	}
-	if (suit == 3) {
+	if (sk == 3) {
 		// Shaolin: saffron robe, deep red sash and wraps, shaved head,
 		// wooden prayer beads.
 		vec3 o = mix(vec3(0.62, 0.28, 0.04), vec3(0.98, 0.62, 0.16), smoothstep(0.08, 0.75, l));
@@ -104,7 +108,7 @@ vec3 suit_col(vec3 c, vec2 t, vec2 hv, float in_head) {
 		}
 		return o;
 	}
-	if (suit == 4) {
+	if (sk == 4) {
 		// Ninja: charcoal gi and hood, an eye slit, red headband and sash.
 		vec3 o = mix(vec3(0.04, 0.04, 0.06), vec3(0.2, 0.2, 0.25), smoothstep(0.1, 0.8, l));
 		// Eye slit: the same band the bat cowl's eyes use, skin shows through.
@@ -173,8 +177,12 @@ void fragment() {
 	if (base.a > 0.5) {
 		vec2 hv = (t - head.xy) / max(head.z, 1.0);
 		float in_head = 1.0 - smoothstep(0.9, 1.25, length(hv * vec2(1.0, 0.85)));
-		if (suit > 0) {
-			col = suit_col(base.rgb, t, hv, in_head);
+		int code = suit;
+		if (suit_head + suit_body + suit_legs > 0) {
+			code = in_head > 0.5 ? suit_head : (hv.y > 5.2 ? suit_legs : suit_body);
+		}
+		if (code > 0) {
+			col = suit_col(base.rgb, t, hv, in_head, code);
 		}
 		// Face: cuts and smears where the skin is.
 		if (wound > 0.01 && in_head > 0.0) {

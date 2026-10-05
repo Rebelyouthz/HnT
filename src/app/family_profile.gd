@@ -67,6 +67,18 @@ func save() -> void:
 		return
 	f.store_string(JSON.stringify(data, "\t"))
 	changed.emit()
+	# Any milestone that just moved may unlock a suit part (once a frame).
+	if not _suit_check_queued:
+		_suit_check_queued = true
+		call_deferred("_suit_check")
+
+
+var _suit_check_queued := false
+
+
+func _suit_check() -> void:
+	_suit_check_queued = false
+	Suits.check_progress()
 
 
 func _defaults() -> Dictionary:

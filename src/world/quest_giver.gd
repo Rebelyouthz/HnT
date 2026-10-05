@@ -209,6 +209,7 @@ func _ready_up() -> void:
 
 func _pay() -> void:
 	state = "paid"
+	FamilyProfile.data["side_jobs_done"] = int(FamilyProfile.data.get("side_jobs_done", 0)) + 1
 	var rw: Dictionary = quest.get("reward", {})
 	var gold := int(rw.get("gold", 0))
 	if gold > 0:

@@ -46,9 +46,27 @@ func _prepare() -> void:
 			b[id] = maxi(1, int(b.get(id, 0)))
 		(fp.data as Dictionary)["buildings"] = b
 	if _tab == "locker" and fp != null:
-		(fp.data as Dictionary)["suits_owned"] = ["bat", "spider", "shaolin", "ninja"]
-		(fp.data as Dictionary)["suit_son"] = "shaolin"
-		(fp.data as Dictionary)["suit_father"] = "ninja"
+		var parts: Array = []
+		for s in ["bat", "spider", "shaolin", "ninja"]:
+			for p in ["mask", "top", "bottom"]:
+				parts.append("%s_%s" % [s, p])
+		(fp.data as Dictionary)["suits_split"] = true
+		(fp.data as Dictionary)["suit_parts"] = parts
+		for p in ["mask", "top", "bottom"]:
+			(fp.data as Dictionary)["suit_son_" + p] = "bat"
+		(fp.data as Dictionary)["suit_father_mask"] = "spider"
+		(fp.data as Dictionary)["suit_father_top"] = "ninja"
+		(fp.data as Dictionary)["suit_father_bottom"] = "shaolin"
+	# ui:suit_<id> - the Son in that full suit, steam full, showing its
+	# gadget, the top's move and the bottom's special.
+	if _tab.begins_with("ui_suit_") and fp != null:
+		var sid := _tab.substr(8)
+		var owned: Array = []
+		for p in ["mask", "top", "bottom"]:
+			owned.append("%s_%s" % [sid, p])
+			(fp.data as Dictionary)["suit_son_" + p] = sid
+		(fp.data as Dictionary)["suits_split"] = true
+		(fp.data as Dictionary)["suit_parts"] = owned
 	if _tab == "stats":
 		# Demo numbers so the report has something to draw.
 		var d2 := fp.data as Dictionary
@@ -218,7 +236,7 @@ func _process(_delta: float) -> bool:
 			current_scene.call("_" + page)
 	# ui:fight - one thug squared up in front of the Son, a jab-jab-heavy
 	# string, frames saved around every contact (<out>_NNN.png).
-	if (_tab == "ui_fight" or _tab.begins_with("ui_gun_")) and current_scene != null:
+	if (_tab == "ui_fight" or _tab.begins_with("ui_gun_") or _tab.begins_with("ui_suit_")) and current_scene != null:
 		if _n == 80:
 			get_root().get_tree().paused = false
 			for c in current_scene.get_children():
@@ -237,7 +255,7 @@ func _process(_delta: float) -> bool:
 			for d in root.get_tree().get_nodes_in_group("dog_buddy"):
 				d.queue_free()
 			if keep and p1:
-				keep.global_position = p1.global_position + Vector2(40 if not _tab.begins_with("ui_gun_") else 260, 0)
+				keep.global_position = p1.global_position + Vector2(40 if _tab == "ui_fight" else 260, 0)
 				keep.set("facing", -1)
 				keep.set("recover", 99.0)
 		if _n == 90:
@@ -250,7 +268,9 @@ func _process(_delta: float) -> bool:
 			var pg: Node = root.get_tree().get_first_node_in_group("players")
 			if pg:
 				pg.call("equip_pickup", gun)
-		if _n >= 100 and _n < 190:
+		if _tab.begins_with("ui_suit_"):
+			_suit_demo()
+		elif _n >= 100 and _n < 190:
 			var k := (_n - 100) % (6 if gun == "smg" else 14)
 			var heavy := _n >= 156 and gun == ""
 			var act := "p1_heavy" if heavy else ("p1_shoot" if gun != "" else "p1_light")
@@ -273,6 +293,25 @@ func _process(_delta: float) -> bool:
 		_restore_profile()
 		quit()
 	return false
+
+
+## Throw (gadget), double jump + glide, then the special; a frame every
+## other tick from 96 to 300.
+func _suit_demo() -> void:
+	var pp: Node = root.get_tree().get_first_node_in_group("players")
+	if pp and _n >= 96:
+		pp.set("steam", 100.0)
+	var script := {100: ["p1_throw", true], 103: ["p1_throw", false],
+		150: ["p1_jump", true], 156: ["p1_jump", false], 166: ["p1_jump", true], 215: ["p1_jump", false],
+		250: ["p1_special", true], 253: ["p1_special", false]}
+	if script.has(_n):
+		var e: Array = script[_n]
+		if e[1]:
+			Input.action_press(e[0])
+		else:
+			Input.action_release(e[0])
+	if _n >= 96 and _n <= 320 and _n % 2 == 0:
+		root.get_texture().get_image().save_png(_out.get_basename() + "_%03d.png" % _n)
 
 
 func _restore_profile() -> void:

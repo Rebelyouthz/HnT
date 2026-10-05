@@ -161,7 +161,12 @@ var _light_buf := 0
 var _heavy_buf := 0
 var _run_breath := 0
 ## The hero suit worn this run (its perk is read in play).
-var _suit := ""
+## Suit parts worn (mask / top / bottom -> suit id or ""), and the full set.
+var _gear := {"mask": "", "top": "", "bottom": ""}
+var _gear_set := ""
+var _cape_fx: CapeFx
+var _dive_pending := false
+var _gadget_cd := 0.0
 ## COPAY: part of every hit you take is billable - it drains away over a
 ## few seconds unless you bill it back by landing hits (risk / reward, like
 ## Streets of Rage 4's green health, but earned from defence, not specials).
@@ -294,7 +299,37 @@ func _mount_sprite() -> void:
 	SpriteBook.grow(_anim, SpriteBook.FIGHTER_SCALE)
 	squash_root.add_child(_anim)
 	Suits.dress(_anim, role)
-	_suit = Suits.worn(role)
+	refresh_suit()
+
+
+## Re-read the suit parts (also after changing them in GEAR) and hang or
+## drop the bat cape.
+func refresh_suit() -> void:
+	for p in Suits.PARTS:
+		_gear[p] = Suits.worn_part(role, p)
+	_gear_set = Suits.full_set(role)
+	var want_cape := suit_part("top") == "bat"
+	var want_ears := suit_part("mask") == "bat"
+	if (want_cape or want_ears) and _anim != null and _cape_fx == null:
+		_cape_fx = CapeFx.new()
+		_cape_fx.anim = _anim
+		_cape_fx.who = self
+		squash_root.add_child(_cape_fx)
+		squash_root.move_child(_cape_fx, _anim.get_index())
+	elif not (want_cape or want_ears) and _cape_fx != null:
+		_cape_fx.queue_free()
+		_cape_fx = null
+	if _cape_fx != null:
+		_cape_fx.draw_cape = want_cape
+		_cape_fx.draw_ears = want_ears
+
+
+func suit_part(part: String) -> String:
+	return str(_gear.get(part, ""))
+
+
+func suit_set() -> String:
+	return _gear_set
 
 
 func _sprite_clip(kind: String) -> String:
@@ -614,7 +649,9 @@ func _tick_meters(delta: float) -> void:
 	if cart_t > 0.0:
 		cart_t -= delta
 	if _just("block"):
-		parry_win = 15 if _suit == "shaolin" else 10
+		parry_win = 15 if suit_part("top") == "shaolin" else 10
+	if _gadget_cd > 0.0:
+		_gadget_cd -= delta
 	if cape_guard > 0.0:
 		cape_guard -= delta
 	if web_incoming:
@@ -634,7 +671,7 @@ func _tick_meters(delta: float) -> void:
 		var regen := 22.0
 		if FamilyProfile.has_cbt("second_lungs"):
 			regen *= 1.15
-		steam = minf(STEAM_MAX, steam + regen * (1.0 + 0.3 * float(_cart("energy_drink"))) * delta)
+		steam = minf(STEAM_MAX, steam + regen * (1.0 + 0.3 * float(_cart("energy_drink"))) * (2.0 if suit_part("mask") == "shaolin" else 1.0) * delta)
 	blocking = _pressed("block") and steam > 2.0 and not downed
 	if tape_t > 0.0:
 		tape_t -= delta
@@ -807,9 +844,11 @@ func _process_street(delta: float) -> void:
 		velocity.y = y * depth_speed * 0.5
 	if _street_grounded():
 		coyote = COYOTE
+		if suit_part("top") == "bat":
+			extra_jump = maxi(extra_jump, 1)
 		_footsteps(delta, absf(velocity.x))
 	if jump_buf > 0 and coyote > 0:
-		hop_v = JUMP * (1.12 if _suit == "spider" else 1.0)
+		hop_v = JUMP * (1.12 if suit_part("bottom") == "spider" else 1.0)
 		hop = -1.0
 		jump_buf = 0
 		coyote = 0
@@ -819,11 +858,13 @@ func _process_street(delta: float) -> void:
 		jump_buf = 0
 		extra_jump -= 1
 		KitSfx.hit(role, "jump")
+		if suit_part("top") == "bat":
+			_cape_beat()
 	if hop < 0.0 or hop_v != 0.0:
 		var g := GRAV
 		if hop_v > 0.0:
 			g *= FALL_MUL
-		if (role == "son" or _suit == "bat") and hop < 0.0 and _pressed("jump") and hop_v > -80.0:
+		if (role == "son" or suit_part("top") == "bat") and hop < 0.0 and _pressed("jump") and hop_v > -80.0:
 			if not gliding and ResourceLoader.exists("res://assets/audio/sfx/glide.ogg"):
 				Mixer.play_sfx("res://assets/audio/sfx/glide.ogg", 1.0, -10.0)
 			gliding = true
@@ -864,7 +905,7 @@ func _process_roof(delta: float) -> void:
 		var g := GRAV
 		if velocity.y > 0.0:
 			g *= FALL_MUL
-		if role == "son" and _pressed("jump") and velocity.y > -90.0:
+		if (role == "son" or suit_part("top") == "bat") and _pressed("jump") and velocity.y > -90.0:
 			gliding = true
 			g = GRAV * 0.18
 			velocity.y = minf(velocity.y, 10.0)
@@ -877,6 +918,8 @@ func _process_roof(delta: float) -> void:
 	else:
 		gliding = false
 		coyote = COYOTE
+		if suit_part("top") == "bat":
+			extra_jump = maxi(extra_jump, 1)
 		if hop_v != 0.0:
 			_on_land(absf(hop_v) if velocity.y >= 0.0 else 0.0)
 		hop_v = 0.0
@@ -1090,11 +1133,19 @@ func _dash() -> void:
 	dashing = true
 	dash_frames = 10
 	invuln = 8
-	if _suit == "ninja":
-		# Ninja: the dash is a vanish - longer i-frames and a smoke puff.
+	if suit_part("top") == "ninja":
+		# Ninja gi: the dash is a vanish - double i-frames and a smoke puff.
 		invuln = 16
-		Juice.land_puff(global_position)
-		Juice.land_puff(global_position + Vector2(float(facing) * -14.0, -20.0))
+		SuitFx.spawn(global_position + Vector2(0, -30), "smoke", 46.0)
+		SuitFx.spawn(global_position + Vector2(0, -40), "ghost", 90.0, float(facing), Color(0.2, 0.2, 0.28))
+		_suit_sfx("smoke_puff", -8.0)
+		if suit_set() == "ninja":
+			# Full set: it's a smoke bomb - thugs around you lose their bearings.
+			SuitFx.spawn(global_position + Vector2(0, -20), "smoke", 96.0)
+			for n in get_tree().get_nodes_in_group("enemies"):
+				if n is Punk and (n as Punk).global_position.distance_to(global_position) < 90.0:
+					(n as Punk).snared = maxf((n as Punk).snared, 1.2)
+					Juice.popup_number((n as Punk).global_position + Vector2(0, -80), "?!", Color(0.8, 0.8, 0.9))
 	var blitz := get_tree().get_first_node_in_group("run_state")
 	if blitz and blitz.has_method("has_card") and blitz.has_card("family_blitz"):
 		invuln = 12
@@ -1180,6 +1231,9 @@ func _special() -> void:
 		if a:
 			_attach_web(a)
 			return
+	if suit_part("bottom") != "" and _suit_special():
+		return
+	if role == "father":
 		if not _spend(35.0):
 			return
 		_spawn_hit("special", Vector2(78, 44), 0.22, Vector2(44 * facing, -34))
@@ -1689,6 +1743,7 @@ func _try_getup_attack() -> bool:
 
 func _on_hit_landed(kind: String, _global_pos: Vector2) -> void:
 	_strike_impact(_global_pos)
+	_suit_contact(_global_pos)
 	if kind == "light" or kind == "jump-kick" or kind == "gut-punch" or kind == "slide":
 		attack_cd = mini(attack_cd, 7)
 	var rs := get_tree().get_first_node_in_group("run_state")
@@ -2131,6 +2186,8 @@ func take_hit(kind: String, from: Node) -> void:
 	if armored and kind == "light":
 		Juice.flash_red(visual, 1)
 		return
+	if _sense_dodge(kind):
+		return
 	if web_anchor:
 		_release_web(false)
 	if gliding:
@@ -2145,6 +2202,8 @@ func take_hit(kind: String, from: Node) -> void:
 	if buff_t > 0.0:
 		dmg = int(round(float(dmg) * 0.85))
 	if wrong_guard:
+		dmg = maxi(1, int(round(float(dmg) * 0.7)))
+	if suit_set() == "shaolin":
 		dmg = maxi(1, int(round(float(dmg) * 0.7)))
 	var srun := SurviveRun.get_run(get_tree())
 	if srun and srun.armor() > 0.0:
@@ -2406,6 +2465,8 @@ func stumble() -> void:
 
 
 func _on_land(fall: float) -> void:
+	if _dive_pending:
+		_bat_slam()
 	# Knees absorb the drop: the deeper the fall, the longer the crouch.
 	if fall > 160.0 and _strike_phase == 0:
 		_land_t = clampf(fall / 2600.0, 0.1, 0.26)
@@ -2627,6 +2688,7 @@ func _throw() -> void:
 		_try_wall_bounce(e)
 		Juice.shout("DISARMED")
 		return
+	_suit_gadget()
 
 
 func equip_pickup(kind: String) -> void:
@@ -2785,3 +2847,247 @@ func _maybe_knockdown(kind: String, from: Node) -> void:
 			Juice.play("res://assets/audio/stumble.wav")
 			Juice.pulse_shake(4.0)
 	)
+
+
+# --- Suit part perks -------------------------------------------------------
+
+const SUIT_SFX_FALLBACK := {
+	"batwing": "gun_throw", "cape_flap": "flip", "smoke_puff": "roll",
+	"web_slam": "gun_web", "shockwave": "hit_stomp", "shadow_step": "whoosh_spin",
+	"sense_dodge": "whiff_punch", "kick_flurry": "whiff_kick",
+}
+
+var _suit_hit_w := 0.0
+var _suit_hit_until := 0
+
+
+func _suit_sfx(id: String, db := -4.0, pitch := 1.0) -> void:
+	var p := "res://assets/audio/sfx/%s.ogg" % id
+	if not ResourceLoader.exists(p):
+		p = "res://assets/audio/sfx/%s.ogg" % str(SUIT_SFX_FALLBACK.get(id, "whiff_punch"))
+	Mixer.play_sfx(p, pitch * randf_range(0.95, 1.05), db)
+
+
+## A suit strike: the box plus contact juice (specials skip the strike
+## phase, so _strike_impact would not fire for them).
+func _suit_hit(kind: String, size: Vector2, life: float, offset: Vector2, weight: float) -> void:
+	_suit_hit_w = weight
+	_suit_hit_until = Time.get_ticks_msec() + int(life * 1000.0) + 30
+	_spawn_hit(kind, size, life, offset)
+
+
+func _suit_contact(at: Vector2) -> void:
+	if Time.get_ticks_msec() > _suit_hit_until:
+		return
+	var w := _suit_hit_w
+	Juice.impact(at, w, facing)
+	Juice.hitstop(2 + int(4.0 * w))
+	Juice.kick(Vector2(float(facing), 0.3), 2.0 + 5.0 * w)
+	Mixer.play_sfx("res://assets/audio/sfx/punch_heavy.ogg" if w > 0.5 else "res://assets/audio/sfx/punch_light.ogg", randf_range(0.92, 1.08), -2.0)
+
+
+## A flap of the bat cape on the double jump: a burst of wind and dust.
+func _cape_beat() -> void:
+	_suit_sfx("cape_flap", -6.0, 0.9)
+	Juice.land_puff(global_position + Vector2(0, hop))
+	_squash_to(Vector2(0.9, 1.12))
+
+
+## Throw with nobody in reach: the mask's gadget (or the spider top's web).
+func _suit_gadget() -> bool:
+	if _gadget_cd > 0.0:
+		return false
+	var m := suit_part("mask")
+	var t := suit_part("top")
+	var at := global_position + Vector2(float(facing) * 26.0, -46.0 + hop)
+	if m == "bat":
+		var full := suit_set() == "bat"
+		var s := _gadget_shot("batwing", at, Vector2(float(facing) * 780.0, 0.0))
+		s.boomerang = true
+		s.pierce = 99 if full else 0
+		s.life = 1.5
+		_suit_sfx("batwing", -4.0)
+		Juice.shout("BATWING")
+		_gadget_cd = 0.55
+	elif m == "ninja":
+		for i in 3:
+			var vy := (float(i) - 1.0) * 90.0
+			_gadget_shot("shuriken", at + Vector2(0, (float(i) - 1.0) * 6.0), Vector2(float(facing) * 640.0, vy))
+		_suit_sfx("batwing", -6.0, 1.35)
+		Juice.shout("SHURIKEN")
+		_gadget_cd = 0.6
+	elif t == "spider":
+		_gadget_shot("snare", at, Vector2(float(facing) * 520.0, 0.0))
+		Mixer.play_sfx("res://assets/audio/sfx/gun_web.ogg", randf_range(0.95, 1.05), -3.0)
+		Juice.shout("THWIP")
+		_gadget_cd = 0.7
+	else:
+		return false
+	_squash_to(Vector2(1.08, 0.94))
+	anim_atk = "cross" if _anim != null and _anim.sprite_frames.has_animation("cross") else ""
+	_atk_t = 0.22
+	return true
+
+
+func _gadget_shot(kind: String, at: Vector2, vel: Vector2) -> KitShot:
+	var shot := KitShot.new()
+	shot.kind = kind
+	shot.owner_role = role
+	shot.vel = vel
+	shot.home = self
+	shot.global_position = at
+	get_parent().add_child(shot)
+	return shot
+
+
+## The bottom's special in place of the default one. False = not enough
+## steam (nothing happens, like the default).
+func _suit_special() -> bool:
+	var b := suit_part("bottom")
+	if not _spend(35.0):
+		return true
+	match b:
+		"bat":
+			_bat_dive()
+		"spider":
+			_web_slam()
+		"shaolin":
+			_hundred_kicks()
+		"ninja":
+			_shadow_step()
+		_:
+			steam += 35.0
+			return false
+	return true
+
+
+func _bat_dive() -> void:
+	Juice.shout("BAT DIVE")
+	_suit_sfx("cape_flap", -3.0, 0.8)
+	_dive_pending = true
+	invuln = maxi(invuln, 20)
+	attack_cd = 30
+	if plane == "street":
+		hop = minf(hop, -1.0)
+		hop_v = -520.0
+	else:
+		velocity.y = -460.0
+	velocity.x = float(facing) * 260.0
+	anim_atk = "dive" if _anim != null and _anim.sprite_frames.has_animation("dive") else ""
+	_atk_t = 0.9
+	# Never stuck waiting for a floor (ledges, ladders): slam anyway.
+	get_tree().create_timer(1.1).timeout.connect(func() -> void:
+		if is_instance_valid(self) and _dive_pending:
+			_bat_slam()
+	)
+
+
+func _bat_slam() -> void:
+	_dive_pending = false
+	_atk_t = 0.0
+	var full := suit_set() == "bat"
+	var w := 150.0 if full else 120.0
+	_suit_hit("special", Vector2(w, 54), 0.18, Vector2(0, -20), 0.9)
+	SuitFx.spawn(global_position, "ring", w * 0.9, 1.0, Color(0.5, 0.55, 1.0))
+	SuitFx.spawn(global_position, "ring", w * 0.55, 1.0, Color(1.0, 0.9, 0.6))
+	Juice.land_puff(global_position + Vector2(-30, 0))
+	Juice.land_puff(global_position + Vector2(30, 0))
+	Juice.pulse_shake(9.0)
+	Juice.hitstop(5)
+	_suit_sfx("shockwave", -1.0, 0.85)
+	_squash_to(Vector2(1.25, 0.78))
+
+
+func _web_slam() -> void:
+	Juice.shout("WEB SLAM")
+	Mixer.play_sfx("res://assets/audio/sfx/gun_web.ogg", 0.8, -1.0)
+	attack_cd = 26
+	anim_atk = "heavy" if _anim != null and _anim.sprite_frames.has_animation("heavy") else ""
+	_atk_t = 0.4
+	var at := global_position + Vector2(float(facing) * 64.0, -34.0)
+	SuitFx.spawn(at, "web", 54.0)
+	get_tree().create_timer(0.12).timeout.connect(func() -> void:
+		if not is_instance_valid(self):
+			return
+		_suit_hit("web-slam", Vector2(110, 60), 0.2, Vector2(60 * facing, -30), 0.85)
+		_suit_sfx("web_slam", -2.0)
+		Juice.pulse_shake(6.0)
+	)
+
+
+func _hundred_kicks() -> void:
+	Juice.shout("HUNDRED KICKS")
+	attack_cd = 40
+	invuln = maxi(invuln, 24)
+	var clips := ["front_kick", "side_kick", "roundhouse"]
+	for i in 6:
+		get_tree().create_timer(0.07 * float(i)).timeout.connect(func() -> void:
+			if not is_instance_valid(self) or downed:
+				return
+			var last := i == 5
+			var clip: String = clips[i % clips.size()] if not last else "roundhouse"
+			if _anim != null and _anim.sprite_frames.has_animation(clip):
+				anim_atk = clip
+				_atk_t = 0.12 if not last else 0.3
+				_anim.play(clip)
+				_anim.frame = mini(2, _anim.sprite_frames.get_frame_count(clip) - 1)
+			var y := -22.0 - 12.0 * float(i % 3)
+			_suit_hit("roundhouse" if last else "jump-kick", Vector2(70 if last else 58, 44), 0.06, Vector2(44 * facing, y), 0.8 if last else 0.3)
+			SuitFx.spawn(global_position + Vector2(float(facing) * 40.0, y * SpriteBook.ACTOR_K), "kicks", 24.0 if not last else 36.0, float(facing), Color(1.0, 0.65, 0.2))
+			_suit_sfx("kick_flurry", -6.0, 1.0 + 0.06 * float(i))
+			velocity.x = float(facing) * 60.0
+	)
+
+
+func _shadow_step() -> void:
+	var best: Punk = null
+	var bd := 260.0
+	for n in get_tree().get_nodes_in_group("enemies"):
+		if n is Punk and not (n as Punk).is_queued_for_deletion() and int((n as Punk).hp) > 0:
+			var d := (n as Punk).global_position.distance_to(global_position)
+			if d < bd:
+				bd = d
+				best = n
+	SuitFx.spawn(global_position + Vector2(0, -30), "smoke", 50.0)
+	_suit_sfx("shadow_step", -3.0)
+	attack_cd = 24
+	invuln = maxi(invuln, 18)
+	if best == null:
+		# No one near: a quick blink forward.
+		global_position.x += float(facing) * 120.0
+		SuitFx.spawn(global_position + Vector2(0, -30), "smoke", 40.0)
+		return
+	var side := -signf(best.global_position.x - global_position.x)
+	if side == 0.0:
+		side = -float(facing)
+	# Appear on the far side, facing back at him.
+	global_position = Vector2(best.global_position.x - side * 46.0, best.global_position.y)
+	facing = int(side)
+	visual.scale.x = float(facing)
+	SuitFx.spawn(global_position + Vector2(0, -30), "smoke", 40.0)
+	Juice.shout("SHADOW STEP")
+	get_tree().create_timer(0.08).timeout.connect(func() -> void:
+		if not is_instance_valid(self):
+			return
+		anim_atk = "heavy" if _anim != null and _anim.sprite_frames.has_animation("heavy") else ""
+		_atk_t = 0.3
+		_suit_hit("heavy", Vector2(64, 44), 0.12, Vector2(36 * facing, -30), 0.85)
+		SuitFx.spawn(global_position + Vector2(float(facing) * 40.0, -40.0), "slash", 40.0, float(facing), Color(0.9, 0.15, 0.2))
+	)
+
+
+## SPIDER SENSE: a hit that never lands. True = dodged.
+func _sense_dodge(kind: String) -> bool:
+	if suit_part("mask") != "spider" or kind == "snap" or kind == "throw":
+		return false
+	var chance := 0.4 if suit_set() == "spider" else 0.2
+	if randf() >= chance:
+		return false
+	invuln = 12
+	var back := -float(facing)
+	SuitFx.spawn(global_position, "ghost", 90.0, -back, Color(0.9, 0.2, 0.25))
+	global_position.x += back * 26.0
+	Juice.popup_number(global_position + Vector2(0, -100), "SENSE!", Color(1.0, 0.35, 0.35))
+	_suit_sfx("sense_dodge", -4.0)
+	_squash_to(Vector2(0.88, 1.08))
+	return true

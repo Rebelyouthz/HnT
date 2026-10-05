@@ -73,6 +73,14 @@ SFX = {
     "sfx/hit_headbutt.ogg": ("headbutt, two skulls knocking, dull hard thud", 0.7),
     "sfx/hit_sweep.ogg": ("leg sweep, swish and a body slamming onto pavement", 1),
     "sfx/hit_dive.ogg": ("flying kick crashing into a body, heavy impact thud", 0.9),
+    "sfx/batwing.ogg": ("metal boomerang spinning fast through the air, whirring whoosh", 0.9),
+    "sfx/cape_flap.ogg": ("heavy cloth cape flapping hard in the wind once, whoomp", 0.8),
+    "sfx/smoke_puff.ogg": ("smoke bomb popping, soft poof and hiss of smoke", 1.0),
+    "sfx/web_slam.ogg": ("elastic snap and heavy body slammed down, thwip and thud", 1.0),
+    "sfx/shockwave.ogg": ("heavy landing slam on concrete, deep boom shockwave and debris", 1.4),
+    "sfx/shadow_step.ogg": ("quick dark teleport whoosh, airy swish with low rumble", 0.8),
+    "sfx/sense_dodge.ogg": ("fast dodge swish, cloth whip, short tingle", 0.6),
+    "sfx/kick_flurry.ogg": ("single very fast martial arts kick whoosh, sharp", 0.4),
 }
 
 

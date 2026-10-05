@@ -853,6 +853,8 @@ func take_hit(kind: String, from: Node) -> void:
 			dmg = int(round(float(dmg) * (1.0 + 0.15 * float(knuckles))))
 	if from is Fighter and (from as Fighter).buff_t > 0.0:
 		dmg = int(round(float(dmg) * 1.25))
+	if from is Fighter and (from as Fighter).suit_set() == "bat":
+		dmg = int(round(float(dmg) * 1.2))
 	if from is Fighter:
 		dmg += int(FamilyProfile.gear_stat_bonus((from as Fighter).role).get("dmg", 0))
 	if from is Fighter and Charms.has("rabbit_foot") and randf() < 0.12:
