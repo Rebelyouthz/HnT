@@ -10,6 +10,8 @@ var scrap: int = 0
 var xp: int = 0
 var wanted: int = 0
 var cards: Array = []
+## Item cards level up when picked again (data/cards.json "max_lv").
+var card_lv: Dictionary = {}
 var level_ups: int = 0
 var shops_used: int = 0
 var card_reroll: bool = false
@@ -151,6 +153,12 @@ func take_card(id: String) -> void:
 		return
 	if not cards.has(id):
 		cards.append(id)
+		card_lv[id] = 1
+	else:
+		card_lv[id] = int(card_lv.get(id, 1)) + 1
+	var rack := get_tree().get_first_node_in_group("item_rack")
+	if rack and rack.has_method("on_card"):
+		rack.call("on_card", id, int(card_lv[id]))
 	var rarity := "common"
 	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/cards.json"))
 	if typeof(parsed) == TYPE_ARRAY:
@@ -162,13 +170,26 @@ func take_card(id: String) -> void:
 	if Rarity.normalize(rarity) == "legendary":
 		FamilyProfile.mark_legendary()
 	Juice.shout(id.replace("_", " ").to_upper())
-	Juice.toast("reward", "RULE INSTALLED", "%s  ·  %s" % [id.replace("_", " ").to_upper(), Rarity.label(rarity)])
+	var lvl := int(card_lv.get(id, 1))
+	Juice.toast("reward", "ITEM LV %d" % lvl if lvl > 1 else "RULE INSTALLED", "%s  ·  %s" % [id.replace("_", " ").to_upper(), Rarity.label(rarity)])
 	add_points(Juice.last_hitter, 40 + Rarity.rank(rarity) * 25, "card")
 	SurviveMods.apply(id)
 
 
 func has_card(id: String) -> bool:
 	return cards.has(id)
+
+
+func card_level(id: String) -> int:
+	return int(card_lv.get(id, 0)) if cards.has(id) else 0
+
+
+## Can this card still be offered (not owned, or an item below its cap)?
+static func offerable(c: Dictionary, owned: Array, lv: Dictionary) -> bool:
+	var id := str(c.get("id", ""))
+	if not owned.has(id):
+		return true
+	return int(lv.get(id, 1)) < int(c.get("max_lv", 1))
 
 
 func note_shop() -> void:

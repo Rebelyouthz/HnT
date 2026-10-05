@@ -1,363 +1,616 @@
 [
-  {
-    "id": "head_trampoline",
-    "name": "HEAD TRAMPOLINE",
-    "blurb": "Air heavy bounces them 80 px and refunds a jump. Kill on the bounce is always blunt.",
-    "fixed": true,
-    "rarity": "epic",
-    "tag": "AIR"
-  },
-  {
-    "id": "family_discount",
-    "name": "FAMILY DISCOUNT",
-    "blurb": "Your hits refill the partner's Steam. Shared combo lives if only one of you eats dirt.",
-    "fixed": true,
-    "rarity": "epic",
-    "tag": "COOP"
-  },
-  {
-    "id": "office_rage",
-    "name": "OFFICE RAGE",
-    "blurb": "Lights apply Staple bleed. Staple-kills explode paper. Lights still flash red until then.",
-    "fixed": true,
-    "rarity": "epic",
-    "tag": "BLEED"
-  },
-  {
-    "id": "quiet_lunch",
-    "name": "QUIET LUNCH",
-    "blurb": "SNAP on a back restores 8 HP. Missed SNAP is your problem.",
-    "fixed": false,
-    "rarity": "rare",
-    "tag": "SNAP"
-  },
-  {
-    "id": "double_slap",
-    "name": "DOUBLE SLAP",
-    "blurb": "A Parenting Slap heals both 20% and they hit meaner for 2 seconds. Will be abused.",
-    "fixed": false,
-    "rarity": "rare",
-    "tag": "REVIVE"
-  },
-  {
-    "id": "ricochet_policy",
-    "name": "RICOCHET POLICY",
-    "blurb": "Batwings bounce +1 off metal. Neon that is hit is a conversation.",
-    "fixed": false,
-    "rarity": "uncommon",
-    "tag": "SHOT"
-  },
-  {
-    "id": "tutoring",
-    "name": "TUTORING",
-    "blurb": "Every 8th light without eating dirt: the next shot fires twice. Homework.",
-    "fixed": false,
-    "rarity": "uncommon",
-    "tag": "STRING"
-  },
-  {
-    "id": "pendulum_politics",
-    "name": "PENDULUM POLITICS",
-    "blurb": "A web-slam kill leaves a lamp. The Son can grab it. Solo: you still get the lamp.",
-    "fixed": false,
-    "rarity": "rare",
-    "tag": "WEB"
-  },
-  {
-    "id": "cop_out",
-    "name": "COP OUT",
-    "blurb": "SNAP on a cop refunds one Wanted stamp. The paperwork files itself.",
-    "fixed": false,
-    "rarity": "common",
-    "tag": "WANTED"
-  },
-  {
-    "id": "steam_tax",
-    "name": "STEAM TAX",
-    "blurb": "Lights cost 0 Steam. Heavies refund 8. The clinic calls it a loophole.",
-    "fixed": false,
-    "rarity": "rare",
-    "tag": "STEAM"
-  },
-  {
-    "id": "family_blitz",
-    "name": "FAMILY BLITZ",
-    "blurb": "Dash i-frames +4. Slide hits twice. SoR4 called; it wants its meter back.",
-    "fixed": false,
-    "rarity": "rare",
-    "tag": "DASH"
-  },
-  {
-    "id": "street_credit",
-    "name": "STREET CREDIT",
-    "blurb": "Combo cash-out pays double Scrap. Let the timer die on purpose. That's the bit.",
-    "fixed": false,
-    "rarity": "epic",
-    "tag": "BANK"
-  },
-  {
-    "id": "coping_magnet",
-    "name": "COPING MAGNET",
-    "blurb": "Pickup vacuum radius +110. Halls of Torment called it a trait. We call it enabling.",
-    "fixed": false,
-    "rarity": "rare",
-    "tag": "MAGNET"
-  },
-  {
-    "id": "orbit_form",
-    "name": "ORBIT FORM",
-    "blurb": "Two blades orbit you and chip. Not a meadow. Still illegal in group.",
-    "fixed": false,
-    "rarity": "epic",
-    "tag": "ORBIT"
-  },
-  {
-    "id": "drip_feed",
-    "name": "DRIP FEED",
-    "blurb": "Aura ticks light on anything in hugging distance. The clinic calls it presence.",
-    "fixed": false,
-    "rarity": "rare",
-    "tag": "AURA"
-  },
-  {
-    "id": "vacuum_hour",
-    "name": "VACUUM HOUR",
-    "blurb": "One huge magnet pulse. Every chip remembers your name. Then it forgets again.",
-    "fixed": false,
-    "rarity": "epic",
-    "tag": "VACUUM"
-  },
-  {
-    "id": "open_tab",
-    "name": "OPEN TAB",
-    "blurb": "Kills pay +4 pinball to whoever landed it. The clinic calls it a tab. We call it a personality.",
-    "fixed": false,
-    "rarity": "uncommon",
-    "tag": "SCORE"
-  },
-  {
-    "id": "invoice_void",
-    "name": "INVOICE VOID",
-    "blurb": "Legendary. Heavies strip an extra plate on armored bosses. The Director hates this card.",
-    "fixed": false,
-    "rarity": "legendary",
-    "tag": "BOSS",
-    "stats": { "plates": "+1 strip", "score": "+boss" }
-  },
-  {
-    "id": "named_line",
-    "name": "NAMED LINE",
-    "blurb": "Perfect tricks pay +12 and keep the speed. The coach would bill this. Unique card art.",
-    "fixed": false,
-    "rarity": "epic",
-    "tag": "PARKOUR",
-    "stats": { "trick": "+12", "speed": "keep" }
-  },
-  {
-    "id": "stomp_policy",
-    "name": "STOMP POLICY",
-    "blurb": "Face stomps score double. Brain on three is still the personality.",
-    "fixed": false,
-    "rarity": "rare",
-    "tag": "FINISH",
-    "stats": { "stomp": "x2", "blood": "more" }
-  },
-  {
-    "id": "idle_alibi",
-    "name": "IDLE ALIBI",
-    "blurb": "Legendary. Patrol banks +50% gold. Closed still counts. The alley works for you.",
-    "fixed": false,
-    "rarity": "legendary",
-    "tag": "PATROL",
-    "stats": { "idle": "+50%", "gold": "bank" }
-  },
-  {
-    "id": "courier_policy",
-    "name": "COURIER POLICY",
-    "blurb": "On the lemon van, rail shots refund 1 ammo. The clinic still bills the crash.",
-    "fixed": false,
-    "rarity": "epic",
-    "tag": "CHASE",
-    "stats": { "ammo": "refund", "rail": "360" }
-  },
-  {
-    "id": "orchard_copay",
-    "name": "ORCHARD COPAY",
-    "blurb": "Slide hills and rope swings pay +8. Hay is not a couch. The lake still wants a copay.",
-    "fixed": false,
-    "rarity": "rare",
-    "tag": "FARM",
-    "stats": { "slide": "+8", "swing": "+8" }
-  },
-  {
-    "id": "brine_lungs",
-    "name": "BRINE LUNGS",
-    "blurb": "Legendary. In Ledger Dive, magnet radius +80 and eels chip slower. The spa hates this.",
-    "fixed": false,
-    "rarity": "legendary",
-    "tag": "VAULT",
-    "stats": { "magnet": "+80", "eel": "slow" }
-  },
-  {
-    "id": "wall_bounce",
-    "name": "WALL BOUNCE",
-    "blurb": "Throws bounce off smashables AND the invoice wall. SoR4 called it a juggle. We bill it.",
-    "fixed": false,
-    "rarity": "rare",
-    "tag": "THROW",
-    "stats": { "bounce": "+1" }
-  },
-  {
-    "id": "snack_break",
-    "name": "SNACK BREAK",
-    "blurb": "Smash a fridge or kiosk and the combo does not die. Extra scrap. The till still wants a copay.",
-    "fixed": false,
-    "rarity": "uncommon",
-    "tag": "PROP",
-    "stats": { "smash": "combo" }
-  },
-  {
-    "id": "revenge_policy",
-    "name": "REVENGE POLICY",
-    "blurb": "After you eat dirt, the next hit is a Revenge. Longer window. SoR4 special restore, billed.",
-    "fixed": false,
-    "rarity": "rare",
-    "tag": "COUNTER",
-    "stats": { "revenge": "+1" }
-  },
-  {
-    "id": "cart_hop",
-    "name": "CART HOP",
-    "blurb": "Shopping carts last longer. Jump off for a pop. Don't tell tutoring.",
-    "fixed": false,
-    "rarity": "uncommon",
-    "tag": "PARKOUR",
-    "stats": { "cart": "+0.6s" }
-  },
-  {
-    "id": "weapon_catch",
-    "name": "WEAPON CATCH",
-    "blurb": "Thrown pipes bounce back once. SoR4 called it a juggle. We call it recycling.",
-    "fixed": false,
-    "rarity": "rare",
-    "tag": "THROW",
-    "stats": { "catch": "boomerang" }
-  },
-  {
-    "id": "clash_policy",
-    "name": "CLASH POLICY",
-    "blurb": "Heavy vs a telegraphing punk chips extra and refunds Steam. Huntdown called it a katana. We bill the spark.",
-    "fixed": false,
-    "rarity": "epic",
-    "tag": "COUNTER",
-    "stats": { "clash": "+6" }
-  },
-  {
-    "id": "awning_hop",
-    "name": "AWNING HOP",
-    "blurb": "Awnings bounce higher. Sunset Overdrive storefronts, billed as copays.",
-    "fixed": false,
-    "rarity": "uncommon",
-    "tag": "PARKOUR",
-    "stats": { "awning": "+100" }
-  },
-  {
-    "id": "news_cycle",
-    "name": "NEWS CYCLE",
-    "blurb": "Pop a newsstand and a pipe drops with the Paper Boy. The headline still wants a copay.",
-    "fixed": false,
-    "rarity": "rare",
-    "tag": "PROP",
-    "stats": { "news": "pipe" }
-  },
-  {
-    "id": "oil_policy",
-    "name": "OIL POLICY",
-    "blurb": "Oil drums blast wider. SoR4 threw bodies at barrels. We bill the crater.",
-    "fixed": false,
-    "rarity": "epic",
-    "tag": "PROP",
-    "stats": { "blast": "+36" }
-  },
-  {
-    "id": "pole_vault",
-    "name": "POLE VAULT",
-    "blurb": "Streetlight swings launch higher. Sunset Overdrive rented the lamp. Tutoring can wait.",
-    "fixed": false,
-    "rarity": "uncommon",
-    "tag": "PARKOUR",
-    "stats": { "pole": "+100" }
-  },
-  {
-    "id": "dive_bounce",
-    "name": "DIVE BOUNCE",
-    "blurb": "A dive that lands hops you back up. Sunset Overdrive slam bounce, billed as falling with intent.",
-    "fixed": false,
-    "rarity": "rare",
-    "tag": "AIR",
-    "stats": { "dive": "bounce" }
-  },
-  {
-    "id": "hood_hop",
-    "name": "HOOD HOP",
-    "blurb": "Car hoods bounce higher. Sunset Overdrive rented the bumper. We stole the copay.",
-    "fixed": false,
-    "rarity": "uncommon",
-    "tag": "PARKOUR",
-    "stats": { "hood": "+100" }
-  },
-  {
-    "id": "steam_lid",
-    "name": "STEAM LID",
-    "blurb": "Pop a manhole and nearby punks eat the steam. SoR4 hid knives under crates.",
-    "fixed": false,
-    "rarity": "rare",
-    "tag": "PROP",
-    "stats": { "manhole": "chip" }
-  },
-  {
-    "id": "slide_tax",
-    "name": "SLIDE TAX",
-    "blurb": "Slides last longer and cut a second invoice. Vector went under. We billed the asphalt.",
-    "fixed": false,
-    "rarity": "rare",
-    "tag": "STREET",
-    "stats": { "slide": "+4" }
-  },
-  {
-    "id": "escape_clause",
-    "name": "ESCAPE CLAUSE",
-    "blurb": "Secret. Tower falls refund a jump. The lease did not sign this.",
-    "fixed": false,
-    "rarity": "epic",
-    "tag": "TOWER",
-    "stats": { "fall": "jump" }
-  },
-  {
-    "id": "talking_stick",
-    "name": "TALKING STICK",
-    "blurb": "Secret. SNAP heals 4 extra. Nobody passed it. You took it.",
-    "fixed": false,
-    "rarity": "rare",
-    "tag": "SNAP",
-    "stats": { "snap": "+4 hp" }
-  },
-  {
-    "id": "landlord_void",
-    "name": "LANDLORD VOID",
-    "blurb": "Secret. Legendary. Heavies on armored punks strip two plates. The mortgage cried.",
-    "fixed": false,
-    "rarity": "legendary",
-    "tag": "BOSS",
-    "stats": { "plates": "+2 strip" }
-  },
-  {
-    "id": "shuttle_rip",
-    "name": "SHUTTLE RIP",
-    "blurb": "Secret. Mid-air slap windows last longer. The wellness drone still wants a copay.",
-    "fixed": false,
-    "rarity": "epic",
-    "tag": "AIR",
-    "stats": { "slap": "+80ms" }
+ {
+  "id": "head_trampoline",
+  "name": "HEAD TRAMPOLINE",
+  "blurb": "Air heavy bounces them 80 px and refunds a jump. Kill on the bounce is always blunt.",
+  "fixed": true,
+  "rarity": "epic",
+  "tag": "AIR"
+ },
+ {
+  "id": "family_discount",
+  "name": "FAMILY DISCOUNT",
+  "blurb": "Your hits refill the partner's Steam. Shared combo lives if only one of you eats dirt.",
+  "fixed": true,
+  "rarity": "epic",
+  "tag": "COOP"
+ },
+ {
+  "id": "office_rage",
+  "name": "OFFICE RAGE",
+  "blurb": "Lights apply Staple bleed. Staple-kills explode paper. Lights still flash red until then.",
+  "fixed": true,
+  "rarity": "epic",
+  "tag": "BLEED"
+ },
+ {
+  "id": "quiet_lunch",
+  "name": "QUIET LUNCH",
+  "blurb": "SNAP on a back restores 8 HP. Missed SNAP is your problem.",
+  "fixed": false,
+  "rarity": "rare",
+  "tag": "SNAP"
+ },
+ {
+  "id": "double_slap",
+  "name": "DOUBLE SLAP",
+  "blurb": "A Parenting Slap heals both 20% and they hit meaner for 2 seconds. Will be abused.",
+  "fixed": false,
+  "rarity": "rare",
+  "tag": "REVIVE"
+ },
+ {
+  "id": "ricochet_policy",
+  "name": "RICOCHET POLICY",
+  "blurb": "Batwings bounce +1 off metal. Neon that is hit is a conversation.",
+  "fixed": false,
+  "rarity": "uncommon",
+  "tag": "SHOT"
+ },
+ {
+  "id": "tutoring",
+  "name": "TUTORING",
+  "blurb": "Every 8th light without eating dirt: the next shot fires twice. Homework.",
+  "fixed": false,
+  "rarity": "uncommon",
+  "tag": "STRING"
+ },
+ {
+  "id": "pendulum_politics",
+  "name": "PENDULUM POLITICS",
+  "blurb": "A web-slam kill leaves a lamp. The Son can grab it. Solo: you still get the lamp.",
+  "fixed": false,
+  "rarity": "rare",
+  "tag": "WEB"
+ },
+ {
+  "id": "cop_out",
+  "name": "COP OUT",
+  "blurb": "SNAP on a cop refunds one Wanted stamp. The paperwork files itself.",
+  "fixed": false,
+  "rarity": "common",
+  "tag": "WANTED"
+ },
+ {
+  "id": "steam_tax",
+  "name": "STEAM TAX",
+  "blurb": "Lights cost 0 Steam. Heavies refund 8. The clinic calls it a loophole.",
+  "fixed": false,
+  "rarity": "rare",
+  "tag": "STEAM"
+ },
+ {
+  "id": "family_blitz",
+  "name": "FAMILY BLITZ",
+  "blurb": "Dash i-frames +4. Slide hits twice. SoR4 called; it wants its meter back.",
+  "fixed": false,
+  "rarity": "rare",
+  "tag": "DASH"
+ },
+ {
+  "id": "street_credit",
+  "name": "STREET CREDIT",
+  "blurb": "Combo cash-out pays double Scrap. Let the timer die on purpose. That's the bit.",
+  "fixed": false,
+  "rarity": "epic",
+  "tag": "BANK"
+ },
+ {
+  "id": "coping_magnet",
+  "name": "COPING MAGNET",
+  "blurb": "Pickup vacuum radius +110. Halls of Torment called it a trait. We call it enabling.",
+  "fixed": false,
+  "rarity": "rare",
+  "tag": "MAGNET"
+ },
+ {
+  "id": "orbit_form",
+  "name": "ORBIT FORM",
+  "blurb": "Two blades orbit you and chip. Not a meadow. Still illegal in group.",
+  "fixed": false,
+  "rarity": "epic",
+  "tag": "ORBIT"
+ },
+ {
+  "id": "drip_feed",
+  "name": "DRIP FEED",
+  "blurb": "Aura ticks light on anything in hugging distance. The clinic calls it presence.",
+  "fixed": false,
+  "rarity": "rare",
+  "tag": "AURA"
+ },
+ {
+  "id": "vacuum_hour",
+  "name": "VACUUM HOUR",
+  "blurb": "One huge magnet pulse. Every chip remembers your name. Then it forgets again.",
+  "fixed": false,
+  "rarity": "epic",
+  "tag": "VACUUM"
+ },
+ {
+  "id": "open_tab",
+  "name": "OPEN TAB",
+  "blurb": "Kills pay +4 pinball to whoever landed it. The clinic calls it a tab. We call it a personality.",
+  "fixed": false,
+  "rarity": "uncommon",
+  "tag": "SCORE"
+ },
+ {
+  "id": "invoice_void",
+  "name": "INVOICE VOID",
+  "blurb": "Legendary. Heavies strip an extra plate on armored bosses. The Director hates this card.",
+  "fixed": false,
+  "rarity": "legendary",
+  "tag": "BOSS",
+  "stats": {
+   "plates": "+1 strip",
+   "score": "+boss"
   }
+ },
+ {
+  "id": "named_line",
+  "name": "NAMED LINE",
+  "blurb": "Perfect tricks pay +12 and keep the speed. The coach would bill this. Unique card art.",
+  "fixed": false,
+  "rarity": "epic",
+  "tag": "PARKOUR",
+  "stats": {
+   "trick": "+12",
+   "speed": "keep"
+  }
+ },
+ {
+  "id": "stomp_policy",
+  "name": "STOMP POLICY",
+  "blurb": "Face stomps score double. Brain on three is still the personality.",
+  "fixed": false,
+  "rarity": "rare",
+  "tag": "FINISH",
+  "stats": {
+   "stomp": "x2",
+   "blood": "more"
+  }
+ },
+ {
+  "id": "idle_alibi",
+  "name": "IDLE ALIBI",
+  "blurb": "Legendary. Patrol banks +50% gold. Closed still counts. The alley works for you.",
+  "fixed": false,
+  "rarity": "legendary",
+  "tag": "PATROL",
+  "stats": {
+   "idle": "+50%",
+   "gold": "bank"
+  }
+ },
+ {
+  "id": "courier_policy",
+  "name": "COURIER POLICY",
+  "blurb": "On the lemon van, rail shots refund 1 ammo. The clinic still bills the crash.",
+  "fixed": false,
+  "rarity": "epic",
+  "tag": "CHASE",
+  "stats": {
+   "ammo": "refund",
+   "rail": "360"
+  }
+ },
+ {
+  "id": "orchard_copay",
+  "name": "ORCHARD COPAY",
+  "blurb": "Slide hills and rope swings pay +8. Hay is not a couch. The lake still wants a copay.",
+  "fixed": false,
+  "rarity": "rare",
+  "tag": "FARM",
+  "stats": {
+   "slide": "+8",
+   "swing": "+8"
+  }
+ },
+ {
+  "id": "brine_lungs",
+  "name": "BRINE LUNGS",
+  "blurb": "Legendary. In Ledger Dive, magnet radius +80 and eels chip slower. The spa hates this.",
+  "fixed": false,
+  "rarity": "legendary",
+  "tag": "VAULT",
+  "stats": {
+   "magnet": "+80",
+   "eel": "slow"
+  }
+ },
+ {
+  "id": "wall_bounce",
+  "name": "WALL BOUNCE",
+  "blurb": "Throws bounce off smashables AND the invoice wall. SoR4 called it a juggle. We bill it.",
+  "fixed": false,
+  "rarity": "rare",
+  "tag": "THROW",
+  "stats": {
+   "bounce": "+1"
+  }
+ },
+ {
+  "id": "snack_break",
+  "name": "SNACK BREAK",
+  "blurb": "Smash a fridge or kiosk and the combo does not die. Extra scrap. The till still wants a copay.",
+  "fixed": false,
+  "rarity": "uncommon",
+  "tag": "PROP",
+  "stats": {
+   "smash": "combo"
+  }
+ },
+ {
+  "id": "revenge_policy",
+  "name": "REVENGE POLICY",
+  "blurb": "After you eat dirt, the next hit is a Revenge. Longer window. SoR4 special restore, billed.",
+  "fixed": false,
+  "rarity": "rare",
+  "tag": "COUNTER",
+  "stats": {
+   "revenge": "+1"
+  }
+ },
+ {
+  "id": "cart_hop",
+  "name": "CART HOP",
+  "blurb": "Shopping carts last longer. Jump off for a pop. Don't tell tutoring.",
+  "fixed": false,
+  "rarity": "uncommon",
+  "tag": "PARKOUR",
+  "stats": {
+   "cart": "+0.6s"
+  }
+ },
+ {
+  "id": "weapon_catch",
+  "name": "WEAPON CATCH",
+  "blurb": "Thrown pipes bounce back once. SoR4 called it a juggle. We call it recycling.",
+  "fixed": false,
+  "rarity": "rare",
+  "tag": "THROW",
+  "stats": {
+   "catch": "boomerang"
+  }
+ },
+ {
+  "id": "clash_policy",
+  "name": "CLASH POLICY",
+  "blurb": "Heavy vs a telegraphing punk chips extra and refunds Steam. Huntdown called it a katana. We bill the spark.",
+  "fixed": false,
+  "rarity": "epic",
+  "tag": "COUNTER",
+  "stats": {
+   "clash": "+6"
+  }
+ },
+ {
+  "id": "awning_hop",
+  "name": "AWNING HOP",
+  "blurb": "Awnings bounce higher. Sunset Overdrive storefronts, billed as copays.",
+  "fixed": false,
+  "rarity": "uncommon",
+  "tag": "PARKOUR",
+  "stats": {
+   "awning": "+100"
+  }
+ },
+ {
+  "id": "news_cycle",
+  "name": "NEWS CYCLE",
+  "blurb": "Pop a newsstand and a pipe drops with the Paper Boy. The headline still wants a copay.",
+  "fixed": false,
+  "rarity": "rare",
+  "tag": "PROP",
+  "stats": {
+   "news": "pipe"
+  }
+ },
+ {
+  "id": "oil_policy",
+  "name": "OIL POLICY",
+  "blurb": "Oil drums blast wider. SoR4 threw bodies at barrels. We bill the crater.",
+  "fixed": false,
+  "rarity": "epic",
+  "tag": "PROP",
+  "stats": {
+   "blast": "+36"
+  }
+ },
+ {
+  "id": "pole_vault",
+  "name": "POLE VAULT",
+  "blurb": "Streetlight swings launch higher. Sunset Overdrive rented the lamp. Tutoring can wait.",
+  "fixed": false,
+  "rarity": "uncommon",
+  "tag": "PARKOUR",
+  "stats": {
+   "pole": "+100"
+  }
+ },
+ {
+  "id": "dive_bounce",
+  "name": "DIVE BOUNCE",
+  "blurb": "A dive that lands hops you back up. Sunset Overdrive slam bounce, billed as falling with intent.",
+  "fixed": false,
+  "rarity": "rare",
+  "tag": "AIR",
+  "stats": {
+   "dive": "bounce"
+  }
+ },
+ {
+  "id": "hood_hop",
+  "name": "HOOD HOP",
+  "blurb": "Car hoods bounce higher. Sunset Overdrive rented the bumper. We stole the copay.",
+  "fixed": false,
+  "rarity": "uncommon",
+  "tag": "PARKOUR",
+  "stats": {
+   "hood": "+100"
+  }
+ },
+ {
+  "id": "steam_lid",
+  "name": "STEAM LID",
+  "blurb": "Pop a manhole and nearby punks eat the steam. SoR4 hid knives under crates.",
+  "fixed": false,
+  "rarity": "rare",
+  "tag": "PROP",
+  "stats": {
+   "manhole": "chip"
+  }
+ },
+ {
+  "id": "slide_tax",
+  "name": "SLIDE TAX",
+  "blurb": "Slides last longer and cut a second invoice. Vector went under. We billed the asphalt.",
+  "fixed": false,
+  "rarity": "rare",
+  "tag": "STREET",
+  "stats": {
+   "slide": "+4"
+  }
+ },
+ {
+  "id": "escape_clause",
+  "name": "ESCAPE CLAUSE",
+  "blurb": "Secret. Tower falls refund a jump. The lease did not sign this.",
+  "fixed": false,
+  "rarity": "epic",
+  "tag": "TOWER",
+  "stats": {
+   "fall": "jump"
+  }
+ },
+ {
+  "id": "talking_stick",
+  "name": "TALKING STICK",
+  "blurb": "Secret. SNAP heals 4 extra. Nobody passed it. You took it.",
+  "fixed": false,
+  "rarity": "rare",
+  "tag": "SNAP",
+  "stats": {
+   "snap": "+4 hp"
+  }
+ },
+ {
+  "id": "landlord_void",
+  "name": "LANDLORD VOID",
+  "blurb": "Secret. Legendary. Heavies on armored punks strip two plates. The mortgage cried.",
+  "fixed": false,
+  "rarity": "legendary",
+  "tag": "BOSS",
+  "stats": {
+   "plates": "+2 strip"
+  }
+ },
+ {
+  "id": "shuttle_rip",
+  "name": "SHUTTLE RIP",
+  "blurb": "Secret. Mid-air slap windows last longer. The wellness drone still wants a copay.",
+  "fixed": false,
+  "rarity": "epic",
+  "tag": "AIR",
+  "stats": {
+   "slap": "+80ms"
+  }
+ },
+ {
+  "id": "protein_shake",
+  "name": "PROTEIN SHAKE",
+  "kind": "PASSIVE",
+  "tag": "HEAVY",
+  "rarity": "common",
+  "max_lv": 3,
+  "lv": [
+   "+12% damage.",
+   "+24% damage.",
+   "+36% damage. The shaker rattles."
+  ],
+  "blurb": "+12% damage."
+ },
+ {
+  "id": "running_shoes",
+  "name": "RUNNING SHOES",
+  "kind": "PASSIVE",
+  "tag": "PARKOUR",
+  "rarity": "common",
+  "max_lv": 3,
+  "lv": [
+   "+8% move speed.",
+   "+16% move speed.",
+   "+24% move speed, dash costs less."
+  ],
+  "blurb": "+8% move speed."
+ },
+ {
+  "id": "thick_hoodie",
+  "name": "THICK HOODIE",
+  "kind": "PASSIVE",
+  "tag": "BLOCK",
+  "rarity": "uncommon",
+  "max_lv": 3,
+  "lv": [
+   "+10 max health, healed now.",
+   "+20 max health.",
+   "+30 max health. Machine wash cold."
+  ],
+  "blurb": "+10 max health, healed now."
+ },
+ {
+  "id": "chi_battery",
+  "name": "CHI BATTERY",
+  "kind": "PASSIVE",
+  "tag": "STEAM",
+  "rarity": "rare",
+  "max_lv": 3,
+  "lv": [
+   "+35% CHI from hits and kills.",
+   "+70% CHI.",
+   "+105% CHI. Arts on tap."
+  ],
+  "blurb": "+35% CHI from hits and kills."
+ },
+ {
+  "id": "paper_drone",
+  "name": "PAPERBOY DRONE",
+  "kind": "AUTOWEAPON",
+  "tag": "SHOT",
+  "rarity": "rare",
+  "max_lv": 3,
+  "lv": [
+   "A drone over your shoulder throws a rolled paper at a thug every 2.2 s.",
+   "Every 1.8 s, harder.",
+   "Every 1.4 s, two papers."
+  ],
+  "blurb": "A drone over your shoulder throws a rolled paper at a thug every 2.2 s."
+ },
+ {
+  "id": "stapler_orbit",
+  "name": "STAPLER ORBIT",
+  "kind": "AUTOWEAPON",
+  "tag": "BLEED",
+  "rarity": "uncommon",
+  "max_lv": 3,
+  "lv": [
+   "A stapler circles you, biting anyone it passes (bleed).",
+   "Two staplers.",
+   "Three staplers, wider."
+  ],
+  "blurb": "A stapler circles you, biting anyone it passes (bleed)."
+ },
+ {
+  "id": "molotov_lob",
+  "name": "MOLOTOV DAD",
+  "kind": "AUTOWEAPON",
+  "tag": "HEAT",
+  "rarity": "epic",
+  "max_lv": 3,
+  "lv": [
+   "Every 6 s a bottle flies at the nearest thug and the street burns.",
+   "Every 5 s.",
+   "Every 4 s, a bigger fire."
+  ],
+  "blurb": "Every 6 s a bottle flies at the nearest thug and the street burns."
+ },
+ {
+  "id": "stray_cat",
+  "name": "STRAY CAT",
+  "kind": "COMPANION",
+  "tag": "BLEED",
+  "rarity": "uncommon",
+  "max_lv": 3,
+  "lv": [
+   "A street cat follows you and pounces on thugs (claws bleed).",
+   "Pounces more often.",
+   "Two cats. They have opinions."
+  ],
+  "blurb": "A street cat follows you and pounces on thugs (claws bleed)."
+ },
+ {
+  "id": "repo_drone",
+  "name": "REPO DRONE",
+  "kind": "COMPANION",
+  "tag": "SNAP",
+  "rarity": "rare",
+  "max_lv": 3,
+  "lv": [
+   "A drone hovers by you and zaps a thug every 2.5 s (stun).",
+   "Every 2 s, longer stun.",
+   "Every 1.5 s, the zap jumps to a second thug."
+  ],
+  "blurb": "A drone hovers by you and zaps a thug every 2.5 s (stun)."
+ },
+ {
+  "id": "pigeon_squad",
+  "name": "PIGEON SQUAD",
+  "kind": "COMPANION",
+  "tag": "AIR",
+  "rarity": "epic",
+  "max_lv": 3,
+  "lv": [
+   "Every 6 s a flock sweeps down the lane, hitting and stunning everyone.",
+   "Every 5 s.",
+   "Every 4 s, more pigeons, more damage."
+  ],
+  "blurb": "Every 6 s a flock sweeps down the lane, hitting and stunning everyone."
+ },
+ {
+  "id": "air_horn",
+  "name": "AIR HORN",
+  "kind": "ACTIVE",
+  "tag": "PARRY",
+  "rarity": "rare",
+  "max_lv": 3,
+  "lv": [
+   "SHOOT with empty hands: everyone close is stunned 1.2 s. Cooldown 14 s.",
+   "Stun 1.6 s, cooldown 12 s.",
+   "Stun 2 s, cooldown 10 s, knocks them down."
+  ],
+  "blurb": "SHOOT with empty hands: everyone close is stunned 1.2 s. Cooldown 14 s."
+ },
+ {
+  "id": "smoke_bomb",
+  "name": "SMOKE BOMB",
+  "kind": "ACTIVE",
+  "tag": "REVIVE",
+  "rarity": "epic",
+  "max_lv": 3,
+  "lv": [
+   "SHOOT with empty hands: smoke, 2.5 s untouchable, thugs lose you. Cooldown 18 s.",
+   "Cooldown 15 s.",
+   "Cooldown 12 s, you heal a little in the smoke."
+  ],
+  "blurb": "SHOOT with empty hands: smoke, 2.5 s untouchable, thugs lose you. Cooldown 18 s."
+ },
+ {
+  "id": "knife_belt",
+  "name": "KNIFE BELT",
+  "kind": "MANUALWEAPON",
+  "tag": "THROW",
+  "rarity": "uncommon",
+  "max_lv": 3,
+  "lv": [
+   "+3 throwing knives now, carry 3 more.",
+   "+3 more, carry 3 more.",
+   "+3 more, knives go through everyone."
+  ],
+  "blurb": "+3 throwing knives now, carry 3 more."
+ },
+ {
+  "id": "slingshot",
+  "name": "SLINGSHOT",
+  "kind": "MANUALWEAPON",
+  "tag": "SHOT",
+  "rarity": "common",
+  "max_lv": 3,
+  "lv": [
+   "SHOOT with empty hands fires a pebble. No ammo, ever.",
+   "Harder pebbles.",
+   "Faster and harder: marbles now."
+  ],
+  "blurb": "SHOOT with empty hands fires a pebble. No ammo, ever."
+ }
 ]

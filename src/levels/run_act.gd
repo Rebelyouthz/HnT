@@ -375,6 +375,7 @@ func _ready() -> void:
 		var pk := Party.spawn_row(self, row, _state.hp_mul() * NightCondition.mul(map_id, "hp") * Heroes.enemy_hp_mul() * Artifacts.enemy_hp())
 		if pk:
 			pk.speed *= NightCondition.mul(map_id, "speed")
+	add_child(ItemRack.new())
 	_cam = CouchCamera.new()
 	_cam.limit_right = int(map_w)
 	_cam.targets = _targets()
@@ -461,7 +462,7 @@ func _cards() -> void:
 		var pool: Array = []
 		var table: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/cards.json"))
 		for c in table:
-			if not bool(c.get("fixed", false)) and not _state.cards.has(c["id"]):
+			if not bool(c.get("fixed", false)) and RunState.offerable(c, _state.cards, _state.card_lv):
 				pool.append(c["id"])
 		pool.shuffle()
 		pick.ids = pool.slice(0, 3)

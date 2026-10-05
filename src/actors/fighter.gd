@@ -142,7 +142,7 @@ var combo_dmg := 0
 ## fills from kills; art_lock owns the body while one plays.
 var chi := 0.0
 ## Throwing knives on the belt (THROW with nobody in reach).
-const KNIVES_MAX := 6
+var knives_max := 6
 var knives := 2
 var team := 0.0
 var art_lock := 0.0
@@ -884,7 +884,7 @@ func _process_street(delta: float) -> void:
 		var combo_spd := 1.0 + clampf(float(Juice.combo) * 0.008, 0.0, 0.14)
 		if stumble_t > 0.0:
 			limp *= 0.4
-		velocity.x = x * speed * limp * (1.0 + (trick_boost - 1.0) * Meta.flow_mul()) * Meta.run_speed_mul() * NightExtras.speed_mul() * combo_spd * (1.0 + 0.12 * float(_cart("energy_drink"))) * _surv_speed()
+		velocity.x = x * speed * limp * (1.0 + (trick_boost - 1.0) * Meta.flow_mul()) * Meta.run_speed_mul() * NightExtras.speed_mul() * combo_spd * (1.0 + 0.12 * float(_cart("energy_drink"))) * _surv_speed() * ItemRack.speed_k
 		if _street_grounded():
 			velocity.y = y * depth_speed * limp
 		else:
@@ -1870,6 +1870,8 @@ func _shoot() -> void:
 		else:
 			_fire_gun()
 		return
+	if pickup == "" and ItemRack.shoot(self):
+		return
 	if ammo <= 0 or attack_cd > 0:
 		return
 	ammo -= 1
@@ -2706,7 +2708,7 @@ func _spend(n: float) -> bool:
 
 ## A thug this hero hit went down: CHI for the arts, TEAM for both heroes.
 func gain_kill() -> void:
-	chi = minf(Elements.CHI_MAX, chi + Elements.CHI_KILL)
+	chi = minf(Elements.CHI_MAX, chi + Elements.CHI_KILL * ItemRack.chi_k)
 	team = minf(Elements.TEAM_MAX, team + Elements.TEAM_KILL)
 	for n in get_tree().get_nodes_in_group("players"):
 		if n is Fighter and n != self:
@@ -2715,7 +2717,7 @@ func gain_kill() -> void:
 
 func gain_hit(kind: String) -> void:
 	if not art_hit:
-		chi = minf(Elements.CHI_MAX, chi + Elements.chi_for_hit(kind))
+		chi = minf(Elements.CHI_MAX, chi + Elements.chi_for_hit(kind) * ItemRack.chi_k)
 
 
 func _pressed(action: String) -> bool:

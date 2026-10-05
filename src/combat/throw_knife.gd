@@ -14,6 +14,7 @@ var dir := 1
 var on_ground := false
 var _t := 0.0
 var _spin := 0.0
+var _hit := {}
 
 
 static func throw_from(f: Fighter) -> ThrowKnife:
@@ -42,7 +43,7 @@ func _physics_process(delta: float) -> void:
 	if on_ground:
 		for n in get_tree().get_nodes_in_group("players"):
 			if n is Fighter and (n as Fighter).global_position.distance_to(global_position) < 26.0:
-				(n as Fighter).knives = mini(Fighter.KNIVES_MAX, (n as Fighter).knives + 1)
+				(n as Fighter).knives = mini((n as Fighter).knives_max, (n as Fighter).knives + 1)
 				Juice.popup_number(global_position + Vector2(0, -50), "+1 KNIFE", Color(0.85, 0.9, 1.0))
 				Mixer.play_sfx("res://assets/audio/cling.wav", 1.4, -6.0)
 				queue_free()
@@ -56,15 +57,17 @@ func _physics_process(delta: float) -> void:
 	for n in get_tree().get_nodes_in_group("enemies"):
 		if n is Punk:
 			var e: Punk = n
-			if e.hp > 0 and absf(e.global_position.x - global_position.x) < 18.0 and absf(e.global_position.y - global_position.y) < 24.0:
+			if e.hp > 0 and not _hit.has(e.get_instance_id()) and absf(e.global_position.x - global_position.x) < 18.0 and absf(e.global_position.y - global_position.y) < 24.0:
+				_hit[e.get_instance_id()] = true
 				e.guarding = false
 				e.take_hit("blade", by if is_instance_valid(by) else self)
 				if is_instance_valid(e) and e.hp > 0:
 					e.staples = maxi(e.staples, 2)
 				Mixer.play_sfx("res://assets/audio/sfx/melee_knife.ogg", 1.1, -2.0)
 				Juice.sparks(e.global_position + Vector2(0, -36))
-				queue_free()
-				return
+				if not ItemRack.knife_pierce:
+					queue_free()
+					return
 	if _t > LIFE:
 		on_ground = true
 		_t = 0.0

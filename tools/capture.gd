@@ -224,6 +224,16 @@ func _process(_delta: float) -> bool:
 				current_scene.call("_banner", "DOCK STREET FILED", "Gant is down. Benny is free.", true, false)
 			"cards":
 				current_scene.call("_cards")
+			"items":
+				var rs: Node = root.get_tree().get_first_node_in_group("run_state")
+				rs.call("take_card", "stapler_orbit")
+				var cp: CanvasLayer = load("res://src/combat/card_pick.gd").new()
+				cp.set("ids", ["paper_drone", "stapler_orbit", "stray_cat"])
+				current_scene.add_child(cp)
+			"items_live":
+				var rs2: Node = root.get_tree().get_first_node_in_group("run_state")
+				for id in ["paper_drone", "stapler_orbit", "stapler_orbit", "stray_cat", "repo_drone", "pigeon_squad"]:
+					rs2.call("take_card", id)
 			"loot":
 				var pl: Node2D = root.get_tree().get_first_node_in_group("players")
 				if pl:

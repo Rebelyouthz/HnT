@@ -66,6 +66,15 @@ The rest is in English, like the code. Newest work first. Each block says
   (can, scope/red dot, drum, long barrel, laser line). Old gun mods migrate.
 - Throwing knives (`ThrowKnife`): THROW with nobody in reach, 2 per night,
   max 6, misses and 8% thug drops lie on the street to pick back up.
+- Level-up cards: every card shows a KIND badge (PixelCard.KINDS: PASSIVE /
+  ACTIVE / COMPANION / AUTOWEAPON / MANUALWEAPON) and LV / UPGRADE LV.
+  14 item cards in data/cards.json ("kind", "max_lv", "lv" texts) level to 3
+  when picked again (RunState.card_lv, RunState.offerable). `ItemRack` (one per
+  run) runs them: passives as static multipliers (dmg_k, speed_k, chi_k),
+  paperboy/repo drones, stapler orbit, molotov lobs, stray cats, pigeon
+  sweeps, AIR HORN / SMOKE BOMB actives and the SLINGSHOT on SHOOT with
+  empty hands (`ItemRack.shoot`). Survivor pick cards carry the same badge +
+  rarity line.
 
 ## 0l. Bosses, three trees + metas, survivor depth, weapon mods, night extras
 

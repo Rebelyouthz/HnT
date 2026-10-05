@@ -161,7 +161,7 @@ func _card(o: Dictionary) -> Button:
 			r = {"name": "10 GOLD", "blurb": "Nothing left to learn. Have some money.", "icon": "i_coin"}
 			lv_text = "CONSOLATION"
 	var b := Button.new()
-	b.custom_minimum_size = Vector2(320, 300)
+	b.custom_minimum_size = Vector2(320, 326)
 	b.focus_mode = Control.FOCUS_ALL
 	b.add_theme_stylebox_override("normal", UiKit.panel(Palette.PANEL, col.darkened(0.3)))
 	b.add_theme_stylebox_override("hover", UiKit.panel(Palette.PANEL, col))
@@ -169,10 +169,43 @@ func _card(o: Dictionary) -> Button:
 	b.add_theme_stylebox_override("pressed", UiKit.panel(Palette.PANEL, col))
 	var v := VBoxContainer.new()
 	v.position = Vector2(16, 16)
-	v.size = Vector2(288, 270)
+	v.size = Vector2(288, 296)
 	v.add_theme_constant_override("separation", 10)
 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	b.add_child(v)
+	# What it is (PASSIVE / AUTOWEAPON / COMPANION / ACTIVE) and its rarity.
+	var kd := "PASSIVE"
+	var rar := str(r.get("rarity", ""))
+	match kind:
+		"ability":
+			var aid := str(o["id"])
+			kd = "COMPANION" if (aid.contains("drone") or aid.contains("dog") or aid.contains("intern") or aid.contains("cart") or aid.contains("pet")) else "AUTOWEAPON"
+			if rar == "":
+				rar = "rare"
+		"evolve":
+			kd = "AUTOWEAPON"
+			rar = "legendary"
+		"trait":
+			if rar == "":
+				rar = "uncommon"
+		"item":
+			kd = "ACTIVE" if r.has("active") else "PASSIVE"
+	if rar == "":
+		rar = "common"
+	var kinfo: Array = PixelCard.KINDS[kd]
+	var krow := HBoxContainer.new()
+	krow.add_theme_constant_override("separation", 4)
+	krow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var kic := PixelIcon.new()
+	kic.kind = str(kinfo[1])
+	kic.custom_minimum_size = Vector2(16, 16)
+	kic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	krow.add_child(kic)
+	var kl := Label.new()
+	kl.text = "%s  ·  %s" % [str(kinfo[0]), Rarity.label(Rarity.normalize(rar))]
+	UiKit.apply_label(kl, 11, kinfo[2])
+	krow.add_child(kl)
+	v.add_child(krow)
 	var tag := Label.new()
 	tag.text = lv_text
 	UiKit.apply_label(tag, 13, col)

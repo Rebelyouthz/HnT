@@ -29,6 +29,15 @@ const STAT_OF := {
 	"BLOCK": ["DEFENCE", "TEMPO"], "PARRY": ["DEFENCE", "FINISH"], "THROW": ["DAMAGE", "CONTROL"], "HEAVY": ["DAMAGE", "CONTROL"],
 }
 
+## What kind of thing the card gives, shown on a badge with its own glyph.
+const KINDS := {
+	"PASSIVE": ["PASSIVE", "star", Color(0.62, 0.72, 0.86)],
+	"ACTIVE": ["ACTIVE", "bolt", Color(1.0, 0.6, 0.2)],
+	"COMPANION": ["COMPANION / PET", "heart", Color(0.45, 0.9, 0.55)],
+	"AUTOWEAPON": ["AUTOWEAPON", "eye", Color(1.0, 0.36, 0.32)],
+	"MANUALWEAPON": ["MANUAL WEAPON", "fist", Color(1.0, 0.85, 0.3)],
+}
+
 var info: Dictionary = {}
 var face_up := true
 var lit := false
@@ -49,6 +58,11 @@ func _ready() -> void:
 
 func rarity() -> String:
 	return Rarity.normalize(str(info.get("rarity", "common")))
+
+
+func kind() -> String:
+	var k := str(info.get("kind", "PASSIVE")).to_upper()
+	return k if KINDS.has(k) else "PASSIVE"
 
 
 func tag() -> String:
@@ -112,6 +126,37 @@ func _build_face() -> void:
 	# cyan, the rest in their rarity colour (common ones in gold, not grey).
 	_label(str(info.get("name", "?")), Vector2(22, 210), W - 44, 22, _name_col(p), true)
 	_label(Rarity.label(rarity()) + "  ·  " + tag(), Vector2(22, 244), W - 44, 12, p[1])
+	# Kind badge (top-left) and level (top-right).
+	var kd: Array = KINDS[kind()]
+	var badge := PanelContainer.new()
+	var bs := StyleBoxFlat.new()
+	bs.bg_color = Color(0.03, 0.03, 0.06, 0.92)
+	bs.border_color = kd[2]
+	bs.set_border_width_all(2)
+	bs.set_corner_radius_all(3)
+	bs.content_margin_left = 4
+	bs.content_margin_right = 6
+	badge.add_theme_stylebox_override("panel", bs)
+	badge.position = Vector2(16, 58)
+	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var bh := HBoxContainer.new()
+	bh.add_theme_constant_override("separation", 3)
+	var bi := PixelIcon.new()
+	bi.kind = str(kd[1])
+	bi.custom_minimum_size = Vector2(16, 16)
+	bi.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bh.add_child(bi)
+	var bl2 := Label.new()
+	bl2.text = str(kd[0])
+	bl2.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(bl2, 10, kd[2])
+	bh.add_child(bl2)
+	badge.add_child(bh)
+	add_child(badge)
+	_labels.append(badge)
+	if info.has("level"):
+		var lvl := _label(("UPGRADE  LV %d" if bool(info.get("upgrade", false)) else "LV %d") % int(info["level"]), Vector2(W - 150, 60), 134, 11, UiKit.GOLD if bool(info.get("upgrade", false)) else Palette.TEXT)
+		lvl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	var stats := stat_rows()
 	for i in stats.size():
 		_label(str(stats[i][0]), Vector2(30, 280 + i * 22), 110, 12, Palette.TEXT).horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT

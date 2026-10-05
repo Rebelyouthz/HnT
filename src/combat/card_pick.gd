@@ -92,7 +92,17 @@ func _ready() -> void:
 func _info(id: String) -> Dictionary:
 	for c in _table:
 		if str(c["id"]) == id:
-			return c
+			var out: Dictionary = (c as Dictionary).duplicate()
+			# Owned item: the card shows the next level and what it adds.
+			var rs := get_tree().get_first_node_in_group("run_state")
+			var lv := int(rs.call("card_level", id)) if rs and rs.has_method("card_level") else 0
+			var lines: Array = out.get("lv", [])
+			if not lines.is_empty():
+				var nxt := clampi(lv + 1, 1, lines.size())
+				out["blurb"] = str(lines[nxt - 1])
+				out["level"] = nxt
+				out["upgrade"] = lv > 0
+			return out
 	return {}
 
 
@@ -219,9 +229,10 @@ func _reroll() -> void:
 	var cards_v: Variant = rs.get("cards")
 	if typeof(cards_v) == TYPE_ARRAY:
 		owned = (cards_v as Array).duplicate()
+	var lvs: Dictionary = rs.get("card_lv") if rs.get("card_lv") is Dictionary else {}
 	var pool: Array = []
 	for c in _table:
-		if not owned.has(str(c["id"])):
+		if RunState.offerable(c, owned, lvs):
 			pool.append(str(c["id"]))
 	pool.shuffle()
 	ids = pool.slice(0, 3)
