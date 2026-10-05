@@ -75,7 +75,7 @@ func _process(delta: float) -> void:
 		_encircle(host, f)
 	if _every("supply", 75.0, delta):
 		Supply.drop(host, f.global_position + Vector2(randf_range(-160, 160), randf_range(-20, 30)))
-	if _every("wheel", 100.0, delta):
+	if _every("wheel", 70.0 if Trees.has("f_wheel") else 100.0, delta):
 		WheelToken.place(host, f.global_position + Vector2(randf_range(120, 220) * (1.0 if randf() < 0.5 else -1.0), randf_range(-10, 20)), "survivor")
 	if run.kills >= (_milestone + 1) * 100:
 		_milestone += 1

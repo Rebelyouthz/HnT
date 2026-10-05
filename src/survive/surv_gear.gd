@@ -91,7 +91,7 @@ static func add(p: Dictionary) -> int:
 
 
 static func drop(luck := 0.0) -> Dictionary:
-	var p := roll(luck)
+	var p := roll(luck + (0.15 if Trees.has("f_gear") else 0.0))
 	add(p)
 	var r := rarity_of(p)
 	Rarity.juice(r, str(LIST[str(p["id"])]["name"]))

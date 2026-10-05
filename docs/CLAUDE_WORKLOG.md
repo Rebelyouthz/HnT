@@ -85,6 +85,14 @@ The rest is in English, like the code. Newest work first. Each block says
   rarity), pause BUILD list, run history (STATS), title LAST NIGHT line,
   stage-card tips, parkour RECORDS in BUILD. Survivor's ten go into the
   survivor depth pass (#99). Fire Escapes alley got its cobbles.
+- Survivor depth (#99): S-COINS (`SurvCoin`, `SurviveRun.coins`, label via
+  `Trees.cur_label`), `SurvGear` (4 slots, 18 pieces, rarity/levels/fuse/box,
+  BUILD › SURVIVOR › SURVIVOR GEAR sheet), `LuckyWheel` (+ `WheelToken`) in
+  all modes, STARTING DRAW (story) / TALENT DRAW (survivor), roof chest on
+  parkour maps, `SurvEvents` (golden thug, bounty, encircle, supply drops,
+  milestone chests, panic cry, edge arrows), LIMIT BREAK, DPS share on
+  results, harder scaling, six new survivor tree nodes (s_boxes, s_four,
+  f_gear, f_wheel, u_limit, u_start2).
 
 ## 0l. Bosses, three trees + metas, survivor depth, weapon mods, night extras
 

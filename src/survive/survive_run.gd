@@ -58,6 +58,8 @@ func _ready() -> void:
 	# Father's coffee (solo picks by role).
 	var start := "invoice_toss" if App.solo_role == "son" else "coffee"
 	call_deferred("_grant", start)
+	if Trees.has("u_start2"):
+		call_deferred("_second_start", start)
 	# SURVIVOR meta + tree: extra rerolls, banishes, revives, a free trait.
 	rerolls += Meta.rank("s_reroll") + (2 if Trees.has("s_reroll") else 0)
 	banishes += Meta.rank("s_banish") + (2 if Trees.has("s_banish") else 0)
@@ -70,6 +72,17 @@ func _ready() -> void:
 		call_deferred("_free_trait")
 	# A carried item from the Lost & Found well.
 	call_deferred("_offer_stash")
+
+
+func _second_start(first: String) -> void:
+	var pool: Array = []
+	for a: Dictionary in book.get("abilities", []):
+		var id := str(a.get("id", ""))
+		if id != first and ability_unlocked(id):
+			pool.append(id)
+	if not pool.is_empty():
+		_grant(str(pool[randi() % pool.size()]))
+		Juice.shout("DOUBLE SHIFT")
 
 
 func _grant(id: String) -> void:
@@ -99,7 +112,7 @@ func trait_n(id: String) -> int:
 
 
 func dmg_mul() -> float:
-	return 1.0 + 0.12 * trait_n("t_dmg") + _item_mod("dmg") + 0.05 * Meta.rank("s_might") + SurvGear.stat("dmg") + 0.05 * float(limit_breaks)
+	return 1.0 + 0.12 * trait_n("t_dmg") + _item_mod("dmg") + 0.05 * Meta.rank("s_might") + SurvGear.stat("dmg") + (0.08 if Trees.has("u_limit") else 0.05) * float(limit_breaks)
 
 
 func area_mul() -> float:
@@ -214,6 +227,8 @@ func add_xp(n: int) -> void:
 		xp -= need()
 		level += 1
 		_pending += 1
+		if Trees.has("s_boxes") and level % 5 == 0:
+			call_deferred("open_item_chest")
 		var heal := _item_mod("lvl_heal")
 		for f in _fighters():
 			if heal > 0.0:

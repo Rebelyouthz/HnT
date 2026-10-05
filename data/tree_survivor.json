@@ -244,11 +244,83 @@
   "trunk": "FORTUNE",
   "branch": "right",
   "requires": "f_luck",
-  "name": "CASH BONUS",
-  "blurb": "+50% gold picked up in the hour.",
+  "name": "COIN BONUS",
+  "blurb": "+50% S-COINS dropped in the hour.",
   "gold": 120,
   "rep": 0,
   "rarity": "epic",
-  "stat": "+50% gold"
+  "stat": "+50% coins"
+ },
+ {
+  "id": "s_boxes",
+  "trunk": "INSTINCT",
+  "branch": "left",
+  "requires": "s_ult2",
+  "name": "LEVEL-UP BOXES",
+  "blurb": "Every fifth level opens a free item chest.",
+  "gold": 160,
+  "rep": 0,
+  "rarity": "epic",
+  "stat": "+boxes"
+ },
+ {
+  "id": "s_four",
+  "trunk": "INSTINCT",
+  "branch": "right",
+  "requires": "s_ult3",
+  "name": "FOURTH CARD",
+  "blurb": "Level-ups offer four picks instead of three.",
+  "gold": 200,
+  "rep": 0,
+  "rarity": "legendary",
+  "stat": "+1 pick"
+ },
+ {
+  "id": "f_gear",
+  "trunk": "FORTUNE",
+  "branch": "left",
+  "requires": "f_revive",
+  "name": "LOST PROPERTY",
+  "blurb": "Survivor gear drops roll better rarities.",
+  "gold": 150,
+  "rep": 0,
+  "rarity": "epic",
+  "stat": "+gear luck"
+ },
+ {
+  "id": "f_wheel",
+  "trunk": "FORTUNE",
+  "branch": "right",
+  "requires": "f_gold",
+  "name": "SPIN CLASS",
+  "blurb": "Lucky wheels turn up every 70 s instead of 100.",
+  "gold": 130,
+  "rep": 0,
+  "rarity": "rare",
+  "stat": "+wheels"
+ },
+ {
+  "id": "u_limit",
+  "trunk": "ARSENAL",
+  "branch": "left",
+  "requires": "u_audit",
+  "name": "OVERTIME",
+  "blurb": "Each LIMIT BREAK gives +8% damage instead of +5%.",
+  "gold": 140,
+  "rep": 0,
+  "rarity": "rare",
+  "stat": "+limit"
+ },
+ {
+  "id": "u_start2",
+  "trunk": "ARSENAL",
+  "branch": "right",
+  "requires": "u_gravy",
+  "name": "DOUBLE SHIFT",
+  "blurb": "Start every hour with a second, random ability.",
+  "gold": 220,
+  "rep": 0,
+  "rarity": "legendary",
+  "stat": "+1 ability"
  }
 ]

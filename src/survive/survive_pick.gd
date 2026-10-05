@@ -64,7 +64,7 @@ func _ready() -> void:
 	UiKit.apply_label(_info, 13, Palette.MUTED)
 	_root.add_child(_info)
 	if mode == "level":
-		_offers = run.offers(3)
+		_offers = run.offers(4 if Trees.has("s_four") else 3)
 		var tools := HBoxContainer.new()
 		tools.position = Vector2(430, 520)
 		tools.add_theme_constant_override("separation", 20)
@@ -77,7 +77,7 @@ func _ready() -> void:
 			run.rerolls -= 1
 			rr.text = "REROLL (%d)" % run.rerolls
 			rr.disabled = run.rerolls <= 0
-			_offers = run.offers(3)
+			_offers = run.offers(4 if Trees.has("s_four") else 3)
 			_fill()
 		)
 		tools.add_child(rr)
@@ -254,7 +254,7 @@ func _pick(o: Dictionary) -> void:
 		_banish = false
 		run.banishes -= 1
 		run.banned.append(str(o.get("id", "")))
-		_offers = run.offers(3)
+		_offers = run.offers(4 if Trees.has("s_four") else 3)
 		_info.text = "Banished."
 		_fill()
 		return

@@ -1255,7 +1255,7 @@ func _drops(from: Node) -> void:
 	var srun := SurviveRun.get_run(get_tree())
 	if srun:
 		# Survivor hours pay in S-COINS, not gold.
-		if randf() < 0.07 + 0.5 * srun.luck():
+		if randf() < (0.07 + 0.5 * srun.luck()) * (1.5 if Trees.has("f_gold") else 1.0):
 			SurvCoin.spawn(host, global_position, 1)
 		coins = 0
 	for i in coins:
