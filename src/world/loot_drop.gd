@@ -178,7 +178,7 @@ func _take(f: Fighter) -> void:
 			var g := maxi(1, amount)
 			if Charms.has("lucky_coin"):
 				g = int(ceil(float(g) * 1.5))
-			g = int(ceil(float(g) * Meta.gold_mul()))
+			g = int(ceil(float(g) * Meta.gold_mul() * Artifacts.gold()))
 			if Trees.has("f_gold") and SurviveRun.get_run(get_tree()) != null:
 				g = int(ceil(float(g) * 1.5))
 			FamilyProfile.add_gold(g)
@@ -186,7 +186,7 @@ func _take(f: Fighter) -> void:
 			Juice.fly_pills(global_position, g, 0)
 			Juice.play("res://assets/audio/cash.wav" if ResourceLoader.exists("res://assets/audio/cash.wav") else "res://assets/audio/cling.wav")
 		"flask":
-			var heal := int(round(float(f.max_hp) * 0.25))
+			var heal := 0 if Artifacts.has("no_lunch") else int(round(float(f.max_hp) * 0.25))
 			f.hp = mini(f.max_hp, f.hp + heal)
 			Juice.popup_number(global_position + Vector2(0, -24), "+%d HP" % heal, Palette.READY)
 			Juice.play("res://assets/audio/heal.wav" if ResourceLoader.exists("res://assets/audio/heal.wav") else "res://assets/audio/cling_ok.wav")

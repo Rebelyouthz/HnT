@@ -178,7 +178,7 @@ func _tile(id: String) -> Control:
 		var br := HBoxContainer.new()
 		br.add_theme_constant_override("separation", 6)
 		var lv := Arsenal.level(id)
-		var up := UiKit.button(("LV %d  ▲ %dG" % [lv, Arsenal.level_cost(id)]) if lv < Arsenal.MAX_LV else "LV MAX", Vector2(170, 30))
+		var up := UiKit.button(("LV %d  ▲ %dG" % [lv, Arsenal.level_cost(id)]) if lv < Arsenal.MAX_LV else "LV MAX", Vector2(120, 30))
 		up.set_meta("key", "lv_" + id)
 		up.disabled = lv >= Arsenal.MAX_LV or int(FamilyProfile.data.get("gold", 0)) < Arsenal.level_cost(id)
 		up.pressed.connect(func() -> void:
@@ -193,11 +193,26 @@ func _tile(id: String) -> Control:
 		var mod_names: Array[String] = []
 		for m in on:
 			mod_names.append(str(Arsenal.MODS[m]["title"]))
-		var mb := UiKit.button("MODS %d/%d" % [on.size(), Arsenal.slots(id)], Vector2(150, 30))
+		var mb := UiKit.button("MODS %d/%d" % [on.size(), Arsenal.slots(id)], Vector2(110, 30))
 		mb.set_meta("key", "mods_" + id)
 		mb.tooltip_text = ", ".join(mod_names) if not mod_names.is_empty() else "No mods fitted."
 		mb.pressed.connect(_mods_for.bind(id))
 		br.add_child(mb)
+		# CARRY IN (needs META STARTER KIT): start every night with this one.
+		if Meta.rank("starter_kit") > 0:
+			var carrying := str(FamilyProfile.data.get("carry_weapon", "")) == id
+			var cb := UiKit.button("CARRIED" if carrying else "CARRY", Vector2(110, 30))
+			cb.set_meta("key", "carry_" + id)
+			if carrying:
+				cb.add_theme_color_override("font_color", Palette.READY)
+			cb.pressed.connect(func() -> void:
+				FamilyProfile.data["carry_weapon"] = "" if carrying else id
+				FamilyProfile.save()
+				Juice.play("res://assets/audio/claim.wav")
+				_focus_key = "carry_" + id
+				_paint()
+			)
+			br.add_child(cb)
 		v.add_child(br)
 		if not mod_names.is_empty():
 			var ml := Label.new()

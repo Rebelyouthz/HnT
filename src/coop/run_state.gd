@@ -1,7 +1,7 @@
 class_name RunState
 extends Node
 
-var lives: int = 3 + Meta.rank("extra_life")
+var lives: int = maxi(1, 3 + Meta.rank("extra_life") - (1 if Artifacts.has("one_life") else 0))
 var checkpoint := Vector2(220, 490)
 var failed: bool = false
 var cleared: bool = false
@@ -64,7 +64,12 @@ func clear_run() -> void:
 	var gold := 30 + 10 * Heroes.map_tier() + int(scrap / 4.0)
 	if App.difficulty == "finals":
 		gold += 6
+	gold = int(round(float(gold) * Artifacts.gold()))
 	FamilyProfile.add_gold(gold)
+	if Artifacts.has("one_life"):
+		FamilyProfile.add_gems(1)
+		var who: String = App.solo_role if App.solo_role in ["son", "father"] else "son"
+		Heroes.add_shards(who, 6)
 	run_cleared.emit()
 
 

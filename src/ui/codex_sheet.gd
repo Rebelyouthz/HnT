@@ -7,7 +7,17 @@ extends Control
 
 signal closed
 
-var _page := "abilities"
+var _page := "bestiary"
+const DODGE := {
+	"charge": "A red lane fills: step to another depth (up/down) before it does.",
+	"slam": "A red ring where it lands: run out of the circle or jump.",
+	"volley": "Fans of paper at three depths: walk between them.",
+	"rain": "Red markers fall in order: keep moving, never stand on one.",
+	"summon": "Calls two thugs from the edges: clear them or keep the boss between.",
+	"lane_wave": "A shockwave along its lane: change depth, the second follows you.",
+	"grab": "Flashes white, then lunges: roll or jump, it can't be blocked.",
+	"spin": "Light hits bounce: back off, then hit it hard when it stops (OPEN).",
+}
 var _book: Dictionary = {}
 
 
@@ -45,12 +55,12 @@ func _paint() -> void:
 	card.add_child(outer)
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", 8)
-	var t := UiKit.title("SURVIVOR CODEX", 30, Color(1.0, 0.56, 0.12))
+	var t := UiKit.title("CODEX", 30, Color(1.0, 0.56, 0.12))
 	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(t)
 	var first: Button = null
-	for pair in [["abilities", "ABILITIES"], ["evolutions", "EVOLUTIONS"], ["ultimate", "ULTIMATE"], ["records", "RECORDS"]]:
-		var b := UiKit.button(pair[1], Vector2(140, 36))
+	for pair in [["bestiary", "BESTIARY"], ["abilities", "ABILITIES"], ["evolutions", "EVOLUTIONS"], ["ultimate", "ULTIMATE"], ["records", "RECORDS"]]:
+		var b := UiKit.button(pair[1], Vector2(122, 36))
 		b.add_theme_font_size_override("font_size", 12)
 		if pair[0] == _page:
 			b.add_theme_stylebox_override("normal", UiKit.panel(Palette.BRICK, Palette.LEMON))
@@ -81,6 +91,42 @@ func _paint() -> void:
 	grid.add_theme_constant_override("v_separation", 10)
 	sc.add_child(grid)
 	match _page:
+		"bestiary":
+			var bparsed: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/bosses.json"))
+			var bosses: Dictionary = bparsed if bparsed is Dictionary else {}
+			var kb: Dictionary = FamilyProfile.data.get("kills_by", {})
+			var tries: int = 0
+			for k in FamilyProfile.data:
+				if str(k).begins_with("boss_tries_"):
+					tries += int(FamilyProfile.data[k])
+			for bt in ["Shift Lead", "Collector Gant", "Clamp King", "Lot Hydra"]:
+				var spec := BossBrain.spec_for(bt)
+				var lines: Array[String] = []
+				var st: Array = spec.get("stages", [])
+				for i in st.size():
+					for mv in st[i]:
+						var nm := str((spec.get("names", {}) as Dictionary).get(mv, str(mv).to_upper()))
+						lines.append("[color=#ffd75e]%s[/color] (%d%%) %s" % [nm, [100, 75, 50, 25][i], str(DODGE.get(mv, ""))])
+				var seen := int(kb.get(bt, 0)) > 0
+				var e := _entry("", bt.to_upper() + ("  ·  FILED x%d" % int(kb.get(bt, 0)) if seen else ""), "BOSS PATTERNS  ·  every pattern ends OPEN: +50% damage", "", true, Palette.BRICK)
+				var rt := UiKit.rich("\n".join(lines), 440, 11, Palette.TEXT)
+				((e.get_child(0) as PanelContainer).get_child(0) as HBoxContainer).get_child(1).add_child(rt)
+				var face := SpriteBook.face(_who(bt))
+				if face:
+					var ic := ((e.get_child(0) as PanelContainer).get_child(0) as HBoxContainer).get_child(0) as TextureRect
+					ic.texture = face
+				grid.add_child(e)
+			var titles: Array = kb.keys()
+			titles.sort_custom(func(a, b) -> bool: return int(kb[a]) > int(kb[b]))
+			for tt in titles:
+				if str(tt) in ["Shift Lead", "Collector Gant", "Clamp King", "Lot Hydra"]:
+					continue
+				var e2 := _entry("", str(tt).to_upper(), "FILED x%d" % int(kb[tt]), "Thug on the night streets.", true, Palette.EDGE)
+				var f2 := SpriteBook.face(_who(str(tt)))
+				if f2:
+					(((e2.get_child(0) as PanelContainer).get_child(0) as HBoxContainer).get_child(0) as TextureRect).texture = f2
+				grid.add_child(e2)
+			sub.text = "Bosses fell you %d times so far. Read the patterns, then go back stronger." % tries
 		"abilities":
 			for r: Dictionary in _book.get("abilities", []):
 				var unlock := str(r.get("unlock", ""))
@@ -163,3 +209,10 @@ func _entry(icon: String, title: String, stat: String, line: String, open: bool,
 	var wrap := HBoxContainer.new()
 	wrap.add_child(p)
 	return wrap
+
+
+
+## Sprite folder for a thug title ("Collector Gant" -> gant).
+func _who(title: String) -> String:
+	var m := {"Collector Gant": "gant", "Lot Hydra": "lot_hydra", "Clamp King": "clamp_king", "Shift Lead": "shift_lead", "Bag Snatch": "bag_snatch", "Mohawk Bo": "mohawk", "Repo Goon": "repo_goon", "Roof Runner": "roof_runner", "Bailiff": "bailiff", "Coping Imp": "coping_imp", "Beat Cop": "cop"}
+	return str(m.get(title, title.to_lower().replace(" ", "_")))

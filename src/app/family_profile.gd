@@ -1082,7 +1082,7 @@ func claim_patrol() -> Dictionary:
 
 func mark_trick() -> void:
 	data["tricks"] = int(data.get("tricks", 0)) + 1
-	Trees.add_flow(int(round(1.0 * Meta.trick_flow_mul())))
+	Trees.add_flow(int(round(1.0 * Meta.trick_flow_mul() * (1.5 if Artifacts.has("rush_job") else 1.0))))
 	_trick_perks(false)
 	sync_cosmetics(true)
 	save()

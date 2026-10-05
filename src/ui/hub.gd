@@ -150,7 +150,18 @@ func _make_top() -> Control:
 	var codex := UiKit.button("CODEX", Vector2(96, 38))
 	codex.pressed.connect(_open_codex)
 	row.add_child(codex)
-	var gear := UiKit.button(Copy.OPTIONS, Vector2(110, 38))
+	var jobs := UiKit.button("JOBS", Vector2(76, 38))
+	jobs.pressed.connect(_open_jobs)
+	var jobs_wrap := Control.new()
+	jobs_wrap.custom_minimum_size = Vector2(78, 40)
+	jobs.set_anchors_preset(Control.PRESET_FULL_RECT)
+	jobs_wrap.add_child(jobs)
+	_jobs_bang = UiKit.bang()
+	_jobs_bang.position = Vector2(60, -4)
+	_jobs_bang.visible = Contracts.ready_count() > 0
+	jobs_wrap.add_child(_jobs_bang)
+	row.add_child(jobs_wrap)
+	var gear := UiKit.button(Copy.OPTIONS, Vector2(100, 38))
 	gear.pressed.connect(_open_settings)
 	row.add_child(gear)
 
@@ -443,6 +454,23 @@ func _open_profile() -> void:
 			_clear_modal()
 			_open_intake()
 		)
+
+
+var _jobs_bang: Control
+
+
+func _open_jobs() -> void:
+	_clear_modal()
+	var sheet := preload("res://src/ui/desk_sheet.gd").new()
+	sheet.mode = "contracts"
+	add_child(sheet)
+	_modal = sheet
+	sheet.closed.connect(func() -> void:
+		_clear_modal()
+		if _jobs_bang:
+			_jobs_bang.visible = Contracts.ready_count() > 0
+	)
+	sheet.need_refresh.connect(_refresh_pills)
 
 
 func _open_codex() -> void:

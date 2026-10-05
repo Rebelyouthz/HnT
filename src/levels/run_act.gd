@@ -220,6 +220,8 @@ func _place_extras() -> void:
 	elif map_id == "tutorial_alley":
 		StreetLife.dress(self, [520.0, 1050.0])
 	add_child(PhotoMode.new())
+	if map_id in ["dock_street", "intake_lot", "tutorial_alley"] or App.ORDER.has(map_id):
+		NightExtras.place(self, map_id, map_w)
 	if DogBuddy.joined():
 		var dog := DogBuddy.new()
 		dog.position = spawn_at + Vector2(-30, 6)
@@ -384,6 +386,10 @@ func _ready() -> void:
 	_dad = party.get("dad") as Fighter
 	# META starter kit: armed from the first step.
 	var kit := Meta.starter_weapon()
+	# ARMORY "CARRY IN": a found weapon chosen to start with (STARTER KIT).
+	var carry := str(FamilyProfile.data.get("carry_weapon", ""))
+	if kit != "" and carry != "" and Arsenal.found(carry):
+		kit = carry
 	if kit != "":
 		for f in [_son, _dad]:
 			if f and f.pickup == "":
@@ -397,7 +403,7 @@ func _ready() -> void:
 	if App.ORDER.has(map_id) and not StoryBook.is_survive(map_id):
 		Nemesis.maybe_spawn(self, map_id, map_w, _state.hp_mul())
 	for row in Party.encounters(map_id):
-		var pk := Party.spawn_row(self, row, _state.hp_mul() * NightCondition.mul(map_id, "hp") * Heroes.enemy_hp_mul())
+		var pk := Party.spawn_row(self, row, _state.hp_mul() * NightCondition.mul(map_id, "hp") * Heroes.enemy_hp_mul() * Artifacts.enemy_hp())
 		if pk:
 			pk.speed *= NightCondition.mul(map_id, "speed")
 	_cam = CouchCamera.new()

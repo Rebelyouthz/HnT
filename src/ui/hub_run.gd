@@ -140,6 +140,22 @@ func _ready() -> void:
 	vs_b.pressed.connect(App.start_versus)
 	extra.add_child(intro_b)
 	extra.add_child(vs_b)
+	# NIGHT ARTIFACTS: risk / reward rules for the next nights.
+	var art := UiKit.button("ARTIFACTS %d/%d" % [Artifacts.on().size(), Artifacts.MAX_ON], Vector2(150, 36))
+	art.add_theme_font_size_override("font_size", 12)
+	if not Artifacts.on().is_empty():
+		art.add_theme_color_override("font_color", Color(0.85, 0.45, 1.0))
+	art.pressed.connect(func() -> void:
+		var sh := preload("res://src/ui/desk_sheet.gd").new()
+		sh.mode = "artifacts"
+		get_tree().current_scene.add_child(sh)
+		sh.closed.connect(func() -> void:
+			sh.queue_free()
+			art.text = "ARTIFACTS %d/%d" % [Artifacts.on().size(), Artifacts.MAX_ON]
+			art.grab_focus()
+		)
+	)
+	extra.add_child(art)
 	stage.add_child(extra)
 	var net := HBoxContainer.new()
 	net.position = Vector2(820, 470)

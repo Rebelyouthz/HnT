@@ -93,7 +93,7 @@ static func add_tokens(n: int) -> void:
 		return
 	if has("f_tokens"):
 		n = int(round(float(n) * 1.25))
-	n = int(round(float(n) * Meta.token_mul()))
+	n = int(round(float(n) * Meta.token_mul() * (1.4 if Artifacts.has("no_lunch") else 1.0)))
 	FamilyProfile.data["tokens"] = int(FamilyProfile.data.get("tokens", 0)) + n
 	FamilyProfile.data["tokens_total"] = int(FamilyProfile.data.get("tokens_total", 0)) + n
 
@@ -103,3 +103,25 @@ static func add_flow(n: int) -> void:
 		return
 	FamilyProfile.data["flow"] = int(FamilyProfile.data.get("flow", 0)) + n
 	FamilyProfile.data["flow_total"] = int(FamilyProfile.data.get("flow_total", 0)) + n
+
+
+
+## Refund a whole tree: every node back for what it cost (rep too for BRAWL).
+static func refund(mode: String) -> int:
+	var back := 0
+	var rep_back := 0
+	var key := str(KEYS[mode])
+	var owned_ids: Array = (FamilyProfile.data.get(key, []) as Array).duplicate()
+	for id in owned_ids:
+		var r := node(mode, str(id))
+		back += int(r.get("gold", 0))
+		rep_back += int(r.get("rep", 0))
+	if owned_ids.is_empty():
+		return 0
+	FamilyProfile.data[key] = []
+	FamilyProfile.data[CUR[mode]] = balance(mode) + back
+	if mode == "brawl":
+		FamilyProfile.data["rep"] = int(FamilyProfile.data.get("rep", 0)) + rep_back
+	FamilyProfile.data["respecs"] = int(FamilyProfile.data.get("respecs", 0)) + 1
+	FamilyProfile.save()
+	return back

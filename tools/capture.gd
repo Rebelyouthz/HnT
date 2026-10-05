@@ -76,6 +76,12 @@ func _prepare() -> void:
 			(fp.data as Dictionary)["suit_son_" + p] = sid
 		(fp.data as Dictionary)["suits_split"] = true
 		(fp.data as Dictionary)["suit_parts"] = owned
+	if _tab == "codex" and fp != null:
+		(fp.data as Dictionary)["kills_by"] = {"Collector Gant": 1, "Bag Snatch": 34, "Repo Goon": 21, "Mohawk Bo": 6, "Coping Imp": 88}
+		(fp.data as Dictionary)["boss_tries_dock_street"] = 2
+	if _tab == "jobs" and fp != null:
+		(fp.data as Dictionary).erase("contracts")
+		(fp.data as Dictionary)["kills_total"] = 0
 	if (_tab == "codex" or _tab == "build") and fp != null:
 		(fp.data as Dictionary)["tokens"] = 240
 		(fp.data as Dictionary)["flow"] = 130
@@ -91,6 +97,8 @@ func _prepare() -> void:
 		(fp.data as Dictionary)["hero_father"] = {"level": 13, "rarity": 1, "shards": 6}
 		(fp.data as Dictionary)["meta"] = {"vitality": 2, "strength": 1, "spring_legs": 1}
 	if _tab == "armory" and fp != null:
+		(fp.data as Dictionary)["meta"] = {"starter_kit": 1}
+		(fp.data as Dictionary)["carry_weapon"] = "baseball_bat"
 		(fp.data as Dictionary)["weapons_found"] = ["knife", "pipe", "board", "chain", "baseball_bat", "machete", "pistol", "revolver", "shotgun", "flare_gun", "smg"]
 		(fp.data as Dictionary)["weapon_kills"] = {"baseball_bat": 31, "machete": 12, "pistol": 25, "shotgun": 9, "pipe": 4, "revolver": 2}
 		(fp.data as Dictionary)["weapon_lv"] = {"baseball_bat": 3, "pistol": 2}
@@ -166,6 +174,8 @@ func _process(_delta: float) -> bool:
 		current_scene.call("_open_stats")
 	if _tab == "armory" and _n == 40 and current_scene != null and current_scene.has_method("_open_armory"):
 		current_scene.call("_open_armory")
+	if _tab == "jobs" and _n == 40 and current_scene != null and current_scene.has_method("_open_jobs"):
+		current_scene.call("_open_jobs")
 	if _tab == "codex" and _n == 40 and current_scene != null and current_scene.has_method("_open_codex"):
 		current_scene.call("_open_codex")
 	if _tab.begins_with("ui_") and _n == 80 and current_scene != null:
@@ -300,6 +310,15 @@ func _process(_delta: float) -> bool:
 				if c is CanvasLayer and c.get_script() != null and str(c.get_script().resource_path).ends_with("survive_pick.gd"):
 					c.queue_free()
 					get_root().get_tree().paused = false
+			root.get_texture().get_image().save_png(_out.get_basename() + "_%03d.png" % _n)
+	# ui:extras - a street event and the tax refund runner right away.
+	if _tab == "ui_extras" and current_scene != null:
+		var ne: Node = current_scene.get_node_or_null("NightExtras")
+		if _n == 90 and ne:
+			get_root().get_tree().paused = false
+			ne.set("_event_cd", 0.0)
+			ne.set("_runner_cd", 0.0)
+		if _n >= 100 and _n % 10 == 0:
 			root.get_texture().get_image().save_png(_out.get_basename() + "_%03d.png" % _n)
 	# ui:boss_<move> - the map's boss next to the Son runs one pattern;
 	# frames every 4 ticks (<out>_NNN.png).

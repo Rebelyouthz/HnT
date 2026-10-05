@@ -312,6 +312,7 @@ func _tick_sprite() -> void:
 
 
 var _bowled: Dictionary = {}
+var _edge_bounces := 0
 
 
 func _fling(delta: float) -> void:
@@ -322,6 +323,23 @@ func _fling(delta: float) -> void:
 	velocity.y = 0.0
 	move_and_slide()
 	_lane()
+	# Streets of Rage style: the screen edge is a wall. Up to three bounces
+	# a flight, each one a free juggle.
+	var cam := get_viewport().get_camera_2d()
+	if cam and _edge_bounces < 3:
+		var half := get_viewport_rect().size.x * 0.5 / maxf(0.01, cam.zoom.x)
+		var dx := global_position.x - cam.get_screen_center_position().x
+		if absf(dx) > half - 18.0 and signf(dx) == signf(flung_dir):
+			_edge_bounces += 1
+			flung_dir *= -1.0
+			flung_t = 0.24
+			hp = maxi(1, hp - 6)
+			Juice.shout(Copy.WALL_BOUNCE if _edge_bounces < 3 else "TRIPLE BOUNCE")
+			Juice.pulse_shake(4.0)
+			Juice.hitstop(3)
+			Juice.register_hit("heavy", global_position, 6)
+			Juice.play("res://assets/audio/wall_bounce.wav" if ResourceLoader.exists("res://assets/audio/wall_bounce.wav") else "res://assets/audio/hit_heavy.wav")
+			FamilyProfile.mark_bounce()
 	for n in get_tree().get_nodes_in_group("smashables"):
 		if not is_instance_valid(n) or not (n is Node2D):
 			continue
@@ -370,6 +388,7 @@ func _fling(delta: float) -> void:
 			FamilyProfile.mark_bounce()
 			return
 		flung = false
+		_edge_bounces = 0
 		_bowled.clear()
 		velocity.x = 0.0
 
@@ -732,7 +751,7 @@ func _mix_mod() -> void:
 	# Sprites show damage as blood and wounds; only a hint of flush here.
 	var body := _base_mod.lerp(hurt, (1.0 - frac) * (0.18 if _anim != null else 0.7))
 	visual.modulate = body * _alert * lamp
-	speed = _walk * (0.55 if frac < 0.4 else 1.0)
+	speed = _walk * (0.55 if frac < 0.4 else 1.0) * Artifacts.enemy_speed() * (1.3 if NightExtras.rush() else 1.0)
 	if frac < 0.4 and visual:
 		visual.position.y = 4.0 + 2.2 * sin(_bob * 0.7)
 	if _brain:
@@ -888,7 +907,7 @@ func take_hit(kind: String, from: Node) -> void:
 	# Hero level / rarity and META strength (fists, gadgets and guns alike).
 	var hero := Heroes.role_of(from)
 	if hero == "son" or hero == "father":
-		dmg = int(round(float(dmg) * Heroes.dmg_mul(hero) * Meta.dmg_mul()))
+		dmg = int(round(float(dmg) * Heroes.dmg_mul(hero) * Meta.dmg_mul() * Artifacts.player_dmg() * NightExtras.dmg_mul()))
 	if from is Fighter and (from as Fighter).suit_set() == "bat":
 		dmg = int(round(float(dmg) * 1.2))
 	if from is Fighter:
@@ -1060,6 +1079,10 @@ func _hit_noise(kind: String, from: Node) -> void:
 
 
 func _die(kind: String, from: Node) -> void:
+	var kb: Dictionary = FamilyProfile.data.get("kills_by", {})
+	kb[title] = int(kb.get(title, 0)) + 1
+	FamilyProfile.data["kills_by"] = kb
+	FamilyProfile.data["kills_total"] = int(FamilyProfile.data.get("kills_total", 0)) + 1
 	var dir := -float(facing)
 	if from is Node2D and (from as Node2D).global_position.x != global_position.x:
 		dir = signf(global_position.x - (from as Node2D).global_position.x)
@@ -1205,7 +1228,7 @@ func _drops(from: Node) -> void:
 	xp_n = int(round(float(xp_n) * cond_xp * rank_mul))
 	XpOrb.burst(host, global_position, xp_n, tier == "elite" or tier == "boss" or title == "Bailiff")
 	var coins := 6 if title == "Bailiff" else (2 if title == "Mohawk Bo" or title == "Repo Goon" else ((1 + (1 if randf() < 0.35 else 0)) if randf() < 0.75 else 0))
-	coins = int(round(float(coins) * cond_coin * rank_mul))
+	coins = int(round(float(coins) * cond_coin * rank_mul)) * NightExtras.coin_mul()
 	if rank_mul > 1.0 and coins > 0:
 		Juice.popup_number(global_position + Vector2(0, -76), "RANK %s  x%.2f" % [Juice.combo_rank(), rank_mul], UiKit.GOLD)
 	for i in coins:
@@ -1239,7 +1262,7 @@ func _drops(from: Node) -> void:
 func _progress_drops(host: Node, from: Node) -> void:
 	var big := tier == "boss"
 	var elite := tier == "elite" or title == "Bailiff"
-	var sc := (0.05 if not elite else 0.5) * Meta.shard_mul()
+	var sc := (0.05 if not elite else 0.5) * Meta.shard_mul() * Artifacts.shards()
 	if big or randf() < sc:
 		var killer := Heroes.role_of(from)
 		var n := randi_range(6, 10) if big else (randi_range(2, 3) if elite else 1)

@@ -830,7 +830,7 @@ func _process_street(delta: float) -> void:
 		var combo_spd := 1.0 + clampf(float(Juice.combo) * 0.008, 0.0, 0.14)
 		if stumble_t > 0.0:
 			limp *= 0.4
-		velocity.x = x * speed * limp * (1.0 + (trick_boost - 1.0) * Meta.flow_mul()) * Meta.run_speed_mul() * combo_spd * (1.0 + 0.12 * float(_cart("energy_drink"))) * _surv_speed()
+		velocity.x = x * speed * limp * (1.0 + (trick_boost - 1.0) * Meta.flow_mul()) * Meta.run_speed_mul() * NightExtras.speed_mul() * combo_spd * (1.0 + 0.12 * float(_cart("energy_drink"))) * _surv_speed()
 		if _street_grounded():
 			velocity.y = y * depth_speed * limp
 		else:
@@ -2241,7 +2241,7 @@ func take_hit(kind: String, from: Node) -> void:
 	if buff_t > 0.0:
 		dmg = int(round(float(dmg) * 0.85))
 	if from is Punk or from is Round or from is KitShot:
-		dmg = maxi(1, int(round(float(dmg) * Heroes.enemy_dmg_mul())))
+		dmg = maxi(1, int(round(float(dmg) * Heroes.enemy_dmg_mul() * Artifacts.enemy_dmg() * NightExtras.guard_mul())))
 	if wrong_guard:
 		dmg = maxi(1, int(round(float(dmg) * 0.7)))
 	if suit_set() == "shaolin":
@@ -3354,7 +3354,7 @@ func _weapon_contact(at: Vector2, wt: float) -> void:
 
 ## A boss pattern landing: a big hit through any guard.
 func _take_crush(from: Node) -> void:
-	var dmg := int(round(24.0 * Heroes.enemy_dmg_mul()))
+	var dmg := int(round(24.0 * Heroes.enemy_dmg_mul() * Artifacts.enemy_dmg() * NightExtras.guard_mul()))
 	if suit_set() == "shaolin":
 		dmg = int(round(float(dmg) * 0.7))
 	var srun := SurviveRun.get_run(get_tree())

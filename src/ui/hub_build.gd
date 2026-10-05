@@ -103,6 +103,23 @@ func _ready() -> void:
 	wallet.add_theme_font_override("font", UiKit.pixel_font())
 	UiKit.apply_label(wallet, 15, UiKit.GOLD)
 	_stage.add_child(wallet)
+	# RESPEC: every node in this tree back for its full price.
+	var refund := UiKit.button("REFUND TREE", Vector2(150, 30))
+	refund.add_theme_font_size_override("font_size", 11)
+	refund.disabled = Trees.count(mode).x == 0
+	refund.position = Vector2(14, 232)
+	var armed := [false]
+	refund.pressed.connect(func() -> void:
+		if not armed[0]:
+			armed[0] = true
+			refund.text = "SURE? PRESS AGAIN"
+			return
+		var back := Trees.refund(mode)
+		Juice.toast("reward", "TREE REFUNDED", "+%d %s back. Plant it again your way." % [back, Trees.cur_label(mode)])
+		Juice.play("res://assets/audio/cash.wav" if ResourceLoader.exists("res://assets/audio/cash.wav") else "res://assets/audio/claim.wav")
+		need_refresh.emit()
+	)
+	_stage.add_child(refund)
 	if mode == "brawl":
 		var compare := UiKit.button("BUILD COMPARE", Vector2(170, 32))
 		compare.add_theme_font_size_override("font_size", 12)
