@@ -338,7 +338,7 @@ func _suit_card(id: String) -> Control:
 	v.add_child(nm)
 	v.add_child(_delta_row(row.get("stats", {}), Suits.stats(_role)))
 	var bl := Label.new()
-	bl.text = str(row["blurb"]) if have else "LOCKED  ·  " + str(row["how"])
+	bl.text = (str(row["blurb"]) + ("\n" + str(row.get("perk", "")) if str(row.get("perk", "")) != "" else "")) if have else "LOCKED  ·  " + str(row["how"]) + "\n" + str(row.get("perk", ""))
 	bl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	bl.custom_minimum_size = Vector2(380, 0)
 	UiKit.apply_label(bl, 12, Palette.TEXT if have else Palette.BRICK)

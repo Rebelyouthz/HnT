@@ -160,6 +160,8 @@ var _getup_done := false
 var _light_buf := 0
 var _heavy_buf := 0
 var _run_breath := 0
+## The hero suit worn this run (its perk is read in play).
+var _suit := ""
 ## COPAY: part of every hit you take is billable - it drains away over a
 ## few seconds unless you bill it back by landing hits (risk / reward, like
 ## Streets of Rage 4's green health, but earned from defence, not specials).
@@ -292,6 +294,7 @@ func _mount_sprite() -> void:
 	SpriteBook.grow(_anim, SpriteBook.FIGHTER_SCALE)
 	squash_root.add_child(_anim)
 	Suits.dress(_anim, role)
+	_suit = Suits.worn(role)
 
 
 func _sprite_clip(kind: String) -> String:
@@ -611,7 +614,7 @@ func _tick_meters(delta: float) -> void:
 	if cart_t > 0.0:
 		cart_t -= delta
 	if _just("block"):
-		parry_win = 10
+		parry_win = 15 if _suit == "shaolin" else 10
 	if cape_guard > 0.0:
 		cape_guard -= delta
 	if web_incoming:
@@ -806,7 +809,7 @@ func _process_street(delta: float) -> void:
 		coyote = COYOTE
 		_footsteps(delta, absf(velocity.x))
 	if jump_buf > 0 and coyote > 0:
-		hop_v = JUMP
+		hop_v = JUMP * (1.12 if _suit == "spider" else 1.0)
 		hop = -1.0
 		jump_buf = 0
 		coyote = 0
@@ -820,7 +823,7 @@ func _process_street(delta: float) -> void:
 		var g := GRAV
 		if hop_v > 0.0:
 			g *= FALL_MUL
-		if role == "son" and hop < 0.0 and _pressed("jump") and hop_v > -80.0:
+		if (role == "son" or _suit == "bat") and hop < 0.0 and _pressed("jump") and hop_v > -80.0:
 			if not gliding and ResourceLoader.exists("res://assets/audio/sfx/glide.ogg"):
 				Mixer.play_sfx("res://assets/audio/sfx/glide.ogg", 1.0, -10.0)
 			gliding = true
@@ -1087,6 +1090,11 @@ func _dash() -> void:
 	dashing = true
 	dash_frames = 10
 	invuln = 8
+	if _suit == "ninja":
+		# Ninja: the dash is a vanish - longer i-frames and a smoke puff.
+		invuln = 16
+		Juice.land_puff(global_position)
+		Juice.land_puff(global_position + Vector2(float(facing) * -14.0, -20.0))
 	var blitz := get_tree().get_first_node_in_group("run_state")
 	if blitz and blitz.has_method("has_card") and blitz.has_card("family_blitz"):
 		invuln = 12

@@ -9,16 +9,16 @@ extends RefCounted
 const LIST := {
 	"bat": {"title": "BAT SUIT", "code": 1, "rarity": "legendary", "icon": "bat",
 		"blurb": "Cowl, belt, the emblem. Found in Gant's office. Nobody asks.",
-		"how": "Beat Collector Gant (Dock Street boss).", "stats": {"hp": 2, "dmg": 2, "steam": 0, "speed": 0}},
+		"how": "Beat Collector Gant (Dock Street boss).", "perk": "PERK: the cape glides - either of you.", "stats": {"hp": 2, "dmg": 2, "steam": 0, "speed": 0}},
 	"spider": {"title": "SPIDER SUIT", "code": 2, "rarity": "legendary", "icon": "spider",
 		"blurb": "Red, blue, webs. Dad says it's for the back. It isn't.",
-		"how": "Beat Collector Gant (Dock Street boss).", "stats": {"hp": 0, "dmg": 1, "steam": 0, "speed": 12}},
+		"how": "Beat Collector Gant (Dock Street boss).", "perk": "PERK: jumps 12% higher.", "stats": {"hp": 0, "dmg": 1, "steam": 0, "speed": 12}},
 	"shaolin": {"title": "SHAOLIN ROBE", "code": 3, "rarity": "epic", "icon": "fist",
 		"blurb": "Saffron, beads, a shaved head. Inner peace, outer bruises.",
-		"how": "Master three moves in the dojo.", "stats": {"hp": 6, "dmg": 0, "steam": 6, "speed": 0}},
+		"how": "Master three moves in the dojo.", "perk": "PERK: 50% wider parry window.", "stats": {"hp": 6, "dmg": 0, "steam": 6, "speed": 0}},
 	"ninja": {"title": "NINJA GI", "code": 4, "rarity": "epic", "icon": "eye",
 		"blurb": "Black, quiet, one red sash. The street never saw you.",
-		"how": "Find three secret stashes.", "stats": {"hp": 0, "dmg": 1, "steam": 0, "speed": 16}},
+		"how": "Find three secret stashes.", "perk": "PERK: the dash is a vanish - double i-frames, smoke.", "stats": {"hp": 0, "dmg": 1, "steam": 0, "speed": 16}},
 }
 
 
