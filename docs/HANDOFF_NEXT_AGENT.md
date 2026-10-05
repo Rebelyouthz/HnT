@@ -28,6 +28,38 @@ ROG Ally (Windows, gamepad) and test the Windows installer.
    visual rounds** (camera moments on cool moves, particles, blood, effects,
    "AAA+"), then rebuild the installer and send screenshots.
 
+### Latest wishes (last message before handoff, translated)
+
+> "Thank you for everything, good job." The owner asked that all of this is
+> passed on to you:
+
+6. **Paperdoll for equipment**: a character figure that shows every worn
+   piece on the body (survivor gear: cap, jacket, shoes, charm; story gear
+   too). Swapping a piece updates the doll right away.
+7. **Pictures of the weapons being modified (GUNSMITH)**: a large picture
+   of the gun, and every attached part must be **visible** on it. Attaching
+   a part plays an **animation**, e.g. the bare muzzle → a suppressor
+   slides on and clicks into place (sound + flash). Do this for every part
+   in every slot on every gun/item (`src/app/attachments.gd` already has
+   `dress()`; it needs real sprite parts and attach/detach tweens).
+8. **Skill tree icons polished** so they clearly read as **pixel art**:
+   crisp, nearest-filtered, outlined and shaded, not blurry downscales
+   (`src/ui/hub_build.gd`, `NODE_ICON` / `_node_tex`).
+9. **Survivor gear screen and item cards / gunsmith screen**: pictures and
+   logos on **everything**, never just plain menu text
+   (`src/ui/surv_gear_sheet.gd`, `armory_sheet.gd` `_gunsmith`,
+   `ui:items`).
+10. **META upgrades get a picture/logo too** (all tree nodes, shop rows,
+    meta screens).
+11. **JUICE on every upgrade, across all menus in the whole game**: it has
+    to *feel*, *show* and *sound* good, with a "reward grow" feeling
+    (scale punch, glow, particles, rising sound, number pop).
+12. **Rewards must be visible**: when gold, gems, S-COINS or other
+    currency is given, show it on screen, **count it up**, then animate the
+    coins/gems **flying to their counter in the top corner**, and only then
+    tick that counter up (with a small bump on arrival). Same everywhere
+    rewards are given: results, chests, wheel, quests, shops, level-ups.
+
 Older open items in the task list: audit entities without sprites, in-run
 HUD overlaps, parallax backgrounds, map 1 → film → map 2 flow polish.
 
