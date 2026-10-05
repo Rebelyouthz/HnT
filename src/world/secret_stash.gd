@@ -101,6 +101,8 @@ func _process(delta: float) -> void:
 
 
 func _claim(f: Fighter) -> void:
+	FamilyProfile.data["stashes_found"] = int(FamilyProfile.data.get("stashes_found", 0)) + 1
+	Suits.check_progress()
 	if _taken:
 		return
 	_taken = true

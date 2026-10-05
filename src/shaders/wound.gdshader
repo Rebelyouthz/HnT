@@ -12,7 +12,7 @@ uniform float wound : hint_range(0.0, 1.0) = 0.0;
 uniform float splat : hint_range(0.0, 1.0) = 0.0;
 uniform float side = 1.0;
 uniform float tear : hint_range(0.0, 1.0) = 0.0;  // ripped clothes (bosses)
-uniform int suit = 0;  // 1 = bat suit (son), 2 = spider suit (father)
+uniform int suit = 0;  // 1 bat, 2 spider, 3 shaolin, 4 ninja (either fighter)
 uniform float seed = 0.0;
 uniform vec3 head = vec3(0.0, -60.0, 14.0);  // centre x, centre y, radius
 uniform vec2 holes[6];
@@ -81,6 +81,45 @@ vec3 suit_col(vec3 c, vec2 t, vec2 hv, float in_head) {
 			if (wing < 0.85 && abs(e.y + 0.1 * sin(wing * 9.0)) < 0.35 - wing * 0.25) {
 				o = vec3(0.05, 0.05, 0.07);
 			}
+		}
+		return o;
+	}
+	if (suit == 3) {
+		// Shaolin: saffron robe, deep red sash and wraps, shaved head,
+		// wooden prayer beads.
+		vec3 o = mix(vec3(0.62, 0.28, 0.04), vec3(0.98, 0.62, 0.16), smoothstep(0.08, 0.75, l));
+		if (in_head > 0.5) {
+			// Face stays; hair becomes a shaved scalp.
+			o = skin(c) ? c : (yrel < 0.25 ? vec3(0.78, 0.56, 0.42) * shade : c);
+		}
+		if (in_head < 0.5 && abs(yrel - 4.9) < 0.38) {
+			o = vec3(0.52, 0.07, 0.06) * shade;
+		}
+		if (in_head < 0.5 && yrel > 7.6) {
+			o = vec3(0.45, 0.08, 0.06) * shade;
+		}
+		// Beads around the neck.
+		if (in_head < 0.5 && abs(yrel - 1.35) < 0.18 && abs(hv.x - 0.1) < 0.9 && fract((hv.x + 2.0) * 4.0) < 0.6) {
+			o = vec3(0.32, 0.16, 0.06);
+		}
+		return o;
+	}
+	if (suit == 4) {
+		// Ninja: charcoal gi and hood, an eye slit, red headband and sash.
+		vec3 o = mix(vec3(0.04, 0.04, 0.06), vec3(0.2, 0.2, 0.25), smoothstep(0.1, 0.8, l));
+		// Eye slit: the same band the bat cowl's eyes use, skin shows through.
+		if (in_head > 0.5 && abs(yrel + 0.12) < 0.13 && hv.x > 0.12 && hv.x < 0.8) {
+			o = skin(c) ? c * 1.1 : vec3(0.85, 0.66, 0.52) * shade;
+		}
+		if (in_head > 0.5 && abs(yrel + 0.62) < 0.13) {
+			o = vec3(0.72, 0.06, 0.08) * shade;
+		}
+		// Headband tails behind the head.
+		if (in_head > 0.5 && hv.x < -0.6 && hv.x > -1.4 && abs(yrel + 0.5 + (hv.x + 0.6) * 0.4) < 0.1) {
+			o = vec3(0.72, 0.06, 0.08) * shade;
+		}
+		if (in_head < 0.5 && abs(yrel - 4.9) < 0.3) {
+			o = vec3(0.72, 0.06, 0.08) * shade;
 		}
 		return o;
 	}

@@ -45,6 +45,10 @@ func _prepare() -> void:
 		for id in ["therapy_couch", "wardrobe_cage", "trophy_cabinet"]:
 			b[id] = maxi(1, int(b.get(id, 0)))
 		(fp.data as Dictionary)["buildings"] = b
+	if _tab == "locker" and fp != null:
+		(fp.data as Dictionary)["suits_owned"] = ["bat", "spider", "shaolin", "ninja"]
+		(fp.data as Dictionary)["suit_son"] = "shaolin"
+		(fp.data as Dictionary)["suit_father"] = "ninja"
 	if _tab == "stats":
 		# Demo numbers so the report has something to draw.
 		var d2 := fp.data as Dictionary

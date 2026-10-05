@@ -540,6 +540,10 @@ func gear_stat_bonus(role: String) -> Dictionary:
 			continue
 		for k in out.keys():
 			out[k] = int(out[k]) + int((st as Dictionary).get(k, 0)) + lvl
+	# The hero suit worn over everything adds its own bit.
+	var ss := Suits.stats(role)
+	for k in out.keys():
+		out[k] = int(out[k]) + int(ss.get(k, 0))
 	return out
 
 
@@ -942,6 +946,7 @@ func try_dojo(id: String) -> bool:
 		grant_cosmetic("badge", "badge_shaolin", true)
 	flag_unseen("dojo_%s" % id)
 	save()
+	Suits.check_progress()
 	var title := str(spec.get("title", id))
 	if int(d[id]) == 1:
 		Juice.unlock_logo("%s  LEARNED" % title, "Dojo gates the move. Rank 1 unlocks. Rank 3 pins a badge.", "MOVE  ·  UNLOCKED")
