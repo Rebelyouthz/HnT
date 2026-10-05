@@ -62,12 +62,12 @@ func _ready() -> void:
 	if own != "" and SpriteBook.has_who(own):
 		# A drawn character of their own: no tint needed.
 		_anim = SpriteBook.make_anim(own)
-		SpriteBook.grow(_anim, SpriteBook.FIGHTER_SCALE)
+		SpriteBook.grow(_anim, SpriteBook.NPC_SCALE)
 		_anim.flip_h = true
 		add_child(_anim)
 	elif SpriteBook.has_who("bystander"):
 		_anim = SpriteBook.make_anim("bystander")
-		SpriteBook.grow(_anim, SpriteBook.FIGHTER_SCALE)
+		SpriteBook.grow(_anim, SpriteBook.NPC_SCALE)
 		var tint: Array = quest.get("tint", [1, 1, 1])
 		var m := ShaderMaterial.new()
 		m.shader = preload("res://src/shaders/npc_tint.gdshader")

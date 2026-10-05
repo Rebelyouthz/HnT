@@ -228,8 +228,14 @@ static func make_anim(who: String) -> AnimatedSprite2D:
 ## people were ~20% too small; everything that fights is scaled by it, and
 ## hitboxes/reach follow (Fighter._spawn_hit, Punk hurtbox and swing range).
 const ACTOR_K := 1.25
-const FIGHTER_SCALE := 1.12 * ACTOR_K
-const ENEMY_SCALE := 1.25 * ACTOR_K
+## Re-measured (tests/size_probe.gd) so everyone is about a painted door
+## tall: the heroes the biggest people on the street (son ~67, father ~70
+## units), thugs ~57 (brutes more), townsfolk ~55; props a touch smaller.
+const FIGHTER_SCALE := 1.22 * ACTOR_K
+const FATHER_K := 1.06
+const ENEMY_SCALE := 1.06 * ACTOR_K
+const NPC_SCALE := 0.98 * ACTOR_K
+const PROP_K := 0.9
 ## Cutscenes were composed at the old size (tower ledge, intro film).
 const FILM_SCALE := 1.12
 
@@ -273,6 +279,7 @@ static func attach_living(host: Node, who: String, extra_y: float = 0.0) -> bool
 		return false
 	hide_polys(host)
 	var a := make_anim(who)
+	grow(a, PROP_K)
 	a.position.y += extra_y
 	host.add_child(a)
 	return true

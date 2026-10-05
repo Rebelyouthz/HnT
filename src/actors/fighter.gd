@@ -301,7 +301,7 @@ func _mount_sprite() -> void:
 		return
 	SpriteBook.hide_polys(squash_root)
 	_anim = SpriteBook.make_anim(role)
-	SpriteBook.grow(_anim, SpriteBook.FIGHTER_SCALE)
+	SpriteBook.grow(_anim, SpriteBook.FIGHTER_SCALE * (SpriteBook.FATHER_K if role == "father" else 1.0))
 	squash_root.add_child(_anim)
 	Suits.dress(_anim, role)
 	refresh_suit()
