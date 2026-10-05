@@ -144,6 +144,9 @@ func _make_top() -> Control:
 	var stats := UiKit.button("STATS", Vector2(84, 38))
 	stats.pressed.connect(_open_stats)
 	row.add_child(stats)
+	var armory := UiKit.button("ARMORY", Vector2(104, 38))
+	armory.pressed.connect(_open_armory)
+	row.add_child(armory)
 	var gear := UiKit.button(Copy.OPTIONS, Vector2(110, 38))
 	gear.pressed.connect(_open_settings)
 	row.add_child(gear)
@@ -431,6 +434,15 @@ func _open_profile() -> void:
 			_clear_modal()
 			_open_intake()
 		)
+
+
+func _open_armory() -> void:
+	_clear_modal()
+	var sheet := preload("res://src/ui/armory_sheet.gd").new()
+	sheet.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(sheet)
+	_modal = sheet
+	sheet.closed.connect(_clear_modal)
 
 
 func _open_stats() -> void:

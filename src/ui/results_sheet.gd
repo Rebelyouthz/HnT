@@ -117,7 +117,11 @@ func _ready() -> void:
 		rewards.add_child(_reward("gold", "SCRAP", "+%d" % state.scrap))
 	if not win and fail_gold > 0:
 		rewards.add_child(_reward("gold", "GOLD", "+%d" % fail_gold))
-	rewards.add_child(_reward("fist", "SMASH", str(int(FamilyProfile.data.get("smash_kills", 0)))))
+	# Weapon of the night: the one that put the most of them down.
+	var bw := Arsenal.run_best()
+	if bw != "":
+		var run_k: Dictionary = Engine.get_meta("run_weapon_kills", {})
+		rewards.add_child(_reward("fist", str(WeaponBook.spec(bw).get("title", bw)).to_upper(), "%d KO" % int(run_k.get(bw, 0))))
 	rewards.add_child(_reward("shield", "PARRY", str(int(FamilyProfile.data.get("parries", 0)))))
 	# Account XP.
 	var xp_row := HBoxContainer.new()

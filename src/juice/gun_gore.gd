@@ -144,6 +144,37 @@ static func death(p: Punk, shot: Dictionary, dir: float) -> bool:
 	return true
 
 
+## A blade takes the head (the MACHETE's killing chop). False = could not
+## (no sprite, less gore), so the ordinary death plays.
+static func decap(p: Punk, dir: float) -> bool:
+	if FamilyProfile.less_gore():
+		return false
+	var anim := p.get("_anim") as AnimatedSprite2D
+	if anim == null:
+		return false
+	var host := p.get_parent()
+	var blood := p.get_tree().get_first_node_in_group("blood_sim")
+	var head := BloodSim.head_of(anim)
+	BloodSim._wound_mat(anim).set_shader_parameter("head", head)
+	var body := HitReact.corpse(host, anim, p.global_position, "blade", dir, p.facing)
+	if body == null:
+		return false
+	var art := _art_of(body)
+	var m: ShaderMaterial = art.material as ShaderMaterial if art != null else null
+	if m:
+		m.set_shader_parameter("cut_head", 1.0)
+	_fly_piece(host, art, p.global_position, dir, 1, head)
+	_neck_fountain(body, blood, dir)
+	Arsenal.bump("decaps")
+	Juice.shout("DECAPITATED")
+	Mixer.play_sfx("res://assets/audio/sfx/melee_machete.ogg", 0.85, 0.0)
+	Mixer.play_sfx("res://assets/audio/sfx/gib_splat.ogg", 1.0, -2.0)
+	Juice.freeze_frames(6)
+	if blood:
+		blood.screen(dir, 0.8)
+	return true
+
+
 static func _art_of(body: Node2D) -> CanvasItem:
 	for c in body.get_children():
 		for cc in c.get_children():

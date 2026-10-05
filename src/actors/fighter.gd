@@ -85,10 +85,10 @@ var _reload_len := 0.0
 var _shell_t := 0.0
 var _pump_t := 0.0
 ## Per gun: reload time (shotgun: per shell), spare mags carried.
-const RELOAD := {"pistol": [0.85, 1], "smg": [1.15, 1], "shotgun": [0.34, 1], "nailgun": [1.0, 1], "ray": [1.3, 1]}
+const RELOAD := {"pistol": [0.85, 1], "smg": [1.15, 1], "shotgun": [0.34, 1], "nailgun": [1.0, 1], "ray": [1.3, 1], "revolver": [1.5, 1], "flare_gun": [1.1, 2]}
 ## Hand guns (data/weapons.json "gun"): the held sprite, cooldown, and how
 ## long the arm stays up after a shot.
-const GUNS := ["pistol", "nailgun", "shotgun", "smg", "ray"]
+const GUNS := ["pistol", "nailgun", "shotgun", "smg", "ray", "revolver", "flare_gun"]
 var gun_cd := 0.0
 var aim_t := 0.0
 var _gun: Sprite2D
@@ -167,6 +167,8 @@ var _gear_set := ""
 var _cape_fx: CapeFx
 var _dive_pending := false
 var _gadget_cd := 0.0
+## Landed hits left on the melee weapon in hand before it breaks.
+var melee_uses := 0
 ## COPAY: part of every hit you take is billable - it drains away over a
 ## few seconds unless you bill it back by landing hits (risk / reward, like
 ## Streets of Rage 4's green health, but earned from defence, not specials).
@@ -762,6 +764,7 @@ func _tick_meters(delta: float) -> void:
 		if hurt > 0.35:
 			squash_root.modulate = squash_root.modulate.lerp(Color(0.85, 0.45, 0.4), hurt * 0.35)
 	_tick_sprite()
+	_place_melee(delta)
 	if _shadow:
 		var air := absf(hop) if plane == "street" else maxf(0.0, -minf(velocity.y, 0.0))
 		_shadow.scale.x = 1.1 - clampf(air / 200.0, 0.0, 0.5)
@@ -1321,6 +1324,18 @@ func _attack(kind: String, charged: bool) -> void:
 			kind = "blade"
 	elif pickup == "can":
 		size += Vector2(8, 4)
+	elif pickup != "" and not (pickup in GUNS) and WeaponBook.spec(pickup).has("reach"):
+		# Data-driven melee (bat, machete, sledge): reach, blade cuts, and
+		# the sledge makes every swing a slow heavy one.
+		var ws := WeaponBook.spec(pickup)
+		var rch: Array = ws["reach"]
+		size += Vector2(float(rch[0]), float(rch[1]))
+		if str(ws.get("hit", "")) == "blade" and (kind == "light" or kind == "gut-punch"):
+			kind = "blade"
+		if bool(ws.get("slow", false)):
+			if kind == "light" or kind == "gut-punch":
+				kind = "heavy"
+			attack_cd += 10
 	elif pickup in GUNS and (kind == "light" or kind == "gut-punch") and (pistol_shots > 0 or reload_t > 0.0):
 		# A gun in hand: light pulls the trigger instead of punching.
 		_fire_gun()
@@ -1467,6 +1482,7 @@ func _strike_impact(at: Vector2) -> void:
 	Juice.kick(Vector2(float(facing), 0.2 + 0.3 * wt), 2.0 + 5.0 * wt)
 	_squash_to(Vector2(1.06 + 0.08 * wt, 0.96 - 0.05 * wt))
 	Juice.impact(at, float(mv["weight"]), facing)
+	_weapon_contact(at, wt)
 	if copay >= 1.0 and hp > 0:
 		var back := int(minf(copay, 2.0 + 4.0 * wt))
 		hp = mini(max_hp, hp + back)
@@ -1744,6 +1760,7 @@ func _try_getup_attack() -> bool:
 func _on_hit_landed(kind: String, _global_pos: Vector2) -> void:
 	_strike_impact(_global_pos)
 	_suit_contact(_global_pos)
+	_wear_melee(_global_pos)
 	if kind == "light" or kind == "jump-kick" or kind == "gut-punch" or kind == "slide":
 		attack_cd = mini(attack_cd, 7)
 	var rs := get_tree().get_first_node_in_group("run_state")
@@ -1961,12 +1978,13 @@ func _fire_gun() -> void:
 		var r := Round.new()
 		r.weapon = id
 		r.round_kind = str(spec.get("round", "bullet"))
-		r.dmg = int(round(float(spec.get("dmg", 10)) * (1.0 + 0.25 * float(_cart("gun_oil")))))
+		r.dmg = int(round(float(spec.get("dmg", 10)) * (1.0 + 0.25 * float(_cart("gun_oil"))) * Arsenal.dmg_mul(id)))
 		r.owner_role = role
 		r.shooter = self
 		r.lane_y = global_position.y
 		r.range_left = float(spec.get("range", 900.0))
 		r.pierce = r.round_kind == "orb"
+		r.pierce_left = int(spec.get("pierce", 0))
 		var z := zone
 		if spread > 0.0 and randf() < spread * 4.0:
 			# Spray: some rounds land a zone off.
@@ -1988,7 +2006,8 @@ func _fire_gun() -> void:
 			Mixer.play_sfx(_sfx_or("res://assets/audio/sfx/shotgun_pump.ogg", "res://assets/audio/cling.wav"), randf_range(0.95, 1.05), -4.0)
 			GunFx.casing(get_parent(), _muzzle_global() - Vector2(float(facing) * 30.0, 0), "shotgun", facing, global_position.y + 6.0)
 		)
-	else:
+	elif not (id in ["revolver", "flare_gun", "ray"]):
+		# A revolver keeps its brass; the flare's shell comes out on reload.
 		GunFx.casing(host, at + Vector2(-float(facing) * 10.0, 0), id, facing, global_position.y + 6.0)
 	# Each gun kicks the body its own way.
 	_squash_to(Vector2(0.97 - 0.004 * recoil, 1.0 + 0.003 * recoil))
@@ -1996,7 +2015,7 @@ func _fire_gun() -> void:
 	if not ResourceLoader.exists(snd):
 		snd = "res://assets/audio/pistol.wav"
 	Mixer.play_sfx(snd, randf_range(0.95, 1.05), -2.0 if id != "smg" else -6.0)
-	Juice.pulse_shake({"shotgun": 6.0, "ray": 4.0, "pistol": 2.0, "smg": 0.8, "nailgun": 1.2}.get(id, 2.0))
+	Juice.pulse_shake({"shotgun": 6.0, "ray": 4.0, "pistol": 2.0, "smg": 0.8, "nailgun": 1.2, "revolver": 5.0, "flare_gun": 3.0}.get(id, 2.0))
 	if id == "shotgun":
 		Juice.hitstop(2)
 	if pistol_shots <= 0 and gun_reserve > 0:
@@ -2693,6 +2712,11 @@ func _throw() -> void:
 
 func equip_pickup(kind: String) -> void:
 	pickup = kind
+	Arsenal.mark_found(kind)
+	melee_uses = Arsenal.uses(kind)
+	var mspec := WeaponBook.spec(kind)
+	if not (kind in GUNS) and mspec.has("reach"):
+		Juice.toast("reward", str(mspec.get("title", kind)).to_upper(), "%s  ·  lasts %d hits%s" % [str(mspec.get("blurb", "")), melee_uses, "  ·  MASTERED" if Arsenal.mastered(kind) else ""])
 	if kind in GUNS:
 		var spec := WeaponBook.spec(kind)
 		pistol_shots = int(round(float(spec.get("mag", spec.get("ammo", 6))) * (1.0 + 0.5 * float(_cart("long_mag")))))
@@ -3091,3 +3115,205 @@ func _sense_dodge(kind: String) -> bool:
 	_suit_sfx("sense_dodge", -4.0)
 	_squash_to(Vector2(0.88, 1.08))
 	return true
+
+
+
+# --- Melee weapon in the fist ----------------------------------------------
+
+var _melee: Sprite2D
+var _melee_trail: Line2D
+var _melee_ang := -1.9
+static var _held_cache: Dictionary = {}
+static var _front_cache: Dictionary = {}
+const LIGHT_MELEE := ["knife", "stapler", "clipboard", "machete"]
+
+
+func _held_meta(kind: String) -> Dictionary:
+	if _held_cache.is_empty():
+		var all: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://assets/sprites/held/held.json"))
+		if all is Dictionary:
+			_held_cache = all
+	return _held_cache.get(kind, {}) as Dictionary
+
+
+## The leading hand on the frame on screen: the frontmost opaque texel in
+## the arm band (a quarter to a half down the body), in the sprite's local
+## (centred) texels. Measured once per frame texture.
+func _front_hand() -> Vector2:
+	if _anim == null or _anim.sprite_frames == null or not _anim.sprite_frames.has_animation(_anim.animation):
+		return Vector2(20, -60)
+	var tex := _anim.sprite_frames.get_frame_texture(_anim.animation, _anim.frame)
+	if tex == null:
+		return Vector2(20, -60)
+	var key := tex.get_instance_id()
+	if _front_cache.has(key):
+		return _front_cache[key]
+	var out := Vector2(20, -60)
+	var img := tex.get_image()
+	if img != null:
+		var w := img.get_width()
+		var h := img.get_height()
+		var top := -1
+		var bot := -1
+		for y in range(0, h, 2):
+			for x in range(0, w, 3):
+				if img.get_pixel(x, y).a > 0.5:
+					if top < 0:
+						top = y
+					bot = y
+					break
+		if top >= 0:
+			var body := float(bot - top)
+			var best := Vector2(-1, -1)
+			for y in range(int(top + body * 0.24), int(top + body * 0.52), 2):
+				for x in range(w - 1, -1, -1):
+					if img.get_pixel(x, y).a > 0.5:
+						if x > best.x:
+							best = Vector2(x, y)
+						break
+			if best.x >= 0:
+				var off := Vector2.ZERO
+				var full := Vector2(w, h)
+				if tex is AtlasTexture:
+					off = (tex as AtlasTexture).margin.position
+					full = tex.get_size()
+				out = best + off - full * 0.5 - Vector2(3, 0)
+	_front_cache[key] = out
+	return out
+
+
+## The held weapon rides the hand and swings with the strike: raised back on
+## the wind-up, whipped through on contact (with a trail), settling after.
+func _place_melee(delta: float) -> void:
+	var path := "res://assets/sprites/held/%s.png" % pickup
+	var want := pickup != "" and not (pickup in GUNS) and _anim != null and not downed and ResourceLoader.exists(path)
+	if not want:
+		if _melee:
+			_melee.visible = false
+		if _melee_trail:
+			_melee_trail.clear_points()
+		return
+	if _melee == null:
+		_melee = Sprite2D.new()
+		_melee.centered = false
+		_melee.texture_filter = SpriteBook.world_filter()
+		_melee.z_index = 1
+		squash_root.add_child(_melee)
+		_melee_trail = Line2D.new()
+		_melee_trail.width = 7.0
+		_melee_trail.z_index = 1
+		var g := Gradient.new()
+		g.set_color(0, Color(1, 1, 1, 0.0))
+		g.set_color(1, Color(1.0, 0.95, 0.85, 0.75))
+		_melee_trail.gradient = g
+		var cm := CanvasItemMaterial.new()
+		cm.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+		_melee_trail.material = cm
+		squash_root.add_child(_melee_trail)
+	if str(_melee.get_meta("kind", "")) != pickup:
+		_melee.texture = load(path)
+		_melee.set_meta("kind", pickup)
+	var m := _held_meta(pickup)
+	var grip: Array = m.get("grip", [6, 6])
+	var tip: Array = m.get("tip", [40, 6])
+	var light := pickup in LIGHT_MELEE
+	var rest := -0.35 if light else -1.95
+	var target := rest
+	var rate := 12.0
+	match _strike_phase:
+		1:
+			target = -1.2 if light else -2.7
+			rate = 22.0
+		2:
+			target = 0.15 if light else 0.45
+			rate = 46.0
+		3:
+			target = 0.3 if light else 0.7
+			rate = 10.0
+	if blocking:
+		target = -1.45
+	_melee_ang = lerp_angle(_melee_ang, target, 1.0 - exp(-rate * delta))
+	var hand := _anim.position + _front_hand() * _anim.scale
+	_melee.scale = _anim.scale
+	_melee.rotation = _melee_ang
+	_melee.position = hand - Vector2(float(grip[0]), float(grip[1])).rotated(_melee_ang) * _melee.scale
+	_melee.visible = true
+	var tip_at := _melee.position + Vector2(float(tip[0]), float(tip[1])).rotated(_melee_ang) * _melee.scale
+	if _strike_phase == 2:
+		_melee_trail.add_point(tip_at)
+		while _melee_trail.get_point_count() > 6:
+			_melee_trail.remove_point(0)
+	elif _melee_trail.get_point_count() > 0:
+		_melee_trail.remove_point(0)
+
+
+
+## Every landed blow wears the melee weapon; at zero it breaks in the hand:
+## splinters or a bent bar, a crack, and you are back to fists.
+func _wear_melee(at: Vector2) -> void:
+	if pickup == "" or pickup in GUNS or not Arsenal.USES.has(pickup):
+		return
+	melee_uses -= 1
+	if melee_uses == 3:
+		Juice.popup_number(global_position + Vector2(0, -104), "CRACKING", Color(1.0, 0.7, 0.3))
+	if melee_uses > 0:
+		return
+	var wood := pickup in Arsenal.WOOD
+	var tip := _melee.global_position if _melee != null else at
+	Juice.shout("%s BROKE" % str(WeaponBook.spec(pickup).get("title", pickup)).to_upper())
+	Mixer.play_sfx("res://assets/audio/sfx/crate_break.ogg" if wood else "res://assets/audio/sfx/metal_bang.ogg", randf_range(1.1, 1.3), -3.0)
+	var p := CPUParticles2D.new()
+	p.global_position = tip
+	p.emitting = true
+	p.one_shot = true
+	p.explosiveness = 0.95
+	p.amount = 16
+	p.lifetime = 0.6
+	p.direction = Vector2(float(facing), -0.6)
+	p.spread = 70.0
+	p.gravity = Vector2(0, 700)
+	p.initial_velocity_min = 120.0
+	p.initial_velocity_max = 280.0
+	p.scale_amount_min = 1.5
+	p.scale_amount_max = 3.5
+	p.color = Color(0.72, 0.5, 0.28) if wood else Color(0.7, 0.72, 0.78)
+	get_parent().add_child(p)
+	get_tree().create_timer(0.8).timeout.connect(p.queue_free)
+	Arsenal.bump("weapon_breaks")
+	pickup = ""
+
+
+
+## What the weapon in hand adds on contact: metal throws sparks, wood
+## splinters, a blade opens a red slash, the sledge cracks the street.
+func _weapon_contact(at: Vector2, wt: float) -> void:
+	if pickup == "" or pickup in GUNS:
+		return
+	var blade := pickup in ["knife", "machete", "invoice_star", "clipboard"]
+	var wood := pickup in Arsenal.WOOD
+	if blade:
+		SuitFx.spawn(at, "slash", 26.0 + 14.0 * wt, float(facing), Color(0.95, 0.12, 0.15))
+	elif wood:
+		var p := CPUParticles2D.new()
+		p.global_position = at
+		p.emitting = true
+		p.one_shot = true
+		p.explosiveness = 1.0
+		p.amount = 7
+		p.lifetime = 0.45
+		p.direction = Vector2(float(facing), -0.8)
+		p.spread = 55.0
+		p.gravity = Vector2(0, 600)
+		p.initial_velocity_min = 90.0
+		p.initial_velocity_max = 200.0
+		p.scale_amount_min = 1.2
+		p.scale_amount_max = 2.6
+		p.color = Color(0.78, 0.58, 0.34)
+		get_parent().add_child(p)
+		get_tree().create_timer(0.6).timeout.connect(p.queue_free)
+	else:
+		Juice.sparks(at)
+	if pickup == "sledgehammer":
+		SuitFx.spawn(Vector2(at.x, global_position.y), "ring", 70.0, 1.0, Color(1.0, 0.85, 0.6))
+		Juice.pulse_shake(6.0)
+		Juice.hitstop(3)

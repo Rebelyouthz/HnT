@@ -37,6 +37,15 @@ const SECTIONS := [
 		],
 	},
 	{
+		"title": "ARSENAL & SUITS",
+		"accent": "brick",
+		"tiles": [
+			["Suit Parts", "@suit_parts"], ["Weapons Found", "@weapons"], ["Mastered", "@mastered"],
+			["Weapon Kills", "@weapon_kills"], ["Home Runs", "home_runs"], ["Decapitations", "decaps"],
+			["Burned", "burn_kills"], ["Weapons Broken", "weapon_breaks"], ["Gadget Hits", "gadget_hits"],
+		],
+	},
+	{
 		"title": "HUNTS & BOSSES",
 		"accent": "lemon",
 		"tiles": [
@@ -118,6 +127,16 @@ static func grouped(n: int) -> String:
 func _value(key: String) -> int:
 	if key == "@maps":
 		return (FamilyProfile.data.get("maps_filed", []) as Array).size()
+	if key == "@suit_parts":
+		return (FamilyProfile.data.get("suit_parts", []) as Array).size()
+	if key == "@weapons":
+		return (FamilyProfile.data.get("weapons_found", []) as Array).size()
+	if key == "@mastered" or key == "@weapon_kills":
+		var n := 0
+		var d: Dictionary = FamilyProfile.data.get("weapon_kills", {})
+		for k in d:
+			n += (1 if int(d[k]) >= Arsenal.MASTERY_KILLS else 0) if key == "@mastered" else int(d[k])
+		return n
 	var v: Variant = FamilyProfile.data.get(key, 0)
 	if v is int or v is float:
 		return int(v)

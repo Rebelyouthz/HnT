@@ -13,6 +13,10 @@ extends CharacterBody2D
 
 var facing := -1
 var snared := 0.0
+## On fire (FLARE GUN): seconds left, the damage clock and who lit it.
+var burn_t := 0.0
+var _burn_tick := 0.0
+var _burn_by := ""
 var visual: Node2D
 var telegraph := 0.0
 var recover := 0.0
@@ -384,6 +388,18 @@ func _physics_process(delta: float) -> void:
 		if hp <= 0:
 			_die("blade", self)
 			return
+	if burn_t > 0.0 and hp > 0:
+		burn_t -= delta
+		_burn_tick -= delta
+		if _burn_tick <= 0.0:
+			_burn_tick = 0.35
+			hp = maxi(0, hp - 3)
+			Juice.flash_red(visual, 1)
+			Juice.popup_number(global_position + Vector2(randf_range(-10, 10), -90), "3", Color(1.0, 0.55, 0.2))
+			if hp <= 0:
+				_last_zone = "burn"
+				_die("burn", null)
+				return
 	if snared > 0.0:
 		snared -= delta
 		velocity = Vector2.ZERO
@@ -732,6 +748,17 @@ const ENGAGE := 38.0
 var blocked_last := false
 
 
+## Set on fire: flames on the body, damage over time, a scream.
+func ignite(secs: float, by: String) -> void:
+	if hp <= 0:
+		return
+	burn_t = maxf(burn_t, secs)
+	_burn_by = by
+	FireFx.on_body(self, secs)
+	if randf() < 0.5:
+		VoBank.line(VoBank.who_of(self), "hurt", 0.9)
+
+
 func take_hit(kind: String, from: Node) -> void:
 	blocked_last = false
 	_hurt_t = 0.28
@@ -857,6 +884,9 @@ func take_hit(kind: String, from: Node) -> void:
 		dmg = int(round(float(dmg) * 1.2))
 	if from is Fighter:
 		dmg += int(FamilyProfile.gear_stat_bonus((from as Fighter).role).get("dmg", 0))
+		var wp := str((from as Fighter).pickup)
+		if wp != "" and Arsenal.mastered(wp):
+			dmg = int(round(float(dmg) * Arsenal.dmg_mul(wp)))
 	if from is Fighter and Charms.has("rabbit_foot") and randf() < 0.12:
 		dmg *= 2
 		Juice.popup_number(global_position + Vector2(0, -60), "CRIT", UiKit.GOLD)
@@ -1022,6 +1052,30 @@ func _die(kind: String, from: Node) -> void:
 		dir = signf(global_position.x - (from as Node2D).global_position.x)
 	# Shot dead: the gun death (headshot, decap, leg off, through the chest).
 	var gunned: bool = from is Round and not _shot.is_empty() and GunGore.death(self, _shot, dir)
+	# Weapon kills: the bat knocks them out of the park, the sledge
+	# flattens, the machete can take the head.
+	var held := str((from as Fighter).pickup) if from is Fighter else ""
+	var kill_weapon := held if held != "" else (str((from as Round).weapon) if from is Round else ("flare_gun" if kind == "burn" else ""))
+	Arsenal.add_kill(kill_weapon)
+	if from is KitShot:
+		Arsenal.bump("gadget_hits")
+	if held == "baseball_bat" and kind != "light":
+		_last_zone = "homerun"
+		Arsenal.bump("home_runs")
+		Juice.shout("HOME RUN")
+		Juice.freeze_frames(5)
+		Mixer.play_sfx("res://assets/audio/sfx/melee_bat.ogg", 0.8, 0.0)
+	elif held == "sledgehammer":
+		_last_zone = "crush"
+		Juice.shout("FLATTENED")
+		Juice.pulse_shake(10.0)
+		Juice.land_puff(global_position)
+		Mixer.play_sfx("res://assets/audio/sfx/bone_crack.ogg", 0.8, -1.0)
+	elif held == "machete" and kind == "blade" and randf() < 0.45 and not gunned:
+		gunned = GunGore.decap(self, dir)
+	elif kind == "burn":
+		_last_zone = "burn"
+		Arsenal.bump("burn_kills")
 	# Brutal: the body comes apart on an overkill, chunks and teeth otherwise.
 	var gb := get_tree().get_first_node_in_group("blood_sim")
 	if gb and gb.has_method("gore") and not gunned:

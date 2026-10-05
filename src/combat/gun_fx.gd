@@ -26,14 +26,14 @@ static func flash(host: Node, at: Vector2, w: String, face: int) -> void:
 	f.weapon = w
 	f.facing = face
 	f._seed = randi()
-	f._life = {"shotgun": 0.09, "smg": 0.035, "ray": 0.16, "nailgun": 0.05}.get(w, 0.05)
+	f._life = {"shotgun": 0.09, "smg": 0.035, "ray": 0.16, "nailgun": 0.05, "revolver": 0.08, "flare_gun": 0.12}.get(w, 0.05)
 	f.global_position = at
 	host.add_child(f)
 	var l := PointLight2D.new()
 	l.texture = LightRig.radial_tex()
-	l.texture_scale = 0.55 if w == "shotgun" else 0.35
-	l.color = Color(1.0, 0.2, 0.2) if w == "ray" else Color(1.0, 0.78, 0.45)
-	l.energy = 2.2 if w == "shotgun" else 1.4
+	l.texture_scale = 0.55 if w == "shotgun" or w == "revolver" else 0.35
+	l.color = Color(1.0, 0.2, 0.2) if w == "ray" else (Color(1.0, 0.4, 0.2) if w == "flare_gun" else Color(1.0, 0.78, 0.45))
+	l.energy = 2.2 if w == "shotgun" or w == "revolver" else 1.4
 	# A real light: it washes the street and walls, and things cast shadows.
 	l.texture_scale *= 2.2
 	l.energy *= 1.3
@@ -42,11 +42,11 @@ static func flash(host: Node, at: Vector2, w: String, face: int) -> void:
 	l.shadow_color = Color(0, 0, 0, 0.55)
 	f.set_meta("light", l)
 	f.add_child(l)
-	if w == "shotgun" or w == "pistol":
+	if w == "shotgun" or w == "pistol" or w == "revolver" or w == "flare_gun":
 		var s := GunFx.new()
 		s.kind = "smoke"
 		s.facing = face
-		s._life = 0.9 if w == "shotgun" else 0.5
+		s._life = 0.9 if w == "shotgun" or w == "flare_gun" else (0.7 if w == "revolver" else 0.5)
 		s.global_position = at
 		host.add_child(s)
 
@@ -64,6 +64,19 @@ static func mag(host: Node, at: Vector2, w: String, face: int, floor_y: float) -
 	c._v = Vector2(-float(face) * randf_range(10.0, 30.0), randf_range(-60.0, -20.0))
 	c._spin = randf_range(-6.0, 6.0)
 	c.global_position = at
+	host.add_child(c)
+
+
+## A round into the wet street: a ripple ring and a crown of droplets.
+static func splash(host: Node, at: Vector2) -> void:
+	if host == null:
+		return
+	var c := GunFx.new()
+	c.kind = "splash"
+	c._seed = randi()
+	c._life = 0.4
+	c.global_position = at
+	c.z_index = 2
 	host.add_child(c)
 
 
@@ -173,6 +186,19 @@ func _draw() -> void:
 				"nailgun":
 					# Pneumatic: a pale puff, no fire.
 					draw_circle(Vector2(3.0 * f, 0), 3.0 * (1.0 - k) + 1.0, Color(0.85, 0.9, 1.0, 0.5 * k))
+				"revolver":
+					# Big iron: a long tongue of fire and a side blast from the gap.
+					draw_line(Vector2.ZERO, Vector2(18.0 * f, 0) * k, Color(1.0, 0.75, 0.35, k), 3.0)
+					draw_line(Vector2.ZERO, Vector2(24.0 * f, 0) * k, Color(1.0, 0.95, 0.8, k), 1.2)
+					for a in [-0.6, 0.6]:
+						draw_line(Vector2(-8.0 * f, 0), Vector2(-8.0 * f, 0) + Vector2(0.3 * f, a * 1.4) * 9.0 * k, Color(1.0, 0.7, 0.35, 0.8 * k), 1.4)
+					draw_circle(Vector2(3.0 * f, 0), 5.0 * k, Color(1.0, 0.96, 0.82, k))
+				"flare_gun":
+					draw_circle(Vector2(4.0 * f, 0), 7.0 * k, Color(1.0, 0.35, 0.12, 0.7 * k))
+					draw_circle(Vector2(3.0 * f, 0), 4.0 * k, Color(1.0, 0.85, 0.5, k))
+					for i in 6:
+						var a3 := rng.randf_range(-0.8, 0.8)
+						draw_line(Vector2.ZERO, Vector2(cos(a3) * f, sin(a3)) * rng.randf_range(6.0, 14.0) * k, Color(1.0, 0.55, 0.2, k), 1.2)
 				"ray":
 					for r in [9.0, 6.0, 3.0]:
 						draw_arc(Vector2(2.0 * f, 0), r * (1.4 - k * 0.6), 0, TAU, 20, Color(1.0, 0.2, 0.25, 0.8 * k), 1.2)
@@ -192,6 +218,18 @@ func _draw() -> void:
 			var h2 := 5.0 if weapon == "smg" else 3.4
 			draw_rect(Rect2(Vector2(-w2 * 0.5, -h2 * 0.5), Vector2(w2, h2)), dark)
 			draw_rect(Rect2(Vector2(-w2 * 0.5, -h2 * 0.5), Vector2(w2, 0.6)), Color(0.4, 0.4, 0.45))
+		"splash":
+			var ks := _t / _life
+			var rng3 := RandomNumberGenerator.new()
+			rng3.seed = _seed
+			draw_arc(Vector2.ZERO, 2.0 + 9.0 * ks, 0, TAU, 18, Color(0.75, 0.85, 1.0, 0.5 * (1.0 - ks)), 0.8)
+			for i in 7:
+				var vx := rng3.randf_range(-40.0, 40.0)
+				var vy := rng3.randf_range(-90.0, -50.0)
+				var tt := _t
+				var p2 := Vector2(vx * tt, vy * tt + 260.0 * tt * tt)
+				if p2.y < 1.0:
+					draw_circle(p2, 0.8, Color(0.8, 0.9, 1.0, 0.85 * (1.0 - ks)))
 		"spark":
 			var k3 := 1.0 - _t / _life
 			var rng2 := RandomNumberGenerator.new()

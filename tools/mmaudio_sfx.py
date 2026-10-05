@@ -81,6 +81,12 @@ SFX = {
     "sfx/shadow_step.ogg": ("quick dark teleport whoosh, airy swish with low rumble", 0.8),
     "sfx/sense_dodge.ogg": ("fast dodge swish, cloth whip, short tingle", 0.6),
     "sfx/kick_flurry.ogg": ("single very fast martial arts kick whoosh, sharp", 0.4),
+    "sfx/melee_bat.ogg": ("wooden baseball bat smacking a body hard, loud crack and thud", 0.9),
+    "sfx/melee_machete.ogg": ("machete chopping into flesh, heavy wet slash and chop", 0.8),
+    "sfx/melee_sledge.ogg": ("sledgehammer crushing impact on a body, massive deep thud and crunch", 1.1),
+    "sfx/revolver.ogg": ("single loud .44 magnum revolver gunshot, huge boom with city echo", 1.4),
+    "sfx/flare_gun.ogg": ("flare gun firing, hollow pop then fizzing burning hiss", 1.4),
+    "sfx/fire_crackle.ogg": ("small fire burning and crackling, flames whoosh", 2.0),
 }
 
 

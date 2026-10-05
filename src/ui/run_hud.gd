@@ -519,6 +519,14 @@ func _paint_fighter(lab: Label, bar: ColorRect, pips: HBoxContainer, snap: Label
 	if state and lemon_slot:
 		lives = "   LIVES %d" % state.lives
 	lab.text = "%s%s" % [title.to_upper(), lives]
+	# The weapon in hand and what is left in it.
+	if f.pickup != "":
+		var wt := str(WeaponBook.spec(f.pickup).get("title", f.pickup)).to_upper()
+		if f.pickup in Fighter.GUNS:
+			wt += " %d/%d" % [f.pistol_shots, f.gun_reserve]
+		elif Arsenal.USES.has(f.pickup):
+			wt += " ·%d" % f.melee_uses
+		lab.text += "   " + wt
 	var plate: Variant = _plates.get(_slot_of(f))
 	if plate is Control:
 		(plate as Control).visible = true
@@ -710,6 +718,29 @@ func _toggle_pause() -> void:
 		lead.custom_minimum_size = Vector2(380, 0)
 		UiKit.apply_label(lead, 13, Palette.MUTED)
 		right.add_child(lead)
+	# LOADOUT: what the suit parts and the weapon in hand do right now.
+	var lines: Array[String] = []
+	for f: Fighter in [son, father]:
+		if f == null or not is_instance_valid(f):
+			continue
+		var who := FamilyProfile.son_name() if f.role == "son" else FamilyProfile.father_name()
+		var parts: Array[String] = []
+		for part in Suits.PARTS:
+			var sid := f.suit_part(part)
+			if sid != "":
+				parts.append("[color=#ffd75e]%s[/color] %s" % [str(Suits.part_row(sid, part)["title"]), str(Suits.part_row(sid, part)["perk"])])
+		if f.suit_set() != "":
+			parts.append("[color=#5effa0]SET[/color] " + str(Suits.LIST[f.suit_set()]["set"]))
+		if f.pickup != "":
+			var ws := WeaponBook.spec(f.pickup)
+			var extra := ("  ·  %d hits left" % f.melee_uses) if Arsenal.USES.has(f.pickup) else ""
+			parts.append("[color=#ff8a5e]%s[/color]%s%s" % [str(ws.get("title", f.pickup)).to_upper(), extra, "  ·  ★ MASTERED" if Arsenal.mastered(f.pickup) else ""])
+		if not parts.is_empty():
+			lines.append("[b]%s[/b]\n%s" % [who.to_upper(), "\n".join(parts)])
+	if not lines.is_empty():
+		var lo := UiKit.rich("", 520, 12, Palette.TEXT)
+		lo.text = "[color=#ffd75e]LOADOUT[/color]\n" + "\n".join(lines)
+		right.add_child(lo)
 	r.grab_focus()
 
 

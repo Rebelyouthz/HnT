@@ -161,10 +161,50 @@ def ray():
     return p.im, {"grip": [11, 18], "muzzle": [46, 10]}
 
 
+def revolver():
+    """BIG IRON: a long-barrel six-shooter, nickel and walnut."""
+    p = Pen(36, 18)
+    nickel = (150, 156, 168, 255)
+    p.box(16, 4, 34, 6, nickel)                     # barrel
+    p.box(16, 7, 30, 7, shade(nickel, 0.7), False)  # ejector rod
+    p.d.ellipse([9, 3, 17, 10], fill=shade(nickel, 0.85))   # cylinder
+    for x in (11, 13, 15):
+        p.d.line([x, 4, x, 9], fill=shade(nickel, 0.6))
+    p.box(6, 3, 10, 9, nickel)                      # frame
+    p.px(6, 1, DARK)                                # hammer
+    p.px(7, 2, DARK)
+    p.poly([(5, 9), (10, 9), (8, 17), (2, 17), (3, 13)], (98, 56, 30, 255))   # grip
+    p.d.line([4, 12, 7, 11], fill=(140, 90, 52, 255))
+    p.d.arc([9, 8, 15, 14], 0, 180, fill=DARK)
+    p.px(11, 11, (180, 40, 50, 255))
+    p.px(33, 3, nickel)
+    p.box(34, 4, 35, 6, INK, False)
+    p.outline()
+    return p.im, {"grip": [7, 12], "muzzle": [35, 5]}
+
+
+def flare():
+    """FLARE GUN: orange plastic, fat barrel, a red cartridge rim."""
+    p = Pen(32, 20)
+    orange = (238, 112, 28, 255)
+    p.box(6, 4, 28, 10, orange)                     # fat barrel
+    p.d.line([7, 5, 27, 5], fill=shade(orange, 1.35))
+    p.box(4, 5, 7, 9, (200, 40, 36, 255))           # breech / cartridge rim
+    p.box(28, 5, 30, 9, shade(orange, 0.7), False)
+    p.poly([(8, 10), (14, 10), (12, 19), (6, 19)], shade(orange, 0.85))   # grip
+    p.d.line([8, 13, 11, 13], fill=shade(orange, 1.2))
+    p.d.arc([12, 9, 18, 15], 0, 180, fill=DARK)
+    p.px(14, 12, DARK)
+    p.box(30, 6, 31, 8, INK, False)
+    p.outline()
+    return p.im, {"grip": [9, 13], "muzzle": [31, 7]}
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     meta = {}
-    for name, fn in [("pistol", pistol), ("nailgun", nailgun), ("shotgun", shotgun), ("smg", smg), ("ray", ray)]:
+    for name, fn in [("pistol", pistol), ("nailgun", nailgun), ("shotgun", shotgun), ("smg", smg), ("ray", ray),
+                     ("revolver", revolver), ("flare_gun", flare)]:
         im, m = fn()
         # The guns are painted at 1 texel = 1 px of a 2.25 texel/unit grid:
         # double them so they sit at the characters' 4.5 texels per unit.

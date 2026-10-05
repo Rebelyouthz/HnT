@@ -67,6 +67,9 @@ func _prepare() -> void:
 			(fp.data as Dictionary)["suit_son_" + p] = sid
 		(fp.data as Dictionary)["suits_split"] = true
 		(fp.data as Dictionary)["suit_parts"] = owned
+	if _tab == "armory" and fp != null:
+		(fp.data as Dictionary)["weapons_found"] = ["knife", "pipe", "board", "chain", "baseball_bat", "machete", "pistol", "revolver", "shotgun", "flare_gun", "smg"]
+		(fp.data as Dictionary)["weapon_kills"] = {"baseball_bat": 31, "machete": 12, "pistol": 25, "shotgun": 9, "pipe": 4, "revolver": 2}
 	if _tab == "stats":
 		# Demo numbers so the report has something to draw.
 		var d2 := fp.data as Dictionary
@@ -134,6 +137,8 @@ func _process(_delta: float) -> bool:
 		_prepare()
 	if _tab == "stats" and _n == 40 and current_scene != null and current_scene.has_method("_open_stats"):
 		current_scene.call("_open_stats")
+	if _tab == "armory" and _n == 40 and current_scene != null and current_scene.has_method("_open_armory"):
+		current_scene.call("_open_armory")
 	if _tab.begins_with("ui_") and _n == 80 and current_scene != null:
 		match _tab.substr(3):
 			"results":
@@ -255,7 +260,8 @@ func _process(_delta: float) -> bool:
 			for d in root.get_tree().get_nodes_in_group("dog_buddy"):
 				d.queue_free()
 			if keep and p1:
-				keep.global_position = p1.global_position + Vector2(40 if _tab == "ui_fight" else 260, 0)
+				var melee_demo := _tab.begins_with("ui_gun_") and not (_tab.substr(7) in ["pistol", "nailgun", "shotgun", "smg", "ray", "revolver", "flare_gun"])
+				keep.global_position = p1.global_position + Vector2(40 if _tab == "ui_fight" or melee_demo else 260, 0)
 				keep.set("facing", -1)
 				keep.set("recover", 99.0)
 		if _n == 90:
@@ -271,9 +277,10 @@ func _process(_delta: float) -> bool:
 		if _tab.begins_with("ui_suit_"):
 			_suit_demo()
 		elif _n >= 100 and _n < 190:
-			var k := (_n - 100) % (6 if gun == "smg" else 14)
-			var heavy := _n >= 156 and gun == ""
-			var act := "p1_heavy" if heavy else ("p1_shoot" if gun != "" else "p1_light")
+			var k := (_n - 100) % (6 if gun == "smg" else (24 if gun == "sledgehammer" else 14))
+			var is_gun := gun != "" and gun in ["pistol", "nailgun", "shotgun", "smg", "ray", "revolver", "flare_gun"]
+			var heavy := _n >= 156 and not is_gun
+			var act := "p1_heavy" if heavy else ("p1_shoot" if is_gun else "p1_light")
 			if k == 0:
 				Input.action_press(act)
 				var pp: Node2D = root.get_tree().get_first_node_in_group("players")

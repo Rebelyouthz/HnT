@@ -8,6 +8,9 @@ extends Node2D
 ##           close up they all land, far off only a few.
 ##   nail    nailgun: a visible steel nail, slower, drops a little, and stays
 ##           stuck in whatever it hits (bodies included).
+##   flare   FLARE GUN: a slow, arcing ball of burning magnesium with a
+##           smoke tail and a real light; sets whoever it hits on fire and
+##           burns on the street where it lands.
 ##   orb     FINAL NOTICE: a slow, pulsing ball of red ink trailing shredded
 ##           invoice scraps; it goes through everyone in the lane.
 ## Hits are tested against enemies in the shooter's lane (|y| < LANE); the
@@ -26,6 +29,8 @@ var shooter: Node2D
 var range_left := 900.0
 var dist := 0.0
 var pierce := false
+## Bodies a bullet can still go through (BIG IRON: one).
+var pierce_left := 0
 var _from := Vector2.ZERO
 var _trail: Array[Vector2] = []
 var _hit_ids: Dictionary = {}
@@ -42,19 +47,36 @@ func _ready() -> void:
 	if round_kind != "nail" and round_kind != "pellet":
 		m.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
 	material = m
-	if round_kind == "orb":
+	if round_kind == "orb" or round_kind == "flare":
 		_light = PointLight2D.new()
 		_light.texture = LightRig.radial_tex()
-		_light.texture_scale = 0.4
-		_light.color = Color(1.0, 0.18, 0.2)
+		_light.texture_scale = 0.4 if round_kind == "orb" else 0.6
+		_light.color = Color(1.0, 0.18, 0.2) if round_kind == "orb" else Color(1.0, 0.45, 0.25)
 		_light.energy = 1.4
 		add_child(_light)
+	if round_kind == "flare":
+		var smoke := CPUParticles2D.new()
+		smoke.amount = 26
+		smoke.lifetime = 0.7
+		smoke.local_coords = false
+		smoke.gravity = Vector2(0, -30)
+		smoke.initial_velocity_min = 4.0
+		smoke.initial_velocity_max = 14.0
+		smoke.spread = 180.0
+		smoke.scale_amount_min = 2.0
+		smoke.scale_amount_max = 4.5
+		var g := Gradient.new()
+		g.set_color(0, Color(1.0, 0.75, 0.4, 0.7))
+		g.set_color(1, Color(0.5, 0.5, 0.55, 0.0))
+		smoke.color_ramp = g
+		smoke.z_index = -1
+		add_child(smoke)
 
 
 func _physics_process(delta: float) -> void:
 	_t += delta
-	if round_kind == "nail" or round_kind == "pellet":
-		vel.y += (140.0 if round_kind == "nail" else 60.0) * delta
+	if round_kind == "nail" or round_kind == "pellet" or round_kind == "flare":
+		vel.y += {"nail": 140.0, "pellet": 60.0, "flare": 110.0}[round_kind] * delta
 	var step := vel * delta
 	var a := global_position
 	var b := a + step
@@ -70,6 +92,8 @@ func _physics_process(delta: float) -> void:
 		if randf() < 0.6:
 			_scraps.append({"p": global_position + Vector2(randf_range(-4, 4), randf_range(-4, 4)), "v": Vector2(-vel.x * 0.05 + randf_range(-20, 20), randf_range(-30, 10)), "t": 0.6, "r": randf() * TAU})
 		_light.energy = 1.2 + 0.4 * sin(_t * 18.0)
+	elif round_kind == "flare":
+		_light.energy = 1.6 + randf_range(-0.35, 0.35)
 	for s in _scraps:
 		s["t"] = float(s["t"]) - delta
 		s["p"] = (s["p"] as Vector2) + (s["v"] as Vector2) * delta
@@ -78,10 +102,15 @@ func _physics_process(delta: float) -> void:
 	if range_left <= 0.0:
 		if round_kind == "nail":
 			_stick_world(global_position)
+		elif round_kind == "flare":
+			FireFx.ground(get_parent(), Vector2(global_position.x, lane_y), 3.0)
 		elif round_kind == "bullet" or round_kind == "pellet":
-			# A miss hits the street or a wall: sparks and maybe a whine.
+			# A miss hits the street or a wall: sparks and maybe a whine,
+			# and the wet street throws up a splash where it comes down.
 			if round_kind == "bullet" or randf() < 0.25:
 				GunFx.ricochet(get_parent(), global_position, int(signf(vel.x)))
+			if randf() < (0.8 if round_kind == "bullet" else 0.3):
+				GunFx.splash(get_parent(), Vector2(global_position.x + randf_range(-10.0, 10.0), lane_y + randf_range(-4.0, 4.0)))
 		queue_free()
 		return
 	queue_redraw()
@@ -107,6 +136,9 @@ func _test(a: Vector2, b: Vector2) -> bool:
 			continue
 		_hit_ids[p.get_instance_id()] = true
 		_land(p, Vector2(x - signf(vel.x) * 6.0, global_position.y))
+		if pierce_left > 0:
+			pierce_left -= 1
+			continue
 		if not pierce:
 			queue_free()
 			return true
@@ -122,6 +154,9 @@ func _land(p: Punk, at: Vector2) -> void:
 		_stick_body(p, at)
 	if round_kind == "orb":
 		Juice.pulse_shake(3.0)
+	if round_kind == "flare" and is_instance_valid(p):
+		p.ignite(4.0, owner_role)
+		Juice.impact(at, 0.6, int(signf(vel.x)))
 
 
 func _stick_body(p: Punk, at: Vector2) -> void:
@@ -168,6 +203,11 @@ func _draw() -> void:
 			draw_line(tail, tip, Color(0.72, 0.74, 0.78), 0.9)
 			draw_line(tail + Vector2.from_angle(ang + PI * 0.5) * 1.2, tail - Vector2.from_angle(ang + PI * 0.5) * 1.2, Color(0.82, 0.84, 0.88), 0.9)
 			draw_line(-dir * 14.0, tail, Color(0.9, 0.95, 1.0, 0.12), 0.6)
+		"flare":
+			var fl := 1.0 + 0.25 * randf()
+			draw_circle(Vector2.ZERO, 7.0 * fl, Color(1.0, 0.35, 0.1, 0.35))
+			draw_circle(Vector2.ZERO, 4.0 * fl, Color(1.0, 0.7, 0.3, 0.9))
+			draw_circle(Vector2.ZERO, 2.0, Color(1.0, 1.0, 0.92, 1.0))
 		"orb":
 			for i in _trail.size():
 				var k := float(i + 1) / float(_trail.size())

@@ -236,6 +236,27 @@ static func corpse(host: Node, art: AnimatedSprite2D, feet: Vector2, zone: Strin
 		"crush":
 			tw.tween_property(body, "scale", Vector2(1.25, 0.35), 0.1)
 			bleed = 18.0
+		"homerun":
+			# Knocked out of the park: high, far, spinning, a bounce.
+			lie = away * PI * 0.5
+			tw.set_parallel(true)
+			tw.tween_property(body, "position:x", feet.x + away * 260.0, 1.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+			tw.tween_property(body, "rotation", away * (TAU * 3.0 + PI * 0.5), 1.0).set_ease(Tween.EASE_OUT)
+			tw.tween_property(body, "position:y", feet.y - 120.0, 0.45).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+			tw.chain().tween_property(body, "position:y", feet.y - 4.0, 0.45).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+			tw.set_parallel(false)
+			tw.tween_property(body, "position:y", feet.y - 16.0, 0.1)
+			tw.tween_property(body, "position:y", feet.y - 4.0, 0.1)
+		"burn":
+			# Charred where they stood, still smoking.
+			body.modulate = Color(0.35, 0.3, 0.28)
+			FireFx.on_body(body, 2.5)
+			tw.tween_property(body, "scale", Vector2(1.05, 0.85), 0.3)
+			lie = away * PI * 0.5
+			tw.tween_property(body, "rotation", lie, 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+			tw.parallel().tween_property(body, "scale", Vector2.ONE, 0.35)
+			tw.parallel().tween_property(body, "position:y", feet.y - 4.0, 0.35)
+			bleed = 2.0
 		"drawn":
 			bleed = 14.0
 		_:

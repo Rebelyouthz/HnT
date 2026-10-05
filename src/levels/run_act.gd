@@ -58,14 +58,14 @@ func _place_parkour() -> void:
 		"fire_escapes": [[560.0, 248.0, "rail"], [1100.0, 248.0, "gap"], [2000.0, 500.0, "crate"]],
 		"neon_exchange": [[640.0, 500.0, "crate"], [1320.0, 500.0, "rail"], [2100.0, 500.0, "gap"]],
 		"rail_bridge": [[700.0, 500.0, "rail"], [1500.0, 500.0, "gap"], [2300.0, 500.0, "crate"]],
-		"city_hall": [[480.0, 500.0, "crate"], [980.0, 500.0, "rail"]],
-		"invoice_pier": [[900.0, 500.0, "gap"], [1600.0, 500.0, "rail"], [2600.0, 500.0, "crate"]],
-		"processing_floor": [[620.0, 500.0, "rail"], [1480.0, 500.0, "gap"]],
+		"city_hall": [[480.0, 500.0, "crate"], [980.0, 500.0, "rail"], [1380.0, 500.0, "sledgehammer"]],
+		"invoice_pier": [[900.0, 500.0, "gap"], [1600.0, 500.0, "rail"], [2600.0, 500.0, "crate"], [1100.0, 500.0, "flare_gun"]],
+		"processing_floor": [[620.0, 500.0, "rail"], [1480.0, 500.0, "gap"], [1200.0, 500.0, "machete"]],
 		"tutorial_alley": [[640.0, 500.0, "crate"], [1100.0, 500.0, "rail"]],
 		"intake_lot": [[520.0, 500.0, "crate"], [1280.0, 500.0, "rail"]],
 		"group_circle": [[640.0, 500.0, "rail"]],
-		"waiting_room": [[720.0, 500.0, "crate"], [1400.0, 500.0, "gap"]],
-		"copay_orchard": [[720.0, 500.0, "crate"], [2100.0, 500.0, "gap"]],
+		"waiting_room": [[720.0, 500.0, "crate"], [1400.0, 500.0, "gap"], [1620.0, 500.0, "revolver"]],
+		"copay_orchard": [[720.0, 500.0, "crate"], [2100.0, 500.0, "gap"], [980.0, 500.0, "baseball_bat"]],
 		"sleet_hour": [[700.0, 500.0, "rail"], [1500.0, 500.0, "crate"]],
 		"raven_grid": [[900.0, 500.0, "rail"], [2200.0, 500.0, "gap"]],
 		"ledger_dive": [[720.0, 500.0, "crate"], [1600.0, 500.0, "rail"]]
@@ -158,8 +158,8 @@ func _place_smash() -> void:
 
 func _place_weapons() -> void:
 	var rows: Dictionary = {
-		"dock_street": [[900.0, 500.0, "chain"], [1160.0, 500.0, "pistol"], [1740.0, 500.0, "shotgun"], [2180.0, 500.0, "smg"], [2560.0, 500.0, "nailgun"]],
-		"intake_lot": [[760.0, 500.0, "crowbar"], [980.0, 500.0, "shotgun"], [1340.0, 500.0, "smg"], [1760.0, 500.0, "ray"]],
+		"dock_street": [[620.0, 500.0, "baseball_bat"], [900.0, 500.0, "chain"], [1160.0, 500.0, "pistol"], [1460.0, 510.0, "flare_gun"], [1740.0, 500.0, "shotgun"], [1980.0, 505.0, "machete"], [2180.0, 500.0, "smg"], [2560.0, 500.0, "nailgun"]],
+		"intake_lot": [[560.0, 505.0, "sledgehammer"], [760.0, 500.0, "crowbar"], [980.0, 500.0, "shotgun"], [1160.0, 510.0, "revolver"], [1340.0, 500.0, "smg"], [1560.0, 500.0, "machete"], [1760.0, 500.0, "ray"]],
 		"fire_escapes": [[860.0, 248.0, "stapler"]],
 		"group_circle": [[1180.0, 500.0, "clipboard"]],
 		"neon_exchange": [[1480.0, 248.0, "nailgun"]],
@@ -338,6 +338,8 @@ func _place_rescue() -> void:
 
 func _ready() -> void:
 	_configure()
+	Arsenal.reset_run()
+	_suit_toast.call_deferred()
 	var resumed := App.resume_map == map_id and App.resume_pos != Vector2.ZERO
 	if resumed:
 		spawn_at = App.resume_pos
@@ -876,3 +878,13 @@ func anchor(at: Vector2) -> void:
 	var a := WebAnchor.new()
 	a.position = at
 	add_child(a)
+
+
+
+## Wearing a full suit: say what it does as the night starts.
+func _suit_toast() -> void:
+	await get_tree().create_timer(2.5).timeout
+	for role in ["son", "father"]:
+		var f := Suits.full_set(role)
+		if f != "" and is_inside_tree():
+			Juice.toast("reward", "%s SET  ·  %s" % [str(Suits.LIST[f]["title"]), role.to_upper()], str(Suits.LIST[f]["set"]))
