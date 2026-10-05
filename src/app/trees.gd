@@ -49,7 +49,7 @@ static func balance(mode: String) -> int:
 
 
 static func cur_label(mode: String) -> String:
-	return str(CUR[mode]).to_upper()
+	return "S-COINS" if mode == "survivor" else str(CUR[mode]).to_upper()
 
 
 static func count(mode: String) -> Vector2i:

@@ -69,6 +69,16 @@ func _setup() -> void:
 			_ghost_anim.play("parkour_run")
 	_place_tags()
 	_place_pads()
+	# A chest on the highest roof: worth the climb.
+	var top_r := Rect2()
+	for r in get_tree().get_nodes_in_group("roof_solids"):
+		var rect: Rect2 = r.get_meta("rect", Rect2())
+		if rect.size.x > 100.0 and (top_r.size == Vector2.ZERO or rect.position.y < top_r.position.y):
+			top_r = rect
+	if top_r.size != Vector2.ZERO:
+		var c := SurviveChest.new()
+		c.global_position = Vector2(top_r.end.x - 50.0, top_r.position.y)
+		act.add_child.call_deferred(c)
 
 
 func _place_tags() -> void:
@@ -233,6 +243,7 @@ func _finish() -> void:
 	if medal != "":
 		Juice.shout("%s MEDAL  %.1fs" % [medal, _t])
 		Trees.add_flow({"BRONZE": 3, "SILVER": 6, "GOLD": 10}[medal])
+		get_tree().create_timer(1.2).timeout.connect(func() -> void: LuckyWheel.spin(get_tree(), "parkour"))
 	FamilyProfile.save()
 
 

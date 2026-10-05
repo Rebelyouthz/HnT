@@ -3,6 +3,7 @@ extends Area2D
 
 
 func _ready() -> void:
+	add_to_group("survive_chests")
 	collision_layer = 0
 	collision_mask = 2
 	monitoring = true

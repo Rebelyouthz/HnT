@@ -32,6 +32,9 @@ var _announced := -1
 
 func _ready() -> void:
 	add_to_group("horde")
+	var ev := SurvEvents.new()
+	ev.horde = self
+	add_child(ev)
 	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/survive.json"))
 	var book: Dictionary = parsed if parsed is Dictionary else {}
 	_phases = book.get("phases", [])
@@ -130,7 +133,9 @@ func _wave(elite := false, force := false) -> void:
 	}
 	var host := get_parent()
 	var rs := get_tree().get_first_node_in_group("run_state")
-	var mul := 1.0 + elapsed / 120.0
+	# Hard on purpose: the horde outgrows a fresh build; gear, META and the
+	# tree are how you keep up.
+	var mul := 1.0 + elapsed / 85.0 + pow(elapsed / 300.0, 2.0) * 1.5
 	if rs and rs.has_method("hp_mul"):
 		mul *= rs.hp_mul()
 	var p := Party.spawn_row(host, row, mul)
@@ -204,6 +209,10 @@ func _elite_death(p: Punk) -> void:
 				if f is Fighter and (f as Fighter).global_position.distance_to(at) < 70.0:
 					(f as Fighter).take_hit("heavy", p)
 			Juice.pulse_shake(6.0)
+	SurvCoin.spawn(get_parent(), at, 5)
+	# Elites carry gear now and then.
+	if randf() < 0.12:
+		SurvGear.drop.call_deferred(0.05)
 	var chest := SurviveChest.new()
 	chest.global_position = at + Vector2(18, 0)
 	get_parent().add_child.call_deferred(chest)

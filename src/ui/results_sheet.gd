@@ -131,7 +131,23 @@ func _ready() -> void:
 		rewards.add_child(_reward("fist", str(WeaponBook.spec(bw).get("title", bw)).to_upper(), "%d KO" % int(run_k.get(bw, 0))))
 	var tk := int(Engine.get_meta("run_tokens", 0))
 	if tk > 0:
-		rewards.add_child(_reward("star", "TOKENS", "+%d" % tk))
+		rewards.add_child(_reward("star", "S-COINS", "+%d" % tk))
+	# DPS meter: the survivor abilities that did the work this hour.
+	var srun := SurviveRun.get_run(get_tree())
+	if srun and not srun.dealt.is_empty():
+		var keys := srun.dealt.keys()
+		keys.sort_custom(func(a, b) -> bool: return int(srun.dealt[a]) > int(srun.dealt[b]))
+		var dealt_all := 0
+		for k in keys:
+			dealt_all += int(srun.dealt[k])
+		var bits: Array[String] = []
+		for k in keys.slice(0, 4):
+			bits.append("%s %d%%" % [str(srun.row("abilities", str(k)).get("name", k)).to_upper(), int(round(100.0 * float(srun.dealt[k]) / float(maxi(1, dealt_all))))])
+		var dl := Label.new()
+		dl.text = "DAMAGE  ·  " + "   ".join(bits)
+		dl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		UiKit.apply_label(dl, 12, Color(0.6, 0.9, 1.0))
+		col.add_child(dl)
 	var rs_n := int(Engine.get_meta("run_shards", 0))
 	if rs_n > 0:
 		rewards.add_child(_reward("star", "SHARDS", "+%d" % rs_n))

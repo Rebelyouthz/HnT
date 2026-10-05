@@ -103,6 +103,7 @@ static func strike(e: Node, ab: String, src: Node) -> void:
 	src.set("skill_dmg", int(h["dmg"]))
 	e.call("take_hit", "skill", src)
 	run.note_hit(e, int(h["dmg"]))
+	run.dealt[ab] = int(run.dealt.get(ab, 0)) + int(h["dmg"])
 	if bool(h["crit"]):
 		Juice.popup_number((e as Node2D).global_position + Vector2(0, -60), "CRIT %d" % int(h["dmg"]), UiKit.GOLD)
 	if run.slow() > 0.0 and e.get("speed") != null:

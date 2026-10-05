@@ -158,8 +158,8 @@ func _card(o: Dictionary) -> Button:
 			lv_text = "EVOLVE  ·  " + str(run.row("abilities", str(o["id"])).get("name", "")).to_upper()
 			col = Color(1.0, 0.56, 0.12)
 		_:
-			r = {"name": "10 GOLD", "blurb": "Nothing left to learn. Have some money.", "icon": "i_coin"}
-			lv_text = "CONSOLATION"
+			r = {"name": "LIMIT BREAK", "blurb": "Nothing left to learn: +5% damage to everything, stacking.", "icon": "i_coin"}
+			lv_text = "LIMIT BREAK  %d" % (run.limit_breaks + 1)
 	var b := Button.new()
 	b.custom_minimum_size = Vector2(320, 326)
 	b.focus_mode = Control.FOCUS_ALL

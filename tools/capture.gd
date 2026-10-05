@@ -107,6 +107,10 @@ func _prepare() -> void:
 		(fp.data as Dictionary)["weapon_lv"] = {"pistol": 4, "smg": 4, "shotgun": 4}
 		(fp.data as Dictionary)["attach_owned"] = ["suppressor", "laser", "long_barrel", "drum_mag", "hollow", "scope", "compensator"]
 		(fp.data as Dictionary)["attach_on"] = {"pistol": {"muzzle": "suppressor", "optic": "laser", "barrel": "long_barrel", "mag": "drum_mag", "ammo": "hollow"}, "smg": {"muzzle": "compensator", "optic": "scope", "mag": "drum_mag"}}
+	if _tab == "sgear" and fp != null:
+		(fp.data as Dictionary)["tokens"] = 140
+		(fp.data as Dictionary)["sgear"] = [{"id": "varsity", "rar": 2, "lv": 2}, {"id": "crocs", "rar": 1, "lv": 1}, {"id": "rabbit_foot", "rar": 3, "lv": 1}, {"id": "hard_hat", "rar": 0, "lv": 1}, {"id": "hard_hat", "rar": 0, "lv": 1}, {"id": "hard_hat", "rar": 0, "lv": 1}, {"id": "lab_coat", "rar": 4, "lv": 3}]
+		(fp.data as Dictionary)["sgear_on"] = {"jacket": 0, "shoes": 1, "charm": 2, "cap": 3}
 	if _tab.begins_with("armory") and fp != null:
 		(fp.data as Dictionary)["meta"] = {"starter_kit": 1}
 		(fp.data as Dictionary)["carry_weapon"] = "baseball_bat"
@@ -200,6 +204,8 @@ func _process(_delta: float) -> bool:
 		current_scene.call("_open_stats")
 	if _tab.begins_with("armory") and _n == 40 and current_scene != null and current_scene.has_method("_open_armory"):
 		current_scene.call("_open_armory")
+	if _tab == "sgear" and _n == 40 and current_scene != null:
+		current_scene.add_child(load("res://src/ui/surv_gear_sheet.gd").new())
 	if _tab == "armory_gun" and _n == 60:
 		for n in root.get_tree().get_nodes_in_group("armory_sheet"):
 			n.call("_gunsmith", "pistol")

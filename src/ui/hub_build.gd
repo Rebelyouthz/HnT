@@ -103,6 +103,20 @@ func _ready() -> void:
 	wallet.add_theme_font_override("font", UiKit.pixel_font())
 	UiKit.apply_label(wallet, 15, UiKit.GOLD)
 	_stage.add_child(wallet)
+	# Survivor: the gear locker for the hours.
+	if mode == "survivor":
+		var gb := UiKit.button("SURVIVOR GEAR", Vector2(150, 34))
+		gb.add_theme_font_size_override("font_size", 11)
+		gb.position = Vector2(14, 272)
+		gb.pressed.connect(func() -> void:
+			var sh: Control = load("res://src/ui/surv_gear_sheet.gd").new()
+			add_child(sh)
+			sh.closed.connect(func() -> void:
+				sh.queue_free()
+				need_refresh.emit()
+			)
+		)
+		_stage.add_child(gb)
 	# Parkour records: medal, best time and tags found per roof map.
 	if mode == "parkour":
 		var rec: Array[String] = []

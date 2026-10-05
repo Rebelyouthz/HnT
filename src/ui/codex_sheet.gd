@@ -78,7 +78,7 @@ func _paint() -> void:
 	head.add_child(close)
 	outer.add_child(head)
 	var sub := Label.new()
-	sub.text = "TOKENS %d  ·  spend them in BUILD › SURVIVOR and HEROES › META › SURVIVOR" % int(FamilyProfile.data.get("tokens", 0))
+	sub.text = "S-COINS %d  ·  spend them in BUILD › SURVIVOR and HEROES › META › SURVIVOR" % int(FamilyProfile.data.get("tokens", 0))
 	UiKit.apply_label(sub, 13, Palette.MUTED)
 	outer.add_child(sub)
 	var sc := ScrollContainer.new()
@@ -162,7 +162,7 @@ func _paint() -> void:
 					w.add_child(pick)
 				grid.add_child(w)
 		_:
-			for pair in [["BEST KILLS", "surv_best_kills"], ["BEST LEVEL", "surv_best_level"], ["LONGEST HOUR (s)", "surv_best_time"], ["HOURS CLEARED", "survive_clears"], ["TOKENS EARNED", "tokens_total"], ["EVOLUTIONS FOUND", "@evo"]]:
+			for pair in [["BEST KILLS", "surv_best_kills"], ["BEST LEVEL", "surv_best_level"], ["LONGEST HOUR (s)", "surv_best_time"], ["HOURS CLEARED", "survive_clears"], ["S-COINS EARNED", "tokens_total"], ["EVOLUTIONS FOUND", "@evo"]]:
 				var v := int(FamilyProfile.data.get(pair[1], 0)) if pair[1] != "@evo" else (FamilyProfile.data.get("evolutions_seen", []) as Array).size()
 				var tile := UiKit.stat_tile(str(pair[0]), str(v), Color(1.0, 0.56, 0.12), 520.0)
 				grid.add_child(tile)

@@ -91,7 +91,8 @@ func _process(_d: float) -> void:
 		var left := int(horde.left())
 		_clock.text = "%d:%02d" % [left / 60, left % 60]
 		_clock.add_theme_color_override("font_color", Palette.BRICK if left < 30 else Palette.LEMON)
-		_kills.text = "%d KILLS" % int(horde.kills)
+		var srun := SurviveRun.get_run(get_tree())
+		_kills.text = "%d KILLS   ·   %d S-COINS" % [int(horde.kills), srun.coins if srun else 0]
 	if run == null:
 		return
 	if not run.changed.is_connected(_mark):

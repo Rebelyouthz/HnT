@@ -391,6 +391,16 @@ func _ready() -> void:
 	if DisplayServer.is_touchscreen_available():
 		add_child(preload("res://src/ui/touch_hud.gd").new())
 	_state.need_cards.connect(_cards)
+	# Story nights: a LUCKY WHEEL token mid-map, and a STARTING DRAW of item
+	# cards on the first map of a run.
+	if App.ORDER.has(map_id) and not StoryBook.is_survive(map_id):
+		WheelToken.place(self, Vector2(map_w * 0.42, 492.0), "parkour" if roof_start else "story")
+		if _state.cards.is_empty():
+			get_tree().create_timer(3.0).timeout.connect(func() -> void:
+				if is_inside_tree() and get_node_or_null("CardPick") == null:
+					Juice.shout("STARTING DRAW")
+					_cards()
+			)
 	PadRouter.drop_in.connect(_on_dropin)
 	var body := toast_body
 	if body == "":

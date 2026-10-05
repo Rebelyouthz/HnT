@@ -2327,6 +2327,9 @@ func take_hit(kind: String, from: Node) -> void:
 	if suit_set() == "shaolin":
 		dmg = maxi(1, int(round(float(dmg) * 0.7)))
 	var srun := SurviveRun.get_run(get_tree())
+	if srun and from is Punk:
+		# The hour hurts more the longer it runs.
+		dmg = maxi(1, int(round(float(dmg) * (1.0 + srun.time_alive / 200.0))))
 	if srun and srun.armor() > 0.0:
 		dmg = maxi(1, int(round(float(dmg) * (1.0 - srun.armor()))))
 	# THORNS: whoever hit you gets some back.

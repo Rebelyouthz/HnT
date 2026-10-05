@@ -1252,6 +1252,12 @@ func _drops(from: Node) -> void:
 	coins = int(round(float(coins) * cond_coin * rank_mul)) * NightExtras.coin_mul()
 	if rank_mul > 1.0 and coins > 0:
 		Juice.popup_number(global_position + Vector2(0, -76), "RANK %s  x%.2f" % [Juice.combo_rank(), rank_mul], UiKit.GOLD)
+	var srun := SurviveRun.get_run(get_tree())
+	if srun:
+		# Survivor hours pay in S-COINS, not gold.
+		if randf() < 0.07 + 0.5 * srun.luck():
+			SurvCoin.spawn(host, global_position, 1)
+		coins = 0
 	for i in coins:
 		LootDrop.spawn(host, global_position + Vector2(randf_range(-8, 8), 0), "coin", 1, 1.2)
 	var orb := ScrapOrb.new()
