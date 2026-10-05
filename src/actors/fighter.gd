@@ -141,6 +141,9 @@ var combo_dmg := 0
 ## Element arts / grabs / team attacks (ArtMoves): CHI pays for arts, TEAM
 ## fills from kills; art_lock owns the body while one plays.
 var chi := 0.0
+## Throwing knives on the belt (THROW with nobody in reach).
+const KNIVES_MAX := 6
+var knives := 2
 var team := 0.0
 var art_lock := 0.0
 var art_vx := 0.0
@@ -1968,6 +1971,10 @@ func _mount_gun(kind: String) -> void:
 	_gun.texture = load(path) if ResourceLoader.exists(path) else null
 	_gun.set_meta("kind", kind)
 	_gun.visible = false
+	var gm := _gun_meta(kind)
+	var mz: Array = gm.get("muzzle", [28, 5])
+	var gp: Array = gm.get("grip", [8, 12])
+	Attach.dress(_gun, kind, Vector2(float(mz[0]), float(mz[1])), Vector2(float(gp[0]), float(gp[1])))
 
 
 static var _gun_cache: Dictionary = {}
@@ -2011,7 +2018,8 @@ func _muzzle_global() -> Vector2:
 	if _gun != null and _gun.texture != null:
 		var m := _gun_meta(str(_gun.get_meta("kind", "pistol")))
 		var mz: Array = m.get("muzzle", [28, 5])
-		return _gun.to_global(Vector2(float(mz[0]), float(mz[1])))
+		var kind := str(_gun.get_meta("kind", "pistol"))
+		return _gun.to_global(Vector2(float(mz[0]) + Attach.muzzle_ext(kind), float(mz[1])))
 	return global_position + Vector2(float(facing) * 30.0, -44.0 + hop)
 
 
@@ -2025,7 +2033,7 @@ func _fire_gun() -> void:
 		return
 	var id := pickup
 	var spec := WeaponBook.spec(id)
-	gun_cd = float(spec.get("rate", 0.3))
+	gun_cd = float(spec.get("rate", 0.3)) * Attach.rate_mul(id)
 	aim_t = maxf(aim_t, gun_cd + 0.45)
 	attack_cd = maxi(attack_cd, int(gun_cd * 60.0))
 	pistol_shots -= 1
@@ -2034,22 +2042,24 @@ func _fire_gun() -> void:
 	_tick_sprite()
 	var y := _stick().y
 	var zone := "head" if y < -0.4 else ("legs" if y > 0.4 else "chest")
+	if zone == "chest" and Attach.has(id, "red_dot") and randf() < 0.25:
+		zone = "head"
 	var at := _muzzle_global()
 	var host := get_parent()
 	var n := int(spec.get("pellets", 1))
-	var spread := float(spec.get("spread", 0.0))
+	var spread := float(spec.get("spread", 0.0)) * Attach.spread_mul(id)
 	var spd := float(spec.get("speed", 2000.0))
 	for i in n:
 		var r := Round.new()
 		r.weapon = id
 		r.round_kind = str(spec.get("round", "bullet"))
-		r.dmg = int(round(float(spec.get("dmg", 10)) * (1.0 + 0.25 * float(_cart("gun_oil"))) * Arsenal.power_mul(id)))
+		r.dmg = int(round(float(spec.get("dmg", 10)) * (1.0 + 0.25 * float(_cart("gun_oil"))) * Arsenal.power_mul(id) * Attach.dmg_mul(id)))
 		r.owner_role = role
 		r.shooter = self
 		r.lane_y = global_position.y
-		r.range_left = float(spec.get("range", 900.0))
+		r.range_left = float(spec.get("range", 900.0)) * Attach.range_mul(id)
 		r.pierce = r.round_kind == "orb"
-		r.pierce_left = int(spec.get("pierce", 0))
+		r.pierce_left = int(spec.get("pierce", 0)) + (1 if Attach.has(id, "ap_rounds") else 0)
 		var z := zone
 		if spread > 0.0 and randf() < spread * 4.0:
 			# Spray: some rounds land a zone off.
@@ -2059,9 +2069,13 @@ func _fire_gun() -> void:
 		r.vel = Vector2(float(facing) * spd, 0.0).rotated(ang * float(facing))
 		r.global_position = at
 		host.add_child(r)
-	var recoil := float(spec.get("recoil", 6))
+	var recoil := float(spec.get("recoil", 6)) * Attach.recoil_mul(id)
 	velocity.x -= float(facing) * recoil * 9.0
-	GunFx.flash(host, at, id, facing)
+	var quiet := Attach.has(id, "suppressor")
+	if not quiet:
+		GunFx.flash(host, at, id, facing)
+	else:
+		Juice.sparks(at)
 	if id == "shotgun":
 		# Pump-action: the shell comes out on the pump, a beat after the shot.
 		get_tree().create_timer(0.24).timeout.connect(func() -> void:
@@ -2079,7 +2093,10 @@ func _fire_gun() -> void:
 	var snd := str(spec.get("sfx", "res://assets/audio/pistol.wav"))
 	if not ResourceLoader.exists(snd):
 		snd = "res://assets/audio/pistol.wav"
-	Mixer.play_sfx(snd, randf_range(0.95, 1.05), -2.0 if id != "smg" else -6.0)
+	if quiet:
+		Mixer.play_sfx("res://assets/audio/sfx/whiff_punch.ogg", randf_range(1.5, 1.7), -6.0)
+	else:
+		Mixer.play_sfx(snd, randf_range(0.95, 1.05), -2.0 if id != "smg" else -6.0)
 	Juice.pulse_shake({"shotgun": 6.0, "ray": 4.0, "pistol": 2.0, "smg": 0.8, "nailgun": 1.2, "revolver": 5.0, "flare_gun": 3.0}.get(id, 2.0))
 	if id == "shotgun":
 		Juice.hitstop(2)
@@ -2801,7 +2818,22 @@ func _throw() -> void:
 		_try_wall_bounce(e)
 		Juice.shout("DISARMED")
 		return
+	if knives > 0 and not vs_mode:
+		knives -= 1
+		attack_cd = 14
+		ThrowKnife.throw_from(self)
+		_restart_clip_throw()
+		return
 	_suit_gadget()
+
+
+func _restart_clip_throw() -> void:
+	if _anim and _anim.sprite_frames.has_animation("jab"):
+		anim_atk = "jab"
+		_atk_t = 0.22
+		_anim.stop()
+		_anim.play("jab")
+	Mixer.play_sfx("res://assets/audio/sfx/whoosh_spin.ogg", 1.4, -6.0)
 
 
 func equip_pickup(kind: String) -> void:
@@ -2814,7 +2846,7 @@ func equip_pickup(kind: String) -> void:
 	if kind in GUNS:
 		var spec := WeaponBook.spec(kind)
 		pistol_shots = int(round(float(spec.get("mag", spec.get("ammo", 6))) * (1.0 + 0.5 * float(_cart("long_mag"))) * Arsenal.clip_mul(kind)))
-		gun_reserve = pistol_shots * int((RELOAD.get(kind, [1.0, 1]) as Array)[1])
+		gun_reserve = pistol_shots * (int((RELOAD.get(kind, [1.0, 1]) as Array)[1]) + Attach.spare_mags(kind))
 		reload_t = 0.0
 		ammo = maxi(ammo, 3)
 		_mount_gun(kind)

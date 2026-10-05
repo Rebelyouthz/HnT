@@ -538,6 +538,8 @@ func _paint_fighter(lab: Label, bar: ColorRect, pips: HBoxContainer, snap: Label
 		elif Arsenal.USES.has(f.pickup):
 			wt += " ·%d" % f.melee_uses
 		lab.text += "   " + wt
+	if f.knives > 0:
+		lab.text += "   KNIVES %d" % f.knives
 	var plate: Variant = _plates.get(_slot_of(f))
 	if plate is Control:
 		(plate as Control).visible = true

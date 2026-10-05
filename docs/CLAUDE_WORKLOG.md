@@ -57,6 +57,15 @@ The rest is in English, like the code. Newest work first. Each block says
 - `CouchCamera.punch(tree, amount, secs, at)`: zoom swell toward a point.
 - MOVES -> ELEMENTS page (unlock / level / evolve, grab + team list).
 - Capture: `art:<art|grab|team>:<id>[:father]` on Dock Street; `hub:moves_el`.
+- Dojo TUTORIAL (`DojoSchool`, 13 lessons, `TrainingDummy.struck`), gold once
+  per lesson (`school_paid`) + graduation bonus.
+- CouchCamera kept overwriting `limit_right` with 3200 in `_ready` (black past
+  the ground at the map end) - fixed. Feet occluders use light mask 2.
+- GUNSMITH (`Attach`): 5 slots per gun (muzzle/optic/barrel/mag/ammo), 14
+  parts bought once with gems, slots open with gun level; drawn on the gun
+  (can, scope/red dot, drum, long barrel, laser line). Old gun mods migrate.
+- Throwing knives (`ThrowKnife`): THROW with nobody in reach, 2 per night,
+  max 6, misses and 8% thug drops lie on the street to pick back up.
 
 ## 0l. Bosses, three trees + metas, survivor depth, weapon mods, night extras
 

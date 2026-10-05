@@ -884,7 +884,7 @@ func take_hit(kind: String, from: Node) -> void:
 		var mul: float = {"head": 3.0, "chest": 1.0, "gut": 0.9, "legs": 0.65}.get(rd.zone, 1.0)
 		# The Bailiff's vest: body rounds spark off it (a close shotgun or the
 		# ink orb still gets through). Aim for the face.
-		if title == "Bailiff" and (rd.zone == "chest" or rd.zone == "gut") and not (rd.weapon == "shotgun" and rd.dist < 110.0) and rd.weapon != "ray":
+		if title == "Bailiff" and (rd.zone == "chest" or rd.zone == "gut") and not (rd.weapon == "shotgun" and rd.dist < 110.0) and rd.weapon != "ray" and not Attach.has(rd.weapon, "ap_rounds"):
 			mul *= 0.2
 			Juice.popup_number(global_position + Vector2(0, -58), "VEST", Palette.EDGE)
 			Mixer.play_sfx("res://assets/audio/cling.wav", randf_range(1.2, 1.5), -6.0)
@@ -1229,6 +1229,9 @@ func _show_brain() -> void:
 
 
 func _drops(from: Node) -> void:
+	# Now and then a thug carried a knife: it lands for whoever wants it.
+	if from is Fighter and randf() < 0.08 and get_parent() != null:
+		ThrowKnife.drop(get_parent(), global_position + Vector2(randf_range(-10, 10), 4))
 	var host := get_parent()
 	var rs := get_tree().get_first_node_in_group("run_state")
 	# XP leaves as insight gems to pick up; gold as coins.

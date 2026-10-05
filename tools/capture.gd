@@ -103,13 +103,21 @@ func _prepare() -> void:
 		(fp.data as Dictionary)["hero_son"] = {"level": 10, "rarity": 0, "shards": 14}
 		(fp.data as Dictionary)["hero_father"] = {"level": 13, "rarity": 1, "shards": 6}
 		(fp.data as Dictionary)["meta"] = {"vitality": 2, "strength": 1, "spring_legs": 1}
-	if _tab == "armory" and fp != null:
+	if _tab.begins_with("ui_gun_") and fp != null:
+		(fp.data as Dictionary)["weapon_lv"] = {"pistol": 4, "smg": 4, "shotgun": 4}
+		(fp.data as Dictionary)["attach_owned"] = ["suppressor", "laser", "long_barrel", "drum_mag", "hollow", "scope", "compensator"]
+		(fp.data as Dictionary)["attach_on"] = {"pistol": {"muzzle": "suppressor", "optic": "laser", "barrel": "long_barrel", "mag": "drum_mag", "ammo": "hollow"}, "smg": {"muzzle": "compensator", "optic": "scope", "mag": "drum_mag"}}
+	if _tab.begins_with("armory") and fp != null:
 		(fp.data as Dictionary)["meta"] = {"starter_kit": 1}
 		(fp.data as Dictionary)["carry_weapon"] = "baseball_bat"
 		(fp.data as Dictionary)["weapons_found"] = ["knife", "pipe", "board", "chain", "baseball_bat", "machete", "pistol", "revolver", "shotgun", "flare_gun", "smg"]
 		(fp.data as Dictionary)["weapon_kills"] = {"baseball_bat": 31, "machete": 12, "pistol": 25, "shotgun": 9, "pipe": 4, "revolver": 2}
 		(fp.data as Dictionary)["weapon_lv"] = {"baseball_bat": 3, "pistol": 2}
 		(fp.data as Dictionary)["mods_owned"] = ["nails", "weighted", "ext_mag"]
+		(fp.data as Dictionary)["weapon_lv"] = {"baseball_bat": 3, "pistol": 4}
+		(fp.data as Dictionary)["attach_owned"] = ["suppressor", "red_dot", "long_barrel", "hollow"]
+		(fp.data as Dictionary)["attach_on"] = {"pistol": {"muzzle": "suppressor", "optic": "red_dot", "barrel": "long_barrel", "mag": "ext_mag", "ammo": "hollow"}}
+		(fp.data as Dictionary)["gems"] = 6
 		(fp.data as Dictionary)["weapon_mods"] = {"baseball_bat": ["nails", "weighted"], "pistol": ["ext_mag"]}
 		(fp.data as Dictionary)["gold"] = 300
 	if _tab == "stats":
@@ -190,8 +198,16 @@ func _process(_delta: float) -> bool:
 		_art_demo()
 	if _tab == "stats" and _n == 40 and current_scene != null and current_scene.has_method("_open_stats"):
 		current_scene.call("_open_stats")
-	if _tab == "armory" and _n == 40 and current_scene != null and current_scene.has_method("_open_armory"):
+	if _tab.begins_with("armory") and _n == 40 and current_scene != null and current_scene.has_method("_open_armory"):
 		current_scene.call("_open_armory")
+	if _tab == "armory_gun" and _n == 60:
+		for n in root.get_tree().get_nodes_in_group("armory_sheet"):
+			n.call("_gunsmith", "pistol")
+		var sheets := root.find_children("*", "Control", true, false)
+		for c in sheets:
+			if c.has_method("_gunsmith"):
+				c.call("_gunsmith", "pistol")
+				break
 	if _tab.begins_with("moves") and _n == 40 and current_scene != null:
 		var ms: Control = load("res://src/ui/moves_sheet.gd").new()
 		ms.set("_page", {"moves": "loadout", "moves_lib": "library", "moves_lab": "lab", "moves_sty": "styles", "moves_el": "elements"}.get(_tab, "loadout"))

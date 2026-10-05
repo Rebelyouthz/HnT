@@ -95,11 +95,6 @@ const MODS := {
 	"weighted": {"for": "melee", "title": "WEIGHTED", "line": "+25% damage with it.", "gems": 2},
 	"serrated": {"for": "melee", "title": "SERRATED", "line": "15% chance to crit for double.", "gems": 2},
 	"live_wire": {"for": "melee", "title": "LIVE WIRE", "line": "20% chance to stun for a second.", "gems": 3},
-	"ext_mag": {"for": "gun", "title": "EXTENDED MAG", "line": "+50% rounds per magazine.", "gems": 2},
-	"hollow": {"for": "gun", "title": "HOLLOW POINTS", "line": "+30% damage to anyone without armor.", "gems": 2},
-	"laser": {"for": "gun", "title": "LASER SIGHT", "line": "20% chance to crit for double.", "gems": 2},
-	"quick_loader": {"for": "gun", "title": "QUICK LOADER", "line": "Reloads 40% faster.", "gems": 1},
-	"incendiary": {"for": "gun", "title": "INCENDIARY", "line": "25% chance to set them on fire.", "gems": 3},
 }
 
 
@@ -139,6 +134,8 @@ static func mods_on(id: String) -> Array:
 
 
 static func has_mod(id: String, mod: String) -> bool:
+	if id != "" and is_gun(id):
+		return Attach.has(id, mod)
 	return id != "" and mods_on(id).has(mod)
 
 
@@ -190,11 +187,11 @@ static func power_mul(id: String) -> float:
 
 
 static func clip_mul(id: String) -> float:
-	return (1.5 if has_mod(id, "ext_mag") else 1.0) * (1.0 + 0.1 * float(level(id) - 1))
+	return Attach.clip_mul(id) * (1.0 + 0.1 * float(level(id) - 1))
 
 
 static func reload_mul(id: String) -> float:
-	return 0.6 if has_mod(id, "quick_loader") else 1.0
+	return Attach.reload_mul(id)
 
 
 ## On-hit mod effects, called by Punk.take_hit after the blow lands.
@@ -216,4 +213,15 @@ static func on_hit(id: String, p: Punk, dmg: int) -> int:
 		p.ignite(3.0, "flare_gun")
 	if has_mod(id, "hollow") and not p.armored:
 		extra += int(round(float(dmg) * 0.3))
+	if is_gun(id):
+		if Attach.has(id, "rubber"):
+			p.recover = maxf(p.recover, 1.0)
+		if Attach.has(id, "ap_rounds") and p.plates > 0:
+			p.plates = 0
+			p.armored = false
+			Juice.popup_number(p.global_position + Vector2(0, -96), "AP", Color(0.9, 0.9, 1.0))
+		if Attach.has(id, "scope") and float(p._shot.get("dist", 0.0)) > 180.0:
+			extra += int(round(float(dmg) * 0.5))
+		if Attach.has(id, "suppressor") and p.telegraph <= 0.0:
+			extra += int(round(float(dmg) * 0.35))
 	return extra
