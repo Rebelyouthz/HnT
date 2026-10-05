@@ -81,9 +81,58 @@ func _ready() -> void:
 		add_child(_glow)
 
 
+var _beam: Polygon2D
+var _sparks: CPUParticles2D
+
+
+## Loot that matters announces itself: a light pillar in its rarity colour
+## for gear (taller the rarer), twinkling sparks around shards.
+func _dress_up() -> void:
+	if kind == "gear":
+		var col := Rarity.color(Rarity.ORDER[clampi(item_tier, 0, 4)])
+		var h := 60.0 + 30.0 * float(item_tier)
+		_beam = Polygon2D.new()
+		_beam.polygon = PackedVector2Array([Vector2(-5, 0), Vector2(5, 0), Vector2(2, -h), Vector2(-2, -h)])
+		_beam.vertex_colors = PackedColorArray([Color(col.r, col.g, col.b, 0.55), Color(col.r, col.g, col.b, 0.55), Color(col.r, col.g, col.b, 0.0), Color(col.r, col.g, col.b, 0.0)])
+		var bm := CanvasItemMaterial.new()
+		bm.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+		bm.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+		_beam.material = bm
+		_beam.z_index = -1
+		add_child(_beam)
+	if kind.begins_with("shard") or kind == "gear":
+		_sparks = CPUParticles2D.new()
+		_sparks.amount = 6
+		_sparks.lifetime = 0.9
+		_sparks.emission_shape = CPUParticles2D.EMISSION_SHAPE_SPHERE
+		_sparks.emission_sphere_radius = 9.0
+		_sparks.gravity = Vector2(0, -18)
+		_sparks.initial_velocity_min = 2.0
+		_sparks.initial_velocity_max = 8.0
+		_sparks.scale_amount_min = 0.8
+		_sparks.scale_amount_max = 1.6
+		_sparks.position = Vector2(0, -10)
+		var sc := Color(1.0, 0.9, 0.5)
+		if kind == "shard_father":
+			sc = Color(1.0, 0.5, 0.45)
+		elif kind == "gear":
+			sc = Rarity.color(Rarity.ORDER[clampi(item_tier, 0, 4)]).lightened(0.3)
+		_sparks.color = sc
+		var sm := CanvasItemMaterial.new()
+		sm.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+		_sparks.material = sm
+		add_child(_sparks)
+
+
 func _process(delta: float) -> void:
 	_t += delta
+	if _landed and _beam == null and _sparks == null and (kind == "gear" or kind.begins_with("shard")):
+		_dress_up()
+	if _beam:
+		_beam.modulate.a = 0.75 + 0.25 * sin(_t * 3.0)
 	if _taken:
+		if _beam:
+			_beam.visible = false
 		return
 	if not _landed:
 		_v.y += 900.0 * delta

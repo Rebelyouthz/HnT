@@ -122,6 +122,7 @@ func _hero_card(role: String) -> Control:
 		if Heroes.try_level(role):
 			Juice.play("res://assets/audio/claim.wav")
 			Juice.shout("LEVEL %d" % Heroes.level(role))
+			Juice.claim_burst(up.get_global_rect().get_center(), "LV %d" % Heroes.level(role), 0, 0)
 			need_refresh.emit()
 			_paint("lv_" + role)
 	)

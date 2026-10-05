@@ -158,6 +158,17 @@ func _process(_delta: float) -> bool:
 				current_scene.call("_banner", "DOCK STREET FILED", "Gant is down. Benny is free.", true, false)
 			"cards":
 				current_scene.call("_cards")
+			"loot":
+				var pl: Node2D = root.get_tree().get_first_node_in_group("players")
+				if pl:
+					var ld: Script = load("res://src/world/loot_drop.gd")
+					var at := pl.global_position + Vector2(60, 0)
+					ld.call("spawn", current_scene, at, "shard_son", 1, 0.3)
+					ld.call("spawn", current_scene, at + Vector2(40, 8), "shard_father", 2, 0.3)
+					for ti in 5:
+						var dd: Node = ld.call("spawn", current_scene, at + Vector2(90 + 46 * ti, 4), "gear", 1, 0.2)
+						dd.set("item", "headband")
+						dd.set("item_tier", ti)
 			"cart", "cartworld":
 				var cart: Node = null
 				for n in current_scene.get_children():

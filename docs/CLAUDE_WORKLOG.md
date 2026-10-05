@@ -34,7 +34,35 @@ The rest is in English, like the code. Newest work first. Each block says
 
 ---
 
-## 0j. Suits in three parts, five new weapons, ARMORY, polish (latest)
+## 0k. Hero levels + rarity, gear combine, META, new road, polish (latest)
+
+- **Heroes** (`src/app/heroes.gd`, HEROES tab `src/ui/hub_heroes.gd`): level
+  with gold (cap 10 + 5 per rarity), rarity common->legendary (grey, green,
+  blue, purple, orange; `Rarity.color`) with character shards at the cap
+  (`SHARDS`, `RARITY_GOLD`). Save keys `hero_son` / `hero_father`.
+  HP + damage + speed bonuses read by `Fighter._ready` and `Punk.take_hit`
+  (`Heroes.dmg_mul`, also for gadgets and guns via owner_role). Base HP 80.
+- **Shards / gear drops** (`Punk._progress_drops`, `LootDrop` kinds
+  `shard_son`, `shard_father`, `gear`; art `tools/loot_art.py`): thugs 5%,
+  elites 50%, bosses always, +3 per secret stash. Gear parcels drop a random
+  piece at its base rarity (10% one up). Rare loot gets a light pillar.
+- **Gear rarity** (`src/app/gear_inv.gd`, save `gear_inv` = counts per
+  rarity): three alike combine into the next rarity; best copy is worn;
+  rarity x1.35 stats per step above base, level cap 3 + 2 per rarity;
+  `FamilyProfile.gear_price` buys copies.
+- **META** (`src/app/meta.gd`): BODY (vitality, strength, second wind,
+  fortune, shard sense, scavenger, starter kit, spare life) and PARKOUR
+  (spring legs, wall runner, air control, flow state, iron ankles; ranks
+  need lifetime tricks). Effects wired in fighter / loot / run_state.
+- **Roguelite tuning**: `Heroes.enemy_hp_mul` (+13% a map along
+  `App.ORDER`) and `enemy_dmg_mul` (+7%); clear gold 30 + 10/map + scrap/4;
+  more coins. Results show run shards and a tip after a death.
+- **Road**: `tools/road_art.py` -> `assets/backdrops/street_road(_wet).png`,
+  one 480-unit-wide image from the kerb down, tiling only sideways;
+  `WetStreet` uses `<ground>_road.png` when present, plus lamp light pools.
+- Capture modes: `hub:heroes`, `hub:locker_gear`, `ui:loot`.
+
+## 0j. Suits in three parts, five new weapons, ARMORY, polish
 
 **Suits in parts (what / how / why).** Every suit (Bat, Spider, Shaolin,
 Ninja) is now MASK + TOP + BOTTOM, each unlocked on its own, mixable, with a
