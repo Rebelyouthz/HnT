@@ -40,6 +40,7 @@ static func flash(host: Node, at: Vector2, w: String, face: int) -> void:
 	l.shadow_enabled = true
 	l.shadow_filter = PointLight2D.SHADOW_FILTER_PCF5
 	l.shadow_color = Color(0, 0, 0, 0.55)
+	l.shadow_item_cull_mask = 3
 	f.set_meta("light", l)
 	f.add_child(l)
 	if w == "shotgun" or w == "pistol" or w == "revolver" or w == "flare_gun":

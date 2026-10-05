@@ -76,6 +76,13 @@ func _ready() -> void:
 	_board.spar_toggled.connect(func(on: bool) -> void:
 		_dummy.mode = "spar" if on else "still"
 	)
+	# The lessons run until graduation, and again whenever the TUTORIAL
+	# button in the school sheet sent us here.
+	if bool(App.get_meta("dojo_school", false)) or not bool(FamilyProfile.data.get("school_graduated", false)):
+		App.set_meta("dojo_school", false)
+		var school := DojoSchool.new()
+		add_child(school)
+		school.bind(_son if _son != null else _dad, _dummy)
 
 
 func _unhandled_input(event: InputEvent) -> void:

@@ -38,6 +38,17 @@ func _ready() -> void:
 	s.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	UiKit.apply_label(s, 13, Palette.MUTED)
 	col.add_child(s)
+	var tut_row := HBoxContainer.new()
+	tut_row.add_theme_constant_override("separation", 10)
+	for who in ["son", "father"]:
+		var tb := UiKit.button("TUTORIAL AS %s  ·  %d LESSONS" % ["THE SON" if who == "son" else "THE FATHER", DojoSchool.LESSONS.size()], Vector2(370, 44))
+		tb.pressed.connect(func() -> void:
+			FamilyProfile.data["school"] = []
+			App.set_meta("dojo_school", true)
+			_practice(who)
+		)
+		tut_row.add_child(tb)
+	col.add_child(tut_row)
 	var table: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/dojo.json"))
 	for row in table:
 		col.add_child(_row(row))

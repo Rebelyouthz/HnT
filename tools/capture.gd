@@ -422,6 +422,9 @@ func _process(_delta: float) -> bool:
 				root.get_texture().get_image().save_png(_out.get_basename() + "_%03d.png" % _n)
 	if _walk and _n > 20:
 		Input.action_press("p1_left" if _left else "p1_right")
+	if _n == _frames and OS.get_environment("PROBE") != "":
+		var pt := Vector2(float(OS.get_environment("PROBE").get_slice(",", 0)), float(OS.get_environment("PROBE").get_slice(",", 1)))
+		_probe(root, pt)
 	if _n == _frames:
 		var img := root.get_texture().get_image()
 		img.save_png(_out)
@@ -470,6 +473,30 @@ func _art_demo() -> void:
 		pl.get("arts").call("perform", parts[0], parts[1])
 	if _n >= 80 and _n <= 170 and (_n - 80) % 4 == 0:
 		root.get_texture().get_image().save_png(_out.get_basename() + "_%03d.png" % _n)
+
+
+func _probe(n: Node, pt: Vector2) -> void:
+	for c in n.get_children():
+		if c is CanvasItem and (c as CanvasItem).is_visible_in_tree():
+			var ci := c as CanvasItem
+			var r := Rect2()
+			if ci is Control:
+				r = Rect2(Vector2.ZERO, (ci as Control).size)
+			elif ci is Sprite2D and (ci as Sprite2D).texture:
+				r = (ci as Sprite2D).get_rect()
+			elif ci is Polygon2D and (ci as Polygon2D).polygon.size() > 2:
+				var pts := (ci as Polygon2D).polygon
+				r = Rect2(pts[0], Vector2.ZERO)
+				for q in pts:
+					r = r.expand(q)
+			elif ci is ColorRect:
+				r = Rect2(Vector2.ZERO, (ci as ColorRect).size)
+			if r.size != Vector2.ZERO:
+				var xf := ci.get_global_transform_with_canvas()
+				var sr := xf * r
+				if sr.has_point(pt):
+					print("PROBE ", ci.get_path(), " ", ci.get_class(), " z=", ci.z_index, " rect=", sr, " mod=", ci.modulate)
+		_probe(c, pt)
 
 
 func _restore_profile() -> void:

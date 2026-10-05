@@ -51,7 +51,11 @@ func _ready() -> void:
 	limit_top = 0
 	limit_bottom = 720
 	limit_left = 0
-	limit_right = 3200
+	# The level sets limit_right (map_w) before adding the camera; only fall
+	# back when nobody did (it used to overwrite it, so the frame ran past
+	# the end of the painted ground into black).
+	if limit_right > 100000:
+		limit_right = 3200
 	ignore_rotation = true
 
 

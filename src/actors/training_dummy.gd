@@ -7,6 +7,8 @@ extends Punk
 ## the height over its head (▲ high, ■ mid, ▼ low) in a fixed rotation, so
 ## the guard can be drilled: hold block and point the stick to the height.
 
+signal struck(kind: String)
+
 var mode := "still"
 var hits := 0
 var last_dmg := 0
@@ -74,6 +76,7 @@ func take_hit(kind: String, from: Node) -> void:
 	super.take_hit(kind, from)
 	last_dmg = maxi(0, before - hp)
 	hits += 1
+	struck.emit(kind)
 	if last_dmg > 0:
 		Juice.popup_number(global_position + Vector2(randf_range(-8.0, 8.0), -84.0), str(last_dmg), Color(1.0, 0.92, 0.7))
 

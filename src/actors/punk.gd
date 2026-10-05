@@ -102,6 +102,9 @@ func _ready() -> void:
 	var op := OccluderPolygon2D.new()
 	op.polygon = PackedVector2Array([Vector2(-9, -2), Vector2(9, -2), Vector2(9, 2), Vector2(-9, 2)])
 	occ.occluder = op
+	# Only muzzle flashes (light mask 2) see it: a street lamp turned the feet
+	# into a wedge of black over the whole road beside the body.
+	occ.occluder_light_mask = 2
 	add_child(occ)
 	_walk = speed
 	KitBook.apply(self)
