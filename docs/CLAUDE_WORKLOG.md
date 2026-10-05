@@ -34,7 +34,27 @@ The rest is in English, like the code. Newest work first. Each block says
 
 ---
 
-## 0h. Clean reset, guns, full audio pass, COPAY + bowling (latest)
+## 0i. Music per place, ElevenLabs voices, four suits, paperdoll GEAR (latest)
+
+- **Music** (`tools/ace_music.py`, ACE-Step HF Space, free): assets/audio/music/
+  music_dock (the player's own track, Dock Street), music_survive + music_boss
+  (metal psytrance styled after it via audio2audio - trim the reference to
+  the wanted length or the output is padded with silence), music_menu (title,
+  hub, films, results), music_shop (Mixer.push_music/pop_music while a shop
+  is open), music_camp. Mixer prefers assets/audio/music/<name>.ogg.
+  ElevenLabs music needs a paid plan.
+- **Voices**: all lines via ElevenLabs (`tools/eleven_vo.py`, key in
+  ~/.config/elevenlabs/key or $ELEVENLABS_API_KEY - never commit; free tier
+  10k chars/month, ~3.5k used; library voices like "Rai" are 402 on free).
+  New `attack` event: VoBank.attack() on every enemy swing.
+- **Suits** (src/app/suits.gd): bat / spider / shaolin / ninja, wearable by
+  either fighter, stats added in gear_stat_bonus, perks read via
+  Fighter._suit. Unlocks: Gant (bat, spider), 3 dojo masters (shaolin), 3
+  stashes (ninja) via Suits.check_progress().
+- **GEAR** (src/ui/hub_locker.gd): paperdoll with live fighter, slot boxes,
+  GearIcon pixel pictures, green/red stat deltas. Capture: hub:locker.
+
+## 0h. Clean reset, guns, full audio pass, COPAY + bowling 
 
 - **Reset**: Options -> RESET GAME PROGRESS deletes the save, every backup,
   open_room.json and photos, keeps gfx/vol_ options, restarts the game
