@@ -952,7 +952,8 @@ static func pixel_lot(host: Node, map_w: float) -> void:
 			r += 1
 		x += tw
 		n += 1
-	var stall := SpriteBook.tile("stall")
+	# The full-width painted lot carries its own stall lines.
+	var stall := SpriteBook.tile("stall") if not WetStreet.has_road("lot_ground") else null
 	if stall:
 		for i in 7:
 			var st := Sprite2D.new()

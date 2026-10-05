@@ -24,6 +24,10 @@ var _streaks: Array[Node2D] = []
 var _t := 0.0
 
 
+static func has_road(name: String) -> bool:
+	return ResourceLoader.exists("res://assets/backdrops/%s_road.png" % name)
+
+
 static func available(name: String = "street") -> bool:
 	return ResourceLoader.exists("res://assets/backdrops/%s.png" % name) and ResourceLoader.exists("res://assets/backdrops/%s_wet.png" % name)
 
@@ -67,7 +71,7 @@ func _ready() -> void:
 	base.z_index = 0
 	# The painted road is very dark (mean ~10%): lift it so the stones read
 	# under the night lights instead of sinking into one black mass.
-	base.modulate = Color(1.4, 1.36, 1.45) if full else Color(1.5, 1.45, 1.6)
+	base.modulate = (Color(1.4, 1.36, 1.45) if ground == "street" else Color(1.12, 1.1, 1.15)) if full else Color(1.5, 1.45, 1.6)
 	add_child(base)
 	# Depth: the near edge of the road falls off into shadow, which keeps
 	# the eye on the fighting line and gives the floor a little perspective.
