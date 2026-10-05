@@ -181,6 +181,36 @@ static func rich(text: String, w: float, size: int, color: Color, font: Font = n
 	return r
 
 
+## Pad support: give focus to the first usable button under `root` (after
+## layout), unless something inside it already has focus.
+static func focus_first(root: Node) -> void:
+	if root == null:
+		return
+	root.get_tree().process_frame.connect(func() -> void:
+		if not is_instance_valid(root) or not root.is_inside_tree():
+			return
+		var vp := root.get_viewport()
+		var cur := vp.gui_get_focus_owner() if vp else null
+		if cur != null and root.is_ancestor_of(cur):
+			return
+		var b := _first_focusable(root)
+		if b:
+			b.grab_focus()
+	, CONNECT_ONE_SHOT)
+
+
+static func _first_focusable(n: Node) -> Control:
+	for c in n.get_children():
+		if c is Control and not (c as Control).is_visible_in_tree():
+			continue
+		if c is BaseButton and not (c as BaseButton).disabled and (c as Control).focus_mode != Control.FOCUS_NONE:
+			return c
+		var deep := _first_focusable(c)
+		if deep:
+			return deep
+	return null
+
+
 static func apply_label(lab: Label, size: int = 16, color: Color = Palette.TEXT) -> void:
 	lab.add_theme_font_size_override("font_size", size)
 	lab.add_theme_color_override("font_color", color)

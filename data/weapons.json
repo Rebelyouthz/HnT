@@ -8,7 +8,7 @@
   "recoil": 6,
   "speed": 520,
   "kind": "shuriken",
-  "sfx": "res://assets/audio/shuriken.wav",
+  "sfx": "res://assets/audio/sfx/gun_throw.ogg",
   "hit": "light"
  },
  "snare": {
@@ -20,7 +20,7 @@
   "recoil": 4,
   "speed": 380,
   "kind": "snare",
-  "sfx": "res://assets/audio/web.wav",
+  "sfx": "res://assets/audio/sfx/gun_web.ogg",
   "hit": "snare"
  },
  "pistol": {
@@ -32,7 +32,7 @@
   "recoil": 10,
   "speed": 2400,
   "kind": "pistol",
-  "sfx": "res://assets/audio/pistol.wav",
+  "sfx": "res://assets/audio/sfx/gun_pistol.ogg",
   "hit": "heavy",
   "gun": "pistol",
   "round": "bullet",
@@ -54,7 +54,7 @@
   "recoil": 0,
   "speed": 0,
   "kind": "pipe",
-  "sfx": "res://assets/audio/hit_heavy.wav",
+  "sfx": "res://assets/audio/sfx/melee_pipe.ogg",
   "hit": "heavy"
  },
  "board": {
@@ -66,7 +66,7 @@
   "recoil": 0,
   "speed": 0,
   "kind": "board",
-  "sfx": "res://assets/audio/hit_heavy.wav",
+  "sfx": "res://assets/audio/sfx/melee_board.ogg",
   "hit": "heavy"
  },
  "knife": {
@@ -78,7 +78,7 @@
   "recoil": 0,
   "speed": 0,
   "kind": "knife",
-  "sfx": "res://assets/audio/hit_light.wav",
+  "sfx": "res://assets/audio/sfx/melee_knife.ogg",
   "hit": "blade"
  },
  "chain": {
@@ -90,7 +90,7 @@
   "recoil": 0,
   "speed": 0,
   "kind": "chain",
-  "sfx": "res://assets/audio/hit_heavy.wav",
+  "sfx": "res://assets/audio/sfx/melee_chain.ogg",
   "hit": "heavy"
  },
  "crowbar": {
@@ -102,7 +102,7 @@
   "recoil": 0,
   "speed": 0,
   "kind": "crowbar",
-  "sfx": "res://assets/audio/hit_heavy.wav",
+  "sfx": "res://assets/audio/sfx/melee_crowbar.ogg",
   "hit": "heavy"
  },
  "clipboard": {
@@ -114,7 +114,7 @@
   "recoil": 0,
   "speed": 0,
   "kind": "clipboard",
-  "sfx": "res://assets/audio/hit_light.wav",
+  "sfx": "res://assets/audio/sfx/melee_light.ogg",
   "hit": "blade"
  },
  "stapler": {
@@ -126,7 +126,7 @@
   "recoil": 0,
   "speed": 0,
   "kind": "stapler",
-  "sfx": "res://assets/audio/hit_light.wav",
+  "sfx": "res://assets/audio/sfx/melee_light.ogg",
   "hit": "blade"
  },
  "nailgun": {
@@ -160,7 +160,7 @@
   "recoil": 0,
   "speed": 0,
   "kind": "invoice_star",
-  "sfx": "res://assets/audio/shuriken.wav",
+  "sfx": "res://assets/audio/sfx/gun_throw.ogg",
   "hit": "blade",
   "secret": true
  },

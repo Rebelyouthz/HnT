@@ -35,6 +35,7 @@ func _ready() -> void:
 	var awards: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/awards.json"))
 	for a in awards:
 		col.add_child(_award(a))
+	UiKit.focus_first(self)
 
 
 func _section(title: String, kind: String, value: int, maxv: int) -> Control:

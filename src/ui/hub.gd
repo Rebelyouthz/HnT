@@ -242,6 +242,31 @@ func _tab_title(id: String) -> String:
 			return Copy.TAB_AWARDS
 
 
+## Pad / keyboard: LB / RB (or Q / E) step through the tabs.
+func _unhandled_input(event: InputEvent) -> void:
+	var step := 0
+	if event is InputEventJoypadButton and event.pressed:
+		if event.button_index == JOY_BUTTON_LEFT_SHOULDER:
+			step = -1
+		elif event.button_index == JOY_BUTTON_RIGHT_SHOULDER:
+			step = 1
+	elif event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_Q:
+			step = -1
+		elif event.keycode == KEY_E:
+			step = 1
+	if step == 0:
+		return
+	var i := TABS.find(_current)
+	for k in TABS.size():
+		i = (i + step + TABS.size()) % TABS.size()
+		if FamilyProfile.tab_unlocked(TABS[i]):
+			_show_tab(TABS[i])
+			Juice.play("res://assets/audio/ui_click.wav")
+			get_viewport().set_input_as_handled()
+			return
+
+
 func _show_tab(id: String) -> void:
 	if not FamilyProfile.tab_unlocked(id):
 		Juice.claim_burst(Vector2(640, 360), Copy.LOCKED, 0, 0)

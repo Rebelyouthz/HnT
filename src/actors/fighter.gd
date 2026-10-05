@@ -1426,18 +1426,27 @@ func _strike_impact(at: Vector2) -> void:
 		_anim.speed_scale = 1.25
 	stance = str(mv["stance"])
 	stance_t = MoveBook.STANCE_LIVE_HIT
+	# Every strike has its own impact (jab snap, gut thud, roundhouse whip,
+	# knee, elbow...) and a weapon in hand sounds like that weapon.
+	var real := _impact_sfx()
+	if real != "":
+		Mixer.play_sfx(real, randf_range(0.94, 1.06) * (1.04 if role == "son" else 0.95), -1.0)
 	match _strike_grade:
 		"jab":
 			Juice.shout(HitGrade.shout("jab"))
-			KitSfx.hit(role, "jab")
+			if real == "":
+				KitSfx.hit(role, "jab")
 		"cross":
 			Juice.shout(HitGrade.shout("cross"))
-			KitSfx.hit(role, "cross")
+			if real == "":
+				KitSfx.hit(role, "cross")
 		"":
-			KitSfx.hit(role, _strike_sfx())
+			if real == "":
+				KitSfx.hit(role, _strike_sfx())
 		_:
 			Juice.shout(HitGrade.shout(_strike_grade))
-			KitSfx.hit(role, "bam")
+			if real == "":
+				KitSfx.hit(role, "bam")
 			VoBank.bam(role)
 	_strike_grade = ""
 
@@ -1465,6 +1474,30 @@ func _cancel_strike() -> void:
 	stance_t = 0.0
 	anim_atk = ""
 	_atk_t = 0.0
+
+
+const IMPACT := {
+	"jab": "hit_jab", "cross": "hit_cross", "gut": "hit_gut", "body_hook": "hit_gut",
+	"heavy": "hit_heavy", "superman_punch": "hit_heavy", "hammer": "hit_heavy", "snap": "hit_heavy",
+	"uppercut": "hit_uppercut", "getup_upper": "hit_uppercut",
+	"front_kick": "hit_front_kick", "boot_kick": "hit_front_kick",
+	"side_kick": "hit_side_kick", "dropkick": "hit_side_kick",
+	"roundhouse": "hit_roundhouse", "jump_roundhouse": "hit_roundhouse", "air_spin_kick": "hit_roundhouse",
+	"jump_spin_kick": "hit_roundhouse", "cartwheel_kick": "hit_roundhouse", "backflip_kick": "hit_roundhouse",
+	"getup_kick": "hit_roundhouse", "jump_high_kick": "hit_roundhouse", "spin_backfist": "hit_roundhouse",
+	"flying_knee": "hit_knee", "clinch_knee": "hit_knee", "elbow": "hit_elbow", "stomp": "hit_stomp",
+	"headbutt": "hit_headbutt", "sweep": "hit_sweep", "dive": "hit_dive", "air_mix": "hit_dive",
+	"shoulder_charge": "hit_dive", "slide": "hit_sweep",
+}
+
+
+func _impact_sfx() -> String:
+	if pickup != "" and not (pickup in GUNS):
+		var w := str(WeaponBook.spec(pickup).get("sfx", ""))
+		if w.contains("/melee_") and ResourceLoader.exists(w):
+			return w
+	var p := "res://assets/audio/sfx/%s.ogg" % str(IMPACT.get(_strike_clip, "hit_cross"))
+	return p if ResourceLoader.exists(p) else ""
 
 
 func _strike_sfx() -> String:
@@ -2131,13 +2164,13 @@ func take_hit(kind: String, from: Node) -> void:
 	if kind == "light":
 		Juice.flash_red(visual, 2)
 		Juice.hitstop(1)
-		Juice.play("res://assets/audio/hit_light.wav")
+		Juice.play("res://assets/audio/sfx/hit_cross.ogg" if ResourceLoader.exists("res://assets/audio/sfx/hit_cross.ogg") else "res://assets/audio/hit_light.wav")
 		lights_clean = 0
 	else:
 		Juice.flash_white_red(visual)
 		Juice.hitstop(4)
 		Juice.pulse_shake(3.0)
-		Juice.play("res://assets/audio/hit_heavy.wav")
+		Juice.play("res://assets/audio/sfx/hit_side_kick.ogg" if ResourceLoader.exists("res://assets/audio/sfx/hit_side_kick.ogg") else "res://assets/audio/hit_heavy.wav")
 	if from is Node2D:
 		var dir := signf(global_position.x - (from as Node2D).global_position.x)
 		global_position.x += dir * (6.0 if kind == "light" else 16.0)

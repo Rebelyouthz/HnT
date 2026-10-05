@@ -51,6 +51,14 @@ func _paint() -> void:
 	_paperdoll()
 	_items_panel()
 	_totals_row()
+	# Pad: land on the slot being dressed (or the first piece).
+	var keep := _slot
+	get_tree().process_frame.connect(func() -> void:
+		for c in _root.get_children():
+			if c is Button and c.has_meta("slot") and str(c.get_meta("slot")) == keep:
+				(c as Button).grab_focus()
+				return
+	, CONNECT_ONE_SHOT)
 
 
 # --- left: the fighter and his slots -----------------------------------------
@@ -95,6 +103,8 @@ func _paperdoll() -> void:
 
 func _slot_box(slot: String) -> Control:
 	var b := Button.new()
+	b.set_meta("slot", slot)
+	b.focus_mode = Control.FOCUS_ALL
 	b.position = SLOT_POS[slot]
 	b.custom_minimum_size = Vector2(108, 100)
 	b.size = Vector2(108, 100)

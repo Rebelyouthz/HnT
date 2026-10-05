@@ -870,7 +870,8 @@ func take_hit(kind: String, from: Node) -> void:
 			staple_cd = 0.05
 		Juice.flash_red(visual, 2)
 		Juice.hitstop(1)
-		Juice.play("res://assets/audio/hit_light.wav")
+		if not (from is Fighter):
+			Juice.play("res://assets/audio/sfx/hit_jab.ogg" if ResourceLoader.exists("res://assets/audio/sfx/hit_jab.ogg") else "res://assets/audio/hit_light.wav")
 		FamilyProfile.mark_light()
 		Juice.register_hit("light", global_position, dmg)
 	else:
@@ -886,7 +887,8 @@ func take_hit(kind: String, from: Node) -> void:
 		else:
 			Juice.hitstop(4)
 			Juice.pulse_shake(3.0)
-		Juice.play("res://assets/audio/hit_heavy.wav")
+		if not (from is Fighter):
+			Juice.play("res://assets/audio/sfx/hit_heavy.ogg" if ResourceLoader.exists("res://assets/audio/sfx/hit_heavy.ogg") else "res://assets/audio/hit_heavy.wav")
 		FamilyProfile.mark_heavy()
 		if kind != "snap":
 			Juice.register_hit(kind, global_position, dmg)

@@ -85,6 +85,7 @@ func _ready() -> void:
 	_tip_box = HBoxContainer.new()
 	_tip_box.add_theme_constant_override("separation", 22)
 	_tip.add_child(_tip_box)
+	UiKit.focus_first(self)
 
 
 func _depth(node: Dictionary, by_id: Dictionary) -> int:
