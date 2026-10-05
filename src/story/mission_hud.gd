@@ -38,6 +38,8 @@ func _peek(hold: float) -> void:
 ## pixel title, a checkbox line per objective that ticks green when filed.
 func _ready() -> void:
 	layer = 19
+	# Keep ticking while paused so the card can step aside for menus.
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	var wrap := PanelContainer.new()
 	var st := UiKit.panel(Color(0.04, 0.06, 0.12, 0.86), UiKit.RIM)
 	st.content_margin_left = 12
@@ -98,6 +100,11 @@ func _paint() -> void:
 
 
 func _process(_delta: float) -> void:
+	# Pause, level-up picks and sheets: the objective card steps aside.
+	if _wrap:
+		_wrap.visible = not get_tree().paused
+	if get_tree().paused:
+		return
 	if _lunch_done:
 		return
 	var rs := get_tree().get_first_node_in_group("run_state")

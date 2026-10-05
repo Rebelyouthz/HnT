@@ -97,6 +97,11 @@ func _card(who: String, at: Vector2) -> Button:
 	st.text = str(ComboBook.style(who).get("name", "")).to_upper() + " STYLE"
 	UiKit.apply_label(st, 13, UiKit.GOLD)
 	col.add_child(st)
+	var hr := Label.new()
+	var rn := Heroes.rarity_name(who)
+	hr.text = "LV %d  ·  %s" % [Heroes.level(who), rn.to_upper()]
+	UiKit.apply_label(hr, 13, Rarity.color(rn))
+	col.add_child(hr)
 	var bl := Label.new()
 	bl.text = str(BLURB[who])
 	bl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
