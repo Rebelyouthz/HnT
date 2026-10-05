@@ -127,8 +127,9 @@ func _ready() -> void:
 				rec.append("%s  %s  %s  TAGS %d/5" % [StageCard.title_of(mid), str(FamilyProfile.data.get("medal_" + mid, "-")), ("%.1fs" % best) if best > 0.0 else "--", tags])
 		var rl := Label.new()
 		rl.text = "RECORDS\n" + ("\n".join(rec) if not rec.is_empty() else "Run a roof map to the goal: medals, ghost and tags show here.")
-		rl.position = Vector2(14, 270)
-		rl.size = Vector2(260, 120)
+		rl.position = Vector2(990, 74)
+		rl.size = Vector2(270, 120)
+		rl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		rl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		UiKit.apply_label(rl, 11, Color(0.6, 0.9, 1.0))
 		_stage.add_child(rl)
@@ -172,6 +173,46 @@ func _depth(node: Dictionary, by_id: Dictionary) -> int:
 		d += 1
 		req = str((by_id[req] as Dictionary).get("requires", ""))
 	return d
+
+
+## Each node its own picture: a survivor icon, a stat icon or the move it
+## improves (the hero's own frame), before falling back to a pixel glyph.
+const NODE_ICON := {
+	# brawl
+	"thick_skin": "t_hp", "second_lungs": "t_regen", "bandage_pocket": "t_vamp", "wardrobe_stats": "i_shirt",
+	"iron_gut": "t_armor", "farm_patience": "t_cd", "disarm_habit": "i_glove", "pocket_sand": "i_hands",
+	"heavy_wrist": "@heavy", "cling_callus": "i_tooth", "long_commute": "t_pickup", "quiet_hands": "t_crit",
+	"xp_magnet": "t_xp", "crown": "i_amulet", "night_eyes": "camera", "pinball_brain": "bolt",
+	"school_pride": "i_ticket", "group_rate": "i_card", "summit_joke": "note",
+	# survivor
+	"s_slot": "i_hands", "s_reroll": "i_card", "s_banish": "t_curse", "s_evolve": "evolve", "s_item_slot": "i_thermos",
+	"s_ult2": "u_dome", "s_ult3": "u_friday", "f_start": "t_luck", "f_chest": "i_receipt", "f_magnet": "t_pickup",
+	"f_tokens": "i_coin", "f_luck": "t_luck", "f_revive": "t_regen", "f_gold": "i_coin",
+	"s_boxes": "i_receipt", "s_four": "i_card", "f_gear": "i_shirt", "f_wheel": "i_bell", "u_limit": "t_dmg", "u_start2": "coffee",
+	# parkour
+	"p_trick_steam": "t_regen", "p_flow_heal": "t_vamp", "p_chain": "@cartwheel_kick", "p_combo_keep": "t_cd",
+	"p_speed": "@parkour_run", "p_ghost": "t_speed", "p_score": "i_ticket", "p_air_jump": "@jump",
+	"p_float": "@air_mix", "p_coyote": "@jump_roundhouse", "p_high": "@flying_knee", "p_wall": "@backflip_kick",
+	"p_air_ctrl": "@air_spin_kick", "p_hang": "@duck", "p_stomp": "@dive", "p_bounce": "@dropkick",
+	"p_slide_kick": "@slide", "p_quake": "wave", "p_roll": "@roll", "p_meteor": "@dive", "p_iron": "t_armor",
+}
+
+
+func _node_tex(node: Dictionary) -> Texture2D:
+	var id := str(node.get("id", ""))
+	if id.begins_with("u_") and not NODE_ICON.has(id):
+		# Survivor ability unlocks: that ability's icon.
+		var book: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/survive.json"))
+		if book is Dictionary:
+			for a: Dictionary in (book as Dictionary).get("abilities", []):
+				if str(a.get("unlock", "")) == id:
+					return SurviveIcons.tex(str(a.get("icon", "")))
+	var key := str(NODE_ICON.get(id, ""))
+	if key.begins_with("@"):
+		return SpriteBook.move_icon("son", key.substr(1))
+	if key != "":
+		return SurviveIcons.tex(key)
+	return null
 
 
 func _glyph(node: Dictionary) -> String:
@@ -229,13 +270,18 @@ func _tree(trunk: String, list: Array, cx: float) -> void:
 			by_id[str(n["id"])] = n
 	var pos := {}
 	var owned_n := 0
+	# Deeper trees squeeze their rows so the last one stays above the info strip.
+	var maxd := 0
+	for n: Dictionary in nodes:
+		maxd = maxi(maxd, _depth(n, by_id))
+	var step := STEP * 3.0 / float(maxd) if maxd > 3 else STEP
 	for n: Dictionary in nodes:
 		var d := _depth(n, by_id)
 		var br := str(n.get("branch", "core"))
 		var x := cx
 		if d > 0:
 			x += -ARM if br == "left" else ARM
-		pos[str(n["id"])] = Vector2(x, TOP + float(d) * STEP + (0.0 if d == 0 else 26.0))
+		pos[str(n["id"])] = Vector2(x, TOP + float(d) * step + (0.0 if d == 0 else 26.0))
 		if Trees.owned(mode, str(n["id"])):
 			owned_n += 1
 	var vines := VineDraw.new()
@@ -305,13 +351,29 @@ func _node_button(node: Dictionary, at: Vector2) -> Control:
 	b.add_theme_stylebox_override("hover", hover)
 	b.add_theme_stylebox_override("focus", hover)
 	b.add_theme_stylebox_override("pressed", hover)
-	var icon := PixelIcon.new()
-	icon.kind = _glyph(node)
-	icon.dim = st == "locked"
-	icon.size = Vector2(36, 36)
-	icon.position = Vector2(13, 13)
-	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	b.add_child(icon)
+	var tex := _node_tex(node)
+	if tex != null:
+		var pic := TextureRect.new()
+		pic.texture = tex
+		pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		pic.texture_filter = SpriteBook.UI_FILTER
+		pic.size = Vector2(42, 42)
+		pic.position = Vector2(10, 10)
+		pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		if st == "locked":
+			pic.modulate = Color(0.35, 0.35, 0.4)
+		elif st == "poor":
+			pic.modulate = Color(0.75, 0.75, 0.8)
+		b.add_child(pic)
+	else:
+		var icon := PixelIcon.new()
+		icon.kind = _glyph(node)
+		icon.dim = st == "locked"
+		icon.size = Vector2(36, 36)
+		icon.position = Vector2(13, 13)
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		b.add_child(icon)
 	Bevel.dress(b, true)
 	if st == "can":
 		b.pivot_offset = Vector2(31, 31)

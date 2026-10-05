@@ -188,12 +188,61 @@ func _loadout(body: VBoxContainer) -> void:
 		grid.add_child(p)
 
 
+## MOVE PREVIEW: the hero performs whatever move is highlighted.
+var _pv_anim: AnimatedSprite2D
+var _pv_name: Label
+
+
+func _preview_box(parent: Control) -> void:
+	var box := PanelContainer.new()
+	box.add_theme_stylebox_override("panel", UiKit.panel(Color(0.03, 0.04, 0.08), Palette.EDGE))
+	box.custom_minimum_size = Vector2(360, 470)
+	parent.add_child(box)
+	var v := VBoxContainer.new()
+	box.add_child(v)
+	_pv_name = Label.new()
+	_pv_name.text = "HIGHLIGHT A MOVE"
+	_pv_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_pv_name.add_theme_font_override("font", UiKit.title_font())
+	UiKit.apply_label(_pv_name, 18, UiKit.GOLD)
+	v.add_child(_pv_name)
+	var stage := Control.new()
+	stage.custom_minimum_size = Vector2(340, 420)
+	v.add_child(stage)
+	_pv_anim = SpriteBook.make_anim(role)
+	SpriteBook.grow(_pv_anim, 5.2)
+	_pv_anim.position = Vector2(170, 400) + _pv_anim.position
+	_pv_anim.texture_filter = SpriteBook.UI_FILTER
+	stage.add_child(_pv_anim)
+	_pv_anim.animation_finished.connect(func() -> void:
+		if is_instance_valid(_pv_anim):
+			get_tree().create_timer(0.35).timeout.connect(func() -> void:
+				if is_instance_valid(_pv_anim):
+					_pv_anim.play(_pv_anim.animation)
+			)
+	)
+
+
+func _show_move(id: String, title: String) -> void:
+	if _pv_anim == null or not is_instance_valid(_pv_anim):
+		return
+	var clip := id if _pv_anim.sprite_frames.has_animation(id) else ("heavy" if _pv_anim.sprite_frames.has_animation("heavy") else "idle")
+	_pv_anim.sprite_frames.set_animation_loop(clip, false)
+	_pv_anim.stop()
+	_pv_anim.play(clip)
+	_pv_name.text = title
+
+
 func _library(body: VBoxContainer) -> void:
+	var split := HBoxContainer.new()
+	split.add_theme_constant_override("separation", 14)
+	body.add_child(split)
 	var grid := GridContainer.new()
-	grid.columns = 3
+	grid.columns = 2
 	grid.add_theme_constant_override("h_separation", 10)
 	grid.add_theme_constant_override("v_separation", 8)
-	body.add_child(grid)
+	split.add_child(grid)
+	_preview_box(split)
 	for r: Dictionary in Moves.for_role(role):
 		var id := str(r["id"])
 		var have := Moves.learned(role, id)
@@ -201,6 +250,10 @@ func _library(body: VBoxContainer) -> void:
 		var p: PanelContainer = pr[0]
 		var h: HBoxContainer = pr[1]
 		p.custom_minimum_size = Vector2(380, 92)
+		var mtitle := str(r["title"])
+		p.focus_mode = Control.FOCUS_ALL
+		p.mouse_entered.connect(func() -> void: _show_move(id, mtitle))
+		p.focus_entered.connect(func() -> void: _show_move(id, mtitle))
 		var ic := _icon(id)
 		if not have:
 			ic.modulate = Color(0.35, 0.35, 0.4)
@@ -227,6 +280,7 @@ func _library(body: VBoxContainer) -> void:
 			b.disabled = int(r["gold"]) <= 0 or int(FamilyProfile.data.get("gold", 0)) < int(r["gold"])
 			if lesson != "":
 				b.tooltip_text = "Also taught by the dojo lesson."
+			b.focus_entered.connect(func() -> void: _show_move(id, mtitle))
 			b.pressed.connect(func() -> void:
 				if Moves.learn(role, id):
 					Juice.play("res://assets/audio/claim.wav")
