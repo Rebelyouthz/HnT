@@ -9,7 +9,7 @@ const DEFAULT_SON := "HugoLugo"
 ## 8/3 design px per backdrop texel = exactly 4 screen px on 1080p.
 const BD_SCALE := 8.0 / 3.0
 ## Actors at 2 screen px per texel on 1080p (design scale 0.5 x 3).
-const ACTOR_SCALE := 2.0 / 1.5
+const ACTOR_SCALE := 1.8
 
 var _bd: Array[TextureRect] = []
 var _bd_w := 0.0

@@ -1,5 +1,8 @@
 extends Node2D
 
+## Actor scale in the hideout room (crew NPCs read it too).
+const CAMP_K := 1.38
+
 ## The hideout: a walkable home between maps. Every camp building and core
 ## room is a station on the floor (walk up, press UP / ENTER / LIGHT): it
 ## opens just that menu. The COMMAND BOARD opens the whole clinic hub, all
@@ -36,6 +39,9 @@ class CampWalker extends Node2D:
 		add_child(sh)
 		if SpriteBook.has_who(who):
 			anim = SpriteBook.make_anim(who)
+			# The hideout room is painted big: a grown man stands about a
+			# door frame tall (CAMP_K), not two thirds of one.
+			SpriteBook.grow(anim, CAMP_K * (SpriteBook.FATHER_K if who == "father" else 1.0))
 			# Actors land at 1.67 px per texel here: filter, don't nearest.
 			anim.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 			add_child(anim)

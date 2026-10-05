@@ -550,14 +550,43 @@ static func chapel(host: Node, rect: Rect2) -> void:
 	Blockout.add_glow(win)
 
 
+## A parked car at true size: ~175 units long (2.6 people), wheels on the
+## street at `at.y`, uniform scale (the old one was stretched and floated).
+const CAR_LEN := 175.0
+
+
 static func car(host: Node, at: Vector2, color: Color, who: String = "sedan") -> void:
-	Blockout.solid(host, Rect2(at.x, at.y - 36, 110, 22), true)
-	Blockout.occluder(host, Rect2(at.x, at.y - 36, 110, 36))
+	var cx := at.x + 55.0
+	Blockout.solid(host, Rect2(cx - CAR_LEN * 0.46, at.y - 26, CAR_LEN * 0.92, 24), true)
+	Blockout.occluder(host, Rect2(cx - CAR_LEN * 0.46, at.y - 60, CAR_LEN * 0.92, 60))
 	var n := Node2D.new()
-	n.position = at + Vector2(55, 0)
+	n.position = Vector2(cx, at.y)
 	n.z_index = 2
 	host.add_child(n)
-	if SpriteBook.attach_scaled(n, who, -8.0, Vector2(1.35, 1.05)):
+	if SpriteBook.has_who(who):
+		var a := SpriteBook.make_anim(who)
+		var fr := a.sprite_frames.get_frame_texture("idle", 0) if a.sprite_frames.has_animation("idle") else null
+		var tex_w := 207.0
+		var cell_h := 216.0
+		if fr is AtlasTexture:
+			tex_w = (fr as AtlasTexture).region.size.x
+			cell_h = float(fr.get_height())
+		var k := CAR_LEN / tex_w
+		a.scale = Vector2(k, k)
+		# Cell bottom (2 texels under the tyres) on the street line.
+		a.position = Vector2(0, 2.0 * k - cell_h * k * 0.5)
+		n.add_child(a)
+		# Contact shadow under the body.
+		var sh := Polygon2D.new()
+		var pts := PackedVector2Array()
+		for i in 20:
+			var ang := TAU * float(i) / 20.0
+			pts.append(Vector2(cos(ang) * CAR_LEN * 0.48, sin(ang) * 6.0))
+		sh.polygon = pts
+		sh.color = Color(0, 0, 0, 0.5)
+		sh.position = Vector2(0, -1)
+		n.add_child(sh)
+		n.move_child(sh, 0)
 		return
 	Blockout.poly(host, Rect2(at.x, at.y - 36, 110, 36), color, 2)
 	Blockout.poly(host, Rect2(at.x + 18, at.y - 58, 70, 24), color.darkened(0.15), 2)
