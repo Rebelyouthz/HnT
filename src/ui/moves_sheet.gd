@@ -5,6 +5,7 @@ extends Control
 ##   LIBRARY    every strike: learn it (gold), see weight, slots, type
 ##   COMBO LAB  make up to six combos: 2-4 inputs + a finisher + effect
 ##   STYLES     three saved loadouts per hero
+##   ELEMENTS   element arts (unlock, level 1-5, evolve), grabs, team attacks
 
 signal closed
 signal need_refresh
@@ -57,7 +58,7 @@ func _paint() -> void:
 	var gap := Control.new()
 	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(gap)
-	for pair in [["loadout", "LOADOUT"], ["library", "LIBRARY"], ["lab", "COMBO LAB"], ["styles", "STYLES"]]:
+	for pair in [["loadout", "LOADOUT"], ["library", "LIBRARY"], ["lab", "COMBO LAB"], ["styles", "STYLES"], ["elements", "ELEMENTS"]]:
 		var b := _btn(pair[1], Vector2(130, 36), "page_" + pair[0], pair[0] == _page)
 		b.pressed.connect(func() -> void:
 			_page = pair[0]
@@ -92,6 +93,9 @@ func _paint() -> void:
 		"lab":
 			sub.text = "Make your own combo: tap 2-4 inputs, pick the finisher and what it does to them. It fires like any dojo combo (timing ring, PERFECT)."
 			_lab(body)
+		"elements":
+			sub.text = "LIGHT + HEAVY together fires an element art (the stick picks which) and costs CHI: hits and kills fill the ring under your feet. Next to a thug the same buttons GRAB. When the gold TEAM ring is full, hold HEAVY and tap SPECIAL.  GOLD %d  ·  GEMS %d" % [int(FamilyProfile.data.get("gold", 0)), int(FamilyProfile.data.get("gems", 0))]
+			_elements(body)
 		_:
 			sub.text = "Save the current loadout as a style and switch any time: a boxer, a kicker, a brawler."
 			_styles(body)
@@ -234,6 +238,131 @@ func _library(body: VBoxContainer) -> void:
 			v.add_child(b)
 		h.add_child(v)
 		grid.add_child(p)
+
+
+const DIR_NAME := {"N": "L + H", "F": "FWD + L + H", "U": "UP + L + H", "D": "DOWN + L + H", "B": "BACK + L + H"}
+const ART_CLIP := {"fireball": "cross", "lightning_dash": "superman_punch", "wind_kick": "air_spin_kick", "ice_slide": "slide",
+	"fire_palm": "heavy", "thunder_clap": "hammer", "magma_uppercut": "uppercut", "quake_stomp": "boot_kick"}
+
+
+func _section(body: VBoxContainer, txt: String, col: Color) -> void:
+	var l := UiKit.title(txt, 18, col)
+	body.add_child(l)
+
+
+func _elements(body: VBoxContainer) -> void:
+	_section(body, "ELEMENT ARTS", Palette.LEMON)
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 10)
+	grid.add_theme_constant_override("v_separation", 8)
+	body.add_child(grid)
+	for r: Dictionary in Elements.arts(role):
+		var id := str(r["id"])
+		var lv := Elements.level(id)
+		var c := Elements.color(str(r["elem"]))
+		var pr := _row_panel(c if lv > 0 else Palette.MUTED)
+		var p: PanelContainer = pr[0]
+		var h: HBoxContainer = pr[1]
+		p.custom_minimum_size = Vector2(570, 118)
+		var ic := _icon(str(ART_CLIP.get(id, "heavy")), Vector2(76, 76))
+		ic.modulate = c.lerp(Color.WHITE, 0.55) if lv > 0 else Color(0.35, 0.35, 0.4)
+		h.add_child(ic)
+		var v := VBoxContainer.new()
+		v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		v.add_theme_constant_override("separation", 2)
+		var nm := Label.new()
+		nm.text = "%s   %s" % [Elements.title(id), ("LV %d / %d%s" % [lv, Elements.MAX_LV, "  ·  EVOLVED" if Elements.evolved(id) else ""]) if lv > 0 else "LOCKED"]
+		nm.add_theme_font_override("font", UiKit.title_font())
+		UiKit.apply_label(nm, 15, c if lv > 0 else Palette.MUTED)
+		v.add_child(nm)
+		var io := Label.new()
+		io.text = "%s  ·  %s  ·  CHI %d  ·  DMG %d" % [DIR_NAME[str(r["dir"])], str(r["elem"]).to_upper(), int(Elements.cost(id)), Elements.dmg(id)]
+		UiKit.apply_label(io, 11, Palette.TEXT)
+		v.add_child(io)
+		var d := Label.new()
+		d.text = str(r["evo_desc"]) if Elements.evolved(id) else str(r["desc"])
+		d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		d.custom_minimum_size = Vector2(300, 0)
+		UiKit.apply_label(d, 11, Palette.MUTED)
+		v.add_child(d)
+		h.add_child(v)
+		var price := Elements.next_price(id)
+		var bt := ""
+		var can := false
+		if Elements.can_evolve(id):
+			bt = "EVOLVE %d GEMS" % Elements.EVOLVE_GEMS
+			can = int(FamilyProfile.data.get("gems", 0)) >= Elements.EVOLVE_GEMS
+		elif price >= 0:
+			bt = ("UNLOCK %dG" if lv == 0 else "LEVEL UP %dG") % price
+			can = int(FamilyProfile.data.get("gold", 0)) >= price
+		else:
+			bt = "MAXED"
+		var b := _btn(bt, Vector2(150, 34), "art_" + id, false)
+		b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		b.disabled = not can
+		b.pressed.connect(func() -> void:
+			var ok := Elements.evolve(id) if Elements.can_evolve(id) else Elements.buy(id)
+			if ok:
+				Juice.play("res://assets/audio/claim.wav")
+				Juice.shout(Elements.title(id))
+				need_refresh.emit()
+				_focus_key = "art_" + id
+				_paint()
+		)
+		h.add_child(b)
+		grid.add_child(p)
+	_section(body, "GRABS  ·  L + H NEXT TO A THUG", Palette.EDGE)
+	var gg := GridContainer.new()
+	gg.columns = 3
+	gg.add_theme_constant_override("h_separation", 10)
+	body.add_child(gg)
+	for g: Dictionary in Elements.grabs(role):
+		var pr := _row_panel(Palette.EDGE)
+		var p: PanelContainer = pr[0]
+		var h: HBoxContainer = pr[1]
+		p.custom_minimum_size = Vector2(376, 84)
+		var v := VBoxContainer.new()
+		v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var nm := Label.new()
+		nm.text = "%s   %s" % [str(g["title"]), DIR_NAME[str(g["dir"])]]
+		nm.add_theme_font_override("font", UiKit.title_font())
+		UiKit.apply_label(nm, 14, Palette.EDGE)
+		v.add_child(nm)
+		var d := Label.new()
+		d.text = "%s  DMG %d" % [str(g["desc"]), int(g["dmg"])]
+		d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		d.custom_minimum_size = Vector2(340, 0)
+		UiKit.apply_label(d, 11, Palette.MUTED)
+		v.add_child(d)
+		h.add_child(v)
+		gg.add_child(p)
+	_section(body, "DAD + SON TEAM ATTACKS  ·  TEAM RING FULL: HOLD H + SPECIAL", UiKit.GOLD)
+	var tg := GridContainer.new()
+	tg.columns = 3
+	tg.add_theme_constant_override("h_separation", 10)
+	body.add_child(tg)
+	var tdir := {"daddy_launch": "NEUTRAL", "tag_slam": "FORWARD", "family_double": "UP / DOWN"}
+	for t: Dictionary in Elements.team():
+		var pr := _row_panel(UiKit.GOLD)
+		var p: PanelContainer = pr[0]
+		var h: HBoxContainer = pr[1]
+		p.custom_minimum_size = Vector2(376, 84)
+		var v := VBoxContainer.new()
+		v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var nm := Label.new()
+		nm.text = "%s   %s" % [str(t["title"]), str(tdir.get(str(t["id"]), ""))]
+		nm.add_theme_font_override("font", UiKit.title_font())
+		UiKit.apply_label(nm, 14, UiKit.GOLD)
+		v.add_child(nm)
+		var d := Label.new()
+		d.text = "%s  DMG %d" % [str(t["desc"]), int(t["dmg"])]
+		d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		d.custom_minimum_size = Vector2(340, 0)
+		UiKit.apply_label(d, 11, Palette.MUTED)
+		v.add_child(d)
+		h.add_child(v)
+		tg.add_child(p)
 
 
 func _lab(body: VBoxContainer) -> void:

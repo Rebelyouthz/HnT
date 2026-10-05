@@ -81,6 +81,8 @@ func _prepare() -> void:
 		(fp.data as Dictionary)["loadout_moves"] = {"son": {"L3": "front_kick", "H": "side_kick", "STR": "roundhouse"}}
 		(fp.data as Dictionary)["moves_learned"] = {"son": ["side_kick", "flying_knee", "cartwheel_kick"]}
 		(fp.data as Dictionary)["combos_custom"] = {"son": [{"id": "custom_son_1", "who": "son", "title": "ALLEY LESSON", "steps": ["L", "L", "F+H"], "clip": "cartwheel_kick", "fx": "knockdown", "dmg": 44, "custom": true, "starter": true}]}
+		(fp.data as Dictionary)["arts"] = {"fireball": 5, "lightning_dash": 2, "evolved": {}}
+		(fp.data as Dictionary)["gems"] = 30
 	if _tab == "codex" and fp != null:
 		(fp.data as Dictionary)["kills_by"] = {"Collector Gant": 1, "Bag Snatch": 34, "Repo Goon": 21, "Mohawk Bo": 6, "Coping Imp": 88}
 		(fp.data as Dictionary)["boss_tries_dock_street"] = 2
@@ -146,6 +148,11 @@ func _initialize() -> void:
 	if target.begins_with("ui:"):
 		_tab = "ui_" + target.substr(3)
 		target = "res://scenes/levels/intake_lot.tscn" if _tab == "ui_surv" else "res://scenes/levels/dock_street.tscn"
+	# art:<art|grab|team>:<id>[:father] fires an element art, grab or team
+	# attack on Dock Street against three thugs; frames every 3rd tick.
+	elif target.begins_with("art:"):
+		_tab = "art_" + target.substr(4)
+		target = "res://scenes/levels/dock_street.tscn"
 	# film:<from>-><to> plays a bridge film.
 	elif target.begins_with("film:"):
 		_tab = "film_" + target.substr(5)
@@ -174,14 +181,20 @@ func _initialize() -> void:
 func _process(_delta: float) -> bool:
 	_n += 1
 	if _n == 2:
+		if _tab.begins_with("art_") and _tab.ends_with(":father"):
+			var app := root.get_node_or_null("/root/App")
+			if app:
+				app.set("solo_role", "father")
 		_prepare()
+	if _tab.begins_with("art_"):
+		_art_demo()
 	if _tab == "stats" and _n == 40 and current_scene != null and current_scene.has_method("_open_stats"):
 		current_scene.call("_open_stats")
 	if _tab == "armory" and _n == 40 and current_scene != null and current_scene.has_method("_open_armory"):
 		current_scene.call("_open_armory")
 	if _tab.begins_with("moves") and _n == 40 and current_scene != null:
 		var ms: Control = load("res://src/ui/moves_sheet.gd").new()
-		ms.set("_page", {"moves": "loadout", "moves_lib": "library", "moves_lab": "lab", "moves_sty": "styles"}.get(_tab, "loadout"))
+		ms.set("_page", {"moves": "loadout", "moves_lib": "library", "moves_lab": "lab", "moves_sty": "styles", "moves_el": "elements"}.get(_tab, "loadout"))
 		if _tab == "moves_lab":
 			ms.set("_steps", ["L", "F+L", "U+H"])
 		current_scene.add_child(ms)
@@ -434,6 +447,28 @@ func _suit_demo() -> void:
 		else:
 			Input.action_release(e[0])
 	if _n >= 96 and _n <= 320 and _n % 2 == 0:
+		root.get_texture().get_image().save_png(_out.get_basename() + "_%03d.png" % _n)
+
+
+func _art_demo() -> void:
+	var parts := _tab.substr(4).split(":")
+	var pl: Node2D = null
+	for p in root.get_tree().get_nodes_in_group("players"):
+		if p is Node2D and p.get("arts") != null:
+			pl = p
+	if pl == null:
+		return
+	if _n == 70:
+		for i in 3:
+			var e: Node2D = load("res://src/coop/party.gd").spawn_row(current_scene, {"title": "Bag Snatch"}, 4.0)
+			e.global_position = pl.global_position + Vector2(170.0 + 50.0 * float(i), (float(i) - 1.0) * 10.0)
+	if _n == 74:
+		for e in root.get_tree().get_nodes_in_group("enemies"):
+			if e is Node2D and (e as Node2D).global_position.distance_to(pl.global_position) > 320.0:
+				(e as Node2D).queue_free()
+	if _n == 80:
+		pl.get("arts").call("perform", parts[0], parts[1])
+	if _n >= 80 and _n <= 170 and (_n - 80) % 4 == 0:
 		root.get_texture().get_image().save_png(_out.get_basename() + "_%03d.png" % _n)
 
 

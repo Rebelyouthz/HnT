@@ -138,6 +138,14 @@ var _land_t := 0.0
 ## victim to read, and the finisher's own travel (flips, flying knees).
 var _combo: ComboBook
 var combo_dmg := 0
+## Element arts / grabs / team attacks (ArtMoves): CHI pays for arts, TEAM
+## fills from kills; art_lock owns the body while one plays.
+var chi := 0.0
+var team := 0.0
+var art_lock := 0.0
+var art_vx := 0.0
+var art_hit := false
+var arts: ArtMoves
 var combo_fx := ""
 var combo_id := ""
 var _combo_vx := 0.0
@@ -197,6 +205,7 @@ func _ready() -> void:
 	floor_snap_length = 8.0
 	_build_body()
 	_apply_locker()
+	arts = ArtMoves.attach(self)
 	var bonus := FamilyProfile.gear_stat_bonus(role)
 	max_hp += int(bonus.get("hp", 0))
 	# Hero level / rarity and META vitality.
@@ -613,6 +622,14 @@ func _physics_process(delta: float) -> void:
 			return
 		velocity.x = move_toward(velocity.x, 0.0, 600.0 * delta)
 		velocity.y = 0.0
+		move_and_slide()
+		global_position.y = clampf(global_position.y, STREET_MIN, STREET_MAX)
+		_tick_sprite()
+		return
+	if art_lock > 0.0:
+		art_lock -= delta
+		charge_frames = 0
+		velocity = Vector2(art_vx, 0.0)
 		move_and_slide()
 		global_position.y = clampf(global_position.y, STREET_MIN, STREET_MAX)
 		_tick_sprite()
@@ -2665,6 +2682,20 @@ func _spend(n: float) -> bool:
 	steam -= n
 	steam_lock = 0.4
 	return true
+
+
+## A thug this hero hit went down: CHI for the arts, TEAM for both heroes.
+func gain_kill() -> void:
+	chi = minf(Elements.CHI_MAX, chi + Elements.CHI_KILL)
+	team = minf(Elements.TEAM_MAX, team + Elements.TEAM_KILL)
+	for n in get_tree().get_nodes_in_group("players"):
+		if n is Fighter and n != self:
+			(n as Fighter).team = minf(Elements.TEAM_MAX, (n as Fighter).team + Elements.TEAM_ASSIST)
+
+
+func gain_hit(kind: String) -> void:
+	if not art_hit:
+		chi = minf(Elements.CHI_MAX, chi + Elements.chi_for_hit(kind))
 
 
 func _pressed(action: String) -> bool:

@@ -10,6 +10,35 @@ var _look := 0.0
 var _nag_cd := 0.0
 var cinematic := Vector2.ZERO
 var cinematic_on := false
+## Zoom punch for big moves: extra zoom that swells and settles, leaning the
+## frame toward where it happened.
+var _pz := 0.0
+var _pz_t := 0.0
+var _pz_len := 0.0
+var _pz_at := Vector2.ZERO
+
+
+static func punch(tree: SceneTree, amount: float, secs: float, at: Vector2) -> void:
+	if tree == null:
+		return
+	var c := tree.get_first_node_in_group("couch_cam") as CouchCamera
+	if c == null:
+		return
+	if c._pz_t > 0.0 and amount < c._pz:
+		return
+	c._pz = amount
+	c._pz_t = secs
+	c._pz_len = maxf(0.05, secs)
+	c._pz_at = at
+
+
+func _punch_env(delta: float) -> float:
+	if _pz_t <= 0.0:
+		return 0.0
+	_pz_t -= delta
+	var p := 1.0 - clampf(_pz_t / _pz_len, 0.0, 1.0)
+	# Snap in over the first fifth, ease back out over the rest.
+	return clampf(p * 5.0, 0.0, 1.0) * (1.0 - smoothstep(0.2, 1.0, p))
 
 
 func _ready() -> void:
@@ -27,6 +56,8 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	var env := _punch_env(delta)
+	zoom = Vector2.ONE * ZOOM * (1.0 + _pz * env)
 	if _nag_cd > 0.0:
 		_nag_cd -= delta
 	if cinematic_on:
@@ -61,6 +92,8 @@ func _physics_process(delta: float) -> void:
 	# Frame the feet a little below centre: street fights keep the kerb near
 	# the bottom edge, roof runs (y 248) still get headroom.
 	desired.y = clampf(desired.y - 30.0, 190.0, 425.0)
+	if env > 0.0:
+		desired = desired.lerp(_pz_at, 0.35 * env)
 	# Vertical lerp ~0.12 toward the pair so roofs and street share one frame.
 	var y_t := 1.0 - exp(-7.5 * delta)
 	global_position.x = roundf(lerpf(global_position.x, desired.x, follow))

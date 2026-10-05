@@ -1007,6 +1007,8 @@ func take_hit(kind: String, from: Node) -> void:
 		Juice.shout("FINISH")
 	if kind == "combo" and hp > 0 and from is Fighter:
 		_combo_fx(str((from as Fighter).combo_fx), from as Fighter)
+	if from is Fighter:
+		(from as Fighter).gain_hit(kind)
 	if hp <= 0:
 		_die(kind, from)
 
@@ -1081,6 +1083,11 @@ func _hit_noise(kind: String, from: Node) -> void:
 
 
 func _die(kind: String, from: Node) -> void:
+	var art_by: Node = from
+	if art_by is Round and art_by.get("shooter") is Fighter:
+		art_by = art_by.get("shooter")
+	if art_by is Fighter:
+		(art_by as Fighter).gain_kill()
 	var kb: Dictionary = FamilyProfile.data.get("kills_by", {})
 	kb[title] = int(kb.get(title, 0)) + 1
 	FamilyProfile.data["kills_by"] = kb

@@ -34,7 +34,31 @@ The rest is in English, like the code. Newest work first. Each block says
 
 ---
 
-## 0l. Bosses, three trees + metas, survivor depth, weapon mods, night extras (latest)
+## 0m. Element arts, grabs, team attacks; feedback pass (latest)
+
+- Feedback: Bevel 3D overlay off (`Bevel.ENABLED`), plain frames back. Heroes
+  bigger in the hideout (CAMP_K 1.6), title (2.3) and HEROES cards. Lamps 2.9x,
+  `AmbientProp.SIZE` for cones/drums/barriers/sodium lamps, vault crate 0.6.
+  Intake Lot roof + ladder removed. Viewpoint towers clamped to 56-72% of
+  map_w (street towers only). Hideout sawhorses gone. `NightStreet.pixel_roof`
+  draws coping + vents + a brick face to the lane; `roofs_strip` painted
+  skyline (FLUX, tools/street_strip.py, texel 0.42). LightRig `_glow` is a soft
+  radial sprite.
+- `Elements` (data/elements.json): 4 arts per hero (dir N/F/U/D), CHI cost,
+  levels 1-5 for gold, EVOLVE for 25 gems; 3 grabs per hero; 3 team attacks.
+- `ArtMoves` (child of every Fighter, runs first): L+H together -> grab if a
+  thug is within 48 (not bosses), else the art for the stick direction; hold H
+  + tap SPECIAL with TEAM full -> team attack (partner puppeted, or a phantom
+  of the other hero runs in when solo). `Fighter.art_lock` owns the body.
+  CHI from hits (`gain_hit`) and kills (`gain_kill`, also TEAM; partner gets
+  an assist). Meter arcs drawn under the feet.
+- `ElementShot` (ball / tornado / wave) and `ArtFx` (orb, ring, pillar, cone,
+  bolt, streak, burst, cracks) are code-drawn additive effects.
+- `CouchCamera.punch(tree, amount, secs, at)`: zoom swell toward a point.
+- MOVES -> ELEMENTS page (unlock / level / evolve, grab + team list).
+- Capture: `art:<art|grab|team>:<id>[:father]` on Dock Street; `hub:moves_el`.
+
+## 0l. Bosses, three trees + metas, survivor depth, weapon mods, night extras
 
 - **Grounds**: `tools/ground_art.py` paints `lot_ground`, `concrete_floor`,
   `clinic_floor` `_road(_wet).png` (oblique floors that tile sideways).
