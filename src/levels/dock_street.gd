@@ -18,6 +18,7 @@ func _configure() -> void:
 	next_label = Copy.NEXT_LOT
 	gate_sub = Copy.GATE_LOT
 	win_mode = "boss"
+	music = "res://assets/audio/music/music_dock.ogg"
 
 
 func build_world() -> void:

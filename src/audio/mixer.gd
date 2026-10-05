@@ -92,8 +92,12 @@ func _duck(on: bool) -> void:
 func play_music(path: String) -> void:
 	# Composed tracks (tools/music_gen.py) sit next to the old synth loops as
 	# .ogg with the same name and win when present.
+	# Tracks in assets/audio/music/ (tools/ace_music.py) win over both.
+	var named := "res://assets/audio/music/%s.ogg" % path.get_file().get_basename()
 	var ogg := path.get_basename() + ".ogg"
-	if ResourceLoader.exists(ogg):
+	if ResourceLoader.exists(named):
+		path = named
+	elif ResourceLoader.exists(ogg):
 		path = ogg
 	if not ResourceLoader.exists(path):
 		return
@@ -101,6 +105,7 @@ func play_music(path: String) -> void:
 	var outgoing := _music_a if _using_a else _music_b
 	if outgoing.playing and outgoing.stream and outgoing.stream.resource_path == path:
 		return
+	_music_path = path
 	incoming.stream = load(path)
 	if incoming.stream is AudioStreamWAV:
 		(incoming.stream as AudioStreamWAV).loop_mode = AudioStreamWAV.LOOP_FORWARD
@@ -113,6 +118,22 @@ func play_music(path: String) -> void:
 	tw.tween_property(incoming, "volume_db", 0.0, 0.7)
 	tw.chain().tween_callback(outgoing.stop)
 	_using_a = not _using_a
+
+
+var _music_path := ""
+var _music_saved := ""
+
+
+## Swap to a track for a while (a shop) and come back to what played.
+func push_music(path: String) -> void:
+	_music_saved = _music_path
+	play_music(path)
+
+
+func pop_music() -> void:
+	if _music_saved != "":
+		play_music(_music_saved)
+		_music_saved = ""
 
 
 func stop_music() -> void:

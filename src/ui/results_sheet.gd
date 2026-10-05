@@ -267,7 +267,7 @@ func _go_hub() -> void:
 		if App.is_solo_density():
 			FamilyProfile.mark_solo_clear()
 		FamilyProfile.push_log(headline, sub)
-	Mixer.play_music("res://assets/audio/music_clinic.wav")
+	Mixer.play_music("res://assets/audio/music/music_menu.ogg")
 	if App.remote_coop:
 		NetSession.shutdown()
 	App.back_to_hub("awards" if win else "clinic")

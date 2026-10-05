@@ -25,7 +25,7 @@ func _ready() -> void:
 	_film = StoryBook.all().get("intro", {})
 	_build_set()
 	_build_ui()
-	Mixer.play_music("res://assets/audio/music_clinic.wav")
+	Mixer.play_music("res://assets/audio/music/music_menu.ogg")
 	Juice.play("res://assets/audio/sting_intro.wav")
 	_talk = Talk.new()
 	add_child(_talk)

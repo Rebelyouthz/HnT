@@ -20,7 +20,7 @@ func _ready() -> void:
 	_kind = App.film_kind if App.film_kind != "" else "bridge"
 	_build_set()
 	_build_ui()
-	Mixer.play_music("res://assets/audio/music_clinic.wav")
+	Mixer.play_music("res://assets/audio/music/music_menu.ogg")
 	Juice.play("res://assets/audio/sting_intro.wav")
 	_talk = Talk.new()
 	add_child(_talk)
@@ -178,7 +178,7 @@ func _leave() -> void:
 	_done = true
 	if _kind == "ending" or App.film_next == "" or App.film_next == "hub":
 		FamilyProfile.mark_ending()
-		Mixer.play_music("res://assets/audio/music_clinic.wav")
+		Mixer.play_music("res://assets/audio/music/music_menu.ogg")
 		if App.remote_coop:
 			NetSession.shutdown()
 		App.back_to_hub("awards")

@@ -24,7 +24,7 @@ var _flash: ColorRect
 func _ready() -> void:
 	PixelStage.apply_control(self)
 	_seed_names()
-	Mixer.play_music("res://assets/audio/music_street.wav")
+	Mixer.play_music("res://assets/audio/music/music_menu.ogg")
 	_build_backdrop()
 	_build_actors()
 	_build_overlay()

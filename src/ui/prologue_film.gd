@@ -32,7 +32,7 @@ var _done := false
 func _ready() -> void:
 	_build_set()
 	_build_ui()
-	Mixer.play_music("res://assets/audio/music_clinic.wav")
+	Mixer.play_music("res://assets/audio/music/music_menu.ogg")
 	_talk = Talk.new()
 	add_child(_talk)
 	_talk.line.connect(_on_line)

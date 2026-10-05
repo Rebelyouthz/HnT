@@ -20,6 +20,8 @@ static func price_of(row: Dictionary, stage: int, owned: int) -> int:
 
 
 func _ready() -> void:
+	Mixer.push_music("res://assets/audio/music/music_shop.ogg")
+	tree_exiting.connect(Mixer.pop_music)
 	layer = 60
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	get_tree().paused = true

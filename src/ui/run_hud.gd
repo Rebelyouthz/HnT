@@ -674,7 +674,7 @@ func _toggle_pause() -> void:
 		Juice.restore_time()
 		get_tree().paused = false
 		FamilyProfile.mark_run_finished(false)
-		Mixer.play_music("res://assets/audio/music_clinic.wav")
+		Mixer.play_music("res://assets/audio/music/music_menu.ogg")
 		App.back_to_hub("awards")
 	)
 	col.add_child(end)

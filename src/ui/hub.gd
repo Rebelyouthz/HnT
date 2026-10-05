@@ -25,7 +25,7 @@ var _tab_dots: Dictionary = {}
 func _ready() -> void:
 	PixelStage.apply_control(self)
 	FamilyProfile._roll_daily()
-	Mixer.play_music("res://assets/audio/music_clinic.wav")
+	Mixer.play_music("res://assets/audio/music/music_menu.ogg")
 	_build_chrome()
 	var start_tab := App.pending_tab if App.pending_tab in TABS else "clinic"
 	App.pending_tab = "clinic"

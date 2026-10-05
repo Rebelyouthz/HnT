@@ -81,7 +81,7 @@ const CREW_SPOT := {"benny": 0.045, "rico": 0.775}
 
 
 func _ready() -> void:
-	Mixer.play_music("res://assets/audio/music_clinic.wav")
+	Mixer.play_music("res://assets/audio/music/music_camp.ogg")
 	_build_room()
 	_build_actors()
 	_build_stations()
