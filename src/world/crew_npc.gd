@@ -54,7 +54,10 @@ func setup(who: String) -> void:
 	_spr.centered = false
 	_spr.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	if tex != null:
-		var k := BODY_H / float(tex.get_height())
+		# On the street they stand with the townsfolk (NPC_SCALE); films and
+		# the hideout keep the base size the scenes were framed for.
+		var on_street := Engine.get_main_loop() != null and (Engine.get_main_loop() as SceneTree).get_first_node_in_group("run_act") != null
+		var k := BODY_H * (SpriteBook.NPC_SCALE if on_street else 1.0) / float(tex.get_height())
 		_spr.scale = Vector2(k, k)
 		_spr.offset = Vector2(-float(tex.get_width()) * 0.5, -float(tex.get_height()))
 	add_child(_spr)

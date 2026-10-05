@@ -34,7 +34,41 @@ The rest is in English, like the code. Newest work first. Each block says
 
 ---
 
-## 0k. Hero levels + rarity, gear combine, META, new road, polish (latest)
+## 0l. Bosses, three trees + metas, survivor depth, weapon mods, night extras (latest)
+
+- **Grounds**: `tools/ground_art.py` paints `lot_ground`, `concrete_floor`,
+  `clinic_floor` `_road(_wet).png` (oblique floors that tile sideways).
+- **Bosses**: `src/actors/boss_brain.gd` + `boss_fx.gd`, data `data/bosses.json`
+  (per boss: hp_mul, move names, moves per damage stage). Moves: charge,
+  slam, volley, rain, summon, lane_wave, grab, spin. Zones fill then strike;
+  `Fighter.take_hit("crush")` is unblockable (roll/jump/step out), every
+  pattern ends OPEN (+50% damage, `BossBrain.PUNISH_MUL`). Base enemy
+  hp x1.12 / dmg x1.15 (`Heroes.enemy_*_mul`); boss attempt bonus in
+  `RunAct._on_fail`. Capture `ui:boss_<move>`.
+- **Weapons**: `Arsenal` levels (1-5, gold) and `MODS` (gems, slots 1/2);
+  `power_mul`, `clip_mul`, `reload_mul`, `on_hit` (Punk.take_hit). ARMORY
+  shows LV / MODS bench / CARRY (needs META starter kit).
+- **Three trees / three metas**: `src/app/trees.gd` (brawl = cbt.json,
+  survivor = data/tree_survivor.json TOKENS, parkour = data/tree_parkour.json
+  FLOW); `hub_build.gd` mode tabs + REFUND TREE. `Meta.BRANCH_CUR` (body
+  gold, survivor tokens, parkour flow). Flow from `FamilyProfile.mark_trick
+  / mark_perfect / mark_wallkick / note_tower` (+ `_trick_perks`); tokens
+  from `SurviveRun.award_tokens` (fail + clear). Parkour perks in Fighter
+  (coyote, air jump, float, hang, roll, stomp chain, `_land_perks`).
+- **Survivor**: data/survive.json now has 17 abilities (7 gated by tree
+  `unlock`), 15 traits, `evolutions` (LV 7 + item -> chest offers EVOLVE),
+  `ultimates` (kills charge `ult_charge`, SPECIAL fires `fire_ult`). Meta and
+  tree effects in `SurviveRun` getters; icons `tools/survive_icons.py`.
+  CODEX sheet (`src/ui/codex_sheet.gd`): bestiary + boss dodge guide,
+  abilities, evolutions, ultimate loadout, records. Capture `ui:surv`.
+- **Night extras** (`src/extras/night_extras.gd`): blessing machine, tax
+  refund runner, combo milestones, street events; screen-edge wall bounces
+  in `Punk._fling`. **Menus**: `Artifacts` (RUN tab), `Contracts` (JOBS),
+  desk sheet `src/ui/desk_sheet.gd`. Capture `ui:extras`, `hub:jobs`,
+  `hub:codex`, `hub:build_surv`, `hub:build_park`.
+- Crew NPCs scale to NPC size on street maps; waiting room uses benches.
+
+## 0k. Hero levels + rarity, gear combine, META, new road, polish
 
 - **Heroes** (`src/app/heroes.gd`, HEROES tab `src/ui/hub_heroes.gd`): level
   with gold (cap 10 + 5 per rarity), rarity common->legendary (grey, green,

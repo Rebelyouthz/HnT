@@ -30,10 +30,14 @@ func build_world() -> void:
 		Blockout.poly(self, Rect2(0, 80, map_w, 40), Color(0.82, 0.84, 0.78, 0.35), -2)
 		NightStreet.tenement(self, Rect2(20, 20, 200, 180), Color(0.18, 0.18, 0.2))
 		NightStreet.tenement(self, Rect2(1640, 20, 220, 190), Color(0.16, 0.18, 0.18))
+	# Waiting-room benches: the drawn bench prop where we have it.
 	for i in 8:
 		var x := 80.0 + i * 210.0
-		Blockout.poly(self, Rect2(x, 470, 70, 28), Color(0.28, 0.28, 0.3), 2)
-		Blockout.poly(self, Rect2(x + 8, 448, 54, 22), Color(0.32, 0.32, 0.34), 2)
+		if SpriteBook.has_who("bench"):
+			AmbientProp.place(self, "bench", Vector2(x + 35.0, 474.0), 2)
+		else:
+			Blockout.poly(self, Rect2(x, 470, 70, 28), Color(0.28, 0.28, 0.3), 2)
+			Blockout.poly(self, Rect2(x + 8, 448, 54, 22), Color(0.32, 0.32, 0.34), 2)
 	Blockout.solid(self, Rect2(420, 248, 240, 18), true)
 	Blockout.poly(self, Rect2(420, 248, 240, 18), Color(0.3, 0.3, 0.32), 2)
 	Blockout.solid(self, Rect2(1100, 228, 260, 18), true)
