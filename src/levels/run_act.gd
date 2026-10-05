@@ -254,7 +254,7 @@ func _banter(delta: float) -> void:
 	VoBank.line("son" if randf() < 0.5 else "father", "banter", 1.0)
 
 
-## One ordinary thug per street is WANTED: tougher, crowned, and worth
+## One ordinary thug per street is WANTED: tougher, badged, and worth
 ## gems and gold when he drops.
 func _pick_bounty() -> void:
 	if not is_inside_tree() or get_tree().get_first_node_in_group("bounty"):
@@ -270,40 +270,9 @@ func _pick_bounty() -> void:
 	p.add_to_group("bounty")
 	p.max_hp = int(round(float(p.max_hp) * 1.6))
 	p.hp = p.max_hp
-	var crown := Polygon2D.new()
-	crown.polygon = PackedVector2Array([Vector2(-8, 0), Vector2(-8, -6), Vector2(-4, -2), Vector2(0, -8), Vector2(4, -2), Vector2(8, -6), Vector2(8, 0)])
-	crown.color = UiKit.GOLD
-	# Sit it on top of the drawn head (measured from the sprite), sized to
-	# the body - a fixed height landed on the face once people grew.
-	var top := -52.0
-	var anim := p.get("_anim") as AnimatedSprite2D
-	if anim != null:
-		var hd := BloodSim.head_of(anim)
-		top = anim.position.y + (hd.y - hd.z * 0.9) * absf(anim.scale.y)
-	crown.scale = Vector2(1.1, 1.1) * SpriteBook.ACTOR_K
-	crown.position = Vector2(0, top)
-	var cm := CanvasItemMaterial.new()
-	cm.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
-	crown.material = cm
-	p.add_child(crown)
-	# Ride the head every frame (walk bob, flinch, knockdown), facing too.
-	if anim != null:
-		var follow := func() -> void:
-			if not is_instance_valid(crown) or not is_instance_valid(anim):
-				return
-			# Lying down (knockdown / death) the silhouette top is not the
-			# head: tuck the crown away until he is up again.
-			crown.visible = not (str(anim.animation) in ["knockdown", "death", "getup"])
-			var h2 := BloodSim.head_of(anim)
-			var fx := -1.0 if anim.flip_h else 1.0
-			var vis := anim.get_parent() as Node2D
-			var sx := vis.scale.x if vis else 1.0
-			crown.position = Vector2(h2.x * absf(anim.scale.x) * fx * sx, anim.position.y + (h2.y - h2.z * 0.45) * absf(anim.scale.y) + (vis.position.y if vis else 0.0))
-			crown.rotation = 0.0
-		anim.frame_changed.connect(follow)
-		anim.animation_changed.connect(follow)
-		follow.call()
-	Juice.toast("challenge", "WANTED: %s" % p.title.to_upper(), "The crowned one. 2 gems and 40 gold on his head.")
+	# A bounty badge floats over his head (not a crown stuck on it).
+	OverheadBadge.attach(p, "bounty")
+	Juice.toast("challenge", "WANTED: %s" % p.title.to_upper(), "The one with the gold badge. 2 gems and 40 gold on his head.")
 	p.died.connect(func() -> void:
 		FamilyProfile.data["wanted_claimed"] = int(FamilyProfile.data.get("wanted_claimed", 0)) + 1
 		FamilyProfile.add_gems(2)

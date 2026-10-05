@@ -25,6 +25,7 @@ func _ready() -> void:
 		add_to_group("act_final_boss")
 	armored = not is_mini
 	_crown()
+	OverheadBadge.attach.call_deferred(self, "elite" if is_mini else "boss")
 	died.connect(_on_dead)
 	# Attack patterns (data/bosses.json). Bosses are a wall the first time:
 	# more HP, and every pattern has to be learned.

@@ -150,6 +150,7 @@ func _wave(elite := false, force := false) -> void:
 
 
 func _make_elite(p: Punk) -> void:
+	OverheadBadge.attach.call_deferred(p, "elite")
 	if _mods.is_empty():
 		return
 	var m: Dictionary = _mods[randi() % _mods.size()]
