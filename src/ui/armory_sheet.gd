@@ -15,9 +15,17 @@ const WHERE := {
 }
 
 var _grid: GridContainer
+var _focus_key := ""
+var _pop: Control
 
 
 func _ready() -> void:
+	_paint()
+
+
+func _paint() -> void:
+	for c in get_children():
+		c.queue_free()
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var dim := ColorRect.new()
 	dim.color = Color(0.0, 0.0, 0.02, 0.84)
@@ -77,10 +85,25 @@ func _ready() -> void:
 		col.add_child(grid)
 	UiKit.pop_in(card)
 	FamilyProfile.mark_seen("armory")
+	var want := _focus_key
 	get_tree().process_frame.connect(func() -> void:
+		if want != "":
+			for b in _buttons(self):
+				if str(b.get_meta("key", "")) == want and not b.disabled:
+					b.grab_focus()
+					return
 		if is_instance_valid(close):
 			close.grab_focus()
 	, CONNECT_ONE_SHOT)
+
+
+func _buttons(n: Node) -> Array[Button]:
+	var out: Array[Button] = []
+	for c in n.get_children():
+		if c is Button:
+			out.append(c)
+		out.append_array(_buttons(c))
+	return out
 
 
 func _art(id: String) -> Texture2D:
@@ -97,7 +120,7 @@ func _tile(id: String) -> Control:
 	var rarity := Rarity.normalize(str(spec.get("rarity", "common")))
 	var col := Rarity.color(rarity)
 	var p := PanelContainer.new()
-	p.custom_minimum_size = Vector2(370, 138)
+	p.custom_minimum_size = Vector2(370, 176)
 	p.add_theme_stylebox_override("panel", UiKit.panel(Color(0.06, 0.07, 0.12), UiKit.GOLD if Arsenal.mastered(id) else (col if have else Palette.MUTED)))
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 3)
@@ -150,4 +173,104 @@ func _tile(id: String) -> Control:
 	UiKit.apply_label(kl, 12, UiKit.GOLD if Arsenal.mastered(id) else Palette.TEXT)
 	row.add_child(kl)
 	v.add_child(row)
+	if have:
+		# Weapon level (gold) and mods (fitted in slots, bought with gems).
+		var br := HBoxContainer.new()
+		br.add_theme_constant_override("separation", 6)
+		var lv := Arsenal.level(id)
+		var up := UiKit.button(("LV %d  ▲ %dG" % [lv, Arsenal.level_cost(id)]) if lv < Arsenal.MAX_LV else "LV MAX", Vector2(170, 30))
+		up.set_meta("key", "lv_" + id)
+		up.disabled = lv >= Arsenal.MAX_LV or int(FamilyProfile.data.get("gold", 0)) < Arsenal.level_cost(id)
+		up.pressed.connect(func() -> void:
+			if Arsenal.try_level(id):
+				Juice.play("res://assets/audio/claim.wav")
+				Juice.shout("%s LV %d" % [str(spec.get("title", id)).to_upper(), Arsenal.level(id)])
+				_focus_key = "lv_" + id
+				_paint()
+		)
+		br.add_child(up)
+		var on := Arsenal.mods_on(id)
+		var mod_names: Array[String] = []
+		for m in on:
+			mod_names.append(str(Arsenal.MODS[m]["title"]))
+		var mb := UiKit.button("MODS %d/%d" % [on.size(), Arsenal.slots(id)], Vector2(150, 30))
+		mb.set_meta("key", "mods_" + id)
+		mb.tooltip_text = ", ".join(mod_names) if not mod_names.is_empty() else "No mods fitted."
+		mb.pressed.connect(_mods_for.bind(id))
+		br.add_child(mb)
+		v.add_child(br)
+		if not mod_names.is_empty():
+			var ml := Label.new()
+			ml.text = "  ".join(mod_names)
+			UiKit.apply_label(ml, 11, Color(0.6, 0.9, 1.0))
+			v.add_child(ml)
 	return p
+
+
+## The mod bench for one weapon: every mod of its kind, fit / remove /
+## buy with gems.
+func _mods_for(id: String) -> void:
+	if _pop and is_instance_valid(_pop):
+		_pop.queue_free()
+	var kind := "gun" if Arsenal.is_gun(id) else "melee"
+	var dim := ColorRect.new()
+	dim.color = Color(0, 0, 0, 0.6)
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(dim)
+	_pop = dim
+	var card := PanelContainer.new()
+	card.add_theme_stylebox_override("panel", UiKit.frame(Color(0.6, 0.9, 1.0), 0.4))
+	card.set_anchors_preset(Control.PRESET_CENTER)
+	card.offset_left = -360
+	card.offset_right = 360
+	card.offset_top = -250
+	card.offset_bottom = 250
+	dim.add_child(card)
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 8)
+	card.add_child(col)
+	col.add_child(UiKit.title("MOD BENCH  ·  %s" % str(WeaponBook.spec(id).get("title", id)).to_upper(), 22, Color(0.6, 0.9, 1.0)))
+	var sub := Label.new()
+	sub.text = "Slots %d (2 from LV 3).  Gems %d." % [Arsenal.slots(id), int(FamilyProfile.data.get("gems", 0))]
+	UiKit.apply_label(sub, 13, Palette.MUTED)
+	col.add_child(sub)
+	var first: Button = null
+	for m: String in Arsenal.MODS:
+		var spec: Dictionary = Arsenal.MODS[m]
+		if str(spec["for"]) != kind:
+			continue
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 10)
+		var info := UiKit.rich("[color=#ffd75e]%s[/color]  %s" % [str(spec["title"]), str(spec["line"])], 460, 13, Palette.TEXT)
+		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(info)
+		var txt := ""
+		if not Arsenal.mod_owned(m):
+			txt = "BUY %d GEMS" % int(spec["gems"])
+		elif Arsenal.has_mod(id, m):
+			txt = "REMOVE"
+		else:
+			txt = "FIT"
+		var b := UiKit.button(txt, Vector2(170, 34))
+		b.pressed.connect(func() -> void:
+			if not Arsenal.mod_owned(m):
+				if Arsenal.buy_mod(m):
+					Juice.play("res://assets/audio/card.wav")
+			elif Arsenal.toggle_mod(id, m):
+				Juice.play("res://assets/audio/claim.wav")
+			else:
+				Juice.popup_number(Vector2(640, 360), "NO FREE SLOT", Palette.BRICK)
+			_mods_for(id)
+		)
+		row.add_child(b)
+		if first == null:
+			first = b
+		col.add_child(row)
+	var done := UiKit.button("DONE", Vector2(160, 40))
+	done.pressed.connect(func() -> void:
+		_focus_key = "mods_" + id
+		_paint()
+	)
+	col.add_child(done)
+	if first:
+		first.call_deferred("grab_focus")

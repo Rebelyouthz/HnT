@@ -83,6 +83,10 @@ func _prepare() -> void:
 	if _tab == "armory" and fp != null:
 		(fp.data as Dictionary)["weapons_found"] = ["knife", "pipe", "board", "chain", "baseball_bat", "machete", "pistol", "revolver", "shotgun", "flare_gun", "smg"]
 		(fp.data as Dictionary)["weapon_kills"] = {"baseball_bat": 31, "machete": 12, "pistol": 25, "shotgun": 9, "pipe": 4, "revolver": 2}
+		(fp.data as Dictionary)["weapon_lv"] = {"baseball_bat": 3, "pistol": 2}
+		(fp.data as Dictionary)["mods_owned"] = ["nails", "weighted", "ext_mag"]
+		(fp.data as Dictionary)["weapon_mods"] = {"baseball_bat": ["nails", "weighted"], "pistol": ["ext_mag"]}
+		(fp.data as Dictionary)["gold"] = 300
 	if _tab == "stats":
 		# Demo numbers so the report has something to draw.
 		var d2 := fp.data as Dictionary

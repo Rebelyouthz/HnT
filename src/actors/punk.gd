@@ -889,13 +889,17 @@ func take_hit(kind: String, from: Node) -> void:
 	if from is Fighter:
 		dmg += int(FamilyProfile.gear_stat_bonus((from as Fighter).role).get("dmg", 0))
 		var wp := str((from as Fighter).pickup)
-		if wp != "" and Arsenal.mastered(wp):
-			dmg = int(round(float(dmg) * Arsenal.dmg_mul(wp)))
+		if wp != "":
+			dmg = int(round(float(dmg) * Arsenal.power_mul(wp)))
 	if from is Fighter and Charms.has("rabbit_foot") and randf() < 0.12:
 		dmg *= 2
 		Juice.popup_number(global_position + Vector2(0, -60), "CRIT", UiKit.GOLD)
 		Juice.hitstop(3)
 	var before_hp := hp
+	# Weapon mods: crits, bleeding nails, live wire, incendiary, hollow points.
+	var mod_w := str((from as Fighter).pickup) if from is Fighter else (str((from as Round).weapon) if from is Round else "")
+	if mod_w != "" and (WeaponBook.spec(mod_w).has("gun") == (from is Round)):
+		dmg += Arsenal.on_hit(mod_w, self, dmg)
 	hp = maxi(0, hp - dmg)
 	_overkill = hp <= 0 and (dmg - before_hp >= 14 or kind in ["combo", "finish", "stomp3", "snap", "air-spin", "web-slam"])
 	_hit_noise(kind, from)

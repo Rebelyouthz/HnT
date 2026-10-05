@@ -1981,7 +1981,7 @@ func _fire_gun() -> void:
 		var r := Round.new()
 		r.weapon = id
 		r.round_kind = str(spec.get("round", "bullet"))
-		r.dmg = int(round(float(spec.get("dmg", 10)) * (1.0 + 0.25 * float(_cart("gun_oil"))) * Arsenal.dmg_mul(id)))
+		r.dmg = int(round(float(spec.get("dmg", 10)) * (1.0 + 0.25 * float(_cart("gun_oil"))) * Arsenal.power_mul(id)))
 		r.owner_role = role
 		r.shooter = self
 		r.lane_y = global_position.y
@@ -2043,7 +2043,7 @@ func _sfx_or(path: String, fallback: String) -> String:
 
 func _clip_size() -> int:
 	var spec := WeaponBook.spec(pickup)
-	return int(round(float(spec.get("mag", spec.get("ammo", 6))) * (1.0 + 0.5 * float(_cart("long_mag")))))
+	return int(round(float(spec.get("mag", spec.get("ammo", 6))) * (1.0 + 0.5 * float(_cart("long_mag"))) * Arsenal.clip_mul(pickup)))
 
 
 ## Reload: magazine guns drop the empty mag and slap in a new one; the
@@ -2056,7 +2056,7 @@ func start_reload() -> void:
 		_reload_len = float(spec_t[0]) * float(mini(gun_reserve, _clip_size() - pistol_shots)) + 0.25
 		_shell_t = float(spec_t[0])
 	else:
-		_reload_len = float(spec_t[0])
+		_reload_len = float(spec_t[0]) * Arsenal.reload_mul(pickup)
 		GunFx.mag(get_parent(), _muzzle_global() - Vector2(float(facing) * 18.0, -6.0), pickup, facing, global_position.y + 6.0)
 		Mixer.play_sfx(_sfx_or("res://assets/audio/sfx/mag_out.ogg", "res://assets/audio/cling.wav"), randf_range(0.95, 1.05), -5.0)
 	reload_t = _reload_len
@@ -2732,7 +2732,7 @@ func equip_pickup(kind: String) -> void:
 		Juice.toast("reward", str(mspec.get("title", kind)).to_upper(), "%s  ·  lasts %d hits%s" % [str(mspec.get("blurb", "")), melee_uses, "  ·  MASTERED" if Arsenal.mastered(kind) else ""])
 	if kind in GUNS:
 		var spec := WeaponBook.spec(kind)
-		pistol_shots = int(round(float(spec.get("mag", spec.get("ammo", 6))) * (1.0 + 0.5 * float(_cart("long_mag")))))
+		pistol_shots = int(round(float(spec.get("mag", spec.get("ammo", 6))) * (1.0 + 0.5 * float(_cart("long_mag"))) * Arsenal.clip_mul(kind)))
 		gun_reserve = pistol_shots * int((RELOAD.get(kind, [1.0, 1]) as Array)[1])
 		reload_t = 0.0
 		ammo = maxi(ammo, 3)
