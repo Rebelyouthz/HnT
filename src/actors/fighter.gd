@@ -149,6 +149,7 @@ var art_lock := 0.0
 var art_vx := 0.0
 var art_hit := false
 var arts: ArtMoves
+var _duck_tap := -9.0
 var combo_fx := ""
 var combo_id := ""
 var _combo_vx := 0.0
@@ -1111,6 +1112,12 @@ func _combat() -> void:
 	if blocking and _just("dash") and plane == "street" and _street_grounded():
 		_roll()
 		return
+	if _just("duck") and plane == "street" and _street_grounded() and attack_cd == 0:
+		if _clock - _duck_tap < 0.32:
+			_duck_tap = -9.0
+			BrawlPlus.taunt(self)
+			return
+		_duck_tap = _clock
 	if _just("jump"):
 		_combo_press("J")
 	if attack_cd == 0 and _just("dash") and not dashing:
@@ -1777,6 +1784,7 @@ func _roll() -> void:
 	_roll_dir = signf(x) if absf(x) > 0.3 else -float(facing)
 	roll_t = 0.42 * (1.5 if Trees.has("p_roll") else 1.0)
 	invuln = maxi(invuln, 22)
+	BrawlPlus.dodge(self)
 	blocking = false
 	_cancel_strike()
 	if _anim != null and _anim.sprite_frames.has_animation("roll"):
@@ -2326,6 +2334,8 @@ func take_hit(kind: String, from: Node) -> void:
 		(from as Punk).hp = maxi(1, (from as Punk).hp - 6 * srun.trait_n("t_thorns"))
 		Juice.popup_number((from as Punk).global_position + Vector2(0, -80), str(6 * srun.trait_n("t_thorns")), Color(0.5, 1.0, 0.5))
 	hp = maxi(0, hp - dmg)
+	if hp <= 0 and BrawlPlus.clutch(self):
+		return
 	if hp > 0:
 		copay = minf(float(max_hp - hp), copay + float(dmg) * 0.5)
 		_copay_hold = 1.2
@@ -3391,6 +3401,7 @@ func _wear_melee(at: Vector2) -> void:
 		Juice.popup_number(global_position + Vector2(0, -104), "CRACKING", Color(1.0, 0.7, 0.3))
 	if melee_uses > 0:
 		return
+	BrawlPlus.last_hit(self, at)
 	var wood := pickup in Arsenal.WOOD
 	var tip := _melee.global_position if _melee != null else at
 	Juice.shout("%s BROKE" % str(WeaponBook.spec(pickup).get("title", pickup)).to_upper())

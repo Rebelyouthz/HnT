@@ -901,7 +901,17 @@ func _run_team() -> void:
 # --- meters under the feet ------------------------------------------------------
 
 func _draw() -> void:
-	if f == null or (f.chi <= 0.0 and f.team <= 0.0):
+	if f == null:
+		return
+	# TOGETHER: a faint gold tether at the feet when Dad and Son stand close.
+	if f.role == "son":
+		for p in get_tree().get_nodes_in_group("players"):
+			if p is Fighter and p != f and not (p as Fighter).downed:
+				var d := (p as Fighter).global_position - f.global_position
+				if d.length() < 130.0:
+					var a := 0.25 + 0.1 * sin(_ready_pulse * 6.0)
+					draw_line(Vector2(0, 2), d + Vector2(0, 2), Color(1.0, 0.85, 0.35, a), 1.5)
+	if f.chi <= 0.0 and f.team <= 0.0:
 		return
 	var col := Elements.color(str(Elements.art_for(f.role, "N").get("elem", "fire")))
 	var frac := clampf(f.chi / Elements.CHI_MAX, 0.0, 1.0)

@@ -319,6 +319,7 @@ var _edge_bounces := 0
 
 
 func _fling(delta: float) -> void:
+	BrawlPlus.prop_slam(self)
 	if flung_t > 0.0 and not flung_ground and _bowled.size() > 0 and flung_t > 0.3:
 		_bowled.clear()
 	flung_t -= delta
@@ -400,6 +401,8 @@ func _physics_process(delta: float) -> void:
 	if flung:
 		_fling(delta)
 		return
+	if has_meta("bp_slam"):
+		remove_meta("bp_slam")
 	if staple_cd > 0.0:
 		staple_cd -= delta
 	if staples > 0 and staple_cd <= 0.0:
@@ -924,6 +927,8 @@ func take_hit(kind: String, from: Node) -> void:
 		dmg *= 2
 		Juice.popup_number(global_position + Vector2(0, -60), "CRIT", UiKit.GOLD)
 		Juice.hitstop(3)
+	if from is Fighter and kind != "gun":
+		dmg = BrawlPlus.on_blow(self, from as Fighter, kind, dmg)
 	var before_hp := hp
 	# Weapon mods: crits, bleeding nails, live wire, incendiary, hollow points.
 	var mod_w := str((from as Fighter).pickup) if from is Fighter else (str((from as Round).weapon) if from is Round else "")
@@ -1091,6 +1096,7 @@ func _die(kind: String, from: Node) -> void:
 		art_by = art_by.get("shooter")
 	if art_by is Fighter:
 		(art_by as Fighter).gain_kill()
+		BrawlPlus.on_kill(art_by as Fighter, global_position)
 	var kb: Dictionary = FamilyProfile.data.get("kills_by", {})
 	kb[title] = int(kb.get(title, 0)) + 1
 	FamilyProfile.data["kills_by"] = kb

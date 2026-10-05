@@ -562,6 +562,8 @@ static func car(host: Node, at: Vector2, color: Color, who: String = "sedan") ->
 	var n := Node2D.new()
 	n.position = Vector2(cx, at.y)
 	n.z_index = 2
+	n.add_to_group("slam_props")
+	n.set_meta("half_w", CAR_LEN * 0.46)
 	host.add_child(n)
 	if SpriteBook.has_who(who):
 		var a := SpriteBook.make_anim(who)
