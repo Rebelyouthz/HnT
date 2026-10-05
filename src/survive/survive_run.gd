@@ -41,6 +41,8 @@ var _awarded := false
 ## S-COINS picked up this hour, and LIMIT BREAKS once everything is maxed.
 var coins := 0
 var limit_breaks := 0
+## TALKING STICK (group circle): +40% damage while it lasts.
+var share_t := 0.0
 ## Damage dealt per ability this hour (DPS meter).
 var dealt: Dictionary = {}
 
@@ -112,7 +114,7 @@ func trait_n(id: String) -> int:
 
 
 func dmg_mul() -> float:
-	return 1.0 + 0.12 * trait_n("t_dmg") + _item_mod("dmg") + 0.05 * Meta.rank("s_might") + SurvGear.stat("dmg") + (0.08 if Trees.has("u_limit") else 0.05) * float(limit_breaks)
+	return (1.4 if share_t > 0.0 else 1.0) * (1.0 + 0.12 * trait_n("t_dmg") + _item_mod("dmg") + 0.05 * Meta.rank("s_might") + SurvGear.stat("dmg") + (0.08 if Trees.has("u_limit") else 0.05) * float(limit_breaks))
 
 
 func area_mul() -> float:

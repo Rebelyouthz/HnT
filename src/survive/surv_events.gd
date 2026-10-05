@@ -77,6 +77,7 @@ func _process(delta: float) -> void:
 		Supply.drop(host, f.global_position + Vector2(randf_range(-160, 160), randf_range(-20, 30)))
 	if _every("wheel", 70.0 if Trees.has("f_wheel") else 100.0, delta):
 		WheelToken.place(host, f.global_position + Vector2(randf_range(120, 220) * (1.0 if randf() < 0.5 else -1.0), randf_range(-10, 20)), "survivor")
+	_map_event(host, f, run, delta)
 	if run.kills >= (_milestone + 1) * 100:
 		_milestone += 1
 		var c := SurviveChest.new()
@@ -94,6 +95,61 @@ func _process(delta: float) -> void:
 				e.flung = true
 				e.flung_dir = signf(e.global_position.x - f.global_position.x)
 				e.flung_t = 0.3
+
+
+## Each survivor map has its own thing.
+##   intake_lot    TOW TRUCK: every 80 s a truck tows everything in one lane
+##   group_circle  TALKING STICK: stand in the circle 3 s for +40% damage
+##   waiting_room  NOW SERVING: a number is called; the thug wearing it pays
+##   sleet_hour    BLIZZARD: every 70 s the whole street slows for 6 s
+##   ledger_dive   AUDIT: every 60 s gems on screen double in value
+var _stick_zone := Vector2.INF
+var _stick_hold := 0.0
+var _stick_buff := 0.0
+
+
+func _map_event(host: Node, f: Fighter, run: SurviveRun, delta: float) -> void:
+	match str(App.current_map):
+		"intake_lot":
+			if _every("tow", 80.0, delta):
+				Tow.sweep(host, f)
+		"group_circle":
+			if _stick_zone == Vector2.INF and _every("stick", 45.0, delta):
+				_stick_zone = f.global_position + Vector2(randf_range(-180, 180), randf_range(-20, 30))
+				_stick_hold = 0.0
+				ArtFx.spawn(host, _stick_zone, "ring", UiKit.GOLD, 60.0, 8.0)
+				Juice.shout("THE TALKING STICK: STAND IN THE CIRCLE")
+			if _stick_zone != Vector2.INF:
+				if f.global_position.distance_to(_stick_zone) < 40.0:
+					_stick_hold += delta
+					if _stick_hold >= 3.0:
+						_stick_zone = Vector2.INF
+						_stick_buff = 20.0
+						run.frenzy_t = maxf(run.frenzy_t, 6.0)
+						Juice.shout("YOUR TURN TO SHARE: +40% DAMAGE")
+				_t["stick_life"] = float(_t.get("stick_life", 0.0)) + delta
+				if float(_t["stick_life"]) > 8.0:
+					_t["stick_life"] = 0.0
+					_stick_zone = Vector2.INF
+			if _stick_buff > 0.0:
+				_stick_buff -= delta
+				run.share_t = _stick_buff
+		"waiting_room":
+			if _every("serving", 50.0, delta):
+				_mark()
+				Juice.shout("NOW SERVING: NUMBER %d" % (randi() % 90 + 10))
+		"sleet_hour":
+			if _every("blizzard", 70.0, delta):
+				Juice.shout("BLIZZARD")
+				for m in get_tree().get_nodes_in_group("enemies"):
+					if m is Punk:
+						(m as Punk).snared = maxf((m as Punk).snared, 3.0)
+		"ledger_dive":
+			if _every("audit", 60.0, delta):
+				Juice.shout("AUDIT: GEMS DOUBLE")
+				for g in get_tree().get_nodes_in_group("xp_gems"):
+					if g.get("amount") != null:
+						g.set("amount", int(g.get("amount")) * 2)
 
 
 func _golden(host: Node, f: Fighter) -> void:
@@ -138,6 +194,48 @@ func _encircle(host: Node, f: Fighter) -> void:
 		var at := f.global_position + Vector2(cos(a) * 280.0, sin(a) * 60.0)
 		var row := {"title": "Coping Imp", "x": at.x, "y": clampf(at.y, 460.0, 560.0), "home": "street", "hp": 30, "pmin": at.x - 400.0, "pmax": at.x + 400.0}
 		Party.spawn_row(host, row, 1.0 + float(horde.get("elapsed")) / 85.0)
+
+
+## A tow truck crossing one lane of the lot: thugs in its way get towed.
+class Tow extends Node2D:
+	var dir := 1
+	var _hit := {}
+	var _t := 0.0
+
+	static func sweep(host: Node, f: Fighter) -> void:
+		var t := Tow.new()
+		t.dir = 1 if randf() < 0.5 else -1
+		t.global_position = f.global_position + Vector2(-420.0 * float(t.dir), 0)
+		host.add_child(t)
+		Juice.shout("TOW TRUCK")
+		Mixer.play_sfx("res://assets/audio/car_pass.wav", 0.8, 0.0)
+
+	func _ready() -> void:
+		z_index = 6
+
+	func _physics_process(delta: float) -> void:
+		_t += delta
+		global_position.x += float(dir) * 360.0 * delta
+		for m in get_tree().get_nodes_in_group("enemies"):
+			if m is Punk and not _hit.has(m.get_instance_id()):
+				var e: Punk = m
+				if absf(e.global_position.x - global_position.x) < 40.0 and absf(e.global_position.y - global_position.y) < 30.0:
+					_hit[e.get_instance_id()] = true
+					e.take_hit("finish", e)
+		if _t > 2.6:
+			queue_free()
+		queue_redraw()
+
+	func _draw() -> void:
+		var s := float(dir)
+		draw_rect(Rect2(-40, -34, 80, 26), Color(0.85, 0.6, 0.15))
+		draw_rect(Rect2(20.0 * s - 10.0, -50, 20, 18), Color(0.8, 0.55, 0.12))
+		draw_rect(Rect2(20.0 * s - 6.0, -46, 12, 8), Color(0.5, 0.75, 0.9))
+		draw_circle(Vector2(-24, -6), 8.0, Color(0.1, 0.1, 0.12))
+		draw_circle(Vector2(24, -6), 8.0, Color(0.1, 0.1, 0.12))
+		draw_line(Vector2(-30.0 * s, -30), Vector2(-56.0 * s, -10), Color(0.3, 0.3, 0.3), 3.0)
+		var blink := 1.0 if fmod(_t, 0.4) < 0.2 else 0.3
+		draw_circle(Vector2(20.0 * s, -54), 3.0, Color(1.0, 0.6, 0.1, blink))
 
 
 ## A crate on a parachute: heal or magnet.

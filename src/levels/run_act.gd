@@ -398,8 +398,7 @@ func _ready() -> void:
 		if _state.cards.is_empty():
 			get_tree().create_timer(3.0).timeout.connect(func() -> void:
 				if is_inside_tree() and get_node_or_null("CardPick") == null:
-					Juice.shout("STARTING DRAW")
-					_cards()
+					_starting_draw()
 			)
 	PadRouter.drop_in.connect(_on_dropin)
 	var body := toast_body
@@ -482,6 +481,26 @@ func _cards() -> void:
 		pick.ids = pool.slice(0, 3)
 		_state.card_reroll = false
 	add_child(pick)
+	pick.picked.connect(func(id: String) -> void:
+		_state.take_card(id)
+	)
+
+
+## STARTING DRAW: three item cards (drones, pets, actives, weapons) before
+## the first fight of a run.
+func _starting_draw() -> void:
+	var table: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/cards.json"))
+	var pool: Array = []
+	if table is Array:
+		for c in table:
+			if (c as Dictionary).has("kind"):
+				pool.append(c["id"])
+	pool.shuffle()
+	var pick := CardPick.new()
+	pick.name = "CardPick"
+	pick.ids = pool.slice(0, 3)
+	add_child(pick)
+	Juice.shout("STARTING DRAW")
 	pick.picked.connect(func(id: String) -> void:
 		_state.take_card(id)
 	)

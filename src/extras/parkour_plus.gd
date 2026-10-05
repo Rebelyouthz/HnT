@@ -45,10 +45,27 @@ static func place(host: Node, mid: String, goal: float, check: float) -> Parkour
 	return p
 
 
+var _clock_l: Label
+
+
 func _ready() -> void:
 	_lines = SpeedLines.new()
 	add_child(_lines)
 	call_deferred("_setup")
+	# RACE THE CLOCK on the roof maps: the medal times on screen from the start.
+	if bool(act.get("roof_start")):
+		var layer := CanvasLayer.new()
+		layer.layer = 6
+		add_child(layer)
+		var root := PixelStage.attach_canvas(layer)
+		_clock_l = Label.new()
+		_clock_l.position = Vector2(0, 92)
+		_clock_l.size = Vector2(1280, 20)
+		_clock_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		UiKit.apply_label(_clock_l, 14, Color(0.6, 0.9, 1.0))
+		root.add_child(_clock_l)
+		var g := goal_x / 240.0
+		Juice.toast("reward", "RACE THE CLOCK", "GOLD %.0fs  ·  SILVER %.0fs  ·  BRONZE %.0fs" % [g, g * 1.35, g * 1.8])
 
 
 func _setup() -> void:
@@ -172,6 +189,10 @@ func _physics_process(delta: float) -> void:
 	for f in ps:
 		_feet(f, delta)
 	_lines.speed = absf(lead.velocity.x)
+	if _clock_l:
+		var g := goal_x / 240.0
+		var next := "GOLD" if _t <= g else ("SILVER" if _t <= g * 1.35 else ("BRONZE" if _t <= g * 1.8 else "NO MEDAL"))
+		_clock_l.text = ("%.1fs  ·  ON PACE FOR %s" % [_t, next]) if not _done else "FINISHED %.1fs" % float(FamilyProfile.data.get("best_" + map_id, _t))
 
 
 func _feet(f: Fighter, delta: float) -> void:
