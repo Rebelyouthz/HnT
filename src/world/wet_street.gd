@@ -40,22 +40,34 @@ static func lay(host: Node, width: float, name: String = "street") -> WetStreet:
 	return w
 
 
+## A full-width painted road (<ground>_road.png, 4 texels a unit): one image
+## spans a whole screen and the street band from the kerb down, so the only
+## seam is where one image meets the next sideways.
+const ROAD_TEXEL := 0.25
+
+
 func _ready() -> void:
-	var tex := load("res://assets/backdrops/%s.png" % ground) as Texture2D
+	var road := "res://assets/backdrops/%s_road.png" % ground
+	var full := ResourceLoader.exists(road) and ResourceLoader.exists("res://assets/backdrops/%s_road_wet.png" % ground)
+	var tex := load(road if full else "res://assets/backdrops/%s.png" % ground) as Texture2D
 	var region := Rect2(0, 0, ceilf(map_w / TEXEL) + 4.0, ceilf(300.0 / TEXEL_Y))
+	var sc := Vector2(TEXEL, TEXEL_Y)
+	if full:
+		region = Rect2(0, 0, ceilf(map_w / ROAD_TEXEL) + 4.0, float(tex.get_height()))
+		sc = Vector2(ROAD_TEXEL, ROAD_TEXEL)
 	var base := Sprite2D.new()
 	base.texture = tex
 	base.centered = false
 	base.region_enabled = true
 	base.region_rect = region
 	base.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
-	base.scale = Vector2(TEXEL, TEXEL_Y)
+	base.scale = sc
 	base.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	base.position = Vector2(0, TOP)
 	base.z_index = 0
 	# The painted road is very dark (mean ~10%): lift it so the stones read
 	# under the night lights instead of sinking into one black mass.
-	base.modulate = Color(1.5, 1.45, 1.6)
+	base.modulate = Color(1.4, 1.36, 1.45) if full else Color(1.5, 1.45, 1.6)
 	add_child(base)
 	# Depth: the near edge of the road falls off into shadow, which keeps
 	# the eye on the fighting line and gives the floor a little perspective.
@@ -81,7 +93,7 @@ func _ready() -> void:
 	_fx.z_index = 1
 	var mat := ShaderMaterial.new()
 	mat.shader = preload("res://src/shaders/wet_reflect.gdshader")
-	mat.set_shader_parameter("wet_mask", load("res://assets/backdrops/%s_wet.png" % ground))
+	mat.set_shader_parameter("wet_mask", load("res://assets/backdrops/%s_road_wet.png" % ground if full else "res://assets/backdrops/%s_wet.png" % ground))
 	mat.set_shader_parameter("tex_size", Vector2(tex.get_width(), tex.get_height()))
 	_fx.material = mat
 	add_child(_fx)
@@ -123,6 +135,19 @@ func _streak(x: float, col: Color, k: float) -> void:
 	sp.set_meta("x", x)
 	add_child(sp)
 	_streaks.append(sp)
+	# A pool of light on the stones under it: a wide flat glow, lamp coloured.
+	var pool := Sprite2D.new()
+	pool.texture = LightRig.radial_tex()
+	pool.position = Vector2(x, TOP + 26.0)
+	var ts := float(pool.texture.get_width())
+	pool.scale = Vector2(150.0 / ts, 44.0 / ts)
+	pool.modulate = Color(col.r, col.g, col.b, 0.13 * k)
+	var pm := CanvasItemMaterial.new()
+	pm.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	pm.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+	pool.material = pm
+	pool.z_index = 1
+	add_child(pool)
 
 
 static var _stex: Texture2D
