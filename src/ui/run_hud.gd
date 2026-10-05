@@ -529,7 +529,7 @@ func _paint_fighter(lab: Label, bar: ColorRect, pips: HBoxContainer, snap: Label
 	var lives := ""
 	if state and lemon_slot:
 		lives = "   LIVES %d" % state.lives
-	lab.text = "%s%s" % [title.to_upper(), lives]
+	lab.text = "%s  LV%d%s" % [title.to_upper(), Heroes.level(f.role), lives]
 	# The weapon in hand and what is left in it.
 	if f.pickup != "":
 		var wt := str(WeaponBook.spec(f.pickup).get("title", f.pickup)).to_upper()
@@ -746,8 +746,9 @@ func _toggle_pause() -> void:
 			var ws := WeaponBook.spec(f.pickup)
 			var extra := ("  ·  %d hits left" % f.melee_uses) if Arsenal.USES.has(f.pickup) else ""
 			parts.append("[color=#ff8a5e]%s[/color]%s%s" % [str(ws.get("title", f.pickup)).to_upper(), extra, "  ·  ★ MASTERED" if Arsenal.mastered(f.pickup) else ""])
-		if not parts.is_empty():
-			lines.append("[b]%s[/b]\n%s" % [who.to_upper(), "\n".join(parts)])
+		var rn := Heroes.rarity_name(f.role)
+		parts.push_front("[color=#%s]LV %d  ·  %s[/color]" % [Rarity.color(rn).to_html(false), Heroes.level(f.role), rn.to_upper()])
+		lines.append("[b]%s[/b]\n%s" % [who.to_upper(), "\n".join(parts)])
 	if not lines.is_empty():
 		var lo := UiKit.rich("", 520, 12, Palette.TEXT)
 		lo.text = "[color=#ffd75e]LOADOUT[/color]\n" + "\n".join(lines)

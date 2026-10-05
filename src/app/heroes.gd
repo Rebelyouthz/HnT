@@ -98,6 +98,7 @@ static func add_shards(role: String, n: int) -> void:
 		return
 	var row := _row(role)
 	row["shards"] = shards(role) + n
+	Engine.set_meta("run_shards", int(Engine.get_meta("run_shards", 0)) + n)
 	FamilyProfile.data["shards_found"] = int(FamilyProfile.data.get("shards_found", 0)) + n
 	FamilyProfile.flag_unseen("heroes")
 

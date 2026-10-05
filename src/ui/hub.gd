@@ -364,7 +364,9 @@ func _refresh_tab_locks() -> void:
 				var bang: Control = _tab_bangs[id]
 				var unseen: bool = unlocked and not bool(FamilyProfile.data["seen"].get(id, false))
 				var awards_ready: bool = id == "awards" and unlocked and _has_claim()
-				bang.visible = unseen or awards_ready
+				# HEROES: something to spend on (a level, a rarity, a META rank).
+				var heroes_ready: bool = id == "heroes" and _heroes_ready()
+				bang.visible = unseen or awards_ready or heroes_ready
 				var dot: Control = _tab_dots.get(id)
 				if dot:
 					dot.visible = id == "clinic" and FamilyProfile.has_menu_alert() and not bang.visible
@@ -593,3 +595,14 @@ func _clear_modal() -> void:
 	if _modal and is_instance_valid(_modal):
 		_modal.queue_free()
 	_modal = null
+
+
+
+func _heroes_ready() -> bool:
+	for r in Heroes.ROLES:
+		if Heroes.can_level(r) or Heroes.can_rank(r):
+			return true
+	for id in Meta.LIST.keys():
+		if Meta.blocker(id) == "":
+			return true
+	return false

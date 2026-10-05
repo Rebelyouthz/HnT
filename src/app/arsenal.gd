@@ -73,6 +73,7 @@ static func run_best() -> String:
 
 static func reset_run() -> void:
 	Engine.set_meta("run_weapon_kills", {})
+	Engine.set_meta("run_shards", 0)
 
 
 static func bump(key: String, n: int = 1) -> void:

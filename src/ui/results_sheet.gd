@@ -45,9 +45,14 @@ func _ready() -> void:
 	card.position = Vector2(170, 34)
 	card.custom_minimum_size = Vector2(940, 0)
 	card.resized.connect(func() -> void:
-		card.position = Vector2((1280.0 - card.size.x) * 0.5, (720.0 - card.size.y) * 0.5).round()
+		card.position = Vector2((1280.0 - card.size.x) * 0.5, maxf(8.0, (720.0 - card.size.y) * 0.5)).round()
 	)
 	ui.add_child(card)
+	# Re-fit once the wrapped text has its real width.
+	get_tree().process_frame.connect(func() -> void:
+		if is_instance_valid(card):
+			card.reset_size()
+	, CONNECT_ONE_SHOT)
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 12)
 	card.add_child(col)
@@ -60,6 +65,8 @@ func _ready() -> void:
 	s.text = sub
 	s.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	s.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	# A wrapping label needs its width up front or the card grows tall.
+	s.custom_minimum_size = Vector2(860, 0)
 	UiKit.apply_label(s, 17, Palette.TEXT)
 	col.add_child(s)
 	var son_n := FamilyProfile.son_name()
@@ -122,6 +129,9 @@ func _ready() -> void:
 	if bw != "":
 		var run_k: Dictionary = Engine.get_meta("run_weapon_kills", {})
 		rewards.add_child(_reward("fist", str(WeaponBook.spec(bw).get("title", bw)).to_upper(), "%d KO" % int(run_k.get(bw, 0))))
+	var rs_n := int(Engine.get_meta("run_shards", 0))
+	if rs_n > 0:
+		rewards.add_child(_reward("star", "SHARDS", "+%d" % rs_n))
 	rewards.add_child(_reward("shield", "PARRY", str(int(FamilyProfile.data.get("parries", 0)))))
 	# Account XP.
 	var xp_row := HBoxContainer.new()
@@ -152,6 +162,7 @@ func _ready() -> void:
 			var why := Label.new()
 			why.text = lock_line
 			why.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			why.custom_minimum_size = Vector2(860, 0)
 			why.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			UiKit.apply_label(why, 15, Palette.BRICK)
 			col.add_child(why)
@@ -308,6 +319,26 @@ func _death_plate(col: VBoxContainer) -> void:
 	l.add_theme_constant_override("outline_size", 6)
 	row.add_child(l)
 	col.add_child(plate)
+	# Roguelite nudge: what would make the next try go better.
+	var tip := ""
+	for r in Heroes.ROLES:
+		if tip == "" and Heroes.can_level(r):
+			tip = "TIP  ·  you can afford a level in HEROES."
+		elif tip == "" and Heroes.can_rank(r):
+			tip = "TIP  ·  enough shards for a rarity up in HEROES."
+	if tip == "":
+		for id in Meta.LIST.keys():
+			if Meta.blocker(id) == "":
+				tip = "TIP  ·  a META upgrade is ready in HEROES."
+				break
+	if tip == "" and Heroes.map_tier() > 0:
+		tip = "TIP  ·  thugs get tougher deeper in the city. Grow your heroes and gear."
+	if tip != "":
+		var tl := Label.new()
+		tl.text = tip
+		tl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		UiKit.apply_label(tl, 14, UiKit.GOLD)
+		col.add_child(tl)
 	plate.pivot_offset = Vector2(200, 20)
 	plate.scale = Vector2(1.4, 1.4)
 	plate.modulate.a = 0.0
