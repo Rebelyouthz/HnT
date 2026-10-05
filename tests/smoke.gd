@@ -554,8 +554,6 @@ func _initialize() -> void:
 	failed += _contains("res://src/world/night_street.gd", "AmbientProp.place")
 	failed += _contains("res://src/world/night_street.gd", "_tile_fill")
 	failed += _contains("res://src/world/ambient_prop.gd", "static func place")
-	failed += _contains("res://src/levels/intake_lot.gd", "pixel_roof")
-	failed += _contains("res://src/levels/intake_lot.gd", "lot_roof")
 	failed += _contains("res://src/levels/fire_escapes.gd", "pixel_tenement")
 	failed += _contains("res://src/levels/fire_escapes.gd", "pixel_roof")
 	failed += _contains("res://src/ui/boss_card.gd", "clamp_king")

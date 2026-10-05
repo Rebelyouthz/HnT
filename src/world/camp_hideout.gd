@@ -1,7 +1,7 @@
 extends Node2D
 
 ## Actor scale in the hideout room (crew NPCs read it too).
-const CAMP_K := 1.38
+const CAMP_K := 1.6
 
 ## The hideout: a walkable home between maps. Every camp building and core
 ## room is a station on the floor (walk up, press UP / ENTER / LIGHT): it
@@ -329,38 +329,17 @@ func _refresh_locks() -> void:
 
 
 ## Unbuilt: the corner is dark and dusty (a soft shade over the painted
-## furniture) with a small sawhorse and an UNDER CONSTRUCTION board at its
-## foot. Building lights it up.
+## furniture) so it reads as not yet built. Building lights it up.
 func _tarp() -> Node2D:
 	var t := Node2D.new()
 	t.z_index = 2
 	var shade := Polygon2D.new()
 	shade.polygon = PackedVector2Array([Vector2(-11, 0), Vector2(-11, -40), Vector2(11, -40), Vector2(11, 0)])
 	# vertex_colors replace the fill colour: dark at the floor, fading up.
-	var dark := Color(0.02, 0.02, 0.05, 0.55)
-	var fade := Color(0.02, 0.02, 0.05, 0.08)
+	var dark := Color(0.02, 0.02, 0.05, 0.3)
+	var fade := Color(0.02, 0.02, 0.05, 0.0)
 	shade.vertex_colors = PackedColorArray([dark, fade, fade, dark])
 	t.add_child(shade)
-	var horse := Node2D.new()
-	horse.position = Vector2(0, 0)
-	t.add_child(horse)
-	var wood := Color(0.62, 0.45, 0.22)
-	for leg in [[-6.0, -1.0], [6.0, 1.0]]:
-		var l := Line2D.new()
-		l.points = PackedVector2Array([Vector2(leg[0] - 2.0 * leg[1], 0), Vector2(leg[0], -7)])
-		l.width = 1.2
-		l.default_color = wood.darkened(0.3)
-		horse.add_child(l)
-	var bar := Polygon2D.new()
-	bar.polygon = PackedVector2Array([Vector2(-8, -9), Vector2(8, -9), Vector2(8, -6.5), Vector2(-8, -6.5)])
-	bar.color = Color(0.95, 0.8, 0.15)
-	horse.add_child(bar)
-	for k in 3:
-		var st := Polygon2D.new()
-		var x := -6.0 + float(k) * 5.0
-		st.polygon = PackedVector2Array([Vector2(x, -9), Vector2(x + 2, -9), Vector2(x + 0.6, -6.5), Vector2(x - 1.4, -6.5)])
-		st.color = Color(0.08, 0.08, 0.08)
-		horse.add_child(st)
 	return t
 
 

@@ -21,6 +21,10 @@ static func place(host: Node, map: String) -> ViewpointTower:
 	t.global_position = Vector2(float(row.get("x", 1200.0)), float(row.get("y", 500.0)))
 	if map == "raven_grid" and t.global_position.x > 2200.0:
 		t.global_position.x = 1640.0
+	# Never at the door: the tower is a mid-map reward, a bit past halfway.
+	var w := float(host.get("map_w")) if host.get("map_w") != null else 0.0
+	if w > 0.0 and t.global_position.y > 400.0:
+		t.global_position.x = clampf(t.global_position.x, w * 0.56, w * 0.72)
 	host.add_child(t)
 	return t
 

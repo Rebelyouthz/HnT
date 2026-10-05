@@ -27,7 +27,11 @@ func _ready() -> void:
 		Vector2(-28, -22), Vector2(28, -22), Vector2(28, -16), Vector2(-28, -16)
 	])
 	add_child(strap)
-	SpriteBook.attach_living(self, "vault")
+	if SpriteBook.attach_living(self, "vault"):
+		# The painted crate came out a car door tall: a hip-high box.
+		for ch in get_children():
+			if ch is AnimatedSprite2D:
+				SpriteBook.grow(ch as AnimatedSprite2D, 0.6)
 
 
 func covers(pos: Vector2) -> bool:

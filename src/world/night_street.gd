@@ -931,25 +931,58 @@ static func pixel_dock(host: Node, map_w: float, harbour: bool = true) -> void:
 		AmbientProp.lamp(host, Vector2(lx, 500.0), 3)
 
 
-static func pixel_roof(host: Node, rect: Rect2, kind: String = "roof") -> void:
-	var roof := SpriteBook.tile(kind)
-	if roof == null and kind != "roof":
-		roof = SpriteBook.tile("roof")
-	if roof == null:
-		Blockout.poly(host, rect, Color(0.22, 0.18, 0.2), 2)
-		return
-	var tw := float(roof.get_width()) * SpriteBook.DRAW_SCALE
-	var x := rect.position.x
-	while x < rect.end.x - 2.0:
-		var s := Sprite2D.new()
-		s.texture = roof
-		s.centered = false
-		s.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
-		s.position = Vector2(x, rect.position.y)
-		s.z_index = 2
-		s.texture_filter = SpriteBook.world_filter()
-		host.add_child(s)
-		x += tw
+static func pixel_roof(host: Node, rect: Rect2, _kind: String = "roof") -> void:
+	# A roof seen from the street side: the building's face runs down to the
+	# lane, a concrete coping caps it, tar and a lit lip on top. (The old
+	# terracotta tile was drawn a metre per tile and read as noise.)
+	var top := rect.position.y
+	if top < 420.0:
+		var face := Node2D.new()
+		face.modulate = Color(0.95, 0.9, 0.95)
+		host.add_child(face)
+		pixel_tenement(face, Rect2(rect.position.x, top + 8.0, rect.size.x, 440.0 - top))
+		var shade := Polygon2D.new()
+		var a := Color(0.02, 0.02, 0.05, 0.0)
+		var b := Color(0.02, 0.02, 0.05, 0.3)
+		shade.polygon = PackedVector2Array([Vector2(rect.position.x, top + 8.0), Vector2(rect.end.x, top + 8.0), Vector2(rect.end.x, 440.0), Vector2(rect.position.x, 440.0)])
+		shade.vertex_colors = PackedColorArray([b, b, a, a])
+		shade.z_index = 0
+		host.add_child(shade)
+	var x0 := rect.position.x - 4.0
+	var x1 := rect.end.x + 4.0
+	for band: Array in [
+		[top - 3.0, top + 1.0, Color(0.72, 0.7, 0.66)],
+		[top + 1.0, top + 6.0, Color(0.46, 0.44, 0.44)],
+		[top + 6.0, top + 10.0, Color(0.16, 0.15, 0.17)],
+	]:
+		var p := Polygon2D.new()
+		p.polygon = PackedVector2Array([Vector2(x0, band[0]), Vector2(x1, band[0]), Vector2(x1, band[1]), Vector2(x0, band[1])])
+		p.color = band[2]
+		p.z_index = 2
+		host.add_child(p)
+	# Coping joints and the odd vent / antenna so long roofs are not bare.
+	var jx := x0 + 18.0
+	while jx < x1 - 4.0:
+		var j := Polygon2D.new()
+		j.polygon = PackedVector2Array([Vector2(jx, top - 3.0), Vector2(jx + 1.0, top - 3.0), Vector2(jx + 1.0, top + 6.0), Vector2(jx, top + 6.0)])
+		j.color = Color(0.3, 0.29, 0.3)
+		j.z_index = 2
+		host.add_child(j)
+		jx += 36.0
+	var seed := int(rect.position.x) % 7
+	var vx := rect.position.x + 40.0 + float(seed) * 9.0
+	while vx < rect.end.x - 30.0:
+		var v := Polygon2D.new()
+		v.polygon = PackedVector2Array([Vector2(vx, top - 3.0), Vector2(vx, top - 14.0), Vector2(vx + 12.0, top - 14.0), Vector2(vx + 12.0, top - 3.0)])
+		v.color = Color(0.32, 0.33, 0.36)
+		v.z_index = 1
+		host.add_child(v)
+		var cap := Polygon2D.new()
+		cap.polygon = PackedVector2Array([Vector2(vx - 2.0, top - 14.0), Vector2(vx + 14.0, top - 14.0), Vector2(vx + 12.0, top - 17.0), Vector2(vx, top - 17.0)])
+		cap.color = Color(0.5, 0.5, 0.54)
+		cap.z_index = 1
+		host.add_child(cap)
+		vx += 170.0 + float(seed) * 11.0
 
 
 static func pixel_lot(host: Node, map_w: float) -> void:

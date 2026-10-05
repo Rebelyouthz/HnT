@@ -211,12 +211,13 @@ func _lamp(at: Vector2, color: Color, energy: float) -> void:
 
 
 func _glow(at: Vector2, color: Color) -> void:
-	var g := Polygon2D.new()
-	g.position = at
-	g.color = color
-	g.polygon = PackedVector2Array([
-		Vector2(-36, -10), Vector2(36, -10), Vector2(70, 90), Vector2(-70, 90)
-	])
+	# A soft pool of haze under the lamp (the old hard trapezoid read as a
+	# flat green/orange cone in the sky).
+	var g := Sprite2D.new()
+	g.texture = radial_tex()
+	g.position = at + Vector2(0, 30)
+	g.modulate = Color(color.r, color.g, color.b, color.a * 0.55)
+	g.scale = Vector2(1.6, 1.1) * (150.0 / float(g.texture.get_width()))
 	Blockout.add_glow(g)
 	g.z_index = -1
 	add_child(g)

@@ -79,8 +79,8 @@ func _hero_card(role: String) -> Control:
 	var h := HBoxContainer.new()
 	h.add_theme_constant_override("separation", 14)
 	p.add_child(h)
-	var face := UiKit.portrait(SpriteBook.bust(role), Vector2(100, 140))
-	face.custom_minimum_size = Vector2(100, 140)
+	var face := UiKit.portrait(SpriteBook.bust(role, 0.5), Vector2(120, 186))
+	face.custom_minimum_size = Vector2(120, 186)
 	face.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	h.add_child(face)
 	var v := VBoxContainer.new()

@@ -6,6 +6,8 @@ extends Control
 ## shine that sweeps across now and then (at once on hover / focus), so
 ## frames read as raised, cut blocks that are a little alive.
 
+const ENABLED := false
+
 var round := false
 var radius := 5.0
 var strength := 1.0
@@ -16,7 +18,9 @@ var _hot := false
 
 
 static func dress(c: Control, round_node := false, k := 1.0) -> Bevel:
-	if c == null:
+	# Off: the plain frames read better (player feedback). Kept as an
+	# opt-in for later; every caller ignores the return value.
+	if c == null or not ENABLED:
 		return null
 	for ch in c.get_children():
 		if ch is Bevel:
