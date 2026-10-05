@@ -26,7 +26,6 @@ static func dress(c: Control, round_node := false, k := 1.0) -> Bevel:
 	b.strength = k
 	b.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	b.set_anchors_preset(Control.PRESET_FULL_RECT)
-	b.z_index = 1
 	c.add_child(b)
 	if c is BaseButton:
 		var bb := c as BaseButton

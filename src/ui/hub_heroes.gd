@@ -25,6 +25,19 @@ func _paint(keep: String = "") -> void:
 	var title := UiKit.title("HEROES", 44, Palette.EDGE)
 	title.position = Vector2(20, 0)
 	_root.add_child(title)
+	# MOVES: the fighting-style workshop (loadout, library, combo lab, styles).
+	var mv := UiKit.button("MOVES", Vector2(150, 40))
+	mv.set_meta("key", "moves")
+	mv.position = Vector2(400, 6)
+	mv.pressed.connect(func() -> void:
+		var sh := preload("res://src/ui/moves_sheet.gd").new()
+		get_tree().current_scene.add_child(sh)
+		sh.closed.connect(func() -> void:
+			sh.queue_free()
+			need_refresh.emit()
+		)
+	)
+	_root.add_child(mv)
 	var col := VBoxContainer.new()
 	col.position = Vector2(20, 60)
 	col.add_theme_constant_override("separation", 10)

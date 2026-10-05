@@ -76,6 +76,11 @@ func _prepare() -> void:
 			(fp.data as Dictionary)["suit_son_" + p] = sid
 		(fp.data as Dictionary)["suits_split"] = true
 		(fp.data as Dictionary)["suit_parts"] = owned
+	if _tab.begins_with("moves") and fp != null:
+		(fp.data as Dictionary)["gold"] = 400
+		(fp.data as Dictionary)["loadout_moves"] = {"son": {"L3": "front_kick", "H": "side_kick", "STR": "roundhouse"}}
+		(fp.data as Dictionary)["moves_learned"] = {"son": ["side_kick", "flying_knee", "cartwheel_kick"]}
+		(fp.data as Dictionary)["combos_custom"] = {"son": [{"id": "custom_son_1", "who": "son", "title": "ALLEY LESSON", "steps": ["L", "L", "F+H"], "clip": "cartwheel_kick", "fx": "knockdown", "dmg": 44, "custom": true, "starter": true}]}
 	if _tab == "codex" and fp != null:
 		(fp.data as Dictionary)["kills_by"] = {"Collector Gant": 1, "Bag Snatch": 34, "Repo Goon": 21, "Mohawk Bo": 6, "Coping Imp": 88}
 		(fp.data as Dictionary)["boss_tries_dock_street"] = 2
@@ -174,6 +179,12 @@ func _process(_delta: float) -> bool:
 		current_scene.call("_open_stats")
 	if _tab == "armory" and _n == 40 and current_scene != null and current_scene.has_method("_open_armory"):
 		current_scene.call("_open_armory")
+	if _tab.begins_with("moves") and _n == 40 and current_scene != null:
+		var ms: Control = load("res://src/ui/moves_sheet.gd").new()
+		ms.set("_page", {"moves": "loadout", "moves_lib": "library", "moves_lab": "lab", "moves_sty": "styles"}.get(_tab, "loadout"))
+		if _tab == "moves_lab":
+			ms.set("_steps", ["L", "F+L", "U+H"])
+		current_scene.add_child(ms)
 	if _tab == "jobs" and _n == 40 and current_scene != null and current_scene.has_method("_open_jobs"):
 		current_scene.call("_open_jobs")
 	if _tab == "codex" and _n == 40 and current_scene != null and current_scene.has_method("_open_codex"):

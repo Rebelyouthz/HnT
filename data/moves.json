@@ -1,0 +1,437 @@
+{
+ "_doc": "Every strike a hero can put in a loadout slot (Moves / MOVES sheet). slots: light (L1-L3 string), heavy (H, F+H, U+H, STR = heavy after two lights), air (AIR_L, AIR_H). weight 0..1 scales damage and feel (heavier = harder but slower). gold: price to learn in the dojo; starter: known from the start; lesson: a dojo lesson also teaches it.",
+ "moves": [
+  {
+   "id": "jab",
+   "title": "JAB",
+   "type": "punch",
+   "slots": [
+    "light"
+   ],
+   "weight": 0.15,
+   "gold": 0,
+   "starter": true,
+   "lesson": "",
+   "who": [
+    "son",
+    "father"
+   ]
+  },
+  {
+   "id": "cross",
+   "title": "CROSS",
+   "type": "punch",
+   "slots": [
+    "light"
+   ],
+   "weight": 0.35,
+   "gold": 0,
+   "starter": true,
+   "lesson": "",
+   "who": [
+    "son",
+    "father"
+   ]
+  },
+  {
+   "id": "gut",
+   "title": "GUT PUNCH",
+   "type": "punch",
+   "slots": [
+    "light"
+   ],
+   "weight": 0.45,
+   "gold": 0,
+   "starter": true,
+   "lesson": "",
+   "who": [
+    "son",
+    "father"
+   ]
+  },
+  {
+   "id": "heavy",
+   "title": "HAYMAKER",
+   "type": "punch",
+   "slots": [
+    "heavy"
+   ],
+   "weight": 0.9,
+   "gold": 0,
+   "starter": true,
+   "lesson": "",
+   "who": [
+    "son",
+    "father"
+   ]
+  },
+  {
+   "id": "uppercut",
+   "title": "UPPERCUT",
+   "type": "punch",
+   "slots": [
+    "heavy",
+    "light"
+   ],
+   "weight": 0.75,
+   "gold": 0,
+   "starter": true,
+   "lesson": "uppercut",
+   "who": [
+    "son",
+    "father"
+   ]
+  },
+  {
+   "id": "front_kick",
+   "title": "FRONT KICK",
+   "type": "kick",
+   "slots": [
+    "light",
+    "heavy",
+    "air"
+   ],
+   "weight": 0.5,
+   "gold": 0,
+   "starter": true,
+   "lesson": "",
+   "who": [
+    "son",
+    "father"
+   ]
+  },
+  {
+   "id": "side_kick",
+   "title": "SIDE KICK",
+   "type": "kick",
+   "slots": [
+    "light",
+    "heavy",
+    "air"
+   ],
+   "weight": 0.65,
+   "gold": 40,
+   "starter": false,
+   "lesson": "kicks",
+   "who": [
+    "son",
+    "father"
+   ]
+  },
+  {
+   "id": "roundhouse",
+   "title": "ROUNDHOUSE",
+   "type": "kick",
+   "slots": [
+    "heavy"
+   ],
+   "weight": 0.85,
+   "gold": 0,
+   "starter": false,
+   "lesson": "roundhouse",
+   "who": [
+    "son",
+    "father"
+   ]
+  },
+  {
+   "id": "air_spin_kick",
+   "title": "AIR SPIN KICK",
+   "type": "kick",
+   "slots": [
+    "air"
+   ],
+   "weight": 0.6,
+   "gold": 0,
+   "starter": true,
+   "lesson": "",
+   "who": [
+    "son",
+    "father"
+   ]
+  },
+  {
+   "id": "air_mix",
+   "title": "AIR MIX",
+   "type": "punch",
+   "slots": [
+    "air"
+   ],
+   "weight": 0.6,
+   "gold": 60,
+   "starter": false,
+   "lesson": "air_mix",
+   "who": [
+    "son",
+    "father"
+   ]
+  },
+  {
+   "id": "elbow",
+   "title": "ELBOW",
+   "type": "elbow",
+   "slots": [
+    "light",
+    "heavy"
+   ],
+   "weight": 0.55,
+   "gold": 50,
+   "starter": false,
+   "lesson": "",
+   "who": [
+    "father"
+   ]
+  },
+  {
+   "id": "headbutt",
+   "title": "HEADBUTT",
+   "type": "head",
+   "slots": [
+    "light",
+    "heavy"
+   ],
+   "weight": 0.6,
+   "gold": 60,
+   "starter": false,
+   "lesson": "",
+   "who": [
+    "father"
+   ]
+  },
+  {
+   "id": "body_hook",
+   "title": "BODY HOOK",
+   "type": "punch",
+   "slots": [
+    "light",
+    "heavy"
+   ],
+   "weight": 0.5,
+   "gold": 45,
+   "starter": false,
+   "lesson": "",
+   "who": [
+    "father"
+   ]
+  },
+  {
+   "id": "clinch_knee",
+   "title": "CLINCH KNEE",
+   "type": "knee",
+   "slots": [
+    "light",
+    "heavy"
+   ],
+   "weight": 0.6,
+   "gold": 55,
+   "starter": false,
+   "lesson": "",
+   "who": [
+    "father"
+   ]
+  },
+  {
+   "id": "hammer",
+   "title": "HAMMER FIST",
+   "type": "punch",
+   "slots": [
+    "heavy"
+   ],
+   "weight": 0.95,
+   "gold": 90,
+   "starter": false,
+   "lesson": "",
+   "who": [
+    "father"
+   ]
+  },
+  {
+   "id": "boot_kick",
+   "title": "DOCK BOOT",
+   "type": "kick",
+   "slots": [
+    "heavy"
+   ],
+   "weight": 0.8,
+   "gold": 70,
+   "starter": false,
+   "lesson": "",
+   "who": [
+    "father"
+   ]
+  },
+  {
+   "id": "spin_backfist",
+   "title": "SPIN BACKFIST",
+   "type": "punch",
+   "slots": [
+    "heavy",
+    "light"
+   ],
+   "weight": 0.75,
+   "gold": 70,
+   "starter": false,
+   "lesson": "",
+   "who": [
+    "father"
+   ]
+  },
+  {
+   "id": "shoulder_charge",
+   "title": "SHOULDER CHARGE",
+   "type": "body",
+   "slots": [
+    "heavy"
+   ],
+   "weight": 0.85,
+   "gold": 80,
+   "starter": false,
+   "lesson": "",
+   "who": [
+    "father"
+   ]
+  },
+  {
+   "id": "jump_high_kick",
+   "title": "JUMPING HIGH KICK",
+   "type": "kick",
+   "slots": [
+    "heavy",
+    "air"
+   ],
+   "weight": 0.8,
+   "gold": 80,
+   "starter": false,
+   "lesson": "",
+   "who": [
+    "father"
+   ]
+  },
+  {
+   "id": "jump_spin_kick",
+   "title": "TORNADO HEEL",
+   "type": "kick",
+   "slots": [
+    "heavy",
+    "air"
+   ],
+   "weight": 0.85,
+   "gold": 90,
+   "starter": false,
+   "lesson": "",
+   "who": [
+    "father"
+   ]
+  },
+  {
+   "id": "cartwheel_kick",
+   "title": "CARTWHEEL KICK",
+   "type": "kick",
+   "slots": [
+    "heavy"
+   ],
+   "weight": 0.8,
+   "gold": 70,
+   "starter": false,
+   "lesson": "",
+   "who": [
+    "son"
+   ]
+  },
+  {
+   "id": "flying_knee",
+   "title": "FLYING KNEE",
+   "type": "knee",
+   "slots": [
+    "heavy",
+    "light"
+   ],
+   "weight": 0.7,
+   "gold": 60,
+   "starter": false,
+   "lesson": "",
+   "who": [
+    "son"
+   ]
+  },
+  {
+   "id": "superman_punch",
+   "title": "SUPERMAN PUNCH",
+   "type": "punch",
+   "slots": [
+    "heavy"
+   ],
+   "weight": 0.8,
+   "gold": 70,
+   "starter": false,
+   "lesson": "",
+   "who": [
+    "son"
+   ]
+  },
+  {
+   "id": "backflip_kick",
+   "title": "BACKFLIP KICK",
+   "type": "kick",
+   "slots": [
+    "heavy",
+    "air"
+   ],
+   "weight": 0.75,
+   "gold": 80,
+   "starter": false,
+   "lesson": "",
+   "who": [
+    "son"
+   ]
+  },
+  {
+   "id": "jump_roundhouse",
+   "title": "JUMP ROUNDHOUSE",
+   "type": "kick",
+   "slots": [
+    "heavy",
+    "air"
+   ],
+   "weight": 0.85,
+   "gold": 90,
+   "starter": false,
+   "lesson": "",
+   "who": [
+    "son"
+   ]
+  },
+  {
+   "id": "sweep",
+   "title": "LEG SWEEP",
+   "type": "kick",
+   "slots": [
+    "light",
+    "heavy"
+   ],
+   "weight": 0.55,
+   "gold": 50,
+   "starter": false,
+   "lesson": "",
+   "who": [
+    "son"
+   ]
+  },
+  {
+   "id": "dropkick",
+   "title": "DROPKICK",
+   "type": "kick",
+   "slots": [
+    "heavy",
+    "air"
+   ],
+   "weight": 0.9,
+   "gold": 100,
+   "starter": false,
+   "lesson": "",
+   "who": [
+    "son"
+   ]
+  }
+ ]
+}

@@ -337,7 +337,38 @@ func suit_set() -> String:
 	return _gear_set
 
 
+## Which LOADOUT slot a strike kind uses (Moves.SLOTS).
+var _slot_hint := ""
+## Damage scale of the move in the slot (Moves.dmg_mul), read by Punk.
+var move_mul := 1.0
+
+
+func _slot_of(kind: String) -> String:
+	match kind:
+		"light":
+			return "L%d" % clampi(maxi(1, string_n), 1, 3)
+		"heavy", "launcher":
+			return _slot_hint if _slot_hint != "" else "H"
+		"uppercut":
+			return "U+H"
+		"roundhouse":
+			return "STR"
+		"jump-kick":
+			return "AIR_L"
+		"air-spin":
+			return "AIR_H"
+	return ""
+
+
 func _sprite_clip(kind: String) -> String:
+	move_mul = 1.0
+	var slot := _slot_of(kind)
+	_slot_hint = ""
+	if slot != "":
+		var pick := Moves.clip_for(role, slot)
+		if pick != str(Moves.DEFAULT[slot]) and _anim != null and _anim.sprite_frames.has_animation(pick):
+			move_mul = Moves.dmg_mul(slot, pick)
+			return pick
 	var base := _base_clip(kind)
 	var st := _live_stance()
 	var v := base
@@ -1121,6 +1152,8 @@ func _combat() -> void:
 			else:
 				_attack("heavy", charge_frames >= charge_need)
 		else:
+			if absf(_stick().x) > 0.55 and signf(_stick().x) == float(facing):
+				_slot_hint = "F+H"
 			_attack("heavy", charge_frames >= charge_need)
 	elif attack_cd == 0 and _heavy_buf > 0 and not airborne:
 		_heavy_buf = 0

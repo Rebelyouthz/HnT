@@ -906,6 +906,8 @@ func take_hit(kind: String, from: Node) -> void:
 		dmg = int(round(float(dmg) * 1.25))
 	# Hero level / rarity and META strength (fists, gadgets and guns alike).
 	var hero := Heroes.role_of(from)
+	if from is Fighter and absf((from as Fighter).move_mul - 1.0) > 0.01 and kind in ["light", "heavy", "launcher", "uppercut", "roundhouse", "jump-kick", "air-spin"]:
+		dmg = int(round(float(dmg) * (from as Fighter).move_mul))
 	if hero == "son" or hero == "father":
 		dmg = int(round(float(dmg) * Heroes.dmg_mul(hero) * Meta.dmg_mul() * Artifacts.player_dmg() * NightExtras.dmg_mul()))
 	if from is Fighter and (from as Fighter).suit_set() == "bat":

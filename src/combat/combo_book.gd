@@ -41,6 +41,8 @@ static func all_for(who: String) -> Array:
 	for c: Dictionary in data().get("combos", []):
 		if str(c.get("who", "")) == who:
 			out.append(c)
+	# COMBO LAB lines the player made (Moves.add_custom).
+	out.append_array(Moves.customs(who))
 	return out
 
 
@@ -48,7 +50,17 @@ static func by_id(id: String) -> Dictionary:
 	for c: Dictionary in data().get("combos", []):
 		if str(c.get("id", "")) == id:
 			return c
+	for who in ["son", "father"]:
+		for c: Dictionary in Moves.customs(who):
+			if str(c.get("id", "")) == id:
+				return c
 	return {}
+
+
+## Nothing is cached per hero, but the hook keeps callers honest if that
+## changes.
+static func invalidate() -> void:
+	pass
 
 
 static func style(who: String) -> Dictionary:
