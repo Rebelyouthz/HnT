@@ -11,6 +11,7 @@ var introed := false
 ## bloodier and angrier; the last one bleeds as they walk.
 var stage := 0
 var _drip := 0.0
+var brain: BossBrain
 
 
 func _ready() -> void:
@@ -25,6 +26,15 @@ func _ready() -> void:
 	armored = not is_mini
 	_crown()
 	died.connect(_on_dead)
+	# Attack patterns (data/bosses.json). Bosses are a wall the first time:
+	# more HP, and every pattern has to be learned.
+	if self.get_script() == preload("res://src/actors/act_boss.gd"):
+		var spec := BossBrain.spec_for(title)
+		hp = int(round(float(hp) * float(spec.get("hp_mul", 1.9))))
+		max_hp = hp
+		brain = BossBrain.new()
+		brain.boss = self
+		add_child(brain)
 
 
 func _crown() -> void:
@@ -61,7 +71,19 @@ func _on_dead() -> void:
 
 
 func take_hit(kind: String, from: Node) -> void:
+	# Spinning: light blows bounce off.
+	if brain and brain.busy and brain._move == "spin" and kind == "light":
+		Juice.sparks(global_position + Vector2(0, -40))
+		Juice.play("res://assets/audio/block.wav")
+		return
+	var before := hp
 	super.take_hit(kind, from)
+	# The punish window after a pattern: everything lands harder.
+	if brain and brain.punish_t > 0.0 and hp > 0 and hp < before:
+		var extra := int(round(float(before - hp) * (BossBrain.PUNISH_MUL - 1.0)))
+		hp = maxi(1, hp - extra)
+		if extra > 0:
+			Juice.popup_number(global_position + Vector2(randf_range(-10, 10), -90), "+%d" % extra, Color(0.6, 0.9, 1.0))
 	if hp <= 0 or not is_inside_tree():
 		return
 	var frac := float(hp) / float(maxi(max_hp, 1))
@@ -113,6 +135,12 @@ func _dress_stage() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if brain and hp > 0 and brain.tick(delta):
+		move_and_slide()
+		_lane()
+		_mix_mod()
+		_hurt_t = maxf(0.0, _hurt_t - delta)
+		return
 	super._physics_process(delta)
 	if stage >= 3 and hp > 0:
 		_drip -= delta

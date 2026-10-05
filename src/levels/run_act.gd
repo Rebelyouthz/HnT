@@ -588,6 +588,17 @@ func _on_fail() -> void:
 	if _state:
 		FamilyProfile.note_score(_state.score_total)
 		g = FamilyProfile.cash_fail(_state.scrap, _state.score_total)
+	# Fell at the boss: an attempt bonus so the next try comes back stronger.
+	var bs := get_tree().get_first_node_in_group("act_final_boss")
+	if bs != null:
+		var bonus := 40 + 15 * Heroes.map_tier()
+		FamilyProfile.add_gold(bonus)
+		g += bonus
+		var who: String = App.solo_role if App.solo_role in ["son", "father"] else "son"
+		Heroes.add_shards(who, 4)
+		var tries := int(FamilyProfile.data.get("boss_tries_" + map_id, 0)) + 1
+		FamilyProfile.data["boss_tries_" + map_id] = tries
+		Juice.toast("reward", "BOSS ATTEMPT %d" % tries, "+%d gold, +4 shards. Learn the red zones. Spend in HEROES." % bonus)
 	_banner(Copy.FAIL, fail_sub if fail_sub != "" else Copy.FAIL_GOLD, false, false, g)
 	if _end is ResultsSheet:
 		(_end as ResultsSheet).death_line = DeathCause.for_run(get_tree())

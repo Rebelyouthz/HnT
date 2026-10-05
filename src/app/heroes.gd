@@ -138,9 +138,11 @@ static func map_tier() -> int:
 	return maxi(0, App.ORDER.find(App.current_map))
 
 
+## The first night is meant to beat a fresh family: roughly one life lost to
+## the street and one to the boss before levels, gear and META catch up.
 static func enemy_hp_mul() -> float:
-	return 1.0 + 0.13 * float(map_tier())
+	return 1.12 + 0.13 * float(map_tier())
 
 
 static func enemy_dmg_mul() -> float:
-	return 1.0 + 0.07 * float(map_tier())
+	return 1.15 + 0.07 * float(map_tier())

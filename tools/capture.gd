@@ -263,6 +263,30 @@ func _process(_delta: float) -> bool:
 		var page := _tab.substr(6)
 		if page != "" and current_scene.has_method("_" + page):
 			current_scene.call("_" + page)
+	# ui:boss_<move> - the map's boss next to the Son runs one pattern;
+	# frames every 4 ticks (<out>_NNN.png).
+	if _tab.begins_with("ui_boss_") and current_scene != null:
+		if _n == 80:
+			get_root().get_tree().paused = false
+			for e in root.get_tree().get_nodes_in_group("enemies"):
+				e.queue_free()
+			for d in root.get_tree().get_nodes_in_group("dog_buddy"):
+				d.queue_free()
+			if current_scene.has_method("_spawn_story_unit"):
+				current_scene.call("_spawn_story_unit", false)
+		if _n == 84:
+			var p1: Node2D = root.get_tree().get_first_node_in_group("players")
+			var bs: Node = root.get_tree().get_first_node_in_group("act_final_boss")
+			if bs and p1:
+				(bs as Node2D).global_position = p1.global_position + Vector2(230, 0)
+				p1.set("invuln", 0)
+		if _n == 100:
+			var bs2: Node = root.get_tree().get_first_node_in_group("act_final_boss")
+			var p2: Node = root.get_tree().get_first_node_in_group("players")
+			if bs2 and bs2.get("brain") != null:
+				bs2.get("brain").call("_start", _tab.substr(8), p2)
+		if _n >= 96 and _n % 4 == 0:
+			root.get_texture().get_image().save_png(_out.get_basename() + "_%03d.png" % _n)
 	# ui:fight - one thug squared up in front of the Son, a jab-jab-heavy
 	# string, frames saved around every contact (<out>_NNN.png).
 	if (_tab == "ui_fight" or _tab.begins_with("ui_gun_") or _tab.begins_with("ui_suit_")) and current_scene != null:

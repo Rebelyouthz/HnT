@@ -2175,6 +2175,14 @@ func _spawn_hit(kind: String, size: Vector2, life: float, offset: Vector2) -> vo
 func take_hit(kind: String, from: Node) -> void:
 	if downed or invuln > 0:
 		return
+	if kind == "none":
+		return
+	# Boss crush blows can't be blocked or parried: dodge, jump or step away.
+	if kind == "crush":
+		if rolling:
+			return
+		_take_crush(from)
+		return
 	if blocking and parry_win > 0 and kind != "snap" and kind != "throw" and attack_height(kind, from) in ["any", block_height]:
 		var perfect := parry_win >= 7
 		parry_win = 0
@@ -3327,3 +3335,39 @@ func _weapon_contact(at: Vector2, wt: float) -> void:
 		SuitFx.spawn(Vector2(at.x, global_position.y), "ring", 70.0, 1.0, Color(1.0, 0.85, 0.6))
 		Juice.pulse_shake(6.0)
 		Juice.hitstop(3)
+
+
+
+## A boss pattern landing: a big hit through any guard.
+func _take_crush(from: Node) -> void:
+	var dmg := int(round(24.0 * Heroes.enemy_dmg_mul()))
+	if suit_set() == "shaolin":
+		dmg = int(round(float(dmg) * 0.7))
+	var srun := SurviveRun.get_run(get_tree())
+	if srun and srun.armor() > 0.0:
+		dmg = maxi(1, int(round(float(dmg) * (1.0 - srun.armor()))))
+	hp = maxi(0, hp - dmg)
+	invuln = 40
+	_hurt_t = 0.45
+	_cancel_strike()
+	Juice.break_combo()
+	Juice.flash_white_red(visual)
+	Juice.hitstop(7)
+	Juice.pulse_shake(8.0)
+	Juice.popup_number(global_position + Vector2(0, -96), "-%d" % dmg, Color(1.0, 0.3, 0.25))
+	VoBank.line(role, "hurt", 0.9)
+	Mixer.play_sfx("res://assets/audio/sfx/hit_side_kick.ogg", 0.8, 0.0)
+	if from is Node2D:
+		var dir := signf(global_position.x - (from as Node2D).global_position.x)
+		global_position.x += dir * 34.0
+	var blood := get_tree().get_first_node_in_group("blood_sim")
+	if blood:
+		blood.hit(self, "gut", signf(global_position.x - (from as Node2D).global_position.x) if from is Node2D else 1.0, 0.8, 0.8)
+	if hp <= int(round(float(max_hp) * 0.3)) and bandage > 0 and hp > 0:
+		bandage -= 1
+		hp = mini(max_hp, hp + int(round(float(max_hp) * 0.3)))
+		Juice.shout("BANDAGE")
+	if hp <= 0:
+		_go_down()
+		return
+	_maybe_knockdown("heavy", from)

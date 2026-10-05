@@ -1,0 +1,37 @@
+{
+  "_doc": "Boss attack patterns (src/actors/boss_brain.gd). stages[0..3] = the moves used at 100/75/50/25% hp (each list adds to the pool). Move ids: charge, slam, volley, rain, summon, lane_wave, grab, spin. 'names' rename a move in the call-out; 'add' is the thug they call in; 'shot' and 'drop' colour the projectiles and falling things.",
+  "default": {
+    "hp_mul": 1.9, "names": {}, "add": "Bag Snatch", "shot": "paper", "drop": "crate",
+    "stages": [["charge", "volley"], ["slam"], ["summon", "lane_wave"], ["rain", "spin"]]
+  },
+  "Shift Lead": {
+    "hp_mul": 1.5, "add": "Bag Snatch", "shot": "paper", "drop": "crate",
+    "names": {"charge": "OVERTIME RUSH", "volley": "WRITE-UPS", "slam": "MANDATORY MEETING", "summon": "CALL THE TEMPS"},
+    "stages": [["charge"], ["volley"], ["slam"], ["summon"]]
+  },
+  "Collector Gant": {
+    "hp_mul": 2.1, "add": "Repo Goon", "shot": "invoice", "drop": "safe",
+    "names": {"charge": "COLLECTION RUSH", "volley": "INVOICE STORM", "slam": "LATE FEE SLAM", "summon": "SEND THE REPO MEN", "rain": "FALLING ASSETS", "grab": "SHAKEDOWN", "lane_wave": "FINAL NOTICE"},
+    "stages": [["charge", "volley"], ["grab", "slam"], ["summon", "lane_wave"], ["rain"]]
+  },
+  "Clamp King": {
+    "hp_mul": 1.5, "add": "Bag Snatch", "shot": "ticket", "drop": "boot",
+    "names": {"charge": "TOW HOOK", "rain": "CLAMP DROP", "volley": "TICKET SPRAY", "spin": "HUBCAP SPIN"},
+    "stages": [["charge"], ["rain"], ["volley"], ["spin"]]
+  },
+  "Lot Hydra": {
+    "hp_mul": 2.2, "add": "Repo Goon", "shot": "ticket", "drop": "boot",
+    "names": {"rain": "THREE BOOTS", "charge": "TOW TRUCK", "lane_wave": "SPEED BUMP", "volley": "TICKET HAIL", "summon": "VALET SHIFT", "spin": "ROUNDABOUT", "slam": "PARKING BRAKE"},
+    "stages": [["rain", "charge"], ["volley", "lane_wave"], ["summon", "slam"], ["spin"]]
+  },
+  "Lease Hawk": {"names": {"slam": "DIVE BOMB", "volley": "LEASE PAPERS", "rain": "EVICTION NOTICES"}, "stages": [["slam", "volley"], ["rain"], ["charge"], ["spin"]]},
+  "The Facilitator": {"names": {"volley": "TALKING STICK", "summon": "SHARE CIRCLE", "spin": "ICEBREAKER"}, "stages": [["volley", "summon"], ["lane_wave"], ["spin"], ["rain"]]},
+  "Agent Prime": {"names": {"volley": "BURST FIRE", "charge": "TACKLE", "grab": "CUFFS"}, "stages": [["volley", "charge"], ["grab"], ["summon"], ["lane_wave", "rain"]]},
+  "Number 88": {"names": {"rain": "TICKETS CALLED", "lane_wave": "QUEUE JUMP"}, "stages": [["rain", "lane_wave"], ["charge"], ["summon"], ["spin"]]},
+  "Conductor 9": {"names": {"charge": "EXPRESS", "lane_wave": "RAIL SHOCK", "volley": "PUNCHED TICKETS"}, "stages": [["charge", "lane_wave"], ["volley"], ["slam"], ["summon"]]},
+  "Combine Brute": {"names": {"charge": "HARVEST", "spin": "THRESHER", "rain": "HAY BALES"}, "stages": [["charge", "spin"], ["rain"], ["slam"], ["summon"]]},
+  "Snowmobile": {"names": {"charge": "WHITEOUT RUN", "rain": "ICICLES", "lane_wave": "AVALANCHE"}, "stages": [["charge", "rain"], ["lane_wave"], ["volley"], ["spin"]]},
+  "Invoice Chopper": {"names": {"rain": "PAPER RAIN", "volley": "ROTOR WASH", "lane_wave": "SEARCHLIGHT"}, "stages": [["rain", "volley"], ["lane_wave"], ["summon"], ["charge"]]},
+  "Cenote Elite": {"names": {"slam": "DEPTH CHARGE", "grab": "UNDERTOW"}, "stages": [["slam", "grab"], ["volley"], ["lane_wave"], ["rain"]]},
+  "Dr. Splint": {"names": {"volley": "SYRINGES", "grab": "CHECK-UP", "summon": "ORDERLIES"}, "stages": [["volley", "grab"], ["summon"], ["slam"], ["rain", "spin"]]}
+}
