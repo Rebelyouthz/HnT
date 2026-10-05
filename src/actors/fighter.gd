@@ -3,7 +3,7 @@ extends CharacterBody2D
 
 @export var role: String = "son"
 @export var prefix: StringName = &"p1_"
-@export var max_hp: int = 92
+@export var max_hp: int = 80
 @export var speed: float = 210.0
 @export var depth_speed: float = 110.0
 @export var accent: Color = Palette.LEMON
@@ -199,6 +199,9 @@ func _ready() -> void:
 	_apply_locker()
 	var bonus := FamilyProfile.gear_stat_bonus(role)
 	max_hp += int(bonus.get("hp", 0))
+	# Hero level / rarity and META vitality.
+	max_hp += Heroes.hp_bonus(role) + Meta.hp_bonus()
+	speed += Heroes.speed_bonus(role)
 	if FamilyProfile.has_cbt("wardrobe_stats"):
 		max_hp += 4
 	hp = max_hp
@@ -673,14 +676,14 @@ func _tick_meters(delta: float) -> void:
 		var regen := 22.0
 		if FamilyProfile.has_cbt("second_lungs"):
 			regen *= 1.15
-		steam = minf(STEAM_MAX, steam + regen * (1.0 + 0.3 * float(_cart("energy_drink"))) * (2.0 if suit_part("mask") == "shaolin" else 1.0) * delta)
+		steam = minf(STEAM_MAX, steam + regen * (1.0 + 0.3 * float(_cart("energy_drink"))) * (2.0 if suit_part("mask") == "shaolin" else 1.0) * Meta.steam_mul() * Heroes.steam_regen_mul(role) * delta)
 	blocking = _pressed("block") and steam > 2.0 and not downed
 	if tape_t > 0.0:
 		tape_t -= delta
 		if tape_t <= 0.0:
 			armored = charge_frames >= 18
 	if trick_t > 0.0:
-		trick_t -= delta
+		trick_t -= delta / Meta.flow_mul()
 		if trick_t <= 0.0:
 			trick_boost = 1.0
 	if stumble_t > 0.0:
@@ -827,7 +830,7 @@ func _process_street(delta: float) -> void:
 		var combo_spd := 1.0 + clampf(float(Juice.combo) * 0.008, 0.0, 0.14)
 		if stumble_t > 0.0:
 			limp *= 0.4
-		velocity.x = x * speed * limp * trick_boost * combo_spd * (1.0 + 0.12 * float(_cart("energy_drink"))) * _surv_speed()
+		velocity.x = x * speed * limp * (1.0 + (trick_boost - 1.0) * Meta.flow_mul()) * combo_spd * (1.0 + 0.12 * float(_cart("energy_drink"))) * _surv_speed()
 		if _street_grounded():
 			velocity.y = y * depth_speed * limp
 		else:
@@ -851,7 +854,7 @@ func _process_street(delta: float) -> void:
 			extra_jump = maxi(extra_jump, 1)
 		_footsteps(delta, absf(velocity.x))
 	if jump_buf > 0 and coyote > 0:
-		hop_v = JUMP * (1.12 if suit_part("bottom") == "spider" else 1.0)
+		hop_v = JUMP * (1.12 if suit_part("bottom") == "spider" else 1.0) * Meta.jump_mul()
 		hop = -1.0
 		jump_buf = 0
 		coyote = 0
@@ -873,7 +876,7 @@ func _process_street(delta: float) -> void:
 			gliding = true
 			g = GRAV * 0.22
 			hop_v = minf(hop_v, 90.0)
-			velocity.x = move_toward(velocity.x, float(facing) * speed * 1.05, 600.0 * delta)
+			velocity.x = move_toward(velocity.x, float(facing) * speed * 1.05 * Meta.air_mul(), 600.0 * Meta.air_mul() * delta)
 		if _released("jump") and hop_v < 0.0:
 			hop_v *= 0.45
 		hop_v += g * delta
@@ -912,7 +915,7 @@ func _process_roof(delta: float) -> void:
 			gliding = true
 			g = GRAV * 0.18
 			velocity.y = minf(velocity.y, 10.0)
-			velocity.x = move_toward(velocity.x, float(facing) * speed * 1.08, 700.0 * delta)
+			velocity.x = move_toward(velocity.x, float(facing) * speed * 1.08 * Meta.air_mul(), 700.0 * Meta.air_mul() * delta)
 		else:
 			gliding = false
 		if _released("jump") and velocity.y < 0.0:
@@ -927,7 +930,7 @@ func _process_roof(delta: float) -> void:
 			_on_land(absf(hop_v) if velocity.y >= 0.0 else 0.0)
 		hop_v = 0.0
 	if jump_buf > 0 and coyote > 0:
-		velocity.y = JUMP
+		velocity.y = JUMP * Meta.jump_mul()
 		jump_buf = 0
 		coyote = 0
 		KitSfx.hit(role, "jump")
@@ -941,7 +944,7 @@ func _process_roof(delta: float) -> void:
 	else:
 		velocity.x = x * speed
 	if is_on_wall() and jump_buf > 0 and role == "son":
-		wall_run = 0.42
+		wall_run = 0.42 * Meta.wall_mul()
 		jump_buf = 0
 	move_and_slide()
 	_face(x)
@@ -2220,6 +2223,8 @@ func take_hit(kind: String, from: Node) -> void:
 		dmg = 18
 	if buff_t > 0.0:
 		dmg = int(round(float(dmg) * 0.85))
+	if from is Punk or from is Round or from is KitShot:
+		dmg = maxi(1, int(round(float(dmg) * Heroes.enemy_dmg_mul())))
 	if wrong_guard:
 		dmg = maxi(1, int(round(float(dmg) * 0.7)))
 	if suit_set() == "shaolin":
@@ -2500,7 +2505,7 @@ func _on_land(fall: float) -> void:
 	if fall < 280.0:
 		KitSfx.hit(role, "land")
 		return
-	var want_roll := _stick().y > 0.25 or _just("dash") or FamilyProfile.dojo_learned("land_roll")
+	var want_roll := _stick().y > 0.25 or _just("dash") or FamilyProfile.dojo_learned("land_roll") or Meta.rank("iron_ankles") >= 2
 	if want_roll:
 		rolling = true
 		trick_boost = 1.08 + 0.02 * float(FamilyProfile.dojo_rank("land_roll"))
@@ -2514,7 +2519,7 @@ func _on_land(fall: float) -> void:
 	# A full jump lands at JUMP * sqrt(FALL_MUL) (~800): legs absorb that.
 	# Only drops beyond what a jump can produce stagger or hurt.
 	var full_jump := absf(JUMP) * sqrt(FALL_MUL)
-	if fall <= full_jump + 30.0:
+	if fall <= full_jump + 30.0 or Meta.rank("iron_ankles") >= 1:
 		KitSfx.hit(role, "land")
 		return
 	KitSfx.foot(role, 1.0, true)

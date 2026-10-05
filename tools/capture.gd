@@ -17,6 +17,9 @@ var _tab := ""
 ## first frame, change scene on the second.
 func _prepare() -> void:
 	var fp := root.get_node_or_null("FamilyProfile")
+	if _tab == "locker_gear":
+		Engine.set_meta("locker_slot", "clothes")
+		_tab = "locker"
 	if fp != null and fp.get("data") is Dictionary:
 		var d := fp.data as Dictionary
 		d["intro_done"] = true
@@ -46,6 +49,9 @@ func _prepare() -> void:
 			b[id] = maxi(1, int(b.get(id, 0)))
 		(fp.data as Dictionary)["buildings"] = b
 	if _tab == "locker" and fp != null:
+		(fp.data as Dictionary)["gear_inv"] = {"hoodie_lemon": [3, 1, 0, 0, 0], "polo_navy": [1, 0, 0, 0, 0], "headband": [1, 0, 0, 0, 0], "parkour_kicks": [2, 0, 0, 0, 0], "loafer_web": [1, 0, 0, 0, 0], "night_tutor": [0, 0, 1, 0, 0]}
+		(fp.data as Dictionary)["owned_gear"] = ["hoodie_lemon", "polo_navy", "headband", "parkour_kicks", "loafer_web", "night_tutor"]
+		(fp.data as Dictionary)["gold"] = 400
 		var parts: Array = []
 		for s in ["bat", "spider", "shaolin", "ninja"]:
 			for p in ["mask", "top", "bottom"]:
@@ -67,6 +73,13 @@ func _prepare() -> void:
 			(fp.data as Dictionary)["suit_son_" + p] = sid
 		(fp.data as Dictionary)["suits_split"] = true
 		(fp.data as Dictionary)["suit_parts"] = owned
+	if _tab == "heroes" and fp != null:
+		(fp.data as Dictionary)["gold"] = 900
+		(fp.data as Dictionary)["gems"] = 12
+		(fp.data as Dictionary)["tricks"] = 70
+		(fp.data as Dictionary)["hero_son"] = {"level": 10, "rarity": 0, "shards": 14}
+		(fp.data as Dictionary)["hero_father"] = {"level": 13, "rarity": 1, "shards": 6}
+		(fp.data as Dictionary)["meta"] = {"vitality": 2, "strength": 1, "spring_legs": 1}
 	if _tab == "armory" and fp != null:
 		(fp.data as Dictionary)["weapons_found"] = ["knife", "pipe", "board", "chain", "baseball_bat", "machete", "pistol", "revolver", "shotgun", "flare_gun", "smg"]
 		(fp.data as Dictionary)["weapon_kills"] = {"baseball_bat": 31, "machete": 12, "pistol": 25, "shotgun": 9, "pipe": 4, "revolver": 2}

@@ -1,6 +1,6 @@
 extends Control
 
-const TABS := ["clinic", "run", "build", "locker", "awards"]
+const TABS := ["clinic", "run", "heroes", "build", "locker", "awards"]
 
 var _content: Control
 var _tab_bar: HBoxContainer
@@ -186,7 +186,7 @@ func _make_top() -> Control:
 
 ## Bottom tab bar like the reference: one framed strip, an icon + pixel
 ## caps per tab, the open tab in a lit gold box.
-const TAB_ICON := {"clinic": "front_desk", "run": "street_map", "build": "therapy_couch", "locker": "wardrobe_cage", "awards": "trophy_cabinet"}
+const TAB_ICON := {"clinic": "front_desk", "run": "street_map", "build": "therapy_couch", "locker": "wardrobe_cage", "awards": "trophy_cabinet", "heroes": "punching_bag"}
 
 
 func _make_tabs() -> Control:
@@ -198,7 +198,7 @@ func _make_tabs() -> Control:
 	st.content_margin_top = 5
 	st.content_margin_bottom = 5
 	bar.add_theme_stylebox_override("panel", st)
-	bar.custom_minimum_size = Vector2(1000, 0)
+	bar.custom_minimum_size = Vector2(1180, 0)
 	center.add_child(bar)
 	_tab_bar = HBoxContainer.new()
 	_tab_bar.add_theme_constant_override("separation", 4)
@@ -241,6 +241,8 @@ func _tab_title(id: String) -> String:
 			return Copy.TAB_BUILD
 		"locker":
 			return Copy.TAB_LOCKER
+		"heroes":
+			return "HEROES"
 		_:
 			return Copy.TAB_AWARDS
 
@@ -290,6 +292,8 @@ func _show_tab(id: String) -> void:
 			page = preload("res://src/ui/hub_build.gd").new()
 		"locker":
 			page = preload("res://src/ui/hub_locker.gd").new()
+		"heroes":
+			page = preload("res://src/ui/hub_heroes.gd").new()
 		_:
 			page = preload("res://src/ui/hub_awards.gd").new()
 	page.set_anchors_preset(Control.PRESET_FULL_RECT)

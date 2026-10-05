@@ -1,7 +1,7 @@
 class_name RunState
 extends Node
 
-var lives: int = 3
+var lives: int = 3 + Meta.rank("extra_life")
 var checkpoint := Vector2(220, 490)
 var failed: bool = false
 var cleared: bool = false
@@ -59,7 +59,9 @@ func clear_run() -> void:
 	if failed or cleared:
 		return
 	cleared = true
-	var gold := 12 + int(scrap / 5.0)
+	# Clearing pays more the deeper into the city (hero levels, gear copies
+	# and META all want gold now).
+	var gold := 30 + 10 * Heroes.map_tier() + int(scrap / 4.0)
 	if App.difficulty == "finals":
 		gold += 6
 	FamilyProfile.add_gold(gold)

@@ -308,7 +308,7 @@ func has_craft(id: String) -> bool:
 
 func tab_unlocked(tab: String) -> bool:
 	match tab:
-		"clinic", "run":
+		"clinic", "run", "heroes":
 			return true
 		"build":
 			return is_built("therapy_couch")
@@ -531,8 +531,7 @@ func equipped_id(role: String, slot: String) -> String:
 
 
 func owns_gear(id: String) -> bool:
-	var owned: Array = data.get("owned_gear", [])
-	return owned.has(id)
+	return GearInv.tier(id) >= 0
 
 
 func gear_level(id: String) -> int:
@@ -547,11 +546,15 @@ func gear_stat_bonus(role: String) -> Dictionary:
 		if spec.is_empty():
 			continue
 		var st: Variant = spec.get("stats", {})
-		var lvl := gear_level(str(spec.get("id", "")))
+		var gid := str(spec.get("id", ""))
+		var lvl := gear_level(gid)
 		if typeof(st) != TYPE_DICTIONARY:
 			continue
+		# Rarity above the piece's base multiplies it (GearInv.stat_mul).
+		var mul := GearInv.stat_mul(gid)
 		for k in out.keys():
-			out[k] = int(out[k]) + int((st as Dictionary).get(k, 0)) + lvl
+			var base := int((st as Dictionary).get(k, 0))
+			out[k] = int(out[k]) + int(round(float(base) * mul)) + (lvl if base >= 0 else 0)
 	# The hero suit worn over everything adds its own bit.
 	var ss := Suits.stats(role)
 	for k in out.keys():
@@ -561,18 +564,33 @@ func gear_stat_bonus(role: String) -> Dictionary:
 
 func try_buy_gear(id: String) -> bool:
 	var spec := GearBook.item(id)
-	if spec.is_empty() or owns_gear(id):
+	if spec.is_empty():
 		return false
-	if int(data.get("gold", 0)) < int(spec.get("gold", 0)):
+	# Owned already: buy another copy (three combine into a rarer one).
+	var price := gear_price(id)
+	if int(data.get("gold", 0)) < price:
 		return false
 	if int(data.get("rep", 0)) < int(spec.get("rep", 0)):
 		return false
-	data["gold"] = int(data["gold"]) - int(spec.get("gold", 0))
-	(data["owned_gear"] as Array).append(id)
+	var had := owns_gear(id)
+	data["gold"] = int(data["gold"]) - price
+	GearInv.add(id)
+	if had:
+		save()
+		Juice.toast("reward", "+1 COPY", "%s  ·  three alike combine into a rarer one." % str(spec.get("title", spec.get("name", id))))
+		return true
 	flag_unseen("gear_%s" % id)
 	save()
 	Juice.unlock_logo(str(spec.get("name", id)), str(spec.get("blurb", "Clothes with opinions.")), "GEAR  ·  %s" % Rarity.label(str(spec.get("rarity", "common"))))
 	return true
+
+
+## A copy costs its price; free starter pieces cost 25 gold as copies.
+func gear_price(id: String) -> int:
+	var g := int(GearBook.item(id).get("gold", 0))
+	if owns_gear(id) and g <= 0:
+		return 25
+	return g
 
 
 func try_upgrade_gear(id: String) -> bool:
@@ -580,7 +598,7 @@ func try_upgrade_gear(id: String) -> bool:
 		return false
 	var spec := GearBook.item(id)
 	var lvl := gear_level(id)
-	if lvl >= 3:
+	if lvl >= GearInv.level_cap(id):
 		return false
 	var cost := int(spec.get("upgrade", 20)) * (lvl + 1)
 	if int(data.get("gold", 0)) < cost:
@@ -1485,7 +1503,7 @@ func grant_prize(id: String) -> void:
 	if id.begins_with("gear_"):
 		var gid := id.substr(5)
 		if not owns_gear(gid):
-			(data["owned_gear"] as Array).append(gid)
+			GearInv.add(gid)
 			flag_unseen("gear_%s" % gid)
 			save()
 			Juice.unlock_logo(gid.replace("_", " ").to_upper(), "It fell out of a chest. Wear it.", "GEAR")

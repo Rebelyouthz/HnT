@@ -382,6 +382,12 @@ func _ready() -> void:
 	var party: Dictionary = Party.spawn(self, spawn_at)
 	_son = party.get("son") as Fighter
 	_dad = party.get("dad") as Fighter
+	# META starter kit: armed from the first step.
+	var kit := Meta.starter_weapon()
+	if kit != "":
+		for f in [_son, _dad]:
+			if f and f.pickup == "":
+				f.equip_pickup(kit)
 	if roof_start:
 		for f in [_son, _dad]:
 			if f:
@@ -391,7 +397,7 @@ func _ready() -> void:
 	if App.ORDER.has(map_id) and not StoryBook.is_survive(map_id):
 		Nemesis.maybe_spawn(self, map_id, map_w, _state.hp_mul())
 	for row in Party.encounters(map_id):
-		var pk := Party.spawn_row(self, row, _state.hp_mul() * NightCondition.mul(map_id, "hp"))
+		var pk := Party.spawn_row(self, row, _state.hp_mul() * NightCondition.mul(map_id, "hp") * Heroes.enemy_hp_mul())
 		if pk:
 			pk.speed *= NightCondition.mul(map_id, "speed")
 	_cam = CouchCamera.new()

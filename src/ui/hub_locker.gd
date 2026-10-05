@@ -23,6 +23,9 @@ const STAT_NAMES := {"hp": "HP", "dmg": "DMG", "steam": "STEAM", "speed": "SPD"}
 
 
 func _ready() -> void:
+	if Engine.has_meta("locker_slot"):
+		_slot = str(Engine.get_meta("locker_slot"))
+		Engine.remove_meta("locker_slot")
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	_root = Control.new()
 	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -344,17 +347,21 @@ func _item_stats(item: Dictionary) -> Dictionary:
 	if item.is_empty():
 		return {}
 	var st: Dictionary = item.get("stats", {})
-	var lvl := FamilyProfile.gear_level(str(item.get("id", "")))
+	var gid := str(item.get("id", ""))
+	var lvl := FamilyProfile.gear_level(gid)
+	var mul := GearInv.stat_mul(gid)
 	var out := {}
 	for k in STAT_NAMES.keys():
-		out[k] = int(st.get(k, 0)) + lvl
+		var base := int(st.get(k, 0))
+		out[k] = int(round(float(base) * mul)) + (lvl if base >= 0 else 0)
 	return out
 
 
 func _gear_card(item: Dictionary) -> Control:
 	var id := str(item.get("id", ""))
-	var rarity := Rarity.normalize(str(item.get("rarity", "common")))
 	var owned := FamilyProfile.owns_gear(id)
+	# The best copy owned decides the rarity shown (and worn).
+	var rarity := GearInv.tier_name(id) if owned else Rarity.normalize(str(item.get("rarity", "common")))
 	var wearing := FamilyProfile.equipped_id(_role, _slot) == id
 	var pair := _card(UiKit.GOLD if wearing else Rarity.color(rarity))
 	var h: HBoxContainer = pair[1]
@@ -373,14 +380,22 @@ func _gear_card(item: Dictionary) -> Control:
 	UiKit.apply_label(nm, 18, Rarity.color(rarity))
 	v.add_child(nm)
 	var tag := Label.new()
-	tag.text = Rarity.label(rarity) + ("  ·  WEARING" if wearing else "")
+	var copies := ""
+	if owned:
+		var cs := GearInv.counts(id)
+		var parts: Array[String] = []
+		for ti in 5:
+			if int(cs[ti]) > 0:
+				parts.append("%d× %s" % [int(cs[ti]), Rarity.ORDER[ti].to_upper()])
+		copies = "  ·  " + "  ".join(parts) + "  ·  LV CAP %d" % GearInv.level_cap(id)
+	tag.text = Rarity.label(rarity) + copies + ("  ·  WEARING" if wearing else "")
 	UiKit.apply_label(tag, 11, Palette.MUTED)
 	v.add_child(tag)
 	v.add_child(_delta_row(_item_stats(item), _item_stats(GearBook.item(FamilyProfile.equipped_id(_role, _slot)))))
 	var bl := Label.new()
 	bl.text = str(item.get("blurb", ""))
 	bl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	bl.custom_minimum_size = Vector2(380, 0)
+	bl.custom_minimum_size = Vector2(330, 0)
 	UiKit.apply_label(bl, 12, Palette.TEXT)
 	v.add_child(bl)
 	h.add_child(v)
@@ -400,7 +415,7 @@ func _gear_card(item: Dictionary) -> Control:
 		)
 		btns.add_child(wear)
 	else:
-		var cost := int(item.get("gold", 0))
+		var cost := FamilyProfile.gear_price(id)
 		var buy := UiKit.button("%d GOLD" % cost if cost > 0 else "CLAIM", Vector2(150, 36))
 		var need_gold := int(FamilyProfile.data.get("gold", 0)) < cost
 		var need_rep := int(FamilyProfile.data.get("rep", 0)) < int(item.get("rep", 0))
@@ -416,7 +431,30 @@ func _gear_card(item: Dictionary) -> Control:
 				_paint()
 		)
 		btns.add_child(buy)
-	if owned and lvl < 3:
+	if owned:
+		# Three alike -> one rarer. Copies come from loot or the counter.
+		var ct := GearInv.combinable(id)
+		if ct >= 0:
+			var short: String = ["COMMON", "UNCOMMON", "RARE", "EPIC", "LEGEND"][ct + 1]
+			var cb := UiKit.button("3× → %s" % short, Vector2(150, 32))
+			cb.tooltip_text = "Combine three alike into one %s." % Rarity.ORDER[ct + 1]
+			cb.add_theme_color_override("font_color", Rarity.color(Rarity.ORDER[ct + 1]))
+			cb.pressed.connect(func() -> void:
+				if GearInv.combine(id):
+					need_refresh.emit()
+					_paint()
+			)
+			btns.add_child(cb)
+		var cp := FamilyProfile.gear_price(id)
+		var copy := UiKit.button("+COPY  %dG" % cp, Vector2(150, 30))
+		copy.disabled = int(FamilyProfile.data.get("gold", 0)) < cp
+		copy.pressed.connect(func() -> void:
+			if FamilyProfile.try_buy_gear(id):
+				need_refresh.emit()
+				_paint()
+		)
+		btns.add_child(copy)
+	if owned and lvl < GearInv.level_cap(id):
 		var up_cost := int(item.get("upgrade", 20)) * (lvl + 1)
 		var up := UiKit.button("UPGRADE  %dG" % up_cost, Vector2(150, 32))
 		up.disabled = int(FamilyProfile.data.get("gold", 0)) < up_cost

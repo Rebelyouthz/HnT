@@ -11,10 +11,16 @@ const KINDS := {
 	"coin": {"tex": "res://assets/sprites/loot/coin.png", "scale": 0.55},
 	"flask": {"tex": "res://assets/sprites/loot/flask.png", "scale": 0.72},
 	"syringe": {"tex": "res://assets/sprites/loot/syringe.png", "scale": 0.8},
+	"shard_son": {"tex": "res://assets/sprites/loot/shard_son.png", "scale": 0.62},
+	"shard_father": {"tex": "res://assets/sprites/loot/shard_father.png", "scale": 0.62},
+	"gear": {"tex": "res://assets/sprites/loot/gear_box.png", "scale": 0.62},
 }
 
 var kind := "cash"
 var amount := 5
+## For "gear": which piece and at what rarity.
+var item := ""
+var item_tier := 0
 var floor_y := 500.0
 var _v := Vector2.ZERO
 var _sp: Sprite2D
@@ -58,11 +64,18 @@ func _ready() -> void:
 	_sp.offset = Vector2(0, -float(_sp.texture.get_height()) * 0.5)
 	_sp.texture_filter = SpriteBook.world_filter()
 	add_child(_sp)
-	if kind == "syringe" or kind == "flask":
+	if kind == "syringe" or kind == "flask" or kind.begins_with("shard") or kind == "gear":
 		_glow = PointLight2D.new()
 		_glow.texture = LightRig.radial_tex()
 		_glow.texture_scale = 0.35
 		_glow.color = Color(0.4, 1.0, 0.5) if kind == "syringe" else Color(1.0, 0.3, 0.3)
+		if kind == "shard_son":
+			_glow.color = Color(1.0, 0.85, 0.3)
+		elif kind == "shard_father":
+			_glow.color = Color(1.0, 0.35, 0.3)
+		elif kind == "gear":
+			_glow.color = Rarity.color(Rarity.ORDER[clampi(item_tier, 0, 4)])
+			_glow.energy = 1.3
 		_glow.energy = 0.9
 		_glow.position = Vector2(0, -10)
 		add_child(_glow)
@@ -88,6 +101,8 @@ func _process(delta: float) -> void:
 		_shadow.position.y = floor_y - position.y
 		_shadow.scale = Vector2.ONE * clampf(1.0 - (floor_y - position.y) / 80.0, 0.3, 1.0)
 		return
+	if kind == "gear" and _glow:
+		_glow.color = Rarity.color(Rarity.ORDER[clampi(item_tier, 0, 4)])
 	# Bob and glint while waiting.
 	_sp.position.y = -2.0 - 2.0 * sin(_t * 3.2)
 	_sp.modulate = Color(1, 1, 1).lerp(Color(1.6, 1.5, 1.2), maxf(0.0, sin(_t * 2.4)) ** 8.0)
@@ -103,7 +118,7 @@ func _process(delta: float) -> void:
 		if absf(d.x) < 22.0 and absf(d.y) < 18.0:
 			_take(f)
 			return
-		if absf(d.x) < 48.0 and absf(d.y) < 26.0 and kind in ["cash", "coin"]:
+		if absf(d.x) < 48.0 and absf(d.y) < 26.0 and (kind in ["cash", "coin"] or kind.begins_with("shard")):
 			position += d.normalized() * 140.0 * delta
 
 
@@ -114,6 +129,7 @@ func _take(f: Fighter) -> void:
 			var g := maxi(1, amount)
 			if Charms.has("lucky_coin"):
 				g = int(ceil(float(g) * 1.5))
+			g = int(ceil(float(g) * Meta.gold_mul()))
 			FamilyProfile.add_gold(g)
 			Juice.popup_number(global_position + Vector2(0, -24), "+%d" % g, UiKit.GOLD)
 			Juice.fly_pills(global_position, g, 0)
@@ -124,6 +140,21 @@ func _take(f: Fighter) -> void:
 			Juice.popup_number(global_position + Vector2(0, -24), "+%d HP" % heal, Palette.READY)
 			Juice.play("res://assets/audio/heal.wav" if ResourceLoader.exists("res://assets/audio/heal.wav") else "res://assets/audio/cling_ok.wav")
 			Juice.pulse_shake(1.5)
+		"shard_son", "shard_father":
+			var who := "son" if kind == "shard_son" else "father"
+			var n := maxi(1, amount)
+			Heroes.add_shards(who, n)
+			var nm := FamilyProfile.son_name() if who == "son" else FamilyProfile.father_name()
+			Juice.popup_number(global_position + Vector2(0, -28), "+%d %s SHARD%s" % [n, nm.to_upper(), "S" if n > 1 else ""], Color(1.0, 0.85, 0.3) if who == "son" else Color(1.0, 0.4, 0.35))
+			Juice.play("res://assets/audio/card.wav")
+		"gear":
+			GearInv.add(item, item_tier)
+			FamilyProfile.flag_unseen("gear_" + item)
+			var spec := GearBook.item(item)
+			var rn := Rarity.ORDER[clampi(item_tier, 0, 4)]
+			Juice.toast("reward", "%s  ·  %s" % [str(spec.get("title", spec.get("name", item))).to_upper(), rn.to_upper()], "Gear found. Three alike combine in GEAR.")
+			Rarity.juice(rn, str(spec.get("title", item)))
+			Juice.play("res://assets/audio/chest.wav")
 		"syringe":
 			f.hp = f.max_hp
 			f.steam = Fighter.STEAM_MAX

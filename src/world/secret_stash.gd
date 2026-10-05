@@ -150,6 +150,9 @@ func _claim(f: Fighter) -> void:
 			Juice.toast("reward", title, "Twelve gold. Unique would have been nicer.")
 	Rarity.juice(rarity, title)
 	Juice.unlock_logo(title, str(spec.get("blurb", "Unique. The clipboard missed this.")), "SECRET  ·  %s" % Rarity.label(rarity))
+	# Every stash also hides a few character shards for whoever opened it.
+	Heroes.add_shards(f.role, 3)
+	Juice.toast("reward", "+3 SHARDS", "Character shards in the stash. Raise rarity in HEROES.")
 	Juice.play("res://assets/audio/chest.wav")
 	Juice.pulse_shake(3.0)
 	queue_free()

@@ -880,6 +880,10 @@ func take_hit(kind: String, from: Node) -> void:
 			dmg = int(round(float(dmg) * (1.0 + 0.15 * float(knuckles))))
 	if from is Fighter and (from as Fighter).buff_t > 0.0:
 		dmg = int(round(float(dmg) * 1.25))
+	# Hero level / rarity and META strength (fists, gadgets and guns alike).
+	var hero := Heroes.role_of(from)
+	if hero == "son" or hero == "father":
+		dmg = int(round(float(dmg) * Heroes.dmg_mul(hero) * Meta.dmg_mul()))
 	if from is Fighter and (from as Fighter).suit_set() == "bat":
 		dmg = int(round(float(dmg) * 1.2))
 	if from is Fighter:
@@ -1191,7 +1195,7 @@ func _drops(from: Node) -> void:
 	var rank_mul: float = {"S+": 2.0, "S": 1.75, "A": 1.5, "B": 1.3, "C": 1.15}.get(Juice.combo_rank(), 1.0)
 	xp_n = int(round(float(xp_n) * cond_xp * rank_mul))
 	XpOrb.burst(host, global_position, xp_n, tier == "elite" or tier == "boss" or title == "Bailiff")
-	var coins := 6 if title == "Bailiff" else (2 if title == "Mohawk Bo" or title == "Repo Goon" else (1 if randf() < 0.6 else 0))
+	var coins := 6 if title == "Bailiff" else (2 if title == "Mohawk Bo" or title == "Repo Goon" else ((1 + (1 if randf() < 0.35 else 0)) if randf() < 0.75 else 0))
 	coins = int(round(float(coins) * cond_coin * rank_mul))
 	if rank_mul > 1.0 and coins > 0:
 		Juice.popup_number(global_position + Vector2(0, -76), "RANK %s  x%.2f" % [Juice.combo_rank(), rank_mul], UiKit.GOLD)
@@ -1218,6 +1222,29 @@ func _drops(from: Node) -> void:
 		host.add_child(drop)
 	if from is Fighter and rs and rs.has_method("has_card") and rs.has_card("head_trampoline"):
 		pass
+	_progress_drops(host, from)
+
+
+## Character shards and gear parcels: rare from thugs, likely from elites,
+## certain from bosses (META shard sense / scavenger raise the odds).
+func _progress_drops(host: Node, from: Node) -> void:
+	var big := tier == "boss"
+	var elite := tier == "elite" or title == "Bailiff"
+	var sc := (0.05 if not elite else 0.5) * Meta.shard_mul()
+	if big or randf() < sc:
+		var killer := Heroes.role_of(from)
+		var n := randi_range(6, 10) if big else (randi_range(2, 3) if elite else 1)
+		var split := 2 if big else 1
+		for i in split:
+			var who := killer if (killer == "son" or killer == "father") and randf() < 0.65 else ("son" if randf() < 0.5 else "father")
+			LootDrop.spawn(host, global_position + Vector2(randf_range(-10, 10), 0), "shard_" + who, n / split + (n % split if i == 0 else 0), 1.0)
+	var gc := (0.02 if not elite else 0.15) * Meta.gear_mul()
+	if big or randf() < gc:
+		var roll := GearInv.roll_drop()
+		if not roll.is_empty():
+			var d := LootDrop.spawn(host, global_position + Vector2(randf_range(-6, 6), 0), "gear", 1, 0.8)
+			d.item = str(roll["id"])
+			d.item_tier = int(roll["tier"])
 
 
 ## Where the blow landed decides the blood, the body reaction and later the

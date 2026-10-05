@@ -43,6 +43,7 @@ const SECTIONS := [
 			["Suit Parts", "@suit_parts"], ["Weapons Found", "@weapons"], ["Mastered", "@mastered"],
 			["Weapon Kills", "@weapon_kills"], ["Home Runs", "home_runs"], ["Decapitations", "decaps"],
 			["Burned", "burn_kills"], ["Weapons Broken", "weapon_breaks"], ["Gadget Hits", "gadget_hits"],
+			["Shards Found", "shards_found"], ["Gear Combines", "gear_combines"], ["Hero Levels", "@hero_levels"],
 		],
 	},
 	{
@@ -129,6 +130,8 @@ func _value(key: String) -> int:
 		return (FamilyProfile.data.get("maps_filed", []) as Array).size()
 	if key == "@suit_parts":
 		return (FamilyProfile.data.get("suit_parts", []) as Array).size()
+	if key == "@hero_levels":
+		return Heroes.level("son") + Heroes.level("father")
 	if key == "@weapons":
 		return (FamilyProfile.data.get("weapons_found", []) as Array).size()
 	if key == "@mastered" or key == "@weapon_kills":
