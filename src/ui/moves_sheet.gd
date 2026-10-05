@@ -301,7 +301,7 @@ func _elements(body: VBoxContainer) -> void:
 		var b := _btn(bt, Vector2(150, 34), "art_" + id, false)
 		b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		b.disabled = not can
-		b.pressed.connect(func() -> void:
+		var act := func() -> void:
 			var ok := Elements.evolve(id) if Elements.can_evolve(id) else Elements.buy(id)
 			if ok:
 				Juice.play("res://assets/audio/claim.wav")
@@ -309,7 +309,11 @@ func _elements(body: VBoxContainer) -> void:
 				need_refresh.emit()
 				_focus_key = "art_" + id
 				_paint()
-		)
+		# Evolving spends gems: hold to confirm.
+		if Elements.can_evolve(id):
+			UiKit.hold_confirm(b, act)
+		else:
+			b.pressed.connect(act)
 		h.add_child(b)
 		grid.add_child(p)
 	_section(body, "GRABS  ·  L + H NEXT TO A THUG", Palette.EDGE)

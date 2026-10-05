@@ -43,6 +43,22 @@ static func title_of(id: String) -> String:
 	return str(StoryBook.act(id).get("title", id.replace("_", " ").to_upper()))
 
 
+const TIPS := [
+	"LIGHT + HEAVY together fires an element art. The stick picks which.",
+	"Same buttons next to a thug: a grab. Bosses do not grab.",
+	"Hit a thug during his wind-up to INTERRUPT him.",
+	"From behind it is a BACKSTAB: a quarter more.",
+	"Roll just as the swing lands: PERFECT DODGE.",
+	"Double-tap DUCK to taunt. Risky. Pays CHI.",
+	"Hold HEAVY and tap SPECIAL when the gold ring is full.",
+	"Throw with nobody in reach and a knife flies. Pick it back up.",
+	"Ammo is short. Empty guns go in the bin.",
+	"Fling a thug into a lamp post for a PROP SLAM.",
+	"The tutorial in the dojo pays gold once per lesson.",
+	"The GUNSMITH fits five parts to every gun.",
+]
+
+
 func _ready() -> void:
 	layer = 90
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -100,6 +116,13 @@ func _ready() -> void:
 		cl.size = Vector2(1100, 24)
 		UiKit.apply_label(cl, 15, Color(0.6, 0.85, 1.0))
 		_root.add_child(cl)
+	# TIP OF THE NIGHT: one thing worth knowing, a different one each time.
+	var tip := Label.new()
+	tip.text = "TIP  ·  " + str(TIPS[randi() % TIPS.size()])
+	tip.position = Vector2(90, 600)
+	tip.size = Vector2(900, 24)
+	UiKit.apply_label(tip, 12, UiKit.GOLD)
+	_root.add_child(tip)
 	var skip := Label.new()
 	skip.text = "JUMP / ENTER TO SKIP"
 	skip.position = Vector2(0, 600)

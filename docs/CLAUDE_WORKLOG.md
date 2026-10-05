@@ -75,6 +75,16 @@ The rest is in English, like the code. Newest work first. Each block says
   sweeps, AIR HORN / SMOKE BOMB actives and the SLINGSHOT on SHOOT with
   empty hands (`ItemRack.shoot`). Survivor pick cards carry the same badge +
   rarity line.
+- 40 additions (#94): `BrawlPlus` (backstab, interrupt, juggle scaling, taunt
+  on double-tap DUCK, clutch, flinch, prop slam vs lamps/cars "slam_props",
+  perfect dodge, together aura + tether, last hit). `ParkourPlus` on roof maps
+  (speed lines, afterimages, best-run ghost "ghost_<map>", split times, 5
+  graffiti tags, air time FLOW, heavy landing dip, precision pads, medals
+  "medal_<map>", wall-run sparks). Menus: hub ticker + NEXT GOAL, living
+  header portraits, pentatonic focus ticks, `UiKit.hold_confirm` (evolve,
+  rarity), pause BUILD list, run history (STATS), title LAST NIGHT line,
+  stage-card tips, parkour RECORDS in BUILD. Survivor's ten go into the
+  survivor depth pass (#99). Fire Escapes alley got its cobbles.
 
 ## 0l. Bosses, three trees + metas, survivor depth, weapon mods, night extras
 

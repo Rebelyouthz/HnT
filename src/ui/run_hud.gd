@@ -755,6 +755,23 @@ func _toggle_pause() -> void:
 		var lo := UiKit.rich("", 520, 12, Palette.TEXT)
 		lo.text = "[color=#ffd75e]LOADOUT[/color]\n" + "\n".join(lines)
 		right.add_child(lo)
+	# BUILD: the night's cards and items with their kind and level.
+	if state and not state.cards.is_empty():
+		var table: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/cards.json"))
+		var names := {}
+		if table is Array:
+			for c in table:
+				names[str(c["id"])] = c
+		var bits: Array[String] = []
+		for id in state.cards:
+			var c: Dictionary = names.get(str(id), {})
+			var kd := str(c.get("kind", "PASSIVE"))
+			var kcol: Color = (PixelCard.KINDS.get(kd, PixelCard.KINDS["PASSIVE"]) as Array)[2]
+			var lv := int(state.card_lv.get(id, 1))
+			bits.append("[color=#%s]%s[/color] %s%s" % [kcol.to_html(false), kd.left(4), str(c.get("name", id)), "  LV %d" % lv if int(c.get("max_lv", 1)) > 1 else ""])
+		var bd := UiKit.rich("", 520, 12, Palette.TEXT)
+		bd.text = "[color=#ffd75e]BUILD[/color]\n" + "\n".join(bits)
+		right.add_child(bd)
 	r.grab_focus()
 
 

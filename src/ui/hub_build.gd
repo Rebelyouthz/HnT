@@ -103,6 +103,21 @@ func _ready() -> void:
 	wallet.add_theme_font_override("font", UiKit.pixel_font())
 	UiKit.apply_label(wallet, 15, UiKit.GOLD)
 	_stage.add_child(wallet)
+	# Parkour records: medal, best time and tags found per roof map.
+	if mode == "parkour":
+		var rec: Array[String] = []
+		for mid in ["fire_escapes", "neon_exchange", "dock_street", "rail_bridge"]:
+			var best := float(FamilyProfile.data.get("best_" + mid, 0.0))
+			var tags := ((FamilyProfile.data.get("tags", {}) as Dictionary).get(mid, []) as Array).size()
+			if best > 0.0 or tags > 0:
+				rec.append("%s  %s  %s  TAGS %d/5" % [StageCard.title_of(mid), str(FamilyProfile.data.get("medal_" + mid, "-")), ("%.1fs" % best) if best > 0.0 else "--", tags])
+		var rl := Label.new()
+		rl.text = "RECORDS\n" + ("\n".join(rec) if not rec.is_empty() else "Run a roof map to the goal: medals, ghost and tags show here.")
+		rl.position = Vector2(14, 270)
+		rl.size = Vector2(260, 120)
+		rl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		UiKit.apply_label(rl, 11, Color(0.6, 0.9, 1.0))
+		_stage.add_child(rl)
 	# RESPEC: every node in this tree back for its full price.
 	var refund := UiKit.button("REFUND TREE", Vector2(150, 30))
 	refund.add_theme_font_size_override("font_size", 11)

@@ -26,6 +26,8 @@ func _configure() -> void:
 func build_world() -> void:
 	NightStreet.parallax(self, map_w, "roofs")
 	NightStreet.wet_floor(self, map_w, true)
+	# The alley under the roofs: the same wet cobbles as the street.
+	NightStreet.pixel_dock(self, map_w, false)
 	for r in [
 		Rect2(40, 40, 280, 210),
 		Rect2(420, 20, 300, 190),

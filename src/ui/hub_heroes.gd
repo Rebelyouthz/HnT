@@ -150,7 +150,8 @@ func _hero_card(role: String) -> Control:
 	if not c.is_empty():
 		rk.add_theme_color_override("font_color", Rarity.color(Rarity.ORDER[Heroes.rarity(role) + 1]))
 	rk.tooltip_text = "Reach LV %d, then spend shards to raise rarity (+5 level cap)." % cap
-	rk.pressed.connect(func() -> void:
+	# Raising rarity spends the shards: hold to confirm.
+	UiKit.hold_confirm(rk, func() -> void:
 		if Heroes.try_rank(role):
 			need_refresh.emit()
 			_paint("rk_" + role)

@@ -351,6 +351,40 @@ static func pulse_ready(b: Control) -> void:
 
 ## Press feel for any button: it sinks and squashes while held, springs
 ## back on release, lifts a hair on hover.
+const PENTA := [1.0, 1.122, 1.26, 1.498, 1.682, 2.0]
+
+
+## Hold-to-confirm for big spends: the first press arms the button (it reads
+## HOLD... and fills), keeping it down 0.6 s confirms. A tap does nothing.
+static func hold_confirm(b: Button, on_confirm: Callable) -> void:
+	var label := b.text
+	var fill := ColorRect.new()
+	fill.color = Color(1.0, 0.85, 0.3, 0.35)
+	fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	fill.size = Vector2(0, 0)
+	b.add_child(fill)
+	var tw_ref := [null]
+	b.button_down.connect(func() -> void:
+		b.text = "HOLD..."
+		fill.size = Vector2(0, b.size.y)
+		var tw := b.create_tween()
+		tw_ref[0] = tw
+		tw.tween_property(fill, "size:x", b.size.x, 0.6)
+		tw.tween_callback(func() -> void:
+			fill.size = Vector2.ZERO
+			b.text = label
+			on_confirm.call()
+		)
+	)
+	b.button_up.connect(func() -> void:
+		if tw_ref[0] != null and (tw_ref[0] as Tween).is_valid():
+			(tw_ref[0] as Tween).kill()
+		fill.size = Vector2.ZERO
+		if is_instance_valid(b):
+			b.text = label
+	)
+
+
 static func press_feel(b: BaseButton) -> void:
 	b.resized.connect(func() -> void:
 		b.pivot_offset = b.size * 0.5
@@ -369,6 +403,13 @@ static func press_feel(b: BaseButton) -> void:
 	b.mouse_entered.connect(func() -> void:
 		if not b.disabled:
 			b.create_tween().tween_property(b, "scale", Vector2(1.03, 1.03), 0.08)
+	)
+	# Moving through a menu plays a little tune: each button's height picks
+	# a note of a pentatonic scale.
+	b.focus_entered.connect(func() -> void:
+		if b.is_inside_tree() and not b.disabled:
+			var step := int(absf(b.global_position.y + b.global_position.x * 0.25) / 36.0) % PENTA.size()
+			Mixer.play_sfx("res://assets/audio/ui_click.wav", PENTA[step], -17.0)
 	)
 	b.mouse_exited.connect(func() -> void:
 		b.create_tween().tween_property(b, "scale", Vector2.ONE, 0.08)

@@ -376,6 +376,10 @@ func _ready() -> void:
 		if pk:
 			pk.speed *= NightCondition.mul(map_id, "speed")
 	add_child(ItemRack.new())
+	Engine.set_meta("run_kills0", int(FamilyProfile.data.get("kills_total", 0)))
+	Engine.set_meta("run_t0", Time.get_ticks_msec() / 1000.0)
+	if roof_start or not get_tree().get_nodes_in_group("roof_solids").is_empty():
+		ParkourPlus.place(self, map_id, goal_x, check_x)
 	_cam = CouchCamera.new()
 	_cam.limit_right = int(map_w)
 	_cam.targets = _targets()

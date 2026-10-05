@@ -370,6 +370,13 @@ func mark_run_finished(ok: bool = true) -> void:
 		flag_unseen("build_streak_locker")
 	else:
 		data["streak"] = 0
+	# Run history (STATS): the last ten nights.
+	var hist: Array = data.get("run_history", [])
+	var k0 := int(Engine.get_meta("run_kills0", int(data.get("kills_total", 0))))
+	var t0 := float(Engine.get_meta("run_t0", Time.get_ticks_msec() / 1000.0))
+	hist.push_front({"map": str(App.current_map), "ok": ok, "kills": int(data.get("kills_total", 0)) - k0,
+		"secs": int(Time.get_ticks_msec() / 1000.0 - t0), "peak": int(Juice.combo_peak), "date": Time.get_date_string_from_system()})
+	data["run_history"] = hist.slice(0, 10)
 	_bump_daily("run")
 	save()
 

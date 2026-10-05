@@ -175,6 +175,18 @@ func _build_menu() -> void:
 	_add_item("CREDITS", _credits)
 	if not OS.has_feature("web") and not OS.has_feature("mobile"):
 		_add_item("QUIT", func() -> void: get_tree().quit())
+	# Last night, under CONTINUE: where it ended and how.
+	var hist: Array = FamilyProfile.data.get("run_history", [])
+	if has_save and not hist.is_empty():
+		var h: Dictionary = hist[0]
+		var last := Label.new()
+		last.text = "LAST NIGHT  ·  %s  ·  %s  ·  %d KILLS" % [StageCard.title_of(str(h.get("map", ""))), "CLEARED" if bool(h.get("ok", false)) else "WENT DOWN", int(h.get("kills", 0))]
+		last.custom_minimum_size = Vector2(280, 0)
+		last.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		last.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		UiKit.apply_label(last, 11, Palette.MUTED)
+		_menu.add_child(last)
+		_menu.move_child(last, 2)
 	var first := _menu.get_child(0) as Button
 	if first:
 		first.call_deferred("grab_focus")

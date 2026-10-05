@@ -77,6 +77,64 @@ func _build_chrome() -> void:
 	_content.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	root.add_child(_content)
 	root.add_child(_make_tabs())
+	_build_ticker()
+
+
+## NEWS TICKER along the bottom edge, led by the NEXT GOAL: the cheapest
+## thing you can afford right now, so the menus always point somewhere.
+const NEWS := [
+	"RAVEN WHARF: CLINIC RAISES COPAY FOR BEING PUNCHED",
+	"LOCAL DAD CLAIMS HE 'DID THAT ON PURPOSE'",
+	"PIGEONS FORM UNION, DEMAND BREAD",
+	"BAILIFF VEST RECALLED: STOPS EVERYTHING EXCEPT ARMOR PIERCING",
+	"WEATHER: RAIN. AGAIN. FOREVER.",
+	"STRAY CAT ELECTED NEIGHBOURHOOD WATCH",
+	"DOJO SENSEI: 'THE TUTORIAL IS NOT OPTIONAL. IT IS GOLD.'",
+	"SURVEY: NINE IN TEN THUGS FEAR THE TAUNT",
+	"HARBOUR CLOCK STILL WRONG, STILL CLIMBABLE",
+]
+
+
+func next_goal() -> String:
+	var gold := int(FamilyProfile.data.get("gold", 0))
+	var best := ""
+	var best_c := 1 << 30
+	for role in ["son", "father"]:
+		if Heroes.can_level(role) and Heroes.level_cost(role) < best_c:
+			best_c = Heroes.level_cost(role)
+			best = "LEVEL UP %s  %dG" % [(FamilyProfile.son_name() if role == "son" else FamilyProfile.father_name()).to_upper(), best_c]
+		for a: Dictionary in Elements.arts(role):
+			var pr := Elements.next_price(str(a["id"]))
+			if pr > 0 and pr <= gold and pr < best_c:
+				best_c = pr
+				best = "%s %s  %dG" % ["LEVEL" if Elements.owned(str(a["id"])) else "UNLOCK", str(a["title"]), pr]
+	if best == "":
+		var left := DojoSchool.LESSONS.size() - (FamilyProfile.data.get("school_paid", []) as Array).size()
+		if left > 0:
+			return "NEXT GOAL  ·  DOJO TUTORIAL: %d LESSONS LEFT (GOLD EACH)" % left
+		return "NEXT GOAL  ·  GO ON A RUN AND BRING BACK GOLD"
+	return "NEXT GOAL  ·  " + best
+
+
+func _build_ticker() -> void:
+	var clip := Control.new()
+	clip.clip_contents = true
+	clip.position = Vector2(0, 703)
+	clip.size = Vector2(1280, 17)
+	clip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(clip)
+	var band := ColorRect.new()
+	band.color = Color(0, 0, 0, 0.55)
+	band.size = clip.size
+	clip.add_child(band)
+	var l := Label.new()
+	l.text = "%s        ★        %s" % [next_goal(), "        ·        ".join(PackedStringArray(NEWS))]
+	UiKit.apply_label(l, 11, UiKit.GOLD)
+	l.position = Vector2(1280, 0)
+	clip.add_child(l)
+	var w := l.get_minimum_size().x
+	var tw := l.create_tween().set_loops()
+	tw.tween_property(l, "position:x", -w, (1280.0 + w) / 60.0).from(1280.0)
 
 
 func _make_top() -> Control:
@@ -105,6 +163,12 @@ func _make_top() -> Control:
 		var pic := UiKit.portrait(SpriteBook.bust(who), Vector2(44, 56))
 		pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		card.add_child(pic)
+		# Living portraits: a slow breath, out of step with each other.
+		pic.pivot_offset = Vector2(22, 56)
+		var br := pic.create_tween().set_loops()
+		br.tween_interval(0.0 if who == "son" else 0.9)
+		br.tween_property(pic, "scale", Vector2(1.0, 1.035), 1.4).set_trans(Tween.TRANS_SINE)
+		br.tween_property(pic, "scale", Vector2.ONE, 1.4).set_trans(Tween.TRANS_SINE)
 	var info := VBoxContainer.new()
 	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	info.alignment = BoxContainer.ALIGNMENT_CENTER

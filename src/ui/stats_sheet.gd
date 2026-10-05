@@ -106,6 +106,16 @@ func _ready() -> void:
 	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	col.add_theme_constant_override("separation", 14)
 	sc.add_child(col)
+	var hist: Array = FamilyProfile.data.get("run_history", [])
+	if not hist.is_empty():
+		col.add_child(UiKit.title("LAST NIGHTS", 18, Palette.LEMON))
+		var lines: Array[String] = []
+		for h: Dictionary in hist:
+			var ok := bool(h.get("ok", false))
+			lines.append("[color=%s]%s[/color]   %s   ·   %d kills   ·   %d:%02d   ·   best chain %d   ·   %s" % ["#7dffa0" if ok else "#ff6b5e", "CLEARED" if ok else "DOWN", StageCard.title_of(str(h.get("map", ""))), int(h.get("kills", 0)), int(h.get("secs", 0)) / 60, int(h.get("secs", 0)) % 60, int(h.get("peak", 0)), str(h.get("date", ""))])
+		var rl := UiKit.rich("", 980, 13, Palette.TEXT)
+		rl.text = "\n".join(lines)
+		col.add_child(rl)
 	for sec: Dictionary in SECTIONS:
 		col.add_child(_section(sec))
 	UiKit.pop_in(card)
