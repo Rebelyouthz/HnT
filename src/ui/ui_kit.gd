@@ -255,6 +255,8 @@ static func button(text: String, min_size: Vector2 = Vector2(120, 44)) -> Button
 	b.resized.connect(func() -> void:
 		b.pivot_offset = b.size * 0.5
 	)
+	Bevel.dress(b)
+	press_feel(b)
 	b.pressed.connect(func() -> void:
 		var tw := b.create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		tw.tween_property(b, "scale", Vector2(1.05, 1.05), 0.07)
@@ -347,7 +349,68 @@ static func pulse_ready(b: Control) -> void:
 	tw.tween_property(b, "scale", Vector2.ONE, 0.42)
 
 
+## Press feel for any button: it sinks and squashes while held, springs
+## back on release, lifts a hair on hover.
+static func press_feel(b: BaseButton) -> void:
+	b.resized.connect(func() -> void:
+		b.pivot_offset = b.size * 0.5
+	)
+	b.button_down.connect(func() -> void:
+		var tw := b.create_tween()
+		tw.tween_property(b, "scale", Vector2(0.95, 0.92), 0.05)
+		b.modulate = Color(0.85, 0.85, 0.9)
+	)
+	b.button_up.connect(func() -> void:
+		var tw := b.create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tw.tween_property(b, "scale", Vector2(1.06, 1.06), 0.06)
+		tw.tween_property(b, "scale", Vector2.ONE, 0.12)
+		b.modulate = Color.WHITE
+	)
+	b.mouse_entered.connect(func() -> void:
+		if not b.disabled:
+			b.create_tween().tween_property(b, "scale", Vector2(1.03, 1.03), 0.08)
+	)
+	b.mouse_exited.connect(func() -> void:
+		b.create_tween().tween_property(b, "scale", Vector2.ONE, 0.08)
+	)
+
+
+## A burst for big moments (LEVEL UP text, rarity reveals): a shockwave ring
+## and sparks flying out from `at` over a control layer.
+static func blast(host: Control, at: Vector2, col: Color = Color(1.0, 0.85, 0.3), r := 260.0) -> void:
+	if host == null:
+		return
+	var ring := Control.new()
+	ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ring.position = at
+	ring.z_index = 50
+	host.add_child(ring)
+	var k := [0.0]
+	var sparks: Array = []
+	for i in 26:
+		var a := TAU * float(i) / 26.0 + randf_range(-0.1, 0.1)
+		sparks.append([Vector2.from_angle(a), randf_range(0.6, 1.0), randf_range(2.0, 5.0)])
+	ring.draw.connect(func() -> void:
+		var t: float = k[0]
+		var rr := r * (1.0 - pow(1.0 - t, 3.0))
+		ring.draw_arc(Vector2.ZERO, rr, 0, TAU, 64, Color(col.r, col.g, col.b, 0.8 * (1.0 - t)), 10.0 * (1.0 - t) + 2.0)
+		ring.draw_arc(Vector2.ZERO, rr * 0.7, 0, TAU, 48, Color(1, 1, 1, 0.5 * (1.0 - t)), 3.0)
+		for sp: Array in sparks:
+			var p: Vector2 = sp[0] * rr * float(sp[1]) * 1.15
+			ring.draw_line(p, p + sp[0] * 18.0 * (1.0 - t), Color(1, 0.95, 0.7, 1.0 - t), float(sp[2]) * (1.0 - t) + 1.0)
+		if t < 0.25:
+			ring.draw_circle(Vector2.ZERO, r * 0.35 * (1.0 - t * 4.0), Color(1, 1, 1, 0.4 * (1.0 - t * 4.0)))
+	)
+	var tw := ring.create_tween().set_ignore_time_scale(true)
+	tw.tween_method(func(v: float) -> void:
+		k[0] = v
+		ring.queue_redraw()
+	, 0.0, 1.0, 0.7)
+	tw.tween_callback(ring.queue_free)
+
+
 static func pop_in(n: Control) -> void:
+	Bevel.dress(n, false, 0.7)
 	if n.size == Vector2.ZERO:
 		n.pivot_offset = Vector2(
 			absf(n.offset_right - n.offset_left) * 0.5,

@@ -161,6 +161,8 @@ func _slot_box(slot: String) -> Control:
 	var b := Button.new()
 	b.set_meta("slot", slot)
 	b.focus_mode = Control.FOCUS_ALL
+	Bevel.dress(b)
+	UiKit.press_feel(b)
 	b.position = SLOT_POS[slot]
 	b.custom_minimum_size = SLOT_SIZE
 	b.size = SLOT_SIZE
@@ -314,6 +316,7 @@ func _items_panel() -> void:
 func _card(accent: Color) -> Array:
 	var p := PanelContainer.new()
 	p.add_theme_stylebox_override("panel", UiKit.panel(Color(0.07, 0.08, 0.14), accent))
+	Bevel.dress(p, false, 0.7)
 	var h := HBoxContainer.new()
 	h.add_theme_constant_override("separation", 12)
 	p.add_child(h)

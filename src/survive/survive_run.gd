@@ -216,6 +216,13 @@ func add_xp(n: int) -> void:
 		if _item_mod("frenzy") > 0.0:
 			frenzy_t = _item_mod("frenzy")
 		Juice.shout("LEVEL %d" % level)
+		for ff in _fighters():
+			SurvProj.ring(ff.get_parent(), ff.global_position, 150.0, Color(0.5, 1.0, 0.6))
+			for e in get_tree().get_nodes_in_group("enemies"):
+				if e is Node2D and (e as Node2D).global_position.distance_to(ff.global_position) < 150.0:
+					var away := ((e as Node2D).global_position - ff.global_position).normalized()
+					(e as Node2D).global_position += away * 40.0
+					e.set("recover", maxf(float(e.get("recover")), 0.4))
 		Mixer.play_sfx("res://assets/audio/sfx/perfect_sting.ogg" if ResourceLoader.exists("res://assets/audio/sfx/perfect_sting.ogg") else "res://assets/audio/card.wav", 1.2, -4.0)
 	changed.emit()
 	if _pending > 0 and not _picking:

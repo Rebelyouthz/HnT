@@ -39,6 +39,13 @@ func _ready() -> void:
 	t.add_theme_color_override("font_outline_color", Color(0, 0, 0))
 	t.add_theme_constant_override("outline_size", 8)
 	_root.add_child(t)
+	t.pivot_offset = Vector2(640, 28)
+	t.scale = Vector2(1.8, 1.8)
+	var ttw := t.create_tween().set_ignore_time_scale(true).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	ttw.tween_property(t, "scale", Vector2.ONE, 0.28)
+	ttw.tween_callback(func() -> void:
+		UiKit.blast(_root, Vector2(640, 120), Palette.LEMON if mode == "level" else Color(1.0, 0.56, 0.12), 280.0)
+	)
 	var s := Label.new()
 	s.text = str(sub)
 	s.position = Vector2(0, 150)
@@ -203,6 +210,8 @@ func _card(o: Dictionary) -> Button:
 			p.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			pips.add_child(p)
 		v.add_child(pips)
+	Bevel.dress(b)
+	UiKit.press_feel(b)
 	b.pressed.connect(_pick.bind(o))
 	return b
 

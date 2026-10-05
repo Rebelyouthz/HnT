@@ -177,6 +177,7 @@ func _paint() -> void:
 func _entry(icon: String, title: String, stat: String, line: String, open: bool, col: Color) -> Control:
 	var p := PanelContainer.new()
 	p.custom_minimum_size = Vector2(540, 96)
+	Bevel.dress(p, false, 0.7)
 	p.add_theme_stylebox_override("panel", UiKit.panel(Color(0.06, 0.07, 0.12), col if open else Palette.MUTED))
 	var h := HBoxContainer.new()
 	h.add_theme_constant_override("separation", 12)

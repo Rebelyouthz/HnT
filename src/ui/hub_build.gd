@@ -283,6 +283,7 @@ func _node_button(node: Dictionary, at: Vector2) -> Control:
 	icon.position = Vector2(13, 13)
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	b.add_child(icon)
+	Bevel.dress(b, true)
 	if st == "can":
 		b.pivot_offset = Vector2(31, 31)
 		UiKit.pulse_ready(b)

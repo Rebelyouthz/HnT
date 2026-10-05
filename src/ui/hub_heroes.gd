@@ -62,6 +62,7 @@ func _hero_card(role: String) -> Control:
 	var st := UiKit.panel(Rarity.fill(rn), rc)
 	st.set_border_width_all(3)
 	p.add_theme_stylebox_override("panel", st)
+	Bevel.dress(p, false, 0.8)
 	var h := HBoxContainer.new()
 	h.add_theme_constant_override("separation", 14)
 	p.add_child(h)

@@ -54,6 +54,10 @@ func _ready() -> void:
 	var tt := _title.create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tt.tween_property(_title, "scale", Vector2.ONE, 0.3)
 	tt.parallel().tween_property(_title, "modulate:a", 1.0, 0.2)
+	tt.tween_callback(func() -> void:
+		UiKit.blast(_ui, Vector2(640, 70), UiKit.GOLD, 300.0)
+		Juice.pulse_shake(5.0)
+	)
 	var sub := Label.new()
 	sub.text = "PICK ONE RULE FOR THIS RUN"
 	sub.position = Vector2(0, 100)
@@ -111,6 +115,7 @@ func _deal() -> void:
 		card.scale = Vector2(0.15, 0.15)
 		card.rotation = randf_range(-0.6, 0.6)
 		card.modulate.a = 0.0
+		Bevel.dress(card, false, 0.9)
 		_cards.append(card)
 		var hit := Button.new()
 		hit.flat = true
@@ -122,6 +127,18 @@ func _deal() -> void:
 			hit.add_theme_stylebox_override(s, empty)
 		var idx := i
 		hit.mouse_entered.connect(func() -> void: _set_focus(idx))
+		# Press: the card sinks and darkens under the finger, then springs.
+		var cref := card
+		hit.button_down.connect(func() -> void:
+			if is_instance_valid(cref):
+				cref.pivot_offset = cref.size * 0.5
+				cref.create_tween().tween_property(cref, "scale", Vector2(0.94, 0.94), 0.05)
+				cref.modulate = Color(0.85, 0.85, 0.9)
+		)
+		hit.button_up.connect(func() -> void:
+			if is_instance_valid(cref):
+				cref.modulate = Color.WHITE
+		)
 		hit.pressed.connect(func() -> void: _choose(idx))
 		_ui.add_child(hit)
 		_hits.append(hit)

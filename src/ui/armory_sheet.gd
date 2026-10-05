@@ -121,6 +121,7 @@ func _tile(id: String) -> Control:
 	var col := Rarity.color(rarity)
 	var p := PanelContainer.new()
 	p.custom_minimum_size = Vector2(370, 176)
+	Bevel.dress(p, false, 0.7)
 	p.add_theme_stylebox_override("panel", UiKit.panel(Color(0.06, 0.07, 0.12), UiKit.GOLD if Arsenal.mastered(id) else (col if have else Palette.MUTED)))
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 3)

@@ -95,6 +95,8 @@ func _card(id: String) -> Control:
 	var b := Button.new()
 	b.custom_minimum_size = CARD
 	b.focus_mode = Control.FOCUS_ALL
+	Bevel.dress(b)
+	UiKit.press_feel(b)
 	var normal := card_style(false)
 	var lit := card_style(true)
 	b.add_theme_stylebox_override("normal", normal)
