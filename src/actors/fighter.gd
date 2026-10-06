@@ -102,6 +102,13 @@ var stumble_t := 0.0
 ## Knocked flat by a big hit: the knockdown clip plays (fall, lie, get up),
 ## no control and no damage until it ends.
 var knock_t := 0.0
+## Knockdown flight: height over the street and its speed (a launch variant
+## flies on gravity and bounces before the fall art takes over).
+var _knock_hop := 0.0
+var _knock_hv := 0.0
+## Time since going down (plays the fall, then holds the lying frame).
+var _down_t := 0.0
+const LIE_FRAME := {"son": 12, "father": 9}
 var ducking := false
 var _anim: AnimatedSprite2D
 var anim_atk := ""
@@ -452,6 +459,14 @@ func _tick_sprite() -> void:
 	var clip := "idle"
 	if knock_t > 0.0 and _anim.sprite_frames.has_animation("knockdown"):
 		clip = "knockdown"
+	elif downed and _anim.sprite_frames.has_animation("knockdown"):
+		# Down: the fall plays out, then the body lies on the street.
+		var lie: int = mini(int(LIE_FRAME.get(role, 10)), _anim.sprite_frames.get_frame_count("knockdown") - 1)
+		if _anim.animation != "knockdown":
+			_anim.play("knockdown")
+		_anim.pause()
+		_anim.frame = mini(lie, int(_down_t * _anim.sprite_frames.get_animation_speed("knockdown") * 1.3))
+		return
 	elif downed:
 		clip = "hurt"
 	elif anim_atk != "" and _atk_t > 0.0:
@@ -638,11 +653,27 @@ func _physics_process(delta: float) -> void:
 		knock_t -= delta
 		if _try_getup_attack():
 			return
-		velocity.x = move_toward(velocity.x, 0.0, 600.0 * delta)
+		if _knock_hop < 0.0 or _knock_hv < 0.0:
+			_knock_hv += 1250.0 * delta
+			_knock_hop += _knock_hv * delta
+			if _knock_hop >= 0.0:
+				var spd := _knock_hv
+				_knock_hop = 0.0
+				_knock_hv = -spd * 0.28 if spd > 220.0 else 0.0
+				Juice.land_puff(global_position)
+				Mixer.play_sfx("res://assets/audio/sfx/body_fall.ogg", randf_range(0.9, 1.05), clampf(-12.0 + spd / 60.0, -12.0, -3.0))
+				if spd > 300.0:
+					Juice.pulse_shake(3.0)
+			visual.position.y = _knock_hop
+		velocity.x = move_toward(velocity.x, 0.0, (600.0 if _knock_hop >= 0.0 else 120.0) * delta)
 		velocity.y = 0.0
 		move_and_slide()
 		global_position.y = clampf(global_position.y, STREET_MIN, STREET_MAX)
 		_tick_sprite()
+		if knock_t <= 0.0:
+			visual.position.y = 0.0
+			_knock_hop = 0.0
+			_knock_hv = 0.0
 		return
 	if art_lock > 0.0:
 		art_lock -= delta
@@ -1083,6 +1114,9 @@ func _process_web(delta: float) -> void:
 
 
 func _process_downed(delta: float) -> void:
+	_down_t += delta
+	visual.rotation = 0.0
+	_tick_sprite()
 	velocity.x = _stick().x * 40.0
 	velocity.y = 0.0
 	if plane == "street":
@@ -2388,6 +2422,11 @@ func take_hit(kind: String, from: Node) -> void:
 		Juice.kick(Vector2(dir, 0.35), 2.5 if kind == "light" else 6.0)
 		_squash_to(Vector2(0.9, 1.06) if kind == "light" else Vector2(0.84, 1.1))
 		_bleed_from(kind, from, dir)
+		# The body answers where the blow landed: head snaps away, a body
+		# blow folds you over, a low one buckles the knees, a round jolts.
+		var h := attack_height(kind, from)
+		var hz: String = "bullet" if from is KitShot or from is Round else str({"high": "head", "low": "trip"}.get(h, "gut" if kind != "light" else "head"))
+		HitReact.react(visual, facing, hz, dir, 0.3 if kind == "light" else 0.8)
 	if hp <= int(round(float(max_hp) * 0.3)) and bandage > 0:
 		bandage -= 1
 		hp = mini(max_hp, hp + int(round(float(max_hp) * 0.3)))
@@ -2454,6 +2493,8 @@ func _clean_block(kind: String, from: Node) -> void:
 
 func _go_down() -> void:
 	downed = true
+	_down_t = 0.0
+	Mixer.play_sfx("res://assets/audio/sfx/body_fall.ogg", 0.95, -4.0)
 	hp = 0
 	bleed = 12.0
 	var ally := false
@@ -3004,7 +3045,16 @@ func _bleed_from(kind: String, from: Node, dir: float) -> void:
 		BloodSim.wound(_anim, hurt * 1.1, _splat, -dir * float(facing))
 		if zone == "bullet":
 			var head := BloodSim.head_of(_anim)
-			BloodSim.add_hole(_anim, Vector2(head.x + randf_range(-6.0, 6.0), head.y + head.z * randf_range(2.6, 5.0)))
+			var at := Vector2(head.x + randf_range(-6.0, 6.0), head.y + head.z * randf_range(2.6, 5.0))
+			BloodSim.add_hole(_anim, at)
+			# Half the rounds go clean through: a torn exit and a spray out of
+			# the far side; the rest stay in and run.
+			if randf() < 0.5:
+				BloodSim.add_hole(_anim, at + Vector2(head.z * 0.55 * dir * (-1.0 if _anim.flip_h else 1.0), 2.0), true)
+				if blood and blood.has_method("burst"):
+					blood.burst(global_position + Vector2(0, -44), global_position.y, dir, {"n": 12, "speed": 280.0, "spread": 0.3, "rise": 0.12, "size": 1.0, "streak": true})
+			elif blood and blood.has_method("burst"):
+				blood.burst(global_position + Vector2(0, -44), global_position.y, -dir, {"n": 5, "speed": 110.0, "spread": 0.5, "rise": 0.3, "size": 0.9})
 
 
 ## Heavy blows (and throws, specials, SNAPs) put you on the street: a real
@@ -3022,8 +3072,19 @@ func _maybe_knockdown(kind: String, from: Node) -> void:
 	_getup_done = false
 	invuln = maxi(invuln, int(knock_t * 60.0))
 	_cancel_strike()
-	if from is Node2D:
-		velocity.x = signf(global_position.x - (from as Node2D).global_position.x) * 220.0
+	var kdir := float(-facing)
+	if from is Node2D and (from as Node2D).global_position.x != global_position.x:
+		kdir = signf(global_position.x - (from as Node2D).global_position.x)
+	# Not every knockdown is the same fall: big blows launch you into the
+	# air first (gravity, a bounce), heavies shove you back a varied way.
+	_knock_hop = 0.0
+	_knock_hv = 0.0
+	if kind in ["snap", "special", "throw"] or randf() < 0.3:
+		_knock_hv = -randf_range(300.0, 440.0)
+		_knock_hop = -0.1
+		velocity.x = kdir * randf_range(240.0, 320.0)
+	else:
+		velocity.x = kdir * randf_range(150.0, 260.0)
 	_anim.play("knockdown")
 	_anim.frame = 0
 	Juice.pulse_shake(5.0)
@@ -3031,6 +3092,7 @@ func _maybe_knockdown(kind: String, from: Node) -> void:
 		if is_instance_valid(self):
 			Juice.play("res://assets/audio/stumble.wav")
 			Juice.pulse_shake(4.0)
+			Juice.land_puff(global_position + Vector2(-float(facing) * 22.0, 0))
 	)
 
 

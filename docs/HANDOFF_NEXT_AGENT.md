@@ -74,6 +74,14 @@ and secrets with new weapons, moves, parts, suit parts, throwables and cards;
 shoes, necklace and ring in the paperdoll; camp/dojo unlocks in a planned
 order with guided first use and speech bubbles; then polish twice.
 
+### Latest (see worklog 0p)
+
+Owner asked for every suit drawn in a parkour film (done:
+`tools/suit_show.gd`, screens/round2/dräkter_parkour.*), varied deaths by
+blow/weapon/round with real gravity and no overlapping bodies (DeathFall),
+bullets that go through or stay in with exit wounds, the same for the
+heroes, and a calmer right side of the map. All first-passed in 0p.
+
 ### Done since (round 2, see worklog 0o)
 
 All of round 2 has a first pass: codex, guides, build order, stat colours,

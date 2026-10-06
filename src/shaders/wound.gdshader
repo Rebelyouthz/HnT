@@ -241,12 +241,14 @@ void fragment() {
 		for (int i = 0; i < 6; i++) {
 			if (i >= hole_n) break;
 			vec2 d = t - floor(holes[i]);
-			float r = length(d);
-			if (r < 1.5) {
+			// A .5 fraction on x marks an exit wound: wider, torn, wetter.
+			float ex = step(0.25, fract(holes[i].x));
+			float r = length(d) * (1.0 - 0.18 * ex * sin(atan(d.y, d.x) * 5.0));
+			if (r < 1.5 + 1.2 * ex) {
 				col = vec3(0.08, 0.0, 0.01);
-			} else if (r < 3.0) {
-				col = mix(col, blood.rgb * 0.7, 0.9);
-			} else if (abs(d.x) < 1.0 && d.y > 0.0 && d.y < 6.0 + 10.0 * wound) {
+			} else if (r < 3.0 + 2.6 * ex) {
+				col = mix(col, blood.rgb * (0.7 + 0.15 * ex), 0.9);
+			} else if (abs(d.x) < 1.0 + ex && d.y > 0.0 && d.y < 6.0 + 10.0 * wound + 8.0 * ex) {
 				col = mix(col, blood.rgb * 0.8, 0.85);
 			}
 		}

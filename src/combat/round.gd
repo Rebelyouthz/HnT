@@ -31,6 +31,9 @@ var dist := 0.0
 var pierce := false
 ## Bodies a bullet can still go through (BIG IRON: one).
 var pierce_left := 0
+## Did the last body hit let the round out the far side (exit wound) or keep it?
+var went_through := false
+var _passes := 0
 var _from := Vector2.ZERO
 var _trail: Array[Vector2] = []
 var _hit_ids: Dictionary = {}
@@ -135,14 +138,39 @@ func _test(a: Vector2, b: Vector2) -> bool:
 		if round_kind == "pellet" and absf(global_position.y - _from.y) > 26.0:
 			continue
 		_hit_ids[p.get_instance_id()] = true
+		went_through = pierce or pierce_left > 0 or (_passes < 2 and randf() < _through_chance())
 		_land(p, Vector2(x - signf(vel.x) * 6.0, global_position.y))
 		if pierce_left > 0:
 			pierce_left -= 1
 			continue
-		if not pierce:
-			queue_free()
-			return true
+		if pierce:
+			continue
+		if went_through and dmg >= 3:
+			# Clean through: out the far side, slower and weaker, and on to
+			# whoever stands behind.
+			_passes += 1
+			dmg = int(round(float(dmg) * 0.55))
+			vel *= 0.8
+			continue
+		queue_free()
+		return true
 	return false
+
+
+## How likely a round leaves through the far side: a revolver almost always,
+## a pistol about half the time, an SMG less, pellets only point blank;
+## nails and flares stay in. Thin parts (head, legs) let more through.
+func _through_chance() -> float:
+	var c: float = {"revolver": 0.85, "pistol": 0.5, "smg": 0.35}.get(weapon, 0.0)
+	if round_kind == "pellet":
+		c = 0.3 if dist < 110.0 else 0.0
+	if round_kind != "bullet" and round_kind != "pellet":
+		return 0.0
+	if zone == "head" or zone == "legs":
+		c += 0.15
+	elif zone == "gut":
+		c -= 0.1
+	return clampf(c, 0.0, 0.95)
 
 
 func _land(p: Punk, at: Vector2) -> void:

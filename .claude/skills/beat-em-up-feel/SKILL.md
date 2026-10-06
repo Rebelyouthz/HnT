@@ -36,6 +36,12 @@ hit.**
 ## Getting hit / kills
 - Player hurt: camera jolt toward the knock direction, crumple squash, red
   flash, short hitstop.
+- Every kill falls differently (`DeathFall.pick`: zone, move clip, weapon,
+  round, power) and falls for real (gravity, topple about the feet, bounce,
+  skid, settle flat, never on another body, under the living). Do not add
+  tweened corpses; add a style to DeathFall instead.
+- Rounds either pass through (exit spray forward, torn exit hole, next body)
+  or stay in (back-spurt, drip) - `Round._through_chance`.
 - Every kill: short freeze + shove. Last enemy of a fight: `Juice.last_kill()`
   slow motion (never in the coping-hour horde).
 

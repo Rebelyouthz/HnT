@@ -166,6 +166,10 @@ func _momentum(f: Fighter, delta: float) -> void:
 	var running := absf(f.velocity.x) > 190.0
 	_mom = clampf(_mom + (delta / 4.0 if running else -delta * 1.5), 0.0, 1.0)
 	_mom_bar.size.x = 120.0 * _mom
+	# Only there while it matters: fades in with speed, out when standing
+	# (a race keeps the AGENT meter up).
+	var want := 1.0 if (_mom > 0.04 or _gap_bar != null) else 0.0
+	_hud.modulate.a = move_toward(_hud.modulate.a, want, delta * (4.0 if want > 0.0 else 1.5))
 	if _mom >= 1.0 and not _mom_paid:
 		_mom_paid = true
 		Trees.add_flow(4)

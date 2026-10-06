@@ -98,6 +98,14 @@ static func react(visual: Node2D, facing: int, zone: String, dir: float, power: 
 			tw.tween_property(visual, "position:y", 0.0, 0.18).set_ease(Tween.EASE_IN)
 			tw.parallel().tween_property(visual, "rotation", 0.0, 0.22)
 			busy = 0.42
+		"trip":
+			# Knees buckle from a low blow: a dip and a stumble forward.
+			tw.tween_property(visual, "rotation", toward * deg_to_rad(12.0 + 8.0 * power), 0.07)
+			tw.parallel().tween_property(visual, "position:x", away * 4.0, 0.07)
+			tw.tween_property(visual, "rotation", away * deg_to_rad(4.0), 0.12).set_trans(Tween.TRANS_QUAD)
+			tw.tween_property(visual, "rotation", 0.0, 0.14)
+			tw.parallel().tween_property(visual, "position:x", 0.0, 0.14)
+			busy = 0.34
 		"bullet", "blade":
 			tw.tween_property(visual, "rotation", away * deg_to_rad(10.0), 0.04)
 			tw.parallel().tween_property(visual, "position:x", away * 3.0, 0.04)
@@ -119,9 +127,13 @@ static func react(visual: Node2D, facing: int, zone: String, dir: float, power: 
 ## Dead: a still of the last frame becomes a body that falls the way the
 ## blow says, lies on the street and bleeds out. `art` is the sprite (its
 ## wound material is kept), `feet` the actor position, dir the blow.
-static func corpse(host: Node, art: AnimatedSprite2D, feet: Vector2, zone: String, dir: float, facing: int) -> Node2D:
+static func corpse(host: Node, art: AnimatedSprite2D, feet: Vector2, zone: String, dir: float, facing: int, style: String = "") -> Node2D:
 	if host == null or art == null or art.sprite_frames == null:
 		return null
+	if style != "" and style != "drawn" and style != "crush" and DeathFall.STYLES.has(style):
+		return _fall(host, art, feet, style, dir, facing)
+	if style == "drawn":
+		zone = "head"
 	var body := Node2D.new()
 	body.position = feet
 	body.z_index = 3
@@ -277,3 +289,83 @@ static func corpse(host: Node, art: AnimatedSprite2D, feet: Vector2, zone: Strin
 	tw.tween_property(body, "modulate:a", 0.0, 1.5)
 	tw.tween_callback(body.queue_free)
 	return body
+
+
+## A physics body (DeathFall) instead of a tweened still: gravity, spin,
+## bounce, topple, skid, rest.
+static func _fall(host: Node, art: AnimatedSprite2D, feet: Vector2, style: String, dir: float, facing: int) -> Node2D:
+	var body := DeathFall.new()
+	body.add_to_group("corpses")
+	body.z_index = 3
+	var sp := Sprite2D.new()
+	var clip := "hurt" if art.sprite_frames.has_animation("hurt") else str(art.animation)
+	sp.texture = art.sprite_frames.get_frame_texture(clip, mini(1, art.sprite_frames.get_frame_count(clip) - 1))
+	sp.scale = art.scale
+	sp.flip_h = art.flip_h
+	sp.centered = art.centered
+	sp.offset = art.offset
+	sp.texture_filter = art.texture_filter
+	# The body is the drawn figure, not the frame: measure the painted part
+	# so the rod is as long and thick as the person, pivoting on its middle.
+	var used := _used_rect(sp.texture)
+	var c := used.get_center() + sp.offset - (sp.texture.get_size() * 0.5 if sp.centered else Vector2.ZERO)
+	if sp.flip_h:
+		c.x = -c.x
+	var cs := c * sp.scale.abs()
+	body.H = clampf(used.size.y * absf(sp.scale.y), 30.0, 260.0)
+	body.T = clampf(used.size.x * absf(sp.scale.x) * 0.75, 10.0, body.H * 0.5)
+	sp.position = -cs
+	body.gx = feet.x + float(facing) * (art.position.x + cs.x)
+	body.gy = feet.y
+	body.face = facing
+	body.zc = body.H * 0.5
+	if art.material != null:
+		sp.material = art.material.duplicate()
+		var m := sp.material as ShaderMaterial
+		if m != null and m.shader == preload("res://src/shaders/wound.gdshader"):
+			m.set_shader_parameter("wound", 1.0)
+			m.set_shader_parameter("head", BloodSim.head_of_tex(sp.texture))
+			m.set_shader_parameter("splat", maxf(0.5, float(m.get_shader_parameter("splat"))))
+	var flip := Node2D.new()
+	flip.scale.x = float(facing)
+	flip.add_child(sp)
+	body.add_child(flip)
+	body.art_root = flip
+	if style == "burn":
+		body.modulate = Color(0.35, 0.3, 0.28)
+		FireFx.on_body(body, 2.5)
+	body.setup(style, dir)
+	host.add_child(body)
+	var all := host.get_tree().get_nodes_in_group("corpses")
+	if all.size() > 12:
+		var first := all[0] as Node2D
+		var ft := first.create_tween()
+		ft.tween_property(first, "modulate:a", 0.0, 0.6)
+		ft.tween_callback(first.queue_free)
+	return body
+
+
+static var _rects := {}
+
+
+## The painted part of a frame (cached per texture).
+static func _used_rect(tex: Texture2D) -> Rect2:
+	if tex == null:
+		return Rect2(0, 0, 32, 96)
+	var key := tex.get_instance_id()
+	if _rects.has(key):
+		return _rects[key]
+	var r := Rect2(Vector2.ZERO, tex.get_size())
+	var img := tex.get_image()
+	if img != null:
+		if img.is_compressed():
+			img.decompress()
+		var u := img.get_used_rect()
+		if u.size.x > 2 and u.size.y > 2:
+			r = Rect2(u)
+			# An atlas frame's image is only its region; the margin puts it
+			# back where it sits in the full frame.
+			if tex is AtlasTexture:
+				r.position += (tex as AtlasTexture).margin.position
+	_rects[key] = r
+	return r

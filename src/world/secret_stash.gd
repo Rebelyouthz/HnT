@@ -64,8 +64,12 @@ func _ready() -> void:
 	add_child(_box)
 	Blockout.add_glow(_box)
 	_hint = Label.new()
-	_hint.position = Vector2(-90, -58)
+	# World text at world scale (like the parkour gate hints), shown only
+	# when a hero comes close.
+	_hint.scale = Vector2(0.5, 0.5)
+	_hint.position = Vector2(-45, -50)
 	_hint.size = Vector2(180, 32)
+	_hint.modulate.a = 0.0
 	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	UiKit.apply_label(_hint, 12, Palette.EDGE)
 	_hint.text = "FILED" if _taken else str(spec.get("title", "SECRET"))
@@ -90,6 +94,11 @@ func _shape(kind: String) -> PackedVector2Array:
 
 
 func _process(delta: float) -> void:
+	var near := 9999.0
+	for n in get_tree().get_nodes_in_group("players"):
+		if n is Node2D:
+			near = minf(near, (n as Node2D).global_position.distance_to(global_position))
+	_hint.modulate.a = move_toward(_hint.modulate.a, clampf(1.0 - (near - 70.0) / 90.0, 0.0, 1.0) * (0.5 if _taken else 1.0), delta * 3.0)
 	if _taken:
 		return
 	_glint += delta

@@ -293,7 +293,8 @@ func _place_towers() -> void:
 
 func _place_secrets() -> void:
 	SecretStash.place(self, map_id)
-	_spread_props.call_deferred()
+	# After everything else has been dropped in (wheel tokens, gates).
+	get_tree().create_timer(0.15).timeout.connect(_spread_props)
 
 
 func boss_filed() -> bool:
@@ -944,7 +945,7 @@ func _suit_toast() -> void:
 func _spread_props() -> void:
 	var items: Array[Node2D] = []
 	for c in get_children():
-		if c is WeaponPickup or c is SecretStash or c is SmashProp or c is SprayCan:
+		if c is WeaponPickup or c is SecretStash or c is SmashProp or c is SprayCan or c is WheelToken:
 			if absf((c as Node2D).global_position.y - 500.0) < 30.0:
 				items.append(c)
 	items.sort_custom(func(a: Node2D, b: Node2D) -> bool: return a.global_position.x < b.global_position.x)
@@ -953,13 +954,18 @@ func _spread_props() -> void:
 		if c is Node2D:
 			var w := float(c.get_meta("w", 150.0))
 			cars.append(Vector2((c as Node2D).global_position.x - w * 0.5, (c as Node2D).global_position.x + w * 0.5))
+	# Parkour gates carry their own hint text: keep loot and toys off them.
+	for c in get_children():
+		if c is ParkourGate:
+			cars.append(Vector2((c as Node2D).global_position.x - 70.0, (c as Node2D).global_position.x + 70.0))
 	var last := -9999.0
 	var right := float(map_w) - 80.0 if map_w > 0 else 99999.0
 	for n in items:
 		var x := n.global_position.x
-		x = maxf(x, last + 56.0)
-		for span in cars:
-			if x > span.x - 10.0 and x < span.y + 10.0:
-				x = span.y + 24.0
+		x = maxf(x, last + 64.0)
+		for pass_i in 3:
+			for span in cars:
+				if x > span.x - 10.0 and x < span.y + 10.0:
+					x = span.y + 24.0
 		n.global_position.x = minf(x, right)
 		last = n.global_position.x

@@ -46,10 +46,22 @@ static func wound(p: Punk, shot: Dictionary, dir: float) -> void:
 	var blood := p.get_tree().get_first_node_in_group("blood_sim")
 	var world_y: float = {"head": -56.0, "chest": -42.0, "gut": -32.0, "legs": -14.0}.get(zone, -40.0)
 	var at := p.global_position + Vector2(0, world_y)
+	var through := bool(shot.get("through", false))
 	if blood:
-		# Exit: out of the far side, thrown with the round.
-		blood.burst(at, p.global_position.y, dir, {"n": 10 if w != "shotgun" else 18, "speed": 260.0, "spread": 0.35, "rise": 0.15, "size": 1.0, "streak": true, "mist": zone == "head"})
-		blood.burst(at, p.global_position.y, -dir, {"n": 3, "speed": 90.0, "spread": 0.6, "rise": 0.4, "size": 0.8})
+		if through:
+			# Clean through: a spray out of the far side, thrown on with the
+			# round (it paints the street behind), a little back at the gun.
+			blood.burst(at, p.global_position.y, dir, {"n": 14 if w != "shotgun" else 22, "speed": 300.0, "spread": 0.3, "rise": 0.12, "size": 1.1, "streak": true, "mist": zone == "head"})
+			blood.burst(at, p.global_position.y, -dir, {"n": 3, "speed": 90.0, "spread": 0.6, "rise": 0.4, "size": 0.8})
+		else:
+			# The round stays in: a short spurt back out of the entry hole,
+			# then it runs and drips.
+			blood.burst(at, p.global_position.y, -dir, {"n": 6, "speed": 120.0, "spread": 0.5, "rise": 0.3, "size": 0.9})
+			for k in 4:
+				p.get_tree().create_timer(0.25 + 0.3 * float(k)).timeout.connect(func() -> void:
+					if is_instance_valid(p) and p.hp > 0:
+						blood.burst(p.global_position + Vector2(0, world_y + 4.0), p.global_position.y, dir * 0.1, {"n": 2, "speed": 20.0, "spread": 1.0, "rise": 0.0, "size": 0.8})
+				)
 		if zone == "head" and blood.has_method("gore"):
 			blood.gore(p.global_position, dir, "teeth")
 	if anim != null:
@@ -59,6 +71,10 @@ static func wound(p: Punk, shot: Dictionary, dir: float) -> void:
 			n = 4 if close else 2
 		for i in n:
 			BloodSim.add_hole(anim, lm + Vector2(randf_range(-3.0, 3.0), randf_range(-4.0, 4.0)) * (2.0 if w == "shotgun" else 1.0))
+		if through:
+			# The exit is bigger and torn, a little further along the body.
+			var r := maxf(BloodSim.head_of(anim).z, 1.0)
+			BloodSim.add_hole(anim, lm + Vector2(r * 0.55 * dir * (-1.0 if anim.flip_h else 1.0), randf_range(-2.0, 3.0)), true)
 	if zone == "legs":
 		HitReact.react(p.visual, p.facing, "low" if w == "shotgun" and close else "gut", dir, 0.4)
 	elif zone == "head":
@@ -85,7 +101,14 @@ static func death(p: Punk, shot: Dictionary, dir: float) -> bool:
 	# The corpse copies the sprite's material: make sure it is the wound
 	# shader (a punk shot clean has never had a melee wound).
 	BloodSim._wound_mat(anim).set_shader_parameter("head", head)
-	var body := HitReact.corpse(host, anim, p.global_position, "shot", dir, p.facing)
+	var style := DeathFall.pick("bullet", "gun", "", "", 1.0, shot)
+	if zone == "head" and close and w == "shotgun":
+		style = "decap"
+	elif zone == "legs" and close and w == "shotgun":
+		style = "legs"
+	elif zone == "chest" and close and w == "shotgun":
+		style = "blown"
+	var body := HitReact.corpse(host, anim, p.global_position, "shot", dir, p.facing, style)
 	if body == null:
 		return false
 	var art := _art_of(body)
@@ -106,7 +129,10 @@ static func death(p: Punk, shot: Dictionary, dir: float) -> bool:
 		# HEADSHOT: mist and skull out of the far side.
 		if blood:
 			var hp := p.global_position + Vector2(0, -56)
-			blood.burst(hp, p.global_position.y, dir, {"n": 40, "speed": 380.0, "spread": 0.5, "rise": 0.25, "size": 1.3, "streak": true, "mist": true})
+			if bool(shot.get("through", true)):
+				blood.burst(hp, p.global_position.y, dir, {"n": 40, "speed": 380.0, "spread": 0.5, "rise": 0.25, "size": 1.3, "streak": true, "mist": true})
+			else:
+				blood.burst(hp, p.global_position.y, -dir, {"n": 14, "speed": 160.0, "spread": 0.6, "rise": 0.3, "size": 1.1})
 			blood.burst(hp, p.global_position.y, dir, {"n": 16, "speed": 200.0, "spread": 0.9, "rise": 0.5, "size": 1.8})
 			if blood.has_method("gore"):
 				blood.gore(p.global_position, dir, "teeth")
@@ -140,7 +166,10 @@ static func death(p: Punk, shot: Dictionary, dir: float) -> bool:
 		if m:
 			BloodSim.add_hole(art, landmark(art, zone))
 		if blood:
-			blood.burst(p.global_position + Vector2(0, -40), p.global_position.y, dir, {"n": 18, "speed": 300.0, "spread": 0.4, "rise": 0.2, "size": 1.1, "streak": true})
+			if bool(shot.get("through", false)):
+				blood.burst(p.global_position + Vector2(0, -40), p.global_position.y, dir, {"n": 18, "speed": 300.0, "spread": 0.4, "rise": 0.2, "size": 1.1, "streak": true})
+			else:
+				blood.burst(p.global_position + Vector2(0, -40), p.global_position.y, -dir, {"n": 8, "speed": 120.0, "spread": 0.5, "rise": 0.3, "size": 0.9})
 	return true
 
 
@@ -156,7 +185,7 @@ static func decap(p: Punk, dir: float) -> bool:
 	var blood := p.get_tree().get_first_node_in_group("blood_sim")
 	var head := BloodSim.head_of(anim)
 	BloodSim._wound_mat(anim).set_shader_parameter("head", head)
-	var body := HitReact.corpse(host, anim, p.global_position, "blade", dir, p.facing)
+	var body := HitReact.corpse(host, anim, p.global_position, "blade", dir, p.facing, "decap")
 	if body == null:
 		return false
 	var art := _art_of(body)
@@ -215,7 +244,7 @@ static func _fly_piece(host: Node, art: CanvasItem, feet: Vector2, dir: float, o
 	var c := Vector2(head.x, head.y) if only == 1 else Vector2(head.x - r * 0.2 * side, head.y + r * 8.5)
 	sp.position = -c * sp.scale
 	piece.add_child(sp)
-	var start := feet + (art as Node2D).position + c * sp.scale
+	var start := (art as Node2D).global_position + c * sp.scale
 	piece.global_position = start
 	host.add_child(piece)
 	var land := Vector2(start.x + dir * randf_range(50.0, 110.0), feet.y - 3.0)
@@ -253,6 +282,9 @@ static func _neck_fountain(body: Node2D, blood: Node, dir: float) -> void:
 		body.get_tree().create_timer(0.1 * float(k)).timeout.connect(func() -> void:
 			if is_instance_valid(body):
 				var neck := body.global_position + Vector2(0, -50.0 + float(k) * 4.0)
+				if body is DeathFall:
+					# The neck rides the falling body.
+					neck = body.to_global(Vector2(0, -(body as DeathFall).H * 0.38))
 				blood.burst(neck, body.global_position.y, dir * 0.3, {"n": 8, "speed": 260.0 - float(k) * 20.0, "spread": 0.3, "rise": 1.4, "size": 1.3, "streak": true})
 		)
 

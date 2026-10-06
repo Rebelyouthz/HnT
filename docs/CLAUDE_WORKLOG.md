@@ -34,7 +34,51 @@ The rest is in English, like the code. Newest work first. Each block says
 
 ---
 
-## 0o. Codex, guides, survivor depth, rewards desk, loot, throwables, walk angles (latest)
+## 0p. Real falls: DeathFall physics, bullet exit wounds, hero falls, declutter (latest)
+
+The owner: every kill looked the same; bullets should make holes, some go
+through and bleed out the far side, some stay in; the heroes too; bodies
+must lie on the ground, never overlap, with real gravity; the right side of
+the map was busy.
+
+- `src/juice/death_fall.gd` (DeathFall): a dead body is a stiff rod (H long,
+  T thick, measured from the painted part of the frame, `HitReact._used_rect`
+  - mind AtlasTexture `margin`) with its centre of mass over the street.
+  Flight on gravity (G 1250) with spin and up to two bounces; on its feet it
+  topples about the feet like a felled tree (inverted pendulum, 1.5 G/H
+  sin); flat it skids on friction with dust, then settles, rolls up/down the
+  lane if another body lies there (`_make_room`), drops under the living
+  (z 0, moved before the first actor) and bleeds a pool. Scripted beats
+  before the physics: sag (knees), jolt (rounds landing), pirouette (hooks),
+  clutch, hold.
+- `DeathFall.pick()` chooses the fall: zone + move clip + melee weapon +
+  round (weapon/zone/dist) + power. 17 styles: crumple, faceplant, topple,
+  timber, spin, launch, knockback, sweep, stagger, headshot, blown, kneel,
+  legs, blast, homerun, burn, decap, plus the old drawn `death` clip now and
+  then. `HitReact.corpse(..., style)` builds it (`_fall`); Punk._die and
+  GunGore pass the style; GunGore's flying pieces and neck fountain follow
+  the falling body.
+- Rounds: `Round._through_chance()` (revolver 0.85, pistol 0.5, SMG 0.35,
+  pellets point blank 0.3, head/legs +0.15, gut -0.1; nails/flares stay in).
+  A round that goes through keeps flying (x0.55 damage, x0.8 speed, max two
+  bodies). `Punk._shot["through"]` drives GunGore: through = exit spray
+  forward + a torn exit hole (`BloodSim.add_hole(..., exit=true)`, the
+  shader reads a .5 x fraction as exit: wider, ragged, longer run); lodged =
+  back-spurt out of the entry hole and a drip.
+- Heroes: hurt reacts by height (head / gut / new `trip` / bullet); hero
+  bullets 50/50 through or lodged with exit holes; knockdowns vary (30% or
+  big blows launch into a gravity arc with a bounce, varied slide); going
+  down plays the knockdown fall and then LIES on the street (`LIE_FRAME`
+  son 12, father 9) instead of standing in the hurt pose.
+- Declutter: SecretStash titles are world-scale (0.5) and fade in only near
+  a hero; the MOMENTUM meter fades out when idle; `_spread_props` runs after
+  everything is placed, includes WheelToken and keeps loot 70 px off parkour
+  gates; drops are added deferred (no physics-flush errors).
+- `tools/death_show.gd` renders the 24-fall showcase (run with
+  `--fixed-fps 60`, otherwise the slow renderer makes time jump).
+  `tools/suit_show.gd` renders the suits parkour film.
+
+## 0o. Codex, guides, survivor depth, rewards desk, loot, throwables, walk angles
 
 Round 2 of the owner's list (see HANDOFF "Round 2"). Everything below is on
 `claude/gallant-galileo-5ctrmf` with tests green (smoke / focus / reset,

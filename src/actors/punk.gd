@@ -928,7 +928,7 @@ func take_hit(kind: String, from: Node) -> void:
 			Juice.popup_number(global_position + Vector2(0, -58), "VEST", Palette.EDGE)
 			Mixer.play_sfx("res://assets/audio/cling.wav", randf_range(1.2, 1.5), -6.0)
 		dmg = int(round(float(rd.dmg) * mul))
-		_shot = {"weapon": rd.weapon, "zone": rd.zone, "dist": rd.dist, "kind": rd.round_kind}
+		_shot = {"weapon": rd.weapon, "zone": rd.zone, "dist": rd.dist, "kind": rd.round_kind, "through": rd.went_through}
 	elif kind == "combo":
 		dmg = int(from.get("combo_dmg")) if from != null and from.get("combo_dmg") != null else 24
 	elif kind == "skill":
@@ -1220,7 +1220,9 @@ func _die(kind: String, from: Node) -> void:
 	if gunned:
 		pass
 	elif _anim != null and not FamilyProfile.less_gore():
-		HitReact.corpse(get_parent(), _anim, global_position, _last_zone, dir, facing)
+		var kclip := str((from as Fighter).get("_strike_clip")) if from is Fighter else ""
+		var style := DeathFall.pick(_last_zone, kind, kclip, held, HitReact.power_of(kind) if not _overkill else 1.0, {})
+		HitReact.corpse(get_parent(), _anim, global_position, _last_zone, dir, facing, style)
 	elif kind != "light" and kind != "snap":
 		StreetRagdoll.burst(get_parent(), global_position, dir, _base_mod)
 	var rs_heat := get_tree().get_first_node_in_group("run_state")
@@ -1303,7 +1305,7 @@ func _drops(from: Node) -> void:
 		var orb := ScrapOrb.new()
 		orb.amount = 8 if title == "Bailiff" else (5 if title == "Mohawk Bo" or title == "Repo Goon" else 3)
 		orb.global_position = global_position + Vector2(0, -20)
-		host.add_child(orb)
+		host.add_child.call_deferred(orb)
 	if title == "Lottery Goon":
 		FamilyProfile.add_gems(1)
 		Juice.toast("reward", "RAFFLE", "The goon dropped a gem. Civic engagement.")
@@ -1318,7 +1320,7 @@ func _drops(from: Node) -> void:
 		elif title == "Chapel Usher" or title == "Shift Lead":
 			drop.kind = "board"
 		drop.global_position = global_position + Vector2(12, -8)
-		host.add_child(drop)
+		host.add_child.call_deferred(drop)
 	if from is Fighter and rs and rs.has_method("has_card") and rs.has_card("head_trampoline"):
 		pass
 	_progress_drops(host, from)

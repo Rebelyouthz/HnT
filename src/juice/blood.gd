@@ -178,7 +178,7 @@ static func _wound_mat(anim: CanvasItem) -> ShaderMaterial:
 
 
 ## A bullet hole at a local sprite texel (it bleeds down the clothes).
-static func add_hole(anim: CanvasItem, local: Vector2) -> void:
+static func add_hole(anim: CanvasItem, local: Vector2, exit: bool = false) -> void:
 	if anim == null or FamilyProfile.less_gore():
 		return
 	var mat := _wound_mat(anim)
@@ -188,7 +188,7 @@ static func add_hole(anim: CanvasItem, local: Vector2) -> void:
 	var holes := PackedVector2Array(hv) if hv is PackedVector2Array or hv is Array else PackedVector2Array()
 	while holes.size() < 6:
 		holes.append(Vector2.ZERO)
-	holes[n % 6] = local
+	holes[n % 6] = Vector2(floorf(local.x) + (0.5 if exit else 0.0), local.y)
 	mat.set_shader_parameter("holes", holes)
 	mat.set_shader_parameter("hole_n", mini(n + 1, 6))
 
