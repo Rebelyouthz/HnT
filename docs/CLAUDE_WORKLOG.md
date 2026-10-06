@@ -34,7 +34,69 @@ The rest is in English, like the code. Newest work first. Each block says
 
 ---
 
-## 0n. Sprite icons, reward fly-up, gunsmith bench, paperdoll, sprite cards (latest)
+## 0o. Codex, guides, survivor depth, rewards desk, loot, throwables, walk angles (latest)
+
+Round 2 of the owner's list (see HANDOFF "Round 2"). Everything below is on
+`claude/gallant-galileo-5ctrmf` with tests green (smoke / focus / reset,
+combo_test all COMBO_OK).
+
+- **Stat colours**: `UiKit.delta_bb(old, new)` white/grey base, green up,
+  red down ("x1.05 > x1.15"); card meters grey with the gain in green.
+- **Codex discovery** (`src/app/discover.gd`, `src/ui/codex_sheet.gd`): first
+  meeting with a thug, boss, weapon, ability, gear, part or place files an
+  entry (toast + red dot); CLAIM pays gold/gems, +3 gems every 10.
+- **Guided first use** (`src/ui/guide.gd`, `guides.gd`): dim + spotlight +
+  speech bubble with Dad/Kid bust, A next / B skip, saved in `guides_done`.
+  Every menu and new feature has steps (`Guides.STEPS`). Build order for the
+  camp is fixed (`FamilyProfile.BUILD_ORDER`, "BUILD X FIRST").
+- **Survivor (Jotunnslayer-style)**: starter weapons with level / mods /
+  merge-to-rarity (`surv_starter.gd`, `starter_sheet.gd`), 10 challenges
+  that open starters (`surv_challenges.gd`), missions every 70 s + champions
+  (`surv_missions.gd`), boss/mission chests (`boss_chest.gd`), and
+  `surv_extras.gd`: SHRINES (stand 3 s, pick 1 of 3 blessings), RAMPAGE,
+  PACTS (harder hour, more S-COINS; toggled on the starter sheet), CURSED
+  CHESTS, evolution FORECAST. Paperdoll got NECKLACE + RING slots.
+- **Brawl / parkour extras**: `brawl_more.gd` (FINISHER on low-HP staggered
+  thugs, impact frames, screen kill, steam refund, combo bursts);
+  `parkour_more.gd` (repo-agent pursuer, BIG AIR letterbox, momentum, rings,
+  STYLE grade D-SSS).
+- **Rewards desk** (`src/app/reward_book.gd`, `src/ui/rewards_sheet.gd`): gift
+  button in the hub top bar with a count; DAILY CRATE (7-day streak),
+  CLINIC ROAD (a reward per account level, chest every 5th), CLAIM ALL across
+  crate / road / codex / jobs / awards, TITLES (worn under the names),
+  POWER rating that counts up in the header (+N) with a breakdown.
+- **Loot** (`src/extras/loot_book.gd`): story bosses drop a chest (2 finds,
+  minis 1) - a move, a gun part, a suit part or throwables; secret stashes of
+  kind "loot" (8 new in `data/secrets.json` `_extra`).
+- **Throwables** (`src/extras/throw_lob.gd`): SHOOT + up lobs grenade,
+  molotov, flashbang, brick or teargas in an arc; shown in the HUD.
+- **Five new level-up cards** (`data/cards.json`, `item_rack.gd`): BRASS
+  KNUCKLES, VAMPIRE TOOTH, TIE BOOMERANG, HEAT WAVE, THROWING BAG (icons in
+  `tools/icon_pack.py`).
+- **Walk angles**: `son/walk_up` (three-quarter back), `son/walk_down`,
+  `father/walk_down` from Wan 2.2 image-to-video on HF ZeroGPU
+  (`zerogpu-aoti/wan2-2-fp8da-aoti-faster`, start image = the hero's own
+  idle frame on green, 720x900) sliced with `tools/video2sprite.py --loop
+  --start <s> --fps 12` (Son: `--stand 199 --stand-frame 0`, Father:
+  `--scale-ref assets/sprites/father/walk.json`). Fighter picks them when the
+  move is mostly up/down the lane. **Still missing: `father/walk_up` and the
+  enemies** - the ZeroGPU quota ran out (calls are cancelled at once);
+  Sorceress has no credits left (402). Retry the same script later.
+- **Hit reactions** (`src/extras/impact_feel.gd`): head shots snap the head
+  back, gut shots fold, uppercuts lift, sweeps take the legs; kicks push and
+  kick up dust; big hits get a ring, speed lines and a directional camera kick.
+- **Fixes**: KitBook dropped `hp_mul` (horde/story HP scaling); survivor
+  arenas were cluttered (bystander behind the parked car, vault prompt,
+  three pickups per kill); card picks now hold the pause (a stage card
+  closing underneath unpaused, so thugs hit you while choosing); HUD hero
+  line auto-fits; REP pill no longer cut off; boss charge lane redrawn.
+- **Tools**: capture.gd env `REWARD`, `UPFX`, `PRESS`, `SURV_IDS`,
+  `SURV_MISSION`, `SURV_SHRINE`, `GUIDE`, `THROW=kind@f`, `CHEST=f`,
+  `STICK=x,y@f`, `ITEMS=a,b`, `DUMP=f`; targets `hub:rewards`,
+  `hub:starter`, `hub:codex`, `hub:sgear`. autoplay.gd skips guides and
+  takes cards itself.
+
+## 0n. Sprite icons, reward fly-up, gunsmith bench, paperdoll, sprite cards
 
 - `tools/pixkit.py`: pixel-art kit (5-step hue-shifted ramps, rim light and
   shade per part, sphere shading, selective outlines, glints).

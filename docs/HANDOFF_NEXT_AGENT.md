@@ -60,7 +60,32 @@ ROG Ally (Windows, gamepad) and test the Windows installer.
     tick that counter up (with a small bump on arrival). Same everywhere
     rewards are given: results, chests, wheel, quests, shops, level-ups.
 
-### Done since (see worklog 0n)
+### Round 2 (owner's next message, translated, condensed)
+
+More angles for Dad, the Kid and enemies (up, diagonal up/down); punchier
+punch/kick animations, varied hit/kill reactions, blood and wounds; many
+combos, finishers, throws, specials; survivor more like Jotunnslayer (unique
+enemies and bosses, missions, side quests, challenges, start weapons you can
+mod, level and merge to raise rarity); achievements; a codex of everything
+with rewards and first-meeting entries; red dots on everything new; reward
+feel on claim/upgrade/buy/equip with stat gains shown (white base, green up,
+red down); 5+ new things for each mode and 5 for the menus; boss loot chests
+and secrets with new weapons, moves, parts, suit parts, throwables and cards;
+shoes, necklace and ring in the paperdoll; camp/dojo unlocks in a planned
+order with guided first use and speech bubbles; then polish twice.
+
+### Done since (round 2, see worklog 0o)
+
+All of round 2 has a first pass: codex, guides, build order, stat colours,
+survivor starters/missions/challenges/shrines/pacts/rampage, boss chests,
+rewards desk + daily crate + clinic road + titles + power, loot chests and
+loot stashes, five throwables, five new cards, finishers and impact frames,
+parkour pursuer/rings/style, per-move hit reactions, walk_up/walk_down for
+the Kid and walk_down for Dad. Open: `father/walk_up` and enemy angles (HF
+ZeroGPU quota / Sorceress credits ran out - same pipeline, retry), more
+in-game polish, rebuild the installer.
+
+### Done before (see worklog 0n)
 
 Items 1-3 and 6-12 above have a first full pass: sprite icons everywhere
 (IconBook), sprite level-up cards with rise + rarity glow (story and a
@@ -77,7 +102,7 @@ HUD overlaps, parallax backgrounds, map 1 → film → map 2 flow polish.
 
 ## Where things are (repo `/home/user/hnt`, branch `claude/gallant-galileo-5ctrmf`)
 
-Read `docs/CLAUDE_WORKLOG.md` first: section **0m** lists everything done in
+Read `docs/CLAUDE_WORKLOG.md` first: sections **0o** and **0n** lists everything done in
 the latest sessions with file names. Highlights:
 
 | System | Files |
