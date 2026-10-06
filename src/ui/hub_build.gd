@@ -200,6 +200,10 @@ const NODE_ICON := {
 
 func _node_tex(node: Dictionary) -> Texture2D:
 	var id := str(node.get("id", ""))
+	# Own pixel-art icon for every node (tools/icon_pack.py).
+	var own := IconBook.tex(IconBook.for_node(id))
+	if own != null:
+		return own
 	if id.begins_with("u_") and not NODE_ICON.has(id):
 		# Survivor ability unlocks: that ability's icon.
 		var book: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/survive.json"))
@@ -357,9 +361,10 @@ func _node_button(node: Dictionary, at: Vector2) -> Control:
 		pic.texture = tex
 		pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		pic.texture_filter = SpriteBook.UI_FILTER
-		pic.size = Vector2(42, 42)
-		pic.position = Vector2(10, 10)
+		# 32 texels at 2 screen px each: crisp pixel art, no blur.
+		pic.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		pic.size = Vector2(IconBook.SIZE_S, IconBook.SIZE_S)
+		pic.position = Vector2(31, 31) - pic.size * 0.5
 		pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		if st == "locked":
 			pic.modulate = Color(0.35, 0.35, 0.4)

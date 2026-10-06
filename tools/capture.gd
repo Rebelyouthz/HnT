@@ -200,6 +200,19 @@ func _process(_delta: float) -> bool:
 		_prepare()
 	if _tab.begins_with("art_"):
 		_art_demo()
+	# REWARD=key:amount[@frame] fires a reward fly-up in any shot (default
+	# frame 60); UPFX=frame fires upgrade juice on the focused control.
+	var rw := OS.get_environment("REWARD")
+	if rw != "":
+		var at := int(rw.get_slice("@", 1)) if "@" in rw else 60
+		if _n == at:
+			var jc := root.get_node_or_null("Juice")
+			var spec := rw.get_slice("@", 0)
+			jc.call("give", spec.get_slice(":", 0), int(spec.get_slice(":", 1)), Vector2(320, 190))
+	var ux := OS.get_environment("UPFX")
+	if ux != "" and _n == int(ux):
+		var fo: Control = root.get_viewport().gui_get_focus_owner()
+		root.get_node("Juice").call("upgrade_fx", fo, Color(1, 0.8, 0.3), "LV 2", true)
 	if _tab == "stats" and _n == 40 and current_scene != null and current_scene.has_method("_open_stats"):
 		current_scene.call("_open_stats")
 	if _tab.begins_with("armory") and _n == 40 and current_scene != null and current_scene.has_method("_open_armory"):

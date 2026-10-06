@@ -122,7 +122,7 @@ func _claim(f: Fighter) -> void:
 				rs.take_card(str(spec.get("card", "")))
 		"gems":
 			FamilyProfile.add_gems(int(spec.get("gems", 1)))
-			Juice.claim_burst(global_position, title, 0, int(spec.get("gems", 1)))
+			Juice.claim_burst(get_global_transform_with_canvas().origin, title, 0, int(spec.get("gems", 1)))
 		"grenade":
 			f.grenades += 1
 			Juice.toast("reward", title, "A receipt with a timer.")

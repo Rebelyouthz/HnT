@@ -2,7 +2,8 @@ class_name PixelIcon
 extends Control
 
 ## Tiny drawn currency icons on a 11x11 pixel grid (scaled to the control):
-## gold coin, blue gem, grey rep badge. Crisp at any UI scale.
+## gold coin, blue gem, grey rep badge. Crisp at any UI scale. Draws the
+## matching IconBook sprite when one exists.
 
 @export var kind := "gold"
 @export var dim := false
@@ -44,6 +45,15 @@ const COL := {
 
 
 func _draw() -> void:
+	# The sprite icon when there is one (tools/icon_pack.py); the old glyph
+	# grids stay as a fallback.
+	var t := IconBook.tex(IconBook.for_glyph(kind))
+	if t != null:
+		texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		var side := minf(size.x, size.y)
+		var r := Rect2(((size - Vector2(side, side)) * 0.5).floor(), Vector2(side, side))
+		draw_texture_rect(t, r, false, Color(0.5, 0.5, 0.55) if dim else Color.WHITE)
+		return
 	var grid: Array = COIN
 	if kind.begins_with("gem"):
 		grid = GEM

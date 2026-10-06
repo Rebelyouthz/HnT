@@ -489,7 +489,7 @@ func try_cbt(id: String) -> bool:
 	(data["cbt"] as Array).append(id)
 	save()
 	Rarity.juice(str(spec.get("rarity", "common")), str(spec.get("name", id)))
-	Juice.claim_burst(Vector2(640, 360), "COPING MECHANISM INSTALLED", 0, 0)
+	Juice.claim_burst(Vector2(320, 180), "COPING MECHANISM INSTALLED", 0, 0)
 	Juice.toast("reward", str(spec.get("name", id)), "COPING MECHANISM INSTALLED")
 	return true
 

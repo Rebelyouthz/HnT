@@ -78,5 +78,5 @@ func _buy(rs: Node, f: Fighter, item: String) -> void:
 			rs.request_reroll()
 	Juice.shout(str(info["line"]))
 	Juice.play("res://assets/audio/shop.wav")
-	Juice.claim_burst(Vector2(640, 180), str(info["line"]), 0, 0)
+	Juice.claim_burst(Vector2(320, 90), str(info["line"]), 0, 0)
 	Rarity.buy("ROOF TIP", info)

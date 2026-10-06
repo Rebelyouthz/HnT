@@ -291,22 +291,33 @@ func _build_purse(pos: Vector2) -> void:
 		ic.kind = str(pair[0])
 		ic.custom_minimum_size = Vector2(22, 22)
 		row.add_child(ic)
+		# Reward coins fly to this icon and the number ticks up as they land.
+		if str(pair[0]) == "gold":
+			Juice.rewards.register("gold", ic)
+		elif str(pair[0]) == "gem":
+			Juice.rewards.register("gems", ic)
 		var l := Label.new()
 		l.custom_minimum_size = Vector2(54, 0)
 		l.add_theme_font_override("font", UiKit.title_font())
 		UiKit.apply_label(l, 15, Palette.TEXT)
 		row.add_child(l)
 		set(str(pair[1]), l)
+	if not Juice.rewards.landed.is_connected(_on_reward_landed):
+		Juice.rewards.landed.connect(_on_reward_landed)
 
 
 const XP_STEPS := [0, 70, 160, 260, 380, 520]
 
 
+func _on_reward_landed(_key: String) -> void:
+	_paint_purse()
+
+
 func _paint_purse() -> void:
 	if _gold_l == null:
 		return
-	_gold_l.text = str(int(FamilyProfile.data.get("gold", 0)))
-	_gem_l.text = str(int(FamilyProfile.data.get("gems", 0)))
+	_gold_l.text = str(int(FamilyProfile.data.get("gold", 0)) - Juice.rewards.pending("gold"))
+	_gem_l.text = str(int(FamilyProfile.data.get("gems", 0)) - Juice.rewards.pending("gems"))
 	_scrap_l.text = str(state.scrap if state else 0)
 	var xp := state.xp if state else 0
 	var lv := 0

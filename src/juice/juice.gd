@@ -15,6 +15,8 @@ var _overlay: CanvasLayer
 var _sfx: AudioStreamPlayer
 var _toast_box: VBoxContainer
 var _toast_at: Dictionary = {}
+## Rewards that count up and fly to their counter; upgrade juice.
+var rewards: RewardFly
 
 const TOAST_COOL_MS := 2800
 const TOAST_MAX := 2
@@ -44,6 +46,8 @@ func _ready() -> void:
 	_sfx = AudioStreamPlayer.new()
 	_sfx.bus = "sfx"
 	add_child(_sfx)
+	rewards = RewardFly.new()
+	add_child(rewards)
 
 
 func _process(delta: float) -> void:
@@ -294,26 +298,16 @@ func claim_burst(from: Vector2, line: String, gold: int, gems: int) -> void:
 	var lab := Label.new()
 	lab.text = line
 	lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lab.add_theme_font_size_override("font_size", 28)
+	lab.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	lab.add_theme_font_override("font", UiKit.title_font())
+	lab.add_theme_font_size_override("font_size", 16)
 	lab.add_theme_color_override("font_color", Palette.LEMON)
-	lab.add_theme_color_override("font_outline_color", Color(0, 0, 0, 1))
-	lab.add_theme_constant_override("outline_size", 8)
-	lab.position = from + Vector2(-160, -20)
-	lab.size = Vector2(320, 40)
+	lab.add_theme_color_override("font_outline_color", UiKit.INK)
+	lab.add_theme_constant_override("outline_size", 4)
+	lab.position = from + Vector2(-180, -20)
+	lab.size = Vector2(360, 24)
+	lab.pivot_offset = Vector2(180, 12)
 	wrap.add_child(lab)
-	var extra := Label.new()
-	var bits: PackedStringArray = []
-	if gold:
-		bits.append("+%d GOLD" % gold)
-	if gems:
-		bits.append("+%d GEMS" % gems)
-	extra.text = "  ·  ".join(bits)
-	extra.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	extra.position = from + Vector2(-160, 22)
-	extra.size = Vector2(320, 28)
-	extra.add_theme_font_size_override("font_size", 18)
-	extra.add_theme_color_override("font_color", Palette.EDGE)
-	wrap.add_child(extra)
 	var tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.set_ignore_time_scale(true)
 	tw.tween_property(lab, "scale", Vector2(1.12, 1.12), 0.18)
@@ -321,28 +315,27 @@ func claim_burst(from: Vector2, line: String, gold: int, gems: int) -> void:
 	tw.tween_property(wrap, "modulate:a", 0.0, 0.2)
 	tw.finished.connect(wrap.queue_free)
 	if gold or gems:
-		fly_pills(from, gold, gems)
+		# The reward itself pops in under the line, counts up and flies home.
+		fly_pills(from + Vector2(0, 46), gold, gems)
 
 
 func fly_pills(from: Vector2, gold: int, gems: int) -> void:
-	for i in maxi(gold, 0) / 4 + (1 if gold else 0):
-		_fly_chip(from, Vector2(980, 18), Palette.EDGE)
-	for i in maxi(gems, 0):
-		_fly_chip(from, Vector2(1100, 18), Palette.LEMON)
+	# `from` is on the 640x360 grid (viewport coordinates).
+	if gold > 0:
+		rewards.give("gold", gold, from, gems <= 0)
+	if gems > 0:
+		rewards.give("gems", gems, from + Vector2(0, -6), true)
 
 
-func _fly_chip(from: Vector2, to: Vector2, color: Color) -> void:
-	var chip := ColorRect.new()
-	chip.size = Vector2(14, 14)
-	chip.color = color
-	chip.position = from
-	chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_overlay.add_child(chip)
-	var tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN_OUT)
-	tw.set_ignore_time_scale(true)
-	tw.tween_property(chip, "position", to + Vector2(randf_range(-12, 12), randf_range(-6, 6)), 0.7)
-	tw.tween_property(chip, "modulate:a", 0.0, 0.12)
-	tw.finished.connect(chip.queue_free)
+## A reward you can see: the icon pops in, counts up, then flies to its
+## counter (gold / gems / tokens / rep / flow / xp). `from` on the 640x360 grid.
+func give(key: String, amount: int, from := Vector2(-1, -1)) -> void:
+	rewards.give(key, amount, from)
+
+
+## Reward-grow juice on a control that was just bought or levelled.
+func upgrade_fx(target: Control, color: Color = UiKit.GOLD, text := "", big := false) -> void:
+	rewards.upgrade(target, color, text, big)
 
 
 func keep_combo() -> void:

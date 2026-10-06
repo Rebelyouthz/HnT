@@ -67,5 +67,5 @@ func _buy(rs: Node, f: Fighter, item: String) -> void:
 		f.steam = Fighter.STEAM_MAX
 	Juice.shout(str(info["line"]))
 	Juice.play("res://assets/audio/shop.wav")
-	Juice.claim_burst(Vector2(640, 200), str(info["line"]), 0, 0)
+	Juice.claim_burst(Vector2(320, 100), str(info["line"]), 0, 0)
 	Rarity.buy("24/7", info)

@@ -183,7 +183,7 @@ func _take(f: Fighter) -> void:
 				g = int(ceil(float(g) * 1.5))
 			FamilyProfile.add_gold(g)
 			Juice.popup_number(global_position + Vector2(0, -24), "+%d" % g, UiKit.GOLD)
-			Juice.fly_pills(global_position, g, 0)
+			Juice.rewards.give("gold", g, get_global_transform_with_canvas().origin, false)
 			Juice.play("res://assets/audio/cash.wav" if ResourceLoader.exists("res://assets/audio/cash.wav") else "res://assets/audio/cling.wav")
 		"flask":
 			var heal := 0 if Artifacts.has("no_lunch") else int(round(float(f.max_hp) * 0.25))

@@ -255,6 +255,11 @@ func _make_top() -> Control:
 	purse.add_child(_gold_pill)
 	purse.add_child(_gems_pill)
 	purse.add_child(_rep_pill)
+	# Rewards fly to these icons; the numbers tick up as each coin lands.
+	Juice.rewards.register("gold", _gold_pill.get_child(0))
+	Juice.rewards.register("gems", _gems_pill.get_child(0))
+	Juice.rewards.register("rep", _rep_pill.get_child(0))
+	Juice.rewards.landed.connect(_on_reward_landed)
 
 	row.add_child(purse)
 
@@ -352,7 +357,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _show_tab(id: String) -> void:
 	if not FamilyProfile.tab_unlocked(id):
-		Juice.claim_burst(Vector2(640, 360), Copy.LOCKED, 0, 0)
+		Juice.claim_burst(get_viewport().get_visible_rect().size * 0.5, Copy.LOCKED, 0, 0)
 		Juice.play("res://assets/audio/ui_click.wav")
 		return
 	_current = id
@@ -395,10 +400,15 @@ func _after_page() -> void:
 	_show_tab(_current)
 
 
+func _on_reward_landed(_key: String) -> void:
+	_refresh_pills()
+
+
 func _refresh_pills() -> void:
-	_set_pill(_gold_pill, UiKit.num(FamilyProfile.data["gold"]), "gold")
-	_set_pill(_gems_pill, UiKit.num(FamilyProfile.data["gems"]), "gems")
-	_set_pill(_rep_pill, UiKit.num(FamilyProfile.data["rep"]), "rep")
+	var r := Juice.rewards
+	_set_pill(_gold_pill, UiKit.num(int(FamilyProfile.data["gold"]) - r.pending("gold")), "gold")
+	_set_pill(_gems_pill, UiKit.num(int(FamilyProfile.data["gems"]) - r.pending("gems")), "gems")
+	_set_pill(_rep_pill, UiKit.num(int(FamilyProfile.data["rep"]) - r.pending("rep")), "rep")
 	_log_bang.visible = FamilyProfile.unread_log_count() > 0
 	_refresh_new_dots()
 	if _avatar_names:

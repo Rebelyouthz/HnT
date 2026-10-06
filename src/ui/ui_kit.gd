@@ -320,7 +320,7 @@ static func pill(title: String, value: String, accent: Color) -> HBoxContainer:
 	row.add_theme_constant_override("separation", 8)
 	var icon := PixelIcon.new()
 	icon.kind = title.to_lower()
-	icon.custom_minimum_size = Vector2(33, 33)
+	icon.custom_minimum_size = Vector2(IconBook.SIZE_S, IconBook.SIZE_S)
 	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(icon)
 	var t := Label.new()
