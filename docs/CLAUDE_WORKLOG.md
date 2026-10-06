@@ -34,7 +34,60 @@ The rest is in English, like the code. Newest work first. Each block says
 
 ---
 
-## 0m. Element arts, grabs, team attacks; feedback pass (latest)
+## 0n. Sprite icons, reward fly-up, gunsmith bench, paperdoll, sprite cards (latest)
+
+- `tools/pixkit.py`: pixel-art kit (5-step hue-shifted ramps, rim light and
+  shade per part, sphere shading, selective outlines, glints).
+  `tools/icon_pack.py` draws every icon at 32x32: currency (+16 px flying
+  coins), all 56 story cards, survivor gear, slot silhouettes, gun parts,
+  skill nodes (all three trees), META upgrades, card-tag emblems, and
+  redraws the 54 survivor ability/trait/item/ultimate icons in place.
+- `IconBook` (src/ui/icon_book.gd): where each thing finds its icon
+  (for_card / for_node / for_meta / for_gear / for_part / for_glyph) and
+  `rect(name, px)` for a nearest-filtered TextureRect. Sizes are whole
+  multiples of the pixel grid: SIZE_S 128/3 (2 screen px a texel), SIZE_M 64,
+  SIZE_L 128. PixelIcon draws the sprite when one exists, so every old glyph
+  (currency pills, HUD purse, badges) is now a sprite.
+- `RewardFly` (`Juice.rewards`, src/juice/reward_fly.gd): `give(key, amount,
+  from)` pops the icon in with rays, counts the number up with ticks, then
+  bursts into coins that arc to the counter registered for that key
+  (`register(key, control)`); counters show `balance - pending(key)` and
+  tick up on `landed`. `upgrade(control, color, text, big)` is the reward-grow
+  juice (punch, flash, ring, sparks, rising text, chime/boom), `deny()` shakes
+  and buzzes, `reveal()` is the loot reveal for boxes/fuses. Juice.give /
+  Juice.upgrade_fx / UiKit.fx_after(root, key, ...) wrap them. claim_burst and
+  fly_pills go through it (they used to aim off-screen). Hub pills, the run
+  HUD purse, the gunsmith gem wallet and the gear S-COINS wallet are targets.
+- `tools/synth_ui.py` -> assets/audio/ui: coin_tick, coin_land, gem_land,
+  reward_pop, whoosh, up_rise, up_boom, part_slide, part_click, part_off, deny.
+- Gunsmith: `tools/gun_parts.py` makes 14 side-view part sprites at the guns'
+  texel scale with anchors; guns.json gains rail/under/mag/window mounts
+  (tools/gun_art.py). `Attach.layout()` places them (a muzzle device sits at
+  the end of a long barrel), `dress()` puts real sprites on the held gun.
+  `GunView` is the bench (pegboard, gun big at whole pixel steps, markers on
+  open mounts, padlocks on shut ones; `fit_anim` slides a part on and clicks
+  it home, `off_anim` pulls it off and drops it, `preview` shows a ghost).
+  `gunsmith_sheet.gd` = bench + stat bars with green/red deltas + part tiles.
+- Survivor gear is a paperdoll (`surv_gear_sheet.gd`): the Kid lit in the
+  middle, slots joined to the body by lines, cap on his head, charm in his
+  hand, totals as stat icons, tiles in rarity frames, details with deltas,
+  S-COINS fly out on buys, box/fuse open into a reveal.
+- META rows have their icon in a socket; upgrade juice on meta, hero level /
+  rarity, skill nodes, moves, element arts, weapon levels, locker gear, camp
+  builds.
+- Cards: `tools/card_art.py` -> assets/sprites/cards: story frames per rarity
+  (bevelled metal, studs, filigree, emblem socket, sunk art window with baked
+  glow, ribbon plate, rarity gems), backs, survivor ID-badge cards (enamel
+  header, lanyard slot, punched holes, hazard foot) and glow masks. PixelCard
+  draws the sprites with the thing's own icon; lit cards rise (card_pick) and
+  glow in the rarity colour with sparks running the edge. survive_pick uses
+  the badge cards; the focused one rises and glows.
+- Survivor weapons: BADGE BOOMERANG, SHREDDER BLADE, FAX BEAM, RUBBER STAMP,
+  and MANUAL (SHOOT with empty hands): NAIL DRIVER (hold), PAPERWEIGHT (tap).
+- Capture: REWARD=key:amount@frame, UPFX=frame, PRESS=part@frame (gunsmith),
+  SURV_IDS=a,b (ui:surv), new target ui:spick.
+
+## 0m. Element arts, grabs, team attacks; feedback pass
 
 - Feedback: Bevel 3D overlay off (`Bevel.ENABLED`), plain frames back. Heroes
   bigger in the hideout (CAMP_K 1.6), title (2.3) and HEROES cards. Lamps 2.9x,

@@ -400,6 +400,16 @@ func _show_tip(node: Dictionary, _at: Vector2) -> void:
 	for c in _tip_box.get_children():
 		c.queue_free()
 	var st := _state(node)
+	var big_tex := _node_tex(node)
+	if big_tex:
+		var big := TextureRect.new()
+		big.texture = big_tex
+		big.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		big.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		big.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		big.custom_minimum_size = Vector2(IconBook.SIZE_M, IconBook.SIZE_M)
+		big.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		_tip_box.add_child(big)
 	var left := VBoxContainer.new()
 	left.custom_minimum_size = Vector2(190, 0)
 	var name_l := Label.new()

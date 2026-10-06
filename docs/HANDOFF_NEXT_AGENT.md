@@ -60,6 +60,18 @@ ROG Ally (Windows, gamepad) and test the Windows installer.
     tick that counter up (with a small bump on arrival). Same everywhere
     rewards are given: results, chests, wheel, quests, shops, level-ups.
 
+### Done since (see worklog 0n)
+
+Items 1-3 and 6-12 above have a first full pass: sprite icons everywhere
+(IconBook), sprite level-up cards with rise + rarity glow (story and a
+different survivor badge card), six new survivor weapons incl. two manual,
+equipment paperdoll, gunsmith bench with every part visible and attach
+animations, pixel-art skill tree icons, pictures on gear / gunsmith / META,
+upgrade juice in the menus, rewards that count up and fly to the corner.
+Good next steps: more polish on the icons the owner points at, sprite parts
+for melee weapon mods too, story equipment (locker) with the same paperdoll
+treatment, more survivor weapons and evolutions for the new ones.
+
 Older open items in the task list: audit entities without sprites, in-run
 HUD overlaps, parallax backgrounds, map 1 → film → map 2 flow polish.
 
