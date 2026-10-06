@@ -21,6 +21,10 @@ var _avatar_xp: ProgressBar
 var _avatar_dot: ColorRect
 var _logo_dot: ColorRect
 var _tab_dots: Dictionary = {}
+var _rewards_bang: Control
+var _rewards_n: Label
+var _avatar_title: Label
+var _avatar_pwr: Label
 
 
 func _ready() -> void:
@@ -37,6 +41,7 @@ func _ready() -> void:
 	FamilyProfile.changed.connect(_refresh_pills)
 	if FamilyProfile.data.get("named", false):
 		Guides.show(self, "hub", 0.8)
+		_power_rise()
 
 
 func _build_chrome() -> void:
@@ -182,15 +187,27 @@ func _make_top() -> Control:
 	_avatar_names.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_avatar_names.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	info.add_child(_avatar_names)
+	_avatar_title = Label.new()
+	_avatar_title.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(_avatar_title, 8, UiKit.GOLD)
+	_avatar_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	info.add_child(_avatar_title)
 	var lv_row := HBoxContainer.new()
 	lv_row.add_theme_constant_override("separation", 6)
 	lv_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_avatar_lv = Label.new()
 	UiKit.apply_label(_avatar_lv, 13, Palette.LEMON)
 	lv_row.add_child(_avatar_lv)
-	_avatar_xp = UiKit.glow_bar(0.0, Palette.READY, Vector2(96, 8))
+	_avatar_xp = UiKit.glow_bar(0.0, Palette.READY, Vector2(54, 8))
 	_avatar_xp.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	lv_row.add_child(_avatar_xp)
+	# POWER: one number for the family; counts up when it grew (_power_rise).
+	_avatar_pwr = Label.new()
+	_avatar_pwr.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(_avatar_pwr, 9, Color(1.0, 0.75, 0.4))
+	_avatar_pwr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_avatar_pwr.set_meta("key", "power")
+	lv_row.add_child(_avatar_pwr)
 	info.add_child(lv_row)
 	card.add_child(info)
 	avatar.add_child(card)
@@ -208,10 +225,36 @@ func _make_top() -> Control:
 	_log_bang.position = Vector2(48, -4)
 	log_wrap.add_child(_log_bang)
 	row.add_child(log_wrap)
-	var stats := UiKit.button("STATS", Vector2(84, 38))
+	# REWARDS: the gift box with a count of everything claimable.
+	var rw := UiKit.button("", Vector2(52, 38))
+	rw.set_meta("key", "rewards_btn")
+	rw.tooltip_text = "REWARDS"
+	rw.pressed.connect(_open_rewards)
+	var rw_ic := IconBook.rect("cur_gift", 32)
+	rw_ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rw_ic.position = Vector2(10, 3)
+	rw.add_child(rw_ic)
+	_rewards_bang = PanelContainer.new()
+	var rsb := StyleBoxFlat.new()
+	rsb.bg_color = Color(0.85, 0.12, 0.1)
+	rsb.border_color = Color(1, 0.9, 0.8)
+	rsb.set_border_width_all(1)
+	rsb.set_corner_radius_all(2)
+	rsb.content_margin_left = 3
+	rsb.content_margin_right = 3
+	_rewards_bang.add_theme_stylebox_override("panel", rsb)
+	_rewards_bang.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_rewards_bang.position = Vector2(38, -6)
+	_rewards_n = Label.new()
+	_rewards_n.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(_rewards_n, 9, Color.WHITE)
+	_rewards_bang.add_child(_rewards_n)
+	rw.add_child(_rewards_bang)
+	row.add_child(rw)
+	var stats := UiKit.button("STATS", Vector2(76, 38))
 	stats.pressed.connect(_open_stats)
 	row.add_child(stats)
-	var armory := UiKit.button("ARMORY", Vector2(104, 38))
+	var armory := UiKit.button("ARMORY", Vector2(96, 38))
 	armory.pressed.connect(_open_armory)
 	row.add_child(armory)
 	var codex := UiKit.button("CODEX", Vector2(96, 38))
@@ -232,7 +275,7 @@ func _make_top() -> Control:
 	_jobs_bang.visible = Contracts.ready_count() > 0
 	jobs_wrap.add_child(_jobs_bang)
 	row.add_child(jobs_wrap)
-	var gear := UiKit.button(Copy.OPTIONS, Vector2(100, 38))
+	var gear := UiKit.button(Copy.OPTIONS, Vector2(94, 38))
 	gear.pressed.connect(_open_settings)
 	row.add_child(gear)
 
@@ -254,7 +297,7 @@ func _make_top() -> Control:
 	# Currency exactly like the reference board: big pixel icon, the name and
 	# the number in cream pixel caps, no boxes, spaced out at the top right.
 	var purse := HBoxContainer.new()
-	purse.add_theme_constant_override("separation", 26)
+	purse.add_theme_constant_override("separation", 14)
 	purse.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_gold_pill = UiKit.pill("GOLD", "0", Palette.EDGE)
 	_gems_pill = UiKit.pill("GEMS", "0", Palette.LEMON)
@@ -264,6 +307,11 @@ func _make_top() -> Control:
 	purse.add_child(_gold_pill)
 	purse.add_child(_gems_pill)
 	purse.add_child(_rep_pill)
+	# Names small, numbers big: all three fit next to the button row.
+	for pl: HBoxContainer in [_gold_pill, _gems_pill, _rep_pill]:
+		(pl.get_child(1) as Label).add_theme_font_size_override("font_size", 13)
+		(pl.get_child(1) as Label).add_theme_color_override("font_color", Palette.MUTED)
+		pl.add_theme_constant_override("separation", 5)
 	# Rewards fly to these icons; the numbers tick up as each coin lands.
 	Juice.rewards.register("gold", _gold_pill.get_child(0))
 	Juice.rewards.register("gems", _gems_pill.get_child(0))
@@ -424,12 +472,20 @@ func _refresh_pills() -> void:
 	_log_bang.visible = FamilyProfile.unread_log_count() > 0
 	if _codex_dot:
 		_codex_dot.visible = Discover.unclaimed() > 0
+	if _rewards_bang:
+		var n := RewardBook.count() + RewardBook.new_titles()
+		_rewards_bang.visible = n > 0
+		_rewards_n.text = str(n)
 	_refresh_new_dots()
+	call_deferred("_power_rise")
 	if _avatar_names:
 		_avatar_names.text = "%s  &  %s" % [FamilyProfile.son_name(), FamilyProfile.father_name()]
 		var need := maxf(1.0, float(FamilyProfile.account_need()))
 		var xp := float(FamilyProfile.data.get("account_xp", 0))
 		_avatar_lv.text = "LV %d" % int(FamilyProfile.data.get("account_level", 1))
+		_avatar_title.text = RewardBook.title()
+		if not _avatar_pwr.has_meta("rising"):
+			_avatar_pwr.text = "PWR %d" % RewardBook.power()
 		_avatar_xp.value = clampf(xp / need, 0.0, 1.0)
 	if _log_bang.visible:
 		if not _log_bang.has_meta("pulsing"):
@@ -569,6 +625,44 @@ func _open_codex() -> void:
 	_modal = sheet
 	sheet.closed.connect(_clear_modal)
 	sheet.closed.connect(_refresh_pills)
+
+
+func _open_rewards() -> void:
+	_clear_modal()
+	var sheet := preload("res://src/ui/rewards_sheet.gd").new()
+	sheet.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(sheet)
+	_modal = sheet
+	sheet.closed.connect(_clear_modal)
+	sheet.closed.connect(_refresh_pills)
+	sheet.closed.connect(_power_rise)
+
+
+## POWER went up since the hub last showed it: count it up in the header
+## with a green +N and a chime.
+func _power_rise() -> void:
+	if _avatar_pwr == null or _avatar_pwr.has_meta("rising") or not bool(FamilyProfile.data.get("named", false)):
+		return
+	var now := RewardBook.power()
+	var was := int(FamilyProfile.data.get("power_seen", -1))
+	FamilyProfile.data["power_seen"] = now
+	if was < 0 or now <= was or _avatar_pwr == null:
+		return
+	_avatar_pwr.set_meta("rising", true)
+	_avatar_pwr.text = "PWR %d" % was
+	var tw := _avatar_pwr.create_tween()
+	tw.tween_interval(0.9)
+	tw.tween_callback(func() -> void: RewardFly.snd("up_rise", 1.1, -6.0))
+	tw.tween_method(func(v: float) -> void:
+		_avatar_pwr.text = "PWR %d" % int(v)
+		_avatar_pwr.add_theme_color_override("font_color", Color(0.45, 1.0, 0.6))
+	, float(was), float(now), 0.9).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_callback(func() -> void:
+		_avatar_pwr.remove_meta("rising")
+		Juice.upgrade_fx(_avatar_pwr, Color(1.0, 0.75, 0.4), "+%d POWER" % (now - was), false)
+		var back := _avatar_pwr.create_tween()
+		back.tween_interval(0.6)
+		back.tween_callback(func() -> void: _avatar_pwr.add_theme_color_override("font_color", Color(1.0, 0.75, 0.4))))
 
 
 func _open_armory() -> void:

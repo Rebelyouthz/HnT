@@ -2502,6 +2502,71 @@ def cur_flow_s():
     return ic
 
 
+# --- rewards center -------------------------------------------------------
+
+@icon("cur_gift")
+def cur_gift():
+    ic = Icon()
+    ic.rect(4, 14, 27, 28, "red")
+    ic.rect(3, 10, 28, 15, "red", tone=1)
+    ic.rect(14, 10, 17, 28, "gold")
+    ic.rect(3, 12, 28, 13, "gold", flat=True)
+    ic.ellipse(7, 3, 15, 11, "gold")
+    ic.ellipse(16, 3, 24, 11, "gold")
+    ic.ellipse(10, 5, 13, 9, "red", flat=True)
+    ic.ellipse(18, 5, 21, 9, "red", flat=True)
+    ic.rect(14, 8, 17, 11, "gold", tone=1)
+    ic.glint(6, 16)
+    return ic
+
+
+@icon("cur_power")
+def cur_power():
+    ic = Icon()
+    m_star(ic, 16, 16, r=14, mat="orange")
+    m_fist(ic, 9, 9)
+    ic.glint(24, 7)
+    return ic
+
+
+@icon("cur_title")
+def cur_title():
+    ic = Icon()
+    ic.poly([(9, 18), (5, 30), (10, 27), (13, 30), (15, 20)], "red")
+    ic.poly([(23, 18), (27, 30), (22, 27), (19, 30), (17, 20)], "red")
+    ic.ellipse(5, 2, 27, 24, "gold")
+    ic.ellipse(9, 6, 23, 20, "brass")
+    m_star(ic, 16, 13, r=6, mat="yellow")
+    ic.glint(10, 6)
+    return ic
+
+
+@icon("cur_road")
+def cur_road():
+    ic = Icon()
+    ic.rect(14, 4, 17, 30, "wood")
+    ic.poly([(4, 6), (24, 6), (28, 10), (24, 14), (4, 14)], "teal")
+    ic.poly([(27, 16), (7, 16), (3, 20), (7, 24), (27, 24)], "orange")
+    ic.rect(7, 9, 20, 10, "white", flat=True)
+    ic.rect(11, 19, 24, 20, "white", flat=True)
+    ic.glint(6, 7)
+    return ic
+
+
+@icon("cur_calendar")
+def cur_calendar():
+    ic = Icon()
+    ic.rect(4, 6, 27, 28, "paper")
+    ic.rect(4, 6, 27, 12, "red")
+    for x in (9, 21):
+        ic.rect(x, 3, x + 2, 9, "steel")
+    for gy in range(3):
+        for gx in range(4):
+            ic.rect(7 + gx * 5, 15 + gy * 4, 9 + gx * 5, 16 + gy * 4, "slate", flat=True)
+    ic.rect(17, 19, 20, 21, "red", flat=True)
+    return ic
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     made = []

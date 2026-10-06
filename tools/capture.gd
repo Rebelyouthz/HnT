@@ -95,6 +95,17 @@ func _prepare() -> void:
 		(fp.data as Dictionary)["boss_tries_dock_street"] = 2
 	if _tab == "codex" and fp != null:
 		(fp.data as Dictionary)["codex_seen"] = {"enemy:Bag Snatch": 2, "enemy:Roof Runner": 1, "enemy:Mohawk Bo": 1, "enemy:Repo Goon": 2, "enemy:Coping Imp": 1, "boss:Shift Lead": 1, "weapon:pipe": 1, "place:dock_street": 2}
+	if _tab == "rewards" and fp != null:
+		var d := fp.data as Dictionary
+		d["account_level"] = 7
+		d["road_claimed"] = [2, 3]
+		d["crate_last"] = int(Time.get_unix_time_from_system() / 86400.0) - 1
+		d["crate_streak"] = 3
+		d["finishers"] = 4
+		d["titles"] = ["new_patient", "regular"]
+		d["title"] = "regular"
+		d["codex_seen"] = {"enemy:Bag Snatch": 1, "enemy:Roof Runner": 1, "boss:Shift Lead": 1}
+		d["power_seen"] = 50
 	if _tab == "jobs" and fp != null:
 		(fp.data as Dictionary).erase("contracts")
 		(fp.data as Dictionary)["kills_total"] = 0
@@ -258,6 +269,8 @@ func _process(_delta: float) -> bool:
 		current_scene.add_child(ms)
 	if _tab == "jobs" and _n == 40 and current_scene != null and current_scene.has_method("_open_jobs"):
 		current_scene.call("_open_jobs")
+	if _tab == "rewards" and _n == 40 and current_scene != null and current_scene.has_method("_open_rewards") and OS.get_environment("REWARDS_HUB") == "":
+		current_scene.call("_open_rewards")
 	if _tab == "codex" and _n == 40 and current_scene != null and current_scene.has_method("_open_codex"):
 		current_scene.call("_open_codex")
 	if _tab.begins_with("ui_") and _n == 80 and current_scene != null:

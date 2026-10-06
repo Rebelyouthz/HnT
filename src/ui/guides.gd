@@ -12,7 +12,14 @@ const STEPS := {
 		{"key": "button:RUN", "text": "RUN takes us out for a night. That is where gold, gear and new thugs come from."},
 		{"key": "button:HEROES", "text": "HEROES: level the two of us up, raise our rarity with shards and buy META upgrades that last forever."},
 		{"key": "button:CODEX", "text": "Everything we meet gets written down in the CODEX. A red dot there means a reward is waiting."},
+		{"key": "rewards_btn", "text": "The GIFT is our REWARDS desk: a free crate every day, the CLINIC ROAD and everything waiting to be claimed. The number says how much."},
+		{"key": "power", "text": "PWR is how strong the family is all together. Every upgrade pushes it up, and it counts up right here."},
 		{"who": "son", "text": "And the little red squares everywhere mean something NEW. Always press them. Always."},
+	],
+	"rewards": [
+		{"key": "crate", "text": "One free crate a day. Come back every day and it grows: day seven is the big one. Miss a day and it starts over."},
+		{"key": "all", "text": "CLAIM ALL takes everything at once: the crate, road levels, codex entries, finished jobs and awards."},
+		{"who": "son", "text": "The CLINIC ROAD pays out every account level. Every fifth level is a chest. Titles go under our names. I want EXECUTIONER."},
 	],
 	"heroes": [
 		{"key": "lv_son", "text": "LEVEL UP spends gold. More health, more damage, a bit faster. Green numbers are what you gain."},
