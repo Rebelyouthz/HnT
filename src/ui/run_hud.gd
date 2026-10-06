@@ -153,7 +153,7 @@ func _ready() -> void:
 	_put(_combo_fill)
 
 	_call = Label.new()
-	_call.position = Vector2(280, 196)
+	_call.position = Vector2(280, 250)
 	_call.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_call.size = Vector2(720, 30)
 	_call.pivot_offset = Vector2(360, 15)
@@ -459,7 +459,7 @@ func _process(delta: float) -> void:
 	if _call.text != Juice.callout:
 		_call.text = Juice.callout
 		# Survivor has its clock and kill count where the call-out sits.
-		_call.position.y = 262.0 if SurviveRun.get_run(get_tree()) != null else 196.0
+		_call.position.y = 262.0 if SurviveRun.get_run(get_tree()) != null else 250.0
 		if Juice.callout != "":
 			# Every call-out lands: pops big and settles.
 			_call.scale = Vector2(1.5, 1.5)
