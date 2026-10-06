@@ -55,6 +55,15 @@ func _separate(bodies: Array[Node2D]) -> void:
 			if _air(b):
 				continue
 			var dy := absf(a.global_position.y - b.global_position.y)
+			# Two thugs nearly on top of each other in depth: ease them apart
+			# up and down the lane so a group reads as a crowd, not a pile.
+			if a is Punk and b is Punk and dy < 22.0 and absf(b.global_position.x - a.global_position.x) < 30.0:
+				var sy := signf(b.global_position.y - a.global_position.y)
+				if sy == 0.0:
+					sy = 1.0 if i % 2 == 0 else -1.0
+				var py := (22.0 - dy) * 0.04
+				a.global_position.y -= sy * py
+				b.global_position.y += sy * py
 			if dy > LANE:
 				continue
 			var dx := b.global_position.x - a.global_position.x
