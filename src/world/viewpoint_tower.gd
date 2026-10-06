@@ -102,8 +102,10 @@ func _ready() -> void:
 	add_child(lamp)
 	_wind_mist()
 	_hint = Label.new()
+	# World text at half scale (see NightStreet.WORLD_TEXT).
+	_hint.scale = Vector2(NightStreet.WORLD_TEXT, NightStreet.WORLD_TEXT)
 	_hint.position = Vector2(-110, -80)
-	_hint.size = Vector2(220, 48)
+	_hint.size = Vector2(440, 48)
 	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	UiKit.apply_label(_hint, 13, Palette.EDGE)

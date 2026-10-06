@@ -458,6 +458,8 @@ func _process(delta: float) -> void:
 			tw.parallel().tween_property(_rank, "modulate", Palette.LEMON, 0.08)
 	if _call.text != Juice.callout:
 		_call.text = Juice.callout
+		# Survivor has its clock and kill count where the call-out sits.
+		_call.position.y = 262.0 if SurviveRun.get_run(get_tree()) != null else 196.0
 		if Juice.callout != "":
 			# Every call-out lands: pops big and settles.
 			_call.scale = Vector2(1.5, 1.5)
