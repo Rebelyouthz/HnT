@@ -549,12 +549,22 @@ func _paint_fighter(lab: Label, bar: ColorRect, pips: HBoxContainer, snap: Label
 		elif Arsenal.USES.has(f.pickup):
 			wt += " ·%d" % f.melee_uses
 		lab.text += "   " + wt
+	var extra := f.throw_n > 0 or f.grenades > 0
 	if f.knives > 0:
-		lab.text += "   KNIVES %d" % f.knives
+		lab.text += ("  KNV %d" if extra else "   KNIVES %d") % f.knives
 	if f.throw_n > 0 and ThrowLob.KINDS.has(f.throw_kind):
-		lab.text += "   %s %d" % [str(ThrowLob.KINDS[f.throw_kind]["title"]), f.throw_n]
+		lab.text += "  %s %d" % [str({"molotov": "MOLOTOV", "flashbang": "FLASH", "teargas": "GAS", "brick": "BRICK"}.get(f.throw_kind, f.throw_kind.to_upper())), f.throw_n]
 	if f.grenades > 0:
-		lab.text += "   GRENADES %d" % f.grenades
+		lab.text += "  GREN %d" % f.grenades
+	# Never run out of the portrait panel: shrink the line to fit.
+	var base := int(lab.get_meta("base_fs", lab.get_theme_font_size("font_size")))
+	lab.set_meta("base_fs", base)
+	var font := lab.get_theme_font("font")
+	var fs := base
+	var room := 262.0
+	while fs > 8 and font != null and font.get_string_size(lab.text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > room:
+		fs -= 1
+	lab.add_theme_font_size_override("font_size", fs)
 	var plate: Variant = _plates.get(_slot_of(f))
 	if plate is Control:
 		(plate as Control).visible = true
