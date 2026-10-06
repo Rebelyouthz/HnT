@@ -58,6 +58,10 @@ func _process(_d: float) -> bool:
 			for n in root.find_children("*", "CanvasLayer", true, false):
 				if n.has_method("_choose") and n.get_script() != null and str(n.get_script().resource_path).ends_with("card_pick.gd"):
 					n.call("_choose", 0)
+				elif n.has_method("_pick") and n.get_script() != null and str(n.get_script().resource_path).ends_with("survive_pick.gd"):
+					var offs: Array = n.get("_offers")
+					if not offs.is_empty():
+						n.call("_pick", offs[0])
 		if _frame % 20 == 0:
 			Input.action_press("ui_accept")
 		elif _frame % 20 == 2:

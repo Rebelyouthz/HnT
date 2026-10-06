@@ -65,9 +65,10 @@ func _ready() -> void:
 		add_child(layer)
 		var root := PixelStage.attach_canvas(layer)
 		_clock_l = Label.new()
-		_clock_l.position = Vector2(0, 92)
-		_clock_l.size = Vector2(1280, 20)
-		_clock_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		# Right side under the MOMENTUM / AGENT meters, clear of OBJECTIVES.
+		_clock_l.position = Vector2(0, 166)
+		_clock_l.size = Vector2(1262, 20)
+		_clock_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		UiKit.apply_label(_clock_l, 14, Color(0.6, 0.9, 1.0))
 		root.add_child(_clock_l)
 		var g := goal_x / 240.0
