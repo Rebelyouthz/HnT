@@ -2335,6 +2335,8 @@ func take_hit(kind: String, from: Node) -> void:
 		dmg = maxi(1, int(round(float(dmg) * (1.0 + srun.time_alive / 200.0))))
 	if srun and srun.armor() > 0.0:
 		dmg = maxi(1, int(round(float(dmg) * (1.0 - srun.armor()))))
+	if srun and SurvExtras.pact_sum("dmg") > 0.0:
+		dmg = int(round(float(dmg) * (1.0 + SurvExtras.pact_sum("dmg"))))
 	# THORNS: whoever hit you gets some back.
 	if srun and srun.trait_n("t_thorns") > 0 and from is Punk:
 		(from as Punk).hp = maxi(1, (from as Punk).hp - 6 * srun.trait_n("t_thorns"))
@@ -3478,6 +3480,8 @@ func _take_crush(from: Node) -> void:
 	var srun := SurviveRun.get_run(get_tree())
 	if srun and srun.armor() > 0.0:
 		dmg = maxi(1, int(round(float(dmg) * (1.0 - srun.armor()))))
+	if srun and SurvExtras.pact_sum("dmg") > 0.0:
+		dmg = int(round(float(dmg) * (1.0 + SurvExtras.pact_sum("dmg"))))
 	hp = maxi(0, hp - dmg)
 	invuln = 40
 	_hurt_t = 0.45

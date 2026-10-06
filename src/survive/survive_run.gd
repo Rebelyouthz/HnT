@@ -46,6 +46,7 @@ var share_t := 0.0
 ## Damage dealt per ability this hour (DPS meter).
 var dealt: Dictionary = {}
 var missions: SurvMissions
+var luck_boost := 0.0
 
 
 static func get_run(tree: SceneTree) -> SurviveRun:
@@ -65,9 +66,11 @@ func _ready() -> void:
 		start = SurvStarter.picked()
 	call_deferred("_grant", start)
 	missions = SurvMissions.new()
+	var extras := SurvExtras.new()
 	(func() -> void:
 		if is_inside_tree() and get_tree().current_scene:
-			get_tree().current_scene.add_child(missions)).call_deferred()
+			get_tree().current_scene.add_child(missions)
+			get_tree().current_scene.add_child(extras)).call_deferred()
 	if Trees.has("u_start2"):
 		call_deferred("_second_start", start)
 	# SURVIVOR meta + tree: extra rerolls, banishes, revives, a free trait.
@@ -121,17 +124,21 @@ func trait_n(id: String) -> int:
 	return int(traits.get(id, 0))
 
 
+func _ex() -> SurvExtras:
+	return SurvExtras.get_extras(get_tree()) if is_inside_tree() else null
+
+
 func dmg_mul() -> float:
-	return (1.4 if share_t > 0.0 else 1.0) * (1.0 + 0.12 * trait_n("t_dmg") + _item_mod("dmg") + 0.05 * Meta.rank("s_might") + SurvGear.stat("dmg") + (0.08 if Trees.has("u_limit") else 0.05) * float(limit_breaks))
+	return (_ex().dmg_mul() if _ex() else 1.0) * (1.4 if share_t > 0.0 else 1.0) * (1.0 + 0.12 * trait_n("t_dmg") + _item_mod("dmg") + 0.05 * Meta.rank("s_might") + SurvGear.stat("dmg") + (0.08 if Trees.has("u_limit") else 0.05) * float(limit_breaks))
 
 
 func area_mul() -> float:
-	return 1.0 + 0.14 * trait_n("t_area") + _item_mod("area") + 0.05 * Meta.rank("s_area") + SurvGear.stat("area")
+	return (_ex().area_mul() if _ex() else 1.0) * (1.0 + 0.14 * trait_n("t_area") + _item_mod("area") + 0.05 * Meta.rank("s_area") + SurvGear.stat("area"))
 
 
 func cd_mul() -> float:
 	var m := maxf(0.35, 1.0 - 0.08 * trait_n("t_cd") - _item_mod("cd") - 0.03 * Meta.rank("s_cooldown") - SurvGear.stat("cd"))
-	return m * (0.5 if frenzy_t > 0.0 else 1.0)
+	return m * (0.5 if frenzy_t > 0.0 else 1.0) * (_ex().cd_mul() if _ex() else 1.0)
 
 
 func proj_bonus() -> int:
@@ -143,7 +150,7 @@ func crit() -> float:
 
 
 func speed_mul() -> float:
-	return 1.0 + 0.07 * trait_n("t_speed") + _item_mod("speed") + 0.04 * Meta.rank("s_speed") + SurvGear.stat("speed")
+	return (_ex().speed_mul() if _ex() else 1.0) * (1.0 + 0.07 * trait_n("t_speed") + _item_mod("speed") + 0.04 * Meta.rank("s_speed") + SurvGear.stat("speed"))
 
 
 func armor() -> float:
@@ -151,7 +158,7 @@ func armor() -> float:
 
 
 func pickup_mul() -> float:
-	return 1.0 + 0.3 * trait_n("t_pickup") + _item_mod("pickup") + 0.15 * Meta.rank("s_magnet") + (0.4 if Trees.has("f_magnet") else 0.0) + SurvGear.stat("pickup")
+	return (1.4 if _ex() and _ex().has("fleet") else 1.0) * (1.0 + 0.3 * trait_n("t_pickup") + _item_mod("pickup") + 0.15 * Meta.rank("s_magnet") + (0.4 if Trees.has("f_magnet") else 0.0) + SurvGear.stat("pickup"))
 
 
 func max_abilities() -> int:
@@ -163,7 +170,7 @@ func max_items() -> int:
 
 
 func luck() -> float:
-	return 0.05 * trait_n("t_luck") + 0.04 * Meta.rank("s_luck") + (0.15 if Trees.has("f_luck") else 0.0) + SurvGear.stat("luck")
+	return luck_boost + 0.05 * trait_n("t_luck") + 0.04 * Meta.rank("s_luck") + (0.15 if Trees.has("f_luck") else 0.0) + SurvGear.stat("luck")
 
 
 func ult_unlocked(id: String) -> bool:
@@ -574,7 +581,7 @@ func award_tokens(won: bool) -> int:
 		return 0
 	_awarded = true
 	var n := int(kills / 15) + int(time_alive / 60.0 * 8.0) + level * 2 + (40 if won else 0) + coins
-	n = int(round(float(n) * (1.0 + 0.1 * trait_n("t_curse"))))
+	n = int(round(float(n) * (1.0 + 0.1 * trait_n("t_curse")) * (1.0 + SurvExtras.pact_sum("coins"))))
 	var before := int(FamilyProfile.data.get("tokens", 0))
 	Trees.add_tokens(n)
 	var got := int(FamilyProfile.data.get("tokens", 0)) - before

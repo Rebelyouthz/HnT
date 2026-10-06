@@ -281,6 +281,31 @@ func _challenges() -> Control:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 6)
 	p.add_child(v)
+	var pt := Label.new()
+	pt.text = "PACTS  ·  HARDER HOUR, MORE S-COINS"
+	pt.add_theme_font_override("font", UiKit.title_font())
+	UiKit.apply_label(pt, 14, Color(0.75, 0.45, 1.0))
+	v.add_child(pt)
+	for pid: String in SurvExtras.PACTS:
+		var spec: Dictionary = SurvExtras.PACTS[pid]
+		var on := SurvExtras.pacts().has(pid)
+		var pb := _btn(("[ON]  " if on else "[OFF]  ") + str(spec["title"]), Vector2(330, 30), "pact_" + pid)
+		pb.tooltip_text = str(spec["line"])
+		if on:
+			pb.add_theme_color_override("font_color", Color(0.85, 0.6, 1.0))
+		pb.pressed.connect(func() -> void:
+			SurvExtras.toggle_pact(pid)
+			RewardFly.snd("part_click" if not on else "part_off")
+			_focus_key = "pact_" + pid
+			_paint()
+			if not on:
+				UiKit.fx_after(self, "pact_" + pid, Color(0.75, 0.45, 1.0), "PACT SEALED", false))
+		v.add_child(pb)
+		var pl := Label.new()
+		pl.text = str(spec["line"]).to_upper()
+		pl.add_theme_font_override("font", UiKit.pixel_font())
+		UiKit.apply_label(pl, 9, Color(0.85, 0.6, 1.0) if on else Palette.MUTED)
+		v.add_child(pl)
 	var t := Label.new()
 	t.text = "CHALLENGES"
 	t.add_theme_font_override("font", UiKit.title_font())

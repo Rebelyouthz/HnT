@@ -108,7 +108,7 @@ func _alive() -> int:
 func _cap() -> int:
 	var srun := SurviveRun.get_run(get_tree())
 	var curse := 1.0 + (0.1 * float(srun.trait_n("t_curse")) if srun else 0.0)
-	return int(round(float(_phase.get("cap", 9)) * (1 if App.is_solo_density() else 2) * curse))
+	return int(round(float(_phase.get("cap", 9)) * (1 if App.is_solo_density() else 2) * curse * (1.0 + SurvExtras.pact_sum("cap"))))
 
 
 func _wave(elite := false, force := false) -> void:
@@ -138,6 +138,7 @@ func _wave(elite := false, force := false) -> void:
 	var mul := 1.0 + elapsed / 85.0 + pow(elapsed / 300.0, 2.0) * 1.5
 	if rs and rs.has_method("hp_mul"):
 		mul *= rs.hp_mul()
+	mul *= 1.0 + SurvExtras.pact_sum("hp")
 	var p := Party.spawn_row(host, row, mul)
 	if p == null:
 		return

@@ -112,6 +112,7 @@ static func spawn_row(host: Node, row: Dictionary, hp_mul: float) -> Punk:
 	p.title = str(row.get("title", "Bag Snatch"))
 	p.home = str(row.get("home", "street"))
 	p.hp = int(round(float(row.get("hp", 40)) * hp_mul))
+	p.set_meta("hp_mul", hp_mul)
 	p.patrol_min = float(row.get("pmin", 0.0))
 	p.patrol_max = float(row.get("pmax", 0.0))
 	p.cop = bool(row.get("cop", false))
