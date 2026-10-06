@@ -361,6 +361,12 @@ func _process(_delta: float) -> bool:
 							hud = n
 				if hud:
 					hud.call("_toggle_pause")
+					if OS.get_environment("MOVELIST") != "":
+						for cpk in root.find_children("*", "CanvasLayer", true, false):
+							if cpk.get_script() != null and str(cpk.get_script().resource_path).ends_with("card_pick.gd"):
+								cpk.queue_free()
+						var pz: Control = hud.get("_pause")
+						hud.call("_move_list", pz, pz)
 			"toasts":
 				var j := root.get_node("Juice")
 				j.call("toast", "reward", "SECRET FOUND", "The Harbour Clock  ·  128 metres")

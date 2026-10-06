@@ -708,6 +708,10 @@ func _toggle_pause() -> void:
 	r.process_mode = Node.PROCESS_MODE_ALWAYS
 	r.pressed.connect(_toggle_pause)
 	col.add_child(r)
+	var ml := UiKit.button("MOVES & COMBOS", Vector2(400, 48))
+	ml.process_mode = Node.PROCESS_MODE_ALWAYS
+	ml.pressed.connect(func() -> void: _move_list(layer, ml))
+	col.add_child(ml)
 	var opts := UiKit.button("OPTIONS", Vector2(400, 48))
 	opts.process_mode = Node.PROCESS_MODE_ALWAYS
 	opts.pressed.connect(func() -> void:
@@ -852,3 +856,90 @@ func _paint_face(f: Fighter) -> void:
 		tr.modulate = Color(0.45, 0.4, 0.42)
 	elif f.hp >= was and tr.modulate == Color(0.45, 0.4, 0.42):
 		tr.modulate = Color.WHITE
+
+
+## Pause > MOVES & COMBOS: what each button does right now (the hero's own
+## loadout) and every combo they know, with the buttons to press.
+func _move_list(layer: Control, back_to: Control) -> void:
+	var pad := not Input.get_connected_joypads().is_empty()
+	var sheet := Control.new()
+	sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
+	sheet.process_mode = Node.PROCESS_MODE_ALWAYS
+	layer.add_child(sheet)
+	var dim := ColorRect.new()
+	dim.color = Color(0, 0, 0.02, 0.9)
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	sheet.add_child(dim)
+	var card := PanelContainer.new()
+	card.add_theme_stylebox_override("panel", UiKit.frame(UiKit.GOLD, 0.4))
+	card.position = Vector2(60, 36)
+	card.size = Vector2(1160, 648)
+	sheet.add_child(card)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 8)
+	card.add_child(v)
+	var head := HBoxContainer.new()
+	var t := UiKit.title("MOVES & COMBOS", 26, UiKit.GOLD)
+	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	head.add_child(t)
+	var back := UiKit.button("BACK", Vector2(120, 40))
+	back.process_mode = Node.PROCESS_MODE_ALWAYS
+	back.pressed.connect(func() -> void:
+		sheet.queue_free()
+		if is_instance_valid(back_to):
+			back_to.grab_focus())
+	head.add_child(back)
+	v.add_child(head)
+	var cols := HBoxContainer.new()
+	cols.add_theme_constant_override("separation", 20)
+	cols.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	v.add_child(cols)
+	var roles: Array[String] = []
+	for n in get_tree().get_nodes_in_group("players"):
+		if n is Fighter and not roles.has((n as Fighter).role):
+			roles.append((n as Fighter).role)
+	if roles.is_empty():
+		roles = ["son"]
+	for role in roles:
+		var sc := ScrollContainer.new()
+		sc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		cols.add_child(sc)
+		var c := VBoxContainer.new()
+		c.add_theme_constant_override("separation", 4)
+		c.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		sc.add_child(c)
+		var who := FamilyProfile.son_name() if role == "son" else FamilyProfile.father_name()
+		c.add_child(UiKit.title(who.to_upper(), 18, Palette.LEMON if role == "son" else Palette.BRICK))
+		c.add_child(UiKit.title("BUTTONS", 13, Palette.EDGE))
+		var lo := Moves.loadout(role)
+		for slot: String in Moves.SLOTS:
+			var mv := Moves.row(str(lo.get(slot, Moves.DEFAULT.get(slot, ""))))
+			var tok: String = {"L1": "L", "L2": "L", "L3": "L", "H": "H", "F+H": "F+H", "U+H": "U+H", "STR": "H", "AIR_L": "L", "AIR_H": "H"}[slot]
+			var key := ComboBook.step_label(str(tok), pad)
+			var pre: String = {"L2": "2ND ", "L3": "3RD ", "STR": "AFTER 2 LIGHTS ", "AIR_L": "IN THE AIR ", "AIR_H": "IN THE AIR "}.get(slot, "")
+			c.add_child(_row_line("%s%s" % [pre, key], str(mv.get("title", mv.get("id", "?"))).to_upper(), Palette.TEXT))
+		c.add_child(UiKit.title("COMBOS", 13, Palette.EDGE))
+		var known := ComboBook.learned(role)
+		if known.is_empty():
+			c.add_child(_row_line("-", "Learn combos in the DOJO", Palette.MUTED))
+		for cb: Dictionary in known:
+			c.add_child(_row_line(ComboBook.steps_label(cb, pad), "%s  ·  %d" % [str(cb.get("title", cb["id"])), int(cb.get("dmg", 0))], Rarity.color(str(cb.get("rarity", "common")))))
+	back.grab_focus()
+
+
+func _row_line(keys: String, what: String, col: Color) -> Control:
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 10)
+	var k := Label.new()
+	k.text = keys
+	k.custom_minimum_size = Vector2(250, 0)
+	k.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(k, 13, UiKit.GOLD)
+	h.add_child(k)
+	var w := Label.new()
+	w.text = what
+	w.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(w, 13, col)
+	h.add_child(w)
+	return h
