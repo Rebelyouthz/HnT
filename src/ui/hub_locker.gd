@@ -432,6 +432,7 @@ func _gear_card(item: Dictionary) -> Control:
 				Rarity.juice(rarity, str(item.get("title", "")))
 				need_refresh.emit()
 				_paint()
+				UiKit.fx_after(self, "", Rarity.color(rarity), "GOT IT", false)
 		)
 		btns.add_child(buy)
 	if owned:
@@ -446,6 +447,8 @@ func _gear_card(item: Dictionary) -> Control:
 				if GearInv.combine(id):
 					need_refresh.emit()
 					_paint()
+					var nr: String = Rarity.ORDER[ct + 1]
+					Juice.rewards.reveal(IconBook.for_glyph("shield"), "COMBINED  ·  %s" % Rarity.label(nr), Rarity.color(nr), str(item.get("title", "")))
 			)
 			btns.add_child(cb)
 		var cp := FamilyProfile.gear_price(id)
@@ -466,6 +469,7 @@ func _gear_card(item: Dictionary) -> Control:
 				Rarity.juice(rarity, str(item.get("title", "")))
 				need_refresh.emit()
 				_paint()
+				UiKit.fx_after(self, "", Rarity.color(rarity), "LV %d" % (lvl + 1), false)
 		)
 		btns.add_child(up)
 	h.add_child(btns)

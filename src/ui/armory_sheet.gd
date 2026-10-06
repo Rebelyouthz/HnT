@@ -185,9 +185,9 @@ func _tile(id: String) -> Control:
 		up.pressed.connect(func() -> void:
 			if Arsenal.try_level(id):
 				Juice.play("res://assets/audio/claim.wav")
-				Juice.shout("%s LV %d" % [str(spec.get("title", id)).to_upper(), Arsenal.level(id)])
 				_focus_key = "lv_" + id
 				_paint()
+				UiKit.fx_after(self, "lv_" + id, UiKit.GOLD, "%s LV %d" % [str(spec.get("title", id)).to_upper(), Arsenal.level(id)], Arsenal.level(id) >= Arsenal.MAX_LV)
 		)
 		br.add_child(up)
 		var mod_names: Array[String] = []

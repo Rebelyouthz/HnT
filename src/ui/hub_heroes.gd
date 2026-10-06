@@ -136,9 +136,9 @@ func _hero_card(role: String) -> Control:
 		if Heroes.try_level(role):
 			Juice.play("res://assets/audio/claim.wav")
 			Juice.shout("LEVEL %d" % Heroes.level(role))
-			Juice.claim_burst(up.get_global_rect().get_center(), "LV %d" % Heroes.level(role), 0, 0)
 			need_refresh.emit()
 			_paint("lv_" + role)
+			UiKit.fx_after(self, "lv_" + role, UiKit.GOLD, "LV %d" % Heroes.level(role), Heroes.level(role) % 5 == 0)
 	)
 	btns.add_child(up)
 	var rk_text := "MAX"
@@ -155,6 +155,8 @@ func _hero_card(role: String) -> Control:
 		if Heroes.try_rank(role):
 			need_refresh.emit()
 			_paint("rk_" + role)
+			var nr2: String = Rarity.ORDER[Heroes.rarity(role)]
+			UiKit.fx_after(self, "rk_" + role, Rarity.color(nr2), Rarity.label(nr2), true)
 	)
 	btns.add_child(rk)
 	v.add_child(btns)
@@ -184,10 +186,13 @@ func _meta_panel() -> void:
 			_paint("br_" + pair[0])
 		)
 		head.add_child(b)
-	var tl := Label.new()
 	var cur := str(Meta.BRANCH_CUR.get(_branch, "gold"))
-	tl.text = "  %s %d" % [cur.to_upper(), int(FamilyProfile.data.get(cur, 0))]
-	UiKit.apply_label(tl, 13, Palette.MUTED)
+	head.add_child(IconBook.rect(str(RewardFly.ICON.get(cur, "cur_gold")), IconBook.SIZE_S * 0.75))
+	var tl := Label.new()
+	tl.text = str(int(FamilyProfile.data.get(cur, 0)))
+	tl.add_theme_font_override("font", UiKit.title_font())
+	UiKit.apply_label(tl, 16, Palette.TEXT)
+	tl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	head.add_child(tl)
 	var sc := ScrollContainer.new()
 	sc.position = Vector2(606, 112)
@@ -212,6 +217,17 @@ func _meta_row(id: String) -> Control:
 	var h := HBoxContainer.new()
 	h.add_theme_constant_override("separation", 10)
 	p.add_child(h)
+	# The upgrade's own picture in a socket, lit once a rank is bought.
+	var sock := PanelContainer.new()
+	var ss := UiKit.panel(Color(0.03, 0.035, 0.06), UiKit.GOLD if r >= mx else (Palette.EDGE if r > 0 else Color(0.25, 0.26, 0.3)))
+	ss.set_border_width_all(2)
+	sock.add_theme_stylebox_override("panel", ss)
+	sock.set_meta("key", "metaicon_" + id)
+	var ic := IconBook.rect(IconBook.for_meta(id), IconBook.SIZE_M)
+	if r == 0:
+		ic.modulate = Color(0.6, 0.6, 0.66)
+	sock.add_child(ic)
+	h.add_child(sock)
 	var v := VBoxContainer.new()
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var nm := Label.new()
@@ -222,7 +238,7 @@ func _meta_row(id: String) -> Control:
 	var ln := Label.new()
 	ln.text = str(row["line"])
 	ln.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	ln.custom_minimum_size = Vector2(380, 0)
+	ln.custom_minimum_size = Vector2(290, 0)
 	UiKit.apply_label(ln, 12, Palette.MUTED)
 	v.add_child(ln)
 	h.add_child(v)
@@ -232,15 +248,19 @@ func _meta_row(id: String) -> Control:
 	if r < mx:
 		var unit: String = {"gold": "G", "tokens": " TOK", "flow": " FLOW"}.get(str(c["cur"]), "")
 		txt = "%d%s%s" % [int(c["price"]), unit, ("  %d GEMS" % int(c["gems"])) if int(c["gems"]) > 0 else ""]
-	var b := UiKit.button(txt, Vector2(170, 40))
+	var b := UiKit.button(txt, Vector2(150, 40))
+	b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	b.set_meta("key", "meta_" + id)
 	b.disabled = why != ""
 	b.pressed.connect(func() -> void:
 		if Meta.try_buy(id):
 			Juice.play("res://assets/audio/claim.wav")
-			Juice.shout(str(row["title"]))
 			need_refresh.emit()
 			_paint("meta_" + id)
+			var nr := Meta.rank(id)
+			UiKit.fx_after(self, "metaicon_" + id, UiKit.GOLD if nr >= mx else Palette.EDGE, ("MAXED" if nr >= mx else "RANK %d" % nr), nr >= mx)
+		else:
+			Juice.rewards.deny(b)
 	)
 	h.add_child(b)
 	return p

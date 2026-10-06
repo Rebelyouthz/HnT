@@ -328,6 +328,7 @@ func _node_button(node: Dictionary, at: Vector2) -> Control:
 	b.size = Vector2(62, 62)
 	b.position = at - Vector2(31, 31)
 	b.focus_mode = Control.FOCUS_ALL
+	b.set_meta("key", "node_" + str(node.get("id", "")))
 	var ring := StyleBoxFlat.new()
 	ring.set_corner_radius_all(31)
 	ring.set_border_width_all(4)
@@ -459,8 +460,11 @@ func _show_tip(node: Dictionary, _at: Vector2) -> void:
 func _buy(node: Dictionary) -> void:
 	if Trees.try_buy(mode, str(node["id"])):
 		Juice.play("res://assets/audio/claim.wav")
+		var tr := get_tree()
 		need_refresh.emit()
+		UiKit.fx_after(tr.root, "node_" + str(node["id"]), UiKit.GOLD, str(node["name"]), false)
 	else:
+		Juice.rewards.deny(null)
 		Juice.claim_burst(get_viewport_rect().size * 0.5, "NOT ENOUGH " + Trees.cur_label(mode), 0, 0)
 
 

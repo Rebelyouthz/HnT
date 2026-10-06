@@ -284,10 +284,10 @@ func _library(body: VBoxContainer) -> void:
 			b.pressed.connect(func() -> void:
 				if Moves.learn(role, id):
 					Juice.play("res://assets/audio/claim.wav")
-					Juice.shout(str(r["title"]))
 					need_refresh.emit()
 					_focus_key = "learn_" + id
 					_paint()
+					UiKit.fx_after(self, "learn_" + id, Palette.EDGE, "LEARNED  ·  " + str(r["title"]), true)
 			)
 			v.add_child(b)
 		h.add_child(v)
@@ -359,10 +359,10 @@ func _elements(body: VBoxContainer) -> void:
 			var ok := Elements.evolve(id) if Elements.can_evolve(id) else Elements.buy(id)
 			if ok:
 				Juice.play("res://assets/audio/claim.wav")
-				Juice.shout(Elements.title(id))
 				need_refresh.emit()
 				_focus_key = "art_" + id
 				_paint()
+				UiKit.fx_after(self, "art_" + id, Color(0.7, 0.5, 1.0), "%s  LV %d" % [Elements.title(id), Elements.level(id)], Elements.level(id) >= 5)
 		# Evolving spends gems: hold to confirm.
 		if Elements.can_evolve(id):
 			UiKit.hold_confirm(b, act)

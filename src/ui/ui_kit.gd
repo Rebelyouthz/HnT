@@ -341,6 +341,21 @@ static func pill(title: String, value: String, accent: Color) -> HBoxContainer:
 	return row
 
 
+## Upgrade juice on the control tagged `key` (meta "key") under `root`
+## once a repaint has rebuilt it (next frame).
+static func fx_after(root: Node, key: String, col: Color = GOLD, text := "", big := false) -> void:
+	var tree := root.get_tree()
+	tree.process_frame.connect(func() -> void:
+		var top: Node = root if is_instance_valid(root) and root.is_inside_tree() else tree.root
+		for c in (top.find_children("*", "Control", true, false) if key != "" else []):
+			if str(c.get_meta("key", "")) == key and (c as Control).is_visible_in_tree():
+				Juice.upgrade_fx(c as Control, col, text, big)
+				return
+		# Gone in the repaint: juice in the middle of the screen instead.
+		Juice.upgrade_fx(null, col, text, big)
+	, CONNECT_ONE_SHOT)
+
+
 static func pulse_ready(b: Control) -> void:
 	b.pivot_offset = b.custom_minimum_size * 0.5
 	var tw := b.create_tween().set_loops()

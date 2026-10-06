@@ -101,9 +101,10 @@ func _spot(info: Dictionary) -> Control:
 		if FamilyProfile.try_build(id):
 			Juice.play("res://assets/audio/hammer.wav" if ResourceLoader.exists("res://assets/audio/hammer.wav") else "res://assets/audio/chest.wav")
 			Juice.carpenter(str(info["name"]), str(info.get("unlocks", "CAMP")))
-			Juice.claim_burst(get_viewport_rect().size * 0.5, Copy.GROWTH, 0, 0)
+			Juice.upgrade_fx(b, Palette.READY, Copy.GROWTH, true)
 			built.emit(id)
 		else:
+			Juice.rewards.deny(b)
 			Juice.claim_burst(get_viewport_rect().size * 0.5, "THE CLINIC DOES NOT RUN ON IOUS", 0, 0)
 	)
 	col.add_child(b)
