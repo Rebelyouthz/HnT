@@ -1314,11 +1314,13 @@ func _special() -> void:
 	if role == "father":
 		if not _spend(35.0):
 			return
+		BrawlMore.special_used(self, 35.0)
 		_spawn_hit("special", Vector2(78, 44), 0.22, Vector2(44 * facing, -34))
 		attack_cd = 22
 	else:
 		if not _spend(35.0):
 			return
+		BrawlMore.special_used(self, 35.0)
 		cape_guard = 0.4
 		_spawn_hit("special", Vector2(86, 52), 0.4, Vector2(36 * facing, -36))
 		attack_cd = 18
@@ -2262,6 +2264,7 @@ func _spawn_hit(kind: String, size: Vector2, life: float, offset: Vector2) -> vo
 
 
 func take_hit(kind: String, from: Node) -> void:
+	BrawlMore.hero_hit(self)
 	if downed or invuln > 0:
 		return
 	if kind == "none":

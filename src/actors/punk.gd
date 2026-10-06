@@ -1108,6 +1108,7 @@ func _die(kind: String, from: Node) -> void:
 	if art_by is Fighter:
 		(art_by as Fighter).gain_kill()
 		BrawlPlus.on_kill(art_by as Fighter, global_position)
+	BrawlMore.on_kill(self, kind, art_by)
 	var kb: Dictionary = FamilyProfile.data.get("kills_by", {})
 	kb[title] = int(kb.get(title, 0)) + 1
 	FamilyProfile.data["kills_by"] = kb

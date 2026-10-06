@@ -58,7 +58,7 @@ static func on_blow(e: Punk, f: Fighter, kind: String, dmg: int) -> int:
 		if p is Fighter and p != f and not (p as Fighter).downed and (p as Fighter).global_position.distance_to(f.global_position) < 130.0:
 			m *= TOGETHER
 			break
-	return int(round(float(dmg) * m))
+	return BrawlMore.on_blow(e, f, kind, int(round(float(dmg) * m)))
 
 
 ## FLINCH: called when a hero kills.
