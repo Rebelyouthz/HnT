@@ -2247,6 +2247,23 @@ def u_friday():
     return ic
 
 
+@icon("tag_bleed")
+def tag_bleed():
+    ic = Icon()
+    ic.poly([(16, 2), (25, 16), (24, 22), (20, 27), (12, 27), (8, 22), (7, 16)], "blood", round_=True)
+    ic.glint(12, 12, True)
+    ic.ellipse(3, 25, 8, 29, "blood")
+    ic.ellipse(24, 24, 29, 28, "blood")
+    return ic
+
+
+@icon("tag_fire")
+def tag_fire():
+    ic = Icon()
+    m_flame(ic, 7, 3, 1.1)
+    return ic
+
+
 # --- 16 px flying coins (rewards fly to the corner counter) -----------------
 
 @icon("cur_gold_s")

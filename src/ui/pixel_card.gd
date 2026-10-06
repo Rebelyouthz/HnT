@@ -7,7 +7,9 @@ extends Control
 ## where the card-type emblem sits, an art slot sunk into the face with the
 ## big icon inside it, the name on a plate, rarity gems, stat meters and the
 ## rule text. Legendary gets a shine that sweeps across. `face_up` false
-## draws the card back. Everything is drawn on a 2 px grid.
+## draws the card back. The frame, back and glow are pixel-art sprites
+## (tools/card_art.py, a texel is 2 design px); the art is the thing's own
+## IconBook icon. A lit card glows round its frame in its rarity colour.
 
 const W := 300.0
 const H := 440.0
@@ -19,9 +21,15 @@ const PALETTES := {
 	"legendary": [Color(0.92, 0.66, 0.2), Color(1.0, 0.9, 0.5), Color(0.5, 0.3, 0.06), Color(0.16, 0.1, 0.03)],
 }
 const TYPE_ICON := {
-	"AIR": "boot", "COOP": "heart", "BLEED": "drop", "SNAP": "bolt", "REVIVE": "cross", "SHOT": "star",
-	"STEAM": "drop", "GOLD": "gold", "BLOCK": "shield", "PARRY": "shield", "THROW": "fist", "HEAVY": "fist",
-	"LIGHT": "fist", "STOMP": "boot", "HEAT": "eye", "PARKOUR": "boot", "COMBO": "bolt", "RULE": "star",
+	"AIR": "node_jump", "COOP": "node_group", "BLEED": "tag_bleed", "SNAP": "bolt", "REVIVE": "node_heal",
+	"SHOT": "cur_ammo", "STEAM": "node_steam", "GOLD": "cur_gold", "BLOCK": "t_armor", "PARRY": "t_armor",
+	"THROW": "cur_knife", "HEAVY": "t_dmg", "LIGHT": "t_dmg", "STOMP": "node_stomp", "HEAT": "tag_fire",
+	"PARKOUR": "node_speed", "COMBO": "node_combo", "RULE": "node_score", "STRING": "node_chain",
+	"WEB": "card_pendulum_politics", "WANTED": "card_cop_out", "DASH": "card_family_blitz", "BANK": "meta_fortune",
+	"MAGNET": "t_pickup", "ORBIT": "card_orbit_form", "AURA": "t_area", "VACUUM": "card_vacuum_hour",
+	"SCORE": "node_pinball", "BOSS": "node_crown", "FINISH": "node_stomp", "PATROL": "t_cd", "CHASE": "card_courier_policy",
+	"FARM": "card_orchard_copay", "VAULT": "card_brine_lungs", "PROP": "card_oil_policy", "COUNTER": "card_clash_policy",
+	"STREET": "node_slide", "TOWER": "card_escape_clause",
 }
 const STAT_OF := {
 	"AIR": ["MOBILITY", "DAMAGE"], "COOP": ["TEAM", "SUSTAIN"], "BLEED": ["DAMAGE", "TEMPO"], "SNAP": ["FINISH", "SUSTAIN"],
@@ -42,8 +50,11 @@ var info: Dictionary = {}
 var face_up := true
 var lit := false
 var _t := 0.0
-var _icon: PixelIcon
-var _emblem: PixelIcon
+var _icon: TextureRect
+var _emblem: TextureRect
+var _glow: TextureRect
+var _frame_tex: Texture2D
+var _back_tex: Texture2D
 var _labels: Array[Control] = []
 
 
@@ -52,6 +63,22 @@ func _ready() -> void:
 	size = Vector2(W, H)
 	pivot_offset = Vector2(W, H) * 0.5
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_frame_tex = load("res://assets/sprites/cards/story_%s.png" % rarity())
+	_back_tex = load("res://assets/sprites/cards/back_%s.png" % rarity())
+	_glow = TextureRect.new()
+	_glow.texture = load("res://assets/sprites/cards/glow_story.png")
+	_glow.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_glow.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_glow.position = Vector2(-16, -16)
+	_glow.size = Vector2(W + 32, H + 32)
+	_glow.show_behind_parent = true
+	_glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var add := CanvasItemMaterial.new()
+	add.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	_glow.material = add
+	_glow.visible = false
+	add_child(_glow)
 	_build_face()
 	_show_face(face_up)
 
@@ -107,19 +134,12 @@ func _label(text: String, pos: Vector2, w: float, fsize: int, col: Color, title_
 
 func _build_face() -> void:
 	var p := pal()
-	_emblem = PixelIcon.new()
-	_emblem.kind = str(TYPE_ICON.get(tag(), "star"))
-	_emblem.size = Vector2(34, 34)
-	_emblem.position = Vector2(W * 0.5 - 17, 13)
-	_emblem.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_emblem = IconBook.rect(str(TYPE_ICON.get(tag(), "node_score")), IconBook.SIZE_S)
+	_emblem.position = Vector2(W * 0.5, 32) - _emblem.size * 0.5
 	add_child(_emblem)
 	_labels.append(_emblem)
-	_icon = PixelIcon.new()
-	_icon.kind = _glyph()
-	_icon.size = Vector2(88, 88)
-	_icon.position = Vector2(W * 0.5 - 44, 86)
-	_icon.pivot_offset = Vector2(44, 44)
-	_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_icon = IconBook.rect(IconBook.for_card(info), IconBook.SIZE_L)
+	_icon.position = Vector2(86, 66)
 	add_child(_icon)
 	_labels.append(_icon)
 	# The thing's own name gets its own colour: weapons hot orange, skills
@@ -159,7 +179,7 @@ func _build_face() -> void:
 		lvl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	var stats := stat_rows()
 	for i in stats.size():
-		_label(str(stats[i][0]), Vector2(30, 280 + i * 22), 110, 12, Palette.TEXT).horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		_label(str(stats[i][0]), Vector2(32, 280 + i * 22), 110, 12, p[1].lerp(Color.WHITE, 0.25)).horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	var bl := UiKit.rich(str(info.get("blurb", "")), W - 52, 13, Color(0.86, 0.86, 0.82), UiKit.pixel_font())
 	bl.position = Vector2(26, 334)
 	add_child(bl)
@@ -209,7 +229,14 @@ func _process(delta: float) -> void:
 	if face_up and (rarity() == "legendary" or rarity() == "epic" or lit):
 		queue_redraw()
 	if _icon and face_up:
-		_icon.scale = Vector2.ONE * (1.0 + 0.04 * sin(_t * 3.0))
+		# Bob on whole design pixels only (keeps the pixel grid).
+		_icon.position.y = 66.0 + roundf(sin(_t * 3.0) * 2.0) * 2.0
+	if _glow:
+		_glow.visible = lit and face_up
+		if lit:
+			var gc: Color = pal()[1]
+			var k := 1.6 + 0.6 * sin(_t * 5.0)
+			_glow.modulate = Color(gc.r * k, gc.g * k, gc.b * k, 1.0)
 
 
 # --- Drawing ---------------------------------------------------------------
@@ -218,74 +245,27 @@ func _px(r: Rect2, c: Color) -> void:
 	draw_rect(Rect2(r.position.snapped(Vector2(2, 2)), r.size.snapped(Vector2(2, 2))), c)
 
 
-## A raised bevel: light top/left, dark bottom/right, `t` px thick.
-func _bevel(r: Rect2, face: Color, light: Color, dark: Color, t: float) -> void:
-	_px(r, dark)
-	_px(Rect2(r.position, Vector2(r.size.x - t, r.size.y - t)), light)
-	_px(Rect2(r.position + Vector2(t, t), r.size - Vector2(t * 2, t * 2)), face)
-
-
-## A sunk slot: dark top/left (inner shadow), light bottom/right lip.
-func _socket(r: Rect2, inside: Color, p: Array, t: float) -> void:
-	_px(r.grow(t), p[1])
-	_px(Rect2(r.position - Vector2(t, t), r.size + Vector2(t, t)), p[2])
-	_px(r, Color(0, 0, 0.02))
-	_px(Rect2(r.position + Vector2(t, t), r.size - Vector2(t, t)), inside)
-
-
 func _draw() -> void:
 	var p := pal()
-	var base: Color = p[0]
 	var light: Color = p[1]
-	var dark: Color = p[2]
-	var deep: Color = p[3]
-	# Drop shadow / thickness under the card (3D slab).
+	var base: Color = p[0]
+	# Drop shadow / thickness under the card.
 	_px(Rect2(6, 10, W, H), Color(0, 0, 0.02, 0.6))
-	_px(Rect2(0, 6, W, H), dark.darkened(0.5))
-	# Outer metal frame.
-	_bevel(Rect2(0, 0, W, H), base, light, dark, 6)
-	_px(Rect2(10, 10, W - 20, H - 20), UiKit.INK)
 	if not face_up:
-		_draw_back(p)
+		draw_texture_rect(_back_tex, Rect2(0, 0, W, H), false)
 		return
-	# Face plate.
-	_bevel(Rect2(14, 14, W - 28, H - 28), deep, deep.lightened(0.18), Color(0, 0, 0.02), 4)
-	# Rivets in the corners.
-	for c in [Vector2(20, 20), Vector2(W - 26, 20), Vector2(20, H - 26), Vector2(W - 26, H - 26)]:
-		_px(Rect2(c, Vector2(6, 6)), dark)
-		_px(Rect2(c, Vector2(4, 4)), light)
-	# Type emblem socket set into the top of the frame.
-	_px(Rect2(W * 0.5 - 30, 0, 60, 8), base)
-	_socket(Rect2(W * 0.5 - 22, 8, 44, 44), Color(0.05, 0.06, 0.1), p, 4)
-	# Art slot: a deep hole with the icon sitting in it.
-	var slot := Rect2(40, 66, W - 80, 128)
-	_socket(slot, deep.darkened(0.4), p, 6)
-	# Glow pooled in the slot behind the icon.
-	var g := 0.35 + 0.15 * sin(_t * 2.5)
-	for i in 6:
-		var rr := 54.0 - float(i) * 8.0
-		draw_circle(slot.get_center(), rr, Color(light.r, light.g, light.b, 0.05 * g * float(i + 1)))
-	# Name plate.
-	_bevel(Rect2(22, 204, W - 44, 38), dark, base, Color(0, 0, 0.02), 3)
-	# Rarity gems.
-	var n := Rarity.rank(rarity()) + 1
-	for i in 5:
-		var x := W * 0.5 - 50.0 + float(i) * 22.0
-		_px(Rect2(x, 266, 14, 8), Color(0, 0, 0.02))
-		_px(Rect2(x + 2, 268, 10, 4), light if i < n else Color(0.18, 0.18, 0.22))
-	# Stat meters: segmented bars.
+	draw_texture_rect(_frame_tex, Rect2(0, 0, W, H), false)
+	# Stat meters: segmented bars on the rule panel.
 	var stats := stat_rows()
 	for i in stats.size():
 		var y := 282.0 + float(i) * 22.0
 		var frac := float(stats[i][1])
 		var segs := 10
-		for s in segs:
-			var x := 140.0 + float(s) * 13.0
+		for sgm in segs:
+			var x := 140.0 + float(sgm) * 13.0
 			_px(Rect2(x, y, 11, 12), Color(0, 0, 0.02))
-			if float(s) / float(segs) < frac:
-				_px(Rect2(x + 2, y + 2, 7, 8), light if s % 2 == 0 else base)
-	# Divider over the rule text.
-	_px(Rect2(30, 328, W - 60, 2), dark)
+			if float(sgm) / float(segs) < frac:
+				_px(Rect2(x + 2, y + 2, 8, 8), light if sgm % 2 == 0 else base)
 	# Legendary / epic shine sweeping over the whole card.
 	if rarity() == "legendary" or rarity() == "epic" or lit:
 		var sweep := fmod(_t * (0.6 if rarity() == "legendary" else 0.35), 1.6) - 0.3
@@ -295,26 +275,18 @@ func _draw() -> void:
 			var pts := PackedVector2Array([Vector2(sx + off, 0), Vector2(sx + off + 6, 0), Vector2(sx + off + 6 - H * 0.6, H), Vector2(sx + off - H * 0.6, H)])
 			draw_colored_polygon(pts, Color(1, 1, 0.9, 0.06 if k % 2 == 0 else 0.03))
 	if lit:
-		draw_rect(Rect2(-4, -4, W + 8, H + 8), Color(light.r, light.g, light.b, 0.5 + 0.3 * sin(_t * 6.0)), false, 4.0)
-
-
-func _draw_back(p: Array) -> void:
-	var base: Color = p[0]
-	var dark: Color = p[2]
-	_px(Rect2(14, 14, W - 28, H - 28), Color(0.07, 0.08, 0.14))
-	# Diamond lattice.
-	var step := 20.0
-	var y := 14.0
-	var row := 0
-	while y < H - 20.0:
-		var x := 14.0 + (step * 0.5 if row % 2 == 1 else 0.0)
-		while x < W - 20.0:
-			_px(Rect2(x + 8, y + 8, 4, 4), Color(dark.r, dark.g, dark.b, 0.9))
-			x += step
-		y += step * 0.5
-		row += 1
-	# The family crest socket in the middle.
-	_socket(Rect2(W * 0.5 - 50, H * 0.5 - 50, 100, 100), Color(0.04, 0.05, 0.09), p, 6)
-	draw_circle(Vector2(W * 0.5, H * 0.5), 32, Color(base.r, base.g, base.b, 0.9))
-	draw_circle(Vector2(W * 0.5, H * 0.5), 24, Color(0.04, 0.05, 0.09))
-	draw_string(UiKit.title_font(), Vector2(W * 0.5 - 22, H * 0.5 + 12), "H&T", HORIZONTAL_ALIGNMENT_LEFT, -1, 26, base)
+		# Sparks running round the frame.
+		var per := 2.0 * (W + H)
+		for k in 6:
+			var d := fmod(_t * 160.0 + float(k) * per / 6.0, per)
+			var q := Vector2.ZERO
+			if d < W:
+				q = Vector2(d, 2)
+			elif d < W + H:
+				q = Vector2(W - 4, d - W)
+			elif d < 2.0 * W + H:
+				q = Vector2(W - (d - W - H), H - 4)
+			else:
+				q = Vector2(2, H - (d - 2.0 * W - H))
+			_px(Rect2(q.snapped(Vector2(2, 2)), Vector2(4, 4)), Color(light.r, light.g, light.b, 0.95))
+			_px(Rect2(q.snapped(Vector2(2, 2)) + Vector2(1, 1), Vector2(2, 2)), Color(1, 1, 1))

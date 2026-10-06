@@ -159,7 +159,7 @@ func _initialize() -> void:
 	# ui:<what> on Dock Street: results | cards | toasts
 	if target.begins_with("ui:"):
 		_tab = "ui_" + target.substr(3)
-		target = "res://scenes/levels/intake_lot.tscn" if _tab == "ui_surv" else "res://scenes/levels/dock_street.tscn"
+		target = "res://scenes/levels/intake_lot.tscn" if _tab in ["ui_surv", "ui_spick"] else "res://scenes/levels/dock_street.tscn"
 	# art:<art|grab|team>:<id>[:father] fires an element art, grab or team
 	# attack on Dock Street against three thugs; frames every 3rd tick.
 	elif target.begins_with("art:"):
@@ -367,6 +367,12 @@ func _process(_delta: float) -> bool:
 			current_scene.call("_" + page)
 	# ui:surv (on a survive map) - every new ability at LV 7, two evolved,
 	# then the ultimate; frames every 6 ticks.
+	# ui:spick - the survivor level-up pick (sprite ID-badge cards).
+	if _tab == "ui_spick" and _n == 80 and current_scene != null:
+		var sp: Node = root.get_tree().get_first_node_in_group("survive_run")
+		if sp:
+			sp.set("_pending", 1)
+			sp.call("_next_pick")
 	if _tab == "ui_surv" and current_scene != null:
 		var sr: Node = root.get_tree().get_first_node_in_group("survive_run")
 		if _n == 90 and sr:

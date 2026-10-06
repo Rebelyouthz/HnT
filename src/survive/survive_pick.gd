@@ -120,13 +120,6 @@ func _fill() -> void:
 		tw.tween_interval(0.07 * i)
 		tw.tween_property(b, "modulate:a", 1.0, 0.12)
 		tw.parallel().tween_property(b, "scale", Vector2.ONE, 0.22)
-		b.focus_entered.connect(func() -> void:
-			b.create_tween().tween_property(b, "scale", Vector2(1.04, 1.04), 0.08)
-			Mixer.play_sfx("res://assets/audio/ui_click.wav", 1.4, -14.0)
-		)
-		b.focus_exited.connect(func() -> void:
-			b.create_tween().tween_property(b, "scale", Vector2.ONE, 0.08)
-		)
 	var n := _offers.size()
 	_row.position.x = (1280.0 - (float(n) * 320.0 + float(maxi(0, n - 1)) * 26.0)) * 0.5
 	if first:
@@ -160,26 +153,13 @@ func _card(o: Dictionary) -> Button:
 		_:
 			r = {"name": "LIMIT BREAK", "blurb": "Nothing left to learn: +5% damage to everything, stacking.", "icon": "i_coin"}
 			lv_text = "LIMIT BREAK  %d" % (run.limit_breaks + 1)
-	var b := Button.new()
-	b.custom_minimum_size = Vector2(320, 326)
-	b.focus_mode = Control.FOCUS_ALL
-	b.add_theme_stylebox_override("normal", UiKit.panel(Palette.PANEL, col.darkened(0.3)))
-	b.add_theme_stylebox_override("hover", UiKit.panel(Palette.PANEL, col))
-	b.add_theme_stylebox_override("focus", UiKit.panel(Palette.PANEL, col))
-	b.add_theme_stylebox_override("pressed", UiKit.panel(Palette.PANEL, col))
-	var v := VBoxContainer.new()
-	v.position = Vector2(16, 16)
-	v.size = Vector2(288, 296)
-	v.add_theme_constant_override("separation", 10)
-	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	b.add_child(v)
 	# What it is (PASSIVE / AUTOWEAPON / COMPANION / ACTIVE) and its rarity.
 	var kd := "PASSIVE"
 	var rar := str(r.get("rarity", ""))
 	match kind:
 		"ability":
 			var aid := str(o["id"])
-			kd = "COMPANION" if (aid.contains("drone") or aid.contains("dog") or aid.contains("intern") or aid.contains("cart") or aid.contains("pet")) else "AUTOWEAPON"
+			kd = "COMPANION" if (aid.contains("drone") or aid.contains("dog") or aid.contains("intern") or aid.contains("cart") or aid.contains("pet")) else ("MANUALWEAPON" if r.has("manual") else "AUTOWEAPON")
 			if rar == "":
 				rar = "rare"
 		"evolve":
@@ -192,61 +172,127 @@ func _card(o: Dictionary) -> Button:
 			kd = "ACTIVE" if r.has("active") else "PASSIVE"
 	if rar == "":
 		rar = "common"
+	rar = Rarity.normalize(rar)
+	var rc := Rarity.color(rar)
+	# The survivor card is its own object: a steel ID badge sprite
+	# (tools/card_art.py) with the rarity's enamel header. The hit box stays
+	# put; the badge inside rises and glows when focused.
+	var b := Button.new()
+	b.custom_minimum_size = Vector2(320, 326)
+	b.focus_mode = Control.FOCUS_ALL
+	var empty := StyleBoxEmpty.new()
+	for st_name in ["normal", "hover", "focus", "pressed", "disabled"]:
+		b.add_theme_stylebox_override(st_name, empty)
+	var body := Control.new()
+	body.name = "Body"
+	body.size = Vector2(320, 326)
+	body.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	body.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	b.add_child(body)
+	var glow := TextureRect.new()
+	glow.name = "Glow"
+	glow.texture = load("res://assets/sprites/cards/glow_surv.png")
+	glow.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	glow.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	glow.position = Vector2(-16, -16)
+	glow.size = Vector2(352, 358)
+	glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var add := CanvasItemMaterial.new()
+	add.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	glow.material = add
+	glow.modulate = Color(rc.r * 1.8, rc.g * 1.8, rc.b * 1.8, 1.0)
+	glow.visible = false
+	body.add_child(glow)
+	var frame := TextureRect.new()
+	frame.texture = load("res://assets/sprites/cards/surv_%s.png" % rar)
+	frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	frame.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	frame.size = Vector2(320, 326)
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	body.add_child(frame)
 	var kinfo: Array = PixelCard.KINDS[kd]
-	var krow := HBoxContainer.new()
-	krow.add_theme_constant_override("separation", 4)
-	krow.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var kic := PixelIcon.new()
-	kic.kind = str(kinfo[1])
-	kic.custom_minimum_size = Vector2(16, 16)
-	kic.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	krow.add_child(kic)
-	var kl := Label.new()
-	kl.text = "%s  ·  %s" % [str(kinfo[0]), Rarity.label(Rarity.normalize(rar))]
-	UiKit.apply_label(kl, 11, kinfo[2])
-	krow.add_child(kl)
-	v.add_child(krow)
-	var tag := Label.new()
-	tag.text = lv_text
-	UiKit.apply_label(tag, 13, col)
-	v.add_child(tag)
-	var ic := UiKit.portrait(SurviveIcons.tex(str(r.get("icon", ""))), Vector2(96, 96))
-	ic.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	v.add_child(ic)
-	var n2 := Label.new()
-	n2.text = str(r.get("name", "?"))
-	n2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	n2.add_theme_font_override("font", UiKit.title_font())
-	UiKit.apply_label(n2, 20, col.lerp(Color.WHITE, 0.15))
-	v.add_child(n2)
-	var bl := UiKit.rich(str(r.get("blurb", "")), 288, 13, Palette.TEXT)
-	v.add_child(bl)
+	var kic := IconBook.rect(IconBook.for_glyph(str(kinfo[1])), 24)
+	kic.position = Vector2(14, 14)
+	body.add_child(kic)
+	body.add_child(_lab(str(kinfo[0]), Vector2(40, 16), 100, 10, Color.WHITE, HORIZONTAL_ALIGNMENT_LEFT))
+	body.add_child(_lab(Rarity.label(rar), Vector2(196, 16), 110, 10, Color.WHITE, HORIZONTAL_ALIGNMENT_RIGHT))
+	var icn := str(r.get("icon", ""))
+	var ic := IconBook.rect(icn if IconBook.has(icn) else "node_score", IconBook.SIZE_M)
+	ic.position = Vector2(128, 74)
+	ic.name = "Art"
+	body.add_child(ic)
+	var n2 := _lab(str(r.get("name", "?")), Vector2(20, 172), 280, 18, col.lerp(Color.WHITE, 0.2), HORIZONTAL_ALIGNMENT_CENTER, true)
+	body.add_child(n2)
+	body.add_child(_lab(lv_text, Vector2(20, 198), 280, 11, col, HORIZONTAL_ALIGNMENT_CENTER))
+	var bl := UiKit.rich(str(r.get("blurb", "")), 268, 12, Palette.TEXT)
+	bl.position = Vector2(26, 218)
+	bl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	body.add_child(bl)
 	if kind == "ability":
 		var lv := int(run.abilities.get(str(o["id"]), 0))
 		var dmg := float(r.get("dmg", 0)) + float(r.get("per", 0)) * float(maxi(0, lv))
-		var txt := "DMG %d  ·  EVERY %.1fs" % [int(dmg), float(r.get("cd", 1.0))]
+		var cd := float(r.get("cd", 1.0))
+		var when := ("EVERY %.1fs" % cd) if cd > 0.05 else "ALWAYS ON"
+		var txt := "DMG %d  ·  %s" % [int(dmg), when]
 		if lv > 0:
-			txt = "DMG %d › [color=%s]%d (+%d)[/color]  ·  EVERY %.1fs" % [int(dmg - float(r.get("per", 0))), UiKit.UP_COL, int(dmg), int(r.get("per", 0)), float(r.get("cd", 1.0))]
-		var st := UiKit.rich("", 288, 12, col)
+			txt = "DMG %d › [color=%s]%d (+%d)[/color]  ·  %s" % [int(dmg - float(r.get("per", 0))), UiKit.UP_COL, int(dmg), int(r.get("per", 0)), when]
+		var st := UiKit.rich("", 268, 11, col)
 		st.text = "[center]" + txt + "[/center]"
-		v.add_child(st)
-	if kind == "ability" and int(run.abilities.get(str(o["id"]), 0)) > 0:
-		var pips := HBoxContainer.new()
-		pips.alignment = BoxContainer.ALIGNMENT_CENTER
-		pips.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var cur2 := int(run.abilities.get(str(o["id"]), 0))
-		for k in SurviveRun.MAX_LV:
-			var p := ColorRect.new()
-			p.custom_minimum_size = Vector2(22, 8)
-			p.color = col if k < cur2 else (Color(1, 1, 1, 0.9) if k == cur2 else Color(1, 1, 1, 0.12))
-			p.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			pips.add_child(p)
-		v.add_child(pips)
-	Bevel.dress(b)
+		st.position = Vector2(26, 262)
+		st.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		body.add_child(st)
+		if lv > 0:
+			for k in SurviveRun.MAX_LV:
+				var pip := ColorRect.new()
+				pip.size = Vector2(20, 6)
+				pip.position = Vector2(160.0 - float(SurviveRun.MAX_LV) * 12.0 + float(k) * 24.0, 282)
+				pip.color = col if k < lv else (Color(1, 1, 1, 0.9) if k == lv else Color(1, 1, 1, 0.12))
+				pip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+				body.add_child(pip)
+	b.focus_entered.connect(func() -> void: _lift(b, true))
+	b.focus_exited.connect(func() -> void: _lift(b, false))
+	b.mouse_entered.connect(func() -> void: b.grab_focus())
 	UiKit.press_feel(b)
 	b.pressed.connect(_pick.bind(o))
 	return b
+
+
+func _lab(t: String, pos: Vector2, w: float, fs: int, c: Color, align: HorizontalAlignment, title := false) -> Label:
+	var l := Label.new()
+	l.text = t
+	l.position = pos
+	l.size = Vector2(w, 0)
+	l.horizontal_alignment = align
+	l.clip_text = true
+	l.add_theme_font_override("font", UiKit.title_font() if title else UiKit.pixel_font())
+	l.add_theme_font_size_override("font_size", fs)
+	l.add_theme_color_override("font_color", c)
+	l.add_theme_color_override("font_outline_color", UiKit.INK)
+	l.add_theme_constant_override("outline_size", 5 if title else 3)
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return l
+
+
+## Focused badge rises and glows in its rarity colour; the art bobs.
+func _lift(b: Button, on: bool) -> void:
+	var body: Control = b.get_node_or_null("Body")
+	if body == null:
+		return
+	var tw := body.create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(body, "position:y", -20.0 if on else 0.0, 0.16)
+	var g: Control = body.get_node_or_null("Glow")
+	if g:
+		g.visible = on
+		if on:
+			var gt := g.create_tween().set_loops()
+			gt.tween_property(g, "modulate:a", 0.55, 0.35)
+			gt.tween_property(g, "modulate:a", 1.0, 0.35)
+			g.set_meta("tw", gt)
+		elif g.has_meta("tw"):
+			(g.get_meta("tw") as Tween).kill()
+	body.modulate = Color.WHITE if on else Color(0.82, 0.82, 0.88)
+	if on:
+		Mixer.play_sfx("res://assets/audio/ui_click.wav", 1.4, -14.0)
 
 
 func _pick(o: Dictionary) -> void:
