@@ -328,7 +328,17 @@ func _pick(o: Dictionary) -> void:
 	_close()
 
 
+var _holding := true
+
+
+func _process(_delta: float) -> void:
+	# Stay frozen while choosing, even if a banner unpauses underneath.
+	if _holding and is_inside_tree() and not get_tree().paused:
+		get_tree().paused = true
+
+
 func _close() -> void:
+	_holding = false
 	get_tree().paused = false
 	closed.emit()
 	queue_free()

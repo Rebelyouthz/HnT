@@ -38,6 +38,10 @@ func _process(_d: float) -> bool:
 		var d := fp.data as Dictionary
 		d["intro_done"] = true
 		d["named"] = true
+		var g_done: Array = []
+		for gk in load("res://src/ui/guides.gd").STEPS:
+			g_done.append(str(gk))
+		d["guides_done"] = g_done
 		root.get_node("App").call("enter_map", _map)
 		return false
 	if _frame < 50:
@@ -49,6 +53,11 @@ func _process(_d: float) -> bool:
 			return false
 	# Card deals and banners pause the game: take the first card.
 	if paused:
+		# Take the first card of any deal directly.
+		if _frame % 30 == 0:
+			for n in root.find_children("*", "CanvasLayer", true, false):
+				if n.has_method("_choose") and n.get_script() != null and str(n.get_script().resource_path).ends_with("card_pick.gd"):
+					n.call("_choose", 0)
 		if _frame % 20 == 0:
 			Input.action_press("ui_accept")
 		elif _frame % 20 == 2:

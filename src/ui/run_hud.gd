@@ -540,22 +540,28 @@ func _paint_fighter(lab: Label, bar: ColorRect, pips: HBoxContainer, snap: Label
 	var lives := ""
 	if state and lemon_slot:
 		lives = "   LIVES %d" % state.lives
-	lab.text = "%s  LV%d%s" % [title.to_upper(), Heroes.level(f.role), lives]
+	lab.text = "%s  LV%d%s" % [title.to_upper(), Heroes.level(f.role), lives.replace("   ", "  ")]
 	# The weapon in hand and what is left in it.
 	if f.pickup != "":
 		var wt := str(WeaponBook.spec(f.pickup).get("title", f.pickup)).to_upper()
+		# Long names keep their first word in the HUD ("LOUISVILLE LIEN" -> "LOUISVILLE").
+		if wt.length() > 10 and wt.contains(" "):
+			wt = wt.get_slice(" ", 0)
 		if f.pickup in Fighter.GUNS:
 			wt += " %d/%d" % [f.pistol_shots, f.gun_reserve]
 		elif Arsenal.USES.has(f.pickup):
 			wt += " ·%d" % f.melee_uses
-		lab.text += "   " + wt
-	var extra := f.throw_n > 0 or f.grenades > 0
+		lab.text += "  " + wt
+	var extra := f.throw_n > 0 or f.grenades > 0 or f.pickup != ""
 	if f.knives > 0:
 		lab.text += ("  KNV %d" if extra else "   KNIVES %d") % f.knives
 	if f.throw_n > 0 and ThrowLob.KINDS.has(f.throw_kind):
 		lab.text += "  %s %d" % [str({"molotov": "MOLOTOV", "flashbang": "FLASH", "teargas": "GAS", "brick": "BRICK"}.get(f.throw_kind, f.throw_kind.to_upper())), f.throw_n]
 	if f.grenades > 0:
 		lab.text += "  GREN %d" % f.grenades
+	# Crowded line: lives as "x3".
+	if f.pickup != "" or extra:
+		lab.text = lab.text.replace("LIVES ", "x")
 	# Never run out of the portrait panel: shrink the line to fit.
 	var base := int(lab.get_meta("base_fs", lab.get_theme_font_size("font_size")))
 	lab.set_meta("base_fs", base)

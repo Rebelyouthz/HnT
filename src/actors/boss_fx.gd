@@ -162,13 +162,36 @@ func _draw() -> void:
 	var flash := 0.5 + 0.5 * sin(_t * 26.0)
 	match kind:
 		"band":
-			var r := Rect2(rect.position - global_position, rect.size)
-			draw_rect(r, Color(1.0, 0.1, 0.08, 0.12 + 0.1 * flash))
-			var fr := Rect2(r.position, Vector2(r.size.x * k, r.size.y))
-			if r.size.x < 0.0:
-				fr = Rect2(r.position, Vector2(r.size.x * k, r.size.y))
-			draw_rect(fr, Color(1.0, 0.2, 0.1, 0.28))
-			draw_rect(r, Color(1.0, 0.25, 0.15, 0.85), false, 1.5)
+			var r := Rect2(rect.position - global_position, rect.size).abs()
+			draw_rect(r, Color(0.9, 0.05, 0.04, 0.10 + 0.08 * flash))
+			# The charge fills the lane from the boss's side outwards.
+			var dir := 1.0
+			if boss != null and is_instance_valid(boss):
+				dir = 1.0 if boss.global_position.x - global_position.x < r.get_center().x else -1.0
+			var fw := r.size.x * k
+			var fr := Rect2(r.position if dir > 0.0 else Vector2(r.end.x - fw, r.position.y), Vector2(fw, r.size.y))
+			draw_rect(fr, Color(1.0, 0.18, 0.08, 0.24))
+			# Chevrons racing along the lane in the charge direction.
+			var cy := r.get_center().y
+			var h := minf(r.size.y * 0.32, 14.0)
+			var step := 34.0
+			var off := fmod(_t * 160.0, step)
+			var x := 0.0
+			while x < r.size.x + step:
+				var px := r.position.x + (x + off if dir > 0.0 else r.size.x - x - off)
+				if px > r.position.x + 6.0 and px < r.end.x - 6.0:
+					var a := 0.35 + 0.45 * flash
+					draw_polyline(PackedVector2Array([Vector2(px - dir * 8.0, cy - h), Vector2(px, cy), Vector2(px - dir * 8.0, cy + h)]), Color(1.0, 0.75, 0.55, a), 2.5)
+				x += step
+			# Corner brackets instead of a flat box outline.
+			var c := Color(1.0, 0.3, 0.18, 0.95)
+			var L := 12.0
+			for corner in [r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)]:
+				var sx := 1.0 if corner.x <= r.get_center().x else -1.0
+				var sy := 1.0 if corner.y <= r.get_center().y else -1.0
+				draw_line(corner, corner + Vector2(L * sx, 0), c, 2.0)
+				draw_line(corner, corner + Vector2(0, L * sy), c, 2.0)
+			draw_rect(r, Color(1.0, 0.25, 0.15, 0.35), false, 1.0)
 			if _struck:
 				draw_rect(r, Color(1, 0.9, 0.7, 0.6))
 		"circle":

@@ -103,6 +103,14 @@ func _pick_trick() -> Dictionary:
 
 
 func _process(_delta: float) -> void:
+	# The prompt only shows when a hero is coming up on the gate.
+	if _hint:
+		var near := 9999.0
+		for p in get_tree().get_nodes_in_group("players"):
+			if p is Node2D:
+				near = minf(near, absf((p as Node2D).global_position.x - global_position.x))
+		var want := clampf((380.0 - near) / 140.0, 0.0, 1.0)
+		_hint.modulate.a = lerpf(_hint.modulate.a, want, 0.15)
 	if _used:
 		return
 	for n in get_overlapping_bodies():

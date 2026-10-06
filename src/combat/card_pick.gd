@@ -22,6 +22,9 @@ var _reroll_btn: Button
 var _skip_btn: Button
 var _title: Label
 var _was_paused := false
+## While the cards are up the street stays frozen, even if another banner
+## (the stage card) closes and unpauses underneath.
+var _holding := true
 
 const SLOTS := [Vector2(170, 150), Vector2(490, 136), Vector2(810, 150)]
 
@@ -284,8 +287,10 @@ func _choose(idx: int) -> void:
 	var end := create_tween()
 	end.tween_interval(1.55 if idx >= 0 else 0.4)
 	end.tween_callback(func() -> void:
-		# A short beat before the street moves again.
-		get_tree().paused = _was_paused
+		# A short beat before the street moves again. (Whatever paused the
+		# game before the deal - a stage card - has closed by now.)
+		_holding = false
+		get_tree().paused = false
 		picked.emit(id)
 		queue_free()
 	)
@@ -320,3 +325,8 @@ func _burst(at: Vector2, col: Color) -> void:
 		tw.tween_property(p, "position", at + Vector2(cos(a), sin(a)) * d, 0.6).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 		tw.tween_property(p, "modulate:a", 0.0, 0.6)
 		tw.chain().tween_callback(p.queue_free)
+
+
+func _process(_delta: float) -> void:
+	if _holding and not get_tree().paused:
+		get_tree().paused = true
