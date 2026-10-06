@@ -90,6 +90,7 @@ static func on_blow(e: Punk, f: Fighter, kind: String, dmg: int) -> int:
 
 ## A thug died (Punk._die): finisher / impact frame / screen kill.
 static func on_kill(e: Punk, kind: String, by: Node) -> void:
+	ItemRack.on_kill(by)
 	if me == null or not is_instance_valid(me):
 		return
 	var fin := bool(e.get_meta("finisher", false))

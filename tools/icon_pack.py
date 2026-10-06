@@ -486,6 +486,66 @@ def slingshot():
     return ic
 
 
+@icon("card_brass_knuckles")
+def brass_knuckles():
+    ic = Icon()
+    ic.rect(4, 12, 28, 21, "brass", round_=True)
+    for i in range(4):
+        x = 5 + i * 6
+        ic.ring(x, 6, x + 6, 13, 2, "brass", round_=True)
+    ic.rect(8, 20, 24, 27, "brass", tone=1, round_=True)
+    ic.rect(11, 22, 21, 25, "ink", flat=True)
+    ic.glint(7, 14)
+    ic.glint(19, 7)
+    return ic
+
+
+@icon("card_vampire_tooth")
+def vampire_tooth():
+    ic = Icon()
+    ic.poly([(8, 4), (24, 4), (22, 14), (18, 28), (16, 30), (14, 28), (10, 14)], "white")
+    ic.rect(8, 4, 24, 8, "pink", tone=1)
+    m_drop(ic, 20, 18, mat="blood")
+    ic.glint(12, 8)
+    return ic
+
+
+@icon("card_tie_boomerang")
+def tie_boomerang():
+    ic = Icon()
+    ic.poly([(4, 10), (14, 4), (17, 8), (9, 14), (12, 26), (8, 28)], "red")
+    ic.poly([(14, 4), (28, 10), (27, 14), (17, 8)], "red", tone=1)
+    for x, y in ((8, 12), (11, 20), (20, 9)):
+        ic.rect(x, y, x + 2, y + 1, "navy", flat=True)
+    ic.arc([4, 2, 30, 30], 200, 320, "white", width=1)
+    ic.glint(15, 6)
+    return ic
+
+
+@icon("card_heat_wave")
+def heat_wave():
+    ic = Icon()
+    ic.ring(2, 8, 30, 30, 3, "orange", round_=True)
+    m_flame(ic, 16, 10, s=0.8)
+    for x, y in ((4, 18), (27, 18), (16, 8)):
+        ic.rect(x, y, x + 2, y + 3, "yellow", flat=True)
+    return ic
+
+
+@icon("card_throwing_bag")
+def throwing_bag():
+    ic = Icon()
+    ic.poly([(6, 14), (26, 14), (28, 29), (4, 29)], "leather")
+    ic.rect(5, 12, 27, 16, "leather", tone=1)
+    ic.rect(9, 4, 13, 14, "green")
+    ic.rect(10, 1, 12, 5, "paper")
+    ic.ellipse(16, 6, 24, 14, "olive", round_=True)
+    ic.rect(19, 3, 21, 7, "steel")
+    ic.rect(14, 19, 18, 23, "brass")
+    ic.glint(8, 17)
+    return ic
+
+
 # --- story rule cards (by idea) --------------------------------------------
 
 @icon("card_head_trampoline")

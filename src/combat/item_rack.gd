@@ -38,8 +38,8 @@ func lv(id: String) -> int:
 func on_card(id: String, level: int) -> void:
 	_lv[id] = level
 	match id:
-		"protein_shake":
-			dmg_k = 1.0 + 0.12 * float(level)
+		"protein_shake", "brass_knuckles":
+			dmg_k = (1.0 + 0.12 * float(lv("protein_shake"))) * (1.0 + 0.10 * float(lv("brass_knuckles")))
 		"running_shoes":
 			speed_k = 1.0 + 0.08 * float(level)
 		"chi_battery":
@@ -48,6 +48,17 @@ func on_card(id: String, level: int) -> void:
 			for f in _players():
 				f.max_hp += 10
 				f.hp = mini(f.max_hp, f.hp + 10)
+		"throwing_bag":
+			var give: Array = ([["molotov", 3], ["flashbang", 3], ["grenade", 4]] as Array)[clampi(level, 1, 3) - 1]
+			for f in _players():
+				if str(give[0]) == "grenade":
+					f.grenades += int(give[1])
+				else:
+					if f.throw_kind != str(give[0]):
+						f.throw_n = 0
+					f.throw_kind = str(give[0])
+					f.throw_n += int(give[1])
+			Juice.popup_number(_players()[0].global_position + Vector2(0, -120) if not _players().is_empty() else Vector2.ZERO, "+%d %s" % [int(give[1]), str(give[0]).to_upper()], Color(1.0, 0.7, 0.3))
 		"knife_belt":
 			knife_pierce = level >= 3
 			for f in _players():
@@ -141,10 +152,53 @@ func _physics_process(delta: float) -> void:
 					var e := _nearest(f, 240.0)
 					if e:
 						c.pounce(e, 8 + 2 * sc)
+		# TIE BOOMERANG
+		var tb := lv("tie_boomerang")
+		if tb > 0 and _clock(key + "tb", [3.0, 2.5, 2.0][tb - 1], delta):
+			for i in (2 if tb >= 3 else 1):
+				var bm := Boomer.new()
+				bm.f = f
+				bm.dir = f.facing if i == 0 else -f.facing
+				bm.reach = 170.0 + 40.0 * float(tb)
+				bm.dmg = 5 + 2 * tb
+				host.add_child(bm)
+				bm.global_position = f.global_position + Vector2(0, -2)
+		# HEAT WAVE
+		var hw := lv("heat_wave")
+		if hw > 0 and _clock(key + "hw", [6.0, 5.0, 4.0][hw - 1], delta):
+			var rr: float = [90.0, 120.0, 160.0][hw - 1]
+			ArtFx.spawn(host, f.global_position, "ring", Color(1.0, 0.5, 0.15), rr, 0.5)
+			ArtFx.spawn(host, f.global_position, "ring", Color(1.0, 0.85, 0.3), rr * 0.7, 0.4)
+			Mixer.play_sfx("res://assets/audio/sfx/fire_crackle.ogg", 1.2, -4.0)
+			for n in get_tree().get_nodes_in_group("enemies"):
+				if n is Punk and (n as Punk).hp > 0:
+					var d := (n as Punk).global_position - f.global_position
+					if Vector2(d.x, d.y * 2.0).length() < rr:
+						(n as Punk).ignite(2.5 + 0.5 * float(hw), f.role)
 		# PIGEON SQUAD
 		var pg := lv("pigeon_squad")
 		if pg > 0 and _clock(key + "pg", [6.0, 5.0, 4.0][pg - 1], delta):
 			Flock.sweep(host, f, 4 + 3 * pg, 6 + 2 * pg)
+
+
+## VAMPIRE TOOTH: a kill by `by` may heal them (BrawlMore.on_kill).
+static func on_kill(by: Node) -> void:
+	if not (by is Fighter):
+		return
+	var r := rack((by as Fighter).get_tree())
+	if r == null:
+		return
+	var vt := r.lv("vampire_tooth")
+	if vt <= 0:
+		return
+	var f := by as Fighter
+	var k := str(f.get_instance_id()) + "vt"
+	r._t[k] = int(r._t.get(k, 0)) + 1
+	if int(r._t[k]) >= [4, 3, 2][vt - 1]:
+		r._t[k] = 0
+		if f.hp < f.max_hp:
+			f.hp = mini(f.max_hp, f.hp + 1)
+			Juice.popup_number(f.global_position + Vector2(0, -110), "+1 HP", Color(1.0, 0.35, 0.4))
 
 
 func _buddy(store: Dictionary, key: String, f: Fighter, look: String, col: Color) -> Buddy:
@@ -463,3 +517,45 @@ class Flock extends Node2D:
 			draw_line(o, o + Vector2(-6, -flap), c, 2.0)
 			draw_line(o, o + Vector2(6, -flap), c, 2.0)
 			draw_circle(o + Vector2(5.0 * float(dir), -1), 1.5, Color(0.4, 0.42, 0.48))
+
+
+## TIE BOOMERANG: Dad's tie spins out along the lane and comes back,
+## cutting each thug once on the way out and once on the way back.
+class Boomer extends Node2D:
+	var f: Fighter
+	var dir := 1
+	var reach := 210.0
+	var dmg := 7
+	var _t := 0.0
+	var _out := {}
+	var _back := {}
+
+	func _process(delta: float) -> void:
+		if f == null or not is_instance_valid(f):
+			queue_free()
+			return
+		_t += delta
+		var dur := 0.9
+		var k := _t / dur
+		if k >= 1.0:
+			queue_free()
+			return
+		var x := sin(k * PI) * reach * float(dir)
+		global_position = Vector2(f.global_position.x + x, lerpf(global_position.y, f.global_position.y, minf(1.0, delta * 6.0)))
+		rotation += delta * 22.0
+		var hit := _out if k < 0.5 else _back
+		for n in get_tree().get_nodes_in_group("enemies"):
+			if n is Punk and (n as Punk).hp > 0 and not hit.has(n.get_instance_id()):
+				var d := (n as Punk).global_position - global_position
+				if absf(d.x) < 22.0 and absf(d.y) < 26.0:
+					hit[n.get_instance_id()] = true
+					ArtMoves.strike(f, n, dmg, "", "")
+					Juice.sparks((n as Punk).global_position + Vector2(0, -40))
+		queue_redraw()
+
+	func _draw() -> void:
+		var c := Color(0.85, 0.15, 0.18)
+		draw_set_transform(Vector2(0, -44), 0.0, Vector2.ONE)
+		draw_colored_polygon(PackedVector2Array([Vector2(-10, -3), Vector2(4, -6), Vector2(10, 0), Vector2(4, 6), Vector2(-10, 3)]), c)
+		draw_line(Vector2(-6, -2), Vector2(4, -4), Color(0.2, 0.2, 0.5), 1.0)
+		draw_line(Vector2(-6, 2), Vector2(4, 4), Color(0.2, 0.2, 0.5), 1.0)
