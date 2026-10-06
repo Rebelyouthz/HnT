@@ -119,7 +119,7 @@ func _ready() -> void:
 	rewards.add_theme_constant_override("separation", 14)
 	col.add_child(rewards)
 	rewards.add_child(_reward("star", "SCORE", "%d" % total))
-	rewards.add_child(_reward("bolt", "XP", "+%d" % int(grant.get("gained", 0))))
+	rewards.add_child(_reward("xp", "XP", "+%d" % int(grant.get("gained", 0))))
 	if state:
 		rewards.add_child(_reward("gold", "SCRAP", "+%d" % state.scrap))
 	if not win and fail_gold > 0:
@@ -131,7 +131,7 @@ func _ready() -> void:
 		rewards.add_child(_reward("fist", str(WeaponBook.spec(bw).get("title", bw)).to_upper(), "%d KO" % int(run_k.get(bw, 0))))
 	var tk := int(Engine.get_meta("run_tokens", 0))
 	if tk > 0:
-		rewards.add_child(_reward("star", "S-COINS", "+%d" % tk))
+		rewards.add_child(_reward("tokens", "S-COINS", "+%d" % tk))
 	# DPS meter: the survivor abilities that did the work this hour.
 	var srun := SurviveRun.get_run(get_tree())
 	if srun and not srun.dealt.is_empty():
@@ -150,7 +150,7 @@ func _ready() -> void:
 		col.add_child(dl)
 	var rs_n := int(Engine.get_meta("run_shards", 0))
 	if rs_n > 0:
-		rewards.add_child(_reward("star", "SHARDS", "+%d" % rs_n))
+		rewards.add_child(_reward("meta_shard", "SHARDS", "+%d" % rs_n))
 	rewards.add_child(_reward("shield", "PARRY", str(int(FamilyProfile.data.get("parries", 0)))))
 	# Account XP.
 	var xp_row := HBoxContainer.new()
@@ -230,6 +230,9 @@ func _player_tile(who: String, name_text: String, score: int, crown: bool, accen
 	return box
 
 
+var _tiles := 0
+
+
 func _reward(icon: String, label: String, value: String) -> Control:
 	var box := PanelContainer.new()
 	var st := UiKit.panel(UiKit.NAVY, UiKit.RIM)
@@ -243,12 +246,32 @@ func _reward(icon: String, label: String, value: String) -> Control:
 	box.add_child(col)
 	var ic := PixelIcon.new()
 	ic.kind = icon
-	ic.custom_minimum_size = Vector2(34, 34)
+	ic.custom_minimum_size = Vector2(IconBook.SIZE_S, IconBook.SIZE_S)
 	ic.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	col.add_child(ic)
 	var v := UiKit.title(value, 22, Palette.TEXT)
 	v.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(v)
+	# "+N" rewards count up one tile after another, then pop; gold and
+	# S-COINS then fly off to the purse.
+	if value.begins_with("+") and value.substr(1).is_valid_int():
+		var n := int(value.substr(1))
+		var order := _tiles
+		_tiles += 1
+		v.text = "+0"
+		var tw := v.create_tween().set_ignore_time_scale(true)
+		tw.tween_interval(1.1 + 0.45 * float(order))
+		tw.tween_method(func(x: float) -> void:
+			var t := "+%d" % int(round(x))
+			if v.text != t:
+				v.text = t
+				RewardFly.snd("coin_tick", 1.0 + 0.8 * x / float(maxi(1, n)), -10.0)
+		, 0.0, float(n), clampf(0.3 + float(n) / 400.0, 0.3, 0.8))
+		tw.tween_callback(func() -> void:
+			Juice.upgrade_fx(box, UiKit.GOLD, "", false)
+			var key := {"GOLD": "gold", "S-COINS": "tokens"}.get(label, "") as String
+			if key != "" and n > 0:
+				Juice.rewards.give(key, n, RewardFly.vp_of(ic), false))
 	var l := Label.new()
 	l.text = label
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
