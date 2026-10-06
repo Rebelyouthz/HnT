@@ -209,6 +209,13 @@ func _process(_delta: float) -> bool:
 			var jc := root.get_node_or_null("Juice")
 			var spec := rw.get_slice("@", 0)
 			jc.call("give", spec.get_slice(":", 0), int(spec.get_slice(":", 1)), Vector2(320, 190))
+	# PRESS=part@frame presses that part's tile in an open gunsmith.
+	var pr := OS.get_environment("PRESS")
+	if pr != "" and _n == int(pr.get_slice("@", 1)):
+		for c in root.find_children("*", "Control", true, false):
+			if c.has_method("_after_fit"):
+				c.call("_press", pr.get_slice("@", 0), null)
+				break
 	var ux := OS.get_environment("UPFX")
 	if ux != "" and _n == int(ux):
 		var fo: Control = root.get_viewport().gui_get_focus_owner()

@@ -239,82 +239,14 @@ func _tile(id: String) -> Control:
 func _gunsmith(id: String) -> void:
 	if _pop and is_instance_valid(_pop):
 		_pop.queue_free()
-	var dim := ColorRect.new()
-	dim.color = Color(0, 0, 0, 0.6)
-	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(dim)
-	_pop = dim
-	var card := PanelContainer.new()
-	card.add_theme_stylebox_override("panel", UiKit.frame(Color(0.6, 0.9, 1.0), 0.4))
-	card.set_anchors_preset(Control.PRESET_CENTER)
-	card.offset_left = -520
-	card.offset_right = 520
-	card.offset_top = -320
-	card.offset_bottom = 320
-	dim.add_child(card)
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 6)
-	card.add_child(col)
-	col.add_child(UiKit.title("GUNSMITH  ·  %s  ·  LV %d" % [str(WeaponBook.spec(id).get("title", id)).to_upper(), Arsenal.level(id)], 22, Color(0.6, 0.9, 1.0)))
-	var sub := Label.new()
-	sub.text = "One part per slot. Muzzle and ammo from LV 1, optic LV 2, magazine LV 3, barrel LV 4.  Gems %d.  Ammo is scarce out there: a gun comes with one spare magazine, then it is your fists." % int(FamilyProfile.data.get("gems", 0))
-	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	sub.custom_minimum_size = Vector2(1000, 0)
-	UiKit.apply_label(sub, 12, Palette.MUTED)
-	col.add_child(sub)
-	var sc := ScrollContainer.new()
-	sc.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	col.add_child(sc)
-	var body := VBoxContainer.new()
-	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	body.add_theme_constant_override("separation", 4)
-	sc.add_child(body)
-	var first: Button = null
-	for slot: String in Attach.SLOTS:
-		var open := Attach.slot_open(id, slot)
-		var hl := Label.new()
-		hl.text = "%s%s" % [Attach.SLOT_NAME[slot], "" if open else "   ·   OPENS AT LV %d" % int(Attach.SLOT_LV[slot])]
-		hl.add_theme_font_override("font", UiKit.title_font())
-		UiKit.apply_label(hl, 15, UiKit.GOLD if open else Palette.MUTED)
-		body.add_child(hl)
-		for a: String in Attach.LIST:
-			var spec: Dictionary = Attach.LIST[a]
-			if str(spec["slot"]) != slot:
-				continue
-			var row := HBoxContainer.new()
-			row.add_theme_constant_override("separation", 10)
-			var fitted := Attach.on(id, slot) == a
-			var info := UiKit.rich("[color=%s]%s[/color]  %s" % ["#7dffa0" if fitted else "#ffd75e", str(spec["title"]), str(spec["line"])], 780, 13, Palette.TEXT if open else Palette.MUTED)
-			info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			info.text = info.text.replace("[center]", "").replace("[/center]", "")
-			row.add_child(info)
-			var txt := "BUY %d GEMS" % int(spec["gems"]) if not Attach.owned(a) else ("REMOVE" if fitted else "FIT")
-			var b := UiKit.button(txt, Vector2(170, 32))
-			b.disabled = (not open and Attach.owned(a)) or (not Attach.owned(a) and int(FamilyProfile.data.get("gems", 0)) < int(spec["gems"]))
-			b.pressed.connect(func() -> void:
-				if not Attach.owned(a):
-					if Attach.buy(a):
-						Juice.play("res://assets/audio/card.wav")
-				elif Attach.fit(id, a):
-					Juice.play("res://assets/audio/sfx/mag_in.ogg")
-				_gunsmith(id)
-			)
-			row.add_child(b)
-			if first == null and not b.disabled:
-				first = b
-			body.add_child(row)
-	var done := UiKit.button("DONE", Vector2(160, 40))
-	done.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	done.pressed.connect(func() -> void:
+	var sheet: Control = load("res://src/ui/gunsmith_sheet.gd").new()
+	sheet.set("gun", id)
+	add_child(sheet)
+	_pop = sheet
+	sheet.connect("closed", func() -> void:
 		_focus_key = "mods_" + id
 		_paint()
 	)
-	col.add_child(done)
-	if first:
-		first.call_deferred("grab_focus")
-	else:
-		done.call_deferred("grab_focus")
 
 
 ## The mod bench for one melee weapon: every mod of its kind, fit / remove /

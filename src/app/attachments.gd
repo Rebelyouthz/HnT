@@ -142,41 +142,104 @@ static func spare_mags(gun: String) -> int:
 	return 1 if has(gun, "rubber") else 0
 
 
-## How far the muzzle moves out (gun texels) with a can or a long barrel.
+## How far the muzzle moves out (gun sprite px) with a can or a long barrel.
 static func muzzle_ext(gun: String) -> float:
-	return (16.0 if has(gun, "suppressor") else 0.0) + (10.0 if has(gun, "long_barrel") else 0.0)
+	var x := 0.0
+	for p: Dictionary in layout(gun):
+		if str(p["mount"]) == "muzzle":
+			var mz: Array = _gun_meta(gun_sprite(gun)).get("muzzle", [0, 0])
+			x = maxf(x, (p["pos"] as Vector2).x + (p["size"] as Vector2).x - float(mz[0]))
+	return x
 
 
-## Parts drawn on the gun sprite, in its texels: a can on the muzzle, a
-## scope or red dot on top, a drum under the grip, a longer barrel, and the
-## laser line (shown while aiming).
-static func dress(gun_sprite: Sprite2D, gun: String, muzzle: Vector2, grip: Vector2) -> void:
-	for c in gun_sprite.get_children():
+# --- how the parts look (tools/gun_parts.py) ---------------------------------
+
+static var _parts_meta := {}
+static var _guns_meta := {}
+
+
+static func part_meta(a: String) -> Dictionary:
+	if _parts_meta.is_empty():
+		var d: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://assets/sprites/guns/parts/parts.json"))
+		if d is Dictionary:
+			_parts_meta = d
+	return _parts_meta.get(a, {}) as Dictionary
+
+
+static func _gun_meta(sprite: String) -> Dictionary:
+	if _guns_meta.is_empty():
+		var d: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://assets/sprites/guns/guns.json"))
+		if d is Dictionary:
+			_guns_meta = d
+	return _guns_meta.get(sprite, {}) as Dictionary
+
+
+## The sprite a weapon id draws with (assets/sprites/guns/<name>.png).
+static func gun_sprite(gun: String) -> String:
+	return gun if ResourceLoader.exists("res://assets/sprites/guns/%s.png" % gun) else "pistol"
+
+
+static func part_tex(a: String) -> Texture2D:
+	var p := "res://assets/sprites/guns/parts/%s.png" % a
+	return load(p) as Texture2D if ResourceLoader.exists(p) else null
+
+
+## Where every fitted part sits on the gun sprite: [{id, mount, pos (top-left,
+## sprite px), size, tex}]. `fitted` overrides what is on (slot -> part) so
+## menus can preview a part before it is bought.
+static func layout(gun: String, fitted: Variant = null) -> Array:
+	var on_: Dictionary = {}
+	if fitted is Dictionary:
+		on_ = fitted
+	else:
+		for slot in SLOTS:
+			var a := on(gun, slot)
+			if a != "" and slot_open(gun, slot):
+				on_[slot] = a
+	var gm := _gun_meta(gun_sprite(gun))
+	var mz: Array = gm.get("muzzle", [28, 5])
+	var out: Array = []
+	# The barrel first: a muzzle device sits at the end of a long barrel.
+	var muzzle := Vector2(float(mz[0]) - 2.0, float(mz[1]))
+	for slot in ["barrel", "muzzle", "optic", "mag", "ammo"]:
+		var a := str(on_.get(slot, ""))
+		var pm := part_meta(a)
+		if a == "" or pm.is_empty():
+			continue
+		var mount := str(pm["mount"])
+		var at: Vector2
+		if mount == "muzzle":
+			at = muzzle
+		else:
+			var m: Array = gm.get(mount, mz)
+			at = Vector2(float(m[0]), float(m[1]))
+		var anc: Array = pm["anchor"]
+		var sz: Array = pm["size"]
+		var pos := at - Vector2(float(anc[0]), float(anc[1]))
+		out.append({"id": a, "slot": slot, "mount": mount, "pos": pos, "size": Vector2(float(sz[0]), float(sz[1])), "tex": part_tex(a), "at": at})
+		if slot == "barrel" and a == "long_barrel":
+			muzzle.x += float(sz[0]) - 4.0
+	return out
+
+
+## Parts drawn on the held gun sprite (its texels), plus the laser line
+## shown while aiming.
+static func dress(gun_sprite_node: Sprite2D, gun: String, muzzle: Vector2, _grip: Vector2) -> void:
+	for c in gun_sprite_node.get_children():
 		if c.has_meta("attach"):
 			c.queue_free()
-	var x := muzzle.x
-	if has(gun, "long_barrel"):
-		_part(gun_sprite, [Vector2(x - 2, muzzle.y - 2), Vector2(x + 10, muzzle.y - 2), Vector2(x + 10, muzzle.y + 2), Vector2(x - 2, muzzle.y + 2)], Color(0.2, 0.2, 0.22))
-		x += 10.0
-	if has(gun, "suppressor"):
-		_part(gun_sprite, [Vector2(x - 1, muzzle.y - 4), Vector2(x + 16, muzzle.y - 4), Vector2(x + 16, muzzle.y + 4), Vector2(x - 1, muzzle.y + 4)], Color(0.1, 0.1, 0.12))
-		_part(gun_sprite, [Vector2(x + 2, muzzle.y - 4), Vector2(x + 14, muzzle.y - 4), Vector2(x + 14, muzzle.y - 3), Vector2(x + 2, muzzle.y - 3)], Color(0.4, 0.42, 0.46))
-	var top := muzzle.y - 6.0
-	var mid := (grip.x + muzzle.x) * 0.5
-	if has(gun, "scope"):
-		_part(gun_sprite, [Vector2(mid - 10, top - 6), Vector2(mid + 10, top - 6), Vector2(mid + 10, top), Vector2(mid - 10, top)], Color(0.12, 0.12, 0.14))
-		_part(gun_sprite, [Vector2(mid + 8, top - 5), Vector2(mid + 11, top - 5), Vector2(mid + 11, top - 1), Vector2(mid + 8, top - 1)], Color(0.4, 0.75, 1.0))
-	elif has(gun, "red_dot"):
-		_part(gun_sprite, [Vector2(mid - 4, top - 5), Vector2(mid + 4, top - 5), Vector2(mid + 4, top), Vector2(mid - 4, top)], Color(0.15, 0.15, 0.17))
-		_part(gun_sprite, [Vector2(mid, top - 4), Vector2(mid + 2, top - 4), Vector2(mid + 2, top - 2), Vector2(mid, top - 2)], Color(1.0, 0.2, 0.2))
-	if has(gun, "drum_mag"):
-		var pts: Array = []
-		for k in 14:
-			var ang := TAU * float(k) / 14.0
-			pts.append(Vector2(grip.x + 8.0, grip.y + 2.0) + Vector2(cos(ang), sin(ang)) * 7.0)
-		_part(gun_sprite, pts, Color(0.16, 0.16, 0.18))
-	elif has(gun, "ext_mag"):
-		_part(gun_sprite, [Vector2(grip.x + 2, grip.y), Vector2(grip.x + 9, grip.y), Vector2(grip.x + 9, grip.y + 12), Vector2(grip.x + 2, grip.y + 12)], Color(0.14, 0.14, 0.16))
+	for p: Dictionary in layout(gun):
+		if p["tex"] == null:
+			continue
+		var s := Sprite2D.new()
+		s.set_meta("attach", true)
+		s.texture = p["tex"]
+		s.centered = false
+		s.position = p["pos"]
+		s.texture_filter = gun_sprite_node.texture_filter
+		s.z_index = -1 if str(p["mount"]) == "mag" else 0
+		s.z_as_relative = true
+		gun_sprite_node.add_child(s)
 	if has(gun, "laser"):
 		var l := Line2D.new()
 		l.set_meta("attach", true)
@@ -187,12 +250,4 @@ static func dress(gun_sprite: Sprite2D, gun: String, muzzle: Vector2, grip: Vect
 		var m := CanvasItemMaterial.new()
 		m.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
 		l.material = m
-		gun_sprite.add_child(l)
-
-
-static func _part(host: Node2D, pts: Array, col: Color) -> void:
-	var p := Polygon2D.new()
-	p.set_meta("attach", true)
-	p.polygon = PackedVector2Array(pts)
-	p.color = col
-	host.add_child(p)
+		gun_sprite_node.add_child(l)

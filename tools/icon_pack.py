@@ -2312,6 +2312,18 @@ def main():
     surv = []
     for name, fn in SURV_ICONS.items():
         surv.append(fn().save(SURV / f"{name}.png"))
+    # Empty gun slots: a dim silhouette of that slot's typical part.
+    from PIL import Image
+    for slot, part in (("muzzle", "suppressor"), ("optic", "red_dot"), ("barrel", "long_barrel"), ("mag", "ext_mag"), ("ammo", "hollow")):
+        im = Image.open(OUT / f"part_{part}.png").convert("RGBA")
+        px = im.load()
+        for y in range(im.height):
+            for x in range(im.width):
+                r, g, b, a = px[x, y]
+                if a:
+                    l = (r * 3 + g * 5 + b * 2) // 10
+                    px[x, y] = (40 + l // 4, 46 + l // 4, 62 + l // 3, a)
+        im.save(OUT / f"slot_{slot}.png")
     print(f"icons {len(made)}  survive {len(surv)}")
     if "--sheet" in sys.argv:
         sheet(made, "/tmp/claude-0/icons/pack.png", scale=3, cols=16)

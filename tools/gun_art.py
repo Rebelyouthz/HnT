@@ -5,8 +5,9 @@ reads at a glance in the hand and on the floor:
 
     python3 tools/gun_art.py   ->  assets/sprites/guns/<id>.png + guns.json
 
-guns.json stores per gun the grip point (where the hand holds it) and the
-muzzle point, in texels from the top-left, for GunHold and the projectiles.
+guns.json stores per gun the grip point (where the hand holds it), the
+muzzle point and the attachment mounts (rail on top, under the barrel, the
+magazine well, the ammo window; see tools/gun_parts.py), in texels from the top-left, for GunHold and the projectiles.
 """
 from __future__ import annotations
 
@@ -81,7 +82,7 @@ def pistol():
     p.px(26, 2, STEEL)                              # front sight
     p.px(6, 2, STEEL)
     p.outline()
-    return p.im, {"grip": [8, 12], "muzzle": [29, 5]}
+    return p.im, {"grip": [8, 12], "muzzle": [29, 5], "rail": [15, 3], "under": [21, 10], "mag": [7, 17], "window": [14, 5]}
 
 
 def nailgun():
@@ -98,7 +99,7 @@ def nailgun():
     p.d.line([10, 6, 26, 6], fill=shade(yel, 1.3))
     p.d.text((14, 5), "", fill=INK)
     p.outline()
-    return p.im, {"grip": [10, 15], "muzzle": [36, 8]}
+    return p.im, {"grip": [10, 15], "muzzle": [36, 8], "rail": [17, 4], "under": [30, 11], "mag": [9, 22], "window": [20, 8]}
 
 
 def shotgun():
@@ -117,7 +118,7 @@ def shotgun():
     p.px(72, 4, STEEL)
     p.box(73, 5, 74, 7, INK, False)
     p.outline()
-    return p.im, {"grip": [24, 12], "muzzle": [75, 6]}
+    return p.im, {"grip": [24, 12], "muzzle": [75, 6], "rail": [28, 5], "under": [64, 11], "mag": [33, 11], "window": [30, 7]}
 
 
 def smg():
@@ -136,7 +137,7 @@ def smg():
     p.box(14, 3, 18, 4, DARK)                       # rear sight
     p.box(42, 6, 43, 8, INK, False)
     p.outline()
-    return p.im, {"grip": [13, 14], "muzzle": [43, 7]}
+    return p.im, {"grip": [13, 14], "muzzle": [43, 7], "rail": [27, 5], "under": [37, 9], "mag": [21, 18], "window": [28, 7]}
 
 
 def ray():
@@ -158,7 +159,7 @@ def ray():
     p.d.line([12, 0, 12, 2], fill=(240, 240, 232, 255))
     p.d.line([14, 1, 14, 2], fill=(240, 240, 232, 255))
     p.outline()
-    return p.im, {"grip": [11, 18], "muzzle": [46, 10]}
+    return p.im, {"grip": [11, 18], "muzzle": [46, 10], "rail": [26, 6], "under": [34, 13], "mag": [10, 26], "window": [24, 10]}
 
 
 def revolver():
@@ -180,7 +181,7 @@ def revolver():
     p.px(33, 3, nickel)
     p.box(34, 4, 35, 6, INK, False)
     p.outline()
-    return p.im, {"grip": [7, 12], "muzzle": [35, 5]}
+    return p.im, {"grip": [7, 12], "muzzle": [35, 5], "rail": [24, 4], "under": [26, 8], "mag": [5, 17], "window": [13, 6]}
 
 
 def flare():
@@ -197,7 +198,7 @@ def flare():
     p.px(14, 12, DARK)
     p.box(30, 6, 31, 8, INK, False)
     p.outline()
-    return p.im, {"grip": [9, 13], "muzzle": [31, 7]}
+    return p.im, {"grip": [9, 13], "muzzle": [31, 7], "rail": [18, 4], "under": [24, 11], "mag": [9, 19], "window": [16, 7]}
 
 
 def main():
