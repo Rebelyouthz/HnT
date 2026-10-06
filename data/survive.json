@@ -223,6 +223,87 @@
    "life": 4.0,
    "unlock": "u_gravy",
    "blurb": "Hot gravy pools under the biggest crowd and slows them down."
+  },
+  {
+   "id": "name_badge",
+   "name": "BADGE BOOMERANG",
+   "icon": "name_badge",
+   "cd": 1.8,
+   "dmg": 8,
+   "per": 3,
+   "proj": 1,
+   "proj_at": [
+    3,
+    6
+   ],
+   "blurb": "Your name badge flies out and comes back, through everyone both ways. HELLO, MY NAME IS: PAIN."
+  },
+  {
+   "id": "shredder",
+   "name": "SHREDDER BLADE",
+   "icon": "shredder",
+   "cd": 4.5,
+   "dmg": 6,
+   "per": 2,
+   "proj": 1,
+   "proj_at": [
+    4,
+    7
+   ],
+   "life": 4.0,
+   "blurb": "A shredder blade bounces round the screen for four seconds. Confidential. Also you."
+  },
+  {
+   "id": "fax_beam",
+   "name": "FAX BEAM",
+   "icon": "fax_beam",
+   "cd": 2.6,
+   "dmg": 14,
+   "per": 4,
+   "area": 260,
+   "blurb": "A screeching fax beam burns a straight line where you face. Every thug on it gets the memo."
+  },
+  {
+   "id": "rubber_stamp",
+   "name": "RUBBER STAMP",
+   "icon": "rubber_stamp",
+   "cd": 3.0,
+   "dmg": 22,
+   "per": 6,
+   "proj": 1,
+   "proj_at": [
+    3,
+    5,
+    7
+   ],
+   "area": 46,
+   "blurb": "A giant DENIED stamp slams down on a thug and everyone around him. Application rejected."
+  },
+  {
+   "id": "nail_driver",
+   "name": "NAIL DRIVER",
+   "icon": "nail_driver",
+   "cd": 0.13,
+   "dmg": 4,
+   "per": 1,
+   "proj": 1,
+   "proj_at": [
+    4,
+    7
+   ],
+   "manual": true,
+   "blurb": "MANUAL: hold SHOOT with empty hands for a stream of nails where you face. Aim by facing."
+  },
+  {
+   "id": "paperweight",
+   "name": "PAPERWEIGHT",
+   "icon": "paperweight",
+   "cd": 0.9,
+   "dmg": 18,
+   "per": 5,
+   "area": 52,
+   "manual": true,
+   "blurb": "MANUAL: tap SHOOT with empty hands to lob a glass paperweight that shatters on the crowd."
   }
  ],
  "traits": [

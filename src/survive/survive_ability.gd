@@ -34,6 +34,14 @@ func _process(delta: float) -> void:
 	_cd -= delta
 	if _cd > 0.0:
 		return
+	# Manual weapons fire on SHOOT with no gun in hand: NAIL DRIVER while
+	# held, PAPERWEIGHT on each tap.
+	if bool(r.get("manual", false)):
+		if Arsenal.is_gun(str(f.get("pickup"))):
+			return
+		var want: bool = f.call("_pressed", "shoot") if id == "nail_driver" else f.call("_just", "shoot")
+		if not want:
+			return
 	_cd = float(r.get("cd", 1.5)) * run.cd_mul() * (0.65 if run.evolved.has(id) else 1.0)
 	_fire(run, r, f)
 
@@ -137,6 +145,53 @@ func _fire(run: SurviveRun, r: Dictionary, f: Fighter) -> void:
 			for i in n:
 				var a := TAU * float(i) / float(n) + _t
 				SurvProj.shoot(_host(), "staple", id, at, Vector2.from_angle(a) * 420.0, 1)
+		"name_badge":
+			for i in run.proj_count(id):
+				var t := _nearest(at)
+				var a := (t.global_position + Vector2(0, -24) - at).angle() if t else (0.0 if f.facing > 0 else PI)
+				SurvProj.shoot(_host(), "badge", id, at, Vector2.from_angle(a + (float(i) - float(run.proj_count(id) - 1) * 0.5) * 0.5) * 330.0, 99, f)
+			Mixer.play_sfx("res://assets/audio/whoosh_light.wav", 1.2, -12.0)
+		"shredder":
+			for i in run.proj_count(id):
+				var a := randf() * TAU
+				SurvProj.shoot(_host(), "blade", id, at, Vector2.from_angle(a) * 260.0, 9999, f)
+			Mixer.play_sfx("res://assets/audio/sfx/metal_bang.ogg", 1.8, -12.0)
+		"fax_beam":
+			var dir := Vector2(1.0 if f.facing > 0 else -1.0, 0)
+			var t := _nearest(at, area)
+			if t:
+				dir = (t.global_position + Vector2(0, -24) - at).normalized()
+			SurvProj.beam(_host(), id, at, dir * area)
+			for e in get_tree().get_nodes_in_group("enemies"):
+				if not (e is Node2D) or int(e.get("hp")) <= 0:
+					continue
+				var c := (e as Node2D).global_position + Vector2(0, -24) - at
+				var along := c.dot(dir)
+				if along > 0.0 and along < area and absf(c.cross(dir)) < 16.0:
+					SurvProj.strike(e, id, self)
+			Mixer.play_sfx("res://assets/audio/sfx/ray.ogg" if ResourceLoader.exists("res://assets/audio/sfx/ray.ogg") else "res://assets/audio/zap.wav", 0.9, -8.0)
+		"rubber_stamp":
+			var hit: Array = []
+			for i in run.proj_count(id):
+				var t := _nearest(f.global_position, 360.0, hit)
+				if t == null:
+					break
+				hit.append(t)
+				SurvProj.stamp(_host(), id, t.global_position + Vector2(randf_range(-6, 6), 0), area)
+		"nail_driver":
+			var face := 0.0 if f.facing > 0 else PI
+			var n := run.proj_count(id)
+			for i in n:
+				var a := face + (float(i) - float(n - 1) * 0.5) * 0.1 + randf_range(-0.05, 0.05)
+				SurvProj.shoot(_host(), "staple", id, at, Vector2.from_angle(a) * 620.0, 1 + int(run.abilities.get(id, 1)) / 3)
+			Mixer.play_sfx("res://assets/audio/sfx/nailgun.ogg" if ResourceLoader.exists("res://assets/audio/sfx/nailgun.ogg") else "res://assets/audio/ui_click.wav", randf_range(1.5, 1.8), -14.0)
+		"paperweight":
+			var p := f.global_position + Vector2(float(f.facing) * 110.0, 0)
+			var t := _nearest(p, 120.0)
+			if t:
+				p = t.global_position
+			SurvProj.lob(_host(), id, at, p, area)
+			Mixer.play_sfx("res://assets/audio/whoosh_light.wav", 0.8, -10.0)
 		"audit":
 			var chain := int(r.get("chain", 5)) + int(r.get("chain_per", 1)) * (int(run.abilities.get(id, 1)) - 1) + (99 if run.evolved.has(id) else 0)
 			var hit: Array = []

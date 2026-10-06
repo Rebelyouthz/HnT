@@ -1979,6 +1979,82 @@ def s_evolve():
     return ic
 
 
+@icon("name_badge", True)
+def s_name_badge():
+    ic = Icon()
+    ic.rect(4, 8, 27, 25, "white")
+    ic.rect(4, 8, 27, 13, "red")
+    ic.rect(7, 16, 24, 18, "slate", flat=True)
+    ic.rect(7, 20, 18, 21, "slate", flat=True)
+    ic.rect(13, 3, 18, 8, "steel")
+    ic.arc([1, 1, 30, 30], 200, 320, "cyan", width=1, flat=True)
+    ic.poly([(26, 2), (30, 6), (25, 7)], "cyan")
+    return ic
+
+
+@icon("shredder", True)
+def s_shredder():
+    ic = Icon()
+    import math
+    pts = []
+    for i in range(16):
+        a = i * math.pi / 8
+        rr = 14 if i % 2 == 0 else 10
+        pts.append((16 + math.cos(a) * rr, 16 + math.sin(a) * rr))
+    ic.poly(pts, "steel", round_=True)
+    ic.ellipse(11, 11, 20, 20, "gun", round_=True)
+    ic.ellipse(14, 14, 17, 17, "ink", flat=True)
+    ic.pixels([(4, 26), (27, 5), (2, 6)], "paper", 3)
+    return ic
+
+
+@icon("fax_beam", True)
+def s_fax_beam():
+    ic = Icon()
+    ic.rect(2, 12, 16, 26, "grey")
+    ic.rect(4, 9, 14, 12, "paper")
+    ic.rect(4, 15, 9, 17, "ink", flat=True)
+    ic.rect(15, 15, 18, 21, "red")
+    ic.rect(18, 16, 30, 20, "red", flat=True, tone=2)
+    ic.rect(18, 17, 30, 19, "white", flat=True)
+    return ic
+
+
+@icon("rubber_stamp", True)
+def s_rubber_stamp():
+    ic = Icon()
+    ic.ellipse(11, 1, 21, 10, "wood", round_=True)
+    ic.rect(14, 9, 18, 15, "wood")
+    ic.rect(6, 15, 26, 21, "black")
+    ic.rect(5, 21, 27, 24, "red")
+    ic.rect(3, 26, 29, 30, "red", flat=True, tone=-1)
+    ic.rect(6, 27, 26, 28, "paper", flat=True)
+    return ic
+
+
+@icon("nail_driver", True)
+def s_nail_driver():
+    ic = Icon()
+    ic.rect(4, 8, 22, 15, "yellow")
+    ic.rect(22, 10, 27, 13, "gun")
+    ic.poly([(7, 15), (13, 15), (11, 26), (5, 26)], "black")
+    for x in (24, 28):
+        ic.line([(x + 2, 11), (x + 5, 11)], "steel", flat=True, tone=2)
+    ic.rect(8, 16, 18, 18, "steel")
+    return ic
+
+
+@icon("paperweight", True)
+def s_paperweight():
+    ic = Icon()
+    ic.ellipse(4, 8, 27, 29, "glass", round_=True)
+    ic.ellipse(10, 15, 21, 25, "violet", round_=True)
+    ic.ellipse(13, 18, 18, 22, "pink", flat=True)
+    ic.rect(4, 25, 27, 28, "glass", tone=-1)
+    ic.glint(9, 12, True)
+    return ic
+
+
 # Traits.
 @icon("t_dmg", True)
 def t_dmg():

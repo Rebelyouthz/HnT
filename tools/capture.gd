@@ -377,7 +377,10 @@ func _process(_delta: float) -> bool:
 		var sr: Node = root.get_tree().get_first_node_in_group("survive_run")
 		if _n == 90 and sr:
 			get_root().get_tree().paused = false
-			for id in ["cart", "bag", "hydrant", "mailbomb", "sprinkler", "audit", "gravy"]:
+			var ids := ["cart", "bag", "hydrant", "mailbomb", "sprinkler", "audit", "gravy"]
+			if OS.get_environment("SURV_IDS") != "":
+				ids = Array(OS.get_environment("SURV_IDS").split(","))
+			for id in ids:
 				sr.get("abilities")[id] = 7
 				sr.call("_mount", id)
 			sr.get("evolved")["cart"] = true
