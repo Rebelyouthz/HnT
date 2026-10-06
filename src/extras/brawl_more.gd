@@ -25,6 +25,8 @@ var _layer: CanvasLayer
 var _flash: ColorRect
 var _crack: Control
 var _t := 0.0
+var _go: Control
+var _clear_t := 0.0
 
 
 func _ready() -> void:
@@ -42,6 +44,10 @@ func _ready() -> void:
 	_crack.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_crack.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_layer.add_child(_crack)
+	_go = GoArrow.new()
+	_go.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_go.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_layer.add_child(_go)
 	_burst_at = 0
 
 
@@ -61,6 +67,7 @@ func _process(delta: float) -> void:
 					e.add_child(m)
 				elif not ok and mark != null:
 					mark.queue_free()
+	_go_tick(delta)
 	# Combo bursts.
 	var c := int(Juice.combo)
 	if c < _burst_at:
@@ -69,6 +76,31 @@ func _process(delta: float) -> void:
 		if c >= step and _burst_at < step:
 			_burst_at = step
 			_combo_burst(step)
+
+
+## GO: the street ahead is clear - a blinking arrow at the right edge.
+func _go_tick(delta: float) -> void:
+	if _go == null or get_tree().paused:
+		return
+	var act := get_tree().get_first_node_in_group("run_act")
+	var hero: Node2D = null
+	for n in get_tree().get_nodes_in_group("players"):
+		if n is Fighter and not (n as Fighter).downed:
+			hero = n
+			break
+	var ok := act != null and hero != null and SurviveRun.get_run(get_tree()) == null and not bool(act.get("roof_start"))
+	if ok:
+		for n in get_tree().get_nodes_in_group("enemies"):
+			if n is Punk and (n as Punk).hp > 0 and absf((n as Punk).global_position.x - hero.global_position.x) < 700.0:
+				ok = false
+				break
+	if ok and act.get("map_w") != null and hero.global_position.x > float(act.get("map_w")) - 400.0:
+		ok = false
+	_clear_t = _clear_t + delta if ok else 0.0
+	var show := _clear_t > 2.5
+	if show and not (_go as GoArrow).on:
+		Mixer.play_sfx("res://assets/audio/ui/up_rise.wav", 1.5, -12.0)
+	(_go as GoArrow).on = show
 
 
 static func finishable(e: Punk) -> bool:
@@ -256,3 +288,34 @@ class Crack extends Control:
 		for pts: PackedVector2Array in _lines:
 			draw_polyline(pts, Color(1, 1, 1, 0.85 * a), 1.0)
 		draw_circle(_at, 6.0, Color(1, 1, 1, 0.4 * a))
+
+
+## The "GO ->" sign of the old arcade brawlers.
+class GoArrow extends Control:
+	var on := false
+	var _t := 0.0
+	var _a := 0.0
+
+	func _process(delta: float) -> void:
+		_t += delta
+		_a = move_toward(_a, 1.0 if on else 0.0, delta * 4.0)
+		queue_redraw()
+
+	func _draw() -> void:
+		if _a <= 0.01:
+			return
+		var vp := get_viewport_rect().size
+		var blink := 1.0 if fmod(_t, 0.7) < 0.45 else 0.35
+		var a := _a * blink
+		var c := Color(1.0, 0.82, 0.3, a)
+		var x := vp.x - 64.0 + 6.0 * sin(_t * 6.0)
+		var y := vp.y * 0.42
+		var f := UiKit.title_font()
+		draw_string_outline(f, Vector2(x - 34, y - 14), "GO", HORIZONTAL_ALIGNMENT_LEFT, -1, 28, 6, Color(0, 0, 0, a))
+		draw_string(f, Vector2(x - 34, y - 14), "GO", HORIZONTAL_ALIGNMENT_LEFT, -1, 28, c)
+		var pts := PackedVector2Array([Vector2(x - 34, y - 6), Vector2(x + 8, y - 6), Vector2(x + 8, y - 16), Vector2(x + 30, y + 6), Vector2(x + 8, y + 28), Vector2(x + 8, y + 18), Vector2(x - 34, y + 18)])
+		draw_colored_polygon(pts, Color(0, 0, 0, 0.6 * a))
+		var inner := PackedVector2Array()
+		for p in pts:
+			inner.append(p + Vector2(0, -3))
+		draw_colored_polygon(inner, c)
