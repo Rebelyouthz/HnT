@@ -85,6 +85,15 @@ combo_test all COMBO_OK).
 - **Hit reactions** (`src/extras/impact_feel.gd`): head shots snap the head
   back, gut shots fold, uppercuts lift, sweeps take the legs; kicks push and
   kick up dust; big hits get a ring, speed lines and a directional camera kick.
+- **Crowd AI** (`src/actors/crowd_ai.gd`, hooks in `punk.gd`): two attack
+  tickets per hero on story streets; the other thugs hold a ring round the
+  hero (front, behind, up and down the lane) until a ticket frees up;
+  attackers line up in depth; a thug blocked by a crate or car detours up or
+  down the lane. Survivor hordes, bosses, vehicles and shooters are exempt.
+- **Pause > MOVES & COMBOS** (`run_hud.gd` `_move_list`): the hero's own
+  button loadout and every learned combo with pad/keyboard prompts.
+- **GO arrow** (`brawl_more.gd` `GoArrow`): blinks at the right edge after
+  2.5 s with no thug within 700 px (story streets only).
 - **Fixes**: KitBook dropped `hp_mul` (horde/story HP scaling); survivor
   arenas were cluttered (bystander behind the parked car, vault prompt,
   three pickups per kill); card picks now hold the pause (a stage card
