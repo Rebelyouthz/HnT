@@ -42,7 +42,7 @@ func _process(delta: float) -> void:
 		var want: bool = f.call("_pressed", "shoot") if id == "nail_driver" else f.call("_just", "shoot")
 		if not want:
 			return
-	_cd = float(r.get("cd", 1.5)) * run.cd_mul() * (0.65 if run.evolved.has(id) else 1.0)
+	_cd = float(r.get("cd", 1.5)) * run.cd_mul() * (0.65 if run.evolved.has(id) else 1.0) * SurvStarter.cd_mul(id)
 	_fire(run, r, f)
 
 
@@ -65,7 +65,7 @@ func _host() -> Node:
 
 func _fire(run: SurviveRun, r: Dictionary, f: Fighter) -> void:
 	var at := f.global_position + Vector2(0, -30)
-	var area := float(r.get("area", 40)) * run.area_mul()
+	var area := float(r.get("area", 40)) * run.area_mul() * SurvStarter.area_mul(id)
 	match id:
 		"invoice_toss":
 			var n := run.proj_count(id)

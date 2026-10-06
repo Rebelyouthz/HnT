@@ -117,6 +117,24 @@ func _ready() -> void:
 			)
 		)
 		_stage.add_child(gb)
+		var sw := UiKit.button("STARTER WEAPON", Vector2(150, 34))
+		sw.add_theme_font_size_override("font_size", 11)
+		sw.position = Vector2(14, 230)
+		sw.set_meta("key", "starter_btn")
+		if FamilyProfile.is_unseen("surv_starter"):
+			var dt := UiKit.new_dot()
+			dt.position = Vector2(140, -4)
+			sw.add_child(dt)
+		sw.pressed.connect(func() -> void:
+			FamilyProfile.mark_seen("surv_starter")
+			var st: Control = load("res://src/ui/starter_sheet.gd").new()
+			add_child(st)
+			st.closed.connect(func() -> void:
+				st.queue_free()
+				need_refresh.emit()
+			)
+		)
+		_stage.add_child(sw)
 	# Parkour records: medal, best time and tags found per roof map.
 	if mode == "parkour":
 		var rec: Array[String] = []

@@ -17,6 +17,7 @@ var skill_dmg := 6
 var _t := 0.0
 var _hits: Dictionary = {}
 var _tick := 0.0
+static var _leech := 0
 var owner_f: Node2D
 var target := Vector2.ZERO
 var start := Vector2.ZERO
@@ -148,6 +149,14 @@ static func strike(e: Node, ab: String, src: Node) -> void:
 	src.set("skill_dmg", int(h["dmg"]))
 	e.call("take_hit", "skill", src)
 	run.note_hit(e, int(h["dmg"]))
+	# LEECH starter mod: a heart's worth back every 25 hits.
+	if ab == SurvStarter.picked() and SurvStarter.mods(ab).has("leech"):
+		_leech += 1
+		if _leech >= 25:
+			_leech = 0
+			for ff in tree.get_nodes_in_group("players"):
+				if ff is Fighter:
+					(ff as Fighter).hp = mini((ff as Fighter).max_hp, (ff as Fighter).hp + 1)
 	run.dealt[ab] = int(run.dealt.get(ab, 0)) + int(h["dmg"])
 	if bool(h["crit"]):
 		Juice.popup_number((e as Node2D).global_position + Vector2(0, -60), "CRIT %d" % int(h["dmg"]), UiKit.GOLD)

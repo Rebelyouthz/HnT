@@ -45,6 +45,7 @@ var limit_breaks := 0
 var share_t := 0.0
 ## Damage dealt per ability this hour (DPS meter).
 var dealt: Dictionary = {}
+var missions: SurvMissions
 
 
 static func get_run(tree: SceneTree) -> SurviveRun:
@@ -59,7 +60,14 @@ func _ready() -> void:
 	# Everyone starts the hour with one ability: the Son's paper, the
 	# Father's coffee (solo picks by role).
 	var start := "invoice_toss" if App.solo_role == "son" else "coffee"
+	# The STARTER WEAPON picked in the menus walks in with you instead.
+	if SurvStarter.picked() != "":
+		start = SurvStarter.picked()
 	call_deferred("_grant", start)
+	missions = SurvMissions.new()
+	(func() -> void:
+		if is_inside_tree() and get_tree().current_scene:
+			get_tree().current_scene.add_child(missions)).call_deferred()
 	if Trees.has("u_start2"):
 		call_deferred("_second_start", start)
 	# SURVIVOR meta + tree: extra rerolls, banishes, revives, a free trait.
@@ -194,8 +202,8 @@ func slow() -> float:
 func hit(id: String) -> Dictionary:
 	var r := row("abilities", id)
 	var lv := int(abilities.get(id, 1))
-	var d := (float(r.get("dmg", 6)) + float(r.get("per", 1)) * float(lv - 1)) * dmg_mul() * (2.2 if evolved.has(id) else 1.0)
-	var c := randf() < crit()
+	var d := (float(r.get("dmg", 6)) + float(r.get("per", 1)) * float(lv - 1)) * dmg_mul() * (2.2 if evolved.has(id) else 1.0) * SurvStarter.dmg_mul(id)
+	var c := randf() < crit() + SurvStarter.crit_bonus(id)
 	if c:
 		d *= 2.0
 	return {"dmg": int(round(d)), "crit": c}
@@ -209,7 +217,7 @@ func proj_count(id: String) -> int:
 		if lv >= int(at):
 			n += 1
 	if int(r.get("proj", 0)) > 0:
-		n += proj_bonus()
+		n += proj_bonus() + SurvStarter.proj_bonus(id)
 		if evolved.has(id):
 			n += 2
 	return n
@@ -577,5 +585,9 @@ func award_tokens(won: bool) -> int:
 	FamilyProfile.data["surv_best_kills"] = maxi(int(FamilyProfile.data.get("surv_best_kills", 0)), kills)
 	FamilyProfile.data["surv_best_level"] = maxi(int(FamilyProfile.data.get("surv_best_level", 0)), level)
 	FamilyProfile.data["surv_best_time"] = maxi(int(FamilyProfile.data.get("surv_best_time", 0)), int(time_alive))
+	var st := {"kills": kills, "time": int(time_alive), "level": level, "evolved": evolved.size(), "won": 1 if won else 0}
+	if missions and is_instance_valid(missions):
+		st.merge(missions.stats())
+	SurvChallenges.check(st)
 	FamilyProfile.save()
 	return got

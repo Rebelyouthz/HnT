@@ -68,6 +68,11 @@ const STEPS := {
 		{"text": "The badge says what it is: PASSIVE, ACTIVE, PET, AUTOWEAPON or MANUAL weapon. The frame colour is its rarity."},
 		{"who": "son", "text": "The same card again later LEVELS it up: grey bars are what you have, green is what you get."},
 	],
+	"starter": [
+		{"text": "Pick the weapon the Kid walks into the coping hour with. It stays ours: it levels and gets rarer."},
+		{"key": "lv", "text": "LEVEL UP with S-COINS: grey is the damage now, green is after. Copies from boss chests MERGE into a rarer one."},
+		{"who": "son", "text": "Two MOD slots per weapon. Locked starters open with the CHALLENGES on the right."},
+	],
 	"spick": [
 		{"text": "Survivor level up. Abilities fire on their own, traits stack, items help everything."},
 		{"who": "son", "text": "MANUAL weapons fire when you press SHOOT with empty hands. REROLL and BANISH if you hate all three."},
