@@ -175,8 +175,23 @@ func _build_face() -> void:
 	add_child(badge)
 	_labels.append(badge)
 	if info.has("level"):
-		var lvl := _label(("UPGRADE  LV %d" if bool(info.get("upgrade", false)) else "LV %d") % int(info["level"]), Vector2(W - 150, 60), 134, 11, UiKit.GOLD if bool(info.get("upgrade", false)) else Palette.TEXT)
-		lvl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		var lv_now := int(info["level"])
+		var lr := RichTextLabel.new()
+		lr.bbcode_enabled = true
+		lr.fit_content = true
+		lr.scroll_active = false
+		lr.autowrap_mode = TextServer.AUTOWRAP_OFF
+		lr.position = Vector2(W - 150, 58)
+		lr.size = Vector2(134, 20)
+		lr.add_theme_font_override("normal_font", UiKit.pixel_font())
+		lr.add_theme_font_size_override("normal_font_size", 11)
+		lr.add_theme_color_override("font_outline_color", UiKit.INK)
+		lr.add_theme_constant_override("outline_size", 4)
+		lr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var lt := ("LV " + UiKit.delta_bb(float(lv_now - 1), float(lv_now), "%d")) if bool(info.get("upgrade", false)) else "[color=%s]LV %d[/color]" % [UiKit.BASE_COL, lv_now]
+		lr.text = "[right]%s[/right]" % lt
+		add_child(lr)
+		_labels.append(lr)
 	var stats := stat_rows()
 	for i in stats.size():
 		_label(str(stats[i][0]), Vector2(32, 280 + i * 22), 110, 12, p[1].lerp(Color.WHITE, 0.25)).horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -257,15 +272,24 @@ func _draw() -> void:
 	draw_texture_rect(_frame_tex, Rect2(0, 0, W, H), false)
 	# Stat meters: segmented bars on the rule panel.
 	var stats := stat_rows()
+	# What you have in light grey; what this card adds in green (an upgrade
+	# shows last level's share in grey and the new level's gain in green).
+	var lvl := int(info.get("level", 1))
+	var up := bool(info.get("upgrade", false)) and lvl > 1
 	for i in stats.size():
 		var y := 282.0 + float(i) * 22.0
 		var frac := float(stats[i][1])
+		var prev := frac * float(lvl - 1) / float(lvl) if up else 0.0
 		var segs := 10
 		for sgm in segs:
 			var x := 140.0 + float(sgm) * 13.0
+			var f := float(sgm) / float(segs)
 			_px(Rect2(x, y, 11, 12), Color(0, 0, 0.02))
-			if float(sgm) / float(segs) < frac:
-				_px(Rect2(x + 2, y + 2, 8, 8), light if sgm % 2 == 0 else base)
+			if f < prev:
+				_px(Rect2(x + 2, y + 2, 8, 8), Color(0.86, 0.87, 0.9) if sgm % 2 == 0 else Color(0.72, 0.73, 0.78))
+			elif f < frac:
+				var g := Color(0.36, 1.0, 0.52) if up else (light if sgm % 2 == 0 else base)
+				_px(Rect2(x + 2, y + 2, 8, 8), g)
 	# Legendary / epic shine sweeping over the whole card.
 	if rarity() == "legendary" or rarity() == "epic" or lit:
 		var sweep := fmod(_t * (0.6 if rarity() == "legendary" else 0.35), 1.6) - 0.3

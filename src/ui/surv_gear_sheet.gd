@@ -234,6 +234,29 @@ func _stat_chip(k: String, v: float, col: Color) -> Control:
 	return h
 
 
+## A stat with its icon: what is worn now in grey, what this piece gives in
+## green (better) or red (worse).
+func _delta_chip(k: String, was: float, now: float) -> Control:
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 3)
+	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	h.add_child(IconBook.rect(str(STAT_ICON.get(k, "node_score")), IconBook.SIZE_S * 0.75))
+	var fmt := "%+d" if k == "hp" else ("%+.1f" if k == "proj" else "%+d%%")
+	var mul := 1.0 if k in ["hp", "proj"] else 100.0
+	var l := RichTextLabel.new()
+	l.bbcode_enabled = true
+	l.fit_content = true
+	l.autowrap_mode = TextServer.AUTOWRAP_OFF
+	l.scroll_active = false
+	l.add_theme_font_override("normal_font", UiKit.pixel_font())
+	l.add_theme_font_size_override("normal_font_size", 12)
+	l.text = UiKit.delta_bb(was * mul, now * mul, fmt)
+	l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	h.add_child(l)
+	return h
+
+
 func _slot_tile(slot: String, p: Dictionary) -> Control:
 	var rar := SurvGear.rarity_of(p) if not p.is_empty() else "common"
 	var rc := Rarity.color(rar) if not p.is_empty() else Color(0.35, 0.37, 0.42)
@@ -394,11 +417,8 @@ func _show_detail(i: int) -> void:
 				keys.append(k)
 	for k: String in keys:
 		var v := SurvGear.value(p, k)
-		var d := v - (SurvGear.value(cur, k) if not cur.is_empty() else 0.0)
-		if cur.is_empty():
-			chips.add_child(_stat_chip(k, v, Palette.TEXT))
-		else:
-			chips.add_child(_stat_chip(k, d, Palette.TEXT if absf(d) < 0.0001 else (Palette.READY if d > 0.0 else Color(1.0, 0.35, 0.3))))
+		var was := SurvGear.value(cur, k) if not cur.is_empty() else (0.0 if not worn_here else v)
+		chips.add_child(_delta_chip(k, was, v))
 	var btns := HBoxContainer.new()
 	btns.add_theme_constant_override("separation", 8)
 	info.add_child(btns)

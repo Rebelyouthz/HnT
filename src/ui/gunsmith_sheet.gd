@@ -350,7 +350,7 @@ class StatBar extends Control:
 
 	func _draw() -> void:
 		var segs := 20
-		var w := (size.x - 40.0) / float(segs)
+		var w := (size.x - 150.0) / float(segs)
 		var fa := clampf(now / 2.0, 0.0, 1.0)
 		var fb := clampf(then / 2.0, 0.0, 1.0)
 		for i in segs:
@@ -358,13 +358,19 @@ class StatBar extends Control:
 			var r := Rect2(Vector2(float(i) * w, 2), Vector2(w - 2, size.y - 4))
 			var c := Color(0.12, 0.13, 0.17)
 			if f <= minf(fa, fb):
-				c = Color(0.55, 0.85, 1.0) if i % 2 == 0 else Color(0.4, 0.7, 0.9)
+				c = Color(0.86, 0.87, 0.9) if i % 2 == 0 else Color(0.7, 0.72, 0.78)
 			elif f <= fb:
 				c = Color(0.35, 1.0, 0.5)
 			elif f <= fa:
 				c = Color(1.0, 0.3, 0.28)
 			draw_rect(r, c)
-		var pct := int(round((then - 1.0) * 100.0))
-		var txt := ("%+d%%" % pct) if pct != 0 else "STOCK"
-		var col := Color(0.35, 1.0, 0.5) if then > now + 0.001 else (Color(1.0, 0.35, 0.3) if then < now - 0.001 else Palette.MUTED)
-		draw_string(UiKit.pixel_font(), Vector2(size.x - 38.0, size.y - 4.0), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, col)
+		# "1.00 > 1.20": now in grey, the change green (up) or red (down).
+		var f := UiKit.pixel_font()
+		var x := size.x - 140.0
+		var a := "x%.2f" % now
+		draw_string(f, Vector2(x, size.y - 4.0), a, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.84, 0.85, 0.88))
+		if absf(then - now) > 0.001:
+			x += f.get_string_size(a, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x + 4.0
+			draw_string(f, Vector2(x, size.y - 4.0), "›", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.54, 0.55, 0.6))
+			x += 10.0
+			draw_string(f, Vector2(x, size.y - 4.0), "x%.2f" % then, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.35, 1.0, 0.5) if then > now else Color(1.0, 0.35, 0.3))

@@ -148,7 +148,24 @@ const DOWN_COL := "#ff5a4a"
 
 
 ## Stat text for cards: gains (+12%, +3) in green, costs (-10%, -2) in red.
+const BASE_COL := "#d6d8e0"
+
+
+## "old -> new" for a stat: the old value in a plain light grey, the new one
+## green when it is better, red when worse (lower_better for cooldowns etc).
+## `fmt` formats both numbers, e.g. "%.2f", "%d", "%d%%".
+static func delta_bb(old: float, new: float, fmt := "%.2f", lower_better := false) -> String:
+	var a := fmt % old
+	var b := fmt % new
+	if absf(new - old) < 0.0001:
+		return "[color=%s]%s[/color]" % [BASE_COL, a]
+	var better := (new < old) if lower_better else (new > old)
+	return "[color=%s]%s[/color] [color=#8a8c98]›[/color] [color=%s]%s[/color]" % [BASE_COL, a, UP_COL if better else DOWN_COL, b]
+
+
 static func stat_bbcode(text: String) -> String:
+	if "[color" in text:
+		return text
 	var re := RegEx.new()
 	re.compile("([+\\-\u2212]\\d+(?:\\.\\d+)?%?)")
 	var out := ""

@@ -226,6 +226,19 @@ func _card(o: Dictionary) -> Button:
 	body.add_child(_lab(lv_text, Vector2(20, 198), 280, 11, col, HORIZONTAL_ALIGNMENT_CENTER))
 	var bl := UiKit.rich(str(r.get("blurb", "")), 268, 12, Palette.TEXT)
 	bl.position = Vector2(26, 218)
+	if kind == "trait":
+		# Total now -> total with this stack, white then green.
+		var re := RegEx.new()
+		re.compile("([+-]?\\d+(?:\\.\\d+)?)%")
+		var m := re.search(str(r.get("blurb", "")))
+		if m:
+			var per := float(m.get_string(1))
+			var have := run.trait_n(str(o["id"]))
+			var tl := UiKit.rich("", 268, 12, Palette.TEXT)
+			tl.text = "[center]TOTAL  %s[/center]" % UiKit.delta_bb(per * float(have), per * float(have + 1), "%+d%%")
+			tl.position = Vector2(26, 262)
+			tl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			body.add_child(tl)
 	bl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	body.add_child(bl)
 	if kind == "ability":
@@ -233,9 +246,9 @@ func _card(o: Dictionary) -> Button:
 		var dmg := float(r.get("dmg", 0)) + float(r.get("per", 0)) * float(maxi(0, lv))
 		var cd := float(r.get("cd", 1.0))
 		var when := ("EVERY %.1fs" % cd) if cd > 0.05 else "ALWAYS ON"
-		var txt := "DMG %d  ·  %s" % [int(dmg), when]
+		var txt := "DMG [color=%s]%d[/color]  ·  %s" % [UiKit.BASE_COL, int(dmg), when]
 		if lv > 0:
-			txt = "DMG %d › [color=%s]%d (+%d)[/color]  ·  %s" % [int(dmg - float(r.get("per", 0))), UiKit.UP_COL, int(dmg), int(r.get("per", 0)), when]
+			txt = "DMG %s  ·  %s" % [UiKit.delta_bb(dmg - float(r.get("per", 0)), dmg, "%d"), when]
 		var st := UiKit.rich("", 268, 11, col)
 		st.text = "[center]" + txt + "[/center]"
 		st.position = Vector2(26, 262)
