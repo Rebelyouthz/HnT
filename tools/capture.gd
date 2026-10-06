@@ -86,6 +86,8 @@ func _prepare() -> void:
 	if _tab == "codex" and fp != null:
 		(fp.data as Dictionary)["kills_by"] = {"Collector Gant": 1, "Bag Snatch": 34, "Repo Goon": 21, "Mohawk Bo": 6, "Coping Imp": 88}
 		(fp.data as Dictionary)["boss_tries_dock_street"] = 2
+	if _tab == "codex" and fp != null:
+		(fp.data as Dictionary)["codex_seen"] = {"enemy:Bag Snatch": 2, "enemy:Roof Runner": 1, "enemy:Mohawk Bo": 1, "enemy:Repo Goon": 2, "enemy:Coping Imp": 1, "boss:Shift Lead": 1, "weapon:pipe": 1, "place:dock_street": 2}
 	if _tab == "jobs" and fp != null:
 		(fp.data as Dictionary).erase("contracts")
 		(fp.data as Dictionary)["kills_total"] = 0

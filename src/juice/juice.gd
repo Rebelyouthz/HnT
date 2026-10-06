@@ -431,7 +431,7 @@ func land_puff(global_pos: Vector2) -> void:
 		p.queue_free()
 
 
-func toast(kind: String, title: String, body: String) -> void:
+func toast(kind: String, title: String, body: String, icon := "") -> void:
 	if _toast_box == null:
 		return
 	var now := Time.get_ticks_msec()
@@ -451,11 +451,15 @@ func toast(kind: String, title: String, body: String) -> void:
 			accent = Palette.READY
 		"challenge":
 			accent = Palette.BRICK
+		"codex":
+			accent = Color(1.0, 0.56, 0.12)
 		_:
 			accent = Palette.EDGE
 	# Pixel toast: chunky framed plate, a glyph medallion by kind, title in
 	# the pixel caps; slides in from the side with a bounce, shines once.
-	var glyph := {"achievement": "star", "unlock": "star", "quest": "eye", "challenge": "fist", "reward": "gold"}.get(kind, "star") as String
+	var glyph := {"achievement": "star", "unlock": "star", "quest": "eye", "challenge": "fist", "reward": "gold", "codex": "node_school"}.get(kind, "star") as String
+	if icon != "":
+		glyph = icon
 	var wrap := PanelContainer.new()
 	wrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	wrap.process_mode = Node.PROCESS_MODE_ALWAYS
@@ -511,6 +515,8 @@ func toast(kind: String, title: String, body: String) -> void:
 	tw.finished.connect(wrap.queue_free)
 	if kind == "reward" or kind == "achievement" or kind == "unlock":
 		play("res://assets/audio/cling.wav")
+	elif kind == "codex":
+		RewardFly.snd("gem_land", 1.3, -6.0)
 
 
 func unlock_logo(title: String, sub: String, reward: String = "") -> void:

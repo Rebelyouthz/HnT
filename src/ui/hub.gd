@@ -8,6 +8,7 @@ var _gold_pill: HBoxContainer
 var _gems_pill: HBoxContainer
 var _rep_pill: HBoxContainer
 var _log_bang: Control
+var _codex_dot: Control
 var _tab_bangs: Dictionary = {}
 var _current := "clinic"
 var _modal: Control
@@ -214,6 +215,10 @@ func _make_top() -> Control:
 	var codex := UiKit.button("CODEX", Vector2(96, 38))
 	codex.pressed.connect(_open_codex)
 	row.add_child(codex)
+	# Red dot while codex entries wait to be claimed.
+	_codex_dot = UiKit.new_dot()
+	_codex_dot.position = Vector2(84, -4)
+	codex.add_child(_codex_dot)
 	var jobs := UiKit.button("JOBS", Vector2(76, 38))
 	jobs.pressed.connect(_open_jobs)
 	var jobs_wrap := Control.new()
@@ -410,6 +415,8 @@ func _refresh_pills() -> void:
 	_set_pill(_gems_pill, UiKit.num(int(FamilyProfile.data["gems"]) - r.pending("gems")), "gems")
 	_set_pill(_rep_pill, UiKit.num(int(FamilyProfile.data["rep"]) - r.pending("rep")), "rep")
 	_log_bang.visible = FamilyProfile.unread_log_count() > 0
+	if _codex_dot:
+		_codex_dot.visible = Discover.unclaimed() > 0
 	_refresh_new_dots()
 	if _avatar_names:
 		_avatar_names.text = "%s  &  %s" % [FamilyProfile.son_name(), FamilyProfile.father_name()]
@@ -554,6 +561,7 @@ func _open_codex() -> void:
 	add_child(sheet)
 	_modal = sheet
 	sheet.closed.connect(_clear_modal)
+	sheet.closed.connect(_refresh_pills)
 
 
 func _open_armory() -> void:

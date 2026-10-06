@@ -77,6 +77,7 @@ static func roll(luck := 0.0) -> Dictionary:
 
 
 static func add(p: Dictionary) -> int:
+	Discover.see("gear", str(p.get("id", "")), str((LIST.get(str(p.get("id", "")), {}) as Dictionary).get("name", "")))
 	var a := inv()
 	a.append(p)
 	FamilyProfile.data["sgear"] = a

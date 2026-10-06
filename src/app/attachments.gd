@@ -50,6 +50,7 @@ static func buy(a: String) -> bool:
 	arr.append(a)
 	FamilyProfile.data["attach_owned"] = arr
 	FamilyProfile.save()
+	Discover.see("part", a, str(LIST[a]["title"]))
 	return true
 
 

@@ -313,6 +313,10 @@ func _place_rescue() -> void:
 func _ready() -> void:
 	_configure()
 	Arsenal.reset_run()
+	var place := scene_file_path.get_file().get_basename()
+	if Discover.PLACES.has(place):
+		var pname := str(Discover.PLACES[place])
+		(func() -> void: Discover.see("place", place, pname)).call_deferred()
 	_suit_toast.call_deferred()
 	var resumed := App.resume_map == map_id and App.resume_pos != Vector2.ZERO
 	if resumed:

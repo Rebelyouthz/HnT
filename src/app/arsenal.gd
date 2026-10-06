@@ -26,6 +26,7 @@ static func mark_found(id: String) -> void:
 	a.append(id)
 	FamilyProfile.data["weapons_found"] = a
 	FamilyProfile.flag_unseen("armory")
+	Discover.see("weapon", id, str(WeaponBook.spec(id).get("title", id)).to_upper())
 
 
 static func kills(id: String) -> int:

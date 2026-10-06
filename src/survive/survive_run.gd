@@ -342,6 +342,7 @@ func take(o: Dictionary) -> void:
 			abilities[id] = int(abilities.get(id, 0)) + 1
 			if not was:
 				_mount(id)
+				Discover.see("ability", id, str(row("abilities", id).get("name", id)))
 		"trait":
 			var id := str(o["id"])
 			traits[id] = trait_n(id) + 1

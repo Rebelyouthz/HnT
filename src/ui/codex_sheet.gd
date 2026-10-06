@@ -7,7 +7,9 @@ extends Control
 
 signal closed
 
-var _page := "bestiary"
+var _page := "entries"
+var _cat := "enemy"
+var _want := ""
 const DODGE := {
 	"charge": "A red lane fills: step to another depth (up/down) before it does.",
 	"slam": "A red ring where it lands: run out of the circle or jump.",
@@ -59,9 +61,9 @@ func _paint() -> void:
 	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(t)
 	var first: Button = null
-	for pair in [["bestiary", "BESTIARY"], ["abilities", "ABILITIES"], ["evolutions", "EVOLUTIONS"], ["ultimate", "ULTIMATE"], ["records", "RECORDS"]]:
-		var b := UiKit.button(pair[1], Vector2(122, 36))
-		b.add_theme_font_size_override("font_size", 12)
+	for pair in [["entries", "ENTRIES"], ["bestiary", "BESTIARY"], ["abilities", "ABILITIES"], ["evolutions", "EVOLUTIONS"], ["ultimate", "ULTIMATE"], ["records", "RECORDS"]]:
+		var b := UiKit.button(pair[1], Vector2(112, 36))
+		b.add_theme_font_size_override("font_size", 11)
 		if pair[0] == _page:
 			b.add_theme_stylebox_override("normal", UiKit.panel(Palette.BRICK, Palette.LEMON))
 			first = b
@@ -71,7 +73,7 @@ func _paint() -> void:
 			_paint()
 		)
 		head.add_child(b)
-	var close := UiKit.button("CLOSE", Vector2(110, 36))
+	var close := UiKit.button("CLOSE", Vector2(96, 36))
 	close.pressed.connect(func() -> void:
 		closed.emit()
 	)
@@ -91,6 +93,8 @@ func _paint() -> void:
 	grid.add_theme_constant_override("v_separation", 10)
 	sc.add_child(grid)
 	match _page:
+		"entries":
+			_entries_page(outer, grid, sub)
 		"bestiary":
 			var bparsed: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/bosses.json"))
 			var bosses: Dictionary = bparsed if bparsed is Dictionary else {}
@@ -168,7 +172,13 @@ func _paint() -> void:
 				grid.add_child(tile)
 	UiKit.pop_in(card)
 	var f := first
+	var want := _want
 	get_tree().process_frame.connect(func() -> void:
+		if want != "":
+			for c in find_children("*", "Button", true, false):
+				if str(c.get_meta("key", "")) == want:
+					(c as Button).grab_focus()
+					return
 		if is_instance_valid(f):
 			f.grab_focus()
 	, CONNECT_ONE_SHOT)
@@ -211,6 +221,153 @@ func _entry(icon: String, title: String, stat: String, line: String, open: bool,
 	wrap.add_child(p)
 	return wrap
 
+
+
+## Everything filed so far by category: met things show their picture and
+## a CLAIM button for their reward; the rest stay dark "???" plates.
+func _entries_page(outer: VBoxContainer, grid: GridContainer, sub: Label) -> void:
+	sub.text = "FILED %d / %d  ·  every 10 claimed pays 3 gems  ·  meet new things to fill the book" % [Discover.filed(), Discover.total()]
+	grid.columns = 6
+	# Category tabs with their own red dots.
+	var tabs := HBoxContainer.new()
+	tabs.add_theme_constant_override("separation", 6)
+	outer.add_child(tabs)
+	outer.move_child(tabs, 2)
+	for c: String in Discover.CATS:
+		var n_new := 0
+		var n_seen := 0
+		for e: Array in Discover.catalog(c):
+			var st := Discover.state(c, str(e[0]))
+			if st > 0:
+				n_seen += 1
+			if st == 1:
+				n_new += 1
+		var b := UiKit.button("%s %d/%d" % [Discover.CAT_NAME[c], n_seen, Discover.catalog(c).size()], Vector2(134, 34))
+		b.add_theme_font_size_override("font_size", 10)
+		b.set_meta("key", "cat_" + c)
+		if c == _cat:
+			b.add_theme_stylebox_override("normal", UiKit.panel(Palette.BRICK, Palette.LEMON))
+		if n_new > 0:
+			var dot := UiKit.new_dot()
+			dot.position = Vector2(124, -4)
+			b.add_child(dot)
+		b.pressed.connect(func() -> void:
+			_cat = c
+			_want = "cat_" + c
+			_paint())
+		tabs.add_child(b)
+	var all := UiKit.button("CLAIM ALL", Vector2(118, 34))
+	all.add_theme_font_size_override("font_size", 11)
+	all.disabled = Discover.unclaimed() == 0
+	all.pressed.connect(func() -> void:
+		var g := 0
+		var gm := 0
+		for c2: String in Discover.CATS:
+			for e2: Array in Discover.catalog(c2):
+				var pay := Discover.claim(c2, str(e2[0]))
+				g += int(pay.get("gold", 0))
+				gm += int(pay.get("gems", 0))
+		if g > 0:
+			Juice.give("gold", g, RewardFly.vp_of(all))
+		if gm > 0:
+			Juice.give("gems", gm, RewardFly.vp_of(all) + Vector2(0, -10))
+		Juice.upgrade_fx(all, Color(1.0, 0.56, 0.12), "CLAIMED", true)
+		_paint())
+	tabs.add_child(all)
+	for e: Array in Discover.catalog(_cat):
+		grid.add_child(_entry_tile(_cat, str(e[0]), str(e[1])))
+
+
+func _entry_tile(cat: String, id: String, title: String) -> Control:
+	var st := Discover.state(cat, id)
+	var b := Button.new()
+	b.custom_minimum_size = Vector2(180, 150)
+	b.focus_mode = Control.FOCUS_ALL
+	b.set_meta("key", "ent_%s_%s" % [cat, id])
+	var col := Color(1.0, 0.56, 0.12) if st == 1 else (Palette.EDGE if st == 2 else Color(0.25, 0.26, 0.3))
+	var sb := UiKit.panel(Color(0.05, 0.06, 0.1), col)
+	sb.set_border_width_all(2 if st != 1 else 3)
+	var hi := sb.duplicate() as StyleBoxFlat
+	hi.border_color = UiKit.GOLD
+	hi.shadow_color = Color(UiKit.GOLD.r, UiKit.GOLD.g, UiKit.GOLD.b, 0.5)
+	hi.shadow_size = 8
+	for s2 in ["normal", "disabled"]:
+		b.add_theme_stylebox_override(s2, sb)
+	for s3 in ["hover", "focus", "pressed"]:
+		b.add_theme_stylebox_override(s3, hi)
+	# Picture: the thug's face for thugs and bosses, the icon for the rest.
+	var pic: TextureRect
+	var face: Texture2D = SpriteBook.face(_who(id)) if cat in ["enemy", "boss"] else null
+	if face:
+		pic = TextureRect.new()
+		pic.texture = face
+		pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		pic.texture_filter = SpriteBook.UI_FILTER
+		pic.size = Vector2(72, 72)
+		pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	else:
+		pic = IconBook.rect(Discover.icon_for(cat, id), IconBook.SIZE_M)
+	pic.position = Vector2(93, 10) - Vector2(pic.size.x * 0.5, 0)
+	if st == 0:
+		pic.modulate = Color(0, 0, 0.02, 0.85)
+	b.add_child(pic)
+	var nm := Label.new()
+	nm.text = title if st > 0 else "???"
+	nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	nm.clip_text = true
+	nm.position = Vector2(4, 88)
+	nm.size = Vector2(178, 16)
+	nm.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(nm, 10, Palette.TEXT if st > 0 else Palette.MUTED)
+	b.add_child(nm)
+	var pay: Dictionary = Discover.REWARD.get(cat, {})
+	var foot := HBoxContainer.new()
+	foot.alignment = BoxContainer.ALIGNMENT_CENTER
+	foot.position = Vector2(4, 112)
+	foot.size = Vector2(178, 26)
+	foot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.add_child(foot)
+	if st == 1:
+		var cl := Label.new()
+		cl.text = "CLAIM"
+		cl.add_theme_font_override("font", UiKit.title_font())
+		UiKit.apply_label(cl, 13, Color(1.0, 0.56, 0.12))
+		foot.add_child(cl)
+		for k in ["gold", "gems"]:
+			if int(pay.get(k, 0)) > 0:
+				foot.add_child(IconBook.rect("cur_gold_s" if k == "gold" else "cur_gem_s", 22))
+				var v := Label.new()
+				v.text = str(pay[k])
+				v.add_theme_font_override("font", UiKit.pixel_font())
+				UiKit.apply_label(v, 11, Palette.TEXT)
+				foot.add_child(v)
+		var dot := UiKit.new_dot()
+		dot.position = Vector2(170, 4)
+		b.add_child(dot)
+		UiKit.pulse_ready(b)
+	elif st == 2:
+		var fl := Label.new()
+		fl.text = "FILED"
+		fl.add_theme_font_override("font", UiKit.pixel_font())
+		UiKit.apply_label(fl, 11, Palette.READY)
+		foot.add_child(fl)
+	b.pressed.connect(func() -> void:
+		if Discover.state(cat, id) != 1:
+			Juice.rewards.deny(b)
+			return
+		var got := Discover.claim(cat, id)
+		var at := RewardFly.vp_of(b)
+		if int(got.get("gold", 0)) > 0:
+			Juice.give("gold", int(got["gold"]), at)
+		if int(got.get("gems", 0)) > 0:
+			Juice.give("gems", int(got["gems"]), at + Vector2(0, -10))
+		Juice.upgrade_fx(b, Color(1.0, 0.56, 0.12), "FILED", got.has("milestone"))
+		if got.has("milestone"):
+			Juice.rewards.reveal("node_school", "CODEX  ·  %d FILED" % int(got["milestone"]), Color(1.0, 0.56, 0.12), "+3 GEMS milestone bonus")
+		_want = "ent_%s_%s" % [cat, id]
+		_paint())
+	return b
 
 
 ## Sprite folder for a thug title ("Collector Gant" -> gant).

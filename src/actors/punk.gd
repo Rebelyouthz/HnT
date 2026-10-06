@@ -4,6 +4,8 @@ extends CharacterBody2D
 @export var hp := 40
 @export var max_hp := 40
 @export var title := "Bag Snatch"
+var _codex_t := 0.4
+var _codex_done := false
 @export var home := "street"
 @export var patrol_min := 0.0
 @export var patrol_max := 0.0
@@ -398,6 +400,15 @@ func _fling(delta: float) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	# First time this kind of thug walks into view: a CODEX entry.
+	if not _codex_done:
+		_codex_t -= delta
+		if _codex_t <= 0.0:
+			_codex_t = 0.5
+			var cam := get_viewport().get_camera_2d()
+			if cam and absf(global_position.x - cam.get_screen_center_position().x) < 280.0:
+				_codex_done = true
+				Discover.see("boss" if title in Discover.BOSSES else "enemy", title, title.to_upper())
 	if flung:
 		_fling(delta)
 		return
