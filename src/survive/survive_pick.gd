@@ -22,6 +22,7 @@ const RARITY_COL := {"common": Color(0.75, 0.78, 0.82), "uncommon": Color(0.4, 0
 
 
 func _ready() -> void:
+	Guides.show(self, "spick")
 	layer = 70
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	get_tree().paused = true

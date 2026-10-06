@@ -24,6 +24,7 @@ var _book: Dictionary = {}
 
 
 func _ready() -> void:
+	Guides.show(self, "codex")
 	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/survive.json"))
 	_book = parsed if parsed is Dictionary else {}
 	_paint()

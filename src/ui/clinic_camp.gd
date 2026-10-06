@@ -8,6 +8,7 @@ const COLS := 5
 
 
 func _ready() -> void:
+	Guides.show(self, "camp")
 	custom_minimum_size = Vector2(1180, 680)
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_TOP_WIDE)

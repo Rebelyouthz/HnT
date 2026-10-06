@@ -178,6 +178,7 @@ func _deal() -> void:
 	flip.tween_callback(func() -> void:
 		_ready_to_pick = true
 		_set_focus(mini(1, n - 1))
+		Guides.show(self, "cards", 0.1)
 	)
 
 

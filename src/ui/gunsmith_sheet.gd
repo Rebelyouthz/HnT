@@ -25,6 +25,7 @@ const ACCENT := Color(0.6, 0.9, 1.0)
 
 
 func _ready() -> void:
+	Guides.show(self, "gunsmith")
 	_paint()
 
 

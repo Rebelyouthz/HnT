@@ -19,6 +19,7 @@ var _focus_key := ""
 
 
 func _ready() -> void:
+	Guides.show(self, "moves")
 	_paint()
 
 

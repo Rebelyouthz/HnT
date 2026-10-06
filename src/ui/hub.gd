@@ -35,6 +35,8 @@ func _ready() -> void:
 		_open_intake()
 	App.tab_wanted.connect(_show_tab)
 	FamilyProfile.changed.connect(_refresh_pills)
+	if FamilyProfile.data.get("named", false):
+		Guides.show(self, "hub", 0.8)
 
 
 func _build_chrome() -> void:
@@ -256,6 +258,8 @@ func _make_top() -> Control:
 	purse.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_gold_pill = UiKit.pill("GOLD", "0", Palette.EDGE)
 	_gems_pill = UiKit.pill("GEMS", "0", Palette.LEMON)
+	_gold_pill.set_meta("key", "pill_gold")
+	_gems_pill.set_meta("key", "pill_gems")
 	_rep_pill = UiKit.pill("REP", "0", Palette.BRICK)
 	purse.add_child(_gold_pill)
 	purse.add_child(_gems_pill)
@@ -366,6 +370,9 @@ func _show_tab(id: String) -> void:
 		Juice.play("res://assets/audio/ui_click.wav")
 		return
 	_current = id
+	# First visit to a tab: Dad shows how it works.
+	if id in ["heroes", "build", "locker", "awards"]:
+		Guides.show(self, id, 0.6)
 	FamilyProfile.data["seen"][id] = true
 	FamilyProfile.save()
 	for child in _content.get_children():

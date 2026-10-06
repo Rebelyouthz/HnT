@@ -20,6 +20,7 @@ var _pop: Control
 
 
 func _ready() -> void:
+	Guides.show(self, "armory")
 	_paint()
 
 

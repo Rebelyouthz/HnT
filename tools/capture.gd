@@ -31,6 +31,13 @@ func _prepare() -> void:
 			d["father_name"] = "Dad"
 		if str(d.get("son_name", "")) == "":
 			d["son_name"] = "Kid"
+		# First-use guides stay out of shots unless GUIDE=<id> asks for one.
+		var g_keep := OS.get_environment("GUIDE")
+		var g_done: Array = []
+		for gk in load("res://src/ui/guides.gd").STEPS:
+			if str(gk) != g_keep:
+				g_done.append(str(gk))
+		d["guides_done"] = g_done
 	var app := root.get_node_or_null("App")
 	if app != null and _tab.begins_with("film_"):
 		var pair := _tab.substr(5)

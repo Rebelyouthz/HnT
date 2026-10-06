@@ -30,6 +30,7 @@ var _doll: Control
 
 
 func _ready() -> void:
+	Guides.show(self, "sgear")
 	_paint()
 
 
