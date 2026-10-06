@@ -19,6 +19,8 @@ const LEGACY_CELL := 96.0
 const LOOP := {
 	"idle": true,
 	"walk": true,
+	"walk_up": true,
+	"walk_down": true,
 	"parkour_run": true,
 	"duck": true,
 	"dog": true,
@@ -243,7 +245,7 @@ const FILM_SCALE := 1.12
 ## Playback rate that makes a locomotion clip's feet travel exactly as far
 ## as the body does: one loop of a clip is one full stride (two steps) of
 ## STRIDE body heights (walk ~1.25, run ~2.4). ~200 texel bodies.
-const STRIDE := {"walk": 1.25, "parkour_run": 2.4, "run": 2.4}
+const STRIDE := {"walk": 1.25, "walk_up": 0.9, "walk_down": 0.9, "parkour_run": 2.4, "run": 2.4}
 
 
 static func stride_rate(a: AnimatedSprite2D, clip: String, vx: float) -> float:

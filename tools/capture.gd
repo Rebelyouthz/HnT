@@ -243,6 +243,13 @@ func _process(_delta: float) -> bool:
 		break
 	if th != "" and hero != null and _n == int(th.get_slice("@", 1)):
 		load("res://src/extras/throw_lob.gd").call("lob", hero, th.get_slice("@", 0))
+	# STICK=x,y@from steers the first hero with that stick from that frame on.
+	var stk := OS.get_environment("STICK")
+	if stk != "" and hero != null and _n >= int(stk.get_slice("@", 1)):
+		hero.set("net_driven", true)
+		var ns := root.get_node_or_null("NetSession")
+		if ns:
+			ns.set("stick", Vector2(float(stk.get_slice("@", 0).get_slice(",", 0)), float(stk.get_slice("@", 0).get_slice(",", 1))))
 	var ch := OS.get_environment("CHEST")
 	if ch != "" and hero != null and _n == int(ch):
 		load("res://src/extras/loot_book.gd").call("drop_chest", hero.get_parent(), hero.global_position + Vector2(60, 0), true)

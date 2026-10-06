@@ -82,6 +82,7 @@ static func finishable(e: Punk) -> bool:
 ## into a FINISHER. Returns the damage to deal.
 static func on_blow(e: Punk, f: Fighter, kind: String, dmg: int) -> int:
 	note_hit(f)
+	ImpactFeel.blow(e, f, kind)
 	if kind in ["heavy", "special", "combo"] and finishable(e):
 		e.set_meta("finisher", true)
 		return maxi(dmg, e.hp + 999)

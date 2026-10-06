@@ -474,8 +474,14 @@ func _tick_sprite() -> void:
 		clip = "slide"
 	elif dashing or parkour_lock > 0.0 or absf(velocity.x) > 110.0:
 		clip = "parkour_run"
-	elif absf(velocity.x) > 18.0:
+	elif absf(velocity.x) > 18.0 or (plane == "street" and absf(velocity.y) > 18.0):
 		clip = "walk"
+		# Up / down the lane: the three-quarter back or front walk when the
+		# move is mostly into or out of the street.
+		if plane == "street" and absf(velocity.y) > 18.0 and absf(velocity.y) > absf(velocity.x) * 0.55:
+			var lane := "walk_up" if velocity.y < 0.0 else "walk_down"
+			if _anim.sprite_frames.has_animation(lane):
+				clip = lane
 	if not _anim.sprite_frames.has_animation(clip):
 		if clip == "side_kick" and _anim.sprite_frames.has_animation("front_kick"):
 			clip = "front_kick"
@@ -514,7 +520,9 @@ func _tick_sprite() -> void:
 func _drive_clip(clip: String) -> void:
 	match clip:
 		"walk":
-			_anim.speed_scale = SpriteBook.stride_rate(_anim, "walk", velocity.x)
+			_anim.speed_scale = SpriteBook.stride_rate(_anim, "walk", maxf(absf(velocity.x), absf(velocity.y) * 1.4))
+		"walk_up", "walk_down":
+			_anim.speed_scale = SpriteBook.stride_rate(_anim, clip, velocity.length() * 1.4)
 		"parkour_run":
 			var spd := maxf(absf(velocity.x), 420.0 if dashing else 0.0)
 			_anim.speed_scale = SpriteBook.stride_rate(_anim, "parkour_run", spd)
