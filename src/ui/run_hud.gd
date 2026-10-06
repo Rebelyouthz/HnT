@@ -551,6 +551,10 @@ func _paint_fighter(lab: Label, bar: ColorRect, pips: HBoxContainer, snap: Label
 		lab.text += "   " + wt
 	if f.knives > 0:
 		lab.text += "   KNIVES %d" % f.knives
+	if f.throw_n > 0 and ThrowLob.KINDS.has(f.throw_kind):
+		lab.text += "   %s %d" % [str(ThrowLob.KINDS[f.throw_kind]["title"]), f.throw_n]
+	if f.grenades > 0:
+		lab.text += "   GRENADES %d" % f.grenades
 	var plate: Variant = _plates.get(_slot_of(f))
 	if plate is Control:
 		(plate as Control).visible = true

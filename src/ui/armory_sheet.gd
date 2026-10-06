@@ -21,6 +21,7 @@ var _pop: Control
 
 func _ready() -> void:
 	Guides.show(self, "armory")
+	FamilyProfile.mark_seen("armory")
 	_paint()
 
 

@@ -53,6 +53,9 @@ func _crown() -> void:
 
 func _on_dead() -> void:
 	var act := get_tree().get_first_node_in_group("run_act")
+	# Loot: a chest drops where they fell (two finds for a boss, one for a mini).
+	if get_parent() != null and self.get_script() == preload("res://src/actors/act_boss.gd"):
+		LootBook.drop_chest(get_parent(), global_position + Vector2(float(randi_range(-20, 20)), 6), not is_mini)
 	if is_mini:
 		Juice.toast("challenge", "MINI DOWN", "%s filed. The street keeps going. That's the bit." % title.to_upper())
 		Juice.shout("MINI FILED")

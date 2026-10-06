@@ -234,6 +234,18 @@ func _process(_delta: float) -> bool:
 			var jc := root.get_node_or_null("Juice")
 			var spec := rw.get_slice("@", 0)
 			jc.call("give", spec.get_slice(":", 0), int(spec.get_slice(":", 1)), Vector2(320, 190))
+	# THROW=kind@frame lobs a throwable from the first hero; CHEST=frame
+	# drops a story boss chest in front of them.
+	var th := OS.get_environment("THROW")
+	var hero: Node = null
+	for n in root.get_tree().get_nodes_in_group("players"):
+		hero = n
+		break
+	if th != "" and hero != null and _n == int(th.get_slice("@", 1)):
+		load("res://src/extras/throw_lob.gd").call("lob", hero, th.get_slice("@", 0))
+	var ch := OS.get_environment("CHEST")
+	if ch != "" and hero != null and _n == int(ch):
+		load("res://src/extras/loot_book.gd").call("drop_chest", hero.get_parent(), hero.global_position + Vector2(60, 0), true)
 	# PRESS=part@frame presses that part's tile in an open gunsmith.
 	var pr := OS.get_environment("PRESS")
 	if pr != "" and _n == int(pr.get_slice("@", 1)):

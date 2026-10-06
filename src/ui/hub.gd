@@ -22,6 +22,7 @@ var _avatar_dot: ColorRect
 var _logo_dot: ColorRect
 var _tab_dots: Dictionary = {}
 var _rewards_bang: Control
+var _armory_dot: Control
 var _rewards_n: Label
 var _avatar_title: Label
 var _avatar_pwr: Label
@@ -257,6 +258,10 @@ func _make_top() -> Control:
 	var armory := UiKit.button("ARMORY", Vector2(96, 38))
 	armory.pressed.connect(_open_armory)
 	row.add_child(armory)
+	# Red dot while a new gun part waits in the armory.
+	_armory_dot = UiKit.new_dot()
+	_armory_dot.position = Vector2(84, -4)
+	armory.add_child(_armory_dot)
 	var codex := UiKit.button("CODEX", Vector2(96, 38))
 	codex.pressed.connect(_open_codex)
 	row.add_child(codex)
@@ -472,6 +477,8 @@ func _refresh_pills() -> void:
 	_log_bang.visible = FamilyProfile.unread_log_count() > 0
 	if _codex_dot:
 		_codex_dot.visible = Discover.unclaimed() > 0
+	if _armory_dot:
+		_armory_dot.visible = FamilyProfile.is_unseen("armory")
 	if _rewards_bang:
 		var n := RewardBook.count() + RewardBook.new_titles()
 		_rewards_bang.visible = n > 0
@@ -672,6 +679,7 @@ func _open_armory() -> void:
 	add_child(sheet)
 	_modal = sheet
 	sheet.closed.connect(_clear_modal)
+	sheet.closed.connect(_refresh_pills)
 
 
 func _open_stats() -> void:

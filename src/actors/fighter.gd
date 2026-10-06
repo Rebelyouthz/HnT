@@ -72,6 +72,9 @@ var snap_pos := Vector2.ZERO
 var snap_hop := 0.0
 var tape_t := 0.0
 var grenades := 0
+## Throwables (ThrowLob): SHOOT + up throws one of these before a grenade.
+var throw_kind := ""
+var throw_n := 0
 var _shadow: Polygon2D
 var _slip: Polygon2D
 var _breath := 0.0
@@ -1866,13 +1869,17 @@ func _on_hit_landed(kind: String, _global_pos: Vector2) -> void:
 
 
 func _shoot() -> void:
-	if grenades > 0 and _stick().y < -0.35:
+	if throw_n > 0 and throw_kind != "" and _stick().y < -0.35 and attack_cd <= 0:
+		throw_n -= 1
+		attack_cd = 16
+		ThrowLob.lob(self, throw_kind)
+		if throw_n <= 0:
+			throw_kind = ""
+		return
+	if grenades > 0 and _stick().y < -0.35 and attack_cd <= 0:
 		grenades -= 1
 		attack_cd = 16
-		_spawn_hit("finish", Vector2(90, 70), 0.2, Vector2(50 * facing, -30))
-		Juice.kill_burst(global_position + Vector2(float(facing) * 40.0, -20.0), "finish")
-		Juice.shout("BOUNDARY")
-		Juice.pulse_shake(7.0)
+		ThrowLob.lob(self, "grenade")
 		return
 	if pickup in GUNS:
 		if pistol_shots <= 0:

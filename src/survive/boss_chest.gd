@@ -27,13 +27,14 @@ func _ready() -> void:
 	s.texture = IconBook.tex("cur_chest")
 	s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	s.offset = Vector2(0, -16)
-	s.scale = Vector2.ONE * (1.4 if big else 1.0)
+	s.scale = Vector2.ONE * (1.1 if big else 0.85)
+	s.light_mask = 0
 	add_child(s)
 	var l := PointLight2D.new()
 	l.texture = LightRig.radial_tex()
 	l.texture_scale = 0.6
 	l.color = Color(1.0, 0.56, 0.12) if big else Color(0.4, 1.0, 0.7)
-	l.energy = 1.4
+	l.energy = 0.9
 	l.position = Vector2(0, -18)
 	add_child(l)
 	s.position.y = -120.0

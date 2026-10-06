@@ -29,6 +29,10 @@ func _paint(keep: String = "") -> void:
 	var mv := UiKit.button("MOVES", Vector2(150, 40))
 	mv.set_meta("key", "moves")
 	mv.position = Vector2(400, 6)
+	if FamilyProfile.is_unseen("moves"):
+		var mdot := UiKit.new_dot()
+		mdot.position = Vector2(140, -3)
+		mv.add_child(mdot)
 	mv.pressed.connect(func() -> void:
 		var sh := preload("res://src/ui/moves_sheet.gd").new()
 		get_tree().current_scene.add_child(sh)
