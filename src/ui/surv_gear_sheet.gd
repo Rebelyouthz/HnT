@@ -2,7 +2,8 @@ extends Control
 
 ## SURVIVOR GEAR, a paperdoll: the Kid stands lit in the middle of the bench
 ## with his four worn slots around him (cap by the head, jacket at the
-## chest, shoes at the feet, charm at the hand), each joined to the body by a
+## chest, shoes at the feet, necklace at the neck, charm and ring at the
+## hands), each joined to the body by a
 ## line. Under him the worn totals as stat icons. On the right every piece
 ## you own as a pixel tile in its rarity frame; focus one to see its stats
 ## against what is worn (green up, red down), press it to WEAR. LV UP
@@ -13,8 +14,8 @@ signal closed
 
 const ACCENT := Color(0.4, 1.0, 0.7)
 ## Slot tile positions in the doll panel, and where on the body each joins.
-const SLOT_AT := {"cap": Vector2(24, 26), "jacket": Vector2(24, 170), "shoes": Vector2(24, 314), "charm": Vector2(356, 170)}
-const BODY_AT := {"cap": Vector2(232, 152), "jacket": Vector2(232, 228), "shoes": Vector2(240, 396), "charm": Vector2(262, 288)}
+const SLOT_AT := {"cap": Vector2(24, 26), "jacket": Vector2(24, 170), "shoes": Vector2(24, 314), "neck": Vector2(356, 26), "charm": Vector2(356, 170), "ring": Vector2(356, 314)}
+const BODY_AT := {"cap": Vector2(232, 152), "jacket": Vector2(232, 228), "shoes": Vector2(240, 396), "neck": Vector2(236, 194), "charm": Vector2(262, 288), "ring": Vector2(212, 292)}
 const STAT_ICON := {
 	"dmg": "t_dmg", "area": "t_area", "cd": "t_cd", "speed": "t_speed", "hp": "t_hp", "pickup": "t_pickup",
 	"luck": "t_luck", "armor": "t_armor", "crit": "t_crit", "regen": "t_regen", "xp": "t_xp", "proj": "meta_amount",
@@ -186,6 +187,12 @@ func _doll_panel() -> Control:
 			var ci := IconBook.rect(IconBook.for_gear(str(ch["id"])), IconBook.SIZE_S)
 			ci.position = Vector2(240, 290)
 			p.add_child(ci)
+	if w.has("neck"):
+		var nk := SurvGear.piece(int(w["neck"]))
+		if not nk.is_empty():
+			var ni := IconBook.rect(IconBook.for_gear(str(nk["id"])), IconBook.SIZE_S * 0.75)
+			ni.position = Vector2(220, 180)
+			p.add_child(ni)
 	p.add_child(lines)
 	var lit := {}
 	for slot: String in SurvGear.SLOTS:

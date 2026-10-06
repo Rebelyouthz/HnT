@@ -7,8 +7,8 @@ extends RefCounted
 ## elite chests, the boss) or come out of a GEAR BOX bought with S-COINS.
 ## Their stats feed SurviveRun's multipliers.
 
-const SLOTS := ["cap", "jacket", "shoes", "charm"]
-const SLOT_NAME := {"cap": "CAP", "jacket": "JACKET", "shoes": "SHOES", "charm": "CHARM"}
+const SLOTS := ["cap", "jacket", "shoes", "charm", "neck", "ring"]
+const SLOT_NAME := {"cap": "CAP", "jacket": "JACKET", "shoes": "SHOES", "charm": "CHARM", "neck": "NECKLACE", "ring": "RING"}
 const RARITY := ["common", "uncommon", "rare", "epic", "legendary"]
 const STAT_NAME := {"dmg": "DAMAGE", "area": "AREA", "cd": "COOLDOWN", "speed": "SPEED", "hp": "MAX HP", "pickup": "MAGNET", "luck": "LUCK", "armor": "ARMOR", "crit": "CRIT", "regen": "REGEN", "xp": "XP", "proj": "AMOUNT"}
 const LIST := {
@@ -30,6 +30,14 @@ const LIST := {
 	"family_photo": {"slot": "charm", "name": "FAMILY PHOTO", "stats": {"hp": 8, "regen": 0.25}},
 	"loyalty_card": {"slot": "charm", "name": "LOYALTY CARD", "stats": {"cd": 0.05, "luck": 0.03}},
 	"brass_bell": {"slot": "charm", "name": "BRASS BELL", "stats": {"area": 0.05, "dmg": 0.04}},
+	"gold_chain": {"slot": "neck", "name": "FAKE GOLD CHAIN", "stats": {"luck": 0.06, "pickup": 0.06}},
+	"dog_tags": {"slot": "neck", "name": "DAD'S DOG TAGS", "stats": {"hp": 8, "armor": 0.03}},
+	"whistle": {"slot": "neck", "name": "COACH WHISTLE", "stats": {"cd": 0.05, "speed": 0.03}},
+	"lanyard": {"slot": "neck", "name": "VISITOR LANYARD", "stats": {"xp": 0.07, "area": 0.03}},
+	"mood_ring": {"slot": "ring", "name": "MOOD RING", "stats": {"crit": 0.04, "luck": 0.03}},
+	"class_ring": {"slot": "ring", "name": "CLASS RING", "stats": {"dmg": 0.06, "xp": 0.03}},
+	"wedding_band": {"slot": "ring", "name": "DAD'S OLD RING", "stats": {"regen": 0.3, "hp": 6}},
+	"knuckle_ring": {"slot": "ring", "name": "KNUCKLE RING", "stats": {"dmg": 0.05, "crit": 0.03}},
 }
 const BOX_PRICE := 60
 const MAX_LV := 5

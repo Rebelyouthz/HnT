@@ -1125,6 +1125,111 @@ def gear_brass_bell():
     return ic
 
 
+def m_chain(ic, mat="gold"):
+    for i in range(9):
+        a = 3.14159 * (0.1 + 0.8 * i / 8)
+        import math
+        x, y = 16 - math.cos(a) * 11, 4 + math.sin(a) * 13
+        ic.ring(int(x) - 2, int(y) - 2, int(x) + 2, int(y) + 2, 1, mat, flat=True)
+
+
+@icon("gear_gold_chain")
+def gear_gold_chain():
+    ic = Icon()
+    m_chain(ic, "gold")
+    ic.ellipse(11, 17, 21, 27, "gold", round_=True)
+    ic.rect(14, 20, 18, 24, "yellow", flat=True)
+    ic.glint(13, 19)
+    return ic
+
+
+@icon("gear_dog_tags")
+def gear_dog_tags():
+    ic = Icon()
+    m_chain(ic, "steel")
+    ic.rect(9, 16, 17, 28, "steel")
+    ic.rect(15, 18, 23, 29, "steel", tone=-1)
+    for y in (20, 23):
+        ic.line([(11, y), (15, y)], "slate", flat=True)
+    return ic
+
+
+@icon("gear_whistle")
+def gear_whistle():
+    ic = Icon()
+    ic.arc([4, 0, 28, 20], 20, 160, "red", width=1, flat=True)
+    ic.rect(8, 16, 22, 24, "steel")
+    ic.ellipse(18, 14, 28, 26, "steel", round_=True)
+    ic.ellipse(21, 17, 25, 22, "ink", flat=True)
+    ic.rect(4, 18, 8, 22, "gun")
+    return ic
+
+
+@icon("gear_lanyard")
+def gear_lanyard():
+    ic = Icon()
+    ic.line([(6, 1), (13, 14)], "blue", width=2)
+    ic.line([(26, 1), (19, 14)], "blue", width=2)
+    ic.rect(9, 14, 23, 29, "white")
+    ic.rect(9, 14, 23, 18, "red")
+    ic.rect(12, 21, 20, 22, "slate", flat=True)
+    ic.rect(12, 24, 17, 25, "slate", flat=True)
+    return ic
+
+
+def m_ring(ic, band, stone=None):
+    ic.ring(6, 9, 26, 29, 4, band, round_=True)
+    if stone:
+        ic.ellipse(11, 2, 21, 12, stone, round_=True)
+        ic.glint(13, 4, True)
+
+
+@icon("gear_mood_ring")
+def gear_mood_ring():
+    ic = Icon()
+    m_ring(ic, "steel", "violet")
+    return ic
+
+
+@icon("gear_class_ring")
+def gear_class_ring():
+    ic = Icon()
+    m_ring(ic, "gold", "red")
+    return ic
+
+
+@icon("gear_wedding_band")
+def gear_wedding_band():
+    ic = Icon()
+    m_ring(ic, "gold")
+    ic.glint(9, 14, True)
+    return ic
+
+
+@icon("gear_knuckle_ring")
+def gear_knuckle_ring():
+    ic = Icon()
+    for x in (2, 9, 16, 23):
+        ic.ring(x, 12, x + 7, 20, 2, "steel", round_=True)
+    ic.rect(2, 19, 30, 23, "steel")
+    return ic
+
+
+@icon("slot_neck")
+def slot_neck():
+    ic = Icon()
+    m_chain(ic, "slate")
+    ic.ellipse(11, 17, 21, 27, "slate")
+    return ic
+
+
+@icon("slot_ring")
+def slot_ring():
+    ic = Icon()
+    m_ring(ic, "slate", "slate")
+    return ic
+
+
 @icon("slot_cap")
 def slot_cap():
     ic = Icon()
