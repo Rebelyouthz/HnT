@@ -42,6 +42,12 @@ static func place(host: Node, mid: String, goal: float, check: float) -> Parkour
 	p.check_x = check
 	p.z_index = 1
 	host.add_child(p)
+	var m := ParkourMore.new()
+	m.act = host
+	m.map_id = mid
+	m.goal_x = goal
+	m.race = bool(host.get("roof_start"))
+	host.add_child(m)
 	return p
 
 
