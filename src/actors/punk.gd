@@ -21,6 +21,8 @@ var _burn_tick := 0.0
 var _burn_by := ""
 var visual: Node2D
 var telegraph := 0.0
+var _detour_t := 0.0
+var _detour_dir := 1.0
 var recover := 0.0
 var crush := false
 var staples := 0
@@ -470,13 +472,24 @@ func _physics_process(delta: float) -> void:
 			if same and d < best:
 				best = d
 				t = n
+	var vy := 0.0
 	if t == null:
 		velocity.x = 0
 	else:
 		var d := t.global_position.x - global_position.x
 		facing = 1 if d > 0.0 else -1
 		visual.scale.x = float(facing)
-		if absf(d) < Punk.ENGAGE:
+		# CROWD: only ticket holders go in; the rest hold a ring round the
+		# hero (front, behind, up and down the lane) and wait their turn.
+		var crowd := CrowdAI.role(self, t)
+		var lane_dy := t.global_position.y - global_position.y
+		if crowd == "attack" and home == "street":
+			vy = clampf(lane_dy / 14.0, -1.0, 1.0) * speed * 0.55
+		if crowd == "wait" and absf(d) < CrowdAI.RING + 180.0:
+			var to := CrowdAI.spot(self, t) - global_position
+			velocity.x = clampf(to.x / 24.0, -1.0, 1.0) * speed * 0.7
+			vy = clampf(to.y / 16.0, -1.0, 1.0) * speed * 0.45
+		elif absf(d) < Punk.ENGAGE and (home != "street" or absf(lane_dy) < 30.0):
 			if vehicle != "" and str(kit.get("attack", "")) == "ram":
 				_ram_hit(t as Fighter)
 				velocity.x = 0
@@ -497,10 +510,22 @@ func _physics_process(delta: float) -> void:
 		elif title in ["Invoice Clerk", "Coping Imp", "Badge Broker"] and absf(d) > 90.0 and absf(d) < 280.0 and randf() < 0.014:
 			_shuriken()
 			velocity.x = 0
+		elif absf(d) < Punk.ENGAGE:
+			# In reach but not in the hero's lane yet: line up first.
+			velocity.x = 0
 		else:
 			velocity.x = clampf(d, -1.0, 1.0) * speed
-	velocity.y = 0
+	# DETOUR: walked into a crate or a car - step up or down the lane and go
+	# round it instead of piling up behind it.
+	if _detour_t > 0.0:
+		_detour_t -= delta
+		vy = _detour_dir * speed * 0.85
+	velocity.y = vy
+	var want_x := velocity.x
 	move_and_slide()
+	if home == "street" and absf(want_x) > 10.0 and is_on_wall() and _detour_t <= 0.0:
+		_detour_t = 0.55
+		_detour_dir = -1.0 if global_position.y > 475.0 else 1.0
 	_lane()
 	_canal()
 	_bob += delta * 4.8
