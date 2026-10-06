@@ -247,6 +247,72 @@ func upgrade(target: Control, color: Color, text := "", big := false) -> void:
 		Juice.pulse_shake(3.0)
 
 
+## A new thing revealed: dark veil, rarity rays, the icon slams in big
+## (whole pixel steps), its name and a line under it. Clears itself.
+func reveal(icon_name: String, title: String, color: Color, sub := "", secs := 1.6) -> void:
+	var veil := ColorRect.new()
+	veil.color = Color(0, 0, 0.02, 0.0)
+	veil.size = get_viewport().get_visible_rect().size
+	veil.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(veil)
+	var c := _center() + Vector2(0, -16)
+	var root := Node2D.new()
+	root.position = c
+	root.scale = Vector2(0.1, 0.1)
+	add_child(root)
+	var rays := Rays.new()
+	rays.color = color
+	rays.scale = Vector2(2.2, 2.2)
+	root.add_child(rays)
+	var ic := Sprite2D.new()
+	ic.texture = IconBook.tex(icon_name)
+	ic.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	ic.scale = Vector2(2, 2)
+	ic.position = Vector2(0, -16)
+	root.add_child(ic)
+	var t := Label.new()
+	t.text = title
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	t.add_theme_font_override("font", UiKit.title_font())
+	t.add_theme_font_size_override("font_size", 16)
+	t.add_theme_color_override("font_color", color.lightened(0.3))
+	t.add_theme_color_override("font_outline_color", UiKit.INK)
+	t.add_theme_constant_override("outline_size", 4)
+	t.size = Vector2(400, 20)
+	t.position = c + Vector2(-200, 24)
+	t.modulate.a = 0.0
+	add_child(t)
+	var s2 := Label.new()
+	s2.text = sub
+	s2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	s2.add_theme_font_override("font", UiKit.pixel_font())
+	s2.add_theme_font_size_override("font_size", 8)
+	s2.add_theme_color_override("font_color", Palette.TEXT)
+	s2.add_theme_color_override("font_outline_color", UiKit.INK)
+	s2.add_theme_constant_override("outline_size", 3)
+	s2.size = Vector2(400, 14)
+	s2.position = c + Vector2(-200, 44)
+	s2.modulate.a = 0.0
+	add_child(s2)
+	snd("reward_pop")
+	snd("up_boom", 1.0, -4.0)
+	_sparks(c, color, 24, 90.0)
+	var tw := create_tween()
+	tw.tween_property(veil, "color:a", 0.55, 0.12)
+	tw.parallel().tween_property(root, "scale", Vector2(1.3, 1.3), 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(root, "scale", Vector2.ONE, 0.1)
+	tw.parallel().tween_property(t, "modulate:a", 1.0, 0.12)
+	tw.parallel().tween_property(s2, "modulate:a", 1.0, 0.2)
+	tw.tween_interval(secs)
+	tw.tween_property(root, "scale", Vector2.ZERO, 0.16).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(veil, "color:a", 0.0, 0.2)
+	tw.parallel().tween_property(t, "modulate:a", 0.0, 0.15)
+	tw.parallel().tween_property(s2, "modulate:a", 0.0, 0.15)
+	tw.tween_callback(func() -> void:
+		for n in [veil, root, t, s2]:
+			(n as Node).queue_free())
+
+
 func deny(target: Control) -> void:
 	snd("deny")
 	if target == null or not target.is_inside_tree():
