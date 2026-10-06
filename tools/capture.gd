@@ -246,6 +246,17 @@ func _process(_delta: float) -> bool:
 	var ch := OS.get_environment("CHEST")
 	if ch != "" and hero != null and _n == int(ch):
 		load("res://src/extras/loot_book.gd").call("drop_chest", hero.get_parent(), hero.global_position + Vector2(60, 0), true)
+	# DUMP=frame prints every enemy and prop near the right of the screen.
+	var dm := OS.get_environment("DUMP")
+	if dm != "" and _n == int(dm):
+		for e in root.get_tree().get_nodes_in_group("enemies"):
+			print("ENEMY ", e.name, " ", e.get("title"), " pos=", e.global_position, " hp=", e.get("hp"), " vis=", e.visible, " script=", e.get_script().resource_path if e.get_script() else "")
+		var cam := root.get_viewport().get_camera_2d()
+		print("CAM ", cam.get_screen_center_position() if cam else Vector2.ZERO)
+		for n in current_scene.find_children("*", "Node2D", true, false):
+			var gp: Vector2 = (n as Node2D).global_position
+			if cam and absf(gp.x - (cam.get_screen_center_position().x + 230)) < 120 and absf(gp.y - (cam.get_screen_center_position().y + 90)) < 120 and n.get_parent() == current_scene:
+				print("NEAR ", n.name, " ", n.get_class(), " ", gp, " ", n.get_script().resource_path if n.get_script() else "")
 	# PRESS=part@frame presses that part's tile in an open gunsmith.
 	var pr := OS.get_environment("PRESS")
 	if pr != "" and _n == int(pr.get_slice("@", 1)):

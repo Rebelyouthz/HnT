@@ -1259,12 +1259,14 @@ func _drops(from: Node) -> void:
 	var cond_coin := NightCondition.mul(App.current_map, "coins")
 	var rank_mul: float = {"S+": 2.0, "S": 1.75, "A": 1.5, "B": 1.3, "C": 1.15}.get(Juice.combo_rank(), 1.0)
 	xp_n = int(round(float(xp_n) * cond_xp * rank_mul))
-	XpOrb.burst(host, global_position, xp_n, tier == "elite" or tier == "boss" or title == "Bailiff")
+	var srun := SurviveRun.get_run(get_tree())
+	# Survivor hours drop their own XP gems: no second set of story orbs.
+	if srun == null:
+		XpOrb.burst(host, global_position, xp_n, tier == "elite" or tier == "boss" or title == "Bailiff")
 	var coins := 6 if title == "Bailiff" else (2 if title == "Mohawk Bo" or title == "Repo Goon" else ((1 + (1 if randf() < 0.35 else 0)) if randf() < 0.75 else 0))
 	coins = int(round(float(coins) * cond_coin * rank_mul)) * NightExtras.coin_mul()
 	if rank_mul > 1.0 and coins > 0:
 		Juice.popup_number(global_position + Vector2(0, -76), "RANK %s  x%.2f" % [Juice.combo_rank(), rank_mul], UiKit.GOLD)
-	var srun := SurviveRun.get_run(get_tree())
 	if srun:
 		# Survivor hours pay in S-COINS, not gold.
 		if randf() < (0.07 + 0.5 * srun.luck()) * (1.5 if Trees.has("f_gold") else 1.0):
@@ -1272,15 +1274,16 @@ func _drops(from: Node) -> void:
 		coins = 0
 	for i in coins:
 		LootDrop.spawn(host, global_position + Vector2(randf_range(-8, 8), 0), "coin", 1, 1.2)
-	var orb := ScrapOrb.new()
-	orb.amount = 8 if title == "Bailiff" else (5 if title == "Mohawk Bo" or title == "Repo Goon" else 3)
-	orb.global_position = global_position + Vector2(0, -20)
-	host.add_child(orb)
+	if srun == null:
+		var orb := ScrapOrb.new()
+		orb.amount = 8 if title == "Bailiff" else (5 if title == "Mohawk Bo" or title == "Repo Goon" else 3)
+		orb.global_position = global_position + Vector2(0, -20)
+		host.add_child(orb)
 	if title == "Lottery Goon":
 		FamilyProfile.add_gems(1)
 		Juice.toast("reward", "RAFFLE", "The goon dropped a gem. Civic engagement.")
-	var chance := 0.35
-	if FamilyProfile.has_cbt("disarm_habit"):
+	var chance := 0.35 if srun == null else 0.0
+	if FamilyProfile.has_cbt("disarm_habit") and srun == null:
 		chance += 0.2
 	if randf() < chance:
 		var drop := WeaponPickup.new()

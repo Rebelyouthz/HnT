@@ -73,11 +73,15 @@ func _place_parkour() -> void:
 	var list: Variant = rows.get(map_id, [])
 	if typeof(list) != TYPE_ARRAY:
 		return
+	# Survivor arenas are for fighting the horde: no vault prompts, no
+	# parkour toys, no bystanders wandering through the crowd.
+	var arena := StoryBook.is_survive(map_id)
 	for row in list:
-		if typeof(row) != TYPE_ARRAY or (row as Array).size() < 3:
+		if arena or typeof(row) != TYPE_ARRAY or (row as Array).size() < 3:
 			continue
 		ParkourGate.place(self, Vector2(float(row[0]), float(row[1])), str(row[2]))
-	_place_toys()
+	if not arena:
+		_place_toys()
 	_place_smash()
 	_place_towers()
 	_place_secrets()
@@ -203,6 +207,8 @@ func _place_life() -> void:
 	for at in crowd:
 		if map_id == "raven_grid" and at.x > 2100.0:
 			continue
+		if StoryBook.is_survive(map_id):
+			continue
 		Bystander.place(self, at)
 	if map_id == "neon_exchange":
 		NightStreet.neon(self, Vector2(480, 120), "CASH ONLY FEELINGS  ·  STILL OPEN", Palette.LEMON)
@@ -287,6 +293,7 @@ func _place_towers() -> void:
 
 func _place_secrets() -> void:
 	SecretStash.place(self, map_id)
+	_spread_props.call_deferred()
 
 
 func boss_filed() -> bool:
@@ -929,3 +936,30 @@ func _suit_toast() -> void:
 		var f := Suits.full_set(role)
 		if f != "" and is_inside_tree():
 			Juice.toast("reward", "%s SET  ·  %s" % [str(Suits.LIST[f]["title"]), role.to_upper()], str(Suits.LIST[f]["set"]))
+
+
+## Nothing stacks on the street: pickups, stashes, spray cans and
+## breakables that ended up closer than 56 px (or inside a parked car) are
+## pushed along until each stands on its own.
+func _spread_props() -> void:
+	var items: Array[Node2D] = []
+	for c in get_children():
+		if c is WeaponPickup or c is SecretStash or c is SmashProp or c is SprayCan:
+			if absf((c as Node2D).global_position.y - 500.0) < 30.0:
+				items.append(c)
+	items.sort_custom(func(a: Node2D, b: Node2D) -> bool: return a.global_position.x < b.global_position.x)
+	var cars: Array[Vector2] = []
+	for c in get_tree().get_nodes_in_group("parked_cars"):
+		if c is Node2D:
+			var w := float(c.get_meta("w", 150.0))
+			cars.append(Vector2((c as Node2D).global_position.x - w * 0.5, (c as Node2D).global_position.x + w * 0.5))
+	var last := -9999.0
+	var right := float(map_w) - 80.0 if map_w > 0 else 99999.0
+	for n in items:
+		var x := n.global_position.x
+		x = maxf(x, last + 56.0)
+		for span in cars:
+			if x > span.x - 10.0 and x < span.y + 10.0:
+				x = span.y + 24.0
+		n.global_position.x = minf(x, right)
+		last = n.global_position.x
