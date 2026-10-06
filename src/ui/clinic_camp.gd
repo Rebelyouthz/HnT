@@ -91,7 +91,11 @@ func _spot(info: Dictionary) -> Control:
 	var b := UiKit.button("BUILD %d" % cost if lvl == 0 else "UPGRADE %d" % cost, Vector2(170, 28))
 	b.add_theme_font_size_override("font_size", 12)
 	b.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	if not can_pay:
+	var blk := FamilyProfile.build_blocker(id)
+	if blk != "":
+		b.disabled = true
+		b.text = "AFTER %s" % blk.replace("_", " ").to_upper()
+	elif not can_pay:
 		b.disabled = true
 		b.text = "NEED %d GOLD" % cost
 	else:

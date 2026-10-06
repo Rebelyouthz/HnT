@@ -544,6 +544,9 @@ func _prompt_for(st: Dictionary) -> String:
 		return "▲  TALK TO  %s" % st["name"]
 	if bool(st.get("locked", false)):
 		var cost := FamilyProfile.build_cost(id)
+		var blk := FamilyProfile.build_blocker(id)
+		if blk != "":
+			return "%s  ·  BUILD THE %s FIRST" % [st["name"], blk.replace("_", " ").to_upper()]
 		if not StoryBook.has_crew("benny"):
 			return "%s  ·  BENNY COULD BUILD THIS  ·  HE'S HELD ON DOCK STREET" % st["name"]
 		if int(FamilyProfile.data.get("gold", 0)) < cost:
@@ -569,6 +572,10 @@ func _use(st: Dictionary) -> void:
 		_open_hub("clinic")
 		return
 	if bool(st.get("locked", false)):
+		var blk2 := FamilyProfile.build_blocker(id)
+		if blk2 != "":
+			_talk.play([{"who": "benny", "text": "One thing at a time. The %s goes up first, then this." % blk2.replace("_", " ")}], true)
+			return
 		if StoryBook.has_crew("benny") and int(FamilyProfile.data.get("gold", 0)) >= FamilyProfile.build_cost(id):
 			_construct(st)
 		elif not StoryBook.has_crew("benny"):

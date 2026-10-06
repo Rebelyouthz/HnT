@@ -271,6 +271,11 @@ func _detail(id: String) -> void:
 		b.disabled = not can_pay
 		if not can_pay:
 			b.text = "NEED %d GOLD" % cost
+		var blk := FamilyProfile.build_blocker(id)
+		if blk != "":
+			b.disabled = true
+			b.text = "BUILD %s FIRST" % blk.replace("_", " ").to_upper()
+			b.custom_minimum_size = Vector2(320, 50)
 		b.pressed.connect(func() -> void:
 			if FamilyProfile.try_build(id):
 				Juice.play("res://assets/audio/hammer.wav")

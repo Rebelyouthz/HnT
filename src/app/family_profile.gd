@@ -320,16 +320,49 @@ func tab_unlocked(tab: String) -> bool:
 			return false
 
 
+## The planned order rooms open in: each first build needs the one before
+## it, and costs a little more. The basics (desk, dojo, tree, locker, bench)
+## come first so the menus open one at a time, each with its guide.
+const BUILD_ORDER := [
+	"front_desk", "dojo", "therapy_couch", "street_map", "wardrobe_cage", "workshop",
+	"trophy_cabinet", "pawn_shop", "research_lab", "compare_mirrors", "punching_bag",
+	"bounty_board", "blood_fridge", "patrol_desk", "mail_slot", "bulletin_board",
+	"radio_tower", "album_wall", "streak_locker", "invoice_wheel", "warrant_fax",
+	"tip_jar", "lost_found", "payphone", "water_cooler", "coat_check", "time_clock", "bleach_closet",
+]
+
+
+## The room that has to be built first ("" when nothing blocks it).
+func build_blocker(id: String) -> String:
+	if building_level(id) > 0:
+		return ""
+	var i := BUILD_ORDER.find(id)
+	if i <= 0:
+		return ""
+	for k in range(i - 1, -1, -1):
+		if building_level(str(BUILD_ORDER[k])) <= 0:
+			return str(BUILD_ORDER[k])
+	return ""
+
+
+## The next room in the planned order that is not built yet.
+func next_build() -> String:
+	for id in BUILD_ORDER:
+		if building_level(str(id)) <= 0:
+			return str(id)
+	return ""
+
+
 func build_cost(id: String) -> int:
 	var lvl := building_level(id)
 	if lvl == 0:
-		return 15
+		return 15 + 6 * maxi(0, BUILD_ORDER.find(id))
 	return 20 + lvl * 10
 
 
 func try_build(id: String) -> bool:
 	var cost := build_cost(id)
-	if int(data["gold"]) < cost:
+	if build_blocker(id) != "" or int(data["gold"]) < cost:
 		return false
 	data["gold"] = int(data["gold"]) - cost
 	data["buildings"][id] = building_level(id) + 1
