@@ -47,22 +47,52 @@ func _section(title: String, kind: String, value: int, maxv: int) -> Control:
 	t.text = "%s  ·  %d / %d" % [title, value, maxv]
 	UiKit.apply_label(t, 16, Palette.LEMON)
 	v.add_child(t)
-	v.add_child(StatPanel.new([
-		{"name": "FILLED", "value": "%d / %d" % [value, maxv], "color": Palette.READY},
-		{"name": "LEFT", "value": str(maxi(0, maxv - value)), "color": Palette.MUTED}
-	]))
-	var bar := ProgressBar.new()
-	bar.max_value = maxv
-	bar.value = value
-	bar.show_percentage = false
-	bar.custom_minimum_size = Vector2(0, 18)
-	v.add_child(bar)
+	# A segmented meter: one block per step, filled blocks lit green, the
+	# steps that open a chest marked in gold.
+	var table0: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/milestones.json"))
+	var marks: Array = []
+	for c in table0[kind]:
+		marks.append(int(c["at"]))
+	var seg := HBoxContainer.new()
+	seg.add_theme_constant_override("separation", 3)
+	var w := clampf(820.0 / float(maxv) - 3.0, 12.0, 120.0)
+	for i in maxv:
+		var on := i < value
+		var cell := ColorRect.new()
+		cell.custom_minimum_size = Vector2(w, 16)
+		cell.color = Palette.READY if on else Color(0.1, 0.11, 0.16)
+		var hi := ColorRect.new()
+		hi.color = Color(1, 1, 1, 0.28 if on else 0.05)
+		hi.size = Vector2(w, 3)
+		cell.add_child(hi)
+		if marks.has(i + 1):
+			var m := ColorRect.new()
+			m.color = UiKit.GOLD
+			m.size = Vector2(w, 3)
+			m.position = Vector2(0, 13)
+			cell.add_child(m)
+		seg.add_child(cell)
+		if on and i == value - 1:
+			UiKit.pulse_ready(cell)
+	v.add_child(seg)
+	var left := Label.new()
+	left.text = ("%d LEFT TO THE NEXT CHEST" % maxi(0, _next_mark(marks, value) - value)) if _next_mark(marks, value) > value else "ALL FILLED"
+	left.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(left, 10, Palette.MUTED)
+	v.add_child(left)
 	var row := HBoxContainer.new()
 	var table: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/milestones.json"))
 	for chest in table[kind]:
 		row.add_child(_chest(kind, chest, value))
 	v.add_child(row)
 	return box
+
+
+func _next_mark(marks: Array, value: int) -> int:
+	for m in marks:
+		if int(m) > value:
+			return int(m)
+	return value
 
 
 func _chest(kind: String, chest: Dictionary, value: int) -> Control:
