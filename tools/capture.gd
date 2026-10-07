@@ -561,6 +561,10 @@ func _process(_delta: float) -> bool:
 				root.get_texture().get_image().save_png(_out.get_basename() + "_%03d.png" % _n)
 	if _walk and _n > 20:
 		Input.action_press("p1_left" if _left else "p1_right")
+	# FILM=N saves every Nth frame along the way (out_NNN.png).
+	var film := int(OS.get_environment("FILM"))
+	if film > 0 and _n % film == 0 and _n < _frames:
+		root.get_texture().get_image().save_png(_out.get_basename() + "_%03d.png" % _n)
 	if _n == _frames and OS.get_environment("PROBE") != "":
 		var pt := Vector2(float(OS.get_environment("PROBE").get_slice(",", 0)), float(OS.get_environment("PROBE").get_slice(",", 1)))
 		_probe(root, pt)

@@ -41,14 +41,108 @@ static func is_vault(id: String) -> bool:
 	return id.begins_with("v_") and not card(id).is_empty()
 
 
-static func owned() -> Dictionary:
-	if not FamilyProfile.data.has("vault"):
-		FamilyProfile.data["vault"] = {}
-	return FamilyProfile.data["vault"]
+## The collection: card id -> copies per rarity tier [common..legendary].
+static func inv() -> Dictionary:
+	if not FamilyProfile.data.has("vault_inv"):
+		var out := {}
+		# Older saves kept one level per card: that becomes one copy.
+		for id: String in (FamilyProfile.data.get("vault", {}) as Dictionary).keys():
+			var c := [0, 0, 0, 0, 0]
+			c[clampi(int(FamilyProfile.data["vault"][id]) - 1, 0, 4)] = 1
+			out[id] = c
+		FamilyProfile.data["vault_inv"] = out
+	return FamilyProfile.data["vault_inv"]
 
 
+static func counts(id: String) -> Array:
+	return inv().get(id, [0, 0, 0, 0, 0])
+
+
+## Best rarity owned + 1 (0 = not owned). This is the card's power level.
 static func level(id: String) -> int:
-	return int(owned().get(id, 0))
+	var c := counts(id)
+	for t in range(4, -1, -1):
+		if int(c[t]) > 0:
+			return t + 1
+	return 0
+
+
+static func best_tier(id: String) -> int:
+	return level(id) - 1
+
+
+## Every owned card id -> its level, for older call sites.
+static func owned() -> Dictionary:
+	var out := {}
+	for id: String in inv().keys():
+		if level(id) > 0:
+			out[id] = level(id)
+	return out
+
+
+static func add_copy(id: String, tier: int) -> void:
+	var c: Array = counts(id).duplicate()
+	c[clampi(tier, 0, 4)] = int(c[clampi(tier, 0, 4)]) + 1
+	inv()[id] = c
+	FamilyProfile.save()
+
+
+## Two copies at the same rarity -> one at the next. Returns the new tier
+## or -1 when it cannot merge.
+static func can_merge(id: String, tier: int) -> bool:
+	return tier < 4 and int(counts(id)[tier]) >= 2
+
+
+static func merge(id: String, tier: int) -> int:
+	if not can_merge(id, tier):
+		return -1
+	var c: Array = counts(id).duplicate()
+	c[tier] = int(c[tier]) - 2
+	c[tier + 1] = int(c[tier + 1]) + 1
+	inv()[id] = c
+	FamilyProfile.save()
+	return tier + 1
+
+
+## Evolution cards whose two parents are both at LEGENDARY.
+static func evolutions_ready() -> Array:
+	var out: Array = []
+	if not FamilyProfile.has_cbt("deck_evolve"):
+		return out
+	for c: Dictionary in book():
+		if str(c.get("kind", "")) != "evolution":
+			continue
+		var ok := true
+		for n in c.get("needs", []):
+			if int(counts(str(n))[4]) <= 0:
+				ok = false
+		if ok:
+			out.append(str(c["id"]))
+	return out
+
+
+## Fuses both legendary parents into the evolved card (legendary).
+static func evolve(eid: String) -> bool:
+	if not evolutions_ready().has(eid):
+		return false
+	for n in card(eid).get("needs", []):
+		var c: Array = counts(str(n)).duplicate()
+		c[4] = int(c[4]) - 1
+		inv()[str(n)] = c
+	add_copy(eid, 4)
+	return true
+
+
+## Synergy pairs and whether each half is owned.
+static func synergies() -> Array:
+	var out: Array = []
+	for c: Dictionary in book():
+		if str(c.get("kind", "")) == "synergy":
+			var have: Array = []
+			for n in c.get("needs", []):
+				have.append(level(str(n)) > 0)
+			out.append({"id": str(c["id"]), "needs": c.get("needs", []), "have": have, "owned": level(str(c["id"])) > 0})
+	return out
 
 
 static func tokens() -> int:
@@ -68,21 +162,14 @@ static func hand_size() -> int:
 
 ## Can this card come out of the vault right now?
 static func drawable(c: Dictionary) -> bool:
-	var id := str(c["id"])
-	if level(id) >= MAX_LV:
-		return false
 	match str(c.get("kind", "")):
+		"evolution":
+			return false
 		"synergy":
 			if not FamilyProfile.has_cbt("deck_synergy"):
 				return false
 			for n in c.get("needs", []):
 				if level(str(n)) <= 0:
-					return false
-		"evolution":
-			if not FamilyProfile.has_cbt("deck_evolve"):
-				return false
-			for n in c.get("needs", []):
-				if level(str(n)) < MAX_LV:
 					return false
 	return true
 
@@ -131,42 +218,39 @@ static func draw() -> Dictionary:
 	FamilyProfile.data["card_tokens"] = tokens() - int(p[2])
 	FamilyProfile.data["vault_step"] = step() + 1
 	var floor_rank := 2 if int(p[2]) > 0 else (1 if int(p[1]) > 0 else 0)
-	var pick := _roll(floor_rank)
-	if pick.is_empty():
-		# Everything maxed: pay it back as gems.
+	var pool: Array = []
+	for c: Dictionary in book():
+		if drawable(c):
+			pool.append(c)
+	if pool.is_empty():
 		FamilyProfile.add_gems(5)
 		return {}
+	var pick: Dictionary = pool[randi() % pool.size()]
+	var tier := _roll_tier(floor_rank)
 	var id := str(pick["id"])
 	var was := level(id)
-	owned()[id] = mini(MAX_LV, was + 1)
+	add_copy(id, tier)
 	FamilyProfile.data["vault_draws"] = int(FamilyProfile.data.get("vault_draws", 0)) + 1
 	FamilyProfile.save()
 	var out := pick.duplicate()
+	out["tier"] = tier
+	out["rarity"] = Rarity.ORDER[tier]
 	out["lv"] = level(id)
 	out["new"] = was == 0
+	out["merge"] = can_merge(id, tier)
 	return out
 
 
-static func _roll(floor_rank: int) -> Dictionary:
-	var pool: Array = []
-	for c: Dictionary in book():
-		if drawable(c) and Rarity.rank(str(c.get("rarity", "common"))) >= floor_rank:
-			pool.append(c)
-	if pool.is_empty():
-		for c: Dictionary in book():
-			if drawable(c):
-				pool.append(c)
-	if pool.is_empty():
-		return {}
+static func _roll_tier(floor_rank: int) -> int:
 	var total := 0.0
-	for c: Dictionary in pool:
-		total += float(WEIGHTS.get(str(c.get("rarity", "common")), 10.0))
+	for t in range(floor_rank, 5):
+		total += float(WEIGHTS[Rarity.ORDER[t]])
 	var r := randf() * total
-	for c: Dictionary in pool:
-		r -= float(WEIGHTS.get(str(c.get("rarity", "common")), 10.0))
+	for t in range(floor_rank, 5):
+		r -= float(WEIGHTS[Rarity.ORDER[t]])
 		if r <= 0.0:
-			return c
-	return pool.back()
+			return t
+	return 4
 
 
 ## ---- in a run ------------------------------------------------------------
@@ -195,7 +279,8 @@ static func as_row(id: String) -> Dictionary:
 	var st: Dictionary = c.get("stats", {})
 	for key: String in st.keys():
 		blurb = blurb.replace("{%s}" % key, _fmt(key, float(st[key]) * k))
-	return {"id": id, "name": str(c["name"]), "blurb": blurb, "rarity": str(c.get("rarity", "common")),
+	var tier := maxi(0, best_tier(id))
+	return {"id": id, "name": str(c["name"]), "blurb": blurb, "rarity": Rarity.ORDER[tier],
 		"tag": str(c.get("tag", "VAULT")), "level": n, "upgrade": n > 1, "icon": "cur_card_token"}
 
 
@@ -223,7 +308,7 @@ static func on_pick(id: String, tree: SceneTree) -> void:
 		for f in tree.get_nodes_in_group("players"):
 			if f is Fighter:
 				(f as Fighter).speed += add_sp
-	Rarity.juice(str(card(id).get("rarity", "common")), str(card(id).get("name", "")))
+	Rarity.juice(Rarity.ORDER[maxi(0, best_tier(id))], str(card(id).get("name", "")))
 
 
 ## Summed bonus for a stat from this run's vault picks.
