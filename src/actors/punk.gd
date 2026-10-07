@@ -1323,7 +1323,14 @@ func _drops(from: Node) -> void:
 	var srun := SurviveRun.get_run(get_tree())
 	# Survivor hours drop their own XP gems: no second set of story orbs.
 	if srun == null:
-		XpOrb.burst(host, global_position, xp_n, tier == "elite" or tier == "boss" or title == "Bailiff")
+		# Story streets: XP goes straight in (no orbs on the floor - the
+		# floor is for real loot).
+		if rs and rs.has_method("add_xp"):
+			rs.add_xp(xp_n)
+			Juice.popup_number(global_position + Vector2(0, -64), "+%d XP" % xp_n, Palette.READY)
+		var tok := 0.08 if (tier == "elite" or tier == "boss") else 0.006
+		if from is Fighter and randf() < tok:
+			LootDrop.spawn(host, global_position + Vector2(randf_range(-8, 8), 0), "card_token", 1, 0.9)
 	var coins := 6 if title == "Bailiff" else (2 if title == "Mohawk Bo" or title == "Repo Goon" else ((1 + (1 if randf() < 0.35 else 0)) if randf() < 0.75 else 0))
 	coins = int(round(float(coins) * cond_coin * rank_mul)) * NightExtras.coin_mul()
 	if rank_mul > 1.0 and coins > 0:

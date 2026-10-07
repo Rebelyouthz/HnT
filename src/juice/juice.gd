@@ -40,8 +40,8 @@ func _ready() -> void:
 	_toast_box = VBoxContainer.new()
 	# Tucked into the top-right corner, one at a time (the rest queue), so
 	# the fight on the right of the screen stays clear.
-	_toast_box.position = Vector2(1028, 96)
-	_toast_box.size = Vector2(244, 60)
+	_toast_box.position = Vector2(1010, 96)
+	_toast_box.size = Vector2(262, 60)
 	_toast_box.add_theme_constant_override("separation", 4)
 	_toast_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	toast_root.add_child(_toast_box)
@@ -482,7 +482,7 @@ func _toast_show(kind: String, title: String, body: String, icon: String) -> voi
 			accent = Palette.EDGE
 	# Pixel toast: chunky framed plate, a glyph medallion by kind, title in
 	# the pixel caps; slides in from the side with a bounce, shines once.
-	var glyph := {"achievement": "star", "unlock": "star", "quest": "eye", "challenge": "fist", "reward": "gold", "codex": "node_school"}.get(kind, "star") as String
+	var glyph := {"achievement": "ach_trophy", "unlock": "star", "quest": "eye", "challenge": "fist", "reward": "gold", "codex": "node_school"}.get(kind, "star") as String
 	if icon != "":
 		glyph = icon
 	var wrap := PanelContainer.new()
@@ -498,21 +498,41 @@ func _toast_show(kind: String, title: String, body: String, icon: String) -> voi
 	st.content_margin_top = 5
 	st.content_margin_bottom = 5
 	wrap.add_theme_stylebox_override("panel", st)
-	wrap.custom_minimum_size = Vector2(244, 0)
+	wrap.custom_minimum_size = Vector2(262, 0)
 	_toast_box.add_child(wrap)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 	wrap.add_child(row)
+	# The icon sits in a lit medallion so every toast leads with a picture.
+	var medal := PanelContainer.new()
+	var ms := StyleBoxFlat.new()
+	ms.bg_color = Color(accent.r * 0.25, accent.g * 0.25, accent.b * 0.3, 1.0)
+	ms.border_color = accent
+	ms.set_border_width_all(2)
+	ms.set_corner_radius_all(20)
+	ms.content_margin_left = 3
+	ms.content_margin_right = 3
+	ms.content_margin_top = 3
+	ms.content_margin_bottom = 3
+	medal.add_theme_stylebox_override("panel", ms)
+	medal.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(medal)
 	var ic := PixelIcon.new()
 	ic.kind = glyph
-	ic.custom_minimum_size = Vector2(24, 24)
+	ic.custom_minimum_size = Vector2(34, 34)
 	ic.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	ic.pivot_offset = Vector2(12, 12)
-	row.add_child(ic)
+	ic.pivot_offset = Vector2(17, 17)
+	medal.add_child(ic)
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 0)
 	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(col)
+	if kind == "achievement":
+		var hd := Label.new()
+		hd.text = "ACHIEVEMENT UNLOCKED"
+		hd.add_theme_font_override("font", UiKit.pixel_font())
+		UiKit.apply_label(hd, 9, Color(1.0, 0.85, 0.35))
+		col.add_child(hd)
 	var t := Label.new()
 	t.text = title
 	t.clip_text = true

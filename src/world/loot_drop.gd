@@ -14,6 +14,7 @@ const KINDS := {
 	"shard_son": {"tex": "res://assets/sprites/loot/shard_son.png", "scale": 0.62},
 	"shard_father": {"tex": "res://assets/sprites/loot/shard_father.png", "scale": 0.62},
 	"gear": {"tex": "res://assets/sprites/loot/gear_box.png", "scale": 0.62},
+	"card_token": {"tex": "res://assets/sprites/icons/cur_card_token.png", "scale": 3.4},
 }
 
 var kind := "cash"
@@ -60,15 +61,22 @@ func _ready() -> void:
 	_sp.texture = load(str(row["tex"]))
 	_sp.centered = true
 	var s := float(row["scale"]) * SpriteBook.DRAW_SCALE
+	# Gear shows the piece itself (its painted icon), not a box.
+	var gp := "res://assets/sprites/gear/%s.png" % item
+	if kind == "gear" and item != "" and ResourceLoader.exists(gp):
+		_sp.texture = load(gp)
+		s = 22.0 / float(_sp.texture.get_height())
 	_sp.scale = Vector2(s, s)
 	_sp.offset = Vector2(0, -float(_sp.texture.get_height()) * 0.5)
 	_sp.texture_filter = SpriteBook.world_filter()
 	add_child(_sp)
-	if kind == "syringe" or kind == "flask" or kind.begins_with("shard") or kind == "gear":
+	if kind == "syringe" or kind == "flask" or kind.begins_with("shard") or kind == "gear" or kind == "card_token":
 		_glow = PointLight2D.new()
 		_glow.texture = LightRig.radial_tex()
 		_glow.texture_scale = 0.35
 		_glow.color = Color(0.4, 1.0, 0.5) if kind == "syringe" else Color(1.0, 0.3, 0.3)
+		if kind == "card_token":
+			_glow.color = Color(1.0, 0.8, 0.3)
 		if kind == "shard_son":
 			_glow.color = Color(1.0, 0.85, 0.3)
 		elif kind == "shard_father":
@@ -203,9 +211,13 @@ func _take(f: Fighter) -> void:
 			FamilyProfile.flag_unseen("gear_" + item)
 			var spec := GearBook.item(item)
 			var rn := Rarity.ORDER[clampi(item_tier, 0, 4)]
-			Juice.toast("reward", "%s  ·  %s" % [str(spec.get("title", spec.get("name", item))).to_upper(), rn.to_upper()], "Gear found. Three alike combine in GEAR.")
+			Juice.toast("reward", "%s  ·  %s" % [str(spec.get("title", spec.get("name", item))).to_upper(), rn.to_upper()], "Gear found. Three alike combine in GEAR.", item)
 			Rarity.juice(rn, str(spec.get("title", item)))
 			Juice.play("res://assets/audio/chest.wav")
+		"card_token":
+			VaultCards.add_tokens(maxi(1, amount), "Dropped by the thug. Spend it in the CARD VAULT.")
+			Juice.play("res://assets/audio/card.wav")
+			Rarity.juice("epic", "CARD TOKEN")
 		"syringe":
 			f.hp = f.max_hp
 			f.steam = Fighter.STEAM_MAX
