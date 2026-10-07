@@ -9,7 +9,8 @@ extends Node
 
 signal changed
 
-const MAX_ABILITIES := 6
+## Weapon slots before character rarity: each rarity above common adds one.
+const MAX_ABILITIES := 5
 const MAX_ITEMS := 4
 const MAX_LV := 7
 
@@ -165,7 +166,7 @@ func pickup_mul() -> float:
 
 
 func max_abilities() -> int:
-	return MAX_ABILITIES + (1 if Trees.has("s_slot") else 0)
+	return MAX_ABILITIES + Heroes.weapon_slots() + (1 if Trees.has("s_slot") else 0)
 
 
 func max_items() -> int:

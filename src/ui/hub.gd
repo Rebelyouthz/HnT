@@ -846,7 +846,7 @@ func _clear_modal() -> void:
 
 func _heroes_ready() -> bool:
 	for r in Heroes.ROLES:
-		if Heroes.can_level(r) or Heroes.can_rank(r):
+		if Heroes.can_level_any(r) or Heroes.can_rank(r):
 			return true
 	for id in Meta.LIST.keys():
 		if Meta.blocker(id) == "":

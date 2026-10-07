@@ -95,21 +95,12 @@ func _hero_card(role: String) -> Control:
 	var nm := Label.new()
 	nm.text = "%s  ·  %s" % [(FamilyProfile.son_name() if role == "son" else FamilyProfile.father_name()).to_upper(), rn.to_upper()]
 	nm.add_theme_font_override("font", UiKit.title_font())
-	UiKit.apply_label(nm, 20, rc)
+	UiKit.apply_label(nm, 18, rc)
 	v.add_child(nm)
-	var lv := Heroes.level(role)
 	var cap := Heroes.cap(role)
-	var lr := HBoxContainer.new()
-	lr.add_theme_constant_override("separation", 8)
-	var ll := Label.new()
-	ll.text = "LV %d / %d" % [lv, cap]
-	UiKit.apply_label(ll, 15, Palette.TEXT)
-	ll.custom_minimum_size = Vector2(110, 0)
-	lr.add_child(ll)
-	var bar := UiKit.glow_bar(float(lv) / float(cap), rc, Vector2(240, 10))
-	bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	lr.add_child(bar)
-	v.add_child(lr)
+	# Three level tracks: each only counts in its own mode.
+	for m: String in Heroes.MODES:
+		v.add_child(_track(role, m, rc, cap))
 	var c := Heroes.rank_cost(role)
 	var need := int(c.get("shards", 0))
 	var sr := HBoxContainer.new()
@@ -131,30 +122,18 @@ func _hero_card(role: String) -> Control:
 		sb.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		sr.add_child(sb)
 	v.add_child(sr)
-	v.add_child(UiKit.rich("HP [color=%s]+%d[/color]   DMG [color=%s]x%.2f[/color]   SPD [color=%s]+%d[/color]   POWER %d" % [UiKit.UP_COL, Heroes.hp_bonus(role), UiKit.UP_COL, Heroes.dmg_mul(role), UiKit.UP_COL, int(Heroes.speed_bonus(role)), Heroes.power(role)], 400, 13, Palette.TEXT))
+	v.add_child(UiKit.rich("STREETS  HP [color=%s]+%d[/color]  DMG [color=%s]x%.2f[/color]  SPD [color=%s]+%d[/color]  ·  SURV SLOTS [color=%s]+%d[/color]  ·  POWER %d" % [UiKit.UP_COL, Heroes.hp_bonus(role), UiKit.UP_COL, Heroes.dmg_mul(role), UiKit.UP_COL, int(Heroes.speed_bonus(role)), UiKit.UP_COL, Heroes.rarity(role), Heroes.power(role)], 410, 11, Palette.TEXT))
 	var btns := HBoxContainer.new()
 	btns.add_theme_constant_override("separation", 10)
-	var up := UiKit.button("LEVEL UP  %dG" % Heroes.level_cost(role) if lv < cap else "LEVEL CAP", Vector2(170, 40))
-	up.set_meta("key", "lv_" + role)
-	up.disabled = not Heroes.can_level(role)
-	up.pressed.connect(func() -> void:
-		if Heroes.try_level(role):
-			Juice.play("res://assets/audio/claim.wav")
-			Juice.shout("LEVEL %d" % Heroes.level(role))
-			need_refresh.emit()
-			_paint("lv_" + role)
-			UiKit.fx_after(self, "lv_" + role, UiKit.GOLD, "LV %d" % Heroes.level(role), Heroes.level(role) % 5 == 0)
-	)
-	btns.add_child(up)
 	var rk_text := "MAX"
 	if not c.is_empty():
 		rk_text = "%s  %dS %dG" % [Rarity.ORDER[Heroes.rarity(role) + 1].to_upper(), need, int(c["gold"])]
-	var rk := UiKit.button(rk_text, Vector2(220, 40))
+	var rk := UiKit.button(rk_text, Vector2(230, 32))
 	rk.set_meta("key", "rk_" + role)
 	rk.disabled = not Heroes.can_rank(role)
 	if not c.is_empty():
 		rk.add_theme_color_override("font_color", Rarity.color(Rarity.ORDER[Heroes.rarity(role) + 1]))
-	rk.tooltip_text = "Reach LV %d, then spend shards to raise rarity (+5 level cap)." % cap
+	rk.tooltip_text = "Reach LV %d on any track, then spend shards: +5 level cap on all three, +1 SURVIVOR weapon slot." % cap
 	# Raising rarity spends the shards: hold to confirm.
 	UiKit.hold_confirm(rk, func() -> void:
 		if Heroes.try_rank(role):
@@ -166,6 +145,37 @@ func _hero_card(role: String) -> Control:
 	btns.add_child(rk)
 	v.add_child(btns)
 	return p
+
+
+## One level track: name, LV x / cap, bar and a buy button.
+func _track(role: String, m: String, rc: Color, cap: int) -> Control:
+	var lv := Heroes.level(role, m)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	var ll := Label.new()
+	ll.text = "%s  LV %d/%d" % [Heroes.MODE_NAME[m], lv, cap]
+	UiKit.apply_label(ll, 12, Palette.TEXT if m == Heroes.mode() or m == "story" else Palette.MUTED)
+	ll.custom_minimum_size = Vector2(146, 0)
+	row.add_child(ll)
+	var tint: Color = {"story": rc, "survivor": Color(0.45, 1.0, 0.6), "parkour": Color(0.4, 0.85, 1.0)}[m]
+	var bar := UiKit.glow_bar(float(lv) / float(cap), tint, Vector2(120, 8))
+	bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(bar)
+	var key := "lv_%s_%s" % [role, m]
+	var up := UiKit.button(("+1  %dG" % Heroes.level_cost(role, m)) if lv < cap else "CAP", Vector2(110, 26))
+	up.set_meta("key", key)
+	up.disabled = not Heroes.can_level(role, m)
+	up.tooltip_text = {"story": "Brawl maps: HP, damage.", "survivor": "Survivor hours: HP, damage.", "parkour": "Rooftops: HP, damage, wider trick timing."}[m]
+	up.pressed.connect(func() -> void:
+		if Heroes.try_level(role, m):
+			Juice.play("res://assets/audio/claim.wav")
+			Juice.shout("%s LV %d" % [Heroes.MODE_NAME[m], Heroes.level(role, m)])
+			need_refresh.emit()
+			_paint(key)
+			UiKit.fx_after(self, key, tint, "LV %d" % Heroes.level(role, m), Heroes.level(role, m) % 5 == 0)
+	)
+	row.add_child(up)
+	return row
 
 
 func _meta_panel() -> void:

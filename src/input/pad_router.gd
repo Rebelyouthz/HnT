@@ -17,6 +17,8 @@ var p2_device := -1
 var last_kind := "kb"
 var last_p1_kind := "kb"
 var last_p2_kind := "kb"
+## Mouse aim is live for a few seconds after the mouse last moved (P1 only).
+var _mouse_t := -100.0
 
 
 func _enter_tree() -> void:
@@ -38,6 +40,10 @@ func _input(event: InputEvent) -> void:
 			_handle_start(event.device)
 	elif event is InputEventKey and event.pressed:
 		last_kind = "kb"
+	elif event is InputEventMouseMotion and (event as InputEventMouseMotion).relative.length() > 2.0:
+		_mouse_t = Time.get_ticks_msec() / 1000.0
+		last_kind = "kb"
+		last_p1_kind = "kb"
 
 
 func _on_joy(_device: int, _connected: bool) -> void:
@@ -161,6 +167,24 @@ func _has(name: StringName, ev: InputEvent) -> bool:
 
 func stick(prefix: StringName) -> Vector2:
 	return Input.get_vector(prefix + "left", prefix + "right", prefix + "up", prefix + "down", DEAD)
+
+
+func device_of(prefix: StringName) -> int:
+	return p1_device if str(prefix) == "p1_" else p2_device
+
+
+## The right stick of this player's pad (zero inside the dead zone).
+func rstick(prefix: StringName) -> Vector2:
+	var dev := device_of(prefix)
+	if dev < 0:
+		return Vector2.ZERO
+	var v := Vector2(Input.get_joy_axis(dev, JOY_AXIS_RIGHT_X), Input.get_joy_axis(dev, JOY_AXIS_RIGHT_Y))
+	return v if v.length() > DEAD else Vector2.ZERO
+
+
+## True while P1 is steering with the mouse (it moved in the last 3 s).
+func mouse_live(prefix: StringName) -> bool:
+	return str(prefix) == "p1_" and Time.get_ticks_msec() / 1000.0 - _mouse_t < 3.0
 
 
 func p1_prompt() -> String:

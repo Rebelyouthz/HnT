@@ -364,7 +364,7 @@ func _death_plate(col: VBoxContainer) -> void:
 	# Roguelite nudge: what would make the next try go better.
 	var tip := ""
 	for r in Heroes.ROLES:
-		if tip == "" and Heroes.can_level(r):
+		if tip == "" and Heroes.can_level_any(r):
 			tip = "TIP  ·  you can afford a level in HEROES."
 		elif tip == "" and Heroes.can_rank(r):
 			tip = "TIP  ·  enough shards for a rarity up in HEROES."

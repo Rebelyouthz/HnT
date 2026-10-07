@@ -28,6 +28,8 @@ func _process(delta: float) -> void:
 		return
 	_t += delta
 	var r := run.row("abilities", id)
+	if bool(r.get("manual", false)):
+		_tick_reticle(f)
 	if id == "clipboards" or id == "bag":
 		_tick_orbit(run, r, delta)
 		return
@@ -36,14 +38,63 @@ func _process(delta: float) -> void:
 		return
 	# Manual weapons fire on SHOOT with no gun in hand: NAIL DRIVER while
 	# held, PAPERWEIGHT on each tap.
+	# Twin-stick: the right stick (or the mouse) aims them, and pushing the
+	# stick all the way out or holding the left mouse button fires too.
 	if bool(r.get("manual", false)):
 		if Arsenal.is_gun(str(f.get("pickup"))):
 			return
-		var want: bool = f.call("_pressed", "shoot") if id == "nail_driver" else f.call("_just", "shoot")
+		var twin := PadRouter.rstick(f.prefix).length() > 0.75 or (PadRouter.mouse_live(f.prefix) and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT))
+		var want: bool = twin or (f.call("_pressed", "shoot") if id == "nail_driver" else f.call("_just", "shoot"))
 		if not want:
 			return
 	_cd = float(r.get("cd", 1.5)) * run.cd_mul() * (0.65 if run.evolved.has(id) else 1.0) * SurvStarter.cd_mul(id)
 	_fire(run, r, f)
+
+
+## Aim direction from the right stick, else the mouse, else zero (facing).
+func _aim(f: Fighter, at: Vector2) -> Vector2:
+	var rs := PadRouter.rstick(f.prefix)
+	if rs.length() > 0.3:
+		return rs.normalized()
+	if PadRouter.mouse_live(f.prefix):
+		var d := get_global_mouse_position() - at
+		if d.length() > 12.0:
+			return d.normalized()
+	return Vector2.ZERO
+
+
+## How far a lob goes: to the mouse, or further the harder the stick is pushed.
+func _reach(f: Fighter, at: Vector2) -> float:
+	var rs := PadRouter.rstick(f.prefix)
+	if rs.length() > 0.3:
+		return lerpf(70.0, 230.0, clampf(rs.length(), 0.0, 1.0))
+	return clampf((get_global_mouse_position() - at).length(), 60.0, 260.0)
+
+
+var _ret: Node2D
+
+
+## A small crosshair where the manual weapon is pointed.
+func _tick_reticle(f: Fighter) -> void:
+	var at := f.global_position + Vector2(0, -30)
+	var aim := _aim(f, at)
+	if _ret == null:
+		_ret = Node2D.new()
+		_ret.top_level = true
+		_ret.z_index = 40
+		_ret.draw.connect(func() -> void:
+			var c := Color(1.0, 0.85, 0.3, 0.85)
+			_ret.draw_arc(Vector2.ZERO, 9.0, 0.0, TAU, 20, c, 2.0)
+			for k in 4:
+				var d := Vector2.from_angle(float(k) * PI * 0.5)
+				_ret.draw_line(d * 5.0, d * 13.0, c, 2.0)
+		)
+		add_child(_ret)
+	_ret.visible = aim != Vector2.ZERO
+	if _ret.visible:
+		var dist := _reach(f, at) if id == "paperweight" else 120.0
+		_ret.global_position = at + aim * dist
+		_ret.queue_redraw()
 
 
 func _nearest(from: Vector2, max_d := 420.0, skip: Array = []) -> Node2D:
@@ -179,17 +230,22 @@ func _fire(run: SurviveRun, r: Dictionary, f: Fighter) -> void:
 				hit.append(t)
 				SurvProj.stamp(_host(), id, t.global_position + Vector2(randf_range(-6, 6), 0), area)
 		"nail_driver":
-			var face := 0.0 if f.facing > 0 else PI
+			var aim := _aim(f, at)
+			var face := aim.angle() if aim != Vector2.ZERO else (0.0 if f.facing > 0 else PI)
 			var n := run.proj_count(id)
 			for i in n:
 				var a := face + (float(i) - float(n - 1) * 0.5) * 0.1 + randf_range(-0.05, 0.05)
 				SurvProj.shoot(_host(), "staple", id, at, Vector2.from_angle(a) * 620.0, 1 + int(run.abilities.get(id, 1)) / 3)
 			Mixer.play_sfx("res://assets/audio/sfx/nailgun.ogg" if ResourceLoader.exists("res://assets/audio/sfx/nailgun.ogg") else "res://assets/audio/ui_click.wav", randf_range(1.5, 1.8), -14.0)
 		"paperweight":
+			var aim := _aim(f, at)
 			var p := f.global_position + Vector2(float(f.facing) * 110.0, 0)
-			var t := _nearest(p, 120.0)
-			if t:
-				p = t.global_position
+			if aim != Vector2.ZERO:
+				p = f.global_position + aim * _reach(f, at)
+			else:
+				var t := _nearest(p, 120.0)
+				if t:
+					p = t.global_position
 			SurvProj.lob(_host(), id, at, p, area)
 			Mixer.play_sfx("res://assets/audio/whoosh_light.wav", 0.8, -10.0)
 		"audit":
