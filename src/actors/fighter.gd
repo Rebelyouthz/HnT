@@ -11,6 +11,8 @@ extends CharacterBody2D
 const GRAV := 2400.0
 const JUMP := -620.0
 const FALL_MUL := 1.65
+## Terminal speed: long drops read as falls, not teleports.
+const MAX_FALL := 1150.0
 const COYOTE := 6
 const BUFFER := 8
 const STREET_MIN := 430.0
@@ -973,9 +975,9 @@ func _process_street(delta: float) -> void:
 		var g := GRAV
 		if hop_v > 0.0:
 			g *= FALL_MUL
-		# HANG TIME: the top of the jump floats.
-		if Trees.has("p_hang") and absf(hop_v) < 70.0:
-			g *= 0.45
+		# The top of every jump hangs a moment; HANG TIME floats it longer.
+		if absf(hop_v) < 90.0:
+			g *= 0.45 if Trees.has("p_hang") else 0.7
 		if (role == "son" or suit_part("top") == "bat" or Trees.has("p_float")) and hop < 0.0 and _pressed("jump") and hop_v > -80.0:
 			if not gliding and ResourceLoader.exists("res://assets/audio/sfx/glide.ogg"):
 				Mixer.play_sfx("res://assets/audio/sfx/glide.ogg", 1.0, -10.0)
@@ -985,7 +987,7 @@ func _process_street(delta: float) -> void:
 			velocity.x = move_toward(velocity.x, float(facing) * speed * 1.05 * Meta.air_mul(), 600.0 * Meta.air_mul() * delta)
 		if _released("jump") and hop_v < 0.0:
 			hop_v *= 0.45
-		hop_v += g * delta
+		hop_v = minf(hop_v + g * delta, MAX_FALL)
 		hop += hop_v * delta
 		if hop >= 0.0:
 			var fall := hop_v
@@ -1017,6 +1019,8 @@ func _process_roof(delta: float) -> void:
 		var g := GRAV
 		if velocity.y > 0.0:
 			g *= FALL_MUL
+		if absf(velocity.y) < 90.0:
+			g *= 0.45 if Trees.has("p_hang") else 0.7
 		if (role == "son" or suit_part("top") == "bat" or Trees.has("p_float")) and _pressed("jump") and velocity.y > -90.0:
 			gliding = true
 			g = GRAV * 0.18
@@ -1026,7 +1030,7 @@ func _process_roof(delta: float) -> void:
 			gliding = false
 		if _released("jump") and velocity.y < 0.0:
 			velocity.y *= 0.5
-		velocity.y += g * delta
+		velocity.y = minf(velocity.y + g * delta, MAX_FALL)
 	else:
 		gliding = false
 		coyote = COYOTE * (2 if Trees.has("p_coyote") else 1)
