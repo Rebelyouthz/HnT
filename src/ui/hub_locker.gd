@@ -195,6 +195,7 @@ func _slot_box(slot: String) -> Control:
 	else:
 		var gi := GearIcon.new()
 		gi.slot = slot
+		gi.item_id = str(item.get("id", ""))
 		gi.empty = item.is_empty() and slot != "charm"
 		if slot == "charm":
 			gi.tint = UiKit.GOLD if not Charms.worn().is_empty() else Color(0.4, 0.4, 0.45)
@@ -306,14 +307,64 @@ func _items_panel() -> void:
 		"mask", "top", "bottom":
 			_set_strip()
 			_list.add_child(_part_card("", _slot))
-			for id: String in Suits.LIST.keys():
+			# What you own first, rarest first; the rest after.
+			var ids: Array = Suits.LIST.keys()
+			ids.sort_custom(func(a: String, b: String) -> bool:
+				var oa := Suits.owned_part(a, _slot)
+				var ob := Suits.owned_part(b, _slot)
+				if oa != ob:
+					return oa
+				return Rarity.ORDER.find(Rarity.normalize(str(Suits.LIST[a].get("rarity", "common")))) > Rarity.ORDER.find(Rarity.normalize(str(Suits.LIST[b].get("rarity", "common"))))
+			)
+			for id: String in ids:
 				_list.add_child(_part_card(id, _slot))
 		"charm":
-			for id: String in Charms.LIST.keys():
+			var cids: Array = Charms.LIST.keys()
+			cids.sort_custom(func(a: String, b: String) -> bool:
+				if Charms.has(a) != Charms.has(b):
+					return Charms.has(a)
+				return Rarity.ORDER.find(Rarity.normalize(str(Charms.LIST[a].get("rarity", "common")))) > Rarity.ORDER.find(Rarity.normalize(str(Charms.LIST[b].get("rarity", "common"))))
+			)
+			for id: String in cids:
 				_list.add_child(_charm_card(id))
 		_:
-			for item in GearBook.for_slot(_slot, _role):
+			# Best first: owned pieces by total power, then the ones to buy.
+			var items: Array = GearBook.for_slot(_slot, _role)
+			var score := {}
+			for it: Dictionary in items:
+				score[str(it.get("id", ""))] = _power(_item_stats(it))
+			items.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+				var oa := FamilyProfile.owns_gear(str(a.get("id", "")))
+				var ob := FamilyProfile.owns_gear(str(b.get("id", "")))
+				if oa != ob:
+					return oa
+				return float(score[str(a.get("id", ""))]) > float(score[str(b.get("id", ""))])
+			)
+			_best_id = ""
+			for it: Dictionary in items:
+				if FamilyProfile.owns_gear(str(it.get("id", ""))):
+					_best_id = str(it.get("id", ""))
+					break
+			if _best_id != "" and FamilyProfile.equipped_id(_role, _slot) != _best_id:
+				var quick := UiKit.button("EQUIP BEST  ·  %s" % str(GearBook.item(_best_id).get("title", "")), Vector2(660, 40))
+				quick.add_theme_font_size_override("font_size", 14)
+				quick.pressed.connect(func() -> void:
+					if FamilyProfile.wear_slot(_role, _slot, _best_id):
+						Rarity.juice(GearInv.tier_name(_best_id), str(GearBook.item(_best_id).get("title", "")))
+						need_refresh.emit()
+						_paint()
+				)
+				_list.add_child(quick)
+			for item in items:
 				_list.add_child(_gear_card(item))
+
+
+var _best_id := ""
+
+
+## One number for "how good is this piece": damage and HP weigh most.
+func _power(st: Dictionary) -> float:
+	return float(st.get("hp", 0)) * 1.0 + float(st.get("dmg", 0)) * 1.6 + float(st.get("steam", 0)) * 0.5 + float(st.get("speed", 0)) * 0.6
 
 
 func _card(accent: Color) -> Array:
@@ -373,9 +424,10 @@ func _gear_card(item: Dictionary) -> Control:
 	var h: HBoxContainer = pair[1]
 	var gi := GearIcon.new()
 	gi.slot = _slot
+	gi.item_id = id
 	var t: Array = item.get("tint", [0.6, 0.6, 0.65])
 	gi.tint = Color(float(t[0]), float(t[1]), float(t[2]))
-	gi.custom_minimum_size = Vector2(72, 64)
+	gi.custom_minimum_size = Vector2(96, 96)
 	h.add_child(gi)
 	var v := VBoxContainer.new()
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -394,7 +446,7 @@ func _gear_card(item: Dictionary) -> Control:
 			if int(cs[ti]) > 0:
 				parts.append("%d× %s" % [int(cs[ti]), Rarity.ORDER[ti].to_upper()])
 		copies = "  ·  " + "  ".join(parts) + "  ·  LV CAP %d" % GearInv.level_cap(id)
-	tag.text = Rarity.label(rarity) + copies + ("  ·  WEARING" if wearing else "")
+	tag.text = Rarity.label(rarity) + copies + ("  ·  WEARING" if wearing else "") + ("  ·  ★ BEST YOU OWN" if id == _best_id else "")
 	UiKit.apply_label(tag, 11, Palette.MUTED)
 	v.add_child(tag)
 	v.add_child(_delta_row(_item_stats(item), _item_stats(GearBook.item(FamilyProfile.equipped_id(_role, _slot)))))
