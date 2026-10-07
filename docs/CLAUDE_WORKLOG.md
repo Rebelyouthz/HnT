@@ -34,7 +34,52 @@ The rest is in English, like the code. Newest work first. Each block says
 
 ---
 
-## 0s. Calmer right side, more ways up, paced unlocks, mission art, gear art (latest)
+## 0t. Card vault, mastery, cleaner fights, menu juice (latest)
+
+Owner: the screens look messy (survivor and the Intake Lot); a card shop of
+unlockable level-up cards (face-down hand, rising price gold -> gems ->
+tokens, casino reveal), synergies and evolutions in the tree, tokens from
+secrets/bosses/towers/profile levels, a hard-to-reach secret per map; moves
+get better with use; icons, fly-in and stat arrows on every equip; toasts
+with icons and achievement trophy; loot visible; no XP orbs on story maps.
+
+- **Clutter, found by census** (`tools/autoplay.gd`, `CENSUS=<frame>` prints
+  what is on screen): `Juice.hole()` left permanent 6x6 black squares on the
+  street for every shot - now a small round chip that fades (cap 20). Bodies:
+  `DeathFall.trim()` caps 12 on story streets and 5 in survivor hours, and
+  survivor bodies stay 4 s. Survivor horde: `CrowdAI` gives 5 attack tickets
+  per hero there and a 3-deep ring for the rest + body spacing
+  (`CrowdAI.spread`), phase caps -20% with +20% HP, XP gems merge past 18,
+  elite/champion plates only on the nearest (`EliteTag`).
+- **CARD VAULT** (`src/app/vault_cards.gd`, `data/vault_cards.json`,
+  `src/ui/vault_sheet.gd`): 25 cards (19 + 3 synergies + 3 evolutions),
+  stat-driven (`VaultCards.stat(key)` read in punk dmg/crit/heal, run_state
+  xp/gold, survive_run xp/pickup/area/cd/dmg). Price ladder `LADDER`, -2 steps
+  per night (`on_night`). Hand 9, 12 with brawl node DECK `deck_hand`;
+  `deck_synergy` / `deck_evolve` gate those cards. Owned cards join level-up
+  draws (story `run_act._cards`, `CardPick` table, survivor `offers()`/pick
+  kind "vault"). Card back art: `assets/sprites/vault/card_back.png` (FLUX).
+  Tokens: first clear of a map, first tower top per map, 25% from stashes,
+  every profile level (+3 gems), elite drops (8%) / regular (0.6%),
+  survivor boss chests, VAULT CRATE.
+- **VAULT CRATE** (`src/world/secret_ledge.gd`): on the highest, furthest
+  roof of every map; first find token + 4 gems + 40 gold.
+- **MASTERY** (`src/app/mastery.gd`): uses per move clip, ranks at
+  20/60/140/280/500/800: +3% power, -2.5% wind-up, -3% recovery each; shown
+  in MOVES.
+- **Story XP**: no orbs; XP is credited on the kill with a "+XP" pop. Gear
+  drops show the piece's own art; card token drops (`LootDrop` "card_token").
+- **Toasts**: lit icon medallion, achievements lead with `ach_trophy` and
+  ACHIEVEMENT UNLOCKED; gear toasts carry the item art (`IconBook` also looks
+  in `assets/sprites/gear/`).
+- **Equip juice**: `Juice.equip_fly()` flies the piece to its slot on the
+  doll (overlay, survives the tab rebuild) and rises "▲ DMG +2" arrows; used
+  by gear WEAR / EQUIP BEST, suit parts and charms. `capture.gd BTN=text@f`
+  presses a button for shots.
+
+---
+
+## 0s. Calmer right side, more ways up, paced unlocks, mission art, gear art
 
 Owner: the right side of the screen is messy; what is the ladder (keep it,
 add other ways up); balance and pace unlocks like most games with a big
