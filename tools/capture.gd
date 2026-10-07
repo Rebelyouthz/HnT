@@ -271,6 +271,13 @@ func _process(_delta: float) -> bool:
 			if c.has_method("_after_fit"):
 				c.call("_press", pr.get_slice("@", 0), null)
 				break
+	# BTN=text@frame presses the first button whose text starts with it.
+	var bt := OS.get_environment("BTN")
+	if bt != "" and _n == int(bt.get_slice("@", 1)):
+		for c in root.find_children("*", "Button", true, false):
+			if (c as Button).text.begins_with(bt.get_slice("@", 0)) and (c as Button).is_visible_in_tree():
+				(c as Button).pressed.emit()
+				break
 	var ux := OS.get_environment("UPFX")
 	if ux != "" and _n == int(ux):
 		var fo: Control = root.get_viewport().gui_get_focus_owner()

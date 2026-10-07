@@ -11,6 +11,9 @@ signal need_refresh
 
 var _role := "son"
 var _slot := "top"
+## Survives the hub rebuilding the tab after a change (equip, upgrade).
+static var _last_slot := ""
+static var _last_role := ""
 var _root: Control
 var _list: VBoxContainer
 
@@ -23,6 +26,10 @@ const STAT_NAMES := {"hp": "HP", "dmg": "DMG", "steam": "STEAM", "speed": "SPD"}
 
 
 func _ready() -> void:
+	if _last_slot != "":
+		_slot = _last_slot
+	if _last_role != "":
+		_role = _last_role
 	if Engine.has_meta("locker_slot"):
 		_slot = str(Engine.get_meta("locker_slot"))
 		Engine.remove_meta("locker_slot")
@@ -34,6 +41,8 @@ func _ready() -> void:
 
 
 func _paint() -> void:
+	_last_slot = _slot
+	_last_role = _role
 	for c in _root.get_children():
 		c.queue_free()
 	var title := UiKit.title("GEAR", 44, Palette.EDGE)
@@ -349,7 +358,11 @@ func _items_panel() -> void:
 				var quick := UiKit.button("EQUIP BEST  ·  %s" % str(GearBook.item(_best_id).get("title", "")), Vector2(660, 40))
 				quick.add_theme_font_size_override("font_size", 14)
 				quick.pressed.connect(func() -> void:
-					if FamilyProfile.wear_slot(_role, _slot, _best_id):
+					var old_q := _item_stats(GearBook.item(FamilyProfile.equipped_id(_role, _slot)))
+					var from_q := _root.get_global_transform().affine_inverse() * quick.get_global_rect().get_center()
+					var best := _best_id
+					if FamilyProfile.wear_slot(_role, _slot, best):
+						_fly.call_deferred(best, from_q, old_q)
 						Rarity.juice(GearInv.tier_name(_best_id), str(GearBook.item(_best_id).get("title", "")))
 						need_refresh.emit()
 						_paint()
@@ -360,6 +373,20 @@ func _items_panel() -> void:
 
 
 var _best_id := ""
+
+
+## The piece flies from where it was picked to its slot on the doll and the
+## stat changes rise out of the slot.
+func _fly(id: String, from: Vector2, old_st: Dictionary) -> void:
+	var tex := IconBook.tex(id)
+	if tex == null:
+		return
+	var new_st := _item_stats(GearBook.item(id))
+	var d := {}
+	for k: String in STAT_NAMES.keys():
+		d[k] = int(new_st.get(k, 0)) - int(old_st.get(k, 0))
+	var to: Vector2 = SLOT_POS.get(_slot, Vector2(36, 164)) + SLOT_SIZE * 0.5
+	Juice.equip_fly(_root, tex, from, to, d, STAT_NAMES)
 
 
 ## One number for "how good is this piece": damage and HP weigh most.
@@ -466,10 +493,13 @@ func _gear_card(item: Dictionary) -> Control:
 	elif owned:
 		var wear := UiKit.button(Copy.WEAR, Vector2(150, 36))
 		wear.pressed.connect(func() -> void:
+			var old_st := _item_stats(GearBook.item(FamilyProfile.equipped_id(_role, _slot)))
+			var from := _root.get_global_transform().affine_inverse() * gi.get_global_rect().get_center()
 			if FamilyProfile.wear_slot(_role, _slot, id):
 				Rarity.juice(rarity, str(item.get("title", "")))
 				need_refresh.emit()
 				_paint()
+				_fly(id, from, old_st)
 		)
 		btns.add_child(wear)
 	else:
@@ -607,6 +637,14 @@ func _part_card(id: String, part: String) -> Control:
 	var btn := UiKit.button("WEARING" if worn else ("WEAR" if have else "LOCKED"), Vector2(150, 40))
 	btn.disabled = worn or not have
 	btn.pressed.connect(func() -> void:
+		var ptex: Texture2D = null
+		for tr in h.find_children("*", "TextureRect", true, false):
+			ptex = (tr as TextureRect).texture
+			break
+		var pfrom := _root.get_global_transform().affine_inverse() * btn.get_global_rect().get_center()
+		var pto: Vector2 = SLOT_POS.get(part, Vector2(396, 164)) + SLOT_SIZE * 0.5
+		if ptex:
+			Juice.equip_fly(_root, ptex, pfrom, pto, {})
 		Suits.wear_part(_role, part, id)
 		if id != "" and Suits.full_set(_role) == id:
 			Juice.unlock_logo(str(suit["title"]) + " SET", str(suit.get("set", "")), "FULL SUIT BONUS")
@@ -646,6 +684,9 @@ func _charm_card(id: String) -> Control:
 	var btn := UiKit.button("TAKE OFF" if on else "WEAR", Vector2(150, 40))
 	btn.disabled = not has or (not on and Charms.worn().size() >= Charms.MAX_WORN)
 	btn.pressed.connect(func() -> void:
+		if not on:
+			var cfrom := _root.get_global_transform().affine_inverse() * btn.get_global_rect().get_center()
+			Juice.equip_fly(_root, icon.texture, cfrom, SLOT_POS["charm"] + SLOT_SIZE * 0.5, {})
 		Charms.toggle(id)
 		Juice.play("res://assets/audio/ui_click.wav")
 		_paint()

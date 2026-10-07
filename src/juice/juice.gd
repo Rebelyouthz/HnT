@@ -1273,3 +1273,72 @@ func slip(at: Vector2) -> void:
 ## OPTIONS > REDUCE FLASHES: no white frames, no full-screen flashes.
 static func reduce_flash() -> bool:
 	return bool(FamilyProfile.data.get("reduce_flash", false))
+
+
+## Menu equip/claim juice: `tex` flies from `from` to `to` (both in `host`
+## coordinates) with a spin and a pop, then each stat change rises out of
+## the slot - "▲ DMG +2" in green, "▼ SPD -1" in red - one after another.
+func equip_fly(host: Control, tex: Texture2D, from: Vector2, to: Vector2, deltas: Dictionary, names: Dictionary = {}) -> void:
+	# Menus rebuild themselves on a change: fly on our own overlay, in screen
+	# space, so the effect outlives the old panel.
+	if host != null and is_instance_valid(host):
+		from = host.get_global_transform_with_canvas() * from
+		to = host.get_global_transform_with_canvas() * to
+	var lay := Control.new()
+	lay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_overlay.add_child(lay)
+	get_tree().create_timer(2.5, true, false, true).timeout.connect(lay.queue_free)
+	host = lay
+	var pic := TextureRect.new()
+	pic.texture = tex
+	pic.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	pic.size = Vector2(64, 64)
+	pic.pivot_offset = Vector2(32, 32)
+	pic.position = from - Vector2(32, 32)
+	pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pic.z_index = 50
+	host.add_child(pic)
+	play("res://assets/audio/whoosh_light.wav" if ResourceLoader.exists("res://assets/audio/whoosh_light.wav") else "res://assets/audio/card.wav")
+	var mid := (from + to) * 0.5 + Vector2(0, -90)
+	var tw := pic.create_tween()
+	tw.tween_method(func(t: float) -> void:
+		var a := from.lerp(mid, t)
+		var b := mid.lerp(to, t)
+		pic.position = a.lerp(b, t) - Vector2(32, 32)
+		pic.rotation = sin(t * PI) * 0.6
+		pic.scale = Vector2.ONE * (1.0 + 0.5 * sin(t * PI))
+	, 0.0, 1.0, 0.42).set_trans(Tween.TRANS_SINE)
+	tw.tween_callback(func() -> void:
+		play("res://assets/audio/cling.wav")
+		UiKit.blast(host, to, Palette.LEMON, 90.0)
+	)
+	tw.tween_property(pic, "scale", Vector2(1.4, 1.4), 0.08)
+	tw.tween_property(pic, "modulate:a", 0.0, 0.18)
+	tw.tween_callback(pic.queue_free)
+	var i := 0
+	for k: String in deltas.keys():
+		var d := int(deltas[k])
+		if d == 0:
+			continue
+		var l := Label.new()
+		l.text = "%s %s %s%d" % ["▲" if d > 0 else "▼", str(names.get(k, k.to_upper())), "+" if d > 0 else "", d]
+		l.add_theme_font_override("font", UiKit.title_font())
+		UiKit.apply_label(l, 20, Color(0.45, 1.0, 0.5) if d > 0 else Color(1.0, 0.4, 0.35))
+		l.add_theme_color_override("font_outline_color", Color(0, 0, 0))
+		l.add_theme_constant_override("outline_size", 6)
+		l.position = to + Vector2(-50, -20)
+		l.modulate.a = 0.0
+		l.z_index = 51
+		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		host.add_child(l)
+		var lt := l.create_tween()
+		lt.tween_interval(0.45 + 0.16 * float(i))
+		lt.tween_callback(func() -> void: RewardFly.snd("gem_land", 1.2 + 0.1 * float(i), -8.0) if d > 0 else null)
+		lt.tween_property(l, "modulate:a", 1.0, 0.08)
+		lt.parallel().tween_property(l, "position:y", l.position.y - 46.0, 0.9).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		lt.tween_property(l, "modulate:a", 0.0, 0.3)
+		lt.tween_callback(l.queue_free)
+		i += 1
