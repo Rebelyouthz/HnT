@@ -34,7 +34,49 @@ The rest is in English, like the code. Newest work first. Each block says
 
 ---
 
-## 0t. Card vault, mastery, cleaner fights, menu juice (latest)
+## 0u. Vault reveal + collection, three hero tracks, roof tricks, pinball XP, quick belt (latest)
+
+Owner: a drawn card flips, zooms up with rays/shadow/reflection and lands in a
+collection under DRAW; sunset rooftop card back; two alike merge a rarity,
+two max cards evolve; synergies viewable. Three hero levels (story,
+survivor, parkour); rarity up = one more survivor weapon slot; twin-stick
+aim. Parkour tricks: right stick + R1/R2/L1/L2, hold on approach, release on
+takeoff (graded), hold a landing (roll = both sticks down-forward). XP from
+kills and combos like a pinball table; HUD quick slots on the d-pad / 1-4.
+
+- **Vault** (`src/ui/vault_sheet.gd`, `src/app/vault_cards.gd`): collection is
+  `vault_inv` {id: copies per rarity}; a card's power level = best rarity + 1.
+  Draw rolls the card and its rarity (`_roll_tier`, tokens floor RARE).
+  MERGE 2 alike -> next rarity; EVOLVE consumes one LEGENDARY of each of two
+  parents (`needs` in data). `PixelCard` scales round its centre - place it by
+  its middle (`mid - (W,H)/2`). `capture.gd FILM=N` saves every Nth frame.
+- **Hero tracks** (`src/app/heroes.gd`): `level(role, mode)`; `mode()` reads the
+  running `RunAct` (survive map -> "survivor", `roof_start` -> "parkour").
+  Shared rarity/cap; rank needs any track at the cap. `weapon_slots()` =
+  best rarity; survivor slots = 5 + that (+1 tree). `trick_window_mul()`.
+- **Twin-stick** (`PadRouter.rstick/mouse_live`, `SurviveAbility._aim`): manual
+  weapons aim with the right stick or mouse, fire on a full push / left
+  mouse, crosshair `_ret`.
+- **Roof tricks** (`src/extras/trick_call.gd`): one per act. Roof edges call a
+  trick from `TRICKS` (unlocked by ROOFTOPS level); `ParkourGate` calls its
+  trick via `call_gate` and asks `gate_takeoff` (no TimingRing any more):
+  "skip" when never held (no penalty), else grade on release (`graded`).
+  Landing checks both sticks vs `LANDS`. Prompt is drawn in the 1280x720
+  design space (`PixelStage.attach_canvas`). Keyboard: numpad/arrows + O
+  SHIFT I U. `Fighter.trick_hold` keeps block off while holding L1.
+- **Pinball XP** (`Juice.pinball_kill/xp_mul/_jackpot`): story kill XP x
+  (1 + 6%/hit, cap 3.5) + 0.5 per multi-kill + air/scenery/overkill/elite;
+  jackpots at combo 10/20/30/40/60; banking pays n*n/30.
+- **Quick belt** (`src/app/quick_belt.gd`): flask/adrenaline/energy/smoke,
+  run-scoped in `App.run_bag`, one flask to start. D-pad = slots (moving is
+  the stick only; duck = left-stick click), keys 1-4 (P2 7-0). HUD rows in
+  the bottom corners; pause MOVES lists belt + tricks.
+- **Feel**: every jump hangs at the apex (x0.7 gravity under 90 px/s),
+  `MAX_FALL` 1150.
+
+---
+
+## 0t. Card vault, mastery, cleaner fights, menu juice
 
 Owner: the screens look messy (survivor and the Intake Lot); a card shop of
 unlockable level-up cards (face-down hand, rising price gold -> gems ->
