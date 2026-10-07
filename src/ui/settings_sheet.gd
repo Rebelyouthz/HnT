@@ -122,6 +122,10 @@ func _show(i: int) -> void:
 		"GAME":
 			_meter("SCREEN SHAKE", func() -> float: return float(Gfx.get_v("shake")), func(v: float) -> void: Gfx.set_v("shake", v))
 			_toggle("LESS GORE", func() -> bool: return FamilyProfile.less_gore(), func(v: bool) -> void: _flag("less_gore", v))
+			_meter("BLOOD AMOUNT", func() -> float: return clampf(float(FamilyProfile.data.get("blood_k", 1.0)) / 1.5, 0.0, 1.0), func(v: float) -> void: _setf("blood_k", v * 1.5))
+			_pick("BODIES STAY", ["SHORT (8 S)", "NORMAL (18 S)", "LONG (45 S)"], func() -> int: return int(FamilyProfile.data.get("bodies_stay", 1)), func(v: int) -> void: _setf("bodies_stay", v))
+			_meter("HIT STOP", func() -> float: return float(FamilyProfile.data.get("hitstop_k", 1.0)), func(v: float) -> void: _setf("hitstop_k", v))
+			_toggle("REDUCE FLASHES", func() -> bool: return bool(FamilyProfile.data.get("reduce_flash", false)), func(v: bool) -> void: _flag("reduce_flash", v))
 			_toggle("SKIP STORY FILMS", func() -> bool: return bool(FamilyProfile.data.get("skip_films", false)), func(v: bool) -> void: _flag("skip_films", v))
 			_toggle("SPEECH BUBBLES AUTO", func() -> bool: return bool(FamilyProfile.data.get("talk_auto", false)), func(v: bool) -> void: _flag("talk_auto", v))
 			_action("RESET GAME PROGRESS", "Start completely over on a clean save (options kept)", _confirm_reset, Palette.BRICK)
@@ -380,3 +384,9 @@ func _confirm_reset() -> void:
 	row.add_child(yes)
 	col.add_child(row)
 	no.grab_focus()
+
+
+
+func _setf(key: String, v: Variant) -> void:
+	FamilyProfile.data[key] = v
+	FamilyProfile.save()

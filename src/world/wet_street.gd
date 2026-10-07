@@ -51,6 +51,7 @@ const ROAD_TEXEL := 0.25
 
 
 func _ready() -> void:
+	add_to_group("wet_street")
 	var road := "res://assets/backdrops/%s_road.png" % ground
 	var full := ResourceLoader.exists(road) and ResourceLoader.exists("res://assets/backdrops/%s_road_wet.png" % ground)
 	var tex := load(road if full else "res://assets/backdrops/%s.png" % ground) as Texture2D

@@ -460,9 +460,11 @@ func open_item_chest() -> void:
 	pool.shuffle()
 	# LUCK: rarer items float to the front.
 	if luck() > 0.0:
-		pool.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-			return Rarity.rank(str(a.get("rarity", "common"))) * luck() + randf() > Rarity.rank(str(b.get("rarity", "common"))) * luck() + randf()
-		)
+		# One roll per item (a comparator that re-rolls breaks the sort).
+		var lk := luck()
+		for it: Dictionary in pool:
+			it["_roll"] = Rarity.rank(str(it.get("rarity", "common"))) * lk + randf()
+		pool.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a["_roll"]) > float(b["_roll"]))
 	var sheet := preload("res://src/survive/survive_pick.gd").new()
 	sheet.run = self
 	sheet.mode = "item"

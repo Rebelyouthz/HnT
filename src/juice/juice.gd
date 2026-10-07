@@ -121,6 +121,8 @@ func _apply_scale() -> void:
 
 
 func hitstop(frames: int) -> void:
+	# OPTIONS > HIT STOP scales every freeze (0 turns them off).
+	frames = int(round(float(frames) * float(FamilyProfile.data.get("hitstop_k", 1.0))))
 	if frames <= 0:
 		return
 	_hitstop_depth += 1
@@ -132,6 +134,7 @@ func hitstop(frames: int) -> void:
 
 
 func freeze_frames(frames: int) -> void:
+	frames = int(round(float(frames) * float(FamilyProfile.data.get("hitstop_k", 1.0))))
 	if frames <= 0:
 		return
 	_hitstop_depth += 1
@@ -154,6 +157,9 @@ func flash_red(node: CanvasItem, frames: int = 2) -> void:
 
 func flash_white_red(node: CanvasItem) -> void:
 	if node == null:
+		return
+	if reduce_flash():
+		flash_red(node, 2)
 		return
 	var original := node.modulate
 	node.modulate = Color(1.0, 1.0, 1.0, 1.0)
@@ -1105,3 +1111,9 @@ func slip(at: Vector2) -> void:
 	popup_number(at + Vector2(0, -70), Copy.THAT_WALKER, Color(0.95, 0.86, 0.12))
 	kill_burst(at, "heavy")
 
+
+
+
+## OPTIONS > REDUCE FLASHES: no white frames, no full-screen flashes.
+static func reduce_flash() -> bool:
+	return bool(FamilyProfile.data.get("reduce_flash", false))

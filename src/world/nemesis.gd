@@ -41,7 +41,7 @@ static func maybe_spawn(host: Node, map_id: String, map_w: float, hp_mul: float)
 	p.set_meta("nemesis", true)
 	p.scale = Vector2(1.15, 1.15) * (1.0 + 0.04 * float(lv))
 	p.speed *= 1.0 + 0.05 * float(lv)
-	var tag := Label.new()
+	var tag := HudShy.new()
 	tag.text = "%s  ·  NEMESIS LV %d" % [str(n["name"]).to_upper(), lv]
 	tag.position = Vector2(-90, -104)
 	tag.size = Vector2(180, 12)
@@ -67,3 +67,12 @@ static func maybe_spawn(host: Node, map_id: String, map_w: float, hp_mul: float)
 		Juice.toast("reward", "GRUDGE SETTLED", "%s is done. +%d gold, +1 gem." % [str(n["name"]), 25 * lv])
 		FamilyProfile.save()
 	)
+
+
+
+## World text that fades out when it drifts up under the HUD strip.
+class HudShy extends Label:
+	func _process(_d: float) -> void:
+		var y := get_global_transform_with_canvas().origin.y
+		var vh := get_viewport_rect().size.y
+		modulate.a = clampf((y - vh * 0.16) / (vh * 0.06), 0.15, 1.0)

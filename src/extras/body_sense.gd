@@ -31,6 +31,59 @@ func _physics_process(delta: float) -> void:
 		if n is Fighter:
 			_sounds(n as Fighter, delta)
 	_thug_steps(delta)
+	_breath(delta)
+
+
+## Cold nights: everyone breathes out a little cloud, faster when they have
+## been fighting or running.
+const COLD := ["sleet_hour", "raven_grid", "rail_bridge", "invoice_pier"]
+var _breath_t := {}
+
+
+func _breath(delta: float) -> void:
+	if not (str(App.current_map) in COLD):
+		return
+	for n in get_tree().get_nodes_in_group("players") + get_tree().get_nodes_in_group("enemies"):
+		if not (n is Node2D) or not (n as Node2D).visible:
+			continue
+		if n is Punk and ((n as Punk).hp <= 0 or (n as Punk).home == "air"):
+			continue
+		var id := n.get_instance_id()
+		var t := float(_breath_t.get(id, randf() * 2.0)) - delta
+		var fast := n is Fighter and absf((n as Fighter).velocity.x) > 160.0
+		if t <= 0.0:
+			t = randf_range(0.9, 1.4) if fast else randf_range(2.0, 3.2)
+			_puff(n as Node2D)
+		_breath_t[id] = t
+
+
+func _puff(b: Node2D) -> void:
+	var face := 1.0
+	if b is Fighter:
+		face = float((b as Fighter).facing)
+	elif b is Punk:
+		face = float((b as Punk).facing)
+	var p := CPUParticles2D.new()
+	p.global_position = b.global_position + Vector2(face * 9.0, -86.0 if b is Fighter else -80.0)
+	p.one_shot = true
+	p.explosiveness = 0.6
+	p.amount = 6
+	p.lifetime = 0.9
+	p.direction = Vector2(face, -0.35)
+	p.spread = 22.0
+	p.gravity = Vector2(0, -14)
+	p.initial_velocity_min = 10.0
+	p.initial_velocity_max = 22.0
+	p.scale_amount_min = 1.5
+	p.scale_amount_max = 3.2
+	var g := Gradient.new()
+	g.set_color(0, Color(0.9, 0.93, 1.0, 0.35))
+	g.set_color(1, Color(0.9, 0.93, 1.0, 0.0))
+	p.color_ramp = g
+	p.z_index = 6
+	p.emitting = true
+	b.get_parent().add_child(p)
+	get_tree().create_timer(1.2).timeout.connect(p.queue_free)
 
 
 func _radius(b: Node2D) -> float:

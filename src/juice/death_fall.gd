@@ -181,7 +181,38 @@ func setup(style: String, dir: float) -> void:
 		bleed = 22.0
 
 
+var _shadow: Node2D
+
+
+## The body's shadow on the street: stays flat on the ground under it, as
+## long as the body lies along it, smaller and fainter the higher it flies.
+class GroundShadow extends Node2D:
+	var body: DeathFall
+
+	func _process(_d: float) -> void:
+		if body == null or not is_instance_valid(body):
+			queue_free()
+			return
+		global_position = Vector2(body.gx, body.gy + 1.0)
+		modulate.a = body.modulate.a
+		queue_redraw()
+
+	func _draw() -> void:
+		var a := absf(sin(body.rotation))
+		var w := (a * body.H * 0.55 + (1.0 - a) * body.T * 0.7 + 6.0)
+		var lift := clampf(body.zc - body._floor(), 0.0, 200.0)
+		var k := clampf(1.0 - lift / 160.0, 0.25, 1.0)
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, 0.28))
+		draw_circle(Vector2.ZERO, w * k, Color(0, 0, 0, 0.32 * k))
+		draw_circle(Vector2.ZERO, w * k * 0.62, Color(0, 0, 0, 0.18 * k))
+
+
 func _ready() -> void:
+	_shadow = GroundShadow.new()
+	_shadow.body = self
+	_shadow.top_level = true
+	_shadow.z_index = -1
+	add_child(_shadow)
 	_place()
 
 
@@ -230,8 +261,10 @@ func _physics_process(delta: float) -> void:
 			_slam()
 		zc = _floor()
 	else:
-		# Flat on the street: skid on friction, dust while it slides.
-		vx = move_toward(vx, 0.0, 760.0 * delta)
+		# Flat on the street: skid on friction, dust while it slides (a wet
+		# street is slicker: the body slides further).
+		var mu := 520.0 if is_inside_tree() and get_tree().get_first_node_in_group("wet_street") != null else 760.0
+		vx = move_toward(vx, 0.0, mu * delta)
 		gx += vx * delta
 		_collide(delta)
 		_dust_cd -= delta
@@ -436,6 +469,12 @@ func _thud(spd: float) -> void:
 		return
 	var at := Vector2(gx, gy)
 	Juice.land_puff(at)
+	# A wet street: the body lands in water - a splash and a slap.
+	if is_inside_tree() and get_tree().get_first_node_in_group("wet_street") != null:
+		GunFx.splash(get_parent(), at + Vector2(randf_range(-8.0, 8.0), 1.0))
+		if spd > 160.0:
+			GunFx.splash(get_parent(), at + Vector2(signf(rotation) * H * 0.3, 2.0))
+		Mixer.play_sfx("res://assets/audio/sfx/step_wet_%d.ogg" % (randi() % 3 + 1), randf_range(0.6, 0.8), clampf(-16.0 + spd / 40.0, -16.0, -4.0))
 	if spd > 140.0:
 		Juice.land_puff(at + Vector2(signf(rotation) * H * 0.35, 0))
 	Mixer.play_sfx("res://assets/audio/sfx/body_fall.ogg", randf_range(0.85, 1.1) * (1.15 if spd < 200.0 else 0.95), clampf(-14.0 + spd / 40.0, -14.0, -2.0))
@@ -466,7 +505,7 @@ func _settle() -> void:
 	if blood and blood.has_method("pool"):
 		blood.pool(Vector2(gx + signf(rotation) * H * 0.25, gy + 2.0), bleed)
 	var tw := create_tween()
-	tw.tween_interval(18.0)
+	tw.tween_interval(DeathFall.stay_secs())
 	tw.tween_property(self, "modulate:a", 0.0, 1.5)
 	tw.tween_callback(queue_free)
 
@@ -526,3 +565,9 @@ func _make_room() -> void:
 		else:
 			gy += step
 	_place()
+
+
+
+## OPTIONS > BODIES STAY: how long the dead lie on the street.
+static func stay_secs() -> float:
+	return [8.0, 18.0, 45.0][clampi(int(FamilyProfile.data.get("bodies_stay", 1)), 0, 2)]

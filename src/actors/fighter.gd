@@ -2708,6 +2708,10 @@ func _footsteps(delta: float, spd: float) -> void:
 		return
 	_foot_cd = clampf(0.34 - spd / 900.0, 0.14, 0.34)
 	KitSfx.foot(role, clampf(spd / 280.0, 0.2, 1.2), stumble_t > 0.0)
+	# Running on the wet street throws up a splash at every footfall.
+	if spd > 150.0 and get_tree().get_first_node_in_group("wet_street") != null and randf() < 0.7:
+		GunFx.splash(get_parent(), global_position + Vector2(float(facing) * 6.0, 1.0))
+		Mixer.play_sfx("res://assets/audio/sfx/step_wet_%d.ogg" % (randi() % 3 + 1), randf_range(0.9, 1.15), -13.0)
 	# Running a while: you hear them breathe.
 	if spd > 220.0:
 		_run_breath += 1

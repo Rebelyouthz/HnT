@@ -162,5 +162,9 @@ static func spawn_row(host: Node, row: Dictionary, hp_mul: float) -> Punk:
 		_:
 			p.speed = 48.0
 	p.global_position = Vector2(float(row.get("x", 800.0)), float(row.get("y", 500.0)))
-	host.add_child(p)
+	# Spawned from a physics callback (a trigger area): wait for the flush.
+	if Engine.is_in_physics_frame():
+		host.add_child.call_deferred(p)
+	else:
+		host.add_child(p)
 	return p

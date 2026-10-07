@@ -121,6 +121,8 @@ func pool(at: Vector2, size: float) -> void:
 ## Splash the camera: blobs on the glass on `side` (-1 left, 1 right) that
 ## run down and fade. amount 0..1.
 func screen(side: float, amount: float) -> void:
+	if Juice.reduce_flash():
+		return
 	if FamilyProfile.less_gore() or _screen == null:
 		return
 	# A rare accent, not wallpaper: one splash every few seconds at most,
@@ -302,7 +304,8 @@ static func zone_profile(zone: String, power: float, wound_lv: float) -> Diction
 # --- Simulation ------------------------------------------------------------
 
 func burst(from: Vector2, floor_y: float, dir: float, p: Dictionary) -> void:
-	var n := int(p.get("n", 8))
+	# OPTIONS > BLOOD AMOUNT.
+	var n := int(round(float(p.get("n", 8)) * float(FamilyProfile.data.get("blood_k", 1.0))))
 	var speed := float(p.get("speed", 200.0))
 	var spread := float(p.get("spread", 0.5))
 	var rise := float(p.get("rise", 0.4))

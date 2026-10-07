@@ -57,10 +57,14 @@ static func wound(p: Punk, shot: Dictionary, dir: float) -> void:
 			# The round stays in: a short spurt back out of the entry hole,
 			# then it runs and drips.
 			blood.burst(at, p.global_position.y, -dir, {"n": 6, "speed": 120.0, "spread": 0.5, "rise": 0.3, "size": 0.9})
+			var pid := p.get_instance_id()
+			var bid := blood.get_instance_id()
 			for k in 4:
 				p.get_tree().create_timer(0.25 + 0.3 * float(k)).timeout.connect(func() -> void:
-					if is_instance_valid(p) and p.hp > 0:
-						blood.burst(p.global_position + Vector2(0, world_y + 4.0), p.global_position.y, dir * 0.1, {"n": 2, "speed": 20.0, "spread": 1.0, "rise": 0.0, "size": 0.8})
+					var pp := instance_from_id(pid) as Punk
+					var bb := instance_from_id(bid)
+					if pp != null and bb != null and pp.hp > 0:
+						bb.burst(pp.global_position + Vector2(0, world_y + 4.0), pp.global_position.y, dir * 0.1, {"n": 2, "speed": 20.0, "spread": 1.0, "rise": 0.0, "size": 0.8})
 				)
 		if zone == "head" and blood.has_method("gore"):
 			blood.gore(p.global_position, dir, "teeth")

@@ -159,6 +159,8 @@ static func hero_hit(f: Fighter) -> void:
 
 func impact(strength: float) -> void:
 	Juice.hitstop(4 + int(strength * 4.0))
+	if Juice.reduce_flash():
+		return
 	_flash.visible = true
 	_flash.color = Color(1, 1, 1, 0.75 * strength)
 	var tw := create_tween().set_ignore_time_scale(true)
