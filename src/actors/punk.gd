@@ -1326,8 +1326,18 @@ func _drops(from: Node) -> void:
 		# Story streets: XP goes straight in (no orbs on the floor - the
 		# floor is for real loot).
 		if rs and rs.has_method("add_xp"):
-			rs.add_xp(xp_n)
-			Juice.popup_number(global_position + Vector2(0, -64), "+%d XP" % xp_n, Palette.READY)
+			# Pinball: the combo, multi-kills and style multiply the kill.
+			var tags: Array = []
+			if flung and not flung_ground:
+				tags.append("air")
+			if not (from is Fighter):
+				tags.append("env")
+			if _overkill:
+				tags.append("overkill")
+			if tier == "elite" or tier == "boss":
+				tags.append("elite")
+			var base := int(round(float(xp_n) / rank_mul))
+			rs.add_xp(Juice.pinball_kill(global_position, base, tags))
 		var tok := 0.08 if (tier == "elite" or tier == "boss") else 0.006
 		if from is Fighter and randf() < tok:
 			LootDrop.spawn(host, global_position + Vector2(randf_range(-8, 8), 0), "card_token", 1, 0.9)

@@ -11,6 +11,8 @@ const KINDS := {
 	"coin": {"tex": "res://assets/sprites/loot/coin.png", "scale": 0.55},
 	"flask": {"tex": "res://assets/sprites/loot/flask.png", "scale": 0.72},
 	"syringe": {"tex": "res://assets/sprites/loot/syringe.png", "scale": 0.8},
+	"energy": {"tex": "res://assets/sprites/icons/card_protein_shake.png", "scale": 0.5},
+	"smoke": {"tex": "res://assets/sprites/icons/card_smoke_bomb.png", "scale": 0.5},
 	"shard_son": {"tex": "res://assets/sprites/loot/shard_son.png", "scale": 0.62},
 	"shard_father": {"tex": "res://assets/sprites/loot/shard_father.png", "scale": 0.62},
 	"gear": {"tex": "res://assets/sprites/loot/gear_box.png", "scale": 0.62},
@@ -70,7 +72,7 @@ func _ready() -> void:
 	_sp.offset = Vector2(0, -float(_sp.texture.get_height()) * 0.5)
 	_sp.texture_filter = SpriteBook.world_filter()
 	add_child(_sp)
-	if kind == "syringe" or kind == "flask" or kind.begins_with("shard") or kind == "gear" or kind == "card_token":
+	if kind == "syringe" or kind == "flask" or kind == "energy" or kind == "smoke" or kind.begins_with("shard") or kind == "gear" or kind == "card_token":
 		_glow = PointLight2D.new()
 		_glow.texture = LightRig.radial_tex()
 		_glow.texture_scale = 0.35
@@ -193,12 +195,8 @@ func _take(f: Fighter) -> void:
 			Juice.popup_number(global_position + Vector2(0, -24), "+%d" % g, UiKit.GOLD)
 			Juice.rewards.give("gold", g, get_global_transform_with_canvas().origin, false)
 			Juice.play("res://assets/audio/cash.wav" if ResourceLoader.exists("res://assets/audio/cash.wav") else "res://assets/audio/cling.wav")
-		"flask":
-			var heal := 0 if Artifacts.has("no_lunch") else int(round(float(f.max_hp) * 0.25))
-			f.hp = mini(f.max_hp, f.hp + heal)
-			Juice.popup_number(global_position + Vector2(0, -24), "+%d HP" % heal, Palette.READY)
-			Juice.play("res://assets/audio/heal.wav" if ResourceLoader.exists("res://assets/audio/heal.wav") else "res://assets/audio/cling_ok.wav")
-			Juice.pulse_shake(1.5)
+		"flask", "energy", "smoke":
+			_to_belt(f, kind)
 		"shard_son", "shard_father":
 			var who := "son" if kind == "shard_son" else "father"
 			var n := maxi(1, amount)
@@ -219,20 +217,24 @@ func _take(f: Fighter) -> void:
 			Juice.play("res://assets/audio/card.wav")
 			Rarity.juice("epic", "CARD TOKEN")
 		"syringe":
-			f.hp = f.max_hp
-			f.steam = Fighter.STEAM_MAX
-			Juice.popup_number(global_position + Vector2(0, -30), "FULL REFILL", Palette.READY)
-			Juice.toast("reward", "ADRENALINE", "One per street. Every heart back, steam full.")
-			Juice.play("res://assets/audio/trick_perfect.wav")
-			Juice.hitstop(4)
-			Juice.pulse_shake(4.0)
-			FamilyProfile.data["syringes"] = int(FamilyProfile.data.get("syringes", 0)) + 1
+			_to_belt(f, kind)
+			Juice.toast("reward", "ADRENALINE", "One per street. In your QUICK BELT: d-pad up or key 2 for every heart back.")
 			_heal_wounds(f)
 	var tw := create_tween().set_parallel(true)
 	tw.tween_property(_sp, "position:y", -40.0, 0.3).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tw.tween_property(_sp, "scale", _sp.scale * 1.8, 0.3)
 	tw.tween_property(self, "modulate:a", 0.0, 0.3)
 	tw.chain().tween_callback(queue_free)
+
+
+## Into the QUICK BELT; a full stack is used on the spot.
+func _to_belt(f: Fighter, id: String) -> void:
+	if QuickBelt.add(f.role, id):
+		var slot := QuickBelt.ORDER.find(id) + 1
+		Juice.popup_number(global_position + Vector2(0, -26), "+%s  ·  SLOT %d" % [str(QuickBelt.ITEMS[id]["name"]), slot], Palette.READY)
+		Juice.play("res://assets/audio/cling.wav")
+	else:
+		QuickBelt.apply(f, id)
 
 
 ## A full refill cleans the face up a bit too.

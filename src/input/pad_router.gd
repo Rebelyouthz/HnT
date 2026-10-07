@@ -9,7 +9,8 @@ signal drop_in(device: int)
 const DEAD := 0.22
 const ACTIONS := [
 	"left", "right", "up", "down", "jump", "light", "heavy", "special",
-	"shoot", "block", "throw", "dash", "snap", "pause", "duck"
+	"shoot", "block", "throw", "dash", "snap", "pause", "duck",
+	"slot1", "slot2", "slot3", "slot4"
 ]
 
 var p1_device := -1
@@ -115,11 +116,12 @@ func _bind_device(prefix: String, device: int) -> void:
 	_joy_btn(prefix + "block", JOY_BUTTON_LEFT_SHOULDER, device)
 	_joy_btn(prefix + "snap", JOY_BUTTON_RIGHT_STICK, device)
 	_joy_btn(prefix + "pause", JOY_BUTTON_START, device)
-	_joy_btn(prefix + "duck", JOY_BUTTON_DPAD_DOWN, device)
-	_joy_btn(prefix + "left", JOY_BUTTON_DPAD_LEFT, device)
-	_joy_btn(prefix + "right", JOY_BUTTON_DPAD_RIGHT, device)
-	_joy_btn(prefix + "up", JOY_BUTTON_DPAD_UP, device)
-	_joy_btn(prefix + "down", JOY_BUTTON_DPAD_DOWN, device)
+	# The d-pad is the QUICK BELT; moving is the left stick, duck its click.
+	_joy_btn(prefix + "duck", JOY_BUTTON_LEFT_STICK, device)
+	_joy_btn(prefix + "slot1", JOY_BUTTON_DPAD_LEFT, device)
+	_joy_btn(prefix + "slot2", JOY_BUTTON_DPAD_UP, device)
+	_joy_btn(prefix + "slot3", JOY_BUTTON_DPAD_RIGHT, device)
+	_joy_btn(prefix + "slot4", JOY_BUTTON_DPAD_DOWN, device)
 	_axis(prefix + "left", JOY_AXIS_LEFT_X, -1.0, device)
 	_axis(prefix + "right", JOY_AXIS_LEFT_X, 1.0, device)
 	_axis(prefix + "up", JOY_AXIS_LEFT_Y, -1.0, device)
@@ -189,13 +191,13 @@ func mouse_live(prefix: StringName) -> bool:
 
 func p1_prompt() -> String:
 	if p1_device >= 0 and last_p1_kind == "pad":
-		return "PAD1  LS move  A jump  X light  Y heavy  B cape  RB batwing  RT dash  RS SNAP"
-	return "SON  WASD  SPACE jump  C duck  J light  K heavy  L cape  O batwing  SHIFT dash  F SNAP"
+		return "PAD1  LS move  A jump  X light  Y heavy  B cape  RB batwing  RT dash  RS SNAP  D-PAD belt"
+	return "SON  WASD  SPACE jump  C duck  J light  K heavy  L cape  O batwing  SHIFT dash  F SNAP  1-4 belt"
 
 
 func p2_prompt() -> String:
 	if p2_device >= 0:
-		return "PAD2  LS move  A jump  X light  Y heavy  B web  RB snare  RT dash  RS SNAP"
+		return "PAD2  LS move  A jump  X light  Y heavy  B web  RB snare  RT dash  RS SNAP  D-PAD belt"
 	return "P2 JOIN  Start or keyboard P  ·  then arrows  CTRL jump  M duck  . light  / heavy  ; web  ' snare  ALT dash  N SNAP"
 
 

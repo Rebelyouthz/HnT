@@ -398,6 +398,7 @@ func _ready() -> void:
 	if roof_start or not get_tree().get_nodes_in_group("roof_solids").is_empty():
 		ParkourPlus.place(self, map_id, goal_x, check_x)
 	TrickCall.place(self)
+	QuickBelt.place(self)
 	_cam = CouchCamera.new()
 	_cam.limit_right = int(map_w)
 	_cam.targets = _targets()

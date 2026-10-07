@@ -166,6 +166,10 @@ func _ready() -> void:
 	_snap_a = _snap_lab()
 	_snap_b = _snap_lab()
 
+	# QUICK BELT: four slots per hero along the bottom corners.
+	_belt_a = _belt_row(Vector2(14, 628))
+	_belt_b = _belt_row(Vector2(1280 - 14 - 4 * 46, 628))
+
 	_hint = Label.new()
 	_hint.position = Vector2(12, 688)
 	_hint.size = Vector2(1250, 28)
@@ -173,6 +177,65 @@ func _ready() -> void:
 	UiKit.apply_label(_hint, 13, Palette.MUTED)
 	_put(_hint)
 	_place_banners()
+
+
+var _belt_a: Control
+var _belt_b: Control
+
+
+func _belt_row(pos: Vector2) -> Control:
+	var c := Control.new()
+	c.position = pos
+	c.size = Vector2(4 * 46, 50)
+	c.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	c.set_meta("role", "")
+	var icons: Array = []
+	for id in QuickBelt.ORDER:
+		icons.append(load(str(QuickBelt.ITEMS[id]["icon"])))
+	c.draw.connect(func() -> void:
+		var role := str(c.get_meta("role", ""))
+		if role == "":
+			return
+		var kb := bool(c.get_meta("kb", true))
+		var font := UiKit.title_font()
+		for i in 4:
+			var id: String = QuickBelt.ORDER[i]
+			var n := QuickBelt.count(role, id)
+			var rc := Rect2(float(i) * 46.0, 0, 42, 42)
+			c.draw_rect(rc, Color(0.04, 0.05, 0.09, 0.82))
+			c.draw_rect(rc, (UiKit.GOLD if n > 0 else Color(0.35, 0.36, 0.42)), false, 2.0)
+			var tex: Texture2D = icons[i]
+			if tex:
+				var ts := tex.get_size()
+				var k := 30.0 / maxf(ts.x, ts.y)
+				var sz := ts * k
+				c.draw_texture_rect(tex, Rect2(rc.position + (rc.size - sz) * 0.5, sz), false, Color(1, 1, 1, 1.0 if n > 0 else 0.3))
+			c.draw_string_outline(font, rc.position + Vector2(28, 40), str(n), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, 4, Color.BLACK)
+			c.draw_string(font, rc.position + Vector2(28, 40), str(n), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color.WHITE if n > 0 else Palette.MUTED)
+			# Which button: key number, or a d-pad arrow.
+			var kp := rc.position + Vector2(8, 9)
+			if kb:
+				var keys := ["1", "2", "3", "4"] if role == "son" or c == _belt_a else ["7", "8", "9", "0"]
+				c.draw_string_outline(font, kp + Vector2(-4, 4), keys[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 11, 3, Color.BLACK)
+				c.draw_string(font, kp + Vector2(-4, 4), keys[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Palette.LEMON)
+			else:
+				var d: Vector2 = [Vector2.LEFT, Vector2.UP, Vector2.RIGHT, Vector2.DOWN][i]
+				var side := Vector2(-d.y, d.x)
+				c.draw_colored_polygon(PackedVector2Array([kp + d * 5.0, kp - d * 3.0 + side * 4.0, kp - d * 3.0 - side * 4.0]), Palette.LEMON)
+	)
+	_put(c)
+	return c
+
+
+func _paint_belt(c: Control, f: Fighter) -> void:
+	if c == null:
+		return
+	c.visible = f != null and get_tree().get_first_node_in_group("clinic_van") == null
+	if not c.visible:
+		return
+	c.set_meta("role", f.role)
+	c.set_meta("kb", PadRouter.device_of(f.prefix) < 0)
+	c.queue_redraw()
 
 
 func _put(n: Node) -> void:
@@ -413,6 +476,8 @@ func _process(delta: float) -> void:
 	var right: Fighter = father if son else null
 	_paint_fighter(_son, _steam_a, _hp_a, _snap_a, left, left != null and left.role == "son")
 	_paint_fighter(_dad, _steam_b, _hp_b, _snap_b, right, false)
+	_paint_belt(_belt_a, left)
+	_paint_belt(_belt_b, right)
 	var life_n := 3
 	if state:
 		life_n = state.lives
@@ -445,7 +510,7 @@ func _process(delta: float) -> void:
 			kt.parallel().tween_property(_combo, "modulate", Color.WHITE, 0.14)
 		var heat := clampf(float(Juice.combo) / 30.0, 0.0, 1.0)
 		_combo.add_theme_color_override("font_color", Palette.LEMON.lerp(Color(1.0, 0.3, 0.2), heat))
-		_rank.text = Juice.combo_rank() + "  ·  CASH OUT IF THE BAR DIES"
+		_rank.text = Juice.combo_rank() + ("  ·  XP x%.1f" % Juice.xp_mul()) + "  ·  CASH OUT IF THE BAR DIES"
 		_combo_bg.visible = true
 		_combo_fill.size.x = 180.0 * Juice.combo_frac()
 		_combo_fill.color = Palette.LEMON if Juice.combo_frac() > 0.35 else Palette.BRICK

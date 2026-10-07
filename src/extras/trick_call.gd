@@ -447,10 +447,13 @@ func _ready() -> void:
 	var cl := CanvasLayer.new()
 	cl.layer = 6
 	add_child(cl)
+	# Same 1280x720 design space as the run HUD.
+	var root := PixelStage.attach_canvas(cl)
+	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_hud = Control.new()
-	_hud.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_hud.size = root.size
 	_hud.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	cl.add_child(_hud)
+	root.add_child(_hud)
 	_hud.draw.connect(_draw_hud)
 
 
@@ -485,7 +488,7 @@ func _draw_hud() -> void:
 		var kb := PadRouter.device_of(f.prefix) < 0
 		var two := get_tree().get_nodes_in_group("players").size() > 1
 		var cx := vs.x * (0.5 if not two else (0.32 if str(f.prefix) == "p1_" else 0.68))
-		var at := Vector2(cx, vs.y - 150.0)
+		var at := Vector2(cx, vs.y - 122.0)
 		if s == "air":
 			if not bool(r.get("graded", false)):
 				_chip(at, "LET GO!", Color(1.0, 0.85, 0.3), font, 22)

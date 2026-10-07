@@ -60,6 +60,15 @@ func _bind_keyboard() -> void:
 	_act("p2_snap", [KEY_N])
 	_act("p2_duck", [KEY_M])
 	_act("p2_pause", [KEY_P])
+	# QUICK BELT slots.
+	_act("p1_slot1", [KEY_1])
+	_act("p1_slot2", [KEY_2])
+	_act("p1_slot3", [KEY_3])
+	_act("p1_slot4", [KEY_4])
+	_act("p2_slot1", [KEY_7])
+	_act("p2_slot2", [KEY_8])
+	_act("p2_slot3", [KEY_9])
+	_act("p2_slot4", [KEY_0])
 	_act("ui_accept", [KEY_ENTER, KEY_SPACE])
 	_act("ui_cancel", [KEY_ESCAPE])
 

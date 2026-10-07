@@ -6,6 +6,9 @@ var combo := 0
 var combo_ttl := 0.0
 var combo_peak := 0
 var last_hitter := "son"
+## PINBALL XP: kills inside 1.2 s of each other chain into a multi-kill.
+var multi := 0
+var _multi_t := 0.0
 var callout := ""
 var _callout_t := 0.0
 var _base_scale := 1.0
@@ -227,6 +230,57 @@ func register_hit(kind: String, global_pos: Vector2, dmg: int) -> void:
 		toaster_pop("S+")
 	if combo == 5 or combo == 10 or combo == 20:
 		toaster_pop(combo_rank())
+	_jackpot(combo)
+
+
+## Story XP is a pinball table: every kill's XP is multiplied by the live
+## combo (+6% a hit, up to x3.5), multi-kills add +0.5 each, style kills
+## (in the air, into the scenery, overkill) add theirs, and combo
+## milestones pay a JACKPOT. Returns the XP to grant.
+func xp_mul() -> float:
+	var live := multi if Time.get_ticks_msec() / 1000.0 - _multi_t < 1.2 else 0
+	return minf(3.5, 1.0 + 0.06 * float(combo)) + 0.5 * float(maxi(0, live - 1))
+
+
+func pinball_kill(at: Vector2, base: int, tags: Array) -> int:
+	var now := Time.get_ticks_msec() / 1000.0
+	multi = multi + 1 if now - _multi_t < 1.2 else 1
+	_multi_t = now
+	var mul := xp_mul()
+	var names: Array[String] = []
+	for t in tags:
+		match str(t):
+			"air":
+				mul += 0.5
+				names.append("AIR KILL")
+			"env":
+				mul += 0.5
+				names.append("SCENERY")
+			"overkill":
+				mul += 0.25
+				names.append("OVERKILL")
+			"elite":
+				mul += 0.5
+	if multi >= 2:
+		names.push_front(["", "", "DOUBLE KILL", "TRIPLE KILL", "QUAD KILL"][mini(multi, 4)] if multi <= 4 else "MULTI x%d" % multi)
+	var xp := int(round(float(base) * mul))
+	var col := Palette.READY.lerp(UiKit.GOLD, clampf((mul - 1.0) / 3.0, 0.0, 1.0))
+	popup_number(at + Vector2(0, -64), "+%d XP  x%.1f" % [xp, mul], col)
+	if not names.is_empty():
+		popup_number(at + Vector2(0, -84), "  ·  ".join(names), UiKit.GOLD)
+	return xp
+
+
+## Combo milestones: a JACKPOT of XP straight in.
+func _jackpot(n: int) -> void:
+	var bonus := {10: 20, 20: 45, 30: 80, 40: 130, 60: 220}.get(n, 0) as int
+	if bonus <= 0:
+		return
+	var rs := get_tree().get_first_node_in_group("run_state")
+	if rs and rs.has_method("add_xp") and SurviveRun.get_run(get_tree()) == null:
+		rs.add_xp(bonus)
+		popup_number(Vector2(640, 180), "JACKPOT  +%d XP" % bonus, UiKit.GOLD)
+		play("res://assets/audio/claim.wav")
 
 
 func shout(line: String) -> void:
@@ -396,7 +450,8 @@ func cash_out() -> void:
 		combo_peak = 0
 		return
 	var scrap_n := maxi(1, n / 4)
-	var xp_n := n / 6
+	# Banking pays more the longer the line ran (pinball bonus count).
+	var xp_n := n * n / 30
 	var rs := get_tree().get_first_node_in_group("run_state")
 	if rs and rs.has_method("has_card") and rs.has_card("street_credit"):
 		scrap_n *= 2

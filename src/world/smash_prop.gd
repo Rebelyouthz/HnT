@@ -360,6 +360,10 @@ func _burst_apart(from: Node) -> void:
 		LootDrop.spawn(host, global_position + Vector2(randf_range(-8, 8), 0), "coin", 1, 1.4)
 	if randf() < 0.22 or kind == "fridge":
 		LootDrop.spawn(host, global_position, "flask")
+	elif randf() < 0.07 or kind == "vending":
+		LootDrop.spawn(host, global_position, "energy")
+	elif randf() < 0.05:
+		LootDrop.spawn(host, global_position, "smoke")
 	if has_meta("syringe"):
 		LootDrop.spawn(host, global_position, "syringe", 0, 0.4)
 
