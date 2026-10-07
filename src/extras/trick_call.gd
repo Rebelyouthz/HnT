@@ -493,16 +493,16 @@ func _draw_hud() -> void:
 		var at := Vector2(cx, vs.y - 122.0)
 		if s == "air":
 			if not bool(r.get("graded", false)):
-				_chip(at, "LET GO!", Color(1.0, 0.85, 0.3), font, 22)
+				_chip(at, "LET GO!", Color(1.0, 0.85, 0.3), font, 26)
 				continue
 			var ld: Dictionary = LANDS[str(tr["land"])]
-			_chip(at, "LAND: %s" % str(ld["name"]), Color(0.55, 0.95, 1.0), font, 18)
+			_chip(at, "LAND: %s" % str(ld["name"]), Color(0.55, 0.95, 1.0), font, 22)
 			_stick_glyph(at + Vector2(-30, 34), dir_vec(str(ld["l"])) * Vector2(float(f.facing), 1.0), Color(0.55, 0.95, 1.0), "L-STICK" if not kb else "MOVE")
 			_stick_glyph(at + Vector2(30, 34), dir_vec(str(ld["r"])) * Vector2(float(f.facing), 1.0), Color(0.55, 0.95, 1.0), "R-STICK" if not kb else "NUM")
 			continue
 		var armed := s == "armed"
 		var col := Color(0.45, 1.0, 0.55) if armed else Color(1.0, 0.85, 0.3)
-		_chip(at, str(tr["name"]) + ("   LET GO ON TAKEOFF" if armed else "   HOLD"), col, font, 18)
+		_chip(at, str(tr["name"]) + ("   LET GO ON TAKEOFF" if armed else "   HOLD"), col, font, 22)
 		var parts: Array = tr["btn"]
 		var widths: Array = []
 		var w := 40.0
