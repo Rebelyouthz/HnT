@@ -34,7 +34,55 @@ The rest is in English, like the code. Newest work first. Each block says
 
 ---
 
-## 0r. Menus pass, weekly gauntlet, palettes, options, two polish rounds (latest)
+## 0s. Calmer right side, more ways up, paced unlocks, mission art, gear art (latest)
+
+Owner: the right side of the screen is messy; what is the ladder (keep it,
+add other ways up); balance and pace unlocks like most games with a big
+"DOJO UNLOCKED" banner; unique mission picture per map on RUN instead of tiny
+fighters on a big pavement; real item pictures, stat boxes, best-first lists
+in gear.
+
+- **Right-side clutter** (found in old screenshots): stacked toasts top-right,
+  world labels (parkour hints, tower plaques) readable from across the map,
+  neon/puddle reflections mirrored into big ghost letters, and three crude
+  drawn placeholders (red box "vending" smash prop, blue drawn blessing
+  machine, grey survivor shrine). Fixes: one compact queued toast
+  (`Juice._toast_q`), `NearFade` (src/world/near_fade.gd) fades labels in only
+  near a player, parkour gate hint range tightened, `wet_reflect.gdshader`
+  sheen 0.22->0.15, pool 0.6->0.38, longer smear and less bright-boost, new
+  sprites `dock/props/vending.png`, `dock/props/blessing.png`,
+  `survive/shrine.png` (drawn code kept only as fallback).
+- **Ways up** (`FireEscape.style`): `ladder` (fire escape, unchanged), `pipe`
+  (drainpipe; son climbs 1.35x, dad 0.8x) and `boost` (dumpster + crate,
+  awning, window ledge, AC box, second awning; 3.4x with springy hops).
+  `RunAct._extra_ways_up()` puts one per long roof segment, as far as
+  possible from ladders (>= 240 px), clear of cars, gates, shops, towers.
+  `tools/ways_show.gd` renders all three side by side.
+- **Unlock pacing:** `FamilyProfile.NIGHTS_FOR` - each room in `BUILD_ORDER`
+  also needs N finished nights (desk+dojo 0, couch/skill tree 1, ...).
+  `build_blocker()` returns "@N" for that, `blocker_text()` makes the UI line
+  ("OPENS IN 2 NIGHTS"); Benny says it in camp. The night that opens the next
+  room toasts NEW ROOM READY.
+- **UNLOCKED banner:** `Juice.unlock_banner(title, sub, icon)` - dark band
+  opens, gold rays turn behind the room/feature icon, name slams in from the
+  left, "U N L O C K E D" from the right, sparks, then folds shut; queued.
+  `carpenter()` uses it with the room icon; `unlock_logo()` uses it outside
+  runs (in a run it stays a toast). Upgrades only toast.
+- **Mission art:** `assets/sprites/missions/<map>.png` (FLUX Krea, 355x160,
+  56-colour quantised, shown 2x). RUN tab header is the map name, the frame
+  shows the picture with a slow push-in and a strip "MISSION n/14 · job ·
+  TARGET boss"; `StageCard.art()` uses it too. Regenerate with
+  `tools/mission_art.py`.
+- **Gear:** `assets/sprites/gear/<id>.png` painted icons for all 17 pieces
+  (`tools/gear_art.py`, green screen; green items on magenta). `GearIcon.item_id`
+  shows them. Lists: owned first by `_power()` (hp 1, dmg 1.6, steam 0.5,
+  spd 0.6), suit parts/charms owned+rarest first, "★ BEST YOU OWN" tag and
+  an EQUIP BEST button.
+- Clamp King `walk_up` sliced; other walk angles still wait for HF quota.
+
+---
+
+## 0r. Menus pass, weekly gauntlet, palettes, options, two polish rounds
 
 Owner: more angles; walk every menu and sub-menu, research and add, art for
 everything, deepen the game; two polish rounds (bugs, visuals, physics,
