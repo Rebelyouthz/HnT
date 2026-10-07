@@ -163,6 +163,10 @@ func _rings_tick(f: Fighter, delta: float) -> void:
 
 
 func _momentum(f: Fighter, delta: float) -> void:
+	# No momentum meter in a survivor arena (its HUD owns that corner).
+	if SurviveRun.get_run(get_tree()) != null:
+		_hud.visible = false
+		return
 	var running := absf(f.velocity.x) > 190.0
 	_mom = clampf(_mom + (delta / 4.0 if running else -delta * 1.5), 0.0, 1.0)
 	_mom_bar.size.x = 120.0 * _mom

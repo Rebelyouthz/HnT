@@ -150,6 +150,8 @@ func _test(a: Vector2, b: Vector2) -> bool:
 		if went_through and round_kind != "orb":
 			# What came out the back paints the wall behind him.
 			WallMark.mark(get_parent(), Vector2(x + signf(vel.x) * randf_range(26.0, 60.0), global_position.y + randf_range(-5.0, 5.0)), signf(vel.x))
+			# The exit: a wetter, lower tear than the entry.
+			Mixer.play_sfx("res://assets/audio/sfx/bullet_flesh.ogg", randf_range(0.62, 0.75), -8.0)
 		if went_through and dmg >= 3:
 			# Clean through: out the far side, slower and weaker, and on to
 			# whoever stands behind.

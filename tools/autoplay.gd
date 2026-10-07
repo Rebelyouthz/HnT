@@ -42,6 +42,9 @@ func _process(_d: float) -> bool:
 		for gk in load("res://src/ui/guides.gd").STEPS:
 			g_done.append(str(gk))
 		d["guides_done"] = g_done
+		if OS.get_environment("WEEKLY") == "1":
+			root.get_node("App").call("start_weekly")
+			return false
 		root.get_node("App").call("enter_map", _map)
 		return false
 	if _frame < 50:

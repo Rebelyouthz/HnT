@@ -74,7 +74,16 @@ and secrets with new weapons, moves, parts, suit parts, throwables and cards;
 shoes, necklace and ring in the paperdoll; camp/dojo unlocks in a planned
 order with guided first use and speech bubbles; then polish twice.
 
-### Latest (see worklog 0q)
+### Latest (see worklog 0r)
+
+Owner: more angles, walk every menu and add art/features (researched),
+deepen the game, two polish rounds. Done: menus pass (NIGHT LOG, profile
+fix, contracts bonus, WEEKLY GAUNTLET, hero COLOURS, OPTIONS realism
+settings, header icons), polish A+B (bugs, shadows, wet steps, breath,
+blood vs cars). Open: enemy angles for clamp_king (garbled), gant, mohawk,
+repo_goon, roof_runner, shift_lead, valet, coping_imp - HF quota.
+
+### Before that (see worklog 0q)
 
 Owner said "continue with everything on the to-do list": bodies vs lamps /
 cars / walls / crates / standing thugs, tripping and dragging, wall marks,

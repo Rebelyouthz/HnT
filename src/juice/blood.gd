@@ -110,7 +110,7 @@ func run_pool(at: Vector2, dir: float) -> void:
 
 
 func pool(at: Vector2, size: float) -> void:
-	if FamilyProfile.less_gore():
+	if FamilyProfile.less_gore() or _behind_car(at):
 		return
 	if _pools.size() >= MAX_POOLS:
 		_pools.pop_front()
@@ -445,6 +445,8 @@ func _process(delta: float) -> void:
 ## A drop meets the street: slow ones leave round spots, fast ones a long
 ## streak in the travel direction with a crown of specks.
 func _splat(at: Vector2, v: Vector2, s: float, c: Color) -> void:
+	if _behind_car(at):
+		return
 	var spd := absf(v.x)
 	var len := clampf(spd / 90.0, 0.0, 4.0)
 	if _stains.size() >= MAX_STAINS:
@@ -591,3 +593,19 @@ func _draw_screen() -> void:
 						break
 				x += cell
 			y += cell
+
+
+
+## The floor layers cannot sort against a parked car standing nearer the
+## camera: a stain on the street behind one would paint over it, so none
+## is left where the car would hide it anyway.
+func _behind_car(at: Vector2) -> bool:
+	if not is_inside_tree():
+		return false
+	for c in get_tree().get_nodes_in_group("parked_cars"):
+		if c is Node2D:
+			var cp := (c as Node2D).global_position
+			var w := float(c.get_meta("w", 150.0)) * 0.5
+			if absf(at.x - cp.x) < w and at.y < cp.y + 2.0 and at.y > cp.y - 70.0:
+				return true
+	return false

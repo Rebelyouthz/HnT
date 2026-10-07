@@ -34,7 +34,52 @@ The rest is in English, like the code. Newest work first. Each block says
 
 ---
 
-## 0q. The street fights back, hurt gaits, last-kill cam, new walk angles (latest)
+## 0r. Menus pass, weekly gauntlet, palettes, options, two polish rounds (latest)
+
+Owner: more angles; walk every menu and sub-menu, research and add, art for
+everything, deepen the game; two polish rounds (bugs, visuals, physics,
+light, sound, shadows, reflections, particles, blood).
+
+- Menus walked (tools/capture.gd now opens any hub sheet: hub:stats, jobs,
+  log, profile, settings, intake). Fixed: FAMILY PROFILE text column had no
+  width (one letter per line) - now a breathing portrait and a LV / rarity /
+  power / title line, styled XP bar; GEAR title hidden by the role buttons;
+  READY-green buttons had green-on-green text (`UiKit.dark_text`, 17 spots).
+- `UiKit.title_icon(label, icon)`: header icons (new `head_*` pixel icons in
+  tools/icon_pack.py) on ARMORY, CODEX, MOVES, HEROES, BUILD, GEAR,
+  OPTIONS, STATS, JOBS, NIGHT LOG.
+- NIGHT LOG (`src/ui/log_sheet.gd`) replaces the bare session text: stamped
+  notes, a KILL TALLY mugshot wall (WANTED on the most-hit), last nights.
+- DAILY CONTRACTS: job + pay icons, midnight countdown, ALL THREE bonus
+  crate with a day streak (`Contracts.bonus_ready/claim_bonus/streak`).
+- WEEKLY GAUNTLET (`src/app/weekly_book.gd`, SOR4-style): one seeded coping
+  hour + two pacts per week (`App.start_weekly`, `App.weekly`,
+  `SurvExtras.pacts()` returns the weekly pair, `seed()` in SurviveRun),
+  best time / tries / weekly pay (hold 3:00: +3 gems +150 gold); a poster on
+  the RUN tab (opens after THE INTAKE LOT). Leaving the map goes home.
+  `WEEKLY=1` env makes tools/autoplay.gd start it.
+- Hero COLOURS (`src/app/palettes.gd`): six palettes re-dye clothes not
+  covered by a suit part (`pal` uniform in wound.gdshader, skin kept),
+  unlocked by play; swatches over the GEAR paperdoll.
+- OPTIONS > GAME: BLOOD AMOUNT (`blood_k`), BODIES STAY (`bodies_stay`,
+  DeathFall.stay_secs), HIT STOP (`hitstop_k` scales hitstop + freeze),
+  REDUCE FLASHES (`Juice.reduce_flash()`: no white frames / impact flash /
+  lens blood).
+- Polish: survivor item sort comparator re-rolled (sort broke); Party
+  spawn_row deferred in physics; GunGore drip timers keyed by instance id;
+  nemesis tag fades under the HUD (HudShy); MOMENTUM meter hidden in
+  survivor; blood stains/pools are not left behind parked cars (they drew
+  over them); DeathFall ground shadow; bodies splash and slide further on
+  wet streets; wet footsteps (splash + new step_wet_1..3.ogg); cold maps
+  breath puffs (BodySense._breath); exit-wound sound.
+- HF: bag_snatch + bailiff walk_up/down (rescaled). clamp_king walk_up was
+  garbled (two clamps) - dropped. The rest of the enemy angles are queued
+  in /tmp/claude-0/ang/run_more.sh (retry.sh loops while the ZeroGPU quota
+  is out); slice with video2sprite --start 1.0, then rescale like 0q.
+- Known: harmless "Lambda capture at index 0 was freed" prints from older
+  timer lambdas (43 sites), left as is.
+
+## 0q. The street fights back, hurt gaits, last-kill cam, new walk angles
 
 - DeathFall `_collide`: moving bodies stop dead on lamp posts
   (`street_lamps`, the post shivers) and parked cars (`slam_props`, the car
