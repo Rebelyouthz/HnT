@@ -294,6 +294,7 @@ func mark_map_filed(id: String) -> void:
 	filed.append(id)
 	data["maps_filed"] = filed
 	save()
+	VaultCards.add_tokens(1, "First time %s is filed." % id.replace("_", " ").to_upper())
 
 
 func cash_fail(scrap: int, score: int) -> int:
@@ -423,6 +424,7 @@ func grant(gold: int, gems: int, line: String) -> void:
 
 
 func mark_run_finished(ok: bool = true) -> void:
+	VaultCards.on_night()
 	data["runs"] = int(data["runs"]) + 1
 	data["lifetime_points"] = int(data["lifetime_points"]) + (2 if ok else 1)
 	data["rep"] = int(data["rep"]) + (1 if ok else 0)
@@ -563,6 +565,11 @@ func try_cbt(id: String) -> bool:
 
 func note_tower() -> void:
 	data["towers_climbed"] = int(data.get("towers_climbed", 0)) + 1
+	var topped: Array = data.get("tower_tokens", [])
+	if not topped.has(App.current_map):
+		topped.append(App.current_map)
+		data["tower_tokens"] = topped
+		VaultCards.add_tokens(1, "Top of the tower. The view pays.")
 	Trees.add_flow(15)
 	save()
 
@@ -728,6 +735,8 @@ func grant_account_xp(n: int) -> Dictionary:
 		data["account_xp"] = int(data["account_xp"]) - account_need()
 		data["account_level"] = int(data.get("account_level", 1)) + 1
 		data["gold"] = int(data.get("gold", 0)) + 8
+		data["gems"] = int(data.get("gems", 0)) + 3
+		data["card_tokens"] = int(data.get("card_tokens", 0)) + 1
 		dings += 1
 		flag_unseen("level_%d" % int(data["account_level"]))
 	save()

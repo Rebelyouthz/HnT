@@ -132,15 +132,15 @@ func _ex() -> SurvExtras:
 
 
 func dmg_mul() -> float:
-	return (_ex().dmg_mul() if _ex() else 1.0) * (1.4 if share_t > 0.0 else 1.0) * (1.0 + 0.12 * trait_n("t_dmg") + _item_mod("dmg") + 0.05 * Meta.rank("s_might") + SurvGear.stat("dmg") + (0.08 if Trees.has("u_limit") else 0.05) * float(limit_breaks))
+	return (_ex().dmg_mul() if _ex() else 1.0) * (1.4 if share_t > 0.0 else 1.0) * (1.0 + 0.12 * trait_n("t_dmg") + _item_mod("dmg") + 0.05 * Meta.rank("s_might") + SurvGear.stat("dmg") + VaultCards.stat("dmg") + (0.08 if Trees.has("u_limit") else 0.05) * float(limit_breaks))
 
 
 func area_mul() -> float:
-	return (_ex().area_mul() if _ex() else 1.0) * (1.0 + 0.14 * trait_n("t_area") + _item_mod("area") + 0.05 * Meta.rank("s_area") + SurvGear.stat("area"))
+	return (_ex().area_mul() if _ex() else 1.0) * (1.0 + 0.14 * trait_n("t_area") + _item_mod("area") + 0.05 * Meta.rank("s_area") + SurvGear.stat("area") + VaultCards.stat("area"))
 
 
 func cd_mul() -> float:
-	var m := maxf(0.35, 1.0 - 0.08 * trait_n("t_cd") - _item_mod("cd") - 0.03 * Meta.rank("s_cooldown") - SurvGear.stat("cd"))
+	var m := maxf(0.35, 1.0 - 0.08 * trait_n("t_cd") - _item_mod("cd") - 0.03 * Meta.rank("s_cooldown") - SurvGear.stat("cd") - VaultCards.stat("cd"))
 	return m * (0.5 if frenzy_t > 0.0 else 1.0) * (_ex().cd_mul() if _ex() else 1.0)
 
 
@@ -161,7 +161,7 @@ func armor() -> float:
 
 
 func pickup_mul() -> float:
-	return (1.4 if _ex() and _ex().has("fleet") else 1.0) * (1.0 + 0.3 * trait_n("t_pickup") + _item_mod("pickup") + 0.15 * Meta.rank("s_magnet") + (0.4 if Trees.has("f_magnet") else 0.0) + SurvGear.stat("pickup"))
+	return (1.4 if _ex() and _ex().has("fleet") else 1.0) * (1.0 + 0.3 * trait_n("t_pickup") + _item_mod("pickup") + 0.15 * Meta.rank("s_magnet") + (0.4 if Trees.has("f_magnet") else 0.0) + SurvGear.stat("pickup") + VaultCards.stat("pickup"))
 
 
 func max_abilities() -> int:
@@ -241,7 +241,7 @@ func need() -> int:
 
 
 func add_xp(n: int) -> void:
-	n = int(ceil(float(n) * (1.0 + 0.12 * trait_n("t_xp") + 0.15 * trait_n("t_curse") + 0.05 * Meta.rank("s_growth") + SurvGear.stat("xp"))))
+	n = int(ceil(float(n) * (1.0 + VaultCards.stat("xp") + 0.12 * trait_n("t_xp") + 0.15 * trait_n("t_curse") + 0.05 * Meta.rank("s_growth") + SurvGear.stat("xp"))))
 	xp += n
 	while xp >= need():
 		xp -= need()
@@ -335,6 +335,8 @@ func offers(n: int = 3) -> Array:
 			continue
 		if trait_n(id) < int(r.get("max", 5)):
 			pool.append({"kind": "trait", "id": id, "w": 1.2})
+	for vid: String in VaultCards.offers():
+		pool.append({"kind": "vault", "id": vid, "w": 1.4})
 	var out: Array = []
 	while out.size() < n and not pool.is_empty():
 		var total := 0.0
@@ -387,6 +389,8 @@ func take(o: Dictionary) -> void:
 			for f in _fighters():
 				f.max_hp += hp
 				f.hp += hp
+		"vault":
+			VaultCards.on_pick(str(o["id"]), get_tree())
 		"gold":
 			# LIMIT BREAK: everything maxed, every pick is +5% damage instead.
 			limit_breaks += 1

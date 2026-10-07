@@ -117,6 +117,8 @@ func _claim(f: Fighter) -> void:
 	_taken = true
 	_hint.text = "FILED"
 	FamilyProfile.note_secret(str(spec.get("id", "")))
+	if randf() < 0.25:
+		VaultCards.add_tokens(1, "Tucked behind the stash.")
 	var kind := str(spec.get("kind", "gold"))
 	var title := str(spec.get("title", "SECRET"))
 	var rarity := str(spec.get("rarity", "rare"))

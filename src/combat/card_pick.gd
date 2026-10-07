@@ -37,6 +37,11 @@ func _ready() -> void:
 	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/cards.json"))
 	if typeof(parsed) == TYPE_ARRAY:
 		_table = parsed
+	# Vault cards you own can come up too (they carry "vault": true).
+	for vid: String in VaultCards.offers():
+		var vr := VaultCards.as_row(vid)
+		vr["vault"] = true
+		_table.append(vr)
 	_ui = PixelStage.attach_canvas(self)
 	var dim := ColorRect.new()
 	dim.color = Color(0.01, 0.01, 0.04, 0.0)
@@ -236,7 +241,7 @@ func _reroll() -> void:
 	var lvs: Dictionary = rs.get("card_lv") if rs.get("card_lv") is Dictionary else {}
 	var pool: Array = []
 	for c in _table:
-		if RunState.offerable(c, owned, lvs):
+		if (c as Dictionary).has("vault") or RunState.offerable(c, owned, lvs):
 			pool.append(str(c["id"]))
 	pool.shuffle()
 	ids = pool.slice(0, 3)

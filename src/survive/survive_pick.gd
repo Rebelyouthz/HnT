@@ -147,6 +147,10 @@ func _card(o: Dictionary) -> Button:
 			r = o["row"]
 			lv_text = str(r.get("rarity", "common")).to_upper() + " ITEM"
 			col = RARITY_COL.get(str(r.get("rarity", "common")), Palette.EDGE)
+		"vault":
+			r = VaultCards.as_row(str(o["id"]))
+			lv_text = "VAULT CARD  ·  LV %d" % VaultCards.level(str(o["id"]))
+			col = Color(1.0, 0.82, 0.3)
 		"evolve":
 			r = o
 			lv_text = "EVOLVE  ·  " + str(run.row("abilities", str(o["id"])).get("name", "")).to_upper()

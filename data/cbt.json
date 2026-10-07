@@ -231,5 +231,43 @@
   "rarity": "epic",
   "stat": "lunch +12g",
   "gems": 1
+ },
+ {
+  "id": "deck_hand",
+  "trunk": "SHOW",
+  "branch": "right",
+  "requires": "summit_joke",
+  "name": "BIGGER HAND",
+  "blurb": "The CARD VAULT lays out 12 cards instead of 9.",
+  "gold": 60,
+  "rep": 3,
+  "rarity": "rare",
+  "stat": "vault 12"
+ },
+ {
+  "id": "deck_synergy",
+  "trunk": "SHOW",
+  "branch": "right",
+  "requires": "deck_hand",
+  "name": "CARD SYNERGY",
+  "blurb": "SYNERGY cards can come out of the vault once you own both halves.",
+  "gold": 80,
+  "rep": 4,
+  "rarity": "epic",
+  "stat": "synergy",
+  "gems": 2
+ },
+ {
+  "id": "deck_evolve",
+  "trunk": "SHOW",
+  "branch": "right",
+  "requires": "deck_synergy",
+  "name": "CARD EVOLUTION",
+  "blurb": "A vault card at LV 5 can EVOLVE into its legendary form.",
+  "gold": 110,
+  "rep": 5,
+  "rarity": "legendary",
+  "stat": "evolution",
+  "gems": 4
  }
 ]

@@ -969,7 +969,12 @@ func take_hit(kind: String, from: Node) -> void:
 	if from is Fighter and absf((from as Fighter).move_mul - 1.0) > 0.01 and kind in ["light", "heavy", "launcher", "uppercut", "roundhouse", "jump-kick", "air-spin"]:
 		dmg = int(round(float(dmg) * (from as Fighter).move_mul))
 	if hero == "son" or hero == "father":
-		dmg = int(round(float(dmg) * Heroes.dmg_mul(hero) * Meta.dmg_mul() * Artifacts.player_dmg() * NightExtras.dmg_mul() * ItemRack.dmg_k))
+		dmg = int(round(float(dmg) * Heroes.dmg_mul(hero) * Meta.dmg_mul() * Artifacts.player_dmg() * NightExtras.dmg_mul() * ItemRack.dmg_k * (1.0 + VaultCards.stat("dmg"))))
+		# Vault crits: DAD'S BELT and friends.
+		var crit := VaultCards.stat("crit")
+		if crit > 0.0 and randf() < crit:
+			dmg *= 2
+			Juice.popup_number(global_position + Vector2(0, -96), "CRIT", Color(1.0, 0.85, 0.25))
 	if from is Fighter and (from as Fighter).suit_set() == "bat":
 		dmg = int(round(float(dmg) * 1.2))
 	if from is Fighter:
@@ -1279,6 +1284,10 @@ func _die(kind: String, from: Node) -> void:
 		if Charms.has("fight_tape"):
 			var ff := from as Fighter
 			ff.hp = mini(ff.max_hp, ff.hp + 3)
+		var vh := int(round(VaultCards.stat("heal")))
+		if vh > 0:
+			var fv := from as Fighter
+			fv.hp = mini(fv.max_hp, fv.hp + vh)
 	_drops(from)
 	died.emit()
 	queue_free()

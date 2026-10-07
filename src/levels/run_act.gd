@@ -320,6 +320,7 @@ func _place_rescue() -> void:
 
 
 func _ready() -> void:
+	VaultCards.reset_run()
 	_configure()
 	Arsenal.reset_run()
 	var place := scene_file_path.get_file().get_basename()
@@ -492,7 +493,17 @@ func _cards() -> void:
 		for c in table:
 			if not bool(c.get("fixed", false)) and RunState.offerable(c, _state.cards, _state.card_lv):
 				pool.append(c["id"])
+		# Owned vault cards join the draw (twice, so they show up).
+		for vid: String in VaultCards.offers():
+			pool.append(vid)
+			pool.append(vid)
 		pool.shuffle()
+		# No doubles in one hand.
+		var uniq: Array = []
+		for pid in pool:
+			if not uniq.has(pid):
+				uniq.append(pid)
+		pool = uniq
 		pick.ids = pool.slice(0, 3)
 		_state.card_reroll = false
 	add_child(pick)

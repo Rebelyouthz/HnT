@@ -158,6 +158,24 @@ func _ready() -> void:
 		)
 	)
 	extra.add_child(art)
+	# CARD VAULT: draw level-up cards (opens after the first night out).
+	var vault_open := int(FamilyProfile.data.get("runs", 0)) >= 1
+	var vb := UiKit.button("CARD VAULT  ·  %d TOKENS" % VaultCards.tokens() if vault_open else "VAULT  ·  AFTER NIGHT 1", Vector2(220, 36))
+	vb.add_theme_font_size_override("font_size", 12)
+	vb.disabled = not vault_open
+	if vault_open:
+		vb.add_theme_color_override("font_color", UiKit.GOLD)
+	vb.pressed.connect(func() -> void:
+		var hub := get_tree().current_scene
+		if hub and hub.has_method("_open_vault"):
+			hub.call("_open_vault")
+		else:
+			var sh := preload("res://src/ui/vault_sheet.gd").new()
+			get_tree().current_scene.add_child(sh)
+			sh.closed.connect(sh.queue_free)
+	)
+	vb.position = Vector2(40, 514)
+	stage.add_child(vb)
 	stage.add_child(extra)
 	var net := HBoxContainer.new()
 	net.position = Vector2(820, 470)

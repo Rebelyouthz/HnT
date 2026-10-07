@@ -66,7 +66,7 @@ func clear_run() -> void:
 	var gold := 30 + 10 * Heroes.map_tier() + int(scrap / 4.0)
 	if App.difficulty == "finals":
 		gold += 6
-	gold = int(round(float(gold) * Artifacts.gold()))
+	gold = int(round(float(gold) * Artifacts.gold() * (1.0 + VaultCards.stat("gold"))))
 	FamilyProfile.add_gold(gold)
 	if Artifacts.has("one_life"):
 		FamilyProfile.add_gems(1)
@@ -99,6 +99,7 @@ func buff(id: String) -> int:
 
 
 func add_xp(n: int) -> void:
+	n = int(ceil(float(n) * (1.0 + VaultCards.stat("xp"))))
 	if buff("insight_lens") > 0:
 		n = int(ceil(float(n) * (1.0 + 0.25 * buff("insight_lens"))))
 	xp += n
@@ -150,6 +151,12 @@ func take_card(id: String) -> void:
 	if id == "" or id == "skip":
 		Juice.shout("SKIPPED")
 		Juice.toast("reward", Copy.SKIP, "No rule. Same street. Cowardice is also a build.")
+		return
+	if VaultCards.is_vault(id):
+		VaultCards.on_pick(id, get_tree())
+		Juice.shout(str(VaultCards.card(id).get("name", "VAULT CARD")))
+		Juice.toast("reward", "VAULT CARD", str(VaultCards.card(id).get("name", "")), "cur_card_token")
+		add_points(Juice.last_hitter, 60, "card")
 		return
 	if not cards.has(id):
 		cards.append(id)
