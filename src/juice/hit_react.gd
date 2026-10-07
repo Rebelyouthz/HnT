@@ -190,12 +190,7 @@ static func corpse(host: Node, art: AnimatedSprite2D, feet: Vector2, zone: Strin
 	body.add_child(flip)
 	host.add_child(body)
 	# Old bodies make room.
-	var all := host.get_tree().get_nodes_in_group("corpses")
-	if all.size() > 9:
-		var first := all[0] as Node2D
-		var ft := first.create_tween()
-		ft.tween_property(first, "modulate:a", 0.0, 0.6)
-		ft.tween_callback(first.queue_free)
+	DeathFall.trim(host.get_tree())
 	var tw := body.create_tween()
 	var away := dir
 	var lie := 0.0
@@ -341,12 +336,7 @@ static func _fall(host: Node, art: AnimatedSprite2D, feet: Vector2, style: Strin
 		FireFx.on_body(body, 2.5)
 	body.setup(style, dir)
 	host.add_child(body)
-	var all := host.get_tree().get_nodes_in_group("corpses")
-	if all.size() > 12:
-		var first := all[0] as Node2D
-		var ft := first.create_tween()
-		ft.tween_property(first, "modulate:a", 0.0, 0.6)
-		ft.tween_callback(first.queue_free)
+	DeathFall.trim(host.get_tree())
 	return body
 
 

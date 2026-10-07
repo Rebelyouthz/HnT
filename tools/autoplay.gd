@@ -49,6 +49,28 @@ func _process(_d: float) -> bool:
 		return false
 	if _frame < 50:
 		return false
+	if OS.get_environment("CENSUS") != "" and _frame == int(OS.get_environment("CENSUS")):
+		var tally := {}
+		for n in current_scene.find_children("*", "CanvasItem", true, false):
+			if not (n as CanvasItem).is_visible_in_tree():
+				continue
+			var key: String = n.get_class() + " " + (n.get_script().resource_path.get_file() if n.get_script() else "")
+			if n.get("kind") != null:
+				key += " kind=" + str(n.get("kind"))
+			if n is Node2D and (n as Node2D).modulate.v < 0.3:
+				key += " DARK"
+			if n.get_parent() and n.get_parent().get_script():
+				key += " <" + n.get_parent().get_script().resource_path.get_file()
+			tally[key] = int(tally.get(key, 0)) + 1
+		var ks := tally.keys()
+		ks.sort_custom(func(a, b): return int(tally[a]) > int(tally[b]))
+		for k in ks.slice(0, 40):
+			print("CENSUS ", tally[k], " ", k)
+		var ct: Transform2D = root.get_viewport().get_canvas_transform()
+		for n in current_scene.find_children("*", "Node2D", true, false):
+			var sc: Script = n.get_script()
+			if sc and (sc.resource_path.ends_with("loot_drop.gd") or sc.resource_path.ends_with("xp_gem.gd")):
+				print("AT ", sc.resource_path.get_file(), " ", n.get("kind"), " ", ct * (n as Node2D).global_position)
 	if _f == null or not is_instance_valid(_f):
 		for n in get_nodes_in_group("players"):
 			_f = n

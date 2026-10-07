@@ -980,16 +980,32 @@ func trick_chain(n: int, title: String = "") -> void:
 
 
 func hole(at: Vector2) -> void:
-	var h := ColorRect.new()
-	h.color = Color(0.05, 0.04, 0.05, 0.85)
-	h.size = Vector2(6, 6)
+	# A small round chip with a dark core that fades out (it used to be a
+	# black square left on the street forever). Capped at 20.
+	var host := get_tree().get_first_node_in_group("dock_world")
+	var h := _Hole.new()
 	h.global_position = at
 	h.z_index = 2
-	var host := get_tree().get_first_node_in_group("dock_world")
 	if host:
 		host.add_child(h)
 	else:
 		add_child(h)
+	var all := get_tree().get_nodes_in_group("holes")
+	if all.size() > 20:
+		(all[0] as Node).queue_free()
+
+
+class _Hole extends Node2D:
+	func _ready() -> void:
+		add_to_group("holes")
+		var tw := create_tween()
+		tw.tween_interval(8.0)
+		tw.tween_property(self, "modulate:a", 0.0, 1.0)
+		tw.tween_callback(queue_free)
+
+	func _draw() -> void:
+		draw_circle(Vector2.ZERO, 1.8, Color(0.55, 0.5, 0.45, 0.5))
+		draw_circle(Vector2.ZERO, 1.1, Color(0.04, 0.03, 0.04, 0.9))
 
 
 func named_slowmo() -> void:

@@ -570,4 +570,23 @@ func _make_room() -> void:
 
 ## OPTIONS > BODIES STAY: how long the dead lie on the street.
 static func stay_secs() -> float:
-	return [8.0, 18.0, 45.0][clampi(int(FamilyProfile.data.get("bodies_stay", 1)), 0, 2)]
+	var base: float = [8.0, 18.0, 45.0][clampi(int(FamilyProfile.data.get("bodies_stay", 1)), 0, 2)]
+	# A survivor hour kills dozens: bodies clear fast or the street is a heap.
+	if Engine.get_main_loop() is SceneTree and SurviveRun.get_run(Engine.get_main_loop() as SceneTree) != null:
+		return minf(base, 4.0)
+	return base
+
+
+## Old bodies make room: 12 on a story street, 5 in a survivor hour.
+static func trim(tree: SceneTree) -> void:
+	var cap := 5 if SurviveRun.get_run(tree) != null else 12
+	var all := tree.get_nodes_in_group("corpses")
+	var extra := all.size() - cap
+	for i in maxi(0, extra):
+		var first := all[i] as Node2D
+		if first == null or first.has_meta("trimming"):
+			continue
+		first.set_meta("trimming", true)
+		var ft := first.create_tween()
+		ft.tween_property(first, "modulate:a", 0.0, 0.5)
+		ft.tween_callback(first.queue_free)
