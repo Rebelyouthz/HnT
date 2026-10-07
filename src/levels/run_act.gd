@@ -294,6 +294,7 @@ func _place_towers() -> void:
 func _place_secrets() -> void:
 	SecretStash.place(self, map_id)
 	_extra_ways_up.call_deferred()
+	(func() -> void: SecretLedge.place(self, map_id)).call_deferred()
 	# After everything else has been dropped in (wheel tokens, gates).
 	get_tree().create_timer(0.15).timeout.connect(_spread_props)
 

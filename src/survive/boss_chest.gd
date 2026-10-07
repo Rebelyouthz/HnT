@@ -58,6 +58,9 @@ func _burst() -> void:
 	_open = true
 	var at := get_global_transform_with_canvas().origin
 	var coins := (45 if big else 18) + randi() % 10
+	# The hour's boss always carries a CARD TOKEN; mission chests sometimes.
+	if big or randf() < 0.15:
+		VaultCards.add_tokens(1, "From the chest. Spend it in the CARD VAULT.")
 	Trees.add_tokens(coins)
 	Juice.rewards.give("tokens", coins, at + Vector2(0, -20))
 	var sub: Array[String] = ["+%d S-COINS" % coins]
