@@ -44,6 +44,13 @@ var _lying := false
 var _bounces := 0
 var _dust_cd := 0.0
 var _life := 0.0
+var _hit_cd := 0.0
+## A living thug hauling this body off the street (WoundGait DRAG).
+var dragger: Node2D
+var drag_t := 0.0
+var _drag_dir := 1.0
+var _smear_cd := 0.0
+var _bowled := {}
 
 
 ## The fall a death gets. zone: HitReact zone (head / gut / low / up / blade
@@ -180,6 +187,7 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	if settled:
+		_drag(delta)
 		return
 	_life += delta
 	if _life > 6.0:
@@ -197,6 +205,7 @@ func _physics_process(delta: float) -> void:
 		gx += vx * delta
 		rotation += w * delta
 		w *= 1.0 - 0.25 * delta
+		_collide(delta)
 		if zc <= _floor() and vz <= 0.0:
 			_impact()
 	elif not _lying:
@@ -224,6 +233,7 @@ func _physics_process(delta: float) -> void:
 		# Flat on the street: skid on friction, dust while it slides.
 		vx = move_toward(vx, 0.0, 760.0 * delta)
 		gx += vx * delta
+		_collide(delta)
 		_dust_cd -= delta
 		if absf(vx) > 70.0 and _dust_cd <= 0.0:
 			_dust_cd = 0.08
@@ -232,6 +242,103 @@ func _physics_process(delta: float) -> void:
 		if absf(vx) < 4.0:
 			_settle()
 	_place()
+
+
+## A body in motion meets the street furniture: lamp posts and parked cars
+## stop it dead and throw it back (a clang, sparks, the post shivers),
+## crates and bins it smashes straight through, the screen edge is a wall,
+## and a body flying fast bowls over the thugs still standing.
+func _collide(delta: float) -> void:
+	_hit_cd -= delta
+	if absf(vx) < 60.0 or not is_inside_tree():
+		return
+	var tree := get_tree()
+	var dir := signf(vx)
+	var reach := T * 0.5 + 6.0
+	if _hit_cd <= 0.0:
+		for g in ["street_lamps", "slam_props"]:
+			for n in tree.get_nodes_in_group(g):
+				if not (n is Node2D):
+					continue
+				var o := n as Node2D
+				var half := float(o.get_meta("half_w", 10.0))
+				var dx := o.global_position.x - gx
+				if absf(o.global_position.y - gy) < 30.0 and absf(dx) < half + reach and signf(dx) == dir and zc < (H if g == "street_lamps" else 50.0):
+					_bang(o, g == "street_lamps")
+					return
+		var cam := get_viewport().get_camera_2d()
+		if cam != null:
+			var halfw := get_viewport_rect().size.x * 0.5 / maxf(0.01, cam.zoom.x)
+			var ex := gx - cam.get_screen_center_position().x
+			if absf(ex) > halfw - 14.0 and signf(ex) == dir:
+				_bang(null, false)
+				return
+	for n in tree.get_nodes_in_group("smashables"):
+		if n is Node2D and (n as Node2D).global_position.distance_to(Vector2(gx, gy)) < 34.0 and not _bowled.has(n.get_instance_id()):
+			_bowled[n.get_instance_id()] = true
+			if n.has_method("take_hit"):
+				n.take_hit("throw", self)
+			vx *= 0.6
+			Juice.hitstop(2)
+	if absf(vx) < 220.0:
+		return
+	for n in tree.get_nodes_in_group("enemies"):
+		if not (n is Punk) or _bowled.has(n.get_instance_id()):
+			continue
+		var q := n as Punk
+		if q.hp <= 0 or q.flung or q is ActBoss:
+			continue
+		if absf(q.global_position.x - gx) < 26.0 and absf(q.global_position.y - gy) < 22.0 and zc < H:
+			_bowled[q.get_instance_id()] = true
+			q.hp = maxi(1, q.hp - 8)
+			q.flung = true
+			q.flung_dir = dir
+			q.flung_t = 0.18
+			q.flung_ground = false
+			vx *= 0.55
+			Juice.hitstop(3)
+			Juice.kick(Vector2(dir, 0.2), 3.0)
+			Juice.shout("BOWLED")
+			Mixer.play_sfx("res://assets/audio/sfx/punch_heavy.ogg", randf_range(0.85, 1.0), -4.0)
+
+
+## Hits something solid (or the screen edge, o = null).
+func _bang(o: Node2D, lamp: bool) -> void:
+	_hit_cd = 0.3
+	var spd := absf(vx)
+	vx = -vx * 0.35
+	w = -w * 0.5 + signf(vx) * 3.0
+	if _lying and spd > 160.0:
+		# Knocked up off the obstacle.
+		vz = spd * 0.35
+		_ground = false
+		_lying = false
+	var at := Vector2(gx - signf(vx) * T * 0.4, gy - zc)
+	Juice.pulse_shake(clampf(spd / 90.0, 2.0, 6.0))
+	Juice.hitstop(3 if spd > 250.0 else 2)
+	Juice.land_puff(Vector2(gx, gy))
+	if o != null:
+		Juice.sparks(at)
+		Mixer.play_sfx("res://assets/audio/sfx/metal_bang.ogg", randf_range(0.85, 1.0), -3.0)
+		var blood := get_tree().get_first_node_in_group("blood_sim")
+		if blood and blood.has_method("burst"):
+			blood.burst(at, gy, -signf(vx), {"n": 8, "speed": 140.0, "spread": 0.8, "rise": 0.3, "size": 1.0})
+		if lamp:
+			# The post shivers from the blow.
+			var tw := o.create_tween()
+			var k := clampf(spd / 400.0, 0.3, 1.0) * 0.06
+			tw.tween_property(o, "rotation", -signf(vx) * k, 0.06)
+			tw.tween_property(o, "rotation", signf(vx) * k * 0.6, 0.1)
+			tw.tween_property(o, "rotation", 0.0, 0.18).set_trans(Tween.TRANS_BACK)
+		elif o.is_in_group("parked_cars"):
+			var tw2 := o.create_tween()
+			tw2.tween_property(o, "position:x", o.position.x - signf(vx) * 2.0, 0.04)
+			tw2.tween_property(o, "position:x", o.position.x, 0.12)
+			Mixer.play_sfx("res://assets/audio/sfx/glass_break.ogg", 1.2, -10.0)
+	else:
+		Mixer.play_sfx("res://assets/audio/sfx/body_fall.ogg", 0.8, -3.0)
+	if spd > 300.0:
+		Juice.shout("WALL SPLAT" if o == null else ("LAMP POST" if lamp else "PARKED"))
 
 
 ## Centre height when resting on the street at the current angle.
@@ -362,6 +469,36 @@ func _settle() -> void:
 	tw.tween_interval(18.0)
 	tw.tween_property(self, "modulate:a", 0.0, 1.5)
 	tw.tween_callback(queue_free)
+
+
+func start_drag(by: Node2D, dir: float) -> void:
+	dragger = by
+	drag_t = randf_range(1.1, 1.6)
+	_drag_dir = dir
+
+
+## Hauled by the feet behind the dragger, smearing blood, then left.
+func _drag(delta: float) -> void:
+	if dragger == null:
+		return
+	if not is_instance_valid(dragger) or float(dragger.get("hp")) <= 0.0 or drag_t <= 0.0:
+		dragger = null
+		drag_t = 0.0
+		_make_room()
+		return
+	drag_t -= delta
+	var want := dragger.global_position.x - _drag_dir * (H * 0.55 + 10.0)
+	gx = lerpf(gx, want, minf(1.0, delta * 6.0))
+	gy = lerpf(gy, dragger.global_position.y, minf(1.0, delta * 4.0))
+	# Feet first toward the dragger.
+	rotation = lerpf(rotation, -_drag_dir * PI * 0.5, minf(1.0, delta * 5.0))
+	_place()
+	_smear_cd -= delta
+	if _smear_cd <= 0.0:
+		_smear_cd = 0.12
+		var blood := get_tree().get_first_node_in_group("blood_sim")
+		if blood and blood.has_method("pool"):
+			blood.pool(Vector2(gx, gy + 2.0), 3.0)
 
 
 ## A body never ends on top of another: it rolls a little up or down the

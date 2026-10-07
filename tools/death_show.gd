@@ -43,7 +43,7 @@ func _process(delta: float) -> bool:
 	if _frame < 6:
 		return false
 	_t += delta
-	var w := 0 if _t < 5.0 else 1
+	var w := 0 if _t < 5.0 else (1 if _t < 10.0 else 2)
 	if w != _wave:
 		_spawn(w)
 	for a: Dictionary in _alive:
@@ -116,6 +116,9 @@ func _label(t: String, at: Vector2, size: Vector2, fs: int, col: Color) -> Label
 
 func _spawn(w: int) -> void:
 	_wave = w
+	if w == 2:
+		_street_wave()
+		return
 	for c in _host.get_children():
 		if c.is_in_group("corpses") or c.has_meta("actor"):
 			c.queue_free()
@@ -164,3 +167,63 @@ func _kill(a: Dictionary) -> void:
 		if m:
 			m.set_shader_parameter("cut_head", 1.0)
 	holder.visible = false
+	if _wave == 2 and style == "stagger":
+		_wall_shots(feet)
+
+
+## Wave 3: the street fights back - a lamp post, a parked car, a thug
+## still standing to bowl over, and rounds that paint the wall.
+func _street_wave() -> void:
+	for c in _host.get_children():
+		if c.is_in_group("corpses") or c.has_meta("actor") or c.is_in_group("wall_marks"):
+			c.queue_free()
+	for l in _labels:
+		(l as Node).queue_free()
+	_labels.clear()
+	_alive.clear()
+	var sb := load("res://src/sprites/sprite_book.gd")
+	# Lamp post on the top row.
+	var lamp := Node2D.new()
+	lamp.position = Vector2(250, 190)
+	lamp.set_meta("actor", true)
+	lamp.add_to_group("street_lamps")
+	lamp.set_meta("half_w", 6.0)
+	var la: AnimatedSprite2D = sb.call("make_anim", "lamp")
+	lamp.add_child(la)
+	lamp.scale = Vector2(2.9, 2.9) * 0.75
+	_host.add_child(lamp)
+	# Parked car further along.
+	var car := Node2D.new()
+	car.position = Vector2(520, 196)
+	car.set_meta("actor", true)
+	car.add_to_group("slam_props")
+	car.add_to_group("parked_cars")
+	car.set_meta("half_w", 60.0)
+	var ca: AnimatedSprite2D = sb.call("make_anim", "sedan")
+	ca.position.y = -24.0
+	car.add_child(ca)
+	car.scale = Vector2(1.6, 1.6)
+	_host.add_child(car)
+	_labels.append(_label("INTO THE LAMP POST", Vector2(100, 202), Vector2(200, 12), 9, Color(0.92, 0.9, 0.85)))
+	_labels.append(_label("INTO A PARKED CAR", Vector2(340, 202), Vector2(200, 12), 9, Color(0.92, 0.9, 0.85)))
+	_labels.append(_label("BLOWN BACK, SKIDS", Vector2(170, 342), Vector2(200, 12), 9, Color(0.92, 0.9, 0.85)))
+	_labels.append(_label("CLEAN THROUGH - THE WALL", Vector2(400, 342), Vector2(220, 12), 9, Color(0.92, 0.9, 0.85)))
+	var plan := [[Vector2(140, 190), "knockback", "punk", 10.4], [Vector2(380, 190), "knockback", "cop", 10.8], [Vector2(150, 330), "blown", "punk", 11.2], [Vector2(470, 330), "stagger", "cop", 11.6]]
+	for pl in plan:
+		var holder := Node2D.new()
+		holder.position = pl[0]
+		holder.set_meta("actor", true)
+		_host.add_child(holder)
+		var anim: AnimatedSprite2D = sb.call("make_anim", str(pl[2]))
+		sb.call("grow", anim, float(sb.get("ENEMY_SCALE")) * 0.75)
+		anim.flip_h = true
+		holder.add_child(anim)
+		if anim.sprite_frames.has_animation("idle"):
+			anim.play("idle")
+		_alive.append({"holder": holder, "anim": anim, "style": str(pl[1]), "at": float(pl[3]), "dead": false, "feet": pl[0]})
+
+
+func _wall_shots(feet: Vector2) -> void:
+	var wm := load("res://src/juice/wall_mark.gd")
+	for i in 3:
+		wm.call("mark", _host, Vector2(feet.x + 40.0 + float(i) * 14.0, feet.y - 50.0 + float(i) * 9.0), 1.0, true)

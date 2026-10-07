@@ -849,7 +849,7 @@ func smash_burst(at: Vector2, kind: String) -> void:
 
 
 ## The last thug of a fight drops in slow motion for a moment.
-func last_kill() -> void:
+func last_kill(body: Node2D = null) -> void:
 	if get_tree().get_first_node_in_group("chase_crash"):
 		return
 	# Let the killing blow's own hitstop finish first.
@@ -861,6 +861,12 @@ func last_kill() -> void:
 	Engine.time_scale = 0.25
 	pulse_shake(6.0)
 	await get_tree().create_timer(0.5, true, false, true).timeout
+	# The last body of the fight: stay slow until it has hit the street
+	# (the camera follows it there), at most another second.
+	var held := 0.0
+	while body != null and is_instance_valid(body) and held < 1.0 and not bool(body.get("settled")) and not bool(body.get("_lying")):
+		held += get_process_delta_time() / maxf(Engine.time_scale, 0.01)
+		await get_tree().process_frame
 	_hitstop_depth = maxi(0, _hitstop_depth - 1)
 	if _hitstop_depth == 0:
 		Engine.time_scale = _base_scale

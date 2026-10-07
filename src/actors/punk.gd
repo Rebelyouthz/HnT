@@ -305,8 +305,13 @@ func _tick_sprite() -> void:
 		clip = _swing_clip if _swing_clip != "" else "attack"
 	elif recover > 0.0:
 		clip = "idle"
-	elif absf(velocity.x) > 8.0:
+	elif absf(velocity.x) > 8.0 or absf(velocity.y) > 18.0:
 		clip = "walk"
+		# Mostly up or down the lane: the back or front walk (punk, cop).
+		if absf(velocity.y) > 18.0 and absf(velocity.y) > absf(velocity.x) * 0.55:
+			var lane := "walk_up" if velocity.y < 0.0 else "walk_down"
+			if _anim.sprite_frames.has_animation(lane):
+				clip = lane
 	if not _anim.sprite_frames.has_animation(clip):
 		clip = "attack" if clip.begins_with("punch") or clip == "kick_low" else clip
 		if not _anim.sprite_frames.has_animation(clip):
@@ -315,7 +320,9 @@ func _tick_sprite() -> void:
 		_anim.play(clip)
 		_anim.speed_scale = _swing_rate if clip == _swing_clip else 1.0
 	if clip == "walk":
-		_anim.speed_scale = SpriteBook.stride_rate(_anim, "walk", velocity.x)
+		_anim.speed_scale = SpriteBook.stride_rate(_anim, "walk", maxf(absf(velocity.x), absf(velocity.y) * 1.4))
+	elif clip == "walk_up" or clip == "walk_down":
+		_anim.speed_scale = SpriteBook.stride_rate(_anim, clip, velocity.length() * 1.4)
 
 
 var _bowled: Dictionary = {}
@@ -481,40 +488,45 @@ func _physics_process(delta: float) -> void:
 		visual.scale.x = float(facing)
 		# CROWD: only ticket holders go in; the rest hold a ring round the
 		# hero (front, behind, up and down the lane) and wait their turn.
-		var crowd := CrowdAI.role(self, t)
-		var lane_dy := t.global_position.y - global_position.y
-		if crowd == "attack" and home == "street":
-			vy = clampf(lane_dy / 14.0, -1.0, 1.0) * speed * 0.55
-		if crowd == "wait" and absf(d) < CrowdAI.RING + 180.0:
-			var to := CrowdAI.spot(self, t) - global_position
-			velocity.x = clampf(to.x / 24.0, -1.0, 1.0) * speed * 0.7
-			vy = clampf(to.y / 16.0, -1.0, 1.0) * speed * 0.45
-		elif absf(d) < Punk.ENGAGE and (home != "street" or absf(lane_dy) < 30.0):
-			if vehicle != "" and str(kit.get("attack", "")) == "ram":
-				_ram_hit(t as Fighter)
+		# Hurt thugs scoot away or drag the dead; the rest fight.
+		if not WoundGait.override(self, t, delta):
+			var crowd := CrowdAI.role(self, t)
+			var lane_dy := t.global_position.y - global_position.y
+			if crowd == "attack" and home == "street":
+				vy = clampf(lane_dy / 14.0, -1.0, 1.0) * speed * 0.55
+			if crowd == "wait" and absf(d) < CrowdAI.RING + 180.0:
+				var to := CrowdAI.spot(self, t) - global_position
+				velocity.x = clampf(to.x / 24.0, -1.0, 1.0) * speed * 0.7
+				vy = clampf(to.y / 16.0, -1.0, 1.0) * speed * 0.45
+			elif absf(d) < Punk.ENGAGE and (home != "street" or absf(lane_dy) < 30.0):
+				if vehicle != "" and str(kit.get("attack", "")) == "ram":
+					_ram_hit(t as Fighter)
+					velocity.x = 0
+				elif _maybe_guard(t as Fighter):
+					velocity.x = 0
+				else:
+					_start_telegraph()
+					velocity.x = 0
+			elif str(kit.get("attack", "")) == "gun" and absf(d) > 90.0 and absf(d) < 300.0 and randf() < 0.016:
+				_shuriken()
 				velocity.x = 0
-			elif _maybe_guard(t as Fighter):
+			elif str(kit.get("attack", "")) == "grenade" and absf(d) > 80.0 and absf(d) < 320.0 and randf() < 0.012:
+				_lob()
+				velocity.x = 0
+			elif title == "Roof Runner" and absf(d) > 90.0 and absf(d) < 260.0 and randf() < 0.012:
+				_shuriken()
+				velocity.x = 0
+			elif title in ["Invoice Clerk", "Coping Imp", "Badge Broker"] and absf(d) > 90.0 and absf(d) < 280.0 and randf() < 0.014:
+				_shuriken()
+				velocity.x = 0
+			elif absf(d) < Punk.ENGAGE:
+				# In reach but not in the hero's lane yet: line up first.
 				velocity.x = 0
 			else:
-				_start_telegraph()
-				velocity.x = 0
-		elif str(kit.get("attack", "")) == "gun" and absf(d) > 90.0 and absf(d) < 300.0 and randf() < 0.016:
-			_shuriken()
-			velocity.x = 0
-		elif str(kit.get("attack", "")) == "grenade" and absf(d) > 80.0 and absf(d) < 320.0 and randf() < 0.012:
-			_lob()
-			velocity.x = 0
-		elif title == "Roof Runner" and absf(d) > 90.0 and absf(d) < 260.0 and randf() < 0.012:
-			_shuriken()
-			velocity.x = 0
-		elif title in ["Invoice Clerk", "Coping Imp", "Badge Broker"] and absf(d) > 90.0 and absf(d) < 280.0 and randf() < 0.014:
-			_shuriken()
-			velocity.x = 0
-		elif absf(d) < Punk.ENGAGE:
-			# In reach but not in the hero's lane yet: line up first.
-			velocity.x = 0
-		else:
-			velocity.x = clampf(d, -1.0, 1.0) * speed
+				velocity.x = clampf(d, -1.0, 1.0) * speed
+		var gait := WoundGait.speed_mul(self)
+		velocity.x *= gait
+		vy *= gait
 	# DETOUR: walked into a crate or a car - step up or down the lane and go
 	# round it instead of piling up behind it.
 	if _detour_t > 0.0:
@@ -526,6 +538,8 @@ func _physics_process(delta: float) -> void:
 	if home == "street" and absf(want_x) > 10.0 and is_on_wall() and _detour_t <= 0.0:
 		_detour_t = 0.55
 		_detour_dir = -1.0 if global_position.y > 475.0 else 1.0
+	WoundGait.underfoot(self, delta)
+	WoundGait.pose(self, delta)
 	_lane()
 	_canal()
 	_bob += delta * 4.8
@@ -1142,6 +1156,7 @@ func _die(kind: String, from: Node) -> void:
 	if from is Node2D and (from as Node2D).global_position.x != global_position.x:
 		dir = signf(global_position.x - (from as Node2D).global_position.x)
 	# Shot dead: the gun death (headshot, decap, leg off, through the chest).
+	var last_body: Node2D = null
 	var gunned: bool = from is Round and not _shot.is_empty() and GunGore.death(self, _shot, dir)
 	# Weapon kills: the bat knocks them out of the park, the sledge
 	# flattens, the machete can take the head.
@@ -1210,9 +1225,8 @@ func _die(kind: String, from: Node) -> void:
 	# Every kill lands with a beat; the last body of a fight gets the slow
 	# motion moment.
 	Juice.kick(Vector2(dir, 0.3), 4.0)
-	if get_tree().get_nodes_in_group("enemies").size() <= 1 and get_tree().get_first_node_in_group("horde") == null:
-		Juice.last_kill()
-	else:
+	var last_one := get_tree().get_nodes_in_group("enemies").size() <= 1 and get_tree().get_first_node_in_group("horde") == null
+	if not last_one:
 		Juice.hitstop(3)
 	var blood := get_tree().get_first_node_in_group("blood_sim")
 	if blood and blood.has_method("pump") and _last_zone != "low":
@@ -1222,9 +1236,16 @@ func _die(kind: String, from: Node) -> void:
 	elif _anim != null and not FamilyProfile.less_gore():
 		var kclip := str((from as Fighter).get("_strike_clip")) if from is Fighter else ""
 		var style := DeathFall.pick(_last_zone, kind, kclip, held, HitReact.power_of(kind) if not _overkill else 1.0, {})
-		HitReact.corpse(get_parent(), _anim, global_position, _last_zone, dir, facing, style)
+		last_body = HitReact.corpse(get_parent(), _anim, global_position, _last_zone, dir, facing, style)
 	elif kind != "light" and kind != "snap":
 		StreetRagdoll.burst(get_parent(), global_position, dir, _base_mod)
+	if last_body == null and gunned and HitReact.last_made != null and is_instance_valid(HitReact.last_made):
+		last_body = HitReact.last_made
+	if last_one:
+		# The fight's last body: slow motion, the camera follows it down.
+		if last_body is DeathFall:
+			CouchCamera.follow_body(get_tree(), last_body, 1.3)
+		Juice.last_kill(last_body if last_body is DeathFall else null)
 	var rs_heat := get_tree().get_first_node_in_group("run_state")
 	InvoiceHeat.bump(rs_heat, 2 if cop else 1)
 	if cop:

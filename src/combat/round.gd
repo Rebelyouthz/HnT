@@ -112,6 +112,8 @@ func _physics_process(delta: float) -> void:
 			# and the wet street throws up a splash where it comes down.
 			if round_kind == "bullet" or randf() < 0.25:
 				GunFx.ricochet(get_parent(), global_position, int(signf(vel.x)))
+			if round_kind == "bullet" and randf() < 0.5:
+				WallMark.mark(get_parent(), global_position, signf(vel.x), false)
 			if randf() < (0.8 if round_kind == "bullet" else 0.3):
 				GunFx.splash(get_parent(), Vector2(global_position.x + randf_range(-10.0, 10.0), lane_y + randf_range(-4.0, 4.0)))
 		queue_free()
@@ -145,6 +147,9 @@ func _test(a: Vector2, b: Vector2) -> bool:
 			continue
 		if pierce:
 			continue
+		if went_through and round_kind != "orb":
+			# What came out the back paints the wall behind him.
+			WallMark.mark(get_parent(), Vector2(x + signf(vel.x) * randf_range(26.0, 60.0), global_position.y + randf_range(-5.0, 5.0)), signf(vel.x))
 		if went_through and dmg >= 3:
 			# Clean through: out the far side, slower and weaker, and on to
 			# whoever stands behind.

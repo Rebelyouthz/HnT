@@ -55,7 +55,7 @@ static func _refresh(tree: SceneTree) -> void:
 		if not (n is Punk):
 			continue
 		var e := n as Punk
-		if e.hp <= 0 or e is ActBoss or e.home != "street":
+		if e.hp <= 0 or e is ActBoss or e.home != "street" or e.has_meta("scoot") or e.has_meta("dragging"):
 			continue
 		var best: Node2D = null
 		var bd := 99999.0

@@ -85,7 +85,7 @@ func flash(title: String, sub: String, accent: Color, full: bool) -> void:
 	tw.tween_property(name_l, "position:x", 380.0, 0.32)
 	tw.tween_property(sub_l, "position:x", 384.0, 0.36)
 	tw.chain().tween_interval(1.35)
-	tw.chain().tween_property(self, "modulate:a", 0.0, 0.28)
+	tw.chain().tween_property(ui, "modulate:a", 0.0, 0.28)
 	tw.finished.connect(queue_free)
 	Juice.unlock_logo(title.to_upper(), sub)
 

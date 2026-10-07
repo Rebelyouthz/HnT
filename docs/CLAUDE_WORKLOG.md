@@ -34,7 +34,36 @@ The rest is in English, like the code. Newest work first. Each block says
 
 ---
 
-## 0p. Real falls: DeathFall physics, bullet exit wounds, hero falls, declutter (latest)
+## 0q. The street fights back, hurt gaits, last-kill cam, new walk angles (latest)
+
+- DeathFall `_collide`: moving bodies stop dead on lamp posts
+  (`street_lamps`, the post shivers) and parked cars (`slam_props`, the car
+  rocks), bounce back (knocked up off it when skidding fast), smash through
+  `smashables`, treat the screen edge as a wall (WALL SPLAT) and bowl over
+  standing thugs when flying fast (`flung`, BOWLED).
+- `src/actors/wound_gait.gd` (WoundGait): hurt thugs (<35% HP) LIMP (leg
+  wounds: 0.55 speed, dip every step), CLUTCH (gut/blade/bullet: folded
+  over, dripping), DAZED (sway); at FINISH health 40% SCOOT back on their
+  backside begging (no attacks, no crowd ticket). Thugs walking over a
+  settled body may TRIP (45%). Waiting thugs sometimes DRAG a body off the
+  street (DeathFall.start_drag/_drag, blood smear). Poses go on `_anim`
+  (rotation/position), so `visual` hit reactions still play. Note: negative
+  `_anim.rotation` leans the art toward its front.
+- WallMark (`src/juice/wall_mark.gd`): a round that exits paints the wall
+  behind (hole + blood fan + runs); missed bullets leave bare holes. Drawn
+  z 0 just before the first actor (over facades, under people), 30 max.
+- Last kill: `Juice.last_kill(body)` stays slow until the body lands (max
+  +1 s) and `CouchCamera.follow_body` leans the frame after it (gun kills
+  via `HitReact.last_made`).
+- HF Wan is back: `father/walk_up`, `punk/walk_up|walk_down`,
+  `cop/walk_up|walk_down` (start frames on green from idle frame 0, sliced
+  `--start 1.0..1.2 --loop --frames 12 --fps 12`). All up/down clips
+  rescaled to the side walk's figure height around the feet
+  (`/tmp` script logic: median bbox height ratio; son and father were ~8%
+  and ~17% off). Punk picks `walk_up/down` like the heroes.
+- `tools/death_show.gd` wave 3 (lamp, car, wall), `tools/wound_show.gd`.
+
+## 0p. Real falls: DeathFall physics, bullet exit wounds, hero falls, declutter
 
 The owner: every kill looked the same; bullets should make holes, some go
 through and bleed out the far side, some stay in; the heroes too; bodies

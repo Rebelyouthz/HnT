@@ -127,11 +127,16 @@ static func react(visual: Node2D, facing: int, zone: String, dir: float, power: 
 ## Dead: a still of the last frame becomes a body that falls the way the
 ## blow says, lies on the street and bleeds out. `art` is the sprite (its
 ## wound material is kept), `feet` the actor position, dir the blow.
+## The body corpse() made last (GunGore deaths hand it to the kill cam).
+static var last_made: Node2D
+
+
 static func corpse(host: Node, art: AnimatedSprite2D, feet: Vector2, zone: String, dir: float, facing: int, style: String = "") -> Node2D:
 	if host == null or art == null or art.sprite_frames == null:
 		return null
 	if style != "" and style != "drawn" and style != "crush" and DeathFall.STYLES.has(style):
-		return _fall(host, art, feet, style, dir, facing)
+		last_made = _fall(host, art, feet, style, dir, facing)
+		return last_made
 	if style == "drawn":
 		zone = "head"
 	var body := Node2D.new()

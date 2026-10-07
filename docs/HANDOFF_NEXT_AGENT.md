@@ -74,7 +74,15 @@ and secrets with new weapons, moves, parts, suit parts, throwables and cards;
 shoes, necklace and ring in the paperdoll; camp/dojo unlocks in a planned
 order with guided first use and speech bubbles; then polish twice.
 
-### Latest (see worklog 0p)
+### Latest (see worklog 0q)
+
+Owner said "continue with everything on the to-do list": bodies vs lamps /
+cars / walls / crates / standing thugs, tripping and dragging, wall marks,
+last-kill cam, hurt gaits (limp/clutch/dazed/scoot) and the missing walk
+angles (father up, punk + cop up/down) are in. Next ideas: angles for the
+other enemy types (repo_goon, bailiff, mohawk...), diagonal clips.
+
+### Before that (see worklog 0p)
 
 Owner asked for every suit drawn in a parkour film (done:
 `tools/suit_show.gd`, screens/round2/dräkter_parkour.*), varied deaths by

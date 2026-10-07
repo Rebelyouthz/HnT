@@ -42,6 +42,9 @@ hit.**
   tweened corpses; add a style to DeathFall instead.
 - Rounds either pass through (exit spray forward, torn exit hole, next body)
   or stay in (back-spurt, drip) - `Round._through_chance`.
+- Bodies collide with street furniture (DeathFall `_collide`); hurt thugs
+  carry their wound (WoundGait) - keep both when adding enemies or props
+  (give new props `half_w` meta + `slam_props`/`street_lamps` group).
 - Every kill: short freeze + shove. Last enemy of a fight: `Juice.last_kill()`
   slow motion (never in the coping-hour horde).
 

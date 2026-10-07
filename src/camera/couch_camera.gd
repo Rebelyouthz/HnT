@@ -16,6 +16,9 @@ var _pz := 0.0
 var _pz_t := 0.0
 var _pz_len := 0.0
 var _pz_at := Vector2.ZERO
+## A body the frame drifts after (the last kill of a fight) and for how long.
+var _body: Node2D
+var _body_t := 0.0
 
 
 static func punch(tree: SceneTree, amount: float, secs: float, at: Vector2) -> void:
@@ -30,6 +33,16 @@ static func punch(tree: SceneTree, amount: float, secs: float, at: Vector2) -> v
 	c._pz_t = secs
 	c._pz_len = maxf(0.05, secs)
 	c._pz_at = at
+
+
+## The last kill: the frame leans after the falling body until it lands.
+static func follow_body(tree: SceneTree, body: Node2D, secs: float) -> void:
+	var c := tree.get_first_node_in_group("couch_cam") as CouchCamera if tree else null
+	if c == null or body == null:
+		return
+	c._body = body
+	c._body_t = secs
+	punch(tree, 0.12, secs, body.global_position)
 
 
 func _punch_env(delta: float) -> float:
@@ -98,6 +111,16 @@ func _physics_process(delta: float) -> void:
 	desired.y = clampf(desired.y - 30.0, 190.0, 425.0)
 	if env > 0.0:
 		desired = desired.lerp(_pz_at, 0.35 * env)
+	if _body_t > 0.0:
+		_body_t -= delta
+		if is_instance_valid(_body):
+			_pz_at = _body.global_position
+			var bp := _body.global_position + Vector2(0, -20)
+			bp.x = clampf(bp.x, limit_left + half.x, limit_right - half.x)
+			bp.y = clampf(bp.y, 190.0, 425.0)
+			desired = desired.lerp(bp, 0.55 * clampf(_body_t * 2.0, 0.0, 1.0))
+		else:
+			_body_t = 0.0
 	# Vertical lerp ~0.12 toward the pair so roofs and street share one frame.
 	var y_t := 1.0 - exp(-7.5 * delta)
 	global_position.x = roundf(lerpf(global_position.x, desired.x, follow))
