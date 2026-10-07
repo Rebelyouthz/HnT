@@ -55,6 +55,9 @@ static func get_run(tree: SceneTree) -> SurviveRun:
 
 func _ready() -> void:
 	add_to_group("survive_run")
+	# The weekly hour: the same street for everyone all week.
+	if App.weekly:
+		seed(WeeklyBook.seed_n())
 	process_mode = Node.PROCESS_MODE_PAUSABLE
 	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/survive.json"))
 	book = parsed if parsed is Dictionary else {}
@@ -596,5 +599,7 @@ func award_tokens(won: bool) -> int:
 	if missions and is_instance_valid(missions):
 		st.merge(missions.stats())
 	SurvChallenges.check(st)
+	if App.weekly:
+		Juice.toast("reward", "WEEKLY GAUNTLET", WeeklyBook.record(int(time_alive), kills, won))
 	FamilyProfile.save()
 	return got

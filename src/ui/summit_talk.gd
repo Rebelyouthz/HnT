@@ -166,6 +166,7 @@ func _choice_btn(label: String, id: String) -> void:
 	var b := UiKit.button(label, Vector2(180, 44))
 	if id == "yes":
 		b.add_theme_stylebox_override("normal", UiKit.panel(Palette.READY, Palette.LEMON))
+		UiKit.dark_text(b)
 	elif id == "deflect":
 		b.add_theme_stylebox_override("normal", UiKit.panel(Palette.PANEL_2, Palette.MUTED))
 	b.pressed.connect(func() -> void:

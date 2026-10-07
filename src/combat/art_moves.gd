@@ -702,6 +702,7 @@ func _bring_partner() -> void:
 	SpriteBook.grow(_p_anim, SpriteBook.FIGHTER_SCALE * (SpriteBook.FATHER_K if _other_role() == "father" else 1.0))
 	_phantom.add_child(_p_anim)
 	Suits.dress(_p_anim, _other_role())
+	Palettes.apply(_p_anim, _other_role())
 	_p_base_y = _p_anim.position.y
 	_partner = _phantom
 	_p_from = _phantom.global_position

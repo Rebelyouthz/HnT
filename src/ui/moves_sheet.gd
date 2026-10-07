@@ -46,6 +46,7 @@ func _paint() -> void:
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", 6)
 	var t := UiKit.title("MOVES", 30, Palette.BRICK)
+	UiKit.title_icon(t, "head_moves")
 	t.custom_minimum_size = Vector2(150, 0)
 	head.add_child(t)
 	for r in ["son", "father"]:

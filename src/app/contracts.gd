@@ -6,17 +6,17 @@ extends RefCounted
 ## one and claim its pay (gold, gems, tokens or flow).
 
 const POOL := [
-	{"id": "kills", "key": "kills_total", "n": 40, "title": "FILE 40 THUGS", "pay": {"gold": 80}},
-	{"id": "tricks", "key": "tricks", "n": 15, "title": "LAND 15 TRICKS", "pay": {"flow": 30}},
-	{"id": "smash", "key": "smash_kills", "n": 6, "title": "6 SMASH KILLS", "pay": {"gold": 70}},
-	{"id": "parry", "key": "parries", "n": 8, "title": "8 PARRIES", "pay": {"gems": 1}},
-	{"id": "shards", "key": "shards_found", "n": 6, "title": "PICK UP 6 SHARDS", "pay": {"gold": 60}},
-	{"id": "bounce", "key": "bounces", "n": 5, "title": "5 WALL BOUNCES", "pay": {"tokens": 25}},
-	{"id": "events", "key": "street_events", "n": 2, "title": "LIVE THROUGH 2 STREET EVENTS", "pay": {"gems": 1}},
-	{"id": "hours", "key": "survive_clears", "n": 1, "title": "HOLD ONE COPING HOUR", "pay": {"tokens": 40}},
-	{"id": "refund", "key": "refunds", "n": 1, "title": "CATCH THE TAX REFUND", "pay": {"gold": 120}},
-	{"id": "combo", "key": "combo_rewards", "n": 2, "title": "HIT 2 COMBO MILESTONES", "pay": {"flow": 25}},
-	{"id": "bless", "key": "blessings", "n": 2, "title": "BUY 2 BLESSINGS", "pay": {"gold": 50}},
+	{"id": "kills", "key": "kills_total", "n": 40, "title": "FILE 40 THUGS", "pay": {"gold": 80}, "icon": "head_codex"},
+	{"id": "tricks", "key": "tricks", "n": 15, "title": "LAND 15 TRICKS", "pay": {"flow": 30}, "icon": "cur_flow"},
+	{"id": "smash", "key": "smash_kills", "n": 6, "title": "6 SMASH KILLS", "pay": {"gold": 70}, "icon": "gear_box"},
+	{"id": "parry", "key": "parries", "n": 8, "title": "8 PARRIES", "pay": {"gems": 1}, "icon": "node_iron"},
+	{"id": "shards", "key": "shards_found", "n": 6, "title": "PICK UP 6 SHARDS", "pay": {"gold": 60}, "icon": "meta_shard"},
+	{"id": "bounce", "key": "bounces", "n": 5, "title": "5 WALL BOUNCES", "pay": {"tokens": 25}, "icon": "node_wall"},
+	{"id": "events", "key": "street_events", "n": 2, "title": "LIVE THROUGH 2 STREET EVENTS", "pay": {"gems": 1}, "icon": "cur_calendar"},
+	{"id": "hours", "key": "survive_clears", "n": 1, "title": "HOLD ONE COPING HOUR", "pay": {"tokens": 40}, "icon": "cur_wheel"},
+	{"id": "refund", "key": "refunds", "n": 1, "title": "CATCH THE TAX REFUND", "pay": {"gold": 120}, "icon": "cur_gold"},
+	{"id": "combo", "key": "combo_rewards", "n": 2, "title": "HIT 2 COMBO MILESTONES", "pay": {"flow": 25}, "icon": "node_combo"},
+	{"id": "bless", "key": "blessings", "n": 2, "title": "BUY 2 BLESSINGS", "pay": {"gold": 50}, "icon": "cur_gem"},
 ]
 
 
@@ -83,6 +83,45 @@ static func claim(id: String) -> bool:
 			FamilyProfile.save()
 			return true
 	return false
+
+
+## All three done and claimed today: a bonus crate (once a day), and the
+## streak of days in a row that ended that way.
+static func bonus_ready() -> bool:
+	var st := _state()
+	return (st["claimed"] as Array).size() >= 3 and not bool(st.get("bonus", false))
+
+
+static func claim_bonus() -> Dictionary:
+	if not bonus_ready():
+		return {}
+	var st := _state()
+	st["bonus"] = true
+	var last := str(FamilyProfile.data.get("contracts_streak_day", ""))
+	var yday := Time.get_date_string_from_unix_time(int(Time.get_unix_time_from_system()) - 86400)
+	var streak := int(FamilyProfile.data.get("contracts_streak", 0)) + 1 if last == yday else 1
+	FamilyProfile.data["contracts_streak"] = streak
+	FamilyProfile.data["contracts_streak_day"] = today()
+	var pay := {"gold": 60 + 20 * mini(streak, 7), "gems": 1 + (1 if streak % 7 == 0 else 0)}
+	FamilyProfile.add_gold(int(pay["gold"]))
+	FamilyProfile.add_gems(int(pay["gems"]))
+	FamilyProfile.save()
+	pay["streak"] = streak
+	return pay
+
+
+static func streak() -> int:
+	return int(FamilyProfile.data.get("contracts_streak", 0))
+
+
+## Seconds until the jobs change at midnight.
+static func secs_left() -> int:
+	var t := Time.get_time_dict_from_system()
+	return 86400 - (int(t["hour"]) * 3600 + int(t["minute"]) * 60 + int(t["second"]))
+
+
+static func pay_icon(cur: String) -> String:
+	return {"gold": "cur_gold", "gems": "cur_gem", "tokens": "cur_scoin", "flow": "cur_flow"}.get(cur, "cur_gold")
 
 
 static func pay_text(pay: Dictionary) -> String:

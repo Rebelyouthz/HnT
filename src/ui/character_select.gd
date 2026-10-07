@@ -181,6 +181,7 @@ func _build_go() -> void:
 	_go.add_theme_font_override("font", UiKit.title_font())
 	_go.add_theme_font_size_override("font_size", 26)
 	_go.add_theme_stylebox_override("normal", UiKit.panel(Palette.READY, Palette.LEMON))
+	UiKit.dark_text(_go)
 	UiKit.pulse_ready(_go)
 	_go.pressed.connect(_start)
 	add_child(_go)

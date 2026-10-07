@@ -505,3 +505,47 @@ static func portrait(tex: Texture2D, size: Vector2 = Vector2(48, 48)) -> Texture
 	if tex:
 		pic.texture = tex
 	return pic
+
+
+## Dark, readable text on a bright (READY green / gold) button.
+static func dark_text(b: Control) -> void:
+	var c := Color(0.05, 0.12, 0.06)
+	for k in ["font_color", "font_hover_color", "font_focus_color", "font_pressed_color", "font_hover_pressed_color"]:
+		b.add_theme_color_override(k, c)
+	b.add_theme_color_override("font_outline_color", Color(0.75, 1.0, 0.75, 0.5))
+
+
+## A header Label with its pixel icon in front (room made with spaces, so
+## no layout has to change).
+static func title_icon(lab: Label, icon_name: String) -> Label:
+	var tex := IconBook.tex(icon_name)
+	if tex == null or lab == null:
+		return lab
+	var fs := lab.get_theme_font_size("font_size")
+	var font := lab.get_theme_font("font")
+	var h := float(fs) * 1.15
+	var sw := maxf(1.0, font.get_string_size(" ", HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x) if font else float(fs) * 0.3
+	var n := int(ceil((h + float(fs) * 0.35) / sw))
+	lab.text = " ".repeat(n) + lab.text
+	var tr := TextureRect.new()
+	tr.texture = tex
+	tr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	tr.size = Vector2(h, h)
+	tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lab.add_child(tr)
+	# Keep it at the start of the text, vertically centred, as the label resizes.
+	var place := func() -> void:
+		if not is_instance_valid(tr):
+			return
+		var tw := font.get_string_size(lab.text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x if font else lab.size.x
+		var x0 := 0.0
+		if lab.horizontal_alignment == HORIZONTAL_ALIGNMENT_CENTER:
+			x0 = (lab.size.x - tw) * 0.5
+		elif lab.horizontal_alignment == HORIZONTAL_ALIGNMENT_RIGHT:
+			x0 = lab.size.x - tw
+		tr.position = Vector2(x0, (lab.size.y - h) * 0.5)
+	lab.resized.connect(place)
+	place.call_deferred()
+	return lab

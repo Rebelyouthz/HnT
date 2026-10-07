@@ -47,6 +47,7 @@ func _ready() -> void:
 	head.add_theme_constant_override("separation", 18)
 	col.add_child(head)
 	var t := UiKit.title("OPTIONS", 40, UiKit.GOLD)
+	UiKit.title_icon(t, "head_options")
 	head.add_child(t)
 	var tabs := HBoxContainer.new()
 	tabs.add_theme_constant_override("separation", 8)

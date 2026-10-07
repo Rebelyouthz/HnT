@@ -23,6 +23,7 @@ func _paint(keep: String = "") -> void:
 	for c in _root.get_children():
 		c.queue_free()
 	var title := UiKit.title("HEROES", 44, Palette.EDGE)
+	UiKit.title_icon(title, "head_heroes")
 	title.position = Vector2(20, 0)
 	_root.add_child(title)
 	# MOVES: the fighting-style workshop (loadout, library, combo lab, styles).

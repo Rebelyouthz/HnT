@@ -155,6 +155,7 @@ func _chest_btn(kind: String, chest: Dictionary, value: int) -> Button:
 		b.text = "CHEST %d" % at
 	else:
 		b.add_theme_stylebox_override("normal", UiKit.panel(Palette.READY, Palette.LEMON))
+		UiKit.dark_text(b)
 		UiKit.pulse_ready(b)
 	b.pressed.connect(func() -> void:
 		if already or value < at:

@@ -303,6 +303,9 @@ func _process(_delta: float) -> bool:
 		current_scene.call("_open_rewards")
 	if _tab == "codex" and _n == 40 and current_scene != null and current_scene.has_method("_open_codex"):
 		current_scene.call("_open_codex")
+	# hub:<sheet> for any hub sheet with an _open_<sheet> method (stats, jobs, log, profile, settings, intake).
+	if _n == 40 and current_scene != null and not (_tab in ["codex", "rewards", "armory"]) and current_scene.has_method("_open_" + _tab):
+		current_scene.call("_open_" + _tab)
 	if _tab.begins_with("ui_") and _n == 80 and current_scene != null:
 		match _tab.substr(3):
 			"results":

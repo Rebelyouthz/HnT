@@ -37,6 +37,7 @@ func _paint(keep := "") -> void:
 	var head := HBoxContainer.new()
 	var t := UiKit.title("NIGHT ARTIFACTS" if mode == "artifacts" else "DAILY CONTRACTS", 30, col_a)
 	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	UiKit.title_icon(t, "cur_power" if mode == "artifacts" else "head_jobs")
 	head.add_child(t)
 	var close := UiKit.button("CLOSE", Vector2(120, 38))
 	close.pressed.connect(func() -> void:
@@ -77,10 +78,13 @@ func _paint(keep := "") -> void:
 			if focus == null or id == keep:
 				focus = b
 	else:
-		sub.text = "Three jobs a day, new ones at midnight. Progress counts from the start of the day."
+		var left := Contracts.secs_left()
+		sub.text = "Three jobs a day. New ones in %dh %02dm. Progress counts from the start of the day.   STREAK %d" % [left / 3600, (left % 3600) / 60, Contracts.streak()]
 		for r: Dictionary in Contracts.list():
 			var line := HBoxContainer.new()
 			line.add_theme_constant_override("separation", 12)
+			var jic := UiKit.portrait(IconBook.tex(str(r.get("icon", "head_jobs"))), Vector2(52, 52))
+			line.add_child(jic)
 			var v := VBoxContainer.new()
 			v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			var nm := Label.new()
@@ -90,10 +94,19 @@ func _paint(keep := "") -> void:
 			v.add_child(nm)
 			var bar := UiKit.glow_bar(float(r["have"]) / float(r["n"]), UiKit.GOLD, Vector2(500, 10))
 			v.add_child(bar)
+			var prow := HBoxContainer.new()
+			prow.add_theme_constant_override("separation", 6)
 			var pl := Label.new()
-			pl.text = "%d / %d   ·   PAY %s" % [int(r["have"]), int(r["n"]), Contracts.pay_text(r["pay"])]
+			pl.text = "%d / %d   ·   PAY" % [int(r["have"]), int(r["n"])]
 			UiKit.apply_label(pl, 12, Palette.MUTED)
-			v.add_child(pl)
+			prow.add_child(pl)
+			for cur in (r["pay"] as Dictionary):
+				prow.add_child(UiKit.portrait(IconBook.tex(Contracts.pay_icon(str(cur))), Vector2(18, 18)))
+				var pv := Label.new()
+				pv.text = "%d %s" % [int(r["pay"][cur]), str(cur).to_upper()]
+				UiKit.apply_label(pv, 12, UiKit.GOLD)
+				prow.add_child(pv)
+			v.add_child(prow)
 			line.add_child(v)
 			var done := int(r["have"]) >= int(r["n"])
 			var b := UiKit.button("CLAIMED" if bool(r["claimed"]) else ("CLAIM" if done else "WORKING"), Vector2(150, 44))
@@ -110,6 +123,35 @@ func _paint(keep := "") -> void:
 			col.add_child(line)
 			if focus == null and not b.disabled:
 				focus = b
+		# All three: the bonus crate, bigger every day of the streak.
+		var sep := HSeparator.new()
+		col.add_child(sep)
+		var brow := HBoxContainer.new()
+		brow.add_theme_constant_override("separation", 12)
+		brow.add_child(UiKit.portrait(IconBook.tex("cur_chest"), Vector2(64, 64)))
+		var bl := Label.new()
+		var st := mini(Contracts.streak() + 1, 7)
+		bl.text = "ALL THREE  ·  BONUS CRATE\n+%d GOLD  +%d GEM  ·  grows each day in a row (day 7: 2 gems)" % [60 + 20 * st, 1]
+		bl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		UiKit.apply_label(bl, 14, UiKit.GOLD)
+		brow.add_child(bl)
+		var bb := UiKit.button("OPEN" if Contracts.bonus_ready() else "LOCKED", Vector2(150, 44))
+		bb.disabled = not Contracts.bonus_ready()
+		if Contracts.bonus_ready():
+			bb.add_theme_stylebox_override("normal", UiKit.panel(Palette.READY, Palette.LEMON))
+			UiKit.dark_text(bb)
+			UiKit.pulse_ready(bb)
+			focus = bb
+		bb.pressed.connect(func() -> void:
+			var got := Contracts.claim_bonus()
+			if not got.is_empty():
+				Juice.play("res://assets/audio/chest.wav")
+				Juice.rewards.reveal("cur_chest", "BONUS CRATE  ·  STREAK %d" % int(got["streak"]), UiKit.GOLD, "+%d GOLD  ·  +%d GEMS" % [int(got["gold"]), int(got["gems"])], 1.4)
+				need_refresh.emit()
+				_paint()
+		)
+		brow.add_child(bb)
+		col.add_child(brow)
 	UiKit.pop_in(card)
 	var fb: Button = focus if focus != null else close
 	get_tree().process_frame.connect(func() -> void:

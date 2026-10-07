@@ -17,6 +17,9 @@ uniform int suit = 0;  // whole suit (old): 1 bat, 2 spider, 3 shaolin, 4 ninja
 uniform int suit_head = 0;
 uniform int suit_body = 0;
 uniform int suit_legs = 0;
+// Colour palette (the SOR4 way): clothes not covered by a suit part are
+// re-dyed by brightness (rgb = dye, a = strength). Skin stays skin.
+uniform vec4 pal = vec4(0.0, 0.0, 0.0, 0.0);
 uniform float seed = 0.0;
 uniform vec3 head = vec3(0.0, -60.0, 14.0);  // centre x, centre y, radius
 uniform vec2 holes[6];
@@ -183,6 +186,9 @@ void fragment() {
 		}
 		if (code > 0) {
 			col = suit_col(base.rgb, t, hv, in_head, code);
+		} else if (pal.a > 0.0 && in_head < 0.5 && !skin(base.rgb)) {
+			float pl = dot(base.rgb, vec3(0.3, 0.59, 0.11));
+			col = mix(col, pal.rgb * (0.3 + 1.25 * pl), pal.a);
 		}
 		// Face: cuts and smears where the skin is.
 		if (wound > 0.01 && in_head > 0.0) {

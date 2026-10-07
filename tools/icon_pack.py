@@ -2627,6 +2627,137 @@ def cur_calendar():
     return ic
 
 
+# --- sheet header icons (menus) ------------------------------------------
+
+@icon("head_armory")
+def head_armory():
+    ic = Icon()
+    # A bat and a pistol crossed.
+    ic.line([(5, 27), (25, 5)], "wood", width=4)
+    ic.ellipse(22, 2, 28, 8, "wood")
+    ic.rect(4, 25, 8, 29, "black")
+    m_gun(ic, 6, 10)
+    ic.glint(24, 4)
+    return ic
+
+
+@icon("head_codex")
+def head_codex():
+    ic = Icon()
+    ic.rect(5, 4, 26, 28, "red")
+    ic.rect(7, 6, 26, 26, "paper", tone=1)
+    ic.rect(5, 4, 8, 28, "red", tone=-1)
+    ic.ellipse(12, 9, 22, 19, "gold")
+    m_skull(ic, 13, 10)
+    ic.rect(11, 22, 23, 23, "slate", flat=True)
+    ic.glint(9, 6)
+    return ic
+
+
+@icon("head_moves")
+def head_moves():
+    ic = Icon()
+    m_fist(ic, 4, 8)
+    m_boot(ic, 15, 14)
+    ic.line([(2, 24), (10, 20)], "white", width=1)
+    ic.line([(2, 28), (12, 25)], "white", width=1)
+    ic.glint(25, 12)
+    return ic
+
+
+@icon("head_heroes")
+def head_heroes():
+    ic = Icon()
+    # Two heads, Dad bigger behind the Kid.
+    ic.ellipse(3, 5, 17, 19, "skin")
+    ic.ellipse(3, 2, 17, 10, "brown")
+    ic.rect(2, 19, 18, 29, "steel")
+    ic.ellipse(14, 10, 27, 23, "skin")
+    ic.ellipse(14, 8, 27, 14, "brown", tone=1)
+    ic.rect(13, 22, 28, 30, "black")
+    ic.glint(22, 13)
+    return ic
+
+
+@icon("head_build")
+def head_build():
+    ic = Icon()
+    # A skill tree: trunk and three lit nodes.
+    ic.line([(16, 29), (16, 8)], "wood", width=2)
+    ic.line([(16, 18), (7, 11)], "wood", width=2)
+    ic.line([(16, 18), (25, 11)], "wood", width=2)
+    for x, y in ((16, 6), (6, 10), (26, 10)):
+        ic.ellipse(x - 4, y - 4, x + 4, y + 4, "gold")
+    ic.ellipse(12, 24, 20, 31, "lime")
+    ic.glint(15, 4)
+    return ic
+
+
+@icon("head_options")
+def head_options():
+    ic = Icon()
+    import math
+    pts = []
+    for i in range(16):
+        a = i * math.pi / 8
+        r = 14 if i % 2 == 0 else 10
+        pts.append((16 + r * math.cos(a), 16 + r * math.sin(a)))
+    ic.poly(pts, "steel")
+    ic.ellipse(10, 10, 22, 22, "gun")
+    ic.ellipse(13, 13, 19, 19, "black", flat=True)
+    ic.glint(9, 7)
+    return ic
+
+
+@icon("head_stats")
+def head_stats():
+    ic = Icon()
+    ic.rect(3, 27, 29, 29, "slate")
+    for i, (h, m) in enumerate(((8, "red"), (14, "orange"), (20, "gold"), (11, "lime"))):
+        x = 5 + i * 6
+        ic.rect(x, 27 - h, x + 4, 27, m)
+    ic.line([(5, 16), (11, 10), (17, 13), (25, 4)], "white", width=1)
+    ic.glint(25, 4)
+    return ic
+
+
+@icon("head_jobs")
+def head_jobs():
+    ic = Icon()
+    ic.rect(6, 5, 26, 29, "wood")
+    m_paper(ic, 8, 8, 24, 27)
+    ic.rect(12, 3, 20, 7, "steel")
+    ic.pixels([(10, 12), (10, 17), (10, 22)], "lime", step=1)
+    return ic
+
+
+@icon("head_log")
+def head_log():
+    ic = Icon()
+    ic.rect(6, 3, 26, 29, "sky")
+    ic.rect(8, 5, 26, 27, "paper", tone=1)
+    for y in (6, 11, 16, 21, 26):
+        ic.rect(4, y, 8, y + 1, "steel")
+    ic.line([(12, 10), (23, 10)], "slate")
+    ic.line([(12, 15), (23, 15)], "slate")
+    ic.line([(12, 20), (19, 20)], "slate")
+    ic.line([(22, 29), (29, 18)], "yellow", width=2)
+    return ic
+
+
+@icon("head_gear")
+def head_gear():
+    ic = Icon()
+    # The hoodie on its hanger.
+    ic.line([(16, 2), (16, 6)], "steel")
+    ic.line([(5, 10), (16, 5), (27, 10)], "steel", width=1)
+    ic.poly([(6, 10), (26, 10), (30, 20), (25, 21), (24, 29), (8, 29), (7, 21), (2, 20)], "steel", tone=1)
+    ic.ellipse(11, 8, 21, 16, "gun")
+    ic.rect(13, 19, 19, 24, "gun", tone=-1)
+    ic.glint(9, 13)
+    return ic
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     made = []

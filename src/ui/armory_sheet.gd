@@ -46,6 +46,7 @@ func _paint() -> void:
 	card.add_child(outer)
 	var head := HBoxContainer.new()
 	var t := UiKit.title("ARMORY", 32, Palette.BRICK)
+	UiKit.title_icon(t, "head_armory")
 	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(t)
 	var close := UiKit.button("CLOSE", Vector2(120, 40))

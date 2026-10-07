@@ -12,6 +12,8 @@ var solo_role: String = "son"
 var density_coop: bool = false
 var remote_coop: bool = false
 var versus: bool = false
+## WEEKLY GAUNTLET run in progress (WeeklyBook).
+var weekly: bool = false
 var force_intro: bool = false
 var run_bag: Dictionary = {}
 var map_index: int = 0
@@ -66,6 +68,7 @@ const ORDER := [
 
 func start_run() -> void:
 	versus = false
+	weekly = false
 	difficulty = str(FamilyProfile.data.get("difficulty", difficulty))
 	density_coop = couch or remote_coop
 	run_bag = {}
@@ -94,6 +97,17 @@ func start_run() -> void:
 	enter_map(hop)
 
 
+func start_weekly() -> void:
+	versus = false
+	weekly = true
+	run_bag = {}
+	film_from = ""
+	film_next = ""
+	film_kind = ""
+	current_map = WeeklyBook.MAP
+	enter_map(WeeklyBook.MAP)
+
+
 func start_versus() -> void:
 	versus = true
 	run_bag = {}
@@ -109,6 +123,11 @@ func play_intro() -> void:
 
 
 func enter_map(map_id: String) -> void:
+	# The weekly hour is one map: going on from it goes home.
+	if weekly and map_id != WeeklyBook.MAP:
+		weekly = false
+		back_to_hub("run")
+		return
 	current_map = map_id
 	var i := ORDER.find(map_id)
 	map_index = i if i >= 0 else map_index
@@ -234,6 +253,7 @@ func back_to_hub(tab: String = "clinic") -> void:
 	run_bag = {}
 	remote_coop = false
 	versus = false
+	weekly = false
 	film_from = ""
 	film_next = ""
 	film_kind = ""

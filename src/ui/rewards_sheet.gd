@@ -54,6 +54,7 @@ func _paint() -> void:
 	all.disabled = rows.is_empty()
 	if not rows.is_empty():
 		all.add_theme_stylebox_override("normal", UiKit.panel(Palette.READY, Palette.LEMON))
+		UiKit.dark_text(all)
 		UiKit.pulse_ready(all)
 	all.pressed.connect(func() -> void: _claim_all(all))
 	head.add_child(all)
@@ -159,6 +160,7 @@ func _daily() -> Control:
 	ob.disabled = not ready
 	if ready:
 		ob.add_theme_stylebox_override("normal", UiKit.panel(Palette.READY, Palette.LEMON))
+		UiKit.dark_text(ob)
 	ob.pressed.connect(func() -> void: _open_crate(ob))
 	v.add_child(ob)
 	return p

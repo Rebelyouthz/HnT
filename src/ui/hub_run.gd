@@ -129,6 +129,8 @@ func _ready() -> void:
 	_bind_go()
 	stage.add_child(_go)
 
+	stage.add_child(_weekly_card())
+
 	var extra := HBoxContainer.new()
 	extra.position = Vector2(40, 470)
 	extra.add_theme_constant_override("separation", 8)
@@ -346,3 +348,43 @@ func _paint_lock(lab: Label) -> void:
 		return
 	lab.text = ""
 	lab.visible = false
+
+
+
+## WEEKLY GAUNTLET: a poster pinned in the preview's corner - this week's
+## fixed coping hour, its two pacts, the best time and the weekly pay.
+func _weekly_card() -> Control:
+	var card := PanelContainer.new()
+	card.add_theme_stylebox_override("panel", UiKit.panel(Color(0.12, 0.05, 0.08, 0.94), Palette.BRICK))
+	card.position = Vector2(352, 84)
+	card.custom_minimum_size = Vector2(218, 0)
+	card.rotation = deg_to_rad(2.0)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 3)
+	card.add_child(v)
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", 6)
+	head.add_child(UiKit.portrait(IconBook.tex("cur_calendar"), Vector2(26, 26)))
+	var t := Label.new()
+	t.text = "WEEKLY GAUNTLET"
+	t.add_theme_font_override("font", UiKit.title_font())
+	UiKit.apply_label(t, 14, UiKit.GOLD)
+	head.add_child(t)
+	v.add_child(head)
+	var open := (FamilyProfile.data.get("maps_filed", []) as Array).has(WeeklyBook.MAP)
+	var info := Label.new()
+	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	info.custom_minimum_size = Vector2(206, 0)
+	if open:
+		var b := WeeklyBook.best()
+		info.text = "%s  ·  same street all week\n%s\nBEST %d:%02d  ·  TRIES %d\n%s" % [WeeklyBook.week_id(), WeeklyBook.rules_text(), b / 60, b % 60, WeeklyBook.tries(), "PAID THIS WEEK" if WeeklyBook.paid() else "HOLD 3:00: +3 GEMS +150 GOLD"]
+	else:
+		info.text = "File THE INTAKE LOT to open the weekly hour."
+	UiKit.apply_label(info, 10, Palette.TEXT)
+	v.add_child(info)
+	var go := UiKit.button("ENTER" if open else "LOCKED", Vector2(206, 30))
+	go.add_theme_font_size_override("font_size", 12)
+	go.disabled = not open
+	go.pressed.connect(App.start_weekly)
+	v.add_child(go)
+	return card

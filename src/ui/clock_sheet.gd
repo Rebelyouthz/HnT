@@ -44,6 +44,7 @@ func _ready() -> void:
 		punch.disabled = true
 	else:
 		punch.add_theme_stylebox_override("normal", UiKit.panel(Palette.READY, Palette.LEMON))
+		UiKit.dark_text(punch)
 		UiKit.pulse_ready(punch)
 	punch.pressed.connect(func() -> void:
 		if FamilyProfile.punch_clock():

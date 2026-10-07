@@ -44,6 +44,7 @@ func _ready() -> void:
 		drink.disabled = true
 	else:
 		drink.add_theme_stylebox_override("normal", UiKit.panel(Palette.READY, Palette.LEMON))
+		UiKit.dark_text(drink)
 		UiKit.pulse_ready(drink)
 	drink.pressed.connect(func() -> void:
 		if FamilyProfile.drink_cooler():

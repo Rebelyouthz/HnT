@@ -330,6 +330,7 @@ func _mount_sprite() -> void:
 	SpriteBook.grow(_anim, SpriteBook.FIGHTER_SCALE * (SpriteBook.FATHER_K if role == "father" else 1.0))
 	squash_root.add_child(_anim)
 	Suits.dress(_anim, role)
+	Palettes.apply(_anim, role)
 	refresh_suit()
 
 

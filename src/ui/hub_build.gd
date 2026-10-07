@@ -57,6 +57,7 @@ func _ready() -> void:
 	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_stage.add_child(frame)
 	var title := UiKit.title("BUILD", 54, Palette.EDGE)
+	UiKit.title_icon(title, "head_build")
 	title.position = Vector2(0, 2)
 	title.size = Vector2(1248, 64)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

@@ -564,7 +564,11 @@ func _has_claim() -> bool:
 func _open_log() -> void:
 	FamilyProfile.mark_log_read()
 	_refresh_pills()
-	_modal_text("SESSION LOG", _log_body())
+	_clear_modal()
+	var sheet := preload("res://src/ui/log_sheet.gd").new()
+	add_child(sheet)
+	_modal = sheet
+	sheet.closed.connect(_clear_modal)
 
 
 func _log_body() -> String:

@@ -121,6 +121,7 @@ func _chest(kind: String, chest: Dictionary, value: int) -> Control:
 		b.disabled = true
 	else:
 		b.add_theme_stylebox_override("normal", UiKit.panel(Palette.READY, Palette.LEMON))
+		UiKit.dark_text(b)
 		UiKit.pulse_ready(b)
 	b.pressed.connect(func() -> void:
 		if already or value < at:
@@ -191,6 +192,7 @@ func _award(a: Dictionary) -> Control:
 		btn.text = "NOT YET"
 	else:
 		btn.add_theme_stylebox_override("normal", UiKit.panel(Palette.READY, Palette.LEMON))
+		UiKit.dark_text(btn)
 		UiKit.pulse_ready(btn)
 	btn.pressed.connect(func() -> void:
 		if already or not ok:

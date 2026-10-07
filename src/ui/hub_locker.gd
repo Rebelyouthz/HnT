@@ -37,10 +37,11 @@ func _paint() -> void:
 	for c in _root.get_children():
 		c.queue_free()
 	var title := UiKit.title("GEAR", 44, Palette.EDGE)
+	UiKit.title_icon(title, "head_gear")
 	title.position = Vector2(20, 0)
 	_root.add_child(title)
 	var roles := HBoxContainer.new()
-	roles.position = Vector2(160, 8)
+	roles.position = Vector2(250, 8)
 	roles.add_theme_constant_override("separation", 8)
 	for pair in [["son", "THE SON"], ["father", "THE FATHER"]]:
 		var b := UiKit.button(pair[1], Vector2(160, 38))
@@ -98,7 +99,9 @@ func _paperdoll() -> void:
 			stage.add_child(cape)
 		stage.add_child(a)
 		Suits.dress(a, _role)
+		Palettes.apply(a, _role)
 		a.play("idle")
+	_palette_row()
 	var suit := Suits.full_set(_role)
 	var srow: Dictionary = Suits.LIST.get(suit, {})
 	var mixed := suit == "" and (Suits.worn_part(_role, "mask") + Suits.worn_part(_role, "top") + Suits.worn_part(_role, "bottom")) != ""
@@ -623,3 +626,51 @@ func _totals_row() -> void:
 		var sb := UiKit.rich("[color=#ffd75e]SET BONUS[/color]  " + str(Suits.LIST[full]["set"]), 700, 13, Palette.TEXT)
 		sb.position = Vector2(20, 520)
 		_root.add_child(sb)
+
+
+
+## COLOURS: palette swatches over the paperdoll (Palettes). Locked ones show
+## what earns them.
+func _palette_row() -> void:
+	var row := HBoxContainer.new()
+	row.position = Vector2(150, 68)
+	row.add_theme_constant_override("separation", 6)
+	_root.add_child(row)
+	var cap := Label.new()
+	cap.position = Vector2(150, 104)
+	cap.size = Vector2(240, 14)
+	cap.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var worn := Palettes.worn(_role)
+	cap.text = "COLOURS  ·  " + str((Palettes.LIST[worn] as Dictionary)["title"])
+	UiKit.apply_label(cap, 10, UiKit.GOLD)
+	_root.add_child(cap)
+	for id: String in Palettes.LIST:
+		var spec: Dictionary = Palettes.LIST[id]
+		var open := Palettes.unlocked(id)
+		var b := Button.new()
+		b.custom_minimum_size = Vector2(32, 32)
+		b.focus_mode = Control.FOCUS_ALL
+		var dye: Color = spec["dye"]
+		var face := Color(0.32, 0.32, 0.36) if dye.a <= 0.0 else Color(dye.r, dye.g, dye.b)
+		var sb := UiKit.panel(face if open else face.darkened(0.7), UiKit.GOLD if id == worn else Palette.EDGE.darkened(0.4))
+		b.add_theme_stylebox_override("normal", sb)
+		b.add_theme_stylebox_override("hover", UiKit.panel(face.lightened(0.15), UiKit.GOLD))
+		b.add_theme_stylebox_override("focus", UiKit.panel(face.lightened(0.15), Color.WHITE))
+		b.tooltip_text = "%s  ·  %s" % [str(spec["title"]), str(spec["line"])]
+		if not open:
+			var lk := UiKit.portrait(IconBook.tex("cur_lock"), Vector2(20, 20))
+			lk.position = Vector2(6, 6)
+			lk.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			b.add_child(lk)
+		b.focus_entered.connect(func() -> void: cap.text = "%s  ·  %s" % [str(spec["title"]), "WORN" if id == worn else (str(spec["line"]) if not open else "PICK")])
+		b.mouse_entered.connect(func() -> void: cap.text = "%s  ·  %s" % [str(spec["title"]), "WORN" if id == worn else (str(spec["line"]) if not open else "PICK")])
+		b.pressed.connect(func() -> void:
+			if not open:
+				Juice.popup_number(Vector2(640, 300), "LOCKED  ·  " + str(spec["line"]), Palette.BRICK)
+				return
+			Palettes.wear(_role, id)
+			Juice.play("res://assets/audio/ui_click.wav")
+			RewardFly.snd("up_boom", 1.3, -8.0)
+			_paint()
+		)
+		row.add_child(b)

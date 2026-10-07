@@ -70,6 +70,7 @@ func _chest(at: int, now: int) -> Control:
 		b.disabled = true
 	else:
 		b.add_theme_stylebox_override("normal", UiKit.panel(Palette.READY, Palette.LEMON))
+		UiKit.dark_text(b)
 		UiKit.pulse_ready(b)
 	b.pressed.connect(func() -> void:
 		if FamilyProfile.claim_streak(at):

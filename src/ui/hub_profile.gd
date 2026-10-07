@@ -9,7 +9,7 @@ var _col: VBoxContainer
 
 
 func _ready() -> void:
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var dim := ColorRect.new()
 	dim.color = Color(0, 0, 0, 0.78)
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -47,11 +47,7 @@ func _paint() -> void:
 	head.add_child(h)
 	_col.add_child(head)
 	_col.add_child(_avatar_card())
-	var bar := ProgressBar.new()
-	bar.custom_minimum_size = Vector2(880, 22)
-	bar.max_value = float(FamilyProfile.account_need())
-	bar.value = float(FamilyProfile.data.get("account_xp", 0))
-	bar.show_percentage = false
+	var bar := UiKit.glow_bar(clampf(float(FamilyProfile.data.get("account_xp", 0)) / float(maxi(1, FamilyProfile.account_need())), 0.0, 1.0), UiKit.GOLD, Vector2(880, 14))
 	_col.add_child(bar)
 	var xp := Label.new()
 	xp.text = "ACCOUNT LV %d  ·  %d / %d XP  ·  HIGH TABLE %06d" % [
@@ -104,11 +100,17 @@ func _avatar_card() -> Control:
 	p.add_theme_stylebox_override("panel", UiKit.panel(tint, Cosmetics.tint("frames", FamilyProfile.equipped_cosmetic(_role, "frame"))))
 	var row := HBoxContainer.new()
 	p.add_child(row)
-	var body := ColorRect.new()
-	body.custom_minimum_size = Vector2(72, 96)
-	body.color = Palette.LEMON if _role == "son" else Palette.BRICK
-	row.add_child(body)
+	row.add_theme_constant_override("separation", 14)
+	# The patient's own face, breathing, in the chosen frame.
+	var pic := UiKit.portrait(SpriteBook.bust(_role), Vector2(84, 108))
+	pic.pivot_offset = Vector2(42, 108)
+	var br := pic.create_tween().set_loops()
+	br.tween_property(pic, "scale", Vector2(1.0, 1.03), 1.4).set_trans(Tween.TRANS_SINE)
+	br.tween_property(pic, "scale", Vector2.ONE, 1.4).set_trans(Tween.TRANS_SINE)
+	row.add_child(pic)
 	var v := VBoxContainer.new()
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	v.alignment = BoxContainer.ALIGNMENT_CENTER
 	var t := Label.new()
 	t.text = FamilyProfile.son_name() if _role == "son" else FamilyProfile.father_name()
 	UiKit.apply_label(t, 20, Palette.LEMON if _role == "son" else Palette.BRICK)
@@ -122,6 +124,10 @@ func _avatar_card() -> Control:
 	b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	UiKit.apply_label(b, 13, Palette.TEXT)
 	v.add_child(b)
+	var lv := Label.new()
+	lv.text = "LV %d  ·  %s  ·  POWER %d  ·  %s" % [Heroes.level(_role), Heroes.rarity_name(_role).to_upper(), Heroes.power(_role), RewardBook.title()]
+	UiKit.apply_label(lv, 12, UiKit.GOLD)
+	v.add_child(lv)
 	row.add_child(v)
 	return p
 

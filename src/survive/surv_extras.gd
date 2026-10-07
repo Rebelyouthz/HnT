@@ -50,6 +50,8 @@ static func get_extras(tree: SceneTree) -> SurvExtras:
 
 
 static func pacts() -> Array:
+	if App.weekly:
+		return WeeklyBook.pacts()
 	var p: Variant = FamilyProfile.data.get("surv_pacts", [])
 	return p if p is Array else []
 

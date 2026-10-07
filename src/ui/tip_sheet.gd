@@ -45,6 +45,7 @@ func _ready() -> void:
 		toss.disabled = true
 	else:
 		toss.add_theme_stylebox_override("normal", UiKit.panel(Palette.READY, Palette.LEMON))
+		UiKit.dark_text(toss)
 		UiKit.pulse_ready(toss)
 	toss.pressed.connect(func() -> void:
 		var pay: Dictionary = FamilyProfile.toss_tip()
