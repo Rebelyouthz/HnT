@@ -32,6 +32,10 @@ static func show_for(host: Node, id: String) -> void:
 ## The painted section that opens the stage (first strip chunk or the
 ## single backdrop), or null.
 static func art(id: String) -> Texture2D:
+	# The mission picture first (the same one the RUN tab shows).
+	var mp := "res://assets/sprites/missions/%s.png" % id
+	if ResourceLoader.exists(mp):
+		return load(mp) as Texture2D
 	var th := str(THEME.get(id, ""))
 	for p in ["res://assets/backdrops/%s_strip_0.png" % th, "res://assets/backdrops/%s.png" % th]:
 		if ResourceLoader.exists(p):
@@ -74,6 +78,7 @@ func _ready() -> void:
 		_pic.texture = tex
 		_pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		_pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		_pic.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		_pic.size = Vector2(1400, 760)
 		_pic.position = Vector2(-20, -20)
 		_pic.modulate = Color(0.78, 0.78, 0.86)

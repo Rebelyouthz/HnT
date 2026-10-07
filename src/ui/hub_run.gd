@@ -30,7 +30,7 @@ func _ready() -> void:
 		line.position = Vector2(x, 15)
 		line.size = Vector2(80, 2)
 		stage.add_child(line)
-	var h := UiKit.title(Copy.PLAY, 46, Palette.EDGE)
+	var h := UiKit.title(StageCard.title_of(FamilyProfile.next_run_map()), 46, Palette.EDGE)
 	h.position = Vector2(0, 26)
 	h.size = Vector2(1248, 56)
 	h.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -91,7 +91,7 @@ func _ready() -> void:
 	rs.content_margin_top = 6
 	rs.content_margin_bottom = 6
 	ribbon.add_theme_stylebox_override("panel", rs)
-	ribbon.position = Vector2(200, 392)
+	ribbon.position = Vector2(46, 322)
 	stage.add_child(ribbon)
 	var lock_lab := Label.new()
 	lock_lab.name = "PowerLock"
@@ -112,7 +112,7 @@ func _ready() -> void:
 	ss.shadow_size = 12
 	seal.add_theme_stylebox_override("panel", ss)
 	seal.custom_minimum_size = Vector2(72, 72)
-	seal.position = Vector2(690, 380)
+	seal.position = Vector2(690, 300)
 	seal.name = "Seal"
 	var seal_pic := UiKit.portrait(SpriteBook.icon("therapy_couch"), Vector2(56, 56))
 	seal.add_child(seal_pic)
@@ -201,26 +201,66 @@ func _scene(r: Rect2) -> Control:
 	view.clip_contents = true
 	view.custom_minimum_size = r.size - Vector2(10, 10)
 	frame.add_child(view)
-	if ResourceLoader.exists("res://assets/backdrops/dock.png"):
-		var tex := load("res://assets/backdrops/dock.png") as Texture2D
-		var at := AtlasTexture.new()
-		at.atlas = tex
-		var k := 8.0 / 3.0
-		var tw := (r.size.x - 10.0) / k
-		var th := (r.size.y - 10.0) / k
-		at.region = Rect2(40.0, float(tex.get_height()) - th - 6.0, tw, th)
+	var map_id := FamilyProfile.next_run_map()
+	var art_path := "res://assets/sprites/missions/%s.png" % map_id
+	if ResourceLoader.exists(art_path):
+		# The night's own mission picture, 2x pixels, slowly pushing in.
 		var bg := TextureRect.new()
-		bg.texture = at
+		bg.texture = load(art_path)
 		bg.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		bg.stretch_mode = TextureRect.STRETCH_SCALE
+		bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 		bg.size = r.size - Vector2(10, 10)
+		bg.pivot_offset = bg.size * 0.5
 		view.add_child(bg)
-	var floor_y := r.size.y - 24.0
-	_actor(view, "punk", "hurt", 2, Vector2(470, floor_y), true)
-	var dad_clip := "side_kick"
-	var info := SpriteBook.clip_info("father", dad_clip)
-	_actor(view, "father", dad_clip, maxi(0, int(info.get("hit", 0))), Vector2(300, floor_y), false)
+		var push := bg.create_tween().set_loops()
+		push.tween_property(bg, "scale", Vector2(1.04, 1.04), 9.0).set_trans(Tween.TRANS_SINE)
+		push.tween_property(bg, "scale", Vector2.ONE, 9.0).set_trans(Tween.TRANS_SINE)
+	else:
+		var tex := StageCard.art(map_id)
+		if tex:
+			var fb := TextureRect.new()
+			fb.texture = tex
+			fb.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			fb.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+			fb.size = r.size - Vector2(10, 10)
+			view.add_child(fb)
+	# Mission strip along the bottom: act number, the job, the target.
+	var act := StoryBook.act(map_id)
+	var strip := ColorRect.new()
+	strip.color = Color(0.0, 0.0, 0.03, 0.72)
+	strip.position = Vector2(0, r.size.y - 10.0 - 64.0)
+	strip.size = Vector2(r.size.x - 10.0, 64)
+	view.add_child(strip)
+	var gold := ColorRect.new()
+	gold.color = UiKit.GOLD
+	gold.position = strip.position
+	gold.size = Vector2(strip.size.x, 2)
+	view.add_child(gold)
+	var idx := App.ORDER.find(map_id)
+	var tag := Label.new()
+	tag.text = "MISSION %d/%d" % [idx + 1, App.ORDER.size()] if idx >= 0 else "MISSION"
+	tag.position = Vector2(14, strip.position.y + 6.0)
+	tag.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(tag, 13, UiKit.GOLD)
+	view.add_child(tag)
+	var job := Label.new()
+	job.text = str(act.get("main", ""))
+	job.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	job.position = Vector2(14, strip.position.y + 24.0)
+	job.size = Vector2(strip.size.x - 28.0, 36)
+	UiKit.apply_label(job, 14, Palette.TEXT)
+	view.add_child(job)
+	var boss: Variant = act.get("boss", {})
+	if boss is Dictionary and str((boss as Dictionary).get("title", "")) != "":
+		var tgt := Label.new()
+		tgt.text = "TARGET  ·  %s" % str((boss as Dictionary)["title"]).to_upper()
+		tgt.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		tgt.position = Vector2(strip.size.x - 410.0, strip.position.y + 6.0)
+		tgt.size = Vector2(300, 16)
+		tgt.add_theme_font_override("font", UiKit.pixel_font())
+		UiKit.apply_label(tgt, 13, Palette.BRICK.lightened(0.2))
+		view.add_child(tgt)
 	return frame
 
 
@@ -356,7 +396,7 @@ func _paint_lock(lab: Label) -> void:
 func _weekly_card() -> Control:
 	var card := PanelContainer.new()
 	card.add_theme_stylebox_override("panel", UiKit.panel(Color(0.12, 0.05, 0.08, 0.94), Palette.BRICK))
-	card.position = Vector2(352, 84)
+	card.position = Vector2(548, 84)
 	card.custom_minimum_size = Vector2(218, 0)
 	card.rotation = deg_to_rad(2.0)
 	var v := VBoxContainer.new()
