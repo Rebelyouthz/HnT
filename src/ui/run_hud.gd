@@ -990,6 +990,18 @@ func _move_list(layer: Control, back_to: Control) -> void:
 			c.add_child(_row_line("-", "Learn combos in the DOJO", Palette.MUTED))
 		for cb: Dictionary in known:
 			c.add_child(_row_line(ComboBook.steps_label(cb, pad), "%s  ·  %d" % [str(cb.get("title", cb["id"])), int(cb.get("dmg", 0))], Rarity.color(str(cb.get("rarity", "common")))))
+		c.add_child(UiKit.title("QUICK BELT", 13, Palette.EDGE))
+		for i in 4:
+			var bid: String = QuickBelt.ORDER[i]
+			var bkey: String = (["D-PAD LEFT", "D-PAD UP", "D-PAD RIGHT", "D-PAD DOWN"][i]) if pad else str(i + 1 if role == "son" else [7, 8, 9, 0][i])
+			c.add_child(_row_line(bkey, "%s  x%d" % [str(QuickBelt.ITEMS[bid]["name"]), QuickBelt.count(role, bid)], Palette.TEXT))
+		c.add_child(UiKit.title("ROOF TRICKS", 13, Palette.EDGE))
+		var plv := Heroes.level(role, "parkour")
+		for tr: Dictionary in TrickCall.TRICKS:
+			var keys := "%s + %s" % [("R-STICK " if pad else "NUM ") + str(TrickCall.DIR_NAME[str(tr["dir"])]), " + ".join(PackedStringArray((tr["btn"] as Array).map(func(b: Variant) -> String: return str(b) if pad else str(TrickCall.KEY[str(b)]))))]
+			var land: String = str((TrickCall.LANDS[str(tr["land"])] as Dictionary)["name"])
+			var open := int(tr["lv"]) <= plv
+			c.add_child(_row_line(keys, ("%s  ·  LAND %s" % [str(tr["name"]), land]) if open else "%s  ·  ROOFTOPS LV %d" % [str(tr["name"]), int(tr["lv"])], Palette.TEXT if open else Palette.MUTED))
 	back.grab_focus()
 
 

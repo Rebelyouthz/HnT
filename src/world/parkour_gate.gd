@@ -150,6 +150,9 @@ func _attempt(f: Fighter) -> void:
 				grade = str(res[1])
 	if not is_instance_valid(f):
 		return
+	if grade == "skip":
+		get_tree().create_timer(0.6).timeout.connect(func() -> void: _used = false)
+		return
 	_next = {}
 	if grade == "miss":
 		_fail(f, false)

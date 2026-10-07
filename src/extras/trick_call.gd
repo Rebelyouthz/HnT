@@ -38,6 +38,7 @@ const LANDS := {
 	"stick": {"name": "STICK IT", "l": "", "r": ""},
 	"slide": {"name": "SLIDE OUT", "l": "DF", "r": "F"},
 }
+const DIR_NAME := {"F": "FWD", "B": "BACK", "U": "UP", "D": "DOWN", "UF": "UP-FWD", "DF": "DOWN-FWD", "UB": "UP-BACK", "DB": "DOWN-BACK"}
 const ACT := {"R1": "shoot", "L1": "block", "R2": "dash", "L2": "throw"}
 const KEY := {"R1": "O", "L1": "I", "R2": "SHIFT", "L2": "U"}
 
@@ -82,7 +83,7 @@ func call_gate(f: Fighter, gate: Node2D, row: Dictionary) -> void:
 
 
 ## The hero reached the gate: takeoff. Returns the grade when it is known
-## now (not held: "miss"; let go a moment early: graded), else "" and the
+## now (never held: "skip"; let go a moment early: graded), else "" and the
 ## grade arrives on `graded` when the combo is let go.
 func gate_takeoff(f: Fighter, gate: Node2D, row: Dictionary) -> String:
 	var r := _row(f)
@@ -95,7 +96,8 @@ func gate_takeoff(f: Fighter, gate: Node2D, row: Dictionary) -> String:
 	if s != "armed" and not early:
 		r["gate"] = null
 		_to(f, r, "idle")
-		return "miss"
+		# Never tried: no trick, no penalty - just running past.
+		return "skip"
 	r["t0"] = _now()
 	r["air"] = 0.0
 	r["graded"] = false

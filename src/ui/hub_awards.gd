@@ -44,7 +44,7 @@ func _section(title: String, kind: String, value: int, maxv: int) -> Control:
 	var v := VBoxContainer.new()
 	box.add_child(v)
 	var t := Label.new()
-	t.text = "%s  ·  %d / %d" % [title, value, maxv]
+	t.text = "%s  ·  %d / %d" % [title, mini(value, maxv), maxv]
 	UiKit.apply_label(t, 16, Palette.LEMON)
 	v.add_child(t)
 	# A segmented meter: one block per step, filled blocks lit green, the
