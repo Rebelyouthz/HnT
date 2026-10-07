@@ -10,8 +10,8 @@ uniform sampler2D screen_tex : hint_screen_texture, filter_linear_mipmap;
 uniform sampler2D wet_mask : filter_nearest, repeat_enable;
 uniform float mirror_y = 0.5;      // kerb line, screen uv
 uniform vec2 uv_block = vec2(0.003, 0.0055); // one art texel in screen uv
-uniform float sheen = 0.22;        // reflectivity of damp stone
-uniform float pool = 0.6;         // reflectivity of a puddle
+uniform float sheen = 0.15;        // reflectivity of damp stone
+uniform float pool = 0.38;        // reflectivity of a puddle
 uniform float rain = 1.0;
 uniform vec2 tex_size = vec2(331.0, 200.0);
 
@@ -43,12 +43,12 @@ void fragment() {
 	// Smear downwards like light on wet asphalt.
 	vec3 refl = vec3(0.0);
 	for (int i = 0; i < 5; i++) {
-		refl += textureLod(screen_tex, clamp(ruv + vec2(0.0, float(i) * 0.005 * (1.0 - wet * 0.6)), 0.001, 0.999), 0.5).rgb;
+		refl += textureLod(screen_tex, clamp(ruv + vec2(0.0, float(i) * 0.009 * (1.0 - wet * 0.5)), 0.001, 0.999), 0.5).rgb;
 	}
 	refl /= 5.0;
 	// Bright things (lamps, neon) carry; dark walls barely show.
 	float lum = dot(refl, vec3(0.3, 0.55, 0.15));
-	refl *= 0.6 + lum * 1.4;
+	refl *= 0.6 + lum * 1.1;
 	float k = mix(sheen, pool, wet) * mix(1.0, 0.12, depth);
 	vec3 col = refl + vec3(0.55, 0.7, 0.9) * ring * wet * 0.6;
 	COLOR = vec4(col, clamp(k * (0.35 + lum * 1.2) + ring * wet * 0.5, 0.0, 0.92));

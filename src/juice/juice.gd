@@ -19,7 +19,7 @@ var _toast_at: Dictionary = {}
 var rewards: RewardFly
 
 const TOAST_COOL_MS := 2800
-const TOAST_MAX := 2
+const TOAST_MAX := 1
 
 const DECAY := 1.35
 const MAX_OFFSET := Vector2(12, 8)
@@ -38,8 +38,10 @@ func _ready() -> void:
 	var toast_root := PixelStage.attach_canvas(_overlay)
 	toast_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_toast_box = VBoxContainer.new()
-	_toast_box.position = Vector2(960, 92)
-	_toast_box.size = Vector2(310, 200)
+	# Tucked into the top-right corner, one at a time (the rest queue), so
+	# the fight on the right of the screen stays clear.
+	_toast_box.position = Vector2(1028, 96)
+	_toast_box.size = Vector2(244, 60)
 	_toast_box.add_theme_constant_override("separation", 4)
 	_toast_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	toast_root.add_child(_toast_box)
@@ -445,10 +447,27 @@ func toast(kind: String, title: String, body: String, icon := "") -> void:
 	if _toast_at.has(key) and now - int(_toast_at[key]) < TOAST_COOL_MS:
 		return
 	_toast_at[key] = now
-	while _toast_box.get_child_count() >= TOAST_MAX:
-		var oldest := _toast_box.get_child(0)
-		_toast_box.remove_child(oldest)
-		oldest.queue_free()
+	# One on screen; the next waits its turn (at most three wait, the
+	# oldest waiting one is dropped).
+	if _toast_box.get_child_count() >= TOAST_MAX:
+		_toast_q.append([kind, title, body, icon])
+		if _toast_q.size() > 3:
+			_toast_q.pop_front()
+		return
+	_toast_show(kind, title, body, icon)
+
+
+var _toast_q: Array = []
+
+
+func _toast_next() -> void:
+	if _toast_q.is_empty() or _toast_box == null:
+		return
+	var n: Array = _toast_q.pop_front()
+	_toast_show(str(n[0]), str(n[1]), str(n[2]), str(n[3]))
+
+
+func _toast_show(kind: String, title: String, body: String, icon: String) -> void:
 	var accent := Palette.EDGE
 	match kind:
 		"achievement", "unlock":
@@ -479,16 +498,16 @@ func toast(kind: String, title: String, body: String, icon := "") -> void:
 	st.content_margin_top = 5
 	st.content_margin_bottom = 5
 	wrap.add_theme_stylebox_override("panel", st)
-	wrap.custom_minimum_size = Vector2(310, 0)
+	wrap.custom_minimum_size = Vector2(244, 0)
 	_toast_box.add_child(wrap)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 	wrap.add_child(row)
 	var ic := PixelIcon.new()
 	ic.kind = glyph
-	ic.custom_minimum_size = Vector2(34, 34)
+	ic.custom_minimum_size = Vector2(24, 24)
 	ic.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	ic.pivot_offset = Vector2(17, 17)
+	ic.pivot_offset = Vector2(12, 12)
 	row.add_child(ic)
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 0)
@@ -499,7 +518,7 @@ func toast(kind: String, title: String, body: String, icon := "") -> void:
 	t.clip_text = true
 	t.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	t.add_theme_font_override("font", UiKit.title_font())
-	UiKit.apply_label(t, 18, accent)
+	UiKit.apply_label(t, 14, accent)
 	col.add_child(t)
 	if body != "":
 		var b := Label.new()
@@ -507,7 +526,7 @@ func toast(kind: String, title: String, body: String, icon := "") -> void:
 		b.clip_text = true
 		b.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		b.add_theme_font_override("font", UiKit.pixel_font())
-		UiKit.apply_label(b, 13, Palette.TEXT)
+		UiKit.apply_label(b, 11, Palette.TEXT)
 		col.add_child(b)
 	wrap.modulate.a = 0.0
 	wrap.position.x = 60.0
@@ -516,9 +535,11 @@ func toast(kind: String, title: String, body: String, icon := "") -> void:
 	tw.tween_property(wrap, "modulate:a", 1.0, 0.1)
 	tw.parallel().tween_property(ic, "scale", Vector2(1.3, 1.3), 0.12)
 	tw.tween_property(ic, "scale", Vector2.ONE, 0.1)
-	tw.tween_interval(1.9)
+	tw.tween_interval(1.6)
 	tw.tween_property(wrap, "modulate:a", 0.0, 0.2)
-	tw.finished.connect(wrap.queue_free)
+	tw.finished.connect(func() -> void:
+		wrap.queue_free()
+		_toast_next.call_deferred())
 	if kind == "reward" or kind == "achievement" or kind == "unlock":
 		play("res://assets/audio/cling.wav")
 	elif kind == "codex":

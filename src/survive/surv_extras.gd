@@ -298,6 +298,18 @@ class Shrine extends Node2D:
 	var fill := 0.0
 	var _t := 0.0
 
+	func _ready() -> void:
+		var tex: Texture2D = load("res://assets/sprites/survive/shrine.png") if ResourceLoader.exists("res://assets/sprites/survive/shrine.png") else null
+		if tex:
+			var art := Sprite2D.new()
+			art.texture = tex
+			art.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			var k := 64.0 / float(tex.get_height())
+			art.scale = Vector2(k, k)
+			art.offset = Vector2(0, -float(tex.get_height()) * 0.5)
+			add_child(art)
+			set_meta("art", true)
+
 	func _process(delta: float) -> void:
 		_t += delta
 		queue_redraw()
@@ -309,8 +321,9 @@ class Shrine extends Node2D:
 		draw_arc(Vector2.ZERO, 34.0, 0, TAU, 40, Color(c.r, c.g, c.b, 0.8), 2.0)
 		draw_arc(Vector2.ZERO, 34.0, -PI / 2.0, -PI / 2.0 + TAU * fill, 40, Color(1, 1, 1, 0.95), 4.0)
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-		draw_rect(Rect2(-6, -60, 12, 56), Color(0.5, 0.45, 0.4))
-		draw_rect(Rect2(-9, -64, 18, 6), Color(0.6, 0.55, 0.5))
+		if not has_meta("art"):
+			draw_rect(Rect2(-6, -60, 12, 56), Color(0.5, 0.45, 0.4))
+			draw_rect(Rect2(-9, -64, 18, 6), Color(0.6, 0.55, 0.5))
 		draw_circle(Vector2(0, -74 + sin(_t * 2.0) * 3.0), 6.0, c)
 		for i in 6:
 			var a := _t * 1.2 + float(i) * TAU / 6.0

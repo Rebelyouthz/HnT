@@ -220,13 +220,23 @@ class BlessingMachine:
 		_prompt.add_theme_constant_override("outline_size", 3)
 		_prompt.visible = false
 		add_child(_prompt)
+		# The machine itself: a pixel sprite, not a drawn box.
+		var art := Sprite2D.new()
+		art.texture = SpriteBook.prop("blessing")
+		if art.texture:
+			art.centered = false
+			var k := 72.0 / float(art.texture.get_height())
+			art.scale = Vector2(k, k)
+			art.position = Vector2(-float(art.texture.get_width()) * 0.5 * k, -float(art.texture.get_height()) * k)
+			art.texture_filter = SpriteBook.world_filter()
+			add_child(art)
+			move_child(art, 0)
 
 	func price() -> int:
 		return 25 * (uses + 1)
 
 	func _process(delta: float) -> void:
 		_t += delta
-		queue_redraw()
 		var near: Fighter = null
 		for n in get_tree().get_nodes_in_group("players"):
 			if n is Fighter and absf((n as Fighter).global_position.x - global_position.x) < 34.0 and absf((n as Fighter).global_position.y - global_position.y - 40.0) < 50.0:
@@ -253,14 +263,3 @@ class BlessingMachine:
 		Juice.play("res://assets/audio/cash.wav" if ResourceLoader.exists("res://assets/audio/cash.wav") else "res://assets/audio/cling.wav")
 		FamilyProfile.data["blessings"] = int(FamilyProfile.data.get("blessings", 0)) + 1
 
-	func _draw() -> void:
-		draw_rect(Rect2(-16, -72, 32, 72), Color(0.12, 0.2, 0.32))
-		draw_rect(Rect2(-16, -72, 32, 72), Color(0.05, 0.08, 0.12), false, 1.5)
-		draw_rect(Rect2(-12, -66, 18, 40), Color(0.5, 0.85, 1.0, 0.55 + 0.15 * sin(_t * 3.0)))
-		for i in 4:
-			for j in 2:
-				var c: Color = [Color(1, 0.4, 0.3), Color(1, 0.85, 0.3), Color(0.4, 1, 0.5), Color(0.9, 0.5, 1)][(i + j) % 4]
-				draw_rect(Rect2(-10 + j * 8, -62 + i * 9, 5, 6), c)
-		draw_rect(Rect2(8, -60, 5, 14), Color(0.7, 0.72, 0.78))
-		draw_rect(Rect2(-12, -18, 24, 8), Color(0.03, 0.04, 0.06))
-		draw_rect(Rect2(-16, -80, 32, 9), Color(0.9, 0.2, 0.25))

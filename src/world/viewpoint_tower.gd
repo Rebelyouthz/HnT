@@ -150,7 +150,8 @@ func _build_giant() -> void:
 	UiKit.apply_label(_hint, 13, Palette.LEMON)
 	_hint.text = "???"
 	add_child(_hint)
-	NightStreet.plaque(self, Vector2(-38, -112), "%d M" % int(TowerBook.map_row(map_id).get("height_m", 132)), Palette.MUTED, 12)
+	NearFade.on(_hint, 110.0, 240.0)
+	NearFade.on(NightStreet.plaque(self, Vector2(-38, -112), "%d M" % int(TowerBook.map_row(map_id).get("height_m", 132)), Palette.MUTED, 12), 110.0, 240.0)
 
 
 func _guy_wire(a: Vector2, b: Vector2) -> void:
@@ -200,11 +201,11 @@ func _process(delta: float) -> void:
 			var f: Fighter = n
 			if f.downed or f.van_seat != "":
 				continue
-			_hint.modulate = Color(1.2, 1.15, 0.7)
+			_hint.self_modulate = Color(1.2, 1.15, 0.7)
 			if f._just("light") or f._just("jump"):
 				_start(f)
 			return
-	_hint.modulate = Color.WHITE
+	_hint.self_modulate = Color.WHITE
 
 
 func _process_giant() -> void:
@@ -216,12 +217,12 @@ func _process_giant() -> void:
 			if f.downed or f.van_seat != "":
 				continue
 			_hint.text = "%s  ·  UP / JUMP TO CLIMB" % str(TowerBook.map_row(map_id).get("label", "TOWER"))
-			_hint.modulate = Color(1.2, 1.15, 0.7)
+			_hint.self_modulate = Color(1.2, 1.15, 0.7)
 			if f._just("up") or f._just("jump"):
 				_start_film()
 			return
 	_hint.text = "???" if not FamilyProfile.data.get("tower_" + map_id, false) else str(TowerBook.map_row(map_id).get("label", "TOWER"))
-	_hint.modulate = Color.WHITE
+	_hint.self_modulate = Color.WHITE
 
 
 func _start_film() -> void:
