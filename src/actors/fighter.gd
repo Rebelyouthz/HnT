@@ -115,6 +115,8 @@ var anim_atk := ""
 var _hurt_t := 0.0
 var _atk_t := 0.0
 var parkour_lock := 0.0
+## Holding a roof-trick combo (TrickCall): the shoulder buttons do not block.
+var trick_hold := false
 var stomp_n := 0
 var stomp_cd := 0.0
 var _foot_cd := 0.0
@@ -775,7 +777,7 @@ func _tick_meters(delta: float) -> void:
 		if FamilyProfile.has_cbt("second_lungs"):
 			regen *= 1.15
 		steam = minf(STEAM_MAX, steam + regen * (1.0 + 0.3 * float(_cart("energy_drink"))) * (2.0 if suit_part("mask") == "shaolin" else 1.0) * Meta.steam_mul() * Heroes.steam_regen_mul(role) * delta)
-	blocking = _pressed("block") and steam > 2.0 and not downed
+	blocking = _pressed("block") and steam > 2.0 and not downed and not trick_hold
 	if tape_t > 0.0:
 		tape_t -= delta
 		if tape_t <= 0.0:

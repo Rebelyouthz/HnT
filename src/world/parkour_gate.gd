@@ -51,10 +51,8 @@ func _ready() -> void:
 
 func _idle() -> String:
 	var t := _pick_trick()
-	var keys: PackedStringArray = []
-	for k in t.get("combo", [t.get("input", "jump")]):
-		keys.append(str(TimingRing.NAMES.get(str(k), str(k).to_upper())))
-	return "%s  ·  %s" % [str(t.get("title", "JUMP")), " + ".join(keys)]
+	var c := TrickCall.combo_for(str(t.get("id", "jump")), int(t.get("tier", 0)))
+	return "%s  ·  R-STICK + %s" % [str(t.get("title", "JUMP")), " + ".join(PackedStringArray(c["btn"]))]
 
 
 ## Learned tricks that fit this gate (data/parkour.json, learn = dojo id).
@@ -110,6 +108,14 @@ func _process(_delta: float) -> void:
 			if p is Node2D:
 				near = minf(near, absf((p as Node2D).global_position.x - global_position.x))
 		var want := clampf((230.0 - near) / 110.0, 0.0, 1.0)
+		# Running at it: the trick call goes up on that hero's screen.
+		var tc := TrickCall.find(get_tree())
+		if tc and not _used:
+			for p in get_tree().get_nodes_in_group("players"):
+				if p is Fighter and not (p as Fighter).downed:
+					var dx := global_position.x - (p as Fighter).global_position.x
+					if absf(dx) < 240.0 and absf(dx) > 30.0 and signf(dx) == float((p as Fighter).facing) and absf((p as Fighter).global_position.y - global_position.y) < 90.0:
+						tc.call_gate(p as Fighter, self, _pick_trick())
 		_hint.modulate.a = lerpf(_hint.modulate.a, want, 0.15)
 	if _used:
 		return
@@ -132,22 +138,16 @@ func _attempt(f: Fighter) -> void:
 		return
 	_used = true
 	var trick := _pick_trick()
-	# A trick is a button combo: each press timed in its own shrinking ring,
-	# one straight after the other. The worst press grades the trick.
-	var combo: Array = trick.get("combo", [trick.get("input", "jump")])
-	var grade := "perfect"
-	var order := ["perfect", "good", "ok", "miss", "big_miss"]
-	for i in combo.size():
-		var step_title := str(trick.get("title", "JUMP")) if combo.size() == 1 else "%s  %d/%d" % [str(trick.get("title", "JUMP")), i + 1, combo.size()]
-		var ring := TimingRing.spawn(get_tree().current_scene, str(combo[i]), f, 0.62 if i == 0 else 0.42, step_title)
-		ring.slow = 0.45
-		var g: String = await ring.resolved
-		if not is_instance_valid(f):
-			return
-		if order.find(g) > order.find(grade):
-			grade = g
-		if not TimingRing.is_success(g):
-			break
+	# Hold the stick + shoulder combo on the way in (TrickCall shows it),
+	# let go as you reach the gate: the timing of the release grades it.
+	var grade := "ok"
+	var tc := TrickCall.find(get_tree())
+	if tc:
+		grade = tc.gate_takeoff(f, self, trick)
+		while grade == "":
+			var res: Array = await tc.graded
+			if res[0] == f:
+				grade = str(res[1])
 	if not is_instance_valid(f):
 		return
 	_next = {}

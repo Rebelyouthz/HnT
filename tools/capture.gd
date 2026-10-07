@@ -559,6 +559,8 @@ func _process(_delta: float) -> bool:
 				Input.action_release(act)
 			if (_n - 100) % 2 == 0 or gun != "":
 				root.get_texture().get_image().save_png(_out.get_basename() + "_%03d.png" % _n)
+	if _n == 20 and OS.get_environment("TRICKAUTO") != "":
+		load("res://src/ui/timing_ring.gd").set("autoplay", true)
 	if _walk and _n > 20:
 		Input.action_press("p1_left" if _left else "p1_right")
 	# FILM=N saves every Nth frame along the way (out_NNN.png).
