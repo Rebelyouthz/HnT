@@ -161,7 +161,7 @@ func _loadout(body: VBoxContainer) -> void:
 		var pr := _row_panel(Palette.BRICK if id != str(Moves.DEFAULT[slot]) else Palette.MUTED)
 		var p: PanelContainer = pr[0]
 		var h: HBoxContainer = pr[1]
-		p.custom_minimum_size = Vector2(570, 84)
+		p.custom_minimum_size = Vector2(570, 100)
 		h.add_child(_icon(id))
 		var v := VBoxContainer.new()
 		v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -178,6 +178,12 @@ func _loadout(body: VBoxContainer) -> void:
 		var stat := UiKit.rich("", 300, 12, Palette.TEXT)
 		stat.text = "DMG [color=%s]x%.2f[/color]  ·  WEIGHT  %s" % [UiKit.UP_COL if mul >= 1.0 else UiKit.DOWN_COL, mul, "■".repeat(int(round(float(r.get("weight", 0.4)) * 5.0))) + "□".repeat(5 - int(round(float(r.get("weight", 0.4)) * 5.0)))]
 		v.add_child(stat)
+		# MASTERY: how many times this one has been thrown, and what it gave.
+		var mlv := Mastery.level(role, id)
+		var nxt := Mastery.to_next(role, id)
+		var ms := UiKit.rich("", 300, 11, Palette.TEXT)
+		ms.text = "MASTERY [color=#ffd75e]%s[/color]%s  ·  %d uses%s" % ["★".repeat(mlv) + "☆".repeat(Mastery.STEPS.size() - mlv), "" if mlv == 0 else "  [color=%s]+%d%%[/color]" % [UiKit.UP_COL, int(round(Mastery.DMG * 100.0 * float(mlv)))], Mastery.uses(role, id), ("  ·  %d to next" % nxt) if nxt > 0 else "  ·  MAX"]
+		v.add_child(ms)
 		h.add_child(v)
 		for step in [-1, 1]:
 			var b := _btn("◀" if step < 0 else "▶", Vector2(44, 44), "%s_%d" % [slot, step], false)

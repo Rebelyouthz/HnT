@@ -1472,6 +1472,10 @@ func _attack(kind: String, charged: bool) -> void:
 	if kind != "light":
 		_strike_grade = ""
 	anim_atk = _sprite_clip(kind)
+	# MASTERY: the more this move is thrown, the better it gets.
+	Mastery.use(role, anim_atk, global_position)
+	move_mul *= Mastery.power(role, anim_atk)
+	attack_cd = maxi(6, int(round(float(attack_cd) * Mastery.recovery(role, anim_atk))))
 	_atk_t = 0.48 if kind == "light" or kind == "gut-punch" or kind == "jump-kick" else 0.72
 	var life := 0.12 if kind == "light" or kind == "jump-kick" or kind == "gut-punch" else 0.2
 	_begin_strike(kind, size, life, 36.0)
@@ -1493,7 +1497,7 @@ func _begin_strike(kind: String, size: Vector2, life: float, reach: float) -> vo
 	if hit_f > 0:
 		var skip := MoveBook.entry_skip(_live_stance(), clip)
 		start_f = clampi(roundi(float(hit_f) * skip), 0, hit_f - 1)
-		startup = minf(float(hit_f - start_f) / fps, float(mv["startup_cap"]))
+		startup = minf(float(hit_f - start_f) / fps, float(mv["startup_cap"])) * Mastery.speed(role, clip)
 		# The art must reach its peak on the contact tick: speed the wind-up
 		# up if the cap is shorter than the drawn extension.
 		var natural := float(hit_f - start_f) / fps
