@@ -589,7 +589,7 @@
     "Coping Imp"
    ],
    "rate": 1.0,
-   "cap": 9
+   "cap": 8
   },
   {
    "at": 45,
@@ -598,7 +598,7 @@
     "Bag Snatch"
    ],
    "rate": 1.25,
-   "cap": 12
+   "cap": 10
   },
   {
    "at": 90,
@@ -608,7 +608,7 @@
     "Clipboard"
    ],
    "rate": 1.5,
-   "cap": 14,
+   "cap": 12,
    "elite_every": 30
   },
   {
@@ -619,7 +619,7 @@
     "Repo Goon"
    ],
    "rate": 1.8,
-   "cap": 16,
+   "cap": 13,
    "elite_every": 25,
    "mini": true
   },
@@ -632,7 +632,7 @@
     "Mohawk Bo"
    ],
    "rate": 2.2,
-   "cap": 18,
+   "cap": 15,
    "elite_every": 18,
    "swarm": true
   },
@@ -644,7 +644,7 @@
     "Coping Imp"
    ],
    "rate": 2.6,
-   "cap": 20,
+   "cap": 16,
    "elite_every": 14
   }
  ],

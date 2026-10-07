@@ -42,6 +42,9 @@ func _physics_process(delta: float) -> void:
 		global_position = global_position.move_toward(best.global_position + Vector2(0, -20), (420.0 + best.magnet_r) * delta)
 	if _blob:
 		_blob.rotation += delta * 4.0
+		# Merged gems grow instead of piling up.
+		var k := clampf(1.0 + float(amount - 4) / 30.0, 1.0, 2.2)
+		_blob.scale = Vector2(k, k)
 
 
 func _eat(b: Node) -> void:

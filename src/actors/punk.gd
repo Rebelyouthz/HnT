@@ -527,6 +527,10 @@ func _physics_process(delta: float) -> void:
 		var gait := WoundGait.speed_mul(self)
 		velocity.x *= gait
 		vy *= gait
+		if home == "street":
+			var sp := CrowdAI.spread(self)
+			velocity.x += sp.x * 6.0
+			vy += sp.y * 3.0
 	# DETOUR: walked into a crate or a car - step up or down the lane and go
 	# round it instead of piling up behind it.
 	if _detour_t > 0.0:

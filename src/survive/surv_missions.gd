@@ -238,16 +238,7 @@ func _spawn_champ(f: Fighter) -> void:
 	if k == "charger":
 		_champ.speed *= 1.6
 	OverheadBadge.attach.call_deferred(_champ, "boss")
-	var tag := Label.new()
-	tag.text = "CHAMPION · " + str(spec["name"])
-	tag.position = Vector2(-70, -104)
-	tag.size = Vector2(140, 12)
-	tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	tag.add_theme_font_size_override("font_size", 7)
-	tag.add_theme_color_override("font_color", spec["col"])
-	tag.add_theme_color_override("font_outline_color", Color(0, 0, 0))
-	tag.add_theme_constant_override("outline_size", 3)
-	_champ.add_child.call_deferred(tag)
+	_champ.add_child.call_deferred(EliteTag.make("CHAMPION · " + str(spec["name"]), spec["col"], Vector2(-70, -104), 140))
 	_lab.text = "MISSION  ·  " + str(spec["name"])
 	Juice.pulse_shake(4.0)
 	if run:

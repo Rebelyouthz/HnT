@@ -10,6 +10,8 @@ extends RefCounted
 const TICKETS := 2
 const RING := 118.0
 const REFRESH := 0.4
+const TICKETS_SURV := 5
+static var _surv := false
 
 static var _tickets: Dictionary = {}   # hero instance id -> Array of punk ids
 static var _t := 0.0
@@ -22,9 +24,6 @@ static func role(e: Punk, t: Node2D) -> String:
 		return "attack"
 	var k := str(e.kit.get("attack", ""))
 	if k in ["gun", "grenade"]:
-		return "attack"
-	# The survivor horde swarms: crowd rules are for the story streets.
-	if SurviveRun.get_run(e.get_tree()) != null:
 		return "attack"
 	_refresh(e.get_tree())
 	var list: Array = _tickets.get(t.get_instance_id(), [])
@@ -42,6 +41,7 @@ static func _refresh(tree: SceneTree) -> void:
 	_t = now
 	_frame = f
 	_tickets.clear()
+	_surv = SurviveRun.get_run(tree) != null
 	var heroes: Array = []
 	for n in tree.get_nodes_in_group("players"):
 		if n is Fighter and not (n as Fighter).downed:
@@ -75,7 +75,10 @@ static func _refresh(tree: SceneTree) -> void:
 		var q: Array = queues[hid]
 		q.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0])
 		var ids: Array = []
-		for i in mini(TICKETS, q.size()):
+		# The survivor horde is a horde: more go in at once, but still not all
+		# of them, so it surrounds instead of stacking into one pile.
+		var n_t := TICKETS_SURV if _surv else TICKETS
+		for i in mini(n_t, q.size()):
 			ids.append(q[i][1])
 		_tickets[hid] = ids
 
@@ -88,4 +91,26 @@ static func spot(e: Punk, t: Node2D) -> Vector2:
 	var side := -1.0 if seed % 2 == 0 else 1.0
 	var depth := float((seed / 2) % 3 - 1) * 26.0
 	var wob := sin(Time.get_ticks_msec() / 1000.0 * 0.9 + float(seed % 17)) * 14.0
+	if _surv:
+		# Three rings deep and five bands up and down the street.
+		var tier := float((seed / 6) % 3)
+		depth = float((seed / 2) % 5 - 2) * 24.0
+		return t.global_position + Vector2(side * (RING + 10.0 + tier * 48.0 + wob), depth)
 	return t.global_position + Vector2(side * (RING + wob), depth)
+
+
+## Survivor only: thugs closer than a body width step apart, so the horde
+## reads as a crowd of people and not one blob.
+static func spread(e: Punk) -> Vector2:
+	if not _surv:
+		return Vector2.ZERO
+	var push := Vector2.ZERO
+	for n in e.get_tree().get_nodes_in_group("enemies"):
+		if n == e or not (n is Punk) or (n as Punk).home != "street":
+			continue
+		var dv: Vector2 = e.global_position - (n as Node2D).global_position
+		dv.y *= 2.2
+		var d := dv.length()
+		if d < 34.0 and d > 0.01:
+			push += dv / d * (34.0 - d)
+	return push

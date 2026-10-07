@@ -51,6 +51,7 @@ func _ready() -> void:
 	_lock.scale = Vector2.ONE
 	_bars.add_child(_lock)
 	_sign = NightStreet.plaque(self, Vector2(-30, -78), "HELP  ·  %s" % StoryBook.who_name(who), Talk.accent(who), 10)
+	NearFade.on(_sign, 120, 260)
 	add_to_group("rescue_cage")
 
 

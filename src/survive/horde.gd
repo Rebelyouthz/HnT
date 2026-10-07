@@ -135,7 +135,8 @@ func _wave(elite := false, force := false) -> void:
 	var rs := get_tree().get_first_node_in_group("run_state")
 	# Hard on purpose: the horde outgrows a fresh build; gear, META and the
 	# tree are how you keep up.
-	var mul := 1.0 + elapsed / 85.0 + pow(elapsed / 300.0, 2.0) * 1.5
+	# (x1.2: a smaller, readable horde that hits as hard as the old big one)
+	var mul := (1.0 + elapsed / 85.0 + pow(elapsed / 300.0, 2.0) * 1.5) * 1.2
 	if rs and rs.has_method("hp_mul"):
 		mul *= rs.hp_mul()
 	mul *= 1.0 + SurvExtras.pact_sum("hp")
@@ -176,16 +177,7 @@ func _make_elite(p: Punk) -> void:
 	l.energy = 1.2
 	l.position = Vector2(0, -30)
 	p.add_child(l)
-	var tag := Label.new()
-	tag.text = "ELITE · " + str(m.get("name", ""))
-	tag.position = Vector2(-50, -96)
-	tag.size = Vector2(100, 12)
-	tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	tag.add_theme_font_size_override("font_size", 7)
-	tag.add_theme_color_override("font_color", c)
-	tag.add_theme_color_override("font_outline_color", Color(0, 0, 0))
-	tag.add_theme_constant_override("outline_size", 3)
-	p.add_child(tag)
+	p.add_child(EliteTag.make("ELITE · " + str(m.get("name", "")), c, Vector2(-50, -96), 100))
 	if p.elite_mod == "vampiric":
 		var tm := Timer.new()
 		tm.wait_time = 1.0
@@ -226,7 +218,25 @@ func _elite_death(p: Punk) -> void:
 
 func _gem(at: Vector2, big := false) -> void:
 	gems += 1
+	var amt := 18 if big else 4 + int(elapsed / 90.0)
+	# A carpet of gems is noise: past 18 on the floor, a new one feeds the
+	# nearest gem instead (it grows a size) rather than adding another.
+	var lying := get_tree().get_nodes_in_group("xp_gems")
+	if lying.size() > 18:
+		var near: Node2D = null
+		var nd := 160.0
+		for n in lying:
+			var dd := (n as Node2D).global_position.distance_to(at)
+			if dd < nd:
+				nd = dd
+				near = n
+		if near != null:
+			near.set("amount", int(near.get("amount")) + amt)
+			if near.has_method("queue_redraw"):
+				near.queue_redraw()
+			return
 	var g := XpGem.new()
-	g.amount = 18 if big else 4 + int(elapsed / 90.0)
+	g.add_to_group("xp_gems")
+	g.amount = amt
 	g.global_position = at + Vector2(0, -18)
 	get_parent().add_child.call_deferred(g)
