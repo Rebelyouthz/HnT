@@ -1072,7 +1072,10 @@ func _process_climb(delta: float) -> void:
 	velocity = Vector2.ZERO
 	if ladder:
 		global_position.x = move_toward(global_position.x, ladder.climb_x, 240.0 * delta)
-		global_position.y += y * 190.0 * delta
+		global_position.y += y * 190.0 * ladder.speed_k(role) * delta
+		if ladder.style == "boost" and y < 0.0:
+			# Two springy hops: bin lid, awning, roof.
+			visual.position.y = -absf(sin((ladder.bottom_y - global_position.y) / maxf(1.0, ladder.bottom_y - ladder.top_y) * TAU)) * 14.0
 		if global_position.y <= ladder.top_y + 2.0 and y < 0.0:
 			global_position.y = ladder.top_y
 			_enter_roof()
@@ -1083,7 +1086,8 @@ func _process_climb(delta: float) -> void:
 			return
 	else:
 		_enter_street()
-	visual.position.y = 0.0
+	if ladder == null or ladder.style != "boost":
+		visual.position.y = 0.0
 	_face(0.0)
 
 
@@ -2593,6 +2597,10 @@ func _start_climb() -> void:
 	if ladder == null:
 		return
 	plane = "climb"
+	if ladder.style == "boost":
+		Juice.squash(squash_root, facing)
+		Juice.land_puff(global_position)
+		KitSfx.hit(role, "dash")
 	hop = 0.0
 	hop_v = 0.0
 	web_anchor = null

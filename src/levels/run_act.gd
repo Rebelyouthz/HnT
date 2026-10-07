@@ -293,6 +293,7 @@ func _place_towers() -> void:
 
 func _place_secrets() -> void:
 	SecretStash.place(self, map_id)
+	_extra_ways_up.call_deferred()
 	# After everything else has been dropped in (wheel tokens, gates).
 	get_tree().create_timer(0.15).timeout.connect(_spread_props)
 
@@ -921,6 +922,62 @@ func fire_escape(at_x: float, top_y: float = 248.0, bottom: float = 500.0) -> vo
 	var fe := FireEscape.new()
 	fe.configure(at_x, top_y, bottom)
 	add_child(fe)
+
+
+## Ladders aren't the only way up: in each long stretch between two
+## fire escapes a drainpipe or a bin-and-awning boost goes in (taking turns),
+## kept clear of parked cars and parkour gates.
+func _extra_ways_up() -> void:
+	var lads: Array[float] = []
+	var bottom := 500.0
+	for c in get_children():
+		if c is FireEscape:
+			lads.append((c as FireEscape).climb_x)
+			bottom = (c as FireEscape).bottom_y
+	if lads.is_empty():
+		return
+	var blocked: Array[Vector2] = []
+	for c in get_tree().get_nodes_in_group("parked_cars"):
+		if c is Node2D:
+			var w := float(c.get_meta("w", 150.0))
+			blocked.append(Vector2((c as Node2D).global_position.x - w * 0.5 - 40.0, (c as Node2D).global_position.x + w * 0.5 + 40.0))
+	for c in get_children():
+		if c is ViewpointTower:
+			blocked.append(Vector2((c as Node2D).global_position.x - 240.0, (c as Node2D).global_position.x + 240.0))
+		elif c is ParkourGate or c is ShopCart or c is StreetShop or c is CrewNPC or c is ParkourToy:
+			blocked.append(Vector2((c as Node2D).global_position.x - 130.0, (c as Node2D).global_position.x + 130.0))
+	var turn := 0
+	for n in get_tree().get_nodes_in_group("roof_solids"):
+		if not n.has_meta("rect") or not is_ancestor_of(n):
+			continue
+		var r: Rect2 = n.get_meta("rect")
+		if r.size.x < 260.0 or r.position.y < 120.0:
+			continue
+		# The spot on this roof furthest from every ladder.
+		var best := -1.0
+		var best_d := 0.0
+		var x := maxf(r.position.x + 50.0, 180.0)
+		while x <= minf(r.end.x - 50.0, map_w - 180.0):
+			var ok := true
+			for bl in blocked:
+				if x > bl.x and x < bl.y:
+					ok = false
+					break
+			if ok:
+				var d := INF
+				for lx in lads:
+					d = minf(d, absf(lx - x))
+				if d > best_d:
+					best_d = d
+					best = x
+			x += 20.0
+		if best < 0.0 or best_d < 240.0:
+			continue
+		var fe := FireEscape.new()
+		fe.configure(best, r.position.y, bottom, "pipe" if turn % 2 == 0 else "boost")
+		add_child(fe)
+		lads.append(best)
+		turn += 1
 
 
 func anchor(at: Vector2) -> void:
