@@ -332,17 +332,46 @@ const BUILD_ORDER := [
 ]
 
 
-## The room that has to be built first ("" when nothing blocks it).
+## Nights (finished runs) before each room in BUILD_ORDER can go up, so the
+## camp and its menus open one at a time with the story instead of all at
+## once on a fat wallet: desk and dojo on night one, the skill tree after the
+## first night out, the locker after two, then roughly one room a night.
+const NIGHTS_FOR := [0, 0, 1, 1, 2, 3, 3, 4, 5, 6, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+
+
+func nights_for(id: String) -> int:
+	var i := BUILD_ORDER.find(id)
+	if i < 0:
+		return 0
+	return int(NIGHTS_FOR[mini(i, NIGHTS_FOR.size() - 1)])
+
+
+## What stands in the way of the first build ("" when nothing does): the
+## room before it in the plan, or "@N" when N more nights are needed.
 func build_blocker(id: String) -> String:
 	if building_level(id) > 0:
 		return ""
 	var i := BUILD_ORDER.find(id)
-	if i <= 0:
+	if i < 0:
 		return ""
 	for k in range(i - 1, -1, -1):
 		if building_level(str(BUILD_ORDER[k])) <= 0:
 			return str(BUILD_ORDER[k])
+	var left := nights_for(id) - int(data.get("runs", 0))
+	if left > 0:
+		return "@%d" % left
 	return ""
+
+
+## The blocker as a line for a button or prompt.
+func blocker_text(id: String) -> String:
+	var b := build_blocker(id)
+	if b == "":
+		return ""
+	if b.begins_with("@"):
+		var n := int(b.substr(1))
+		return "OPENS IN %d NIGHT%s" % [n, "" if n == 1 else "S"]
+	return "BUILD THE %s FIRST" % b.replace("_", " ").to_upper()
 
 
 ## The next room in the planned order that is not built yet.
@@ -411,6 +440,11 @@ func mark_run_finished(ok: bool = true) -> void:
 		"secs": int(Time.get_ticks_msec() / 1000.0 - t0), "peak": int(Juice.combo_peak), "date": Time.get_date_string_from_system()})
 	data["run_history"] = hist.slice(0, 10)
 	_bump_daily("run")
+	# The night that opens the next room says so.
+	var nb := next_build()
+	if nb != "" and nights_for(nb) == int(data["runs"]) and build_blocker(nb) == "":
+		flag_unseen("build_%s" % nb)
+		Juice.toast("unlock", "NEW ROOM READY", "%s can go up at camp." % nb.replace("_", " ").to_upper())
 	save()
 
 

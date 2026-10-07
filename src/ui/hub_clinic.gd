@@ -170,37 +170,50 @@ func _chest_btn(kind: String, chest: Dictionary, value: int) -> Button:
 
 
 func _on_built(id: String) -> void:
+	# An upgrade is a toast; the first build is the big banner.
+	if FamilyProfile.building_level(id) > 1:
+		Juice.toast("unlock", "%s  ·  LV %d" % [id.replace("_", " ").to_upper(), FamilyProfile.building_level(id)], "Upgraded.")
+		need_refresh.emit()
+		return
 	match id:
 		"therapy_couch":
-			Juice.unlock_logo("BUILD TAB", "The couch is furniture. The tree is a lifestyle.", "TAB  ·  BUILD")
+			Juice.unlock_logo("SKILL TREE", "The couch is furniture. The tree is a lifestyle.", "TAB  ·  BUILD", SpriteBook.icon(id))
 		"wardrobe_cage":
-			Juice.unlock_logo("LOCKER", "Costumes do not change the web. That is the point.", "TAB  ·  LOCKER")
+			Juice.unlock_logo("LOCKER", "Costumes do not change the web. That is the point.", "TAB  ·  LOCKER", SpriteBook.icon(id))
 		"trophy_cabinet":
-			Juice.unlock_logo("AWARDS", "Claim or it did not happen.", "TAB  ·  AWARDS")
+			Juice.unlock_logo("AWARDS", "Claim or it did not happen.", "TAB  ·  AWARDS", SpriteBook.icon(id))
 		"pawn_shop":
-			Juice.unlock_logo("CAMP UNLOCKED", "Chests, wheel, slots. Upgrade the stall and the stock gets meaner.", "SHOP  ·  DOPAMINE")
+			Juice.unlock_logo("DOPAMINE SHOP", "Chests, wheel, slots. Upgrade the stall and the stock gets meaner.", "SHOP  ·  DOPAMINE", SpriteBook.icon(id))
 		"patrol_desk":
-			Juice.unlock_logo("QUICK PATROL", "2×/day. Ticks while you play and while the fridge is closed.", "PATROL  ·  IDLE")
+			Juice.unlock_logo("QUICK PATROL", "2×/day. Ticks while you play and while the fridge is closed.", "PATROL  ·  IDLE", SpriteBook.icon(id))
 		"research_lab":
-			Juice.unlock_logo("RESEARCH CENTER", "Silencers, mags, hollow feelings.", "RESEARCH")
+			Juice.unlock_logo("RESEARCH CENTER", "Silencers, mags, hollow feelings.", "RESEARCH", SpriteBook.icon(id))
 		"dojo":
-			Juice.unlock_logo("MARTIAL ARTS SCHOOL", "Learn. Master. Pin a shaolin badge.", "DOJO")
+			Juice.unlock_logo("MARTIAL ARTS SCHOOL", "Learn. Master. Pin a shaolin badge.", "DOJO", SpriteBook.icon(id))
 		"workshop":
-			Juice.unlock_logo("WORKSHOP", "Parts in. A body out. Gear is the build.", "CRAFT")
+			Juice.unlock_logo("WORKSHOP", "Parts in. A body out. Gear is the build.", "CRAFT", SpriteBook.icon(id))
 		"tip_jar":
-			Juice.unlock_logo("TIP JAR", "Five gold. The jar might love you back.", "CAMP  ·  TIP")
+			Juice.unlock_logo("TIP JAR", "Five gold. The jar might love you back.", "CAMP  ·  TIP", SpriteBook.icon(id))
 		"lost_found":
-			Juice.unlock_logo("LOST AND FOUND", "A pipe for later. Tutoring can wait.", "CAMP  ·  PACK")
+			Juice.unlock_logo("LOST AND FOUND", "A pipe for later. Tutoring can wait.", "CAMP  ·  PACK", SpriteBook.icon(id))
 		"payphone":
-			Juice.unlock_logo("PAYPHONE", "Dial City Hall. The cord is sticky.", "CAMP  ·  PHONE")
+			Juice.unlock_logo("PAYPHONE", "Dial City Hall. The cord is sticky.", "CAMP  ·  PHONE", SpriteBook.icon(id))
 		"water_cooler":
-			Juice.unlock_logo("WATER COOLER", "The water is free. The gossip is billed.", "CAMP  ·  COOLER")
+			Juice.unlock_logo("WATER COOLER", "The water is free. The gossip is billed.", "CAMP  ·  COOLER", SpriteBook.icon(id))
 		"coat_check":
-			Juice.unlock_logo("COAT CHECK", "Tape on a hanger. The copay still wants a wrap.", "CAMP  ·  TAPE")
+			Juice.unlock_logo("COAT CHECK", "Tape on a hanger. The copay still wants a wrap.", "CAMP  ·  TAPE", SpriteBook.icon(id))
 		"time_clock":
-			Juice.unlock_logo("TIME CLOCK", "Punch in. Six gold. The shift still wants a copay.", "CAMP  ·  SHIFT")
+			Juice.unlock_logo("TIME CLOCK", "Punch in. Six gold. The shift still wants a copay.", "CAMP  ·  SHIFT", SpriteBook.icon(id))
 		"bleach_closet":
-			Juice.unlock_logo("BLEACH CLOSET", "A fizz for later. The mop still wants tuition.", "CAMP  ·  FIZZ")
+			Juice.unlock_logo("BLEACH CLOSET", "A fizz for later. The mop still wants tuition.", "CAMP  ·  FIZZ", SpriteBook.icon(id))
+		_:
+			var info := {}
+			var list: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/buildings.json"))
+			if list is Array:
+				for b: Variant in list:
+					if b is Dictionary and str((b as Dictionary)["id"]) == id:
+						info = b
+			Juice.carpenter(str(info.get("name", id.replace("_", " "))), str(info.get("unlocks", "CAMP")), id)
 	need_refresh.emit()
 
 
@@ -275,12 +288,11 @@ func _detail(id: String) -> void:
 		var blk := FamilyProfile.build_blocker(id)
 		if blk != "":
 			b.disabled = true
-			b.text = "BUILD %s FIRST" % blk.replace("_", " ").to_upper()
+			b.text = FamilyProfile.blocker_text(id)
 			b.custom_minimum_size = Vector2(320, 50)
 		b.pressed.connect(func() -> void:
 			if FamilyProfile.try_build(id):
 				Juice.play("res://assets/audio/hammer.wav")
-				Juice.carpenter(str(info.get("name", id)), str(info.get("unlocks", "CAMP")))
 				layer.queue_free()
 				_on_built(id)
 		)

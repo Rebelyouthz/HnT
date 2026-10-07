@@ -546,8 +546,12 @@ func _toast_show(kind: String, title: String, body: String, icon: String) -> voi
 		RewardFly.snd("gem_land", 1.3, -6.0)
 
 
-func unlock_logo(title: String, sub: String, reward: String = "") -> void:
+func unlock_logo(title: String, sub: String, reward: String = "", icon: Texture2D = null) -> void:
 	var body := reward if reward != "" else sub
+	# Mid-fight a corner note; in the camp and menus the big banner.
+	if get_tree().get_first_node_in_group("run_state") == null:
+		unlock_banner(title, sub if reward == "" else "%s  ·  %s" % [reward, sub], icon)
+		return
 	toast("unlock", title, body)
 
 
@@ -659,46 +663,157 @@ func level_up(grant: Dictionary) -> void:
 	toast("achievement", "LEVEL UP", "YOU GOT  ·  LV %d  ·  +8 GOLD" % int(grant.get("level", 1)))
 
 
-func carpenter(title: String, reward: String) -> void:
+func carpenter(title: String, reward: String, icon_id: String = "") -> void:
 	play("res://assets/audio/hammer.wav" if ResourceLoader.exists("res://assets/audio/hammer.wav") else "res://assets/audio/chest.wav")
-	pulse_shake(5.0)
+	var tex: Texture2D = SpriteBook.icon(icon_id) if icon_id != "" else null
+	unlock_banner(title, "YOU GOT  ·  %s" % reward, tex)
+
+
+var _banner_q: Array = []
+var _banner_on := false
+
+
+## The big one: a feature opened up (a camp room, a menu, a move set). A
+## dark band opens across the middle of the screen, gold rays turn behind the
+## icon as it pops in, the name slams in from the left and UNLOCKED from the
+## right, sparks fall; after a beat the band folds shut. Queued, one at a time.
+func unlock_banner(title: String, sub: String = "", tex: Texture2D = null) -> void:
+	_banner_q.append([title, sub, tex])
+	if not _banner_on:
+		_banner_next()
+
+
+func _banner_next() -> void:
+	if _banner_q.is_empty():
+		_banner_on = false
+		return
+	_banner_on = true
+	var job: Array = _banner_q.pop_front()
+	var title := str(job[0]).to_upper()
+	var sub := str(job[1])
+	var tex: Texture2D = job[2]
+	play("res://assets/audio/levelup.wav" if ResourceLoader.exists("res://assets/audio/levelup.wav") else "res://assets/audio/chest.wav")
+	pulse_shake(6.0)
+	var vs := get_viewport().get_visible_rect().size
+	var cy := vs.y * 0.42
 	var wrap := Control.new()
 	wrap.set_anchors_preset(Control.PRESET_FULL_RECT)
 	wrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	wrap.process_mode = Node.PROCESS_MODE_ALWAYS
 	_overlay.add_child(wrap)
-	var plank := ColorRect.new()
-	plank.color = Color(0.45, 0.32, 0.18)
-	plank.size = Vector2(160, 18)
-	plank.position = Vector2(560, 380)
-	wrap.add_child(plank)
-	var saw := ColorRect.new()
-	saw.color = Palette.EDGE
-	saw.size = Vector2(40, 10)
-	saw.position = Vector2(540, 360)
-	wrap.add_child(saw)
-	var lab := Label.new()
-	lab.text = "CAMP UNLOCKED"
-	lab.position = Vector2(400, 250)
-	lab.size = Vector2(480, 40)
-	lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	UiKit.apply_label(lab, 32, Palette.LEMON)
-	wrap.add_child(lab)
-	var sub := Label.new()
-	sub.text = "%s\nYOU GOT  ·  %s" % [title, reward]
-	sub.position = Vector2(360, 300)
-	sub.size = Vector2(560, 60)
-	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	UiKit.apply_label(sub, 16, Palette.TEXT)
-	wrap.add_child(sub)
-	var tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	# The band, with lit rims.
+	var band := Control.new()
+	band.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	band.position = Vector2(0, cy)
+	band.size = Vector2(vs.x, 1)
+	band.scale = Vector2(1, 0)
+	wrap.add_child(band)
+	var bh := 300.0
+	var fill := ColorRect.new()
+	fill.color = Color(0.03, 0.03, 0.06, 0.88)
+	fill.position = Vector2(0, -bh * 0.5)
+	fill.size = Vector2(vs.x, bh)
+	band.add_child(fill)
+	for yy in [-bh * 0.5, bh * 0.5 - 3.0]:
+		var rim := ColorRect.new()
+		rim.color = Palette.LEMON
+		rim.position = Vector2(0, yy)
+		rim.size = Vector2(vs.x, 3)
+		band.add_child(rim)
+	# Rays behind the icon.
+	var ix := vs.x * 0.5
+	var rays := Control.new()
+	rays.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rays.size = vs
+	wrap.add_child(rays)
+	var t0 := Time.get_ticks_msec()
+	rays.draw.connect(func() -> void:
+		var tt := float(Time.get_ticks_msec() - t0) / 1000.0
+		var c := Vector2(ix, cy - 34.0)
+		for i in 14:
+			var a := tt * 0.6 + float(i) * TAU / 14.0
+			var r := 150.0
+			rays.draw_colored_polygon(PackedVector2Array([c, c + Vector2(cos(a - 0.08), sin(a - 0.08)) * r, c + Vector2(cos(a + 0.08), sin(a + 0.08)) * r]), Color(1.0, 0.82, 0.3, 0.16))
+		rays.draw_circle(c, 62.0, Color(1.0, 0.8, 0.3, 0.12))
+	)
+	var spin := create_tween().set_loops()
+	spin.set_ignore_time_scale(true)
+	spin.tween_callback(rays.queue_redraw).set_delay(0.03)
+	rays.modulate.a = 0.0
+	# The icon.
+	var icon := TextureRect.new()
+	icon.texture = tex if tex != null else IconBook.tex("cur_key")
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	icon.size = Vector2(112, 112)
+	icon.pivot_offset = icon.size * 0.5
+	icon.position = Vector2(ix - 56.0, cy - 34.0 - 56.0)
+	icon.scale = Vector2.ZERO
+	wrap.add_child(icon)
+	# Name from the left, UNLOCKED from the right.
+	var name_l := Label.new()
+	name_l.text = title
+	name_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_l.size = Vector2(vs.x, 60)
+	name_l.position = Vector2(-vs.x, cy + 18.0)
+	UiKit.apply_label(name_l, 44, Palette.LEMON)
+	name_l.add_theme_constant_override("outline_size", 10)
+	wrap.add_child(name_l)
+	var un := Label.new()
+	un.text = "U N L O C K E D"
+	un.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	un.size = Vector2(vs.x, 30)
+	un.position = Vector2(vs.x, cy + 66.0)
+	UiKit.apply_label(un, 22, Color.WHITE)
+	wrap.add_child(un)
+	var sl := Label.new()
+	sl.text = sub
+	sl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sl.size = Vector2(vs.x, 22)
+	sl.position = Vector2(0, cy + 128.0)
+	sl.modulate.a = 0.0
+	UiKit.apply_label(sl, 14, Palette.TEXT)
+	wrap.add_child(sl)
+	# Sparks raining from the band.
+	var sp := CPUParticles2D.new()
+	sp.position = Vector2(ix, cy - 110.0)
+	sp.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	sp.emission_rect_extents = Vector2(vs.x * 0.35, 4)
+	sp.amount = 40
+	sp.lifetime = 1.4
+	sp.gravity = Vector2(0, 160)
+	sp.initial_velocity_min = 10.0
+	sp.initial_velocity_max = 60.0
+	sp.scale_amount_min = 2.0
+	sp.scale_amount_max = 4.0
+	sp.color = Color(1.0, 0.85, 0.35)
+	sp.emitting = false
+	wrap.add_child(sp)
+	var tw := create_tween()
 	tw.set_ignore_time_scale(true)
-	tw.tween_property(saw, "position:x", 720.0, 0.35)
-	tw.parallel().tween_property(plank, "rotation", 0.4, 0.4)
-	tw.tween_interval(0.55)
-	tw.tween_property(wrap, "modulate:a", 0.0, 0.2)
-	tw.finished.connect(wrap.queue_free)
+	tw.tween_property(band, "scale:y", 1.0, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_callback(func() -> void: sp.emitting = true)
+	tw.parallel().tween_property(rays, "modulate:a", 1.0, 0.25)
+	tw.parallel().tween_property(icon, "scale", Vector2(1.25, 1.25), 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(icon, "scale", Vector2.ONE, 0.12)
+	tw.parallel().tween_property(name_l, "position:x", 0.0, 0.24).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(un, "position:x", 0.0, 0.28).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT).set_delay(0.06)
+	tw.tween_callback(func() -> void: pulse_shake(3.0))
+	tw.tween_property(sl, "modulate:a", 1.0, 0.2)
+	# A backlog after a big night: keep each one short.
+	tw.tween_interval(1.7 if _banner_q.size() < 2 else 0.8)
+	tw.tween_property(name_l, "position:x", vs.x, 0.22).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(un, "position:x", -vs.x, 0.22).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(icon, "scale", Vector2.ZERO, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(sl, "modulate:a", 0.0, 0.15)
+	tw.parallel().tween_property(rays, "modulate:a", 0.0, 0.2)
+	tw.tween_property(band, "scale:y", 0.0, 0.16)
+	tw.tween_callback(func() -> void:
+		spin.kill()
+		wrap.queue_free()
+		_banner_next.call_deferred()
+	)
 
 
 func muzzle(at: Vector2, facing: int, caliber: String) -> void:

@@ -546,7 +546,7 @@ func _prompt_for(st: Dictionary) -> String:
 		var cost := FamilyProfile.build_cost(id)
 		var blk := FamilyProfile.build_blocker(id)
 		if blk != "":
-			return "%s  ·  BUILD THE %s FIRST" % [st["name"], blk.replace("_", " ").to_upper()]
+			return "%s  ·  %s" % [st["name"], FamilyProfile.blocker_text(id)]
 		if not StoryBook.has_crew("benny"):
 			return "%s  ·  BENNY COULD BUILD THIS  ·  HE'S HELD ON DOCK STREET" % st["name"]
 		if int(FamilyProfile.data.get("gold", 0)) < cost:
@@ -573,6 +573,10 @@ func _use(st: Dictionary) -> void:
 		return
 	if bool(st.get("locked", false)):
 		var blk2 := FamilyProfile.build_blocker(id)
+		if blk2.begins_with("@"):
+			var n := int(blk2.substr(1))
+			_talk.play([{"who": "benny", "text": "Not yet. Bring me %d more night%s of stories and I'll find the lumber." % [n, "" if n == 1 else "s"]}], true)
+			return
 		if blk2 != "":
 			_talk.play([{"who": "benny", "text": "One thing at a time. The %s goes up first, then this." % blk2.replace("_", " ")}], true)
 			return
@@ -748,7 +752,7 @@ func _construct(st: Dictionary, paid := false) -> void:
 		for b: Variant in list:
 			if b is Dictionary and str((b as Dictionary)["id"]) == id:
 				info = b
-	Juice.carpenter(str(info.get("name", st["name"])), str(info.get("unlocks", "CAMP")))
+	Juice.carpenter(str(info.get("name", st["name"])), str(info.get("unlocks", "CAMP")), str(st["id"]))
 	_talk.play([{"who": "benny", "text": "%s. Built to code. Our code." % str(st["name"]).capitalize()}], true)
 	await get_tree().create_timer(1.2).timeout
 	for p in planks:

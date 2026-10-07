@@ -94,7 +94,7 @@ func _spot(info: Dictionary) -> Control:
 	var blk := FamilyProfile.build_blocker(id)
 	if blk != "":
 		b.disabled = true
-		b.text = "AFTER %s" % blk.replace("_", " ").to_upper()
+		b.text = FamilyProfile.blocker_text(id)
 	elif not can_pay:
 		b.disabled = true
 		b.text = "NEED %d GOLD" % cost
@@ -105,7 +105,10 @@ func _spot(info: Dictionary) -> Control:
 	b.pressed.connect(func() -> void:
 		if FamilyProfile.try_build(id):
 			Juice.play("res://assets/audio/hammer.wav" if ResourceLoader.exists("res://assets/audio/hammer.wav") else "res://assets/audio/chest.wav")
-			Juice.carpenter(str(info["name"]), str(info.get("unlocks", "CAMP")))
+			if FamilyProfile.building_level(id) == 1:
+				Juice.carpenter(str(info["name"]), str(info.get("unlocks", "CAMP")), id)
+			else:
+				Juice.toast("unlock", "%s  ·  LV %d" % [str(info["name"]).to_upper(), FamilyProfile.building_level(id)], "Upgraded.")
 			Juice.upgrade_fx(b, Palette.READY, Copy.GROWTH, true)
 			built.emit(id)
 		else:
