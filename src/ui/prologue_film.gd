@@ -181,7 +181,9 @@ func _enter_collectors() -> void:
 
 func _tween_walk(a: FilmActor, x: float, dur: float) -> void:
 	if a.anim and a.anim.sprite_frames.has_animation("walk"):
-		a.anim.play("walk")
+		# The son's three-quarter walk has real steps (Fighter.SIDE_WALK).
+		var clip := str(Fighter.SIDE_WALK.get(str(a.get("role")), "walk"))
+		a.anim.play(clip if a.anim.sprite_frames.has_animation(clip) else "walk")
 	var tw := create_tween()
 	tw.tween_property(a, "position:x", x, dur)
 	tw.tween_callback(func() -> void:
