@@ -254,11 +254,10 @@ func _gem(at: Vector2, big := false) -> void:
 				near = n
 		if near != null:
 			near.set("amount", int(near.get("amount")) + amt)
-			if near.has_method("queue_redraw"):
-				near.queue_redraw()
+			if near.has_method("refresh_tint"):
+				near.call("refresh_tint")
 			return
-	var g := XpGem.new()
-	g.add_to_group("xp_gems")
-	g.amount = amt
-	g.global_position = at + Vector2(0, -18)
-	get_parent().add_child.call_deferred(g)
+	# Elites burst into a little fountain of crystals.
+	var n := 3 if big else 1
+	for i in n:
+		XpGem.pop(get_parent(), at, int(ceil(float(amt) / float(n))))

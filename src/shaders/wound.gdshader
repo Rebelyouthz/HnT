@@ -193,7 +193,7 @@ void fragment() {
 		// Face: cuts and smears where the skin is.
 		if (wound > 0.01 && in_head > 0.0) {
 			float n = noise(t * 0.35) * 0.6 + noise(t * 0.9) * 0.4;
-			float cut = step(0.92 - wound * 0.8, n) * in_head;
+			float cut = step(0.94 - wound * 0.34, n) * in_head;
 			// Nose / mouth bleed: a run down the face's lower half.
 			float run = step(abs(t.x - head.x - head.z * 0.15 * side), 1.0 + wound * 1.5)
 				* step(head.y, t.y) * step(t.y, head.y + head.z * (0.5 + wound * 1.8)) * step(0.18, wound);
@@ -208,7 +208,8 @@ void fragment() {
 		if (splat > 0.01 && in_head < 0.5) {
 			float lean = 0.5 + 0.5 * clamp((t.x - head.x) * side / 18.0, -1.0, 1.0);
 			float s = noise(t * 0.55 + 13.0) * 0.7 + hash(t) * 0.3;
-			float thr = 1.0 - splat * (0.3 + 0.4 * lean);
+			// Capped: even fully hurt, at most ~a third of the clothes is spattered.
+			float thr = 1.0 - splat * (0.1 + 0.2 * lean);
 			if (s > thr) {
 				col = mix(col, blood.rgb * 0.75, 0.85);
 			}

@@ -123,6 +123,8 @@ var _atk_t := 0.0
 var parkour_lock := 0.0
 ## Holding a roof-trick combo (TrickCall): the shoulder buttons do not block.
 var trick_hold := false
+## The lamp colour on the body this frame (hurt flush goes on top of it).
+var _lamp_tint := Color.WHITE
 var stomp_n := 0
 var stomp_cd := 0.0
 var _foot_cd := 0.0
@@ -874,8 +876,10 @@ func _tick_meters(delta: float) -> void:
 			squash_root.scale.y = 1.0
 			squash_root.position.y = 0.0
 		var hurt := clampf(1.0 - float(hp) / float(maxi(max_hp, 1)), 0.0, 1.0)
-		if hurt > 0.35:
-			squash_root.modulate = squash_root.modulate.lerp(Color(0.85, 0.45, 0.4), hurt * 0.35)
+		# Hurt: a faint flush over the lamp tint (set, not stacked per frame -
+		# stacking turned the hero solid red).
+		var lamp := _lamp_tint
+		squash_root.modulate = lamp.lerp(Color(0.85, 0.45, 0.4), (hurt - 0.35) * 0.35) if hurt > 0.35 else lamp
 	_tick_sprite()
 	_place_melee(delta)
 	if _shadow:
@@ -3054,7 +3058,8 @@ func _apply_lamp() -> void:
 		return
 	var rig := get_tree().get_first_node_in_group("light_rig")
 	if rig and rig.has_method("tint_at"):
-		squash_root.modulate = rig.tint_at(global_position)
+		_lamp_tint = rig.tint_at(global_position)
+		squash_root.modulate = _lamp_tint
 
 
 ## Getting hit: blood from the face or the gut, the sprite gets bloodier as
