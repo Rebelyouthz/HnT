@@ -176,6 +176,21 @@ func _ready() -> void:
 	)
 	vb.position = Vector2(40, 514)
 	stage.add_child(vb)
+	# SURVIVOR: the coping hours on their own, at any AGONY (opens once the
+	# story reaches the first hour).
+	var surv_open := App.ORDER.find("intake_lot") <= App.ORDER.find(FamilyProfile.next_run_map()) or (FamilyProfile.data.get("maps_filed", []) as Array).has("intake_lot")
+	var sv := UiKit.button("SURVIVOR HOURS" if surv_open else "SURVIVOR  ·  AFTER DOCK ST", Vector2(220, 36))
+	sv.add_theme_font_size_override("font_size", 12)
+	sv.disabled = not surv_open
+	if surv_open:
+		sv.add_theme_color_override("font_color", Color(0.45, 1.0, 0.6))
+	sv.pressed.connect(func() -> void:
+		var hub := get_tree().current_scene
+		if hub and hub.has_method("_open_survivor"):
+			hub.call("_open_survivor")
+	)
+	sv.position = Vector2(270, 514)
+	stage.add_child(sv)
 	stage.add_child(extra)
 	var net := HBoxContainer.new()
 	net.position = Vector2(820, 470)

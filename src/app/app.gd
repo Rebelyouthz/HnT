@@ -16,6 +16,9 @@ var versus: bool = false
 var weekly: bool = false
 var force_intro: bool = false
 var run_bag: Dictionary = {}
+## Survivor lobby: one hour on its own (no story after it), at an AGONY level.
+var surv_solo := false
+var agony := 0
 var map_index: int = 0
 var current_map: String = "dock_street"
 var film_from: String = ""
@@ -67,6 +70,7 @@ const ORDER := [
 
 
 func start_run() -> void:
+	surv_solo = false
 	versus = false
 	weekly = false
 	difficulty = str(FamilyProfile.data.get("difficulty", difficulty))
@@ -95,6 +99,21 @@ func start_run() -> void:
 		return
 	current_map = hop
 	enter_map(hop)
+
+
+## SURVIVOR lobby: straight into one coping hour on that map.
+func start_survivor(map_id: String, level: int) -> void:
+	versus = false
+	weekly = false
+	surv_solo = true
+	agony = level
+	run_bag = {}
+	film_from = ""
+	film_next = ""
+	film_kind = ""
+	last_run_ok = false
+	current_map = map_id
+	enter_map(map_id)
 
 
 func start_weekly() -> void:

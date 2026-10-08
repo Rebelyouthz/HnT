@@ -127,6 +127,10 @@ func _prepare() -> void:
 		(fp.data as Dictionary)["weapon_lv"] = {"pistol": 4, "smg": 4, "shotgun": 4}
 		(fp.data as Dictionary)["attach_owned"] = ["suppressor", "laser", "long_barrel", "drum_mag", "hollow", "scope", "compensator"]
 		(fp.data as Dictionary)["attach_on"] = {"pistol": {"muzzle": "suppressor", "optic": "laser", "barrel": "long_barrel", "mag": "drum_mag", "ammo": "hollow"}, "smg": {"muzzle": "compensator", "optic": "scope", "mag": "drum_mag"}}
+	if _tab == "survivor" and fp != null:
+		(fp.data as Dictionary)["maps_filed"] = ["dock_street", "intake_lot", "fire_escapes", "group_circle", "neon_exchange"]
+		(fp.data as Dictionary)["agony"] = {"intake_lot": 3, "group_circle": 1}
+		(fp.data as Dictionary)["surv_map_best"] = {"intake_lot": {"time": 300, "kills": 612, "wins": 3}, "group_circle": {"time": 214, "kills": 388, "wins": 1}}
 	if _tab == "starter" and fp != null:
 		(fp.data as Dictionary)["tokens"] = 300
 		(fp.data as Dictionary)["surv_start"] = {"pick": "stapler", "w": {"stapler": {"lv": 4, "rar": 2, "copies": 3, "mods": ["rapid"]}, "invoice_toss": {"lv": 2, "rar": 0, "copies": 1, "mods": []}}}

@@ -572,6 +572,18 @@ func _open_vault() -> void:
 	)
 
 
+## THE COPING HOURS: the survivor lobby.
+func _open_survivor() -> void:
+	_clear_modal()
+	var sheet := preload("res://src/ui/survivor_lobby.gd").new()
+	add_child(sheet)
+	_modal = sheet
+	sheet.closed.connect(func() -> void:
+		_clear_modal()
+		_refresh_pills()
+	)
+
+
 func _open_log() -> void:
 	FamilyProfile.mark_log_read()
 	_refresh_pills()

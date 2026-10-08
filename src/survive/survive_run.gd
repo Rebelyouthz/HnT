@@ -591,7 +591,8 @@ func award_tokens(won: bool) -> int:
 		return 0
 	_awarded = true
 	var n := int(kills / 15) + int(time_alive / 60.0 * 8.0) + level * 2 + (40 if won else 0) + coins
-	n = int(round(float(n) * (1.0 + 0.1 * trait_n("t_curse")) * (1.0 + SurvExtras.pact_sum("coins"))))
+	n = int(round(float(n) * (1.0 + 0.1 * trait_n("t_curse")) * (1.0 + SurvExtras.pact_sum("coins")) * Agony.coins()))
+	Agony.note_best(App.current_map, int(time_alive), kills, won)
 	var before := int(FamilyProfile.data.get("tokens", 0))
 	Trees.add_tokens(n)
 	var got := int(FamilyProfile.data.get("tokens", 0)) - before

@@ -330,6 +330,9 @@ func _ready() -> void:
 	_configure()
 	if self is SurviveAct:
 		SurviveField.setup(self)
+		# Played from the SURVIVOR lobby: the hour is the whole run.
+		if App.surv_solo:
+			next_id = ""
 	Arsenal.reset_run()
 	var place := scene_file_path.get_file().get_basename()
 	if Discover.PLACES.has(place):
@@ -697,6 +700,7 @@ func _on_clear() -> void:
 		FamilyProfile.mark_family_plan()
 	if map_id in ["intake_lot", "group_circle", "waiting_room", "sleet_hour", "ledger_dive"]:
 		FamilyProfile.mark_survive(map_id)
+		Agony.on_win(map_id)
 	if SurviveRun.get_run(get_tree()):
 		SurviveRun.get_run(get_tree()).award_tokens(true)
 	if App.remote_coop:
