@@ -27,6 +27,10 @@ const COL := {
 ## Where coins go when no counter is on screen (top-right corner).
 const CORNER := {"gold": Vector2(470, 14), "gems": Vector2(530, 14), "tokens": Vector2(590, 14), "rep": Vector2(610, 14), "flow": Vector2(590, 14), "xp": Vector2(320, 14)}
 const SND := "res://assets/audio/ui/%s.wav"
+## How big a reward stands in the middle of the screen before it flies home.
+const BIG := 2.3
+## Scale of an upgrade / equip showcase while it holds centre stage.
+const SHOW := 1.9
 
 var _targets := {}
 var _pending := {}
@@ -88,17 +92,37 @@ func give(key: String, amount: int, from := Vector2(-1, -1), banner := true) -> 
 	_pending[key] = pending(key) + amount
 	landed.emit(key)
 	if banner:
-		_banner(key, amount, from)
+		# Centre stage first (big, counted up), then it shrinks and the coins
+		# fly home. Several at once queue up instead of piling on each other.
+		var wait := maxf(0.0, _stage_free - _now())
+		# Whole banner: pop 0.38 + count + hold 0.4 + shrink 0.26.
+		_stage_free = _now() + wait + 1.0 + clampf(0.35 + float(amount) / 300.0, 0.35, 0.9)
+		if wait > 0.0:
+			get_tree().create_timer(wait, true, false, true).timeout.connect(func() -> void: _banner(key, amount, from))
+		else:
+			_banner(key, amount, from)
 	else:
 		_burst(key, amount, from, 0.0)
 
 
+var _stage_free := 0.0
+## Rapid buys (a row of tree nodes) do not stack showcases: the next one
+## inside this window juices the control directly.
+var _show_busy := 0.0
+
+
+func _now() -> float:
+	return float(Time.get_ticks_msec()) / 1000.0
+
+
 func _banner(key: String, amount: int, from: Vector2) -> void:
 	var col: Color = COL[key]
+	var mid := _center() + Vector2(0, -10)
 	var root := Node2D.new()
 	root.position = from
 	root.scale = Vector2(0.2, 0.2)
 	add_child(root)
+	var veil := _veil(0.5)
 	var rays := Rays.new()
 	rays.color = col
 	root.add_child(rays)
@@ -132,8 +156,9 @@ func _banner(key: String, amount: int, from: Vector2) -> void:
 	snd("reward_pop")
 	var count_t := clampf(0.35 + float(amount) / 300.0, 0.35, 0.9)
 	var tw := create_tween()
-	tw.tween_property(root, "scale", Vector2(1.25, 1.25), 0.16).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tw.tween_property(root, "scale", Vector2.ONE, 0.1)
+	tw.tween_property(root, "position", mid, 0.18).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(root, "scale", Vector2(BIG * 1.2, BIG * 1.2), 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(root, "scale", Vector2(BIG, BIG), 0.1)
 	tw.tween_method(func(v: float) -> void:
 		var n := int(round(v))
 		if lab.text != "+%d" % n:
@@ -146,11 +171,17 @@ func _banner(key: String, amount: int, from: Vector2) -> void:
 	tw.tween_callback(func() -> void:
 		lab.add_theme_color_override("font_color", Color.WHITE)
 		snd("coin_tick", 2.0, -3.0))
-	tw.tween_property(root, "scale", Vector2(1.18, 1.18), 0.08)
-	tw.tween_interval(0.18)
-	tw.tween_callback(func() -> void: _burst(key, amount, from + Vector2(0, -8), 0.0))
-	tw.tween_property(root, "scale", Vector2(0.0, 0.0), 0.14).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
-	tw.tween_callback(root.queue_free)
+	tw.tween_property(root, "scale", Vector2(BIG * 1.12, BIG * 1.12), 0.08)
+	tw.tween_interval(0.32)
+	# Shrink to coin size, drift toward the counter, then break into coins.
+	tw.tween_property(root, "scale", Vector2(0.45, 0.45), 0.16).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(root, "position", mid.lerp(_to(key), 0.25), 0.16)
+	tw.parallel().tween_property(veil, "color:a", 0.0, 0.2)
+	tw.tween_callback(func() -> void: _burst(key, amount, root.position + Vector2(0, -8), 0.0))
+	tw.tween_property(root, "scale", Vector2(0.0, 0.0), 0.1).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	tw.tween_callback(func() -> void:
+		root.queue_free()
+		veil.queue_free())
 
 
 func _burst(key: String, amount: int, from: Vector2, delay: float) -> void:
@@ -201,7 +232,113 @@ func _land(key: String, share: int, idx: int) -> void:
 
 # --- upgrades ----------------------------------------------------------------
 
-func upgrade(target: Control, color: Color, text := "", big := false) -> void:
+func upgrade(target: Control, color: Color, text := "", big := false, icon := "") -> void:
+	if text != "" and target != null and target.is_inside_tree() and _now() >= _show_busy:
+		_show_busy = _now() + 0.6
+		# Seen first: the word (and icon) stands big in the middle, then
+		# shrinks and flies into the thing that was bought / levelled / worn.
+		_showcase(icon, text, color, "", big, func() -> Vector2: return vp_of(target) if is_instance_valid(target) and target.is_inside_tree() else _center(),
+			func() -> void:
+				if is_instance_valid(target) and target.is_inside_tree():
+					_hit_target(target, color, "", big)
+				else:
+					_hit_target(null, color, "", big))
+		return
+	_hit_target(target, color, text, big)
+
+
+## Showcase centre stage, then fly to `to.call()` and run `arrive`.
+func _showcase(icon_name: String, title: String, color: Color, sub: String, big: bool, to: Callable, arrive: Callable, hold := -1.0) -> void:
+	var c := _center() + Vector2(0, -14)
+	var veil := _veil(0.55 if big else 0.45)
+	var root := Node2D.new()
+	root.position = c
+	root.scale = Vector2(0.15, 0.15)
+	add_child(root)
+	var rays := Rays.new()
+	rays.color = color
+	rays.scale = Vector2(1.6, 1.6) if big else Vector2(1.25, 1.25)
+	root.add_child(rays)
+	var y := 6.0
+	if icon_name != "":
+		var ic := Sprite2D.new()
+		ic.texture = IconBook.tex(icon_name)
+		ic.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		ic.scale = Vector2(2, 2)
+		ic.position = Vector2(0, -14)
+		root.add_child(ic)
+		y = 20.0
+	var t := Label.new()
+	t.text = title
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	t.add_theme_font_override("font", UiKit.title_font())
+	t.add_theme_font_size_override("font_size", 20 if big else 16)
+	t.add_theme_color_override("font_color", color.lightened(0.35))
+	t.add_theme_color_override("font_outline_color", UiKit.INK)
+	t.add_theme_constant_override("outline_size", 5)
+	t.size = Vector2(420, 24)
+	t.position = Vector2(-210, y - 12)
+	root.add_child(t)
+	if sub != "":
+		var s2 := Label.new()
+		s2.text = sub
+		s2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		s2.add_theme_font_override("font", UiKit.pixel_font())
+		s2.add_theme_font_size_override("font_size", 8)
+		s2.add_theme_color_override("font_color", Palette.TEXT)
+		s2.add_theme_color_override("font_outline_color", UiKit.INK)
+		s2.add_theme_constant_override("outline_size", 3)
+		s2.size = Vector2(420, 14)
+		s2.position = Vector2(-210, y + 12)
+		root.add_child(s2)
+	snd("reward_pop", 1.1 if big else 1.25, -2.0)
+	if big:
+		snd("up_boom", 1.0, -5.0)
+	_sparks(c, color, 16 if big else 8, 70.0 if big else 46.0)
+	var keep := hold if hold >= 0.0 else (0.55 if big else 0.32)
+	var tw := create_tween()
+	var hs := SHOW * (1.2 if big else 1.0)
+	tw.tween_property(root, "scale", Vector2(hs * 1.2, hs * 1.2), 0.16).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(root, "scale", Vector2(hs, hs), 0.08)
+	tw.tween_interval(keep)
+	tw.tween_property(root, "scale", Vector2(0.55, 0.55), 0.12).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(veil, "color:a", 0.0, 0.2)
+	var bend := Vector2(randf_range(-40.0, 40.0), -50.0)
+	tw.tween_method(func(k: float) -> void:
+		var dest: Vector2 = to.call()
+		var m := (c + dest) * 0.5 + bend
+		root.position = c.lerp(m, k).lerp(m.lerp(dest, k), k).round()
+		root.scale = Vector2.ONE * lerpf(0.55, 0.16, k)
+		root.modulate.a = lerpf(1.0, 0.75, k)
+	, 0.0, 1.0, 0.3).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tw.tween_callback(func() -> void:
+		snd("whoosh", 1.4, -8.0)
+		arrive.call()
+		root.queue_free()
+		veil.queue_free())
+	snd("whoosh", 0.9, -9.0)
+
+
+## A thin dark veil so whatever is centre stage reads over a busy menu.
+func _veil(a: float) -> ColorRect:
+	var v := ColorRect.new()
+	v.color = Color(0, 0, 0.02, a)
+	v.size = get_viewport().get_visible_rect().size
+	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(v)
+	move_child(v, 0)
+	return v
+
+
+## Something new landed in a slot / list: showcase, then into `slot`
+## (or the top-right corner where the bag lives when there is none).
+func equip(icon_name: String, title: String, color: Color, slot: Control = null, sub := "") -> void:
+	_showcase(icon_name, title, color, sub, false,
+		func() -> Vector2: return vp_of(slot) if slot != null and is_instance_valid(slot) and slot.is_inside_tree() else Vector2(get_viewport().get_visible_rect().size.x - 30.0, 16.0),
+		func() -> void: _hit_target(slot if slot != null and is_instance_valid(slot) and slot.is_inside_tree() else null, color, "", false))
+
+
+func _hit_target(target: Control, color: Color, text := "", big := false) -> void:
 	var at := vp_of(target) if target != null and target.is_inside_tree() else _center()
 	if target != null and target.is_inside_tree():
 		target.pivot_offset = target.size * 0.5
@@ -249,7 +386,7 @@ func upgrade(target: Control, color: Color, text := "", big := false) -> void:
 
 ## A new thing revealed: dark veil, rarity rays, the icon slams in big
 ## (whole pixel steps), its name and a line under it. Clears itself.
-func reveal(icon_name: String, title: String, color: Color, sub := "", secs := 1.6) -> void:
+func reveal(icon_name: String, title: String, color: Color, sub := "", secs := 1.6, to: Control = null) -> void:
 	var veil := ColorRect.new()
 	veil.color = Color(0, 0, 0.02, 0.0)
 	veil.size = get_viewport().get_visible_rect().size
@@ -298,17 +435,27 @@ func reveal(icon_name: String, title: String, color: Color, sub := "", secs := 1
 	snd("up_boom", 1.0, -4.0)
 	_sparks(c, color, 24, 90.0)
 	var tw := create_tween()
-	tw.tween_property(veil, "color:a", 0.55, 0.12)
-	tw.parallel().tween_property(root, "scale", Vector2(1.3, 1.3), 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tw.tween_property(root, "scale", Vector2.ONE, 0.1)
+	tw.tween_property(veil, "color:a", 0.68, 0.12)
+	tw.parallel().tween_property(root, "scale", Vector2(1.75, 1.75), 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(root, "scale", Vector2(1.5, 1.5), 0.1)
 	tw.parallel().tween_property(t, "modulate:a", 1.0, 0.12)
 	tw.parallel().tween_property(s2, "modulate:a", 1.0, 0.2)
 	tw.tween_interval(secs)
-	tw.tween_property(root, "scale", Vector2.ZERO, 0.16).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
-	tw.parallel().tween_property(veil, "color:a", 0.0, 0.2)
+	# Then it shrinks and is pulled to where it now lives (the slot that
+	# got it, or the bag in the top-right corner).
+	tw.tween_property(root, "scale", Vector2(0.6, 0.6), 0.14).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(veil, "color:a", 0.0, 0.25)
 	tw.parallel().tween_property(t, "modulate:a", 0.0, 0.15)
 	tw.parallel().tween_property(s2, "modulate:a", 0.0, 0.15)
+	var bend := Vector2(randf_range(-40.0, 40.0), -60.0)
+	tw.tween_method(func(k: float) -> void:
+		var dest := vp_of(to) if to != null and is_instance_valid(to) and to.is_inside_tree() else Vector2(get_viewport().get_visible_rect().size.x - 30.0, 16.0)
+		var m := (c + dest) * 0.5 + bend
+		root.position = c.lerp(m, k).lerp(m.lerp(dest, k), k).round()
+		root.scale = Vector2.ONE * lerpf(0.6, 0.14, k)
+	, 0.0, 1.0, 0.32).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	tw.tween_callback(func() -> void:
+		_hit_target(to if to != null and is_instance_valid(to) and to.is_inside_tree() else null, color, "", false)
 		for n in [veil, root, t, s2]:
 			(n as Node).queue_free())
 

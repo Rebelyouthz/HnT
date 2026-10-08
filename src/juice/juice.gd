@@ -357,34 +357,49 @@ func claim_burst(from: Vector2, line: String, gold: int, gems: int) -> void:
 	wrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	wrap.process_mode = Node.PROCESS_MODE_ALWAYS
 	_overlay.add_child(wrap)
+	# The line stands big over the middle on a dark band (readable over any
+	# menu); the reward itself then counts up centre stage under it.
+	var mid := get_viewport().get_visible_rect().size * 0.5
+	var y := mid.y - (96.0 if gold or gems else 18.0)
+	var band := ColorRect.new()
+	band.color = Color(0, 0, 0.03, 0.62)
+	band.position = Vector2(0, y - 8)
+	band.size = Vector2(mid.x * 2.0, 44)
+	band.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	wrap.add_child(band)
 	var lab := Label.new()
 	lab.text = line
 	lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lab.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	lab.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	lab.add_theme_font_override("font", UiKit.title_font())
-	lab.add_theme_font_size_override("font_size", 16)
+	lab.add_theme_font_size_override("font_size", 28)
 	lab.add_theme_color_override("font_color", Palette.LEMON)
 	lab.add_theme_color_override("font_outline_color", UiKit.INK)
-	lab.add_theme_constant_override("outline_size", 4)
-	lab.position = from + Vector2(-180, -20)
-	lab.size = Vector2(360, 24)
-	lab.pivot_offset = Vector2(180, 12)
+	lab.add_theme_constant_override("outline_size", 5)
+	lab.position = Vector2(mid.x - 300, y - 6)
+	lab.size = Vector2(600, 34)
+	lab.pivot_offset = Vector2(300, 17)
+	lab.scale = Vector2(0.3, 0.3)
 	wrap.add_child(lab)
 	var tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.set_ignore_time_scale(true)
-	tw.tween_property(lab, "scale", Vector2(1.12, 1.12), 0.18)
-	tw.tween_interval(0.52)
-	tw.tween_property(wrap, "modulate:a", 0.0, 0.2)
+	tw.tween_property(lab, "scale", Vector2(1.18, 1.18), 0.18)
+	tw.tween_property(lab, "scale", Vector2.ONE, 0.08)
+	tw.tween_interval(0.85 if gold or gems else 0.7)
+	tw.tween_property(lab, "scale", Vector2(0.6, 0.6), 0.16).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(lab, "position:y", lab.position.y - 40.0, 0.2)
+	tw.parallel().tween_property(wrap, "modulate:a", 0.0, 0.2)
 	tw.finished.connect(wrap.queue_free)
 	if gold or gems:
-		# The reward itself pops in under the line, counts up and flies home.
+		# The reward pops in under the line, counts up and flies home.
 		fly_pills(from + Vector2(0, 46), gold, gems)
 
 
 func fly_pills(from: Vector2, gold: int, gems: int) -> void:
 	# `from` is on the 640x360 grid (viewport coordinates).
 	if gold > 0:
-		rewards.give("gold", gold, from, gems <= 0)
+		rewards.give("gold", gold, from, true)
 	if gems > 0:
 		rewards.give("gems", gems, from + Vector2(0, -6), true)
 
@@ -396,8 +411,8 @@ func give(key: String, amount: int, from := Vector2(-1, -1)) -> void:
 
 
 ## Reward-grow juice on a control that was just bought or levelled.
-func upgrade_fx(target: Control, color: Color = UiKit.GOLD, text := "", big := false) -> void:
-	rewards.upgrade(target, color, text, big)
+func upgrade_fx(target: Control, color: Color = UiKit.GOLD, text := "", big := false, icon := "") -> void:
+	rewards.upgrade(target, color, text, big, icon)
 
 
 func keep_combo() -> void:
@@ -1359,7 +1374,7 @@ func equip_fly(host: Control, tex: Texture2D, from: Vector2, to: Vector2, deltas
 	lay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	lay.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_overlay.add_child(lay)
-	get_tree().create_timer(2.5, true, false, true).timeout.connect(lay.queue_free)
+	get_tree().create_timer(3.4, true, false, true).timeout.connect(lay.queue_free)
 	host = lay
 	var pic := TextureRect.new()
 	pic.texture = tex
@@ -1373,15 +1388,43 @@ func equip_fly(host: Control, tex: Texture2D, from: Vector2, to: Vector2, deltas
 	pic.z_index = 50
 	host.add_child(pic)
 	play("res://assets/audio/whoosh_light.wav" if ResourceLoader.exists("res://assets/audio/whoosh_light.wav") else "res://assets/audio/card.wav")
-	var mid := (from + to) * 0.5 + Vector2(0, -90)
+	# Seen first: it rises to the middle of the screen, big, with rays and a
+	# dark veil behind it; then it shrinks and drops into its slot.
+	var stage := lay.get_viewport_rect().size * 0.5 + Vector2(0, -20)
+	var veil := ColorRect.new()
+	veil.color = Color(0, 0, 0.03, 0.0)
+	veil.set_anchors_preset(Control.PRESET_FULL_RECT)
+	veil.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	host.add_child(veil)
+	host.move_child(veil, 0)
+	var rays := RewardFly.Rays.new()
+	rays.color = Palette.LEMON
+	rays.position = stage + Vector2(0, 8)
+	rays.scale = Vector2(3.2, 3.2)
+	rays.modulate.a = 0.0
+	host.add_child(rays)
+	var mid := (stage + to) * 0.5 + Vector2(0, -90)
 	var tw := pic.create_tween()
 	tw.tween_method(func(t: float) -> void:
-		var a := from.lerp(mid, t)
+		pic.position = from.lerp(stage, t) - Vector2(32, 32)
+		pic.scale = Vector2.ONE * lerpf(1.0, 3.0, t)
+		pic.rotation = sin(t * PI) * 0.25
+	, 0.0, 1.0, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(veil, "color:a", 0.45, 0.2)
+	tw.parallel().tween_property(rays, "modulate:a", 1.0, 0.2)
+	tw.tween_interval(0.42)
+	tw.tween_property(rays, "modulate:a", 0.0, 0.15)
+	tw.parallel().tween_property(veil, "color:a", 0.0, 0.3)
+	tw.parallel().tween_method(func(t: float) -> void:
+		var a := stage.lerp(mid, t)
 		var b := mid.lerp(to, t)
 		pic.position = a.lerp(b, t) - Vector2(32, 32)
-		pic.rotation = sin(t * PI) * 0.6
-		pic.scale = Vector2.ONE * (1.0 + 0.5 * sin(t * PI))
-	, 0.0, 1.0, 0.42).set_trans(Tween.TRANS_SINE)
+		pic.rotation = sin(t * PI) * 0.5
+		pic.scale = Vector2.ONE * lerpf(3.0, 1.0, t)
+	, 0.0, 1.0, 0.4).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tw.tween_callback(func() -> void:
+		rays.queue_free()
+		veil.queue_free())
 	tw.tween_callback(func() -> void:
 		play("res://assets/audio/cling.wav")
 		UiKit.blast(host, to, Palette.LEMON, 90.0)
@@ -1406,7 +1449,7 @@ func equip_fly(host: Control, tex: Texture2D, from: Vector2, to: Vector2, deltas
 		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		host.add_child(l)
 		var lt := l.create_tween()
-		lt.tween_interval(0.45 + 0.16 * float(i))
+		lt.tween_interval(1.1 + 0.16 * float(i))
 		lt.tween_callback(func() -> void: RewardFly.snd("gem_land", 1.2 + 0.1 * float(i), -8.0) if d > 0 else null)
 		lt.tween_property(l, "modulate:a", 1.0, 0.08)
 		lt.parallel().tween_property(l, "position:y", l.position.y - 46.0, 0.9).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
