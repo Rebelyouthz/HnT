@@ -102,7 +102,9 @@ func _kill(p: Punk) -> void:
 	if is_instance_valid(host):
 		for i in 3:
 			LootDrop.spawn(host, global_position + Vector2(randf_range(-10, 10), -4), "coin", 1, 1.2)
-		XpOrb.burst(host, global_position, 20)
+		var rs := host.get_tree().get_first_node_in_group("run_state")
+		if rs and rs.has_method("add_xp"):
+			rs.add_xp(20)
 	Juice.toast("reward", "ENVIRONMENTAL", "The street did the paperwork. +3 coins, +20 XP.")
 	FamilyProfile.data["env_kills"] = int(FamilyProfile.data.get("env_kills", 0)) + 1
 

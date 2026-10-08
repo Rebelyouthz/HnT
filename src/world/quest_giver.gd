@@ -215,7 +215,11 @@ func _pay() -> void:
 	if gold > 0:
 		for i in mini(gold / 5, 10):
 			LootDrop.spawn(get_parent(), global_position + Vector2(randf_range(-10, 10), 0), "coin", gold / mini(gold / 5, 10), 1.2)
-	XpOrb.burst(get_parent(), global_position, int(rw.get("xp", 0)))
+	# Story streets: XP goes straight in, no orbs on the floor.
+	var rs := get_tree().get_first_node_in_group("run_state")
+	if rs and rs.has_method("add_xp") and int(rw.get("xp", 0)) > 0:
+		rs.add_xp(int(rw.get("xp", 0)))
+		Juice.popup_number(global_position + Vector2(0, -70), "+%d XP" % int(rw.get("xp", 0)), Palette.READY)
 	if int(rw.get("gems", 0)) > 0:
 		FamilyProfile.add_gems(int(rw["gems"]))
 	if bool(rw.get("heal", false)):
