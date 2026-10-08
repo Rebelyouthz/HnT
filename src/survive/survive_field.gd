@@ -20,7 +20,7 @@ const THEMES := {
 		"props": ["dumpster", "barrel", "hydrant", "manhole", "news", "fridge", "booth"], "cars": ["hatchback", "cop_car", "sedan", "van"], "decor": ["cone", "barrier", "drum", "crate", "cart"]},
 	"group_circle": {"tile": "circle", "k": 0.16, "night": Color(0.4, 0.46, 0.5), "lamp": Color(0.95, 0.85, 0.55),
 		"props": ["kiosk", "barrel", "mail", "manhole", "news", "booth"], "cars": ["sedan"], "decor": ["bench", "bench", "fence", "crate", "cone"]},
-	"waiting_room": {"tile": "clinic", "k": 0.14, "night": Color(0.55, 0.62, 0.6), "lamp": Color(0.75, 1.0, 0.9),
+	"waiting_room": {"tile": "clinic", "k": 0.14, "night": Color(0.42, 0.48, 0.48), "lamp": Color(0.75, 1.0, 0.9),
 		"props": ["vending", "fridge", "booth", "barrel", "mail"], "cars": [], "decor": ["bench", "bench", "bench", "crate", "cart"]},
 	"sleet_hour": {"tile": "sleet", "k": 0.22, "night": Color(0.48, 0.52, 0.66), "lamp": Color(0.8, 0.88, 1.0),
 		"props": ["booth", "barrel", "mail", "manhole", "fridge", "news"], "cars": ["hatchback", "cop_car", "sedan"], "decor": ["barrier", "cone", "fence", "drum"]},

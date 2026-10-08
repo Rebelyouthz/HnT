@@ -496,6 +496,11 @@ func _tick_sprite() -> void:
 		clip = "jump"
 	elif sliding or slide_frames > 0:
 		clip = "slide"
+	elif FIELD and not dashing and plane == "street" and velocity.length() > 18.0:
+		# Top-down: the eight-way walk; a fast straight sideways move runs.
+		clip = SpriteBook.dir_clip(_anim.sprite_frames, velocity, true)
+		if clip == "walk" and absf(velocity.x) > 110.0:
+			clip = "parkour_run"
 	elif dashing or parkour_lock > 0.0 or absf(velocity.x) > 110.0:
 		clip = "parkour_run"
 	elif absf(velocity.x) > 18.0 or (plane == "street" and absf(velocity.y) > 18.0):

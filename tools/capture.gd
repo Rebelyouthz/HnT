@@ -567,6 +567,9 @@ func _process(_delta: float) -> bool:
 		load("res://src/ui/timing_ring.gd").set("autoplay", true)
 	if _walk and _n > 20:
 		Input.action_press("p1_left" if _left else "p1_right")
+		# WALKY=up|down: walk diagonally (eight-way checks on the field).
+		if OS.get_environment("WALKY") != "":
+			Input.action_press("p1_" + OS.get_environment("WALKY"))
 	# FILM=N saves every Nth frame along the way (out_NNN.png).
 	var film := int(OS.get_environment("FILM"))
 	if film > 0 and _n % film == 0 and _n < _frames:
