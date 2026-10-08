@@ -4,6 +4,8 @@ extends Area2D
 
 func _ready() -> void:
 	add_to_group("survive_chests")
+	add_to_group("map_pins")
+	set_meta("pin", "chest")
 	collision_layer = 0
 	collision_mask = 2
 	monitoring = true

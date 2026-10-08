@@ -22,6 +22,8 @@ func _ready() -> void:
 	)
 	add_child(_horde)
 	add_child(SurviveHud.new())
+	if Fighter.FIELD:
+		FieldMap.place(self)
 	# Clearing the hour: drop one item down the well for the next ones.
 	_state.run_cleared.connect(func() -> void:
 		var run := SurviveRun.get_run(get_tree())

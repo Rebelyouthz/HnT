@@ -299,6 +299,8 @@ class Shrine extends Node2D:
 	var _t := 0.0
 
 	func _ready() -> void:
+		add_to_group("map_pins")
+		set_meta("pin", "shrine")
 		var tex: Texture2D = load("res://assets/sprites/survive/shrine.png") if ResourceLoader.exists("res://assets/sprites/survive/shrine.png") else null
 		if tex:
 			var art := Sprite2D.new()
@@ -336,6 +338,8 @@ class CursedChest extends Node2D:
 	var _t := 0.0
 
 	func _ready() -> void:
+		add_to_group("map_pins")
+		set_meta("pin", "cursed")
 		var s := Sprite2D.new()
 		s.texture = IconBook.tex("cur_chest")
 		s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST

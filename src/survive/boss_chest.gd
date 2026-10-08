@@ -21,6 +21,8 @@ static func drop(host: Node, at: Vector2, is_big: bool) -> BossChest:
 
 
 func _ready() -> void:
+	add_to_group("map_pins")
+	set_meta("pin", "chest")
 	z_index = 5
 	var s := Sprite2D.new()
 	s.name = "Box"
