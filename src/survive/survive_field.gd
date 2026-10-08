@@ -52,15 +52,18 @@ static func setup(act: RunAct) -> void:
 
 
 static func build(act: RunAct, map_id: String) -> void:
+	_blocks.clear()
 	var th := theme(map_id)
 	_ground(act, str(th["tile"]), float(th.get("k", 0.2)))
 	_walls(act)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash(map_id + "_field")
 	var taken: Array[Vector2] = [center()]
+	# Each hour has its own shape first (landmarks), then the scatter.
+	var lamps := _landmarks(act, map_id, rng, taken)
 	# Breakables in loose clusters: cover and loot to dodge round.
 	var kinds: Array = th["props"]
-	for i in 44:
+	for i in 34:
 		var p := _free_spot(rng, taken, 120.0)
 		if p == Vector2.INF:
 			continue
@@ -72,7 +75,7 @@ static func build(act: RunAct, map_id: String) -> void:
 	# Parked cars: big solid blockers that break up the open floor.
 	var cars: Array = th["cars"]
 	if not cars.is_empty():
-		for i in 11:
+		for i in 6:
 			var p := _free_spot(rng, taken, 220.0)
 			if p == Vector2.INF:
 				continue
@@ -80,7 +83,7 @@ static func build(act: RunAct, map_id: String) -> void:
 			_car(act, p, str(cars[rng.randi() % cars.size()]))
 	# Scenery that does not break: cones, benches, fences, drums.
 	var decor: Array = th.get("decor", [])
-	for i in 60:
+	for i in 40:
 		if decor.is_empty():
 			break
 		var p := _free_spot(rng, taken, 70.0)
@@ -90,18 +93,166 @@ static func build(act: RunAct, map_id: String) -> void:
 		_decor(act, p, str(decor[rng.randi() % decor.size()]), rng)
 	# Lamps on a loose grid: pools of light, the rest falls off into fog.
 	var lamp_col: Color = th["lamp"]
-	for gx in 5:
-		for gy in 3:
-			var p := Vector2((float(gx) + 0.5) * W / 5.0 + rng.randf_range(-120, 120), (float(gy) + 0.5) * H / 3.0 + rng.randf_range(-90, 90))
-			_lamp(act, p, lamp_col)
+	if lamps:
+		for gx in 5:
+			for gy in 3:
+				var p := Vector2((float(gx) + 0.5) * W / 5.0 + rng.randf_range(-120, 120), (float(gy) + 0.5) * H / 3.0 + rng.randf_range(-90, 90))
+				_lamp(act, p, lamp_col)
 	_fog(act)
 	_weather(act, str(th.get("weather", "")))
+
+
+## The hour's own layout. Returns false when it brings its own lights (no
+## street lamps then).
+static func _landmarks(act: Node2D, map_id: String, rng: RandomNumberGenerator, taken: Array[Vector2]) -> bool:
+	var c := center()
+	match map_id:
+		"intake_lot":
+			# THE FLOODED LOT: two rows of parked cars like real stalls, big
+			# flooded patches between, burning drums where people warmed up.
+			for row in [380.0, 1300.0]:
+				var x := 260.0
+				while x < W - 260.0:
+					if rng.randf() < 0.72:
+						_car(act, Vector2(x, row), ["hatchback", "sedan", "cop_car", "van"][rng.randi() % 4])
+						taken.append(Vector2(x, row))
+					x += 190.0
+			for i in 7:
+				var p := Vector2(rng.randf_range(300, W - 300), rng.randf_range(560, 1120))
+				FieldLife.puddle(act, p, Vector2(rng.randf_range(60, 140), rng.randf_range(22, 50)))
+			for p in [Vector2(520, 840), Vector2(2080, 720), Vector2(1300, 560), Vector2(900, 1180), Vector2(1800, 1150)]:
+				FieldLife.fire_barrel(act, p)
+				taken.append(p)
+			for p in [Vector2(700, 640), Vector2(1900, 980), Vector2(1450, 1180)]:
+				FieldLife.steam(act, p)
+			for i in 8:
+				var p := Vector2(rng.randf_range(100, W - 100), [150.0, H - 110.0][i % 2])
+				FieldLife.tree(act, p, true)
+			for i in 5:
+				var p := _free_spot(rng, taken, 180.0)
+				if p != Vector2.INF:
+					FieldLife.prop(act, p, "cart_lot", 46.0, rng.randf() < 0.5)
+					taken.append(p)
+			return true
+		"group_circle":
+			# GROUP CIRCLE: a fountain at the top of the plaza, a ring of trees
+			# and benches round it, planters, a couple of warming drums.
+			var fc := c + Vector2(0, -300)
+			FieldLife.fountain(act, fc)
+			taken.append(fc)
+			for i in 12:
+				var a := TAU * float(i) / 12.0
+				var p := c + Vector2(cos(a) * 720.0, sin(a) * 470.0)
+				FieldLife.tree(act, p)
+				taken.append(p)
+			for i in 8:
+				var a := TAU * (float(i) + 0.5) / 8.0
+				var p := c + Vector2(cos(a) * 430.0, sin(a) * 280.0)
+				_decor(act, p, "bench", rng)
+				taken.append(p)
+			for i in 6:
+				var p := _free_spot(rng, taken, 220.0)
+				if p != Vector2.INF:
+					FieldLife.solid(FieldLife.prop(act, p, "planter", 70.0), Vector2(60, 14), Vector2(0, -6))
+					taken.append(p)
+			for p in [c + Vector2(-900, 420), c + Vector2(880, 380), c + Vector2(0, 560)]:
+				FieldLife.fire_barrel(act, p)
+				taken.append(p)
+			for i in 3:
+				FieldLife.puddle(act, Vector2(rng.randf_range(300, W - 300), rng.randf_range(300, H - 300)), Vector2(70, 26))
+			return true
+		"waiting_room":
+			# THE WAITING ROOM: blocks of chair rows, the reception desk on
+			# top, tube lights that stutter. No street lamps indoors.
+			var desk := Vector2(c.x, 300)
+			FieldLife.solid(FieldLife.prop(act, desk, "desk", 120.0), Vector2(230, 30), Vector2(0, -10))
+			taken.append(desk)
+			for bx in [-760.0, -380.0, 380.0, 760.0]:
+				for by in [-260.0, 0.0, 260.0, 520.0]:
+					var p := c + Vector2(bx, by)
+					var n := FieldLife.prop(act, p, "chairs", 72.0)
+					n.modulate = Color(0.62, 0.68, 0.78)
+					FieldLife.solid(n, Vector2(120, 16), Vector2(0, -6))
+					taken.append(p)
+			for gx in 6:
+				for gy in 4:
+					FieldLife.tube(act, Vector2((float(gx) + 0.5) * W / 6.0, (float(gy) + 0.5) * H / 4.0), Color(0.78, 1.0, 0.92))
+			return false
+		"sleet_hour":
+			# THE SLEET HOUR: a frozen pond you slide on, snow heaps, people's
+			# fire drums, bare trees.
+			var lake := c + Vector2(-560, 120)
+			FieldLife.ice(act, lake, Vector2(380, 210))
+			taken.append(lake)
+			taken.append(lake + Vector2(-220, 0))
+			taken.append(lake + Vector2(220, 0))
+			for i in 14:
+				var p := _free_spot(rng, taken, 160.0)
+				if p != Vector2.INF:
+					FieldLife.solid(FieldLife.prop(act, p, "snow_pile", rng.randf_range(50.0, 80.0), rng.randf() < 0.5), Vector2(60, 14), Vector2(0, -4))
+					taken.append(p)
+			for p in [lake + Vector2(460, -150), lake + Vector2(470, 200), c + Vector2(700, -300), c + Vector2(820, 420), c + Vector2(200, 560), c + Vector2(-200, -540)]:
+				FieldLife.fire_barrel(act, p)
+				taken.append(p)
+			for i in 10:
+				var p := Vector2(rng.randf_range(100, W - 100), [150.0, H - 110.0][i % 2])
+				FieldLife.tree(act, p, true)
+			for p in [Vector2(1500, 700), Vector2(2000, 1200)]:
+				FieldLife.steam(act, p)
+			return true
+		"ledger_dive":
+			# LEDGER DIVE: black water channels across the dock with plank
+			# crossings, bollards on the edges, pallet stacks, tube lights.
+			for wy in [520.0, 1150.0]:
+				var gaps: Array = [rng.randf_range(400, 800), rng.randf_range(1200, 1500), rng.randf_range(1900, 2300)]
+				var x := EDGE
+				for g: float in gaps:
+					if g - 70.0 > x:
+						FieldLife.water(act, Rect2(x, wy - 45.0, g - 70.0 - x, 90.0))
+						_block(Rect2(x, wy - 45.0, g - 70.0 - x, 90.0))
+					x = g + 70.0
+				FieldLife.water(act, Rect2(x, wy - 45.0, W - EDGE - x, 90.0))
+				_block(Rect2(x, wy - 45.0, W - EDGE - x, 90.0))
+				var bx := 200.0
+				while bx < W - 200.0:
+					if not gaps.any(func(g: float) -> bool: return absf(g - bx) < 110.0):
+						FieldLife.solid(FieldLife.prop(act, Vector2(bx, wy - 54.0), "bollard", 44.0), Vector2(20, 10), Vector2(0, -4))
+					bx += 260.0
+				for gx in [200.0, 600.0, 1000.0, 1400.0, 1800.0, 2200.0]:
+					taken.append(Vector2(gx, wy))
+			for i in 9:
+				var p := _free_spot(rng, taken, 200.0)
+				if p != Vector2.INF and not _blocked(p, 70.0):
+					FieldLife.solid(FieldLife.prop(act, p, "pallets", 80.0, rng.randf() < 0.5), Vector2(64, 18), Vector2(0, -6))
+					taken.append(p)
+			for gx in 5:
+				for gy in [0.0, 1.0, 2.0]:
+					FieldLife.tube(act, Vector2((float(gx) + 0.5) * W / 5.0, [280.0, 840.0, 1450.0][int(gy)]), Color(1.0, 0.72, 0.45))
+			for i in 4:
+				FieldLife.puddle(act, Vector2(rng.randf_range(300, W - 300), rng.randf_range(650, 1000)), Vector2(70, 24))
+			return false
+	return true
+
+
+## Spots that are not floor (water): spawns and props keep out.
+static var _blocks: Array[Rect2] = []
+
+
+static func _block(r: Rect2) -> void:
+	_blocks.append(r)
+
+
+static func _blocked(p: Vector2, pad := 0.0) -> bool:
+	for r in _blocks:
+		if r.grow(pad).has_point(p):
+			return true
+	return false
 
 
 static func _free_spot(rng: RandomNumberGenerator, taken: Array[Vector2], gap: float) -> Vector2:
 	for attempt in 30:
 		var p := Vector2(rng.randf_range(EDGE + 120.0, W - EDGE - 120.0), rng.randf_range(EDGE + 140.0, H - EDGE - 60.0))
-		var ok := true
+		var ok := not _blocked(p, 60.0)
 		for t in taken:
 			if t.distance_to(p) < gap or (t == center() and t.distance_to(p) < 320.0):
 				ok = false
@@ -323,6 +474,7 @@ class Weather extends Node2D:
 static func _fog(act: Node2D) -> void:
 	var f := Node2D.new()
 	f.z_index = 30
+	f.add_to_group("field_fog")
 	act.add_child(f)
 	var depth := 260.0
 	var c0 := Color(0.0, 0.0, 0.02, 0.92)
@@ -356,7 +508,7 @@ static func ring_point(tree: SceneTree) -> Vector2:
 	var r := half.length() + 50.0
 	for attempt in 8:
 		var p := mid + Vector2.from_angle(randf() * TAU) * r * Vector2(1.0, 0.75)
-		if p.x > EDGE + 20.0 and p.x < W - EDGE - 20.0 and p.y > EDGE + 40.0 and p.y < H - EDGE - 10.0:
+		if p.x > EDGE + 20.0 and p.x < W - EDGE - 20.0 and p.y > EDGE + 40.0 and p.y < H - EDGE - 10.0 and not _blocked(p, 30.0):
 			return p
 	# Squeezed into a corner: come in from the far side of the frame.
 	return Vector2(clampf(mid.x + (r if mid.x < W * 0.5 else -r), EDGE + 40.0, W - EDGE - 40.0), clampf(mid.y + randf_range(-half.y, half.y), EDGE + 60.0, H - EDGE - 20.0))

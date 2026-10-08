@@ -572,6 +572,20 @@ func _process(_delta: float) -> bool:
 			for gid in OS.get_environment("GIVE").get_slice("@", 0).split(","):
 				srg.get("abilities")[gid] = 3
 				srg.call("_mount", gid)
+	# OVERVIEW=1: the whole survivor field in one shot (camera frozen, zoomed out).
+	if OS.get_environment("OVERVIEW") != "" and _n >= 100:
+		var oc := root.get_viewport().get_camera_2d()
+		if oc:
+			oc.set_physics_process(false)
+			oc.offset = Vector2.ZERO
+			oc.limit_left = -100000
+			oc.limit_right = 100000
+			oc.limit_top = -100000
+			oc.limit_bottom = 100000
+			oc.zoom = Vector2.ONE * 0.24
+			oc.global_position = Vector2(1300, 850)
+			for fm in root.get_tree().get_nodes_in_group("field_fog"):
+				fm.visible = false
 	# FIRE=frame: hold SHOOT from then on (manual weapons, magazines).
 	if OS.get_environment("FIRE") != "" and _n == int(OS.get_environment("FIRE")):
 		Input.action_press("p1_shoot")

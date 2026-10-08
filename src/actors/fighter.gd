@@ -126,6 +126,16 @@ var trick_hold := false
 ## The lamp colour on the body this frame (hurt flush goes on top of it).
 var _lamp_tint := Color.WHITE
 var _hip := false
+var _ice_v := Vector2.ZERO
+
+
+func _on_ice() -> bool:
+	for n in get_tree().get_nodes_in_group("ice"):
+		var sz: Vector2 = n.get_meta("size", Vector2.ONE)
+		var d := (global_position - (n as Node2D).global_position) / sz
+		if d.length() < 0.95:
+			return true
+	return false
 var stomp_n := 0
 var stomp_cd := 0.0
 var _foot_cd := 0.0
@@ -956,8 +966,15 @@ func _process_street(delta: float) -> void:
 			# Top-down: the same speed every way, diagonals not faster
 			# (y a touch slower: the ground is seen at an angle).
 			var mv := Vector2(x, y).limit_length(1.0)
-			velocity.x = mv.x * run_k
-			velocity.y = mv.y * run_k * 0.9
+			var want_v := Vector2(mv.x * run_k, mv.y * run_k * 0.9)
+			# Ice (FieldLife.ice): the feet slide - momentum carries.
+			if _on_ice():
+				_ice_v = _ice_v.lerp(want_v * 1.15, 1.0 - exp(-1.8 * get_physics_process_delta_time()))
+				want_v = _ice_v
+			else:
+				_ice_v = want_v
+			velocity.x = want_v.x
+			velocity.y = want_v.y
 		elif _street_grounded():
 			velocity.y = y * depth_speed * limp
 		else:
