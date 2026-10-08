@@ -95,6 +95,20 @@ var _released: Dictionary = {}   # dir, btn, at
 var _step_frame := -1
 var _ghost_t := 0.0
 var _slide_hold := false
+## Build of this runner: ROOFTOPS level, parkour tree and parkour META.
+var top := TOP
+var boost := BOOST
+var jump_v := JUMP_V
+var win_k := 1.0     # wider timing windows
+var boost_len := 1.3
+var boost_add := 55.0
+var air_k := 1.0
+var hang_k := 1.0
+var coyote_t := 0.07
+var score_k := 1.0
+var iron := 0        # 1 big drops never stagger, 2 every hard landing rolls
+var ghost_trick := false
+var _untouch := 0.0
 
 
 func _ready() -> void:
@@ -121,6 +135,25 @@ func _ready() -> void:
 	Suits.dress(anim, role)
 	Palettes.apply(anim, role)
 	_play("idle")
+	_build()
+
+
+## Everything bought for the ROOFTOPS: level, PARKOUR tree, parkour META.
+func _build() -> void:
+	var lv := Heroes.level(role, "parkour")
+	var spd := Meta.run_speed_mul() * (1.08 if Trees.has("p_speed") else 1.0) * (1.0 + 0.008 * float(lv - 1))
+	top = TOP * spd + Heroes.speed_bonus(role) * 0.5
+	boost = BOOST * spd + Heroes.speed_bonus(role) * 0.5
+	jump_v = JUMP_V * Meta.jump_mul() * (1.06 if Trees.has("p_high") else 1.0)
+	win_k = Heroes.trick_window_mul(role)
+	boost_len = 1.3 * (1.5 if Trees.has("p_chain") else 1.0) * (1.0 + 0.25 * float(Meta.rank("flow_state")))
+	boost_add = 55.0 * Meta.flow_mul()
+	air_k = Meta.air_mul() * (1.5 if Trees.has("p_air_ctrl") else 1.0)
+	hang_k = 0.55 if Trees.has("p_hang") else 1.0
+	coyote_t = 0.07 * (2.0 if Trees.has("p_coyote") else 1.0)
+	score_k = (2.0 if Trees.has("p_score") else 1.0) * (1.0 + 0.2 * float(Meta.rank("trick_value")))
+	iron = maxi(Meta.rank("iron_ankles"), 1 if Trees.has("p_iron") else 0)
+	ghost_trick = Trees.has("p_ghost")
 
 
 # --- Input -------------------------------------------------------------------
@@ -194,7 +227,7 @@ static func find_trick(dir: String, btn: Array) -> Dictionary:
 func armed() -> Dictionary:
 	if not _load.is_empty():
 		return find_trick(str(_load.get("dir", "")), _load.get("btn", []))
-	if not _released.is_empty() and _now - float(_released["at"]) <= RELEASE_WIN:
+	if not _released.is_empty() and _now - float(_released["at"]) <= RELEASE_WIN * win_k:
 		return find_trick(str(_released.get("dir", "")), _released.get("btn", []))
 	return {}
 
@@ -231,6 +264,7 @@ func _physics_process(delta: float) -> void:
 	_now += delta
 	_t_state += delta
 	boost_t = maxf(0.0, boost_t - delta)
+	_untouch = maxf(0.0, _untouch - delta)
 	if autopilot:
 		_autopilot()
 	var ls := _ls()
@@ -269,7 +303,7 @@ func _set_state(s: String) -> void:
 
 
 func _speed_cap() -> float:
-	return BOOST if boost_t > 0.0 else TOP
+	return boost if boost_t > 0.0 else top
 
 
 func _accel(delta: float, ls: Vector2) -> void:
@@ -293,7 +327,7 @@ func _run(delta: float, ls: Vector2, up_edge: bool, down_now: bool) -> void:
 	if up_edge:
 		if _try_vault() or _try_climb():
 			return
-		_jump(JUMP_V + vx * 0.12)
+		_jump(jump_v + vx * 0.12)
 		return
 	if down_now and vx > 110.0:
 		_set_state("slide")
@@ -331,7 +365,7 @@ func _ground_follow(delta: float) -> void:
 	var g := course.ground_at(position.x, HALF_W)
 	if g == INF or g > position.y + 6.0:
 		_coyote += delta
-		if _coyote > 0.07:
+		if _coyote > coyote_t:
 			_start_fall()
 		return
 	_coyote = 0.0
@@ -365,6 +399,9 @@ func _hazards() -> void:
 			if state == "slide":
 				g.knock("slide")
 				_score("SLIDE TACKLE", 8, Color(0.6, 1.0, 0.7))
+			elif _untouch > 0.0:
+				g.knock("slide")
+				_score("GHOSTED", 6, Color(0.7, 0.9, 1.0))
 			else:
 				vx *= 0.15
 				position.x = g.position.x - 24.0
@@ -485,7 +522,7 @@ func _slide(delta: float, ls: Vector2, up_edge: bool, down_now: bool) -> void:
 	var under := not course.bar_at(position.x).is_empty() or not course.bar_at(position.x + 30.0).is_empty()
 	if up_edge and not under:
 		_set_state("run")
-		_jump(JUMP_V * 0.9)
+		_jump(jump_v * 0.9)
 		return
 	if (_t_state > 0.65 and not down_now and not under) or vx < 60.0 and not under:
 		_set_state("run")
@@ -623,9 +660,9 @@ func _grade_release(target_x: float) -> String:
 		return "epic"
 	if d < -4.0 or d > 90.0:
 		return "bad"
-	if d <= 24.0:
+	if d <= 24.0 * win_k:
 		return "perfect"
-	if d <= 48.0:
+	if d <= 48.0 * win_k:
 		return "good"
 	return "ok"
 
@@ -658,11 +695,13 @@ func _predict_air(svx: float, svy: float) -> float:
 func _air(delta: float, ls: Vector2) -> void:
 	# A little air control, like leaning the body.
 	if ls.x > 0.3:
-		vx = move_toward(vx, _speed_cap(), 120.0 * delta)
+		vx = move_toward(vx, _speed_cap(), 120.0 * air_k * delta)
 	elif ls.x < -0.3:
-		vx = move_toward(vx, 40.0, 260.0 * delta)
+		vx = move_toward(vx, 40.0, 260.0 * air_k * delta)
 	var prev_y := position.y
-	vy = minf(vy + G * delta, 1500.0)
+	# The top of the arc hangs (HANG TIME floats it longer).
+	var grav := G * (0.7 * hang_k if absf(vy) < 90.0 else 1.0)
+	vy = minf(vy + grav * delta, 1500.0)
 	_air_top = minf(_air_top, position.y)
 	var step := vx * delta
 	if step > 0.0:
@@ -755,10 +794,19 @@ func _land(drop: float) -> void:
 	var lead := _now - _pose_t if held else 99.0
 	var land_grade := "miss"
 	if held:
-		land_grade = "perfect" if lead <= 0.16 else "good"
+		land_grade = "perfect" if lead <= 0.16 * win_k else "good"
 	Juice.land_puff(global_position)
+	if land_grade == "miss" and need == "roll" and iron >= 2:
+		# IRON ANKLES II: the body rolls it out on its own.
+		land_grade = "good"
 	if land_grade == "miss":
-		if need == "roll" and drop > ROLL_DROP * 1.7:
+		if need == "roll" and iron >= 1:
+			vx *= 0.6
+			_set_state("run")
+			_play("parkour_run")
+			event.emit("sloppy", "IRON ANKLES", Color(0.75, 0.8, 0.9), 0)
+			return
+		elif need == "roll" and drop > ROLL_DROP * 1.7:
 			# A big drop with no roll: the legs fold.
 			_epic_fail("face" if vx > 200.0 else "back", "EPIC FAIL")
 			return
@@ -784,8 +832,10 @@ func _land(drop: float) -> void:
 		_play("parkour_run")
 		Mixer.play_sfx("res://assets/audio/sfx/land.ogg", randf_range(1.0, 1.15), -6.0)
 	if land_grade == "perfect":
-		boost_t = 1.3
-		vx = maxf(vx, TOP) + 55.0
+		boost_t = boost_len
+		vx = maxf(vx, top) + boost_add
+		if ghost_trick:
+			_untouch = 0.5
 		chain += 1
 		perfects += 1
 		event.emit("perfect_land", "PERFECT %s" % ("ROLL" if need == "roll" else "LANDING"), Color(1.0, 0.85, 0.3), 6 * chain)
@@ -801,6 +851,7 @@ func _land(drop: float) -> void:
 
 
 func _score(name: String, pts: int, col: Color, grade: String = "") -> void:
+	pts = int(round(float(pts) * score_k))
 	style += pts
 	var txt := name if grade == "" or grade == "flow" else "%s  %s" % [grade.to_upper(), name]
 	event.emit("score", txt, col, pts)

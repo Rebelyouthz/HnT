@@ -43,6 +43,8 @@ static func _row(role: String) -> Dictionary:
 ## Menus pass a mode explicitly.
 static func mode() -> String:
 	var sc: Node = Engine.get_main_loop().current_scene if Engine.get_main_loop() is SceneTree else null
+	if sc is RooftopRun:
+		return "parkour"
 	if sc is RunAct:
 		if StoryBook.is_survive((sc as RunAct).map_id):
 			return "survivor"

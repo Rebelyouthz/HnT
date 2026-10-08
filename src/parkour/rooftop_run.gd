@@ -484,7 +484,8 @@ func _paint_hud() -> void:
 	_txt(c, Vector2(24, 34), "STYLE %d" % lead.style, 22, UiKit.GOLD)
 	if lead.chain > 1:
 		_txt(c, Vector2(24, 60), "PERFECT CHAIN x%d" % lead.chain, 14, Color(1.0, 0.85, 0.3))
-	var spd := clampf(lead.vx / Runner.BOOST, 0.0, 1.0)
+	var spd := clampf(lead.vx / lead.boost, 0.0, 1.0)
+	_txt(c, Vector2(24, 92), "ROOFTOPS LV %d" % Heroes.level(lead.role, "parkour"), 11, Color(0.7, 0.85, 1.0))
 	c.draw_rect(Rect2(24, 72, 180, 6), Color(0.04, 0.02, 0.06, 0.8))
 	c.draw_rect(Rect2(24, 72, 180.0 * spd, 6), Color(1.0, 0.62, 0.35) if lead.boost_t <= 0.0 else Color(1.0, 0.9, 0.5))
 	# Falls left.
