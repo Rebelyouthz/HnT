@@ -10,6 +10,7 @@ func _configure() -> void:
 	goal_x = 99999.0
 	next_id = "fire_escapes"
 	light_preset = "intake_lot"
+	music = "res://assets/audio/music/music_dock.ogg"
 	toast_title = "THE INTAKE LOT"
 	toast_body = "Hold the lot. Magnet the chips. Clamp King at 0:32."
 	clear_title = Copy.LOT_CLEAR

@@ -258,6 +258,6 @@ func map_lines() -> PackedStringArray:
 		"COUCH: one pad = The Father (keyboard is The Son)  ·  two pads = one each.",
 		"A jump   X light (SNAP confirm in the window)   Y heavy   B special",
 		"LB block   RB shoot   LT throw   RT dash/slide   RS click SNAP   Start pause",
-		"D-pad or left stick. Hold RT + down to slide. Hold A in the air to cape-glide (The Son).",
+		"D-pad or left stick. Hold RT + down to slide. Hold A in the air to glide (BAT suit cape only).",
 		"Start on a pad (or keyboard P) drops the empty chair in. Enemies stay the count you booked."
 	])

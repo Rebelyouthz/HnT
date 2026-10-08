@@ -18,7 +18,8 @@ func _configure() -> void:
 	next_label = Copy.NEXT_LOT
 	gate_sub = Copy.GATE_LOT
 	win_mode = "boss"
-	music = "res://assets/audio/music/music_dock.ogg"
+	# Swapped with the Intake Lot on request: the survive track opens the game.
+	music = "res://assets/audio/music/music_survive.ogg"
 
 
 func build_world() -> void:
@@ -44,9 +45,11 @@ func build_world() -> void:
 	NightStreet.pixel_roof(self, Rect2(1420, ROOF_Y, 580, 22))
 	Blockout.solid(self, Rect2(2480, ROOF_Y, 440, 22), true)
 	NightStreet.pixel_roof(self, Rect2(2480, ROOF_Y, 440, 22))
-	var wall := Blockout.solid(self, Rect2(1234, 140, 18, 110), false)
+	# A brick chimney stack on the roof edge: low enough to hop, the son can
+	# also wall-kick it.
+	var wall := Blockout.solid(self, Rect2(1234, 196, 18, 54), false)
 	wall.add_to_group("metal")
-	NightStreet.pixel_tenement(self, Rect2(1230, 140, 32, 110))
+	NightStreet.pixel_tenement(self, Rect2(1230, 196, 32, 54))
 	fire_escape(480.0)
 	fire_escape(1920.0)
 	fire_escape(2520.0)

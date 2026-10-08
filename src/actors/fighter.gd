@@ -6,10 +6,15 @@ extends CharacterBody2D
 @export var max_hp: int = 80
 @export var speed: float = 210.0
 @export var depth_speed: float = 110.0
+## Walk clip stand-ins while a hero's profile walk is being redone.
+const SIDE_WALK := {"son": "walk_dr"}
+## Story-street walk pace as a share of top speed (heroes walk; dash runs).
+const WALK_K := {"father": 0.6, "son": 0.56}
 @export var accent: Color = Palette.LEMON
 
-const GRAV := 2400.0
-const JUMP := -620.0
+## Same jump height as before, ~15% more hang time (it read too snappy).
+const GRAV := 1815.0
+const JUMP := -539.0
 const FALL_MUL := 1.65
 ## Terminal speed: long drops read as falls, not teleports.
 const MAX_FALL := 1150.0
@@ -22,7 +27,7 @@ static var STREET_MAX := 520.0
 ## Top-down survivor field: free 8-way movement at full speed both ways.
 static var FIELD := false
 const STEAM_MAX := 100.0
-const JUMP_HEIGHT := (620.0 * 620.0) / (2.0 * 2400.0)
+const JUMP_HEIGHT := (539.0 * 539.0) / (2.0 * 1815.0)
 
 var hp: int
 var steam: float = STEAM_MAX
@@ -518,7 +523,7 @@ func _tick_sprite() -> void:
 		clip = SpriteBook.dir_clip(_anim.sprite_frames, velocity, true)
 		if clip == "walk" and absf(velocity.x) > 110.0:
 			clip = "parkour_run"
-	elif dashing or parkour_lock > 0.0 or absf(velocity.x) > 110.0:
+	elif dashing or parkour_lock > 0.0 or absf(velocity.x) > (175.0 if plane == "street" else 110.0):
 		clip = "parkour_run"
 	elif absf(velocity.x) > 18.0 or (plane == "street" and absf(velocity.y) > 18.0):
 		clip = "walk"
@@ -527,6 +532,10 @@ func _tick_sprite() -> void:
 		# eight ways: side, diagonals (walk_ur / walk_dr) and straight.
 		if plane == "street":
 			clip = SpriteBook.dir_clip(_anim.sprite_frames, velocity, FIELD)
+		# The son's profile walk cycle barely moves its legs (reads as a
+		# glide); his three-quarter walk has real alternating steps.
+		if clip == "walk" and SIDE_WALK.has(role) and _anim.sprite_frames.has_animation(SIDE_WALK[role]):
+			clip = SIDE_WALK[role]
 	if not _anim.sprite_frames.has_animation(clip):
 		if clip == "side_kick" and _anim.sprite_frames.has_animation("front_kick"):
 			clip = "front_kick"
@@ -734,10 +743,27 @@ func _physics_process(delta: float) -> void:
 	else:
 		_process_street(delta)
 	_combat()
-	if cape:
-		cape.visible = gliding or cape_guard > 0.0 or FamilyProfile.costume_for(role) == "night_tutor"
-	if ears:
-		ears.visible = gliding or cape_guard > 0.0 or FamilyProfile.costume_for(role) == "night_tutor"
+	var cape_on := gliding or cape_guard > 0.0 or FamilyProfile.costume_for(role) == "night_tutor"
+	if _anim != null:
+		# Sprite heroes wear the animated cloth cape (CapeFx), never the old
+		# flat placeholder quad (it showed as a black box).
+		if cape:
+			cape.visible = false
+		if ears:
+			ears.visible = false
+		if cape_on and _cape_fx == null:
+			_cape_fx = CapeFx.new()
+			_cape_fx.anim = _anim
+			_cape_fx.who = self
+			squash_root.add_child(_cape_fx)
+			squash_root.move_child(_cape_fx, _anim.get_index())
+		if _cape_fx != null:
+			_cape_fx.draw_cape = cape_on or suit_part("top") == "bat"
+	else:
+		if cape:
+			cape.visible = cape_on
+		if ears:
+			ears.visible = cape_on
 
 
 func _tick_meters(delta: float) -> void:
@@ -973,6 +999,10 @@ func _process_street(delta: float) -> void:
 		if stumble_t > 0.0:
 			limp *= 0.4
 		var run_k := speed * limp * (1.0 + (trick_boost - 1.0) * Meta.flow_mul()) * Meta.run_speed_mul() * NightExtras.speed_mul() * combo_spd * (1.0 + 0.12 * float(_cart("energy_drink"))) * _surv_speed() * ItemRack.speed_k
+		# Story streets are walked, not run (the dash runs): a walking pace
+		# the walk cycle's feet actually cover.
+		if not FIELD and plane == "street":
+			run_k *= WALK_K.get(role, 0.6)
 		velocity.x = x * run_k
 		if FIELD:
 			# Top-down: the same speed every way, diagonals not faster
@@ -1032,7 +1062,7 @@ func _process_street(delta: float) -> void:
 		# The top of every jump hangs a moment; HANG TIME floats it longer.
 		if absf(hop_v) < 90.0:
 			g *= 0.45 if Trees.has("p_hang") else 0.7
-		if (role == "son" or suit_part("top") == "bat" or Trees.has("p_float")) and hop < 0.0 and _pressed("jump") and hop_v > -80.0:
+		if can_glide() and hop < 0.0 and _pressed("jump") and hop_v > -80.0:
 			if not gliding and ResourceLoader.exists("res://assets/audio/sfx/glide.ogg"):
 				Mixer.play_sfx("res://assets/audio/sfx/glide.ogg", 1.0, -10.0)
 			gliding = true
@@ -1058,6 +1088,11 @@ func _process_street(delta: float) -> void:
 		pass
 
 
+## Gliding needs the bat cape (FLOAT perk only softens the glide).
+func can_glide() -> bool:
+	return suit_part("top") == "bat"
+
+
 func _process_roof(delta: float) -> void:
 	motion_mode = MOTION_MODE_GROUNDED
 	visual.position.y = 0.0
@@ -1065,9 +1100,14 @@ func _process_roof(delta: float) -> void:
 	var x := stick.x
 	var y := stick.y
 	if wall_run > 0.0:
-		velocity = Vector2(float(facing) * 330.0, -50.0)
+		# WALL KICK: one strong step up the wall, then gravity as usual; the
+		# feet keep pushing forward so the top of the wall carries you over.
+		velocity.x = float(facing) * 150.0
+		velocity.y = minf(velocity.y + GRAV * delta, MAX_FALL)
 		move_and_slide()
-		_face(x)
+		if not is_on_wall():
+			velocity.x = float(facing) * 240.0
+		_try_land_roof()
 		return
 	if not is_on_floor():
 		var g := GRAV
@@ -1075,7 +1115,7 @@ func _process_roof(delta: float) -> void:
 			g *= FALL_MUL
 		if absf(velocity.y) < 90.0:
 			g *= 0.45 if Trees.has("p_hang") else 0.7
-		if (role == "son" or suit_part("top") == "bat" or Trees.has("p_float")) and _pressed("jump") and velocity.y > -90.0:
+		if can_glide() and _pressed("jump") and velocity.y > -90.0:
 			gliding = true
 			g = GRAV * 0.18
 			velocity.y = minf(velocity.y, 10.0)
@@ -1113,6 +1153,8 @@ func _process_roof(delta: float) -> void:
 	if is_on_wall() and jump_buf > 0 and role == "son":
 		wall_run = 0.42 * Meta.wall_mul()
 		jump_buf = 0
+		velocity.y = JUMP * 1.3 * Meta.wall_mul()
+		KitSfx.hit(role, "jump")
 	move_and_slide()
 	_face(x)
 	if global_position.y >= STREET_MIN - 6.0:

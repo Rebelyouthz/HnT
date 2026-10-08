@@ -379,7 +379,7 @@ func _ready() -> void:
 	add_child(DuoDirector.new())
 	add_child(BloodSim.new())
 	# The coping hour has its own driving track.
-	if self is SurviveAct and ResourceLoader.exists("res://assets/audio/music_survive.wav"):
+	if self is SurviveAct and not music.contains("/music/") and ResourceLoader.exists("res://assets/audio/music_survive.wav"):
 		music = "res://assets/audio/music_survive.wav"
 	Mixer.play_music(music)
 	var party: Dictionary = Party.spawn(self, spawn_at)
@@ -468,7 +468,7 @@ func _ready() -> void:
 
 func _queue_starting_draw() -> void:
 	# Game time (pauses with the game), so nothing pops over a title card.
-	get_tree().create_timer(2.2, false).timeout.connect(func() -> void:
+	get_tree().create_timer(1.2, false).timeout.connect(func() -> void:
 		if is_inside_tree() and get_node_or_null("CardPick") == null:
 			_starting_draw()
 	)

@@ -100,6 +100,7 @@ func _build_dock() -> void:
 
 
 func play(lines: Array, force := false) -> void:
+	lines = _present(lines)
 	if lines.is_empty():
 		return
 	if _open and not force:
@@ -109,6 +110,24 @@ func play(lines: Array, force := false) -> void:
 	_i = 0
 	_open = true
 	_paint()
+
+
+## Solo nights: the hero who stayed home does not chime in from nowhere.
+func _present(lines: Array) -> Array:
+	if not is_inside_tree():
+		return lines
+	var have := {}
+	for n in get_tree().get_nodes_in_group("players"):
+		have[str(n.get("role"))] = true
+	if have.is_empty():
+		return lines
+	var out: Array = []
+	for l in lines:
+		var who := str((l as Dictionary).get("who", "")) if l is Dictionary else ""
+		if (who == "son" or who == "father") and not have.has(who):
+			continue
+		out.append(l)
+	return out
 
 
 func busy() -> bool:
