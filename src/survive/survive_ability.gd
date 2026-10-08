@@ -44,9 +44,21 @@ func _process(delta: float) -> void:
 		if Arsenal.is_gun(str(f.get("pickup"))):
 			return
 		var twin := PadRouter.rstick(f.prefix).length() > 0.75 or (PadRouter.mouse_live(f.prefix) and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT))
-		var want: bool = twin or (f.call("_pressed", "shoot") if id == "nail_driver" else f.call("_just", "shoot"))
+		# Twin-stick: holding the trigger keeps every manual gun firing at
+		# its own rate (a pump gun pumps, a rifle cracks).
+		var want: bool = twin or f.call("_pressed", "shoot")
 		if not want:
 			return
+		# One trigger, one magazine at a time (ManualRack): dry -> next gun,
+		# all dry -> reload them all.
+		var rack := ManualRack.of(f)
+		if not rack.can_fire(id):
+			return
+		rack.spend(id)
+		var aim := _aim(f, f.global_position + Vector2(0, -30))
+		f.hold_manual({"nail_driver": "nailgun", "sprayer": "shotgun", "rivet_rifle": "smg", "paperweight": "revolver"}.get(id, "pistol"), aim)
+		var fx := 1 if (aim.x if aim != Vector2.ZERO else float(f.facing)) >= 0.0 else -1
+		Juice.muzzle(f.global_position + Vector2(float(fx) * 18.0, -34.0) + aim * 10.0, fx, "pistol" if id != "sprayer" else "shotgun")
 	_cd = float(r.get("cd", 1.5)) * run.cd_mul() * (0.65 if run.evolved.has(id) else 1.0) * SurvStarter.cd_mul(id)
 	_fire(run, r, f)
 
@@ -237,6 +249,22 @@ func _fire(run: SurviveRun, r: Dictionary, f: Fighter) -> void:
 				var a := face + (float(i) - float(n - 1) * 0.5) * 0.1 + randf_range(-0.05, 0.05)
 				SurvProj.shoot(_host(), "staple", id, at, Vector2.from_angle(a) * 620.0, 1 + int(run.abilities.get(id, 1)) / 3)
 			Mixer.play_sfx("res://assets/audio/sfx/nailgun.ogg" if ResourceLoader.exists("res://assets/audio/sfx/nailgun.ogg") else "res://assets/audio/ui_click.wav", randf_range(1.5, 1.8), -14.0)
+		"sprayer":
+			# A pump of staples: a wide fan where you aim.
+			var aim := _aim(f, at)
+			var face := aim.angle() if aim != Vector2.ZERO else (0.0 if f.facing > 0 else PI)
+			var n := 5 + run.proj_count(id)
+			for i in n:
+				var a := face + (float(i) - float(n - 1) * 0.5) * 0.13 + randf_range(-0.03, 0.03)
+				SurvProj.shoot(_host(), "staple", id, at, Vector2.from_angle(a) * randf_range(520.0, 640.0), 1)
+			Mixer.play_sfx("res://assets/audio/sfx/shotgun.ogg" if ResourceLoader.exists("res://assets/audio/sfx/shotgun.ogg") else "res://assets/audio/cling.wav", randf_range(1.1, 1.25), -8.0)
+			f.velocity -= Vector2.from_angle(face) * 60.0
+		"rivet_rifle":
+			# One hard rivet that goes through a row of them.
+			var aim := _aim(f, at)
+			var face := aim.angle() if aim != Vector2.ZERO else (0.0 if f.facing > 0 else PI)
+			SurvProj.shoot(_host(), "staple", id, at, Vector2.from_angle(face) * 900.0, 3 + int(run.abilities.get(id, 1)) / 2)
+			Mixer.play_sfx("res://assets/audio/sfx/nailgun.ogg" if ResourceLoader.exists("res://assets/audio/sfx/nailgun.ogg") else "res://assets/audio/cling.wav", randf_range(0.7, 0.8), -8.0)
 		"paperweight":
 			var aim := _aim(f, at)
 			var p := f.global_position + Vector2(float(f.facing) * 110.0, 0)

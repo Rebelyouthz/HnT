@@ -237,7 +237,8 @@ func _combo_burst(step: int) -> void:
 			e.flung_ground = false
 	var gold := step / 5
 	FamilyProfile.add_gold(gold)
-	Juice.rewards.give("gold", gold, f.get_global_transform_with_canvas().origin + Vector2(0, -60))
+	# On the survivor field a big banner over the hero hides the crowd.
+	Juice.rewards.give("gold", gold, f.get_global_transform_with_canvas().origin + Vector2(0, -60), not Fighter.FIELD)
 
 
 ## The blinking skull over a thug you can finish.

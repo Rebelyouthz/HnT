@@ -125,6 +125,7 @@ var parkour_lock := 0.0
 var trick_hold := false
 ## The lamp colour on the body this frame (hurt flush goes on top of it).
 var _lamp_tint := Color.WHITE
+var _hip := false
 var stomp_n := 0
 var stomp_cd := 0.0
 var _foot_cd := 0.0
@@ -482,7 +483,7 @@ func _tick_sprite() -> void:
 		clip = "hurt"
 	elif anim_atk != "" and _atk_t > 0.0:
 		clip = anim_atk
-	elif aim_t > 0.0 and _gun != null and _anim.sprite_frames.has_animation("cross"):
+	elif aim_t > 0.0 and _gun != null and _anim.sprite_frames.has_animation("cross") and not (FIELD and velocity.length() > 30.0):
 		clip = "cross"
 	elif blocking and _anim.sprite_frames.has_animation("block_" + block_height):
 		clip = "block_" + block_height
@@ -536,6 +537,11 @@ func _tick_sprite() -> void:
 		return
 	if _gun != null:
 		_gun.visible = false
+		# Top-down survivor: walking and shooting, the gun rides at the hip.
+		if FIELD and aim_t > 0.0 and clip != "cross":
+			_hip = true
+			_place_gun()
+			_hip = false
 	if _anim.animation != clip:
 		_anim.speed_scale = 1.0
 		_anim.play(clip)
@@ -2053,6 +2059,20 @@ func xp_magnet() -> float:
 	return r
 
 
+## Survivor manual weapon in the fist: the gun art, aim pose, facing the
+## shot, and the rack's reload tilt (ManualRack drives reload_t).
+func hold_manual(kind: String, aim: Vector2) -> void:
+	if pickup != "":
+		return
+	if _gun == null or str(_gun.get_meta("kind", "")) != kind:
+		_mount_gun(kind)
+	aim_t = maxf(aim_t, 0.35)
+	if aim != Vector2.ZERO and absf(aim.x) > 0.1:
+		facing = 1 if aim.x > 0.0 else -1
+		visual.scale.x = float(facing)
+	gun_cd = 0.12
+
+
 func _mount_gun(kind: String) -> void:
 	if _anim == null:
 		return
@@ -2089,7 +2109,7 @@ func _place_gun() -> void:
 		return
 	var m := _gun_meta(str(_gun.get_meta("kind", "pistol")))
 	var grip: Array = m.get("grip", [8, 12])
-	var hand := _anim.position + _hand_point() * _anim.scale
+	var hand := _anim.position + (_hand_point() * Vector2(0.55, 0.8) if _hip else _hand_point()) * _anim.scale
 	_gun.scale = _anim.scale
 	# Recoil per gun: muzzle climbs and the gun slides back with its kick;
 	# reloads tilt it (mag guns muzzle-up, the shotgun down for shells).
@@ -2802,6 +2822,9 @@ func _street_grounded() -> bool:
 func _face(x: float) -> void:
 	# No turning around mid-strike: the hips are committed.
 	if _strike_phase == 1 or _strike_phase == 2:
+		return
+	# Twin-stick: while a manual gun is up, the body faces the aim, not the walk.
+	if FIELD and aim_t > 0.0 and pickup == "":
 		return
 	# Mid-chain the stick is part of the input (back + heavy), not a turn.
 	if _combo != null and not _combo.hist.is_empty() and not _combo.cold(_clock):

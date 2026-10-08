@@ -565,6 +565,16 @@ func _process(_delta: float) -> bool:
 				root.get_texture().get_image().save_png(_out.get_basename() + "_%03d.png" % _n)
 	if _n == 20 and OS.get_environment("TRICKAUTO") != "":
 		load("res://src/ui/timing_ring.gd").set("autoplay", true)
+	# GIVE=id,id,...@frame: survivor abilities at level 3 (any survive map).
+	if OS.get_environment("GIVE") != "" and _n == int(OS.get_environment("GIVE").get_slice("@", 1)):
+		var srg: Node = root.get_tree().get_first_node_in_group("survive_run")
+		if srg:
+			for gid in OS.get_environment("GIVE").get_slice("@", 0).split(","):
+				srg.get("abilities")[gid] = 3
+				srg.call("_mount", gid)
+	# FIRE=frame: hold SHOOT from then on (manual weapons, magazines).
+	if OS.get_environment("FIRE") != "" and _n == int(OS.get_environment("FIRE")):
+		Input.action_press("p1_shoot")
 	if _walk and _n > 20:
 		Input.action_press("p1_left" if _left else "p1_right")
 		# WALKY=up|down: walk diagonally (eight-way checks on the field).

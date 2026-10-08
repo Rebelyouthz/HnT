@@ -292,7 +292,7 @@
     7
    ],
    "manual": true,
-   "blurb": "MANUAL: hold SHOOT with empty hands for a stream of nails where you face. Aim by facing."
+   "blurb": "MANUAL: hold fire for a stream of nails where you aim. 24 to a magazine; dry, it swaps to your next gun."
   },
   {
    "id": "paperweight",
@@ -303,7 +303,35 @@
    "per": 5,
    "area": 52,
    "manual": true,
-   "blurb": "MANUAL: tap SHOOT with empty hands to lob a glass paperweight that shatters on the crowd."
+   "blurb": "MANUAL: tap fire to lob a glass paperweight where you aim. Four to a magazine."
+  },
+  {
+   "id": "sprayer",
+   "name": "STAPLE SHOTGUN",
+   "icon": "stapler",
+   "cd": 0.55,
+   "dmg": 5,
+   "per": 1,
+   "proj": 0,
+   "proj_at": [
+    3,
+    5,
+    7
+   ],
+   "manual": true,
+   "blurb": "MANUAL: a pump-action fan of staples where you aim. Six to a magazine."
+  },
+  {
+   "id": "rivet_rifle",
+   "name": "RIVET RIFLE",
+   "icon": "nail_driver",
+   "cd": 0.32,
+   "dmg": 15,
+   "per": 4,
+   "proj": 1,
+   "proj_at": [],
+   "manual": true,
+   "blurb": "MANUAL: hold to fire rivets that punch through a whole row. Eight to a magazine."
   }
  ],
  "traits": [
