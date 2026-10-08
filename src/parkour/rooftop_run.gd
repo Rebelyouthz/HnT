@@ -33,6 +33,7 @@ func _ready() -> void:
 	Fighter.FIELD = false
 	App.current_map = MAP_ID
 	Runner.autopilot = OS.get_environment("PARKOUR_AUTO") != ""
+	Runner.autopilot_sloppy = OS.get_environment("PARKOUR_SLOPPY") != ""
 	Engine.set_meta("run_parries0", int(FamilyProfile.data.get("parries", 0)))
 	state = RunState.new()
 	state.add_to_group("run_state")
@@ -232,6 +233,15 @@ func _on_event(kind: String, text: String, col: Color, pts: int, rn: Runner) -> 
 			Mixer.play_sfx("res://assets/audio/cling_fail.wav", 1.0, -4.0)
 		"sloppy":
 			hunter.nudge(-0.1)
+		"bad":
+			hunter.nudge(-0.15)
+			Juice.pulse_shake(2.5)
+		"epic_take":
+			hunter.nudge(-0.1)
+		"epic":
+			hunter.nudge(-0.5)
+			Juice.pulse_shake(7.0)
+			Mixer.play_sfx("res://assets/audio/cling_fail.wav", 0.8, -2.0)
 		"perfect_land":
 			hunter.nudge(0.22)
 			Juice.pulse_shake(2.0)
@@ -246,7 +256,7 @@ func _on_event(kind: String, text: String, col: Color, pts: int, rn: Runner) -> 
 	if text != "":
 		var p := rn.global_position + Vector2(0, -96)
 		Juice.popup_number(p, text + ("  +%d" % pts if pts > 0 else ""), col)
-		if kind in ["perfect_land", "trick_call", "stumble"]:
+		if kind in ["perfect_land", "trick_call", "stumble", "epic", "bad"]:
 			_feed_add(text, col)
 
 

@@ -53,6 +53,8 @@ const BTN_ACT := {"R1": "shoot", "L1": "block", "R2": "dash", "L2": "throw"}
 
 ## Test / attract mode: reads the course and plays like a decent runner
 ## (PARKOUR_AUTO=1 in the environment).
+## Test: the autopilot mistimes some jumps and skips some landings.
+static var autopilot_sloppy := false
 static var autopilot := false
 var _ap: Dictionary = {}
 
@@ -249,6 +251,8 @@ func _physics_process(delta: float) -> void:
 			_air(delta, ls)
 		"vault", "climb":
 			_tick_move(delta)
+		"fail":
+			_tick_fail(delta)
 		"stumble":
 			vx = move_toward(vx, 0.0, 500.0 * delta)
 			_ground_follow(delta)
@@ -506,6 +510,59 @@ func _stumble(text: String, t: float) -> void:
 	pivot.rotation = 0.0
 	Mixer.play_sfx("res://assets/audio/sfx/body_fall.ogg", randf_range(0.95, 1.1), -6.0)
 	event.emit("stumble", text, Color(1.0, 0.45, 0.35), 0)
+	if autopilot:
+		print("PK_STUMBLE ", text, " ", Engine.get_process_frames())
+
+
+## EPIC FAIL, three ways down:
+##   trip  catches a foot, flails, nearly eats it, keeps his feet (shortest)
+##   face  pitches forward flat on his chest, pushes himself back up
+##   back  feet fly out, lands on his back, rolls over and gets up
+## Uses the fail_<kind> clip when the son has one, else a posed fall.
+func _epic_fail(kind: String, text: String) -> void:
+	chain = 0
+	var dur: float = {"trip": 0.9, "face": 1.5, "back": 1.6}[kind]
+	_move = {"t": dur, "kind": kind}
+	_set_state("fail")
+	pivot.rotation = 0.0
+	vx *= 0.35 if kind == "trip" else 0.15
+	var clip := "fail_" + kind
+	if anim.sprite_frames.has_animation(clip):
+		_play(clip)
+		_move["clip"] = true
+	else:
+		_play("hurt" if kind == "trip" else ("knockdown" if anim.sprite_frames.has_animation("knockdown") else "hurt"))
+		_move["clip"] = false
+	Mixer.play_sfx("res://assets/audio/sfx/body_fall.ogg", randf_range(0.8, 0.95), -2.0)
+	Juice.land_puff(global_position)
+	event.emit("epic", text, Color(1.0, 0.25, 0.25), 0)
+	if autopilot:
+		print("PK_EPIC ", kind, " ", Engine.get_process_frames())
+
+
+## Posed fall when there is no clip: lean, hit the roof, lie, get up.
+func _tick_fail(delta: float) -> void:
+	vx = move_toward(vx, 0.0, 420.0 * delta)
+	_ground_follow(delta)
+	var t := _t_state
+	var dur := float(_move.get("t", 1.2))
+	var kind := str(_move.get("kind", "trip"))
+	if not bool(_move.get("clip", false)):
+		var k := clampf(t / 0.28, 0.0, 1.0)
+		var up := clampf((t - (dur - 0.45)) / 0.45, 0.0, 1.0)
+		match kind:
+			"trip":
+				pivot.rotation = sin(clampf(t / dur, 0.0, 1.0) * PI) * 0.55
+			"face":
+				pivot.rotation = lerpf(0.0, 1.45, ease(k, 0.4)) * (1.0 - ease(up, 2.0))
+			"back":
+				pivot.rotation = lerpf(0.0, -1.4, ease(k, 0.4)) * (1.0 - ease(up, 2.0))
+		if kind != "trip" and t > 0.25 and t < dur - 0.45:
+			pivot.rotation += sin(t * 30.0) * 0.02 * clampf(0.5 - (t - 0.25), 0.0, 0.5)
+	if t >= dur:
+		pivot.rotation = 0.0
+		_set_state("run")
+		_play("parkour_run")
 
 
 # --- Jumping and tricks ------------------------------------------------------------
@@ -518,6 +575,17 @@ func _jump(v: float) -> void:
 	_set_state("air")
 	grounded = false
 	_air_grade = _grade_release(_takeoff_x())
+	if _air_grade == "bad":
+		# Mistimed push: less pop, less speed.
+		vy *= 0.88
+		vx *= 0.85
+		event.emit("bad", "BAD TIMING", _grade_col("bad"), 0)
+		if autopilot:
+			print("PK_BADT ", Engine.get_process_frames())
+	elif _air_grade == "epic":
+		vy *= 0.75
+		vx *= 0.7
+		event.emit("epic_take", "WAY OFF", _grade_col("epic"), 0)
 	if not tr.is_empty():
 		_released = {}
 		var air_t := _predict_air(vx, vy)
@@ -550,23 +618,24 @@ func _grade_release(target_x: float) -> String:
 	if target_x == INF:
 		return "flow"
 	var d := target_x - position.x
-	if d < -4.0:
-		return "late"
+	# Left the roof already (coyote jump) or jumped way before the edge.
+	if d < -26.0 or d > 170.0:
+		return "epic"
+	if d < -4.0 or d > 90.0:
+		return "bad"
 	if d <= 24.0:
 		return "perfect"
 	if d <= 48.0:
 		return "good"
-	if d <= 90.0:
-		return "ok"
-	return "early"
+	return "ok"
 
 
 func _grade_mult(g: String) -> float:
-	return {"perfect": 2.0, "good": 1.4, "ok": 1.0, "flow": 0.8, "early": 0.6, "late": 0.6}.get(g, 1.0)
+	return {"perfect": 2.0, "good": 1.4, "ok": 1.0, "flow": 0.8, "bad": 0.4, "epic": 0.0}.get(g, 1.0)
 
 
 func _grade_col(g: String) -> Color:
-	return {"perfect": Color(1.0, 0.85, 0.3), "good": Color(0.55, 1.0, 0.6), "ok": Color(0.8, 0.85, 0.95)}.get(g, Color(0.7, 0.7, 0.75))
+	return {"perfect": Color(1.0, 0.85, 0.3), "good": Color(0.55, 1.0, 0.6), "ok": Color(0.8, 0.85, 0.95), "bad": Color(1.0, 0.55, 0.3), "epic": Color(1.0, 0.25, 0.25)}.get(g, Color(0.7, 0.7, 0.75))
 
 
 ## Seconds until the feet would touch something, flying with this speed.
@@ -668,14 +737,16 @@ func _land(drop: float) -> void:
 	pivot.rotation = 0.0
 	_air_rot_left = 0.0
 	_air_twist = 0.0
-	if bailed:
-		vx *= 0.2
-		_stumble("BAIL", 0.75)
-		event.emit("bail", "", Color.WHITE, 0)
-		return
 	var need := "roll" if drop > ROLL_DROP else "run"
 	var trick := _air_trick
 	_air_trick = {}
+	if bailed:
+		# Still mid-spin when the roof arrives: over the head or on the back.
+		_epic_fail("face" if _air_rot_rate > 0.0 else "back", "BAIL")
+		return
+	if _air_grade == "epic" and drop > 20.0:
+		_epic_fail("trip", "EPIC FAIL")
+		return
 	if drop < 28.0 and trick.is_empty():
 		_set_state("run")
 		_play("parkour_run")
@@ -687,15 +758,19 @@ func _land(drop: float) -> void:
 		land_grade = "perfect" if lead <= 0.16 else "good"
 	Juice.land_puff(global_position)
 	if land_grade == "miss":
+		if need == "roll" and drop > ROLL_DROP * 1.7:
+			# A big drop with no roll: the legs fold.
+			_epic_fail("face" if vx > 200.0 else "back", "EPIC FAIL")
+			return
 		if need == "roll":
 			vx *= 0.22
 			_stumble("HARD LANDING", 0.8)
 			event.emit("hard", "", Color.WHITE, 0)
 		else:
-			vx *= 0.7
-			_set_state("run")
-			_play("parkour_run")
-			event.emit("sloppy", "SLOPPY", Color(0.85, 0.7, 0.6), 0)
+			# BAD landing: a stumble step and most of the speed gone.
+			vx *= 0.55
+			_stumble("BAD LANDING", 0.45)
+			event.emit("bad", "", Color.WHITE, 0)
 		if not trick.is_empty():
 			_score(str(trick["name"]), int(float(trick["pts"]) * 0.5), Color(0.75, 0.75, 0.8), _air_grade)
 		Mixer.play_sfx("res://assets/audio/sfx/land.ogg", 0.85, -2.0)
@@ -821,7 +896,7 @@ func _autopilot() -> void:
 	if state == "air":
 		if vy > 0.0:
 			var g := course.ground_at(x + vx * 0.1, HALF_W)
-			if g != INF and g - position.y < 70.0:
+			if g != INF and g - position.y < 70.0 and not (autopilot_sloppy and int(position.x / 400.0) % 2 == 1):
 				var pose := Vector2(0.75, 0.75) if _land_need == "roll" else Vector2(1, 0)
 				ls = pose
 				rs = pose
@@ -847,7 +922,10 @@ func _autopilot() -> void:
 			var pick: Dictionary = TRICKS[int(abs(int(edge))) % TRICKS.size()]
 			rs = Runner.dir_vec(str(pick["dir"]))
 			btn = (pick["btn"] as Array).duplicate()
-		if vault_near or (not w.is_empty() and str(w["kind"]) != "vault") or (d_edge != INF and d_edge <= 16.0):
+		var jump_at := 16.0
+		if autopilot_sloppy and d_edge != INF and int(edge / 400.0) % 3 == 0:
+			jump_at = 120.0 + float(int(edge) % 90)
+		if vault_near or (not w.is_empty() and str(w["kind"]) != "vault") or (d_edge != INF and d_edge <= jump_at):
 			if not _ap.get("up", false):
 				ls = Vector2(1, -1).normalized()
 				_ap["up"] = true
