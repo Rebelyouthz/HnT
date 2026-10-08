@@ -28,6 +28,8 @@ var _phase: Dictionary = {}
 var _elite_t := 0.0
 var _swarm_done := false
 var _announced := -1
+## Titles with no walking sprite (vehicles, fliers): skipped on the field.
+var _no_art: Dictionary = {}
 
 
 func _ready() -> void:
@@ -120,6 +122,10 @@ func _wave(elite := false, force := false) -> void:
 	var cam := get_viewport().get_camera_2d()
 	var cx := cam.global_position.x if cam else map_w * 0.5
 	var side := -1.0 if randf() < 0.5 else 1.0
+	if Fighter.FIELD:
+		# Top-down: only thugs with walking art (no blockout vehicles/fliers).
+		var walkers: Array = pool.filter(func(t: Variant) -> bool: return not _no_art.has(str(t)))
+		pool = walkers if not walkers.is_empty() else ["Coping Imp"]
 	var title := str(pool[randi() % pool.size()])
 	var air := title in ["Clipboard", "Pier Gull", "Drone", "Ice Drone", "Billboard Gull", "Invoice Chopper"]
 	var row := {
@@ -131,6 +137,16 @@ func _wave(elite := false, force := false) -> void:
 		"pmin": cx - 520.0,
 		"pmax": cx + 520.0
 	}
+	if Fighter.FIELD:
+		# Top-down: from every side, just off screen; fliers come in on foot
+		# height (they still hover in their art).
+		var at := SurviveField.ring_point(get_tree())
+		row["x"] = at.x
+		row["y"] = at.y
+		row["home"] = "street"
+		row["hp"] = 30 if air else 36
+		row["pmin"] = 0.0
+		row["pmax"] = SurviveField.W
 	var host := get_parent()
 	var rs := get_tree().get_first_node_in_group("run_state")
 	# Hard on purpose: the horde outgrows a fresh build; gear, META and the
@@ -142,6 +158,10 @@ func _wave(elite := false, force := false) -> void:
 	mul *= 1.0 + SurvExtras.pact_sum("hp")
 	var p := Party.spawn_row(host, row, mul)
 	if p == null:
+		return
+	if Fighter.FIELD and p.get("_anim") == null:
+		_no_art[title] = true
+		p.queue_free()
 		return
 	if elite:
 		_make_elite(p)

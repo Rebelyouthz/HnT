@@ -306,12 +306,8 @@ func _tick_sprite() -> void:
 	elif recover > 0.0:
 		clip = "idle"
 	elif absf(velocity.x) > 8.0 or absf(velocity.y) > 18.0:
-		clip = "walk"
-		# Mostly up or down the lane: the back or front walk (punk, cop).
-		if absf(velocity.y) > 18.0 and absf(velocity.y) > absf(velocity.x) * 0.55:
-			var lane := "walk_up" if velocity.y < 0.0 else "walk_down"
-			if _anim.sprite_frames.has_animation(lane):
-				clip = lane
+		# Side, three-quarter or straight up/down walk (eight ways on the field).
+		clip = SpriteBook.dir_clip(_anim.sprite_frames, velocity, Fighter.FIELD)
 	if not _anim.sprite_frames.has_animation(clip):
 		clip = "attack" if clip.begins_with("punch") or clip == "kick_low" else clip
 		if not _anim.sprite_frames.has_animation(clip):
@@ -321,7 +317,7 @@ func _tick_sprite() -> void:
 		_anim.speed_scale = _swing_rate if clip == _swing_clip else 1.0
 	if clip == "walk":
 		_anim.speed_scale = SpriteBook.stride_rate(_anim, "walk", maxf(absf(velocity.x), absf(velocity.y) * 1.4))
-	elif clip == "walk_up" or clip == "walk_down":
+	elif clip in ["walk_up", "walk_down", "walk_ur", "walk_dr"]:
 		_anim.speed_scale = SpriteBook.stride_rate(_anim, clip, velocity.length() * 1.4)
 
 
@@ -472,6 +468,9 @@ func _physics_process(delta: float) -> void:
 	var players := get_tree().get_nodes_in_group("players")
 	var t: Node2D = null
 	var best := 9999.0
+	if Fighter.FIELD and home == "street":
+		_field_chase(players, delta)
+		return
 	for n in players:
 		if n is Fighter and not (n as Fighter).downed:
 			var d: float = absf((n as Node2D).global_position.x - global_position.x)
@@ -555,6 +554,63 @@ func _physics_process(delta: float) -> void:
 	_tick_sprite()
 
 
+## Top-down survivor field: walk straight at the nearest hero from any
+## side, stop beside them (melee lands on the same row), swing when lined up.
+## Ranged kits still throw from range. The crowd spreads itself out.
+func _field_chase(players: Array, delta: float) -> void:
+	var t: Fighter = null
+	var best := 1e9
+	for n in players:
+		if n is Fighter and not (n as Fighter).downed:
+			var d2 := (n as Node2D).global_position.distance_squared_to(global_position)
+			if d2 < best:
+				best = d2
+				t = n
+	if t == null:
+		velocity = velocity.move_toward(Vector2.ZERO, 400.0 * delta)
+		move_and_slide()
+		_lane()
+		_mix_mod()
+		_tick_sprite()
+		return
+	var dx := t.global_position.x - global_position.x
+	var dy := t.global_position.y - global_position.y
+	facing = 1 if dx > 0.0 else -1
+	visual.scale.x = float(facing)
+	var side := -signf(dx) if absf(dx) > 4.0 else float(-facing)
+	var spot := t.global_position + Vector2(side * Punk.ENGAGE * 0.7, 0.0)
+	var to := spot - global_position
+	var gait := WoundGait.speed_mul(self)
+	var v := to.normalized() * speed * gait if to.length() > 6.0 else Vector2.ZERO
+	var kit_atk := str(kit.get("attack", ""))
+	if absf(dx) < Punk.ENGAGE and absf(dy) < 26.0 and not WoundGait.override(self, t, delta):
+		if vehicle != "" and kit_atk == "ram":
+			_ram_hit(t)
+		elif not _maybe_guard(t):
+			_start_telegraph()
+		v = Vector2.ZERO
+	elif kit_atk in ["gun", "grenade"] or title in ["Invoice Clerk", "Coping Imp", "Badge Broker", "Roof Runner"]:
+		var far := sqrt(best)
+		if far > 90.0 and far < 300.0 and randf() < 0.012:
+			if kit_atk == "grenade":
+				_lob()
+			else:
+				_shuriken()
+			v = Vector2.ZERO
+	var sp := CrowdAI.spread(self)
+	v += Vector2(sp.x * 6.0, sp.y * 6.0)
+	velocity = v
+	move_and_slide()
+	WoundGait.underfoot(self, delta)
+	WoundGait.pose(self, delta)
+	_lane()
+	_bob += delta * 4.8
+	if _hurt_t > 0.0:
+		_hurt_t -= delta
+	_mix_mod()
+	_tick_sprite()
+
+
 func _lane() -> void:
 	if home == "air" or title == "Drone":
 		global_position.y = clampf(global_position.y, 150.0, 360.0)
@@ -562,7 +618,7 @@ func _lane() -> void:
 			global_position.x = clampf(global_position.x, patrol_min, patrol_max)
 		return
 	if home == "street":
-		global_position.y = clampf(global_position.y, 430.0, 520.0)
+		global_position.y = clampf(global_position.y, Fighter.STREET_MIN, Fighter.STREET_MAX)
 	else:
 		if patrol_max > patrol_min:
 			global_position.x = clampf(global_position.x, patrol_min, patrol_max)

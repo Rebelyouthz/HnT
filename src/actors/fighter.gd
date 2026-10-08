@@ -15,8 +15,12 @@ const FALL_MUL := 1.65
 const MAX_FALL := 1150.0
 const COYOTE := 6
 const BUFFER := 8
-const STREET_MIN := 430.0
-const STREET_MAX := 520.0
+## The walkable band (y). Story streets: 430-520; the survivor FIELD opens
+## it to the whole top-down arena (RunAct sets both, every act).
+static var STREET_MIN := 430.0
+static var STREET_MAX := 520.0
+## Top-down survivor field: free 8-way movement at full speed both ways.
+static var FIELD := false
 const STEAM_MAX := 100.0
 const JUMP_HEIGHT := (620.0 * 620.0) / (2.0 * 2400.0)
 
@@ -497,11 +501,10 @@ func _tick_sprite() -> void:
 	elif absf(velocity.x) > 18.0 or (plane == "street" and absf(velocity.y) > 18.0):
 		clip = "walk"
 		# Up / down the lane: the three-quarter back or front walk when the
-		# move is mostly into or out of the street.
-		if plane == "street" and absf(velocity.y) > 18.0 and absf(velocity.y) > absf(velocity.x) * 0.55:
-			var lane := "walk_up" if velocity.y < 0.0 else "walk_down"
-			if _anim.sprite_frames.has_animation(lane):
-				clip = lane
+		# move is mostly into or out of the street. On the top-down field all
+		# eight ways: side, diagonals (walk_ur / walk_dr) and straight.
+		if plane == "street":
+			clip = SpriteBook.dir_clip(_anim.sprite_frames, velocity, FIELD)
 	if not _anim.sprite_frames.has_animation(clip):
 		if clip == "side_kick" and _anim.sprite_frames.has_animation("front_kick"):
 			clip = "front_kick"
@@ -541,7 +544,7 @@ func _drive_clip(clip: String) -> void:
 	match clip:
 		"walk":
 			_anim.speed_scale = SpriteBook.stride_rate(_anim, "walk", maxf(absf(velocity.x), absf(velocity.y) * 1.4))
-		"walk_up", "walk_down":
+		"walk_up", "walk_down", "walk_ur", "walk_dr":
 			_anim.speed_scale = SpriteBook.stride_rate(_anim, clip, velocity.length() * 1.4)
 		"parkour_run":
 			var spd := maxf(absf(velocity.x), 420.0 if dashing else 0.0)
@@ -932,8 +935,15 @@ func _process_street(delta: float) -> void:
 		var combo_spd := 1.0 + clampf(float(Juice.combo) * 0.008, 0.0, 0.14)
 		if stumble_t > 0.0:
 			limp *= 0.4
-		velocity.x = x * speed * limp * (1.0 + (trick_boost - 1.0) * Meta.flow_mul()) * Meta.run_speed_mul() * NightExtras.speed_mul() * combo_spd * (1.0 + 0.12 * float(_cart("energy_drink"))) * _surv_speed() * ItemRack.speed_k
-		if _street_grounded():
+		var run_k := speed * limp * (1.0 + (trick_boost - 1.0) * Meta.flow_mul()) * Meta.run_speed_mul() * NightExtras.speed_mul() * combo_spd * (1.0 + 0.12 * float(_cart("energy_drink"))) * _surv_speed() * ItemRack.speed_k
+		velocity.x = x * run_k
+		if FIELD:
+			# Top-down: the same speed every way, diagonals not faster
+			# (y a touch slower: the ground is seen at an angle).
+			var mv := Vector2(x, y).limit_length(1.0)
+			velocity.x = mv.x * run_k
+			velocity.y = mv.y * run_k * 0.9
+		elif _street_grounded():
 			velocity.y = y * depth_speed * limp
 		else:
 			velocity.y = 0.0
@@ -949,7 +959,7 @@ func _process_street(delta: float) -> void:
 	if roll_t > 0.0:
 		roll_t -= delta
 		velocity.x = _roll_dir * 330.0 * clampf(roll_t / 0.2, 0.35, 1.0)
-		velocity.y = y * depth_speed * 0.5
+		velocity.y = y * (speed * 0.8 if FIELD else depth_speed * 0.5)
 	if _street_grounded():
 		coyote = COYOTE * (2 if Trees.has("p_coyote") else 1)
 		if suit_part("top") == "bat":

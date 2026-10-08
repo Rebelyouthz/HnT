@@ -323,7 +323,7 @@ func burst(from: Vector2, floor_y: float, dir: float, p: Dictionary) -> void:
 		_drops.append({
 			"p": from + o, "v": v, "s": s,
 			# Depth: drops land a little in front of / behind the body.
-			"floor": clampf(floor_y + randf_range(-5.0, 8.0), 428.0, 640.0),
+			"floor": clampf(floor_y + randf_range(-5.0, 8.0), Fighter.STREET_MIN - 2.0, maxf(640.0, Fighter.STREET_MAX + 20.0)),
 			"c": tint.lerp(DARK, randf() * 0.45),
 			"streak": bool(p.get("streak", false))
 		})
@@ -377,7 +377,7 @@ func _throw_gibs(from: Vector2, floor_y: float, dir: float, n: int, kind: String
 			"bone":
 				sz = randf_range(2.0, 3.2)
 		_gibs.append({"p": from + Vector2(randf_range(-4, 4), randf_range(-4, 4)), "v": v, "kind": kind, "s": sz,
-			"rot": randf() * TAU, "spin": randf_range(-14.0, 14.0), "floor": clampf(floor_y + randf_range(-6.0, 10.0), 428.0, 640.0),
+			"rot": randf() * TAU, "spin": randf_range(-14.0, 14.0), "floor": clampf(floor_y + randf_range(-6.0, 10.0), Fighter.STREET_MIN - 2.0, maxf(640.0, Fighter.STREET_MAX + 20.0)),
 			"down": false, "seed": randi() % 997})
 
 

@@ -26,7 +26,7 @@ static func burst(host: Node, at: Vector2, total: int, elite: bool = false) -> v
 		var o := XpOrb.new()
 		o.amount = each if i < n - 1 else total - each * (n - 1)
 		o.big = elite and i == 0
-		o.floor_y = clampf(at.y, 432.0, 600.0) + randf_range(-6.0, 6.0)
+		o.floor_y = clampf(at.y, Fighter.STREET_MIN + 2.0, maxf(600.0, Fighter.STREET_MAX + 10.0)) + randf_range(-6.0, 6.0)
 		o.position = Vector2(at.x, o.floor_y - 26.0)
 		o._v = Vector2(randf_range(-110.0, 110.0), randf_range(-260.0, -150.0))
 		host.add_child(o)

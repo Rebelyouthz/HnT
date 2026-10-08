@@ -322,7 +322,14 @@ func _place_rescue() -> void:
 
 func _ready() -> void:
 	VaultCards.reset_run()
+	# Every act starts on the story street band; survivor hours open the
+	# top-down field (SurviveField.setup).
+	Fighter.FIELD = false
+	Fighter.STREET_MIN = 430.0
+	Fighter.STREET_MAX = 520.0
 	_configure()
+	if self is SurviveAct:
+		SurviveField.setup(self)
 	Arsenal.reset_run()
 	var place := scene_file_path.get_file().get_basename()
 	if Discover.PLACES.has(place):
@@ -346,18 +353,24 @@ func _ready() -> void:
 	add_child(_state)
 	if not App.run_bag.is_empty():
 		_state.unpack(App.run_bag)
-	build_world()
+	if Fighter.FIELD:
+		SurviveField.build(self, map_id)
+	else:
+		build_world()
 	# The halfway cart on every story stage.
 	if App.ORDER.has(map_id) and not StoryBook.is_survive(map_id):
 		NightCondition.dress(self, map_id)
 		ShopCart.place(self, map_w * 0.5)
 		QuestGiver.place_for(self, map_id, map_w)
 		Hazard.place_for(self, map_w)
-	_place_parkour()
-	_place_rescue()
+	if not Fighter.FIELD:
+		_place_parkour()
+		_place_rescue()
 	_rig = LightRig.new()
-	_rig.preset = light_preset
+	_rig.preset = "field" if Fighter.FIELD else light_preset
 	add_child(_rig)
+	if Fighter.FIELD and _rig.get_node_or_null("Night"):
+		(_rig.get_node("Night") as CanvasModulate).color = SurviveField.theme(map_id)["night"]
 	add_child(SnapDirector.new())
 	add_child(DuoDirector.new())
 	add_child(BloodSim.new())
@@ -401,6 +414,9 @@ func _ready() -> void:
 	QuickBelt.place(self)
 	_cam = CouchCamera.new()
 	_cam.limit_right = int(map_w)
+	if Fighter.FIELD:
+		_cam.field = true
+		_cam.limit_bottom = int(SurviveField.H)
 	_cam.targets = _targets()
 	add_child(_cam)
 	var hud_script := preload("res://src/ui/run_hud.gd")
@@ -754,6 +770,11 @@ func _spawn_story_unit(mini: bool) -> void:
 	var x := float(d.get("x", spawn_at.x + 800.0))
 	if StoryBook.is_survive(map_id) and cam:
 		x = cam.global_position.x + (280.0 if mini else 340.0)
+	var y := float(d.get("y", 500.0))
+	if Fighter.FIELD:
+		var at := SurviveField.ring_point(get_tree())
+		x = at.x
+		y = at.y
 	var unit := ActBoss.new()
 	unit.title = str(d.get("title", "Named Problem"))
 	unit.display = unit.title
@@ -765,7 +786,7 @@ func _spawn_story_unit(mini: bool) -> void:
 	unit.patrol_max = float(d.get("pmax", x + 160.0))
 	unit.speed = 34.0 if not mini else 40.0
 	unit.armored = not mini
-	unit.global_position = Vector2(x, float(d.get("y", 500.0)))
+	unit.global_position = Vector2(x, y)
 	unit.accent = Palette.EDGE if mini else Palette.BRICK
 	add_child(unit)
 
@@ -795,6 +816,8 @@ func _spawn_skinwalker(d: Dictionary, mini: bool) -> void:
 	unit.patrol_min = float(d.get("pmin", x - 180.0))
 	unit.patrol_max = float(d.get("pmax", x + 180.0))
 	unit.global_position = Vector2(x, float(d.get("y", 500.0)))
+	if Fighter.FIELD:
+		unit.global_position = SurviveField.ring_point(get_tree())
 	unit.dormant = false
 	add_child(unit)
 	unit.hp = int(round(float(d.get("hp", 128)) * _state.hp_mul()))

@@ -38,7 +38,7 @@ static func spawn(host: Node, at: Vector2, what: String, n: int = 0, toss: float
 	var d := LootDrop.new()
 	d.kind = what
 	d.amount = n
-	d.floor_y = clampf(at.y, 432.0, 600.0)
+	d.floor_y = clampf(at.y, Fighter.STREET_MIN + 2.0, maxf(600.0, Fighter.STREET_MAX + 10.0))
 	d.position = Vector2(at.x, d.floor_y - 20.0)
 	d._v = Vector2(randf_range(-70.0, 70.0) * toss, randf_range(-230.0, -160.0))
 	host.add_child(d)

@@ -21,6 +21,8 @@ const LOOP := {
 	"walk": true,
 	"walk_up": true,
 	"walk_down": true,
+	"walk_ur": true,
+	"walk_dr": true,
 	"parkour_run": true,
 	"duck": true,
 	"dog": true,
@@ -43,6 +45,37 @@ static func world_filter() -> CanvasItem.TextureFilter:
 
 ## Portraits and icons are always shrunk into UI boxes.
 const UI_FILTER := CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+
+
+## The walk clip for a move direction. Street lanes: side unless mostly
+## up/down. The top-down field (eight ways): side within 25 deg of level,
+## straight up/down within 25 deg of vertical, the diagonal clips between
+## (walk_ur = three-quarter back, walk_dr = three-quarter front; mirrored for
+## left by the facing flip). Missing clips fall back to the nearest one.
+static func dir_clip(sf: SpriteFrames, v: Vector2, eight: bool) -> String:
+	if v.length() < 18.0:
+		return "walk"
+	var ax := absf(v.x)
+	var ay := absf(v.y)
+	var pick := "walk"
+	if not eight:
+		if ay > 18.0 and ay > ax * 0.55:
+			pick = "walk_up" if v.y < 0.0 else "walk_down"
+	else:
+		var deg := rad_to_deg(atan2(ay, ax))
+		if deg > 65.0:
+			pick = "walk_up" if v.y < 0.0 else "walk_down"
+		elif deg > 25.0:
+			pick = "walk_ur" if v.y < 0.0 else "walk_dr"
+	if sf.has_animation(pick):
+		return pick
+	if pick == "walk_ur" and sf.has_animation("walk_up") and rad_to_deg(atan2(ay, ax)) > 45.0:
+		return "walk_up"
+	if pick == "walk_dr" and sf.has_animation("walk_down") and rad_to_deg(atan2(ay, ax)) > 45.0:
+		return "walk_down"
+	if pick.begins_with("walk_u") and not sf.has_animation(pick) and sf.has_animation("walk_up") and pick == "walk_up":
+		return "walk_up"
+	return "walk" if sf.has_animation("walk") else "idle"
 
 
 static func has_who(who: String) -> bool:
@@ -245,7 +278,7 @@ const FILM_SCALE := 1.12
 ## Playback rate that makes a locomotion clip's feet travel exactly as far
 ## as the body does: one loop of a clip is one full stride (two steps) of
 ## STRIDE body heights (walk ~1.25, run ~2.4). ~200 texel bodies.
-const STRIDE := {"walk": 1.25, "walk_up": 0.9, "walk_down": 0.9, "parkour_run": 2.4, "run": 2.4}
+const STRIDE := {"walk": 1.25, "walk_up": 0.9, "walk_down": 0.9, "walk_ur": 1.05, "walk_dr": 1.05, "parkour_run": 2.4, "run": 2.4}
 
 
 static func stride_rate(a: AnimatedSprite2D, clip: String, vx: float) -> float:

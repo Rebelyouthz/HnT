@@ -238,7 +238,7 @@ func _volley() -> void:
 		var ly := f.global_position.y if f else boss.global_position.y
 		var per := 3 + mini(boss.stage, 2)
 		for i in per:
-			var lane := clampf(ly + (float(i) - float(per - 1) * 0.5) * 30.0, 436.0, 590.0)
+			var lane := clampf(ly + (float(i) - float(per - 1) * 0.5) * 30.0, Fighter.STREET_MIN + 6.0, maxf(Fighter.STREET_MAX, 590.0))
 			var from := boss.global_position + Vector2(_dir * 20.0, -46.0)
 			var v := Vector2(_dir * (330.0 + 30.0 * float(boss.stage)), (lane - boss.global_position.y) * 0.5)
 			BossFx.shot(_host(), from, v, boss, str(book.get("shot", "paper")), lane)
@@ -258,7 +258,7 @@ func _rain() -> void:
 		var at := c + Vector2(randf_range(-140, 140), randf_range(-40, 40))
 		if _n % 3 == 0 and f:
 			at = f.global_position
-		at.y = clampf(at.y, 438.0, 592.0)
+		at.y = clampf(at.y, Fighter.STREET_MIN + 8.0, maxf(Fighter.STREET_MAX, 592.0))
 		BossFx.drop(_host(), at, 0.95 / _speed_k(), boss, str(book.get("drop", "crate")))
 		_n += 1
 	if _t > 0.3 + float(count) * gap + 1.0:

@@ -6,6 +6,8 @@ extends Camera2D
 const ZOOM := 1.5
 
 var targets: Array[Node2D] = []
+## Top-down survivor field: follow on both axes inside the arena, wider.
+var field := false
 var _look := 0.0
 var _nag_cd := 0.0
 var cinematic := Vector2.ZERO
@@ -62,7 +64,8 @@ func _ready() -> void:
 	position_smoothing_enabled = false
 	process_physics_priority = -40
 	limit_top = 0
-	limit_bottom = 720
+	if not field:
+		limit_bottom = 720
 	limit_left = 0
 	# The level sets limit_right (map_w) before adding the camera; only fall
 	# back when nobody did (it used to overwrite it, so the frame ran past
@@ -74,7 +77,7 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	var env := _punch_env(delta)
-	zoom = Vector2.ONE * ZOOM * (1.0 + _pz * env)
+	zoom = Vector2.ONE * (SurviveField.ZOOM if field else ZOOM) * (1.0 + _pz * env)
 	if _nag_cd > 0.0:
 		_nag_cd -= delta
 	if cinematic_on:
@@ -96,7 +99,7 @@ func _physics_process(delta: float) -> void:
 		if t is Fighter:
 			face_sum += float((t as Fighter).facing)
 	mid /= float(living.size())
-	var look_target := 90.0 * clampf(face_sum / float(living.size()), -1.0, 1.0)
+	var look_target := (30.0 if field else 90.0) * clampf(face_sum / float(living.size()), -1.0, 1.0)
 	var look_t := 1.0 - exp(-6.0 * delta)
 	_look = lerpf(_look, look_target, look_t)
 	mid.x += _look
@@ -108,7 +111,10 @@ func _physics_process(delta: float) -> void:
 	desired.x = clampf(desired.x, limit_left + half.x, limit_right - half.x)
 	# Frame the feet a little below centre: street fights keep the kerb near
 	# the bottom edge, roof runs (y 248) still get headroom.
-	desired.y = clampf(desired.y - 30.0, 190.0, 425.0)
+	if field:
+		desired.y = clampf(desired.y - 24.0, limit_top + half.y, limit_bottom - half.y)
+	else:
+		desired.y = clampf(desired.y - 30.0, 190.0, 425.0)
 	if env > 0.0:
 		desired = desired.lerp(_pz_at, 0.35 * env)
 	if _body_t > 0.0:
@@ -117,18 +123,20 @@ func _physics_process(delta: float) -> void:
 			_pz_at = _body.global_position
 			var bp := _body.global_position + Vector2(0, -20)
 			bp.x = clampf(bp.x, limit_left + half.x, limit_right - half.x)
-			bp.y = clampf(bp.y, 190.0, 425.0)
+			bp.y = clampf(bp.y, limit_top + half.y, limit_bottom - half.y) if field else clampf(bp.y, 190.0, 425.0)
 			desired = desired.lerp(bp, 0.55 * clampf(_body_t * 2.0, 0.0, 1.0))
 		else:
 			_body_t = 0.0
 	# Vertical lerp ~0.12 toward the pair so roofs and street share one frame.
-	var y_t := 1.0 - exp(-7.5 * delta)
+	var y_t := 1.0 - exp((-8.0 if field else -7.5) * delta)
 	global_position.x = roundf(lerpf(global_position.x, desired.x, follow))
 	global_position.y = roundf(lerpf(global_position.y, desired.y, y_t))
 	offset = Juice.shake_offset()
 
 
 func _leash(living: Array[Node2D]) -> void:
+	if field:
+		return
 	var dist := absf(living[0].global_position.x - living[1].global_position.x)
 	var max_sep := get_viewport_rect().size.x / zoom.x * 0.7
 	if dist <= max_sep:

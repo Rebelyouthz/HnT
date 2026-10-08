@@ -188,7 +188,7 @@ func _shrines(f: Fighter, delta: float) -> void:
 	if _shrine == null and _shrine_t <= 0.0 and blessings.size() < 4:
 		_shrine = Shrine.new()
 		var mw := float(get_parent().get("map_w")) if get_parent().get("map_w") != null else 3000.0
-		_shrine.global_position = Vector2(clampf(f.global_position.x + randf_range(-220, 220), 80.0, mw - 80.0), clampf(f.global_position.y + randf_range(-30, 30), 440.0, 590.0))
+		_shrine.global_position = Vector2(clampf(f.global_position.x + randf_range(-220, 220), 80.0, mw - 80.0), clampf(f.global_position.y + randf_range(-120, 120) if Fighter.FIELD else f.global_position.y + randf_range(-30, 30), Fighter.STREET_MIN + 10.0, maxf(Fighter.STREET_MAX, 590.0)))
 		if OS.get_environment("SURV_SHRINE") != "":
 			_shrine.global_position = f.global_position
 		get_parent().add_child(_shrine)

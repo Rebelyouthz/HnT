@@ -192,7 +192,7 @@ func _encircle(host: Node, f: Fighter) -> void:
 	for i in 12:
 		var a := TAU * float(i) / 12.0
 		var at := f.global_position + Vector2(cos(a) * 280.0, sin(a) * 60.0)
-		var row := {"title": "Coping Imp", "x": at.x, "y": clampf(at.y, 460.0, 560.0), "home": "street", "hp": 30, "pmin": at.x - 400.0, "pmax": at.x + 400.0}
+		var row := {"title": "Coping Imp", "x": at.x, "y": clampf(at.y, Fighter.STREET_MIN + 30.0, maxf(Fighter.STREET_MAX, 560.0)), "home": "street", "hp": 30, "pmin": at.x - 400.0, "pmax": at.x + 400.0}
 		Party.spawn_row(host, row, 1.0 + float(horde.get("elapsed")) / 85.0)
 
 
