@@ -17,7 +17,7 @@ dest_files=["res://.godot/imported/void_cape.png-6afc007478868e3b9b0909a898d894e
 
 compress/mode=1
 compress/high_quality=false
-compress/lossy_quality=0.9
+compress/lossy_quality=0.8
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1

@@ -17,7 +17,7 @@ dest_files=["res://.godot/imported/sleet_06.png-43130caffbf2c281bcbb9feca7c78eea
 
 compress/mode=1
 compress/high_quality=false
-compress/lossy_quality=0.9
+compress/lossy_quality=0.8
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1

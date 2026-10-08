@@ -17,7 +17,7 @@ dest_files=["res://.godot/imported/kick_low.png-45aab16a69e37c14ae55ef54f09004fc
 
 compress/mode=1
 compress/high_quality=false
-compress/lossy_quality=0.9
+compress/lossy_quality=0.8
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1

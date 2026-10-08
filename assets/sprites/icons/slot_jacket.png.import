@@ -17,7 +17,7 @@ dest_files=["res://.godot/imported/slot_jacket.png-0b1479ce9f218200185aa8415b695
 
 compress/mode=1
 compress/high_quality=false
-compress/lossy_quality=0.9
+compress/lossy_quality=0.8
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
