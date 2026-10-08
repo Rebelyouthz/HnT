@@ -2,7 +2,13 @@ class_name NightStreet
 extends Object
 
 
+## True while the map being built has a painted backdrop: roof faces then
+## stay see-through so the painted buildings carry the street.
+static var painted := false
+
+
 static func parallax(host: Node, map_w: float, theme: String = "dock") -> void:
+	painted = has_backdrop(theme)
 	var pal := _theme_pal(theme)
 	var pb := ParallaxBackground.new()
 	pb.name = "Parallax"
@@ -954,7 +960,21 @@ static func pixel_roof(host: Node, rect: Rect2, _kind: String = "roof") -> void:
 	# lane, a concrete coping caps it, tar and a lit lip on top. (The old
 	# terracotta tile was drawn a metre per tile and read as noise.)
 	var top := rect.position.y
-	if top < 420.0:
+	if top < 420.0 and painted:
+		# Painted street behind: no brick slab over it, just the roof's
+		# depth - a soft shadow under the coping and the two corners.
+		var veil := Polygon2D.new()
+		var a0 := Color(0.02, 0.02, 0.05, 0.0)
+		var a1 := Color(0.02, 0.02, 0.05, 0.42)
+		veil.polygon = PackedVector2Array([Vector2(rect.position.x, top + 8.0), Vector2(rect.end.x, top + 8.0), Vector2(rect.end.x, top + 70.0), Vector2(rect.position.x, top + 70.0)])
+		veil.vertex_colors = PackedColorArray([a1, a1, a0, a0])
+		host.add_child(veil)
+		for ex in [rect.position.x, rect.end.x - 3.0]:
+			var edge := Polygon2D.new()
+			edge.polygon = PackedVector2Array([Vector2(ex, top + 8.0), Vector2(ex + 3.0, top + 8.0), Vector2(ex + 3.0, 430.0), Vector2(ex, 430.0)])
+			edge.vertex_colors = PackedColorArray([Color(0.1, 0.09, 0.12, 0.85), Color(0.1, 0.09, 0.12, 0.85), Color(0.1, 0.09, 0.12, 0.0), Color(0.1, 0.09, 0.12, 0.0)])
+			host.add_child(edge)
+	elif top < 420.0:
 		var face := Node2D.new()
 		face.modulate = Color(0.95, 0.9, 0.95)
 		host.add_child(face)
