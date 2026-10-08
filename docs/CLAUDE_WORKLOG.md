@@ -34,7 +34,44 @@ The rest is in English, like the code. Newest work first. Each block says
 
 ---
 
-## 0v. Survivor goes top-down (latest)
+## 0w. Survivor: own maps, living props, 3D XP crystals, twin-stick magazines (latest)
+
+Owner: different maps per survivor hour, living animated objects, XP gems
+that pop out of bodies and tumble/land like 3D (survivor only - the main game
+pays XP per kill, no orbs), twin-stick with auto + manual weapons: one manual
+fires, empty mag -> next gun, all empty -> reload; reload animations.
+
+- **Layouts** (`SurviveField._landmarks`): per map before the scatter (lot car
+  rows/puddles/drums, circle fountain + tree ring + benches, clinic chair
+  blocks + desk + tube grid, sleet frozen pond + snow heaps, dock water
+  channels with gaps + bollards + pallets). `_blocks` keeps props and
+  spawns (`ring_point`) out of water. Returns false = no street lamps.
+- **Living props** (`src/survive/field_life.gd`): fire_barrel, steam, puddle
+  (rain rings), tree (Sway skew), fountain, ice (slippery: Fighter `_ice_v`
+  momentum, group "ice" + meta size), water (solid, ripples), tube (Flicker
+  hard). Prop art `assets/sprites/field/props/*.png` (FLUX on magenta,
+  keyed with a corner-median distance key; /tmp script key2.py).
+- **XP crystals** (`src/survive/xp_gem.gd`, `XpGem.pop`): height `_h` +
+  shadow, flip (scale.x by cos) + spin, 2 bounces, falls over (`_lie`),
+  glint, magnet lifts it; colour by value; elites pop 3. Merge cap calls
+  `refresh_tint` (not queue_redraw - that clashes with CanvasItem).
+- **Main game orbs gone**: quest_giver/hazard pay XP directly.
+- **ManualRack** (`src/survive/manual_rack.gd`): per hero; `MAG` per weapon;
+  `can_fire/spend`, swap on dry, reload all (sets Fighter.reload_t so the
+  held gun tilts), SNAP cycles, pips under the feet. Survive ability: hold
+  fire = all manuals repeat at cd. `Fighter.hold_manual(kind, aim)` mounts
+  the gun art, aim pose (`cross`, or hip `_hip` while moving), faces aim
+  (`_face` skips while aim_t on the field). New manuals sprayer +
+  rivet_rifle (data/survive.json). Main game already had reloads (gun tilt,
+  mag drop, sfx).
+- **Fixes**: hurt flush stacked per frame -> heroes went solid red (now one
+  flush over `_lamp_tint`); wound/spatter coverage capped; combo gold banner
+  off on the field. capture: GIVE=ids@f, FIRE=f, OVERVIEW=1.
+- **Diagonals**: enemies still pending - Wan ZeroGPU Space errors (quota).
+
+---
+
+## 0v. Survivor goes top-down
 
 Owner: is survivor top-down like Halls of Torment / Vampire Survivors? (It was
 not - it ran on the story's side street.) Make it top-down with a good
