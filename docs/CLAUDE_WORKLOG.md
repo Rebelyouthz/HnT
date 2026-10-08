@@ -34,7 +34,49 @@ The rest is in English, like the code. Newest work first. Each block says
 
 ---
 
-## 0u. Vault reveal + collection, three hero tracks, roof tricks, pinball XP, quick belt (latest)
+## 0v. Survivor goes top-down (latest)
+
+Owner: is survivor top-down like Halls of Torment / Vampire Survivors? (It was
+not - it ran on the story's side street.) Make it top-down with a good
+ground per map, 8 directions for heroes and enemies, survivor menus, better
+than Halls of Torment.
+
+- **Field** (`src/survive/survive_field.gd`): `SurviveField.setup(act)` (RunAct,
+  for every `SurviveAct`) sets `Fighter.FIELD`, opens the lane
+  (`Fighter.STREET_MIN/MAX` are now static vars, reset to 430/520 by every
+  act), map 2600x1700, spawn centre, `y_sort_enabled`. `build()` replaces the
+  map's `build_world`: tiled ground `assets/sprites/field/<tile>.png` (FLUX,
+  pixelated + mirror-tiled 2048, mipmaps on; per-theme scale `k`), walls,
+  44 SmashProps, cars, decor (attach_living), 15 lamps (light pools), fog
+  at the edges, weather (`Weather` follows the camera). Theme table
+  `THEMES` per survive map. `ring_point()` = spawn just off screen.
+- **Movement**: Fighter on the field moves 8-way (normalised, y x0.9).
+  `Punk._field_chase` = 2D chase to a spot beside the hero, swing when
+  |dy|<26. Horde/boss/champion/skinwalker spawn via `ring_point`; titles
+  without walking art are skipped on the field (`Horde._no_art`). Camera:
+  `CouchCamera.field` (zoom 1.05, both axes, no leash). Hardcoded lane
+  clamps (blood, loot/xp floors, boss brain, shrines, events) follow the
+  static bounds.
+- **8 directions**: `SpriteBook.dir_clip(sf, v, eight)` -> walk / walk_ur /
+  walk_dr / walk_up / walk_down (mirrored left by facing). New clips:
+  son + father walk_dr/walk_ur, coping_imp walk_dr. Pipeline:
+  `/tmp`-style script: FLUX Kontext (`black-forest-labs/FLUX.1-Kontext-Dev`)
+  turns the idle frame to a 3/4 front/back view, Wan 2.2 ZeroGPU walks it in
+  place (it drifts back to profile after ~1.3 s: cut `--end 1.3..1.6`),
+  `tools/video2sprite.py --loop --frames 10 --fps 12 --scale-ref
+  <who>/walk_up.json`. **Still missing**: the other enemies' diagonals
+  (ZeroGPU quota ran out) - they fall back to the nearest clip.
+- **Lobby** (`src/ui/survivor_lobby.gd`, RUN tab > SURVIVOR HOURS,
+  `hub._open_survivor`): map cards with the ground art, best per map
+  (`Agony.note_best`), AGONY dial (`src/survive/agony.gd`: hp/cap/speed/coins,
+  opens per map on a win), hero pick, starter/gear/tree shortcuts,
+  `App.start_survivor(map, agony)` (`App.surv_solo`: next_id cleared).
+- **Radar** (`src/survive/field_map.gd`): minimap + edge arrows; pins via
+  group `map_pins` + meta `pin` (chest/shrine/cursed), `act_boss`, elites.
+
+---
+
+## 0u. Vault reveal + collection, three hero tracks, roof tricks, pinball XP, quick belt
 
 Owner: a drawn card flips, zooms up with rays/shadow/reflection and lands in a
 collection under DRAW; sunset rooftop card back; two alike merge a rarity,
