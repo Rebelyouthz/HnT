@@ -119,7 +119,7 @@ var _knock_hop := 0.0
 var _knock_hv := 0.0
 ## Time since going down (plays the fall, then holds the lying frame).
 var _down_t := 0.0
-const LIE_FRAME := {"son": 12, "father": 9}
+const LIE_FRAME := {"son": 20, "father": 9}
 var ducking := false
 var _anim: AnimatedSprite2D
 var anim_atk := ""

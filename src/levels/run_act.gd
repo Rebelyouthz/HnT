@@ -469,7 +469,7 @@ func _ready() -> void:
 func _queue_starting_draw() -> void:
 	# Game time (pauses with the game), so nothing pops over a title card.
 	get_tree().create_timer(1.2, false).timeout.connect(func() -> void:
-		if is_inside_tree() and get_node_or_null("CardPick") == null:
+		if is_inside_tree() and get_node_or_null("CardPick") == null and not Engine.has_meta("probe_no_draw"):
 			_starting_draw()
 	)
 

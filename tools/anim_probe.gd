@@ -43,6 +43,7 @@ func _process(_d: float) -> bool:
 		fp.data["intro_done"] = true
 		fp.data["named"] = true
 		root.get_node("App").set("solo_role", _role)
+		Engine.set_meta("probe_no_draw", true)
 		change_scene_to_file("res://scenes/levels/%s.tscn" % _map)
 	if _n == START - 5:
 		for p in root.get_tree().get_nodes_in_group("players"):
