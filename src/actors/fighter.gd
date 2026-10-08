@@ -849,7 +849,8 @@ func _tick_meters(delta: float) -> void:
 		if FamilyProfile.has_cbt("second_lungs"):
 			regen *= 1.15
 		steam = minf(STEAM_MAX, steam + regen * (1.0 + 0.3 * float(_cart("energy_drink"))) * (2.0 if suit_part("mask") == "shaolin" else 1.0) * Meta.steam_mul() * Heroes.steam_regen_mul(role) * delta)
-	blocking = _pressed("block") and steam > 2.0 and not downed and not trick_hold
+	# On the survivor field LB / LT are the two ACTIVE SKILLS (SurvActives).
+	blocking = _pressed("block") and steam > 2.0 and not downed and not trick_hold and not FIELD
 	if tape_t > 0.0:
 		tape_t -= delta
 		if tape_t <= 0.0:
@@ -1328,7 +1329,7 @@ func _combat() -> void:
 			_dash()
 	if _street_grounded() or (plane == "roof" and is_on_floor()):
 		_try_vault()
-	if _just("throw"):
+	if _just("throw") and not FIELD:
 		_throw()
 	if _just("special"):
 		if string_n >= 2:

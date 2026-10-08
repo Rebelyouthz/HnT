@@ -86,6 +86,10 @@ func _ready() -> void:
 	if ult_unlocked(chosen):
 		ult = chosen
 	call_deferred("_meta_body")
+	# The two ACTIVE SKILLS picked in the lobby ride on each hero.
+	(func() -> void:
+		for f in _fighters():
+			SurvActives.of(f)).call_deferred()
 	if Trees.has("f_start"):
 		call_deferred("_free_trait")
 	# A carried item from the Lost & Found well.
@@ -172,7 +176,16 @@ func area_mul() -> float:
 
 func cd_mul() -> float:
 	var m := maxf(0.35, 1.0 - 0.08 * trait_n("t_cd") - _item_mod("cd") - 0.03 * Meta.rank("s_cooldown") - SurvGear.stat("cd") - VaultCards.stat("cd"))
-	return m * (0.5 if frenzy_t > 0.0 else 1.0) * (_ex().cd_mul() if _ex() else 1.0)
+	return m * (0.5 if frenzy_t > 0.0 else 1.0) * (_ex().cd_mul() if _ex() else 1.0) * (0.5 if _adrenaline() else 1.0)
+
+
+## An ADRENALINE active is running on any hero.
+func _adrenaline() -> bool:
+	for f in _fighters():
+		var a := f.get_node_or_null("SurvActives") as SurvActives
+		if a and a.adrenaline():
+			return true
+	return false
 
 
 func proj_bonus() -> int:
@@ -184,7 +197,7 @@ func crit() -> float:
 
 
 func speed_mul() -> float:
-	return (_ex().speed_mul() if _ex() else 1.0) * (1.0 + 0.07 * trait_n("t_speed") + _item_mod("speed") + 0.04 * Meta.rank("s_speed") + SurvGear.stat("speed"))
+	return (1.25 if _adrenaline() else 1.0) * (_ex().speed_mul() if _ex() else 1.0) * (1.0 + 0.07 * trait_n("t_speed") + _item_mod("speed") + 0.04 * Meta.rank("s_speed") + SurvGear.stat("speed"))
 
 
 func armor() -> float:
@@ -242,6 +255,9 @@ func _add_street_arsenal() -> void:
 
 func ability_unlocked(id: String) -> bool:
 	var r := row("abilities", id)
+	# SURVIVOR DECK cards only deal in once you own a copy.
+	if bool(r.get("deck", false)) and not SurvDeck.owned(id):
+		return false
 	if r.has("found"):
 		return Arsenal.found(str(r["found"]))
 	return str(r.get("unlock", "")) == "" or Trees.has(str(r.get("unlock", "")))
@@ -273,7 +289,7 @@ func slow() -> float:
 func hit(id: String) -> Dictionary:
 	var r := row("abilities", id)
 	var lv := int(abilities.get(id, 1))
-	var d := (float(r.get("dmg", 6)) + float(r.get("per", 1)) * float(lv - 1)) * dmg_mul() * (Arsenal.power_mul(str(r["weapon"])) if r.has("weapon") else 1.0) * (2.2 if evolved.has(id) else 1.0) * SurvStarter.dmg_mul(id)
+	var d := (float(r.get("dmg", 6)) + float(r.get("per", 1)) * float(lv - 1)) * dmg_mul() * (Arsenal.power_mul(str(r["weapon"])) if r.has("weapon") else 1.0) * (2.2 if evolved.has(id) else 1.0) * SurvStarter.dmg_mul(id) * SurvDeck.power(id)
 	var c := randf() < crit() + SurvStarter.crit_bonus(id)
 	if c:
 		d *= 2.0
@@ -383,19 +399,19 @@ func offers(n: int = 3) -> Array:
 	var pool: Array = []
 	for r: Dictionary in book.get("abilities", []):
 		var id := str(r["id"])
-		if id in banned or not ability_unlocked(id):
+		if id in banned or not ability_unlocked(id) or (SurvDeck.benched(id) and not abilities.has(id)):
 			continue
 		if abilities.has(id):
 			if int(abilities[id]) < MAX_LV:
-				pool.append({"kind": "ability", "id": id, "w": 3.0})
+				pool.append({"kind": "ability", "id": id, "w": 3.0 * SurvDeck.weight(id)})
 		elif abilities.size() < max_abilities():
-			pool.append({"kind": "ability", "id": id, "w": 1.6})
+			pool.append({"kind": "ability", "id": id, "w": 1.6 * SurvDeck.weight(id)})
 	for r: Dictionary in book.get("traits", []):
 		var id := str(r["id"])
-		if id in banned:
+		if id in banned or SurvDeck.benched(id):
 			continue
 		if trait_n(id) < int(r.get("max", 5)):
-			pool.append({"kind": "trait", "id": id, "w": 1.2})
+			pool.append({"kind": "trait", "id": id, "w": 1.2 * SurvDeck.weight(id)})
 	for vid: String in VaultCards.offers():
 		pool.append({"kind": "vault", "id": vid, "w": 1.4})
 	# The street's level-up cards (autoweapons, companions, items) deal in

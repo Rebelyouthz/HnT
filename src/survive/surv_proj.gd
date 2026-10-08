@@ -157,6 +157,9 @@ static func strike(e: Node, ab: String, src: Node) -> void:
 	var h := run.hit(ab)
 	if ab == "gravy" and e.get("recover") != null:
 		e.set("recover", maxf(float(e.get("recover")), 0.3))
+	# SPRAY TAG: wet paint, they slip.
+	if ab == "spray_tag" and e.get("recover") != null:
+		e.set("recover", maxf(float(e.get("recover")), 0.25))
 	src.set("skill_dmg", int(h["dmg"]))
 	e.call("take_hit", "skill", src)
 	run.note_hit(e, int(h["dmg"]))
@@ -360,10 +363,16 @@ func _draw() -> void:
 		"puddle":
 			var a := clampf(life, 0.0, 1.0)
 			draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, 0.42))
-			if ability == "gravy":
-				draw_circle(Vector2.ZERO, radius, Color(0.55, 0.3, 0.12, 0.6 * a))
-			draw_circle(Vector2.ZERO, radius, Color(0.32, 0.18, 0.08, 0.55 * a))
-			draw_circle(Vector2(-radius * 0.2, -radius * 0.1), radius * 0.6, Color(0.45, 0.27, 0.12, 0.5 * a))
+			if ability == "spray_tag":
+				# Wet paint: purple with green drips.
+				draw_circle(Vector2.ZERO, radius, Color(0.55, 0.22, 0.75, 0.55 * a))
+				draw_circle(Vector2(radius * 0.25, radius * 0.1), radius * 0.55, Color(0.3, 0.85, 0.45, 0.45 * a))
+				draw_circle(Vector2(-radius * 0.3, -radius * 0.15), radius * 0.35, Color(0.85, 0.5, 1.0, 0.5 * a))
+			else:
+				if ability == "gravy":
+					draw_circle(Vector2.ZERO, radius, Color(0.55, 0.3, 0.12, 0.6 * a))
+				draw_circle(Vector2.ZERO, radius, Color(0.32, 0.18, 0.08, 0.55 * a))
+				draw_circle(Vector2(-radius * 0.2, -radius * 0.1), radius * 0.6, Color(0.45, 0.27, 0.12, 0.5 * a))
 			for k in 4:
 				var ph := _t * 2.0 + float(k) * 1.7
 				draw_arc(Vector2(cos(ph) * radius * 0.5, sin(ph) * radius * 0.4), 2.0 + fmod(_t * 6.0 + float(k), 4.0), 0, TAU, 10, Color(0.9, 0.85, 0.8, 0.4 * a), 1.0)

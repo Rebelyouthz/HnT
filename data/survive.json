@@ -332,6 +332,97 @@
    "proj_at": [],
    "manual": true,
    "blurb": "MANUAL: hold to fire rivets that punch through a whole row. Eight to a magazine."
+  },
+  {
+   "id": "pigeon_flock",
+   "name": "PIGEON FLOCK",
+   "icon": "pigeon",
+   "cd": 2.0,
+   "dmg": 7,
+   "per": 2,
+   "proj": 2,
+   "proj_at": [
+    3,
+    5,
+    7
+   ],
+   "deck": true,
+   "rarity": "uncommon",
+   "blurb": "City pigeons dive at the nearest thugs, one bird each. More birds every few levels."
+  },
+  {
+   "id": "vending_drop",
+   "name": "VENDING DROP",
+   "icon": "vending",
+   "cd": 5.5,
+   "dmg": 34,
+   "per": 9,
+   "area": 70,
+   "proj": 1,
+   "proj_at": [
+    4,
+    7
+   ],
+   "deck": true,
+   "rarity": "rare",
+   "blurb": "A vending machine falls from a balcony onto the thickest crowd. Exact change only."
+  },
+  {
+   "id": "leaf_blower",
+   "name": "LEAF BLOWER",
+   "icon": "blower",
+   "cd": 2.4,
+   "dmg": 6,
+   "per": 2,
+   "area": 150,
+   "deck": true,
+   "rarity": "common",
+   "blurb": "A roaring cone that shoves everything in front of you back and chips at it."
+  },
+  {
+   "id": "taser_web",
+   "name": "TASER WEB",
+   "icon": "taser",
+   "cd": 2.8,
+   "dmg": 11,
+   "per": 3,
+   "chain": 3,
+   "chain_per": 1,
+   "stun": 0.5,
+   "deck": true,
+   "rarity": "rare",
+   "blurb": "A jolt that jumps thug to thug and locks each one up for a moment."
+  },
+  {
+   "id": "roomba",
+   "name": "ROGUE ROOMBA",
+   "icon": "roomba",
+   "cd": 5.0,
+   "dmg": 8,
+   "per": 2,
+   "proj": 1,
+   "proj_at": [
+    4,
+    7
+   ],
+   "life": 5.0,
+   "deck": true,
+   "rarity": "uncommon",
+   "blurb": "A robot vacuum with a grudge zig-zags out from your feet and runs over ankles."
+  },
+  {
+   "id": "spray_tag",
+   "name": "SPRAY TAG",
+   "icon": "spray",
+   "cd": 3.0,
+   "dmg": 5,
+   "per": 2,
+   "area": 48,
+   "life": 4.5,
+   "slow": 0.45,
+   "deck": true,
+   "rarity": "common",
+   "blurb": "Wet paint under the pack: they slip, slow down and take damage while they stand in it."
   }
  ],
  "traits": [

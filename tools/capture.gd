@@ -598,6 +598,15 @@ func _process(_delta: float) -> bool:
 		var gg: Node2D = hg.get("_gun")
 		var an: Node2D = hg.get("_anim")
 		print("GUNDBG anim_pos=", an.position, " anim_scale=", an.scale, " hand=", hg.call("_hand_point"), " gun_pos=", gg.position if gg else null, " gun_vis=", gg.visible if gg else null, " clip=", an.get("animation"), " hip=", hg.get("_hip"), " gun_parent=", gg.get_parent().name if gg else null)
+	# PRESS=action@frame,action@frame: tap p1_<action> for 3 frames.
+	if OS.get_environment("PRESS") != "":
+		for pr2 in OS.get_environment("PRESS").split(","):
+			var pa := "p1_" + pr2.get_slice("@", 0)
+			var pf := int(pr2.get_slice("@", 1))
+			if _n == pf:
+				Input.action_press(pa)
+			elif _n == pf + 3:
+				Input.action_release(pa)
 	# DASH=frame: tap DASH (survivor spin-dodge, story dash).
 	if OS.get_environment("DASH") != "":
 		if _n == int(OS.get_environment("DASH")):

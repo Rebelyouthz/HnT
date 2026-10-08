@@ -76,6 +76,23 @@ func _aim(f: Fighter, at: Vector2) -> Vector2:
 	return Vector2.ZERO
 
 
+## The middle of the thickest pack within `reach` (or just ahead).
+func _crowd(f: Fighter, reach: float) -> Vector2:
+	var best: Node2D = null
+	var bn := -1
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if not (e is Node2D) or (e as Node2D).global_position.distance_to(f.global_position) > reach:
+			continue
+		var c := 0
+		for o in get_tree().get_nodes_in_group("enemies"):
+			if o is Node2D and (o as Node2D).global_position.distance_to((e as Node2D).global_position) < 70.0:
+				c += 1
+		if c > bn:
+			bn = c
+			best = e
+	return best.global_position if best else f.global_position + Vector2(float(f.facing) * 90.0, 0)
+
+
 ## How far a lob goes: to the mouse, or further the harder the stick is pushed.
 func _reach(f: Fighter, at: Vector2) -> float:
 	var rs := PadRouter.rstick(f.prefix)
@@ -280,6 +297,60 @@ func _fire(run: SurviveRun, r: Dictionary, f: Fighter) -> void:
 					p = t.global_position
 			SurvProj.lob(_host(), id, at, p, area)
 			Mixer.play_sfx("res://assets/audio/whoosh_light.wav", 0.8, -10.0)
+		# --- SURVIVOR DECK weapons (owned from packs) ---
+		"pigeon_flock":
+			# One bird per thug: each dives at a different nearest target.
+			var hit: Array = []
+			for i in run.proj_count(id):
+				var t := _nearest(at, 420.0, hit)
+				var a := (t.global_position + Vector2(0, -24) - at).angle() if t else randf() * TAU
+				if t:
+					hit.append(t)
+				SurvProj.shoot(_host(), "invoice", id, at + Vector2(randf_range(-10, 10), -20), Vector2.from_angle(a) * 300.0, 1)
+			Mixer.play_sfx("res://assets/audio/whoosh_light.wav", randf_range(1.8, 2.1), -12.0)
+		"vending_drop":
+			for i in run.proj_count(id):
+				var p := _crowd(f, 460.0) + Vector2(randf_range(-24, 24), randf_range(-8, 8)) * float(i)
+				SurvProj.bomb(_host(), id, p, area)
+			Mixer.play_sfx("res://assets/audio/sfx/metal_bang.ogg", 0.6, -6.0)
+		"leaf_blower":
+			var aim := _aim(f, at)
+			var dir := aim if aim != Vector2.ZERO else Vector2(1.0 if f.facing > 0 else -1.0, 0)
+			var t := _nearest(at, area)
+			if aim == Vector2.ZERO and t:
+				dir = (t.global_position - f.global_position).normalized()
+			SurvProj.beam(_host(), id, at, dir * area * 0.8)
+			for e in get_tree().get_nodes_in_group("enemies"):
+				if not (e is Node2D) or int(e.get("hp")) <= 0:
+					continue
+				var c := (e as Node2D).global_position - f.global_position
+				if c.length() < area and c.normalized().dot(dir) > 0.55:
+					SurvProj.strike(e, id, self)
+					(e as Node2D).global_position += dir * 38.0
+			Mixer.play_sfx("res://assets/audio/whoosh.wav" if ResourceLoader.exists("res://assets/audio/whoosh.wav") else "res://assets/audio/whoosh_light.wav", 0.5, -9.0)
+		"taser_web":
+			var chain := int(r.get("chain", 3)) + int(r.get("chain_per", 1)) * (int(run.abilities.get(id, 1)) - 1)
+			var hit: Array = []
+			var from := at
+			for i in chain:
+				var t := _nearest(from, 240.0, hit)
+				if t == null:
+					break
+				hit.append(t)
+				SurvProj.bolt(_host(), from, t.global_position + Vector2(0, -26))
+				SurvProj.strike(t, id, self)
+				t.set("recover", maxf(float(t.get("recover")), float(r.get("stun", 0.5))))
+				from = t.global_position + Vector2(0, -26)
+			if not hit.is_empty():
+				Mixer.play_sfx("res://assets/audio/zap.wav" if ResourceLoader.exists("res://assets/audio/zap.wav") else "res://assets/audio/sfx/ray.ogg", 2.2, -10.0)
+		"roomba":
+			for i in run.proj_count(id):
+				var a := randf() * TAU
+				SurvProj.shoot(_host(), "blade", id, f.global_position + Vector2(0, -4), Vector2(cos(a), sin(a) * 0.6) * 150.0, 9999, f)
+			Mixer.play_sfx("res://assets/audio/ui_click.wav", 0.5, -14.0)
+		"spray_tag":
+			SurvProj.puddle(_host(), id, _crowd(f, 300.0), area, float(r.get("life", 4.5)))
+			Mixer.play_sfx("res://assets/audio/whoosh_light.wav", 2.4, -14.0)
 		"audit":
 			var chain := int(r.get("chain", 5)) + int(r.get("chain_per", 1)) * (int(run.abilities.get(id, 1)) - 1) + (99 if run.evolved.has(id) else 0)
 			var hit: Array = []

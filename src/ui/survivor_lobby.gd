@@ -98,8 +98,11 @@ func _ready() -> void:
 	tools.position = Vector2(24, 560)
 	tools.add_theme_constant_override("separation", 10)
 	root.add_child(tools)
-	for pair in [["STARTER WEAPON", "res://src/ui/starter_sheet.gd"], ["SURVIVOR GEAR", "res://src/ui/surv_gear_sheet.gd"]]:
-		var b := UiKit.button(pair[0], Vector2(190, 44))
+	tools.add_theme_constant_override("separation", 6)
+	for pair in [["STARTER WEAPON", "res://src/ui/starter_sheet.gd"], ["ACTIVE SKILLS", "res://src/ui/surv_skills_sheet.gd"],
+			["SURVIVOR CARDS", "res://src/ui/surv_deck_sheet.gd"], ["SURVIVOR GEAR", "res://src/ui/surv_gear_sheet.gd"]]:
+		var b := UiKit.button(pair[0], Vector2(162, 44))
+		b.add_theme_font_size_override("font_size", 14)
 		b.pressed.connect(func() -> void:
 			var sh: Control = load(pair[1]).new()
 			add_child(sh)
@@ -108,7 +111,8 @@ func _ready() -> void:
 				_refresh())
 		)
 		tools.add_child(b)
-	var tree := UiKit.button("SURVIVOR TREE", Vector2(190, 44))
+	var tree := UiKit.button("SURVIVOR TREE", Vector2(162, 44))
+	tree.add_theme_font_size_override("font_size", 14)
 	tree.pressed.connect(func() -> void:
 		Engine.set_meta("build_mode", "survivor")
 		closed.emit()
