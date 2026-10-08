@@ -16,15 +16,15 @@ const EDGE := 70.0
 const ZOOM := 1.05
 
 const THEMES := {
-	"intake_lot": {"tile": "lot", "k": 0.2, "night": Color(0.42, 0.46, 0.6), "lamp": Color(1.0, 0.78, 0.45),
+	"intake_lot": {"weather": "rain", "tile": "lot", "k": 0.2, "night": Color(0.42, 0.46, 0.6), "lamp": Color(1.0, 0.78, 0.45),
 		"props": ["dumpster", "barrel", "hydrant", "manhole", "news", "fridge", "booth"], "cars": ["hatchback", "cop_car", "sedan", "van"], "decor": ["cone", "barrier", "drum", "crate", "cart"]},
-	"group_circle": {"tile": "circle", "k": 0.16, "night": Color(0.4, 0.46, 0.5), "lamp": Color(0.95, 0.85, 0.55),
+	"group_circle": {"weather": "leaves", "tile": "circle", "k": 0.16, "night": Color(0.4, 0.46, 0.5), "lamp": Color(0.95, 0.85, 0.55),
 		"props": ["kiosk", "barrel", "mail", "manhole", "news", "booth"], "cars": ["sedan"], "decor": ["bench", "bench", "fence", "crate", "cone"]},
-	"waiting_room": {"tile": "clinic", "k": 0.14, "night": Color(0.42, 0.48, 0.48), "lamp": Color(0.75, 1.0, 0.9),
+	"waiting_room": {"weather": "dust", "tile": "clinic", "k": 0.14, "night": Color(0.42, 0.48, 0.48), "lamp": Color(0.75, 1.0, 0.9),
 		"props": ["vending", "fridge", "booth", "barrel", "mail"], "cars": [], "decor": ["bench", "bench", "bench", "crate", "cart"]},
-	"sleet_hour": {"tile": "sleet", "k": 0.22, "night": Color(0.48, 0.52, 0.66), "lamp": Color(0.8, 0.88, 1.0),
+	"sleet_hour": {"weather": "snow", "tile": "sleet", "k": 0.22, "night": Color(0.48, 0.52, 0.66), "lamp": Color(0.8, 0.88, 1.0),
 		"props": ["booth", "barrel", "mail", "manhole", "fridge", "news"], "cars": ["hatchback", "cop_car", "sedan"], "decor": ["barrier", "cone", "fence", "drum"]},
-	"ledger_dive": {"tile": "dock", "k": 0.18, "night": Color(0.36, 0.44, 0.56), "lamp": Color(1.0, 0.7, 0.4),
+	"ledger_dive": {"weather": "drizzle", "tile": "dock", "k": 0.18, "night": Color(0.36, 0.44, 0.56), "lamp": Color(1.0, 0.7, 0.4),
 		"props": ["fridge", "vending", "barrel", "kiosk", "mail"], "cars": ["van"], "decor": ["crate", "crate", "drum", "barrier"]},
 }
 
@@ -95,6 +95,7 @@ static func build(act: RunAct, map_id: String) -> void:
 			var p := Vector2((float(gx) + 0.5) * W / 5.0 + rng.randf_range(-120, 120), (float(gy) + 0.5) * H / 3.0 + rng.randf_range(-90, 90))
 			_lamp(act, p, lamp_col)
 	_fog(act)
+	_weather(act, str(th.get("weather", "")))
 
 
 static func _free_spot(rng: RandomNumberGenerator, taken: Array[Vector2], gap: float) -> Vector2:
@@ -236,6 +237,86 @@ static func _lamp(act: Node2D, at: Vector2, col: Color) -> void:
 	l.energy = 1.15
 	l.position = Vector2(16, -40)
 	n.add_child(l)
+
+
+## Weather over the frame (it follows the camera): rain on the car park,
+## snow in the sleet hour, drizzle on the dock, leaves in the courtyard,
+## dust in the clinic light.
+static func _weather(act: Node2D, kind: String) -> void:
+	if kind == "":
+		return
+	var w := Weather.new()
+	w.kind = kind
+	act.add_child(w)
+	if kind in ["rain", "drizzle"]:
+		NightStreet.rain_bed(act)
+
+
+class Weather extends Node2D:
+	var kind := "rain"
+
+	func _ready() -> void:
+		z_index = 25
+		var p := GPUParticles2D.new()
+		var m := ParticleProcessMaterial.new()
+		m.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+		m.emission_box_extents = Vector3(380, 230, 1)
+		match kind:
+			"rain", "drizzle":
+				m.direction = Vector3(0.18, 1, 0)
+				m.spread = 3.0
+				m.gravity = Vector3(0, 0, 0)
+				m.initial_velocity_min = 260.0
+				m.initial_velocity_max = 340.0
+				m.scale_min = 1.0
+				m.scale_max = 1.6
+				m.color = Color(0.62, 0.7, 0.85, 0.45 if kind == "rain" else 0.28)
+				p.amount = 260 if kind == "rain" else 120
+				p.lifetime = 0.22
+			"snow":
+				m.direction = Vector3(0.3, 1, 0)
+				m.spread = 25.0
+				m.gravity = Vector3(0, 6, 0)
+				m.initial_velocity_min = 18.0
+				m.initial_velocity_max = 42.0
+				m.scale_min = 1.5
+				m.scale_max = 3.0
+				m.color = Color(0.95, 0.97, 1.0, 0.75)
+				p.amount = 220
+				p.lifetime = 4.0
+			"leaves":
+				m.direction = Vector3(1, 0.4, 0)
+				m.spread = 40.0
+				m.gravity = Vector3(0, 4, 0)
+				m.initial_velocity_min = 14.0
+				m.initial_velocity_max = 30.0
+				m.angular_velocity_min = -90.0
+				m.angular_velocity_max = 90.0
+				m.scale_min = 2.0
+				m.scale_max = 3.5
+				m.color = Color(0.7, 0.5, 0.22, 0.7)
+				p.amount = 40
+				p.lifetime = 5.0
+			"dust":
+				m.direction = Vector3(0.2, -0.2, 0)
+				m.spread = 180.0
+				m.gravity = Vector3(0, 0, 0)
+				m.initial_velocity_min = 3.0
+				m.initial_velocity_max = 9.0
+				m.scale_min = 1.0
+				m.scale_max = 2.0
+				m.color = Color(0.9, 0.95, 0.85, 0.35)
+				p.amount = 70
+				p.lifetime = 6.0
+		p.process_material = m
+		p.local_coords = false
+		p.preprocess = 3.0
+		add_child(p)
+
+	func _process(_d: float) -> void:
+		var cam := get_viewport().get_camera_2d()
+		if cam:
+			global_position = cam.get_screen_center_position()
 
 
 ## Darkness thickening toward the walls: the arena feels bigger than it is.
