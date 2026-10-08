@@ -598,9 +598,58 @@ func _process(_delta: float) -> bool:
 	var film := int(OS.get_environment("FILM"))
 	if film > 0 and _n % film == 0 and _n < _frames:
 		root.get_texture().get_image().save_png(_out.get_basename() + "_%03d.png" % _n)
+	# REDPROBE: two frames before the end save a shot, then zero the hero's
+	# wound params (A), then drop its material (B).
+	if OS.get_environment("REDPROBE") != "" and _n >= _frames - 9:
+		var hh: Node = root.get_tree().get_first_node_in_group("players")
+		var an2 := hh.get("_anim") as CanvasItem if hh else null
+		if an2 and _n == _frames - 9:
+			root.get_texture().get_image().save_png(_out.get_basename() + "_0.png")
+			if an2.material is ShaderMaterial:
+				var smm := an2.material as ShaderMaterial
+				smm.set_shader_parameter("wound", 0.0)
+				smm.set_shader_parameter("splat", 0.0)
+		if an2 and _n == _frames - 5:
+			root.get_texture().get_image().save_png(_out.get_basename() + "_A.png")
+			an2.material = null
+		if an2 and _n == _frames - 1:
+			root.get_texture().get_image().save_png(_out.get_basename() + "_B.png")
+	if OS.get_environment("HPSET") != "" and _n == 100:
+		for h in root.get_tree().get_nodes_in_group("players"):
+			h.set("hp", int(OS.get_environment("HPSET")))
+	# REDTEST=wound,splat: force the hero's wound shader values from frame 100.
+	if OS.get_environment("REDTEST") != "" and _n >= 100:
+		var rt := OS.get_environment("REDTEST").split(",")
+		for h in root.get_tree().get_nodes_in_group("players"):
+			var an := h.get("_anim") as CanvasItem
+			if an:
+				load("res://src/juice/blood.gd").wound(an, float(rt[0]), float(rt[1]), 1.0)
+	if _n == _frames and OS.get_environment("DUMPHERO") != "":
+		for h in root.get_tree().get_nodes_in_group("players"):
+			var cur: Node = h
+			print("HERO ", h.name, " mod=", h.modulate, " self=", h.self_modulate, " hp=", h.get("hp"))
+			for l in _all(root):
+				if l is Light2D and (l as Light2D).is_visible_in_tree() and ((l as Light2D).color.g < 0.6 or (l as Node2D).global_position.distance_to((h as Node2D).global_position) < 260.0):
+					print("  LIGHT ", l.get_path(), " ", l.get_class(), " col=", (l as Light2D).color, " e=", (l as Light2D).energy, " sc=", l.get("texture_scale"), " mask=", (l as Light2D).range_item_cull_mask, " blend=", (l as Light2D).blend_mode, " d=", int((l as Node2D).global_position.distance_to((h as Node2D).global_position)))
+			for c in _all(h):
+				if c is CanvasItem and ((c as CanvasItem).modulate != Color.WHITE or (c as CanvasItem).self_modulate != Color.WHITE or (c as CanvasItem).material != null):
+					var ci := c as CanvasItem
+					var extra := ""
+					if ci.material is ShaderMaterial:
+						var sm := ci.material as ShaderMaterial
+						extra = " shader=" + sm.shader.resource_path
+						for pn in ["pal", "wound", "splat", "suit", "suit_head", "suit_body", "suit_legs", "tear", "blood", "hole_n", "gape", "cut_head", "cut_leg", "only", "head"]:
+							extra += " %s=%s" % [pn, str(sm.get_shader_parameter(pn))]
+					print("  ", h.get_path_to(c), " ", c.get_class(), " mod=", ci.modulate, " self=", ci.self_modulate, extra)
 	if _n == _frames and OS.get_environment("PROBE") != "":
 		var pt := Vector2(float(OS.get_environment("PROBE").get_slice(",", 0)), float(OS.get_environment("PROBE").get_slice(",", 1)))
 		_probe(root, pt)
+		# Custom-drawn nodes have no rect: list scripted Node2Ds near the point.
+		for nd in _all(root):
+			if nd is Node2D and (nd as Node2D).get_script() != null and (nd as Node2D).is_visible_in_tree():
+				var o := (nd as Node2D).get_global_transform_with_canvas().origin
+				if o.distance_to(pt) < 220.0:
+					print("NEAR ", nd.get_path(), " ", (nd.get_script() as Script).resource_path, " at=", o)
 	if _n == _frames:
 		var img := root.get_texture().get_image()
 		img.save_png(_out)
@@ -649,6 +698,13 @@ func _art_demo() -> void:
 		pl.get("arts").call("perform", parts[0], parts[1])
 	if _n >= 80 and _n <= 170 and (_n - 80) % 4 == 0:
 		root.get_texture().get_image().save_png(_out.get_basename() + "_%03d.png" % _n)
+
+
+func _all(n: Node) -> Array:
+	var out: Array = [n]
+	for c in n.get_children():
+		out.append_array(_all(c))
+	return out
 
 
 func _probe(n: Node, pt: Vector2) -> void:

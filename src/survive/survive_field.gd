@@ -61,6 +61,7 @@ static func build(act: RunAct, map_id: String) -> void:
 	var taken: Array[Vector2] = [center()]
 	# Each hour has its own shape first (landmarks), then the scatter.
 	var lamps := _landmarks(act, map_id, rng, taken)
+	_decals(act, str(th["tile"]), rng)
 	# Breakables in loose clusters: cover and loot to dodge round.
 	var kinds: Array = th["props"]
 	for i in 34:
@@ -263,7 +264,28 @@ static func _free_spot(rng: RandomNumberGenerator, taken: Array[Vector2], gap: f
 
 
 ## One seamless tile, repeated over the whole arena (4 texels a unit).
+## One unique ground image for the whole arena (built offline by quilting
+## and laying real slabs / tiles / planks piece by piece): nothing repeats
+## and no seam runs anywhere. GROUND_U world units per texel, GROUND_M
+## margin past the arena on every side.
+const GROUND_U := 0.75
+const GROUND_M := 60.0
+
+
 static func _ground(act: Node2D, tile: String, k: float) -> void:
+	var whole := "res://assets/sprites/field/ground_%s.webp" % tile
+	if ResourceLoader.exists(whole):
+		var u := Sprite2D.new()
+		u.name = "FieldGround"
+		u.centered = false
+		u.z_index = -20
+		u.texture = load(whole)
+		u.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+		u.position = Vector2(-GROUND_M, -GROUND_M)
+		u.scale = Vector2(GROUND_U, GROUND_U)
+		act.add_child(u)
+		act.move_child(u, 0)
+		return
 	var path := "res://assets/sprites/field/%s.png" % tile
 	var g := Sprite2D.new()
 	g.name = "FieldGround"
@@ -284,6 +306,36 @@ static func _ground(act: Node2D, tile: String, k: float) -> void:
 	g.region_rect = Rect2(0, 0, (W + 800.0) / k, (H + 800.0) / k)
 	act.add_child(g)
 	act.move_child(g, 0)
+
+
+## Things lying on the ground (litter, leaves, drains, rope, slush): flat
+## sprites scattered over the floor, turned every which way, never in water.
+static func _decals(act: Node2D, tile: String, rng: RandomNumberGenerator) -> void:
+	var texs: Array[Texture2D] = []
+	for i in 24:
+		var path := "res://assets/sprites/field/decals/%s_%02d.png" % [tile, i]
+		if ResourceLoader.exists(path):
+			texs.append(load(path))
+	if texs.is_empty():
+		return
+	for i in 170:
+		var p := Vector2(rng.randf_range(EDGE + 20.0, W - EDGE - 20.0), rng.randf_range(EDGE + 20.0, H - EDGE - 20.0))
+		if _blocked(p, 30.0):
+			continue
+		var t: Texture2D = texs[rng.randi() % texs.size()]
+		var d := Sprite2D.new()
+		d.texture = t
+		d.position = p
+		d.rotation = rng.randf() * TAU
+		d.flip_h = rng.randf() < 0.5
+		var size := rng.randf_range(11.0, 22.0)
+		d.scale = Vector2.ONE * (size / float(maxi(t.get_width(), t.get_height())))
+		d.z_index = -19
+		d.z_as_relative = false
+		# Sunk into the floor: darker and a touch see-through, like dirt.
+		var v := rng.randf_range(0.6, 0.78)
+		d.modulate = Color(v, v, v * 1.02, 0.92)
+		act.add_child(d)
 
 
 static func _walls(act: Node2D) -> void:

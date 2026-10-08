@@ -34,7 +34,45 @@ The rest is in English, like the code. Newest work first. Each block says
 
 ---
 
-## 0w. Survivor: own maps, living props, 3D XP crystals, twin-stick magazines (latest)
+## 0x. Seamless survivor ground, ground litter, survivor HUD (latest)
+
+Owner: the mirrored ground tiles showed seams ("klipps ihop... skumma
+skarvar") - wanted a real ground with no seams, plus asset sprites on it.
+
+- **One unique ground per map** (`assets/sprites/field/ground_<tile>.webp`,
+  3626x2426 at `SurviveField.GROUND_U` = 0.75 world units per texel, margin
+  `GROUND_M` 60). Nothing tiles. Built offline by `tools/fieldgen/gen.py`
+  (sources in /tmp were FLUX samples): asphalt and cobbles are *image
+  quilted* (`tools/fieldgen/quilt.py`, Efros-Freeman min-cut patches); slabs,
+  clinic tiles and dock planks are laid piece by piece with real texture cut
+  from the sample into each piece (plank rows of random-length boards with
+  butt joints + nails). Then macro light variation, stains, cracks, paint
+  (lot stall lines follow the car rows at y 380/1300), snow drifts + slush
+  ruts, moss in joints, quantised to 72 colours, saved as WebP (import mode
+  lossy). Quilting smears regular grids - use piece layout for those.
+  Lobby cards use small `thumb_<tile>.png`. Old mirrored `lot/circle/...png`
+  removed.
+- **Ground litter** (`SurviveField._decals`, `assets/sprites/field/decals/
+  <tile>_NN.png`, FLUX sheets on magenta sliced by `tools/fieldgen/slice.py`):
+  ~170 flat sprites per map (drains, cans, papers, leaves, rope, crabs,
+  slush...), random turn/flip, 11-22 units, darkened, never in water.
+- **Survivor HUD**: XP bar across the top with a gold LV badge (glint,
+  flash on level), clock + kills under it, ultimate bar under that; the
+  lead plate drops the story XP line and purse in FIELD, boss bar steps down,
+  objective card tucks under the radar, combo text smaller. Soft oval
+  shadow under the heroes (the trapezoid read as a black slab).
+- Dark enemy tints (Vault Guard etc.) are lifted toward white so they don't
+  turn into black cut-outs at night (`Punk` tint chain end).
+- Results show PARRIES for the run (Engine meta `run_parries0`).
+- capture.gd: `DUMPHERO=1` (hero tint/material/lights), `REDTEST=w,s`,
+  `HPSET=n`, `REDPROBE=1`, `PROBE=x,y` also lists scripted nodes nearby.
+- Open: a rare all-red hero seen twice on the field at low HP with the
+  wound shader on; no modulate, light or shader param explained it and it
+  did not reproduce in 6+ later runs. Watch for it.
+- Enemy diagonal walks still wait on the Wan ZeroGPU quota (CancelledError);
+  Kontext pose-by-pose gave near-identical frames, not usable.
+
+## 0w. Survivor: own maps, living props, 3D XP crystals, twin-stick magazines
 
 Owner: different maps per survivor hour, living animated objects, XP gems
 that pop out of bodies and tumble/land like 3D (survivor only - the main game

@@ -153,12 +153,10 @@ func _map_card(m: String) -> Control:
 	b.add_theme_stylebox_override("pressed", UiKit.panel(Color(0.06, 0.08, 0.1, 0.95), Color(0.45, 1.0, 0.6)))
 	var pic := TextureRect.new()
 	var tile := str(SurviveField.theme(m)["tile"])
-	var path := "res://assets/sprites/field/%s.png" % tile
+	# A small cut of the map's own ground (the full one is arena-sized).
+	var path := "res://assets/sprites/field/thumb_%s.png" % tile
 	if ResourceLoader.exists(path):
-		var at := AtlasTexture.new()
-		at.atlas = load(path)
-		at.region = Rect2(200, 200, 820, 560)
-		pic.texture = at
+		pic.texture = load(path)
 	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	pic.position = Vector2(6, 6)

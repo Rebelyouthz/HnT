@@ -151,7 +151,9 @@ func _ready() -> void:
 	var rs_n := int(Engine.get_meta("run_shards", 0))
 	if rs_n > 0:
 		rewards.add_child(_reward("meta_shard", "SHARDS", "+%d" % rs_n))
-	rewards.add_child(_reward("shield", "PARRY", str(int(FamilyProfile.data.get("parries", 0)))))
+	# Parries this run (the profile keeps the lifetime count).
+	var parried := int(FamilyProfile.data.get("parries", 0)) - int(Engine.get_meta("run_parries0", 0))
+	rewards.add_child(_reward("shield", "PARRIES", str(maxi(0, parried))))
 	# Account XP.
 	var xp_row := HBoxContainer.new()
 	xp_row.alignment = BoxContainer.ALIGNMENT_CENTER

@@ -189,6 +189,11 @@ func _ready() -> void:
 		visual.modulate = Color(0.85, 0.55, 0.22)
 	elif title == "Ticket Skipper":
 		visual.modulate = Color(0.55, 0.22, 0.28)
+	# Tints multiply the art: a dark one under the night grade read as a
+	# black cut-out. Keep the hue, lift the darkest ones towards white.
+	var lum := visual.modulate.get_luminance()
+	if lum < 0.6:
+		visual.modulate = visual.modulate.lerp(Color.WHITE, (0.6 - lum) * 0.9)
 	_base_mod = visual.modulate
 
 
