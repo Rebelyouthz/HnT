@@ -74,7 +74,10 @@ func _ring_phase() -> float:
 func _draw() -> void:
 	if fighter == null:
 		return
-	var c := Vector2(0.0, -40.0 + fighter.hop)
+	# A flat ring on the ground round the feet (it used to sit on the chest
+	# and hide the punch): squashed so it reads as lying on the street.
+	var c := Vector2.ZERO
+	draw_set_transform(Vector2(0.0, 2.0), 0.0, Vector2(1.25, 0.42))
 	var dt := _ring_phase()
 	if dt >= 0.0:
 		var inner := 13.0
@@ -95,6 +98,8 @@ func _draw() -> void:
 			var ang := TAU * float(i) / 10.0
 			var r0 := 14.0 + (1.0 - b) * 26.0
 			draw_line(c + Vector2(cos(ang), sin(ang)) * r0, c + Vector2(cos(ang), sin(ang)) * (r0 + 8.0 * b), Color(bc.r, bc.g, bc.b, b), 2.0)
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	c = Vector2(0.0, -10.0)
 	if _next_text != "" and _font != null:
 		# Child of the fighter, not of the flipped visual: text reads right.
 		var fs := 9

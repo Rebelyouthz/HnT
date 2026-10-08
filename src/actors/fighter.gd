@@ -299,6 +299,19 @@ func _ready() -> void:
 	cap.shape = shape
 	cap.position = Vector2(0, -32 * SpriteBook.ACTOR_K)
 	add_child(cap)
+	# Key light: a soft warm light that walks with the hero (like a film's
+	# follow light) so the body reads against the night street without an
+	# outline. No shadows; the night CanvasModulate still sets the mood.
+	if get_tree().get_first_node_in_group("light_rig") != null or not FIELD:
+		var key := PointLight2D.new()
+		key.name = "KeyLight"
+		key.texture = LightRig.radial_tex()
+		key.texture_scale = 0.62
+		key.energy = 0.22 if FIELD else 0.42
+		key.color = Color(1.0, 0.9, 0.78)
+		key.position = Vector2(-14.0, -54.0)
+		key.range_item_cull_mask = 1
+		add_child(key)
 	# Feet occluder: a muzzle flash (shadow-casting light) throws this body's
 	# shadow along the street, away from the light.
 	var occ := LightOccluder2D.new()
