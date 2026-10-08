@@ -56,9 +56,10 @@ func _process(delta: float) -> void:
 			return
 		rack.spend(id)
 		var aim := _aim(f, f.global_position + Vector2(0, -30))
-		f.hold_manual({"nail_driver": "nailgun", "sprayer": "shotgun", "rivet_rifle": "smg", "paperweight": "revolver"}.get(id, "pistol"), aim)
+		var held := str(r.get("weapon", {"nail_driver": "nailgun", "sprayer": "shotgun", "rivet_rifle": "smg", "paperweight": "revolver"}.get(id, "pistol")))
+		f.hold_manual(held, aim)
 		var fx := 1 if (aim.x if aim != Vector2.ZERO else float(f.facing)) >= 0.0 else -1
-		Juice.muzzle(f.global_position + Vector2(float(fx) * 18.0, -34.0) + aim * 10.0, fx, "pistol" if id != "sprayer" else "shotgun")
+		Juice.muzzle(f.global_position + Vector2(float(fx) * 18.0, -34.0) + aim * 10.0, fx, "shotgun" if (id == "sprayer" or held == "shotgun") else "pistol")
 	_cd = float(r.get("cd", 1.5)) * run.cd_mul() * (0.65 if run.evolved.has(id) else 1.0) * SurvStarter.cd_mul(id)
 	_fire(run, r, f)
 
@@ -129,6 +130,9 @@ func _host() -> Node:
 func _fire(run: SurviveRun, r: Dictionary, f: Fighter) -> void:
 	var at := f.global_position + Vector2(0, -30)
 	var area := float(r.get("area", 40)) * run.area_mul() * SurvStarter.area_mul(id)
+	if r.has("weapon"):
+		_street(run, r, f, at)
+		return
 	match id:
 		"invoice_toss":
 			var n := run.proj_count(id)
@@ -329,6 +333,49 @@ func _fire(run: SurviveRun, r: Dictionary, f: Fighter) -> void:
 
 ## Clipboards: n boards circling the fighter, each slaps what it touches
 ## (per-enemy cooldown so they don't shred in one frame).
+## A street weapon from the story arsenal: guns fire tracer rounds where you
+## aim (pellets fan out), melee swings an arc at the nearest thug.
+func _street(run: SurviveRun, r: Dictionary, f: Fighter, at: Vector2) -> void:
+	var wid := str(r["weapon"])
+	var w := WeaponBook.spec(wid)
+	var lv := int(run.abilities.get(id, 1))
+	if r.has("manual"):
+		var aim := _aim(f, at)
+		var face := aim.angle() if aim != Vector2.ZERO else (0.0 if f.facing > 0 else PI)
+		var n := maxi(1, run.proj_count(id))
+		var spread := float(r.get("spread", 0.04))
+		var spd := float(r.get("speed", 900.0))
+		for i in n:
+			var a := face + (float(i) - float(n - 1) * 0.5) * spread * (1.0 if n > 1 else 0.0) + randf_range(-spread, spread) * 0.5
+			SurvProj.shoot(_host(), "bullet", id, at, Vector2.from_angle(a) * spd * randf_range(0.92, 1.0), 1 + lv / 3)
+		var sfx := str(w.get("sfx", "res://assets/audio/sfx/pistol.ogg"))
+		if ResourceLoader.exists(sfx):
+			Mixer.play_sfx(sfx, randf_range(0.95, 1.08), -9.0)
+		f.velocity -= Vector2.from_angle(face) * (20.0 + float(w.get("recoil", 6)) * 1.5)
+		return
+	# Melee: swing at the nearest thug in reach (or where you face).
+	var reach := float(r.get("area", 62)) * run.area_mul() * (1.0 + 0.06 * float(lv - 1))
+	var t := _nearest(f.global_position, reach + 30.0)
+	if t == null:
+		_cd = 0.15
+		return
+	var to := (t.global_position - f.global_position)
+	var ang := to.angle()
+	f.facing = 1 if to.x >= 0.0 else -1
+	# The hero swings: a quick strike clip under the arc.
+	f.set("anim_atk", "heavy" if wid in ["sledgehammer", "baseball_bat", "board", "pipe"] else "cross")
+	f.set("_atk_t", 0.24)
+	SurvProj.swipe(_host(), f.global_position + Vector2(0, -26), ang, reach)
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if not (e is Node2D) or int(e.get("hp")) <= 0:
+			continue
+		var d := (e as Node2D).global_position - f.global_position
+		if d.length() < reach and absf(angle_difference(d.angle(), ang)) < 1.15:
+			SurvProj.strike(e, id, self)
+	var sfx := str(w.get("sfx", "res://assets/audio/whoosh_heavy.wav"))
+	Mixer.play_sfx(sfx if ResourceLoader.exists(sfx) else "res://assets/audio/whoosh_heavy.wav", randf_range(0.9, 1.1), -8.0)
+
+
 func _tick_orbit(run: SurviveRun, r: Dictionary, delta: float) -> void:
 	var n := run.proj_count(id)
 	while _orbit.size() < n:

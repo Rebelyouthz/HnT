@@ -152,6 +152,13 @@ func _card(o: Dictionary) -> Button:
 			r = VaultCards.as_row(str(o["id"]))
 			lv_text = "VAULT CARD  ·  LV %d" % VaultCards.level(str(o["id"]))
 			col = Color(1.0, 0.82, 0.3)
+		"card":
+			r = SurviveRun.street_card(str(o["id"])).duplicate()
+			r["icon"] = "card_" + str(o["id"])
+			var rs := run.street_state()
+			var clv := rs.card_level(str(o["id"])) if rs else 0
+			lv_text = "STREET CARD" if clv == 0 else "STREET CARD  LV %d  ›  %d" % [clv, clv + 1]
+			col = Color(0.95, 0.6, 0.35)
 		"evolve":
 			r = o
 			lv_text = "EVOLVE  ·  " + str(run.row("abilities", str(o["id"])).get("name", "")).to_upper()
@@ -176,6 +183,8 @@ func _card(o: Dictionary) -> Button:
 				rar = "uncommon"
 		"item":
 			kd = "ACTIVE" if r.has("active") else "PASSIVE"
+		"card":
+			kd = str(r.get("kind", "PASSIVE")).to_upper()
 	if rar == "":
 		rar = "common"
 	rar = Rarity.normalize(rar)

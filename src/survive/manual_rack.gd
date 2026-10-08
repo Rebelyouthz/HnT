@@ -56,6 +56,9 @@ func owned() -> Array:
 func mag_size(id: String) -> int:
 	var run := _run()
 	var spec: Array = MAG.get(id, [8, 1])
+	if run and run.row("abilities", id).has("mag"):
+		var m := int(run.row("abilities", id)["mag"])
+		spec = [m, maxi(1, m / 6)]
 	var lv := int(run.abilities.get(id, 1)) if run else 1
 	var n := int(spec[0]) + int(spec[1]) * (lv - 1)
 	if run and run.evolved.has(id):

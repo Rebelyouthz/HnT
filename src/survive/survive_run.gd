@@ -62,6 +62,7 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_PAUSABLE
 	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/survive.json"))
 	book = parsed if parsed is Dictionary else {}
+	_add_street_arsenal()
 	# Everyone starts the hour with one ability: the Son's paper, the
 	# Father's coffee (solo picks by role).
 	var start := "invoice_toss" if App.solo_role == "son" else "coffee"
@@ -106,6 +107,35 @@ func _grant(id: String) -> void:
 	abilities[id] = 1
 	_mount(id)
 	changed.emit()
+
+
+## The act's RunState (cards, points) when this hour runs inside one.
+func street_state() -> RunState:
+	var sc := get_tree().current_scene
+	if sc and sc.get("_state") is RunState:
+		return sc.get("_state") as RunState
+	return null
+
+
+static var _cards_cache: Array = []
+
+
+## Level-up cards from the street that work anywhere (they have a kind).
+static func street_cards() -> Array:
+	if _cards_cache.is_empty():
+		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/cards.json"))
+		if parsed is Array:
+			for c in parsed:
+				if c is Dictionary and (c as Dictionary).has("kind") and not bool((c as Dictionary).get("fixed", false)):
+					_cards_cache.append(c)
+	return _cards_cache
+
+
+static func street_card(id: String) -> Dictionary:
+	for c: Dictionary in street_cards():
+		if str(c["id"]) == id:
+			return c
+	return {}
 
 
 func row(kind: String, id: String) -> Dictionary:
@@ -182,8 +212,38 @@ func ult_unlocked(id: String) -> bool:
 	return not r.is_empty() and (str(r.get("unlock", "")) == "" or Trees.has(str(r.get("unlock", ""))))
 
 
+## Street weapons: every gun and melee weapon found on the story streets
+## also shows up in the hour's picks, at the level it was upgraded to there.
+## Guns are MANUAL (aim and fire like the other manual weapons); melee
+## weapons swing on their own at the nearest thug.
+const STREET_SKIP := ["batwing", "snare", "clipboard", "stapler", "nailgun", "invoice_star", "ray"]
+const MELEE_DMG := {"common": 10, "uncommon": 12, "rare": 14, "epic": 18, "legendary": 22}
+
+
+func _add_street_arsenal() -> void:
+	var abl: Array = book.get("abilities", [])
+	var all := WeaponBook.all()
+	for wid: String in all:
+		if wid in STREET_SKIP:
+			continue
+		var w := WeaponBook.spec(wid)
+		var rar := Rarity.normalize(str(w.get("rarity", "rare")))
+		var title := str(w.get("title", wid)).to_upper()
+		var row := {"id": "w_" + wid, "name": title, "icon": wid, "weapon": wid, "rarity": rar, "found": wid}
+		if Arsenal.is_gun(wid):
+			var dmg := int(w.get("dmg", 8))
+			row.merge({"manual": true, "cd": maxf(0.08, float(w.get("rate", 0.3))), "dmg": dmg, "per": maxi(1, dmg / 4), "proj": int(w.get("pellets", 1)), "proj_at": [], "spread": float(w.get("spread", 0.04)), "speed": minf(1100.0, float(w.get("speed", 900.0))), "mag": int(w.get("mag", 8)), "blurb": "STREET GUN: the %s you found on the streets. MANUAL: aim with the right stick or mouse, fire to empty the magazine." % title.to_lower()})
+		else:
+			var dmg := int(MELEE_DMG.get(rar, 12))
+			row.merge({"cd": 0.85 if rar in ["common", "uncommon"] else 1.05, "dmg": dmg, "per": maxi(2, dmg / 5), "area": 62, "blurb": "STREET WEAPON: your %s swings by itself at whoever gets close. Wider and harder each level." % title.to_lower()})
+		abl.append(row)
+	book["abilities"] = abl
+
+
 func ability_unlocked(id: String) -> bool:
 	var r := row("abilities", id)
+	if r.has("found"):
+		return Arsenal.found(str(r["found"]))
 	return str(r.get("unlock", "")) == "" or Trees.has(str(r.get("unlock", "")))
 
 
@@ -213,7 +273,7 @@ func slow() -> float:
 func hit(id: String) -> Dictionary:
 	var r := row("abilities", id)
 	var lv := int(abilities.get(id, 1))
-	var d := (float(r.get("dmg", 6)) + float(r.get("per", 1)) * float(lv - 1)) * dmg_mul() * (2.2 if evolved.has(id) else 1.0) * SurvStarter.dmg_mul(id)
+	var d := (float(r.get("dmg", 6)) + float(r.get("per", 1)) * float(lv - 1)) * dmg_mul() * (Arsenal.power_mul(str(r["weapon"])) if r.has("weapon") else 1.0) * (2.2 if evolved.has(id) else 1.0) * SurvStarter.dmg_mul(id)
 	var c := randf() < crit() + SurvStarter.crit_bonus(id)
 	if c:
 		d *= 2.0
@@ -338,6 +398,16 @@ func offers(n: int = 3) -> Array:
 			pool.append({"kind": "trait", "id": id, "w": 1.2})
 	for vid: String in VaultCards.offers():
 		pool.append({"kind": "vault", "id": vid, "w": 1.4})
+	# The street's level-up cards (autoweapons, companions, items) deal in
+	# too, levelling the same way they do on the brawl maps.
+	var rs := street_state()
+	if rs:
+		for c: Dictionary in street_cards():
+			var cid := str(c["id"])
+			if cid in banned:
+				continue
+			if rs.card_level(cid) < int(c.get("max_lv", 3)):
+				pool.append({"kind": "card", "id": cid, "w": 0.9 if rs.cards.has(cid) else 0.7})
 	var out: Array = []
 	while out.size() < n and not pool.is_empty():
 		var total := 0.0
@@ -392,6 +462,10 @@ func take(o: Dictionary) -> void:
 				f.hp += hp
 		"vault":
 			VaultCards.on_pick(str(o["id"]), get_tree())
+		"card":
+			var rs := street_state()
+			if rs:
+				rs.take_card(str(o["id"]))
 		"gold":
 			# LIMIT BREAK: everything maxed, every pick is +5% damage instead.
 			limit_breaks += 1

@@ -84,7 +84,7 @@ static func tex(name: String) -> Texture2D:
 	if _cache.has(name):
 		return _cache[name]
 	var t: Texture2D = null
-	for pat in [DIR, SURV, "res://assets/sprites/gear/%s.png"]:
+	for pat in [DIR, SURV, "res://assets/sprites/gear/%s.png", "res://assets/sprites/guns/%s.png", "res://assets/sprites/held/%s.png"]:
 		var p: String = pat % name
 		if ResourceLoader.exists(p):
 			t = load(p) as Texture2D

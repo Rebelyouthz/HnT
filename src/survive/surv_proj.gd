@@ -43,6 +43,17 @@ static func shoot(host: Node, k: String, ab: String, at: Vector2, v: Vector2, pi
 	host.add_child(p)
 
 
+## A melee swing drawn as a fading arc (damage is dealt by the caller).
+static func swipe(host: Node, at: Vector2, ang: float, r: float) -> void:
+	var p := SurvProj.new()
+	p.kind = "swipe"
+	p.vel = Vector2.from_angle(ang)
+	p.radius = r
+	p.life = 0.2
+	p.global_position = at
+	host.add_child(p)
+
+
 ## A straight fax beam from `at` along `v` (already damaged by the caller).
 static func beam(host: Node, ab: String, at: Vector2, v: Vector2) -> void:
 	var p := SurvProj.new()
@@ -231,7 +242,7 @@ func _physics_process(delta: float) -> void:
 				if cc.distance_to(global_position) < 20.0:
 					_hits[e.get_instance_id()] = true
 					SurvProj.strike(e, ability, self)
-		"invoice", "staple", "note", "cart":
+		"invoice", "staple", "note", "cart", "bullet":
 			global_position += vel * delta
 			for e in get_tree().get_nodes_in_group("enemies"):
 				if not (e is Node2D) or _hits.has(e.get_instance_id()) or int(e.get("hp")) <= 0:
@@ -329,6 +340,16 @@ func _draw() -> void:
 		"staple":
 			var d := vel.normalized()
 			draw_line(-d * 3.0, d * 3.0, Color(0.85, 0.87, 0.92), 1.0)
+		"bullet":
+			# A street round: hot tracer with a short smear behind it.
+			var d := vel.normalized()
+			draw_line(-d * 12.0, Vector2.ZERO, Color(1.0, 0.75, 0.3, 0.45), 2.0)
+			draw_line(-d * 4.0, d * 2.0, Color(1.0, 0.95, 0.7), 2.0)
+		"swipe":
+			var k := clampf(life / 0.2, 0.0, 1.0)
+			var a0 := vel.angle()
+			draw_arc(Vector2.ZERO, radius, a0 - 1.1, a0 + 1.1, 18, Color(1.0, 1.0, 1.0, 0.75 * k), 4.0)
+			draw_arc(Vector2.ZERO, radius * 0.82, a0 - 0.9, a0 + 0.9, 14, Color(1.0, 0.85, 0.5, 0.45 * k), 2.0)
 		"note":
 			var y := sin(_t * 14.0) * 4.0
 			for k in 3:
