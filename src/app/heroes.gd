@@ -95,6 +95,9 @@ static func try_level(role: String, m: String = "story") -> bool:
 	FamilyProfile.data["gold"] = int(FamilyProfile.data.get("gold", 0)) - level_cost(role, m)
 	_row(role)[MODE_KEY[m]] = level(role, m) + 1
 	FamilyProfile.save()
+	if m == "parkour":
+		for t: Dictionary in Runner.tricks_at(level(role, m)):
+			Juice.toast("reward", "NEW TRICK", "%s  ·  %s + %s" % [str(t["name"]), str(t["dir"]), " ".join(t["btn"])])
 	return true
 
 

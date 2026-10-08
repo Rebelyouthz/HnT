@@ -563,6 +563,9 @@ func _paint_world_ui() -> void:
 			var glyph := " + ".join(PackedStringArray(parts))
 			var held := not ld.is_empty()
 			var col := Color(0.75, 0.9, 1.0) if held else Color(0.45, 1.0, 0.6)
+			if tr.has("locked"):
+				name = "LOCKED · ROOFTOPS LV %d" % int(tr["locked"])
+				col = Color(0.9, 0.6, 0.45)
 			_txt(_world_ui, head, name, 12, col, true)
 			_txt(_world_ui, head + Vector2(0, 14), glyph if held else "UP!", 10, col.darkened(0.1), true, UiKit.pixel_font())
 		var need := rn.landing_need()

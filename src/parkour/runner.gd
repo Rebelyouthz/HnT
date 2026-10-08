@@ -35,21 +35,30 @@ const RELEASE_WIN := 0.22
 ## dir: right stick in 8 directions (F forward, B back, U up, D down).
 ## spin: forward flips (+) / back flips (-) in turns; twist: a body twist.
 const TRICKS := [
-	{"id": "tuck", "name": "TUCK JUMP", "dir": "U", "btn": [], "spin": 0.0, "twist": 0, "clip": "jump", "pts": 4},
-	{"id": "kong", "name": "KONG SPIN", "dir": "F", "btn": ["R1"], "spin": 1.0, "twist": 0, "clip": "dive", "pts": 10},
-	{"id": "backflip", "name": "BACKFLIP", "dir": "U", "btn": ["L1"], "spin": -1.0, "twist": 0, "clip": "jump", "pts": 10},
-	{"id": "webster", "name": "WEBSTER", "dir": "U", "btn": ["R1"], "spin": 1.0, "twist": 0, "clip": "jump", "pts": 11},
-	{"id": "dive", "name": "FRONT DIVE", "dir": "D", "btn": ["R2"], "spin": 1.0, "twist": 0, "clip": "dive", "pts": 12},
-	{"id": "aerial", "name": "AERIAL", "dir": "F", "btn": ["L1"], "spin": 1.0, "twist": 0, "clip": "cartwheel_kick", "pts": 12},
-	{"id": "cat", "name": "CAT TWIST", "dir": "B", "btn": ["L2"], "spin": 0.0, "twist": 1, "clip": "air_mix", "pts": 12},
-	{"id": "gainer", "name": "GAINER", "dir": "B", "btn": ["R2"], "spin": -1.0, "twist": 0, "clip": "jump", "pts": 14},
-	{"id": "palm", "name": "PALM SPIN", "dir": "D", "btn": ["L1"], "spin": 1.0, "twist": 1, "clip": "air_mix", "pts": 14},
-	{"id": "cork", "name": "CORKSCREW", "dir": "UF", "btn": ["R1", "R2"], "spin": 1.0, "twist": 1, "clip": "air_spin_kick", "pts": 18},
-	{"id": "superman", "name": "SUPERMAN", "dir": "F", "btn": ["L2", "R2"], "spin": 0.0, "twist": 0, "clip": "superman_punch", "pts": 20, "lay": true},
-	{"id": "tornado", "name": "TORNADO", "dir": "UB", "btn": ["L1", "R1"], "spin": -2.0, "twist": 0, "clip": "jump_roundhouse", "pts": 24},
-	{"id": "dbl_cork", "name": "DOUBLE CORK", "dir": "DF", "btn": ["L1", "R1", "R2"], "spin": 2.0, "twist": 2, "clip": "air_spin_kick", "pts": 32},
+	{"id": "tuck", "lv": 1, "name": "TUCK JUMP", "dir": "U", "btn": [], "spin": 0.0, "twist": 0, "clip": "jump", "pts": 4},
+	{"id": "kong", "lv": 1, "name": "KONG SPIN", "dir": "F", "btn": ["R1"], "spin": 1.0, "twist": 0, "clip": "dive", "pts": 10},
+	{"id": "backflip", "lv": 1, "name": "BACKFLIP", "dir": "U", "btn": ["L1"], "spin": -1.0, "twist": 0, "clip": "jump", "pts": 10},
+	{"id": "webster", "lv": 2, "name": "WEBSTER", "dir": "U", "btn": ["R1"], "spin": 1.0, "twist": 0, "clip": "jump", "pts": 11},
+	{"id": "dive", "lv": 3, "name": "FRONT DIVE", "dir": "D", "btn": ["R2"], "spin": 1.0, "twist": 0, "clip": "dive", "pts": 12},
+	{"id": "aerial", "lv": 4, "name": "AERIAL", "dir": "F", "btn": ["L1"], "spin": 1.0, "twist": 0, "clip": "cartwheel_kick", "pts": 12},
+	{"id": "cat", "lv": 5, "name": "CAT TWIST", "dir": "B", "btn": ["L2"], "spin": 0.0, "twist": 1, "clip": "air_mix", "pts": 12},
+	{"id": "gainer", "lv": 6, "name": "GAINER", "dir": "B", "btn": ["R2"], "spin": -1.0, "twist": 0, "clip": "jump", "pts": 14},
+	{"id": "palm", "lv": 7, "name": "PALM SPIN", "dir": "D", "btn": ["L1"], "spin": 1.0, "twist": 1, "clip": "air_mix", "pts": 14},
+	{"id": "cork", "lv": 8, "name": "CORKSCREW", "dir": "UF", "btn": ["R1", "R2"], "spin": 1.0, "twist": 1, "clip": "air_spin_kick", "pts": 18},
+	{"id": "superman", "lv": 9, "name": "SUPERMAN", "dir": "F", "btn": ["L2", "R2"], "spin": 0.0, "twist": 0, "clip": "superman_punch", "pts": 20, "lay": true},
+	{"id": "tornado", "lv": 11, "name": "TORNADO", "dir": "UB", "btn": ["L1", "R1"], "spin": -2.0, "twist": 0, "clip": "jump_roundhouse", "pts": 24},
+	{"id": "dbl_cork", "lv": 13, "name": "DOUBLE CORK", "dir": "DF", "btn": ["L1", "R1", "R2"], "spin": 2.0, "twist": 2, "clip": "air_spin_kick", "pts": 32},
 ]
 const BTN_ACT := {"R1": "shoot", "L1": "block", "R2": "dash", "L2": "throw"}
+
+## Tricks a ROOFTOPS level opens up (for the level-up toast and lists).
+static func tricks_at(lv: int) -> Array:
+	var out: Array = []
+	for t in TRICKS:
+		if int(t.get("lv", 1)) == lv:
+			out.append(t)
+	return out
+
 
 ## Test / attract mode: reads the course and plays like a decent runner
 ## (PARKOUR_AUTO=1 in the environment).
@@ -108,6 +117,7 @@ var coyote_t := 0.07
 var score_k := 1.0
 var iron := 0        # 1 big drops never stagger, 2 every hard landing rolls
 var ghost_trick := false
+var park_lv := 99
 var _untouch := 0.0
 
 
@@ -141,6 +151,7 @@ func _ready() -> void:
 ## Everything bought for the ROOFTOPS: level, PARKOUR tree, parkour META.
 func _build() -> void:
 	var lv := Heroes.level(role, "parkour")
+	park_lv = 99 if autopilot else lv
 	var spd := Meta.run_speed_mul() * (1.08 if Trees.has("p_speed") else 1.0) * (1.0 + 0.008 * float(lv - 1))
 	top = TOP * spd + Heroes.speed_bonus(role) * 0.5
 	boost = BOOST * spd + Heroes.speed_bonus(role) * 0.5
@@ -208,14 +219,23 @@ static func dir_ok(v: Vector2, code: String) -> bool:
 	return dir8(v) == code or (code.length() == 1 and dir8(v).contains(code) and v.length() > 0.5)
 
 
-static func find_trick(dir: String, btn: Array) -> Dictionary:
+## The trick for this stick direction + buttons. Tricks above the ROOFTOPS
+## level come out as a FREESTYLE (still a flip, fewer points) tagged with the
+## level that unlocks them.
+static func find_trick(dir: String, btn: Array, lv: int = 99) -> Dictionary:
 	var want := btn.duplicate()
 	want.sort()
 	for t in TRICKS:
 		var b: Array = (t["btn"] as Array).duplicate()
 		b.sort()
 		if str(t["dir"]) == dir and b == want:
-			return t
+			if int(t.get("lv", 1)) <= lv:
+				return t
+			var fr: Dictionary = (t as Dictionary).duplicate()
+			fr["name"] = "FREESTYLE"
+			fr["pts"] = 6 + 2 * btn.size()
+			fr["locked"] = int(t.get("lv", 1))
+			return fr
 	if btn.is_empty():
 		var nm := {"F": "LONG JUMP", "UF": "TIC TAC", "D": "DROP JUMP", "DF": "DIVE JUMP", "B": "LEAN BACK", "UB": "LAZY JUMP", "DB": "TUCK DROP"}.get(dir, "AIR") as String
 		return {} if dir == "" else {"id": "air", "name": nm, "dir": dir, "btn": [], "spin": 0.0, "twist": 0, "clip": "jump", "pts": 3}
@@ -226,9 +246,9 @@ static func find_trick(dir: String, btn: Array) -> Dictionary:
 ## The trick being held now, or the one let go of a moment ago.
 func armed() -> Dictionary:
 	if not _load.is_empty():
-		return find_trick(str(_load.get("dir", "")), _load.get("btn", []))
+		return find_trick(str(_load.get("dir", "")), _load.get("btn", []), park_lv)
 	if not _released.is_empty() and _now - float(_released["at"]) <= RELEASE_WIN * win_k:
-		return find_trick(str(_released.get("dir", "")), _released.get("btn", []))
+		return find_trick(str(_released.get("dir", "")), _released.get("btn", []), park_lv)
 	return {}
 
 

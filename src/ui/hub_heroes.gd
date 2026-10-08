@@ -166,7 +166,15 @@ func _track(role: String, m: String, rc: Color, cap: int) -> Control:
 	var up := UiKit.button(("+1  %dG" % Heroes.level_cost(role, m)) if lv < cap else "CAP", Vector2(110, 26))
 	up.set_meta("key", key)
 	up.disabled = not Heroes.can_level(role, m)
-	up.tooltip_text = {"story": "Brawl maps: HP, damage.", "survivor": "Survivor hours: HP, damage.", "parkour": "Rooftops: HP, damage, wider trick timing."}[m]
+	up.tooltip_text = {"story": "Brawl maps: HP, damage.", "survivor": "Survivor hours: HP, damage.", "parkour": "Rooftops: faster legs, wider trick timing, new tricks."}[m]
+	if m == "parkour":
+		# The next trick this track opens up.
+		for nl in range(lv + 1, 16):
+			var nt: Array = Runner.tricks_at(nl)
+			if not nt.is_empty():
+				up.tooltip_text += "  NEXT TRICK at LV %d: %s" % [nl, str((nt[0] as Dictionary)["name"])]
+				ll.text += "  ›%s" % str((nt[0] as Dictionary)["name"]).left(9)
+				break
 	up.pressed.connect(func() -> void:
 		if Heroes.try_level(role, m):
 			Juice.play("res://assets/audio/claim.wav")
