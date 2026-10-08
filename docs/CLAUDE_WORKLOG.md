@@ -95,6 +95,15 @@ should share the street weapons and cards; three hero levels with depth;
   start from a mid-stride frame for a real walk. `tools/tween_frames.py`
   (optical-flow in-betweens) ghosts fast limbs - not for strikes.
 - `tools/anim_probe.gd`: films a scripted input line (full frames).
+  Run it with `--fixed-fps 60` and START ~600 (after GET READY / GO);
+  it sets `Engine` meta `probe_no_draw` so the starting card draw stays shut.
+- **Son moves from video** (Wan): jab, cross, heavy, front_kick, roundhouse,
+  jump (scrubbed tuck), knockdown (`LIE_FRAME.son` = 20). Duck kept (owner
+  likes it). Rejected: roll (came out as a hop), hurt (too weak) - re-queued
+  as `son_roll2` / `son_hurt2`. Still queued: `son_sprint` and 30 enemy
+  clips. The queue lives in `tools/hf_queue/` (genq.py, moves.py, start
+  poses). The Pro ZeroGPU quota ran out (resets ~13 h); anonymous calls are
+  refused too.
 
 ## 0y. Rooftop parkour run (Vector-style) + one-file installer
 
