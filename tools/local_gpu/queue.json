@@ -31,6 +31,18 @@
   "npc_idle": [
    2.5,
    "{d} stands on the pavement waiting, shifting weight, glancing around and gesturing a little, calm, not fighting."
+  ],
+  "sprint": [
+   3.0,
+   "{d} sprints to the right on a treadmill at full speed like an athlete, legs driving hard, knees high, arms pumping, body leaning forward, continuous running cycle."
+  ],
+  "roll": [
+   2.0,
+   "{d} dives forward and tucks into a full somersault forward roll on the ground, back rolling over the floor with knees tucked, then pops back up onto his feet facing right."
+  ],
+  "hurt_hard": [
+   1.6,
+   "{d} gets hit hard in the face: his head and shoulders whip backward, arms fly up, he stumbles one big step backward, then straightens up again."
   ]
  },
  "who": {
@@ -87,6 +99,74 @@
    "desc": "The old man with the cane",
    "moves": [
     "npc_idle"
+   ]
+  },
+  "son": {
+   "desc": "The teenage boy in the black jacket",
+   "moves": [
+    "sprint",
+    "roll",
+    "hurt_hard"
+   ]
+  },
+  "bag_snatch": {
+   "desc": "The bag snatcher in the hoodie",
+   "moves": [
+    "idle",
+    "walk",
+    "punch_high",
+    "hurt",
+    "death"
+   ]
+  },
+  "punk": {
+   "desc": "The street punk",
+   "moves": [
+    "idle",
+    "walk",
+    "punch_high",
+    "hurt",
+    "death"
+   ]
+  },
+  "mohawk": {
+   "desc": "The punk with the mohawk",
+   "moves": [
+    "idle",
+    "walk",
+    "punch_high",
+    "hurt",
+    "death"
+   ]
+  },
+  "shift_lead": {
+   "desc": "The shift lead in the work vest",
+   "moves": [
+    "idle",
+    "walk",
+    "punch_high",
+    "hurt",
+    "death"
+   ]
+  },
+  "cop": {
+   "desc": "The police officer",
+   "moves": [
+    "idle",
+    "walk",
+    "punch_high",
+    "hurt",
+    "death"
+   ]
+  },
+  "roof_runner": {
+   "desc": "The rooftop runner",
+   "moves": [
+    "idle",
+    "walk",
+    "punch_high",
+    "hurt",
+    "death"
    ]
   }
  }
