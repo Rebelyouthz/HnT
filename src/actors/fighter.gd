@@ -140,6 +140,7 @@ var _backpedal := false
 var _spin_t := 0.0
 var _spin_dir := Vector2.ZERO
 var _spin_cd := 0.0
+var _skid_t := 0.0
 const SPIN_LEN := 0.34
 
 
@@ -1055,6 +1056,11 @@ func _process_street(delta: float) -> void:
 				var k := 13.0 if want_v.length() > 1.0 else 9.0
 				if _field_v.dot(want_v) < 0.0:
 					k = 7.0
+					# Hard turn at speed: the soles skid and kick up dust.
+					_skid_t -= dt
+					if _field_v.length() > 120.0 and _skid_t <= 0.0:
+						_skid_t = 0.16
+						Juice.land_puff(global_position + _field_v.normalized() * 8.0)
 				_field_v = _field_v.lerp(want_v, 1.0 - exp(-k * dt))
 			velocity.x = _field_v.x
 			velocity.y = _field_v.y

@@ -34,7 +34,51 @@ The rest is in English, like the code. Newest work first. Each block says
 
 ---
 
-## 0z. Controls, start flow, entrances, walking, parkour fails, survivor parity, video clips (latest)
+## 0za. Rewards centre stage, survivor feel, active skills, survivor cards (latest)
+
+Owner round: claims / upgrades / equips / rewards were hard to see (should
+show big in the middle, then shrink and fly to the corner or the slot);
+survivor should feel heavy with strafe, spin and running backwards; more
+manual weapons that switch on an empty magazine and reload one by one;
+many auto weapons, passives and ACTIVE skills (actives equipped in a menu,
+the rest are level-up cards); a separate SURVIVOR CARDS menu; visual polish.
+
+- **RewardFly** (`src/juice/reward_fly.gd`): `give()` banners count up big
+  (BIG 2.3) in the middle, queued one after another (`_stage_free`), shrink
+  and burst into coins to the counter. `upgrade()` with text: centre
+  showcase (`_showcase`, veil + rays, SHOW 1.9) then flies into the control
+  (`_show_busy` stops stacking on rapid buys). `equip(icon, title, col,
+  slot)` new. `reveal(..., to)` ends flying to its slot or the bag corner.
+  `Juice.equip_fly` rises to the middle at 3x first. `claim_burst` line is
+  bigger on a band. Film it with `tools/reward_probe.gd`.
+- **ManualRack**: all magazines dry -> reload ONE BY ONE (RELOAD_EACH 0.75 s);
+  the first back in is live, the rest load behind. `tests/rack_test.gd`.
+- **Field feel** (`Fighter`): `_field_v` weight (k 13 / 9 / 7 turn),
+  skew lean, backpedal (aim one way, walk the other: 80% speed, walk clip
+  reversed), hip-carry gun (`_place_gun` with `_hip`), DASH = pirouette
+  spin-dodge (`_field_spin`, i-frames, afterimages), skid dust, recoil into
+  `_field_v`. capture.gd: `AIM=x,y`, `DASH=f`, `PRESS=act@f`, `DEBUGGUN=f`.
+- **SurvActives** (`src/survive/surv_actives.gd`): 8 actives (frag, stomp,
+  molotov, turret, charge, adrenaline, decoy, medkit), 2 slots on block /
+  throw (LB / LT, Q / E or I / U); levels 1-5 (cd x0.92, power +15%);
+  HUD buttons with cooldown sweep. Fighter ignores block/throw on FIELD.
+  Menu `src/ui/surv_skills_sheet.gd`.
+- **SurvDeck** (`src/survive/surv_deck.gd`): every survivor level-up card;
+  packs (S-coins, 3 cards), copies -> stars (+6% power / +12% offer
+  weight), bench up to 6. `"deck": true` rows only deal in once owned: 6
+  new auto weapons (pigeon_flock, vending_drop, leaf_blower, taser_web,
+  roomba, spray_tag) in `survive_ability._fire`. Menu
+  `src/ui/surv_deck_sheet.gd`. Icons: `tools/survive_art2.py`.
+- Lobby has STARTER / ACTIVE SKILLS / SURVIVOR CARDS / GEAR / TREE.
+- **Readability**: ComboRing lies flat at the feet; a warm `KeyLight`
+  PointLight2D follows each hero.
+- `tools/sheet_probe.gd` films any menu sheet over the hub.
+- HF queue kit in `tools/hf_queue/` (.gdignore); the same jobs are in
+  `tools/local_gpu/queue.json` for the owner's ROG Ally X.
+
+---
+
+## 0z. Controls, start flow, entrances, walking, parkour fails, survivor parity, video clips
 
 Owner feedback round: pad did not move the hero in game, only right mouse
 did anything, video menu stuck on BACK; father glides when he runs (wants
