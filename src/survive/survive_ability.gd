@@ -351,7 +351,11 @@ func _street(run: SurviveRun, r: Dictionary, f: Fighter, at: Vector2) -> void:
 		var sfx := str(w.get("sfx", "res://assets/audio/sfx/pistol.ogg"))
 		if ResourceLoader.exists(sfx):
 			Mixer.play_sfx(sfx, randf_range(0.95, 1.08), -9.0)
-		f.velocity -= Vector2.from_angle(face) * (20.0 + float(w.get("recoil", 6)) * 1.5)
+		# Recoil shoves the body (into the weighted field velocity, so it is
+		# felt instead of overwritten next frame).
+		var kick := Vector2.from_angle(face) * (20.0 + float(w.get("recoil", 6)) * 1.5)
+		f.velocity -= kick
+		f.set("_field_v", (f.get("_field_v") as Vector2) - kick * 0.6)
 		return
 	# Melee: swing at the nearest thug in reach (or where you face).
 	var reach := float(r.get("area", 62)) * run.area_mul() * (1.0 + 0.06 * float(lv - 1))

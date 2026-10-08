@@ -132,6 +132,15 @@ var trick_hold := false
 var _lamp_tint := Color.WHITE
 var _hip := false
 var _ice_v := Vector2.ZERO
+## Survivor FIELD feel: the body has weight (velocity eases toward the
+## stick), walks backwards while the gun aims the other way, leans into the
+## move, and DASH is a spin-dodge along the stick.
+var _field_v := Vector2.ZERO
+var _backpedal := false
+var _spin_t := 0.0
+var _spin_dir := Vector2.ZERO
+var _spin_cd := 0.0
+const SPIN_LEN := 0.34
 
 
 func _on_ice() -> bool:
@@ -521,7 +530,7 @@ func _tick_sprite() -> void:
 	elif FIELD and not dashing and plane == "street" and velocity.length() > 18.0:
 		# Top-down: the eight-way walk; a fast straight sideways move runs.
 		clip = SpriteBook.dir_clip(_anim.sprite_frames, velocity, true)
-		if clip == "walk" and absf(velocity.x) > 110.0:
+		if clip == "walk" and absf(velocity.x) > 110.0 and not _backpedal:
 			clip = "parkour_run"
 	elif dashing or parkour_lock > 0.0 or absf(velocity.x) > (175.0 if plane == "street" else 110.0):
 		clip = "parkour_run"
@@ -580,8 +589,13 @@ func _drive_clip(clip: String) -> void:
 	match clip:
 		"walk":
 			_anim.speed_scale = SpriteBook.stride_rate(_anim, "walk", maxf(absf(velocity.x), absf(velocity.y) * 1.4))
+			# Backpedalling (FIELD, gun the other way): the feet step backwards.
+			if FIELD and _backpedal:
+				_anim.speed_scale = -_anim.speed_scale
 		"walk_up", "walk_down", "walk_ur", "walk_dr":
 			_anim.speed_scale = SpriteBook.stride_rate(_anim, clip, velocity.length() * 1.4)
+			if FIELD and _backpedal:
+				_anim.speed_scale = -_anim.speed_scale
 		"parkour_run":
 			var spd := maxf(absf(velocity.x), 420.0 if dashing else 0.0)
 			_anim.speed_scale = SpriteBook.stride_rate(_anim, "parkour_run", spd)
@@ -1009,14 +1023,31 @@ func _process_street(delta: float) -> void:
 			# (y a touch slower: the ground is seen at an angle).
 			var mv := Vector2(x, y).limit_length(1.0)
 			var want_v := Vector2(mv.x * run_k, mv.y * run_k * 0.9)
+			# Walking backwards while the gun points the other way: slower,
+			# and the walk cycle runs in reverse (_drive_clip).
+			_backpedal = aim_t > 0.0 and absf(want_v.x) > 30.0 and signf(want_v.x) != float(facing)
+			if _backpedal:
+				want_v *= 0.8
+			var dt := get_physics_process_delta_time()
 			# Ice (FieldLife.ice): the feet slide - momentum carries.
 			if _on_ice():
-				_ice_v = _ice_v.lerp(want_v * 1.15, 1.0 - exp(-1.8 * get_physics_process_delta_time()))
+				_ice_v = _ice_v.lerp(want_v * 1.15, 1.0 - exp(-1.8 * dt))
 				want_v = _ice_v
+				_field_v = want_v
 			else:
 				_ice_v = want_v
-			velocity.x = want_v.x
-			velocity.y = want_v.y
+				# Weight: quick to get going, a step to stop, slowest to turn
+				# right round.
+				var k := 13.0 if want_v.length() > 1.0 else 9.0
+				if _field_v.dot(want_v) < 0.0:
+					k = 7.0
+				_field_v = _field_v.lerp(want_v, 1.0 - exp(-k * dt))
+			velocity.x = _field_v.x
+			velocity.y = _field_v.y
+			# Lean into the move (shear from the feet up).
+			var lean := clampf(_field_v.x / maxf(run_k, 1.0), -1.0, 1.0) * 0.1
+			lean += clampf((want_v.x - _field_v.x) / maxf(run_k, 1.0), -1.0, 1.0) * 0.08
+			visual.skew = lerpf(visual.skew, lean, 1.0 - exp(-10.0 * dt))
 		elif _street_grounded():
 			velocity.y = y * depth_speed * limp
 		else:
@@ -1026,6 +1057,20 @@ func _process_street(delta: float) -> void:
 			# Feet set under the guard: you can shuffle, not walk.
 			velocity.x *= 0.25
 			velocity.y *= 0.4
+	if _spin_cd > 0.0:
+		_spin_cd -= delta
+	if _spin_t > 0.0:
+		_spin_t -= delta
+		var k := clampf(_spin_t / SPIN_LEN, 0.0, 1.0)
+		velocity = _spin_dir * lerpf(140.0, 560.0, k * k)
+		_field_v = velocity
+		# A pirouette (turning round the body's own upright axis): two full
+		# turns read in 2D as the body narrowing, flipping and widening.
+		var turn := cos(TAU * 2.0 * (1.0 - k))
+		visual.scale.x = float(facing) * (signf(turn) if absf(turn) > 0.001 else 1.0) * maxf(0.12, absf(turn))
+		if _spin_t <= 0.0:
+			visual.scale.x = float(facing)
+			_squash_to(Vector2(1.08, 0.92))
 	if _combo_t > 0.0:
 		_combo_t -= delta
 		velocity.x = float(facing) * _combo_vx
@@ -1260,6 +1305,9 @@ func _combat() -> void:
 	if snap_ready and (_just("light") or _just("snap")):
 		return
 	if roll_t > 0.0 or _combo_t > 0.0:
+		return
+	if FIELD and _just("dash") and plane == "street":
+		_field_spin()
 		return
 	if blocking and _just("dash") and plane == "street" and _street_grounded():
 		_roll()
@@ -1933,6 +1981,49 @@ func _combo_finish(c: Dictionary) -> void:
 	combo_landed.emit(combo_id, perfect)
 
 
+## Survivor field DASH: a spin-dodge along the stick (backwards from the aim
+## with no stick). Untouchable through the spin, dust, afterimages, a short
+## cooldown so it is a dodge, not a way to travel.
+func _field_spin() -> void:
+	if _spin_t > 0.0 or _spin_cd > 0.0:
+		return
+	var st := Vector2(_stick().x, _stick().y)
+	_spin_dir = st.normalized() if st.length() > 0.3 else Vector2(-float(facing), 0.0)
+	_spin_t = SPIN_LEN
+	_spin_cd = 0.55
+	invuln = maxi(invuln, int(SPIN_LEN * 60.0) + 4)
+	BrawlPlus.dodge(self)
+	_cancel_strike()
+	Mixer.play_sfx("res://assets/audio/sfx/roll.ogg", 1.15, -2.0)
+	KitSfx.hit(role, "dash")
+	Juice.land_puff(global_position)
+	for i in 3:
+		get_tree().create_timer(0.06 * float(i + 1), false).timeout.connect(func() -> void:
+			if is_instance_valid(self):
+				_afterimage())
+
+
+## A fading copy of the current frame where the body was.
+func _afterimage() -> void:
+	if _anim == null or _anim.sprite_frames == null or get_parent() == null:
+		return
+	var g := Sprite2D.new()
+	g.texture = _anim.sprite_frames.get_frame_texture(_anim.animation, _anim.frame)
+	g.global_position = _anim.global_position
+	g.global_rotation = _anim.global_rotation
+	g.global_scale = _anim.global_scale
+	g.centered = _anim.centered
+	g.offset = _anim.offset
+	g.flip_h = _anim.flip_h
+	g.modulate = Color(0.55, 0.8, 1.0, 0.45)
+	g.z_index = z_index - 1
+	g.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	get_parent().add_child(g)
+	var tw := g.create_tween()
+	tw.tween_property(g, "modulate:a", 0.0, 0.22)
+	tw.tween_callback(g.queue_free)
+
+
 ## Block + dash: a combat roll along the stick (backwards with no stick).
 ## Through people, untouchable for most of it, out on your feet.
 func _roll() -> void:
@@ -2180,7 +2271,12 @@ func _place_gun() -> void:
 		return
 	var m := _gun_meta(str(_gun.get_meta("kind", "pistol")))
 	var grip: Array = m.get("grip", [8, 12])
-	var hand := _anim.position + (_hand_point() * Vector2(0.55, 0.8) if _hip else _hand_point()) * _anim.scale
+	# Hip carry (walking and shooting on the field): the gun sits at belly
+	# height in front of the body, not at the punch's chin-high fist.
+	var hand := _anim.position + _hand_point() * _anim.scale
+	if _hip:
+		# The sprite's centre sits at chest height: the hip is lower.
+		hand = Vector2(_anim.position.x + _hand_point().x * 0.55 * _anim.scale.x, _anim.position.y * 0.62)
 	_gun.scale = _anim.scale
 	# Recoil per gun: muzzle climbs and the gun slides back with its kick;
 	# reloads tilt it (mag guns muzzle-up, the shotgun down for shells).

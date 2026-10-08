@@ -586,6 +586,24 @@ func _process(_delta: float) -> bool:
 			oc.global_position = Vector2(1300, 850)
 			for fm in root.get_tree().get_nodes_in_group("field_fog"):
 				fm.visible = false
+	# AIM=x,y (window pixels): keep the mouse there and "live" so manual
+	# weapons aim at it (walk the other way to see the backpedal).
+	if OS.get_environment("AIM") != "" and _n > 20:
+		var prt: Node = root.get_node_or_null("PadRouter")
+		if prt:
+			prt.set("_mouse_t", Time.get_ticks_msec() / 1000.0)
+		Input.warp_mouse(Vector2(float(OS.get_environment("AIM").get_slice(",", 0)), float(OS.get_environment("AIM").get_slice(",", 1))))
+	if OS.get_environment("DEBUGGUN") != "" and _n == int(OS.get_environment("DEBUGGUN")):
+		var hg: Node = root.get_tree().get_first_node_in_group("players")
+		var gg: Node2D = hg.get("_gun")
+		var an: Node2D = hg.get("_anim")
+		print("GUNDBG anim_pos=", an.position, " anim_scale=", an.scale, " hand=", hg.call("_hand_point"), " gun_pos=", gg.position if gg else null, " gun_vis=", gg.visible if gg else null, " clip=", an.get("animation"), " hip=", hg.get("_hip"), " gun_parent=", gg.get_parent().name if gg else null)
+	# DASH=frame: tap DASH (survivor spin-dodge, story dash).
+	if OS.get_environment("DASH") != "":
+		if _n == int(OS.get_environment("DASH")):
+			Input.action_press("p1_dash")
+		elif _n == int(OS.get_environment("DASH")) + 3:
+			Input.action_release("p1_dash")
 	# FIRE=frame: hold SHOOT from then on (manual weapons, magazines).
 	if OS.get_environment("FIRE") != "" and _n == int(OS.get_environment("FIRE")):
 		Input.action_press("p1_shoot")
