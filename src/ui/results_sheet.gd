@@ -111,11 +111,18 @@ func _ready() -> void:
 	duo.alignment = BoxContainer.ALIGNMENT_CENTER
 	duo.add_theme_constant_override("separation", 40)
 	col.add_child(duo)
-	duo.add_child(_player_tile("son", son_n, son_s, son_s >= dad_s and son_s > 0, Palette.LEMON))
-	var vs := UiKit.title("VS", 28, Palette.MUTED)
-	vs.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	duo.add_child(vs)
-	duo.add_child(_player_tile("father", dad_n, dad_s, dad_s > son_s, Palette.BRICK))
+	# Solo: only the one who played (no "VS Dad 0" for an empty chair).
+	var solo := not App.two_bodies()
+	var show_son := not solo or son_s > 0 or (dad_s == 0 and App.solo_role != "father")
+	var show_dad := not solo or dad_s > 0 or (son_s == 0 and App.solo_role == "father")
+	if show_son:
+		duo.add_child(_player_tile("son", son_n, son_s, show_dad and son_s >= dad_s and son_s > 0, Palette.LEMON))
+	if show_son and show_dad:
+		var vs := UiKit.title("VS", 28, Palette.MUTED)
+		vs.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		duo.add_child(vs)
+	if show_dad:
+		duo.add_child(_player_tile("father", dad_n, dad_s, show_son and dad_s > son_s, Palette.BRICK))
 	var grant := _grant_xp(total)
 	# Reward tiles.
 	var rewards := HBoxContainer.new()
