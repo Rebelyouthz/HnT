@@ -17,7 +17,7 @@ dest_files=["res://.godot/imported/ground_dock.webp-1d3539b90915a4346802adc0d5d0
 
 compress/mode=1
 compress/high_quality=false
-compress/lossy_quality=0.88
+compress/lossy_quality=0.74
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
