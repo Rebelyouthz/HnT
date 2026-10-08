@@ -17,6 +17,7 @@ var _card: PanelContainer
 var _list: VBoxContainer
 var _tab_btns: Array[Button] = []
 var _hint: Label
+var _back: Button
 
 
 func _ready() -> void:
@@ -69,6 +70,7 @@ func _ready() -> void:
 	var sc := ScrollContainer.new()
 	sc.custom_minimum_size = Vector2(0, 430)
 	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	sc.follow_focus = true
 	col.add_child(sc)
 	_list = VBoxContainer.new()
 	_list.add_theme_constant_override("separation", 6)
@@ -78,7 +80,7 @@ func _ready() -> void:
 	foot.add_theme_constant_override("separation", 14)
 	col.add_child(foot)
 	_hint = Label.new()
-	_hint.text = "UP/DOWN  pick    LEFT/RIGHT  change    Q / E  tabs    B / ESC  back"
+	_hint.text = "UP/DOWN  pick    LEFT/RIGHT  change    LB / RB  or  Q / E  tabs    B / ESC  back"
 	_hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_hint.add_theme_font_override("font", UiKit.pixel_font())
 	UiKit.apply_label(_hint, 13, Palette.MUTED)
@@ -87,6 +89,7 @@ func _ready() -> void:
 	back.add_theme_font_override("font", UiKit.title_font())
 	back.pressed.connect(_close)
 	foot.add_child(back)
+	_back = back
 	UiKit.pop_in(_card)
 	_show(0)
 
@@ -97,7 +100,10 @@ func _show(i: int) -> void:
 		var b := _tab_btns[k]
 		b.modulate = Color.WHITE if k == _tab else Color(0.6, 0.6, 0.66)
 		b.scale = Vector2.ONE
+	# Detach now: a queued-free row would still win the focus grab below and
+	# leave the pad with nothing focused (only BACK reachable).
 	for c in _list.get_children():
+		_list.remove_child(c)
 		c.queue_free()
 	match TABS[_tab]:
 		"AUDIO":
@@ -142,10 +148,21 @@ func _show(i: int) -> void:
 
 
 func _focus_first() -> void:
+	var rows: Array[Button] = []
 	for c in _list.get_children():
-		if c is Button:
-			(c as Button).grab_focus()
-			return
+		if c is Button and not c.is_queued_for_deletion():
+			rows.append(c as Button)
+	if rows.is_empty():
+		if _back:
+			_back.grab_focus()
+		return
+	# Down from the last row lands on BACK, up from BACK returns to it.
+	var last := rows[rows.size() - 1]
+	if _back:
+		last.focus_neighbor_bottom = last.get_path_to(_back)
+		_back.focus_neighbor_top = _back.get_path_to(last)
+		rows[0].focus_neighbor_top = rows[0].get_path_to(_back)
+	rows[0].grab_focus()
 
 
 # --- Rows --------------------------------------------------------------------
@@ -311,6 +328,11 @@ func _quality(v: int) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Nothing focused (mouse clicked empty space): any pad/arrow press wakes it.
+	if get_viewport().gui_get_focus_owner() == null and (event.is_action_pressed("ui_down") or event.is_action_pressed("ui_up") or event.is_action_pressed("ui_left") or event.is_action_pressed("ui_right")):
+		_focus_first()
+		get_viewport().set_input_as_handled()
+		return
 	if event.is_action_pressed("ui_cancel") or event.is_action_pressed("p1_pause"):
 		_close()
 	elif _key(event, KEY_Q) or _joy(event, JOY_BUTTON_LEFT_SHOULDER):

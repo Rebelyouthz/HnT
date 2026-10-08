@@ -1,7 +1,10 @@
 extends Node
 
-## Couch pads. Keyboard always stays on both prefixes (debug + P1 default).
-## 0 pads: keyboard. 1 pad: that pad is The Father (P2). 2+ pads: device 0 The Son, device 1 The Father.
+## Pads. Keyboard always stays on both prefixes (debug + P1 default).
+## SOLO (one body on screen): EVERY pad drives P1 - whichever pad you pick up
+## works, and the last pad touched is the one the right stick reads.
+## COUCH: 1 pad = The Father (P2, keyboard is The Son); 2+ pads = the pad that
+## was already P1 stays The Son, the next one is The Father.
 
 signal pads_changed
 signal drop_in(device: int)
@@ -20,19 +23,44 @@ var last_p1_kind := "kb"
 var last_p2_kind := "kb"
 ## Mouse aim is live for a few seconds after the mouse last moved (P1 only).
 var _mouse_t := -100.0
+var _solo := true
+## Solo: has the P1 pad actually been played with? Until then a Start press on
+## any pad is just pause, so picking up the "other" pad never spawns Dad.
+var _p1_used := false
 
 
 func _enter_tree() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	Input.joy_connection_changed.connect(_on_joy)
 	_bind_ui()
+	_solo = _is_solo()
 	refresh()
+
+
+## Solo vs couch can flip any time (Run-tab toggle, drop-in, scene change).
+func _process(_delta: float) -> void:
+	var s := _is_solo()
+	if s != _solo:
+		_solo = s
+		refresh()
+
+
+func _is_solo() -> bool:
+	var app := get_node_or_null("/root/App")
+	if app == null:
+		return true
+	return not bool(app.call("two_bodies"))
 
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventJoypadButton or event is InputEventJoypadMotion:
 		if event.device >= 0:
 			last_kind = "pad"
+			# Solo: the pad in your hands is P1 (Start on another pad drops in).
+			var start: bool = event is InputEventJoypadButton and event.button_index == JOY_BUTTON_START
+			if _solo and not start and _moved(event):
+				p1_device = event.device
+				_p1_used = true
 			if event.device == p1_device:
 				last_p1_kind = "pad"
 			elif event.device == p2_device:
@@ -47,6 +75,12 @@ func _input(event: InputEvent) -> void:
 		last_p1_kind = "kb"
 
 
+func _moved(event: InputEvent) -> bool:
+	if event is InputEventJoypadButton:
+		return (event as InputEventJoypadButton).pressed
+	return absf((event as InputEventJoypadMotion).axis_value) > 0.5
+
+
 func _on_joy(_device: int, _connected: bool) -> void:
 	refresh()
 
@@ -56,17 +90,29 @@ func refresh() -> void:
 	if pads.is_empty():
 		p1_device = -1
 		p2_device = -1
+	elif _solo:
+		if not pads.has(p1_device):
+			p1_device = int(pads[0])
+		p2_device = -1
 	elif pads.size() == 1:
 		p1_device = -1
 		p2_device = int(pads[0])
 	else:
-		p1_device = int(pads[0])
-		p2_device = int(pads[1])
+		if not pads.has(p1_device):
+			p1_device = int(pads[0])
+		p2_device = -1
+		for d in pads:
+			if int(d) != p1_device:
+				p2_device = int(d)
+				break
 	_apply_pad_map()
 	pads_changed.emit()
 
 
 func _handle_start(device: int) -> void:
+	# Solo: Start on the pad you play with is pause, not a second player.
+	if _solo and (device == p1_device or not _p1_used or Input.get_connected_joypads().size() < 2):
+		return
 	var assigned := device == p1_device or device == p2_device
 	if not assigned:
 		var pads := Input.get_connected_joypads()
@@ -100,7 +146,9 @@ func _apply_pad_map() -> void:
 	for prefix in ["p1_", "p2_"]:
 		for a in ACTIONS:
 			_strip_joy(StringName(prefix + a))
-	if p1_device >= 0:
+	if _solo and p1_device >= 0:
+		_bind_device("p1_", -1)
+	elif p1_device >= 0:
 		_bind_device("p1_", p1_device)
 	if p2_device >= 0:
 		_bind_device("p2_", p2_device)
@@ -192,7 +240,7 @@ func mouse_live(prefix: StringName) -> bool:
 func p1_prompt() -> String:
 	if p1_device >= 0 and last_p1_kind == "pad":
 		return "PAD1  LS move  A jump  X light  Y heavy  B cape  RB batwing  RT dash  RS SNAP  D-PAD belt"
-	return "SON  WASD  SPACE jump  C duck  J light  K heavy  L cape  O batwing  SHIFT dash  F SNAP  1-4 belt"
+	return "WASD move  SPACE jump  C duck  J / LEFT CLICK light  K / MIDDLE CLICK heavy  L special  O / RIGHT CLICK shoot  SHIFT dash  1-4 belt"
 
 
 func p2_prompt() -> String:
@@ -203,10 +251,11 @@ func p2_prompt() -> String:
 
 func map_lines() -> PackedStringArray:
 	return PackedStringArray([
-		"Xbox layout. Keyboard always works. Hub GO does not wait for a second player.",
-		"Solo is the default. One body, fewer enemies. Couch 2P is a Run-tab toggle.",
-		"P1 The Son  keyboard WASD + J K L O  ·  pad 0 only when two pads are plugged in.",
-		"P2 The Father  first pad if one is plugged  ·  pad 1 if two  ·  arrows after join.",
+		"Xbox layout (Xbox, iPega and other pads). Keyboard and mouse always work too.",
+		"SOLO: any pad you pick up plays your hero. Couch 2P is a Run-tab toggle.",
+		"Mouse: LEFT click light attack  ·  MIDDLE click heavy  ·  RIGHT click shoot.",
+		"Keyboard: WASD move  SPACE jump  C duck  J light  K heavy  L special  O shoot  I block  U throw  SHIFT dash.",
+		"COUCH: one pad = The Father (keyboard is The Son)  ·  two pads = one each.",
 		"A jump   X light (SNAP confirm in the window)   Y heavy   B special",
 		"LB block   RB shoot   LT throw   RT dash/slide   RS click SNAP   Start pause",
 		"D-pad or left stick. Hold RT + down to slide. Hold A in the air to cape-glide (The Son).",

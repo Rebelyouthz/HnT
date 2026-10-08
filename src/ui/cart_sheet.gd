@@ -79,6 +79,7 @@ func _rs() -> RunState:
 
 func _fill() -> void:
 	for c in _list.get_children():
+		_list.remove_child(c)
 		c.queue_free()
 	_first = null
 	var gold := int(FamilyProfile.data.get("gold", 0))

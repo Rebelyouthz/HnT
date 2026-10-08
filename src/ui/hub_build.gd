@@ -417,6 +417,7 @@ func _show_tip(node: Dictionary, _at: Vector2) -> void:
 	# One fixed info strip under the trees (it never covers the nodes).
 	_focus = node
 	for c in _tip_box.get_children():
+		_tip_box.remove_child(c)
 		c.queue_free()
 	var st := _state(node)
 	var big_tex := _node_tex(node)

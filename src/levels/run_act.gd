@@ -29,6 +29,7 @@ var _hud: CanvasLayer
 var _end: Node
 var _cam: CouchCamera
 var _join_grace := 0
+var _draw_pending := false
 var _wanted_cop := false
 var _heli: Node2D
 var _phone_ghost := false
@@ -402,10 +403,21 @@ func _ready() -> void:
 	NetSession.bind_run(_son, _dad)
 	if App.ORDER.has(map_id) and not StoryBook.is_survive(map_id):
 		Nemesis.maybe_spawn(self, map_id, map_w, _state.hp_mul())
-	for row in Party.encounters(map_id):
-		var pk := Party.spawn_row(self, row, _state.hp_mul() * NightCondition.mul(map_id, "hp") * Heroes.enemy_hp_mul() * Artifacts.enemy_hp())
-		if pk:
-			pk.speed *= NightCondition.mul(map_id, "speed")
+	var enc_hp := _state.hp_mul() * NightCondition.mul(map_id, "hp") * Heroes.enemy_hp_mul() * Artifacts.enemy_hp()
+	if Fighter.FIELD or roof_start or App.remote_coop or App.versus:
+		for row in Party.encounters(map_id):
+			var pk := Party.spawn_row(self, row, enc_hp)
+			if pk:
+				pk.speed *= NightCondition.mul(map_id, "speed")
+	else:
+		# Story streets: thugs ARRIVE off camera (walk in, rope down, ladder).
+		var ed := EntryDirector.new()
+		ed.name = "EntryDirector"
+		ed.host = self
+		ed.hp_mul = enc_hp
+		ed.speed_mul = NightCondition.mul(map_id, "speed")
+		add_child(ed)
+		ed.setup(Party.encounters(map_id))
 	add_child(ItemRack.new())
 	add_child(BodySense.new())
 	add_child(BrawlMore.new())
@@ -435,19 +447,31 @@ func _ready() -> void:
 	if App.ORDER.has(map_id) and not StoryBook.is_survive(map_id):
 		WheelToken.place(self, Vector2(map_w * 0.42, 492.0), "parkour" if roof_start else "story")
 		if _state.cards.is_empty():
-			get_tree().create_timer(3.0).timeout.connect(func() -> void:
-				if is_inside_tree() and get_node_or_null("CardPick") == null:
-					_starting_draw()
-			)
+			_draw_pending = true
 	PadRouter.drop_in.connect(_on_dropin)
 	var body := toast_body
 	if body == "":
 		body = Copy.COUCH_HINT if App.density_coop else Copy.SOLO_HINT
 	Juice.toast("quest", toast_title, body)
 	_boot_story()
-	# Fresh entry: the stage's title card over the painted street.
+	# Fresh entry: the stage's title card over the painted street. The
+	# starting draw waits until the street has been on screen for a moment.
+	var card: StageCard = null
 	if not resumed:
-		StageCard.show_for(self, map_id)
+		card = StageCard.show_for(self, map_id)
+	if _draw_pending:
+		if card:
+			card.closed.connect(_queue_starting_draw)
+		else:
+			_queue_starting_draw()
+
+
+func _queue_starting_draw() -> void:
+	# Game time (pauses with the game), so nothing pops over a title card.
+	get_tree().create_timer(2.2, false).timeout.connect(func() -> void:
+		if is_inside_tree() and get_node_or_null("CardPick") == null:
+			_starting_draw()
+	)
 
 
 func _targets() -> Array[Node2D]:

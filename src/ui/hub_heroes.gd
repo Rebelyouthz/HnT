@@ -21,6 +21,7 @@ func _ready() -> void:
 
 func _paint(keep: String = "") -> void:
 	for c in _root.get_children():
+		_root.remove_child(c)
 		c.queue_free()
 	var title := UiKit.title("HEROES", 44, Palette.EDGE)
 	UiKit.title_icon(title, "head_heroes")

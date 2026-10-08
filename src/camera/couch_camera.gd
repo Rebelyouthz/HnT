@@ -21,6 +21,9 @@ var _pz_at := Vector2.ZERO
 ## A body the frame drifts after (the last kill of a fight) and for how long.
 var _body: Node2D
 var _body_t := 0.0
+## First frame frames the heroes at once (no glide down from the sky while the
+## stage card and GET READY hold the game paused).
+var _snap := true
 
 
 static func punch(tree: SceneTree, amount: float, secs: float, at: Vector2) -> void:
@@ -73,6 +76,19 @@ func _ready() -> void:
 	if limit_right > 100000:
 		limit_right = 3200
 	ignore_rotation = true
+	_snap_now.call_deferred()
+
+
+func _snap_now() -> void:
+	if not is_inside_tree() or not _snap:
+		return
+	var any := false
+	for t in targets:
+		any = any or is_instance_valid(t)
+	if not any:
+		get_tree().process_frame.connect(_snap_now, CONNECT_ONE_SHOT)
+		return
+	_physics_process(0.0)
 
 
 func _physics_process(delta: float) -> void:
@@ -129,6 +145,11 @@ func _physics_process(delta: float) -> void:
 			_body_t = 0.0
 	# Vertical lerp ~0.12 toward the pair so roofs and street share one frame.
 	var y_t := 1.0 - exp((-8.0 if field else -7.5) * delta)
+	if _snap:
+		follow = 1.0
+		y_t = 1.0
+		_snap = false
+		_look = look_target
 	global_position.x = roundf(lerpf(global_position.x, desired.x, follow))
 	global_position.y = roundf(lerpf(global_position.y, desired.y, y_t))
 	offset = Juice.shake_offset()

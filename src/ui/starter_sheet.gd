@@ -45,6 +45,7 @@ func _name(id: String) -> String:
 
 func _paint() -> void:
 	for c in get_children():
+		remove_child(c)
 		c.queue_free()
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var dim := ColorRect.new()
@@ -181,6 +182,7 @@ func _show(id: String) -> void:
 	if _detail == null:
 		return
 	for c in _detail.get_children():
+		_detail.remove_child(c)
 		c.queue_free()
 	var open := SurvStarter.unlocked(id)
 	var rar := SurvStarter.rarity(id)

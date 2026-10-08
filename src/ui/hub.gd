@@ -429,6 +429,7 @@ func _show_tab(id: String) -> void:
 	FamilyProfile.data["seen"][id] = true
 	FamilyProfile.save()
 	for child in _content.get_children():
+		_content.remove_child(child)
 		child.queue_free()
 	var page: Control
 	match id:

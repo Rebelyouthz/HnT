@@ -31,6 +31,7 @@ func _ready() -> void:
 
 func _paint() -> void:
 	for c in get_children():
+		remove_child(c)
 		c.queue_free()
 	_bars.clear()
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)

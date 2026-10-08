@@ -44,6 +44,9 @@ func _bind_keyboard() -> void:
 	_act("p1_snap", [KEY_F])
 	_act("p1_duck", [KEY_C])
 	_act("p1_pause", [KEY_ESCAPE])
+	# Mouse: left punch, middle heavy, right shoot (aim follows the cursor).
+	_mouse("p1_light", MOUSE_BUTTON_LEFT)
+	_mouse("p1_heavy", MOUSE_BUTTON_MIDDLE)
 	_mouse("p1_shoot", MOUSE_BUTTON_RIGHT)
 	_act("p2_left", [KEY_LEFT])
 	_act("p2_right", [KEY_RIGHT])

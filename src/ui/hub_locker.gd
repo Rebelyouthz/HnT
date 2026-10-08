@@ -44,6 +44,7 @@ func _paint() -> void:
 	_last_slot = _slot
 	_last_role = _role
 	for c in _root.get_children():
+		_root.remove_child(c)
 		c.queue_free()
 	var title := UiKit.title("GEAR", 44, Palette.EDGE)
 	UiKit.title_icon(title, "head_gear")

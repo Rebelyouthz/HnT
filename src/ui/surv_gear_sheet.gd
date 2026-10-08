@@ -41,6 +41,7 @@ func _coins() -> int:
 
 func _paint() -> void:
 	for c in get_children():
+		remove_child(c)
 		c.queue_free()
 	_slot_tiles.clear()
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -380,6 +381,7 @@ func _show_detail(i: int) -> void:
 	if _detail == null:
 		return
 	for c in _detail.get_children():
+		_detail.remove_child(c)
 		c.queue_free()
 	if i < 0:
 		return

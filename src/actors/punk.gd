@@ -1295,7 +1295,7 @@ func _die(kind: String, from: Node) -> void:
 	# Every kill lands with a beat; the last body of a fight gets the slow
 	# motion moment.
 	Juice.kick(Vector2(dir, 0.3), 4.0)
-	var last_one := get_tree().get_nodes_in_group("enemies").size() <= 1 and get_tree().get_first_node_in_group("horde") == null
+	var last_one := get_tree().get_nodes_in_group("enemies").size() <= 1 and get_tree().get_first_node_in_group("horde") == null and get_tree().get_first_node_in_group("entry_pending") == null
 	if not last_one:
 		Juice.hitstop(3)
 	var blood := get_tree().get_first_node_in_group("blood_sim")

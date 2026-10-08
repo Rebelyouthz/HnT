@@ -3,7 +3,10 @@ extends CanvasLayer
 
 ## The title card at the start of every stage: the painted street slowly
 ## panning behind, STAGE N, the stage's name slammed in, the job in one line.
-## The game waits under it (paused) until it fades or a button skips it.
+## The game waits under it (paused) until it fades or a button skips it, then
+## holds a beat on the live street (GET READY ... GO!) before anything moves.
+
+signal closed
 
 const THEME := {
 	"dock_street": "dock", "intake_lot": "lot", "fire_escapes": "roofs",
@@ -19,14 +22,16 @@ var _t := 0.0
 var _pic: TextureRect
 var _done := false
 var _root: Control
+var _beat := false
 
 
-static func show_for(host: Node, id: String) -> void:
+static func show_for(host: Node, id: String) -> StageCard:
 	if not THEME.has(id) or host == null:
-		return
+		return null
 	var c := StageCard.new()
 	c.map_id = id
 	host.add_child(c)
+	return c
 
 
 ## The painted section that opens the stage (first strip chunk or the
@@ -151,6 +156,8 @@ func _process(delta: float) -> void:
 	_t += delta
 	if _pic:
 		_pic.position.x = -20.0 - _t * 14.0
+	if _beat:
+		return
 	if _t > 0.5 and (Input.is_action_just_pressed("p1_jump") or Input.is_action_just_pressed("ui_accept") or Input.is_action_just_pressed("p1_light") or Input.is_action_just_pressed("p2_jump")):
 		_close()
 	if _t >= HOLD:
@@ -163,7 +170,41 @@ func _close() -> void:
 	_done = true
 	var tw := create_tween()
 	tw.tween_property(_root, "modulate:a", 0.0, 0.35)
-	tw.tween_callback(func() -> void:
-		get_tree().paused = false
-		queue_free()
+	tw.tween_callback(_ready_beat)
+
+
+## The street is on screen, frozen: GET READY, then GO! and the night starts.
+func _ready_beat() -> void:
+	_beat = true
+	for c in _root.get_children():
+		_root.remove_child(c)
+		c.queue_free()
+	_root.modulate.a = 1.0
+	var l := UiKit.title("GET READY", 58, Palette.LEMON)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.size = Vector2(1280, 90)
+	l.position = Vector2(0, 250)
+	l.pivot_offset = Vector2(640, 45)
+	l.add_theme_color_override("font_outline_color", Color(0, 0, 0))
+	l.add_theme_constant_override("outline_size", 12)
+	_root.add_child(l)
+	l.scale = Vector2(1.5, 1.5)
+	l.modulate.a = 0.0
+	var tw := create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(l, "scale", Vector2.ONE, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(l, "modulate:a", 1.0, 0.18)
+	tw.chain().tween_interval(1.0)
+	tw.chain().tween_callback(func() -> void:
+		l.text = "GO!"
+		l.add_theme_color_override("font_color", Color(0.5, 1.0, 0.55))
+		l.scale = Vector2(1.6, 1.6)
+		Juice.play("res://assets/audio/card.wav")
 	)
+	tw.chain().tween_property(l, "scale", Vector2.ONE, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.chain().tween_callback(func() -> void:
+		get_tree().paused = false
+		closed.emit()
+	)
+	tw.chain().tween_property(l, "modulate:a", 0.0, 0.35)
+	tw.chain().tween_callback(queue_free)

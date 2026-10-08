@@ -106,6 +106,7 @@ func _ready() -> void:
 
 func _fill() -> void:
 	for c in _row.get_children():
+		_row.remove_child(c)
 		c.queue_free()
 	var first: Button = null
 	for i in _offers.size():

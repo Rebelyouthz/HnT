@@ -34,6 +34,7 @@ func _ready() -> void:
 
 func _paint() -> void:
 	for c in _col.get_children():
+		_col.remove_child(c)
 		c.queue_free()
 	var head := HBoxContainer.new()
 	var mark := LogoMark.new()
