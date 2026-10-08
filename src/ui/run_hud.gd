@@ -467,9 +467,47 @@ func _prompt_line() -> String:
 	return ""
 
 
+var _field_done := false
+
+
+## The survivor field has its own XP bar, clock and coins (SurviveHud): the
+## lead plate drops the story XP line and the purse, the boss bar steps down
+## under the clock, and the combo counter shrinks to a side note.
+func _field_layout() -> void:
+	_field_done = true
+	var plate: Control = _plates.get("son")
+	if plate:
+		plate.size.y = 92
+		# The avatar socket shrinks with it (as on the Father's plate).
+		for c in plate.get_children():
+			if c is Panel and (c as Panel).position == Vector2(8, 8):
+				(c as Panel).size.y = 76
+		var face: Control = _faces.get("son")
+		if face:
+			face.size = Vector2(face.size.x, 66)
+			face.pivot_offset = face.size * 0.5
+			var wm := face.material as ShaderMaterial
+			if wm:
+				wm.set_shader_parameter("head", Vector3(face.size.x * 0.5, face.size.y * 0.38, face.size.x * 0.3))
+	if _xp_fill:
+		_xp_fill.get_parent().visible = false
+	if _gold_l:
+		_gold_l.get_parent().visible = false
+	_boss_wrap.position = Vector2(400, 150)
+	# WANTED / REVENGE sits in the plate's freed bottom line.
+	_wanted.position = Vector2(118, 74)
+	_combo.add_theme_font_size_override("font_size", 24)
+	_combo.position = Vector2(20, 566)
+	_rank.position = Vector2(22, 596)
+	_combo_bg.position.y = 614
+	_combo_fill.position.y = 614
+
+
 func _process(delta: float) -> void:
 	if _join_grace > 0:
 		_join_grace -= 1
+	if Fighter.FIELD and not _field_done:
+		_field_layout()
 	_blink_t += delta
 	_fps.text = "FPS %d" % int(Engine.get_frames_per_second())
 	var left: Fighter = son if son else father
@@ -510,7 +548,7 @@ func _process(delta: float) -> void:
 			kt.parallel().tween_property(_combo, "modulate", Color.WHITE, 0.14)
 		var heat := clampf(float(Juice.combo) / 30.0, 0.0, 1.0)
 		_combo.add_theme_color_override("font_color", Palette.LEMON.lerp(Color(1.0, 0.3, 0.2), heat))
-		_rank.text = Juice.combo_rank() + ("  ·  XP x%.1f" % Juice.xp_mul()) + "  ·  CASH OUT IF THE BAR DIES"
+		_rank.text = Juice.combo_rank() + ("  ·  XP x%.1f" % Juice.xp_mul()) + ("" if Fighter.FIELD else "  ·  CASH OUT IF THE BAR DIES")
 		_combo_bg.visible = true
 		_combo_fill.size.x = 180.0 * Juice.combo_frac()
 		_combo_fill.color = Palette.LEMON if Juice.combo_frac() > 0.35 else Palette.BRICK
@@ -524,7 +562,7 @@ func _process(delta: float) -> void:
 	if _call.text != Juice.callout:
 		_call.text = Juice.callout
 		# Survivor has its clock and kill count where the call-out sits.
-		_call.position.y = 262.0 if SurviveRun.get_run(get_tree()) != null else 250.0
+		_call.position.y = (190.0 if Fighter.FIELD else 262.0) if SurviveRun.get_run(get_tree()) != null else 250.0
 		if Juice.callout != "":
 			# Every call-out lands: pops big and settles.
 			_call.scale = Vector2(1.5, 1.5)
@@ -620,7 +658,7 @@ func _paint_fighter(lab: Label, bar: ColorRect, pips: HBoxContainer, snap: Label
 			wt += " ·%d" % f.melee_uses
 		lab.text += "  " + wt
 	var extra := f.throw_n > 0 or f.grenades > 0 or f.pickup != ""
-	if f.knives > 0:
+	if f.knives > 0 and not Fighter.FIELD:
 		lab.text += ("  KNV %d" if extra else "   KNIVES %d") % f.knives
 	if f.throw_n > 0 and ThrowLob.KINDS.has(f.throw_kind):
 		lab.text += "  %s %d" % [str({"molotov": "MOLOTOV", "flashbang": "FLASH", "teargas": "GAS", "brick": "BRICK"}.get(f.throw_kind, f.throw_kind.to_upper())), f.throw_n]

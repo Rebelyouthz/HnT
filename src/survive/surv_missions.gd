@@ -68,7 +68,7 @@ func _ready() -> void:
 	sb.content_margin_left = 10
 	sb.content_margin_right = 10
 	_hud.add_theme_stylebox_override("panel", sb)
-	_hud.position = Vector2(14, 152)
+	_hud.position = Vector2(14, 140) if Fighter.FIELD else Vector2(14, 152)
 	_hud.custom_minimum_size = Vector2(360, 0)
 	_hud.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_hud.visible = false

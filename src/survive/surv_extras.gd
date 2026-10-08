@@ -112,7 +112,7 @@ func _ready() -> void:
 	var root := PixelStage.attach_canvas(hl)
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var row := HBoxContainer.new()
-	row.position = Vector2(14, 214)
+	row.position = Vector2(14, 108) if Fighter.FIELD else Vector2(14, 214)
 	row.add_theme_constant_override("separation", 6)
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(row)
@@ -131,7 +131,7 @@ func _ready() -> void:
 	_rage_bar.size = Vector2(0, 8)
 	bg.add_child(_rage_bar)
 	_forecast = Label.new()
-	_forecast.position = Vector2(14, 232)
+	_forecast.position = Vector2(14, 124) if Fighter.FIELD else Vector2(14, 232)
 	_forecast.add_theme_font_override("font", UiKit.pixel_font())
 	UiKit.apply_label(_forecast, 10, Color(1.0, 0.7, 0.3))
 	root.add_child(_forecast)

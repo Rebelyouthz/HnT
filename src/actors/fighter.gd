@@ -267,13 +267,17 @@ func _ready() -> void:
 	var packed := FamilyProfile.consume_packed_weapon()
 	if packed != "":
 		equip_pickup(packed)
+	# A soft oval under the feet (a darker core inside a faint rim): the old
+	# trapezoid read as a black slab on the top-down field.
 	_shadow = Polygon2D.new()
-	_shadow.color = Color(0.02, 0.02, 0.04, 0.45)
-	_shadow.polygon = PackedVector2Array([
-		Vector2(-20, 2), Vector2(20, 2), Vector2(12, 10), Vector2(-12, 10)
-	])
+	_shadow.color = Color(0.02, 0.02, 0.04, 0.3)
+	_shadow.polygon = _oval(21.0, 6.5, 5.0)
 	_shadow.z_index = -1
 	add_child(_shadow)
+	var core := Polygon2D.new()
+	core.color = Color(0.02, 0.02, 0.04, 0.32)
+	core.polygon = _oval(13.0, 3.8, 5.0)
+	_shadow.add_child(core)
 	var cap := CollisionShape2D.new()
 	var shape := CapsuleShape2D.new()
 	shape.radius = 14 * SpriteBook.ACTOR_K
@@ -903,6 +907,14 @@ func _tick_meters(delta: float) -> void:
 		_shadow.scale.x = 1.1 - clampf(air / 200.0, 0.0, 0.5)
 		_shadow.modulate.a = 0.7 - clampf(air / 240.0, 0.0, 0.5)
 
+
+
+static func _oval(rx: float, ry: float, cy: float) -> PackedVector2Array:
+	var pts := PackedVector2Array()
+	for i in 20:
+		var a := TAU * float(i) / 20.0
+		pts.append(Vector2(cos(a) * rx, cy + sin(a) * ry))
+	return pts
 
 func _process_street(delta: float) -> void:
 	motion_mode = MOTION_MODE_FLOATING

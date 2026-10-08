@@ -68,6 +68,15 @@ func _ready() -> void:
 	_wrap = wrap
 	_paint()
 	_peek(9.0)
+	# The survivor field keeps the centre clear for the clock: the card
+	# tucks under the radar on the right, narrower and smaller.
+	if Fighter.FIELD:
+		wrap.position = Vector2(1030, 280)
+		wrap.custom_minimum_size = Vector2(236, 0)
+		head.add_theme_font_size_override("font_size", 13)
+		for l in [_main, _side, _lunch]:
+			(l as Label).custom_minimum_size = Vector2(212, 0)
+			(l as Label).add_theme_font_size_override("font_size", 11)
 
 
 func _line(col: VBoxContainer) -> Label:
