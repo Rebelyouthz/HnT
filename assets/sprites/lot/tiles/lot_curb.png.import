@@ -15,9 +15,9 @@ dest_files=["res://.godot/imported/lot_curb.png-8c7266abd66d206c3835edbe22ffce8d
 
 [params]
 
-compress/mode=0
+compress/mode=1
 compress/high_quality=false
-compress/lossy_quality=0.7
+compress/lossy_quality=0.9
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
