@@ -578,7 +578,7 @@ func _stumble(text: String, t: float) -> void:
 ## Uses the fail_<kind> clip when the son has one, else a posed fall.
 func _epic_fail(kind: String, text: String) -> void:
 	chain = 0
-	var dur: float = {"trip": 0.9, "face": 1.5, "back": 1.6}[kind]
+	var dur: float = {"trip": 1.0, "face": 1.8, "back": 1.9}[kind]
 	_move = {"t": dur, "kind": kind}
 	_set_state("fail")
 	pivot.rotation = 0.0
