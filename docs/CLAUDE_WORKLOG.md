@@ -34,7 +34,41 @@ The rest is in English, like the code. Newest work first. Each block says
 
 ---
 
-## 0x. Seamless survivor ground, ground litter, survivor HUD (latest)
+## 0y. Rooftop parkour run (Vector-style) + one-file installer (latest)
+
+**Fire Escapes is now a side-scrolling rooftop chase** (`scenes/levels/fire_escapes.tscn` ->
+`src/parkour/rooftop_run.gd`; the old `src/levels/fire_escapes.gd` stays because smoke.gd checks it).
+
+- `src/parkour/roof_course.gd` (RoofCourse): seeded generator, 22 buildings, gaps/drops/step-ups,
+  vault boxes, slide bars, climb huts, ramps, roof guards, decor, checkpoint every 4 buildings,
+  goal mast. Queries: `ground_at`, `wall_ahead`, `bar_at/bar_ahead`, `ramp_at`, `edge_ahead`,
+  `checkpoint_before`. Props: `assets/sprites/roof/*.png` (keyed, lossy import).
+- `src/parkour/runner.gd` (Runner): scale 1 m ~ 37 units (son ~67 tall). TOP 290, BOOST 365,
+  G 1300, JUMP_V 430. Tricks are LOADED: right stick dir + R1/R2/L1/L2 held, released with left
+  stick up at the edge (RELEASE_WIN 0.22). Release vs takeoff edge grades perfect<=24 / good<=48 /
+  ok<=90. Landing pose: both sticks down-right (roll) if drop > 95, else both right; held within
+  0.16 s of touchdown = PERFECT (boost +55 for 1.3 s, chain grows). Missed roll = hard landing,
+  unfinished spin = bail. Vault/kong, slide, climb (h<=150, vx>=50), ledge grab, stumble.
+  `Runner.autopilot` (env PARKOUR_AUTO=1) drives captures.
+- `src/parkour/hunter.gd`: replays the leader's own trail with a lag (start 2.0 s, max 2.8,
+  caught at 0.28). Events nudge the lag (stumble -0.3, hard -0.25, bail -0.3, perfect land +0.22).
+- `src/parkour/roof_guard.gd`: kong over (UP) or slide into (DOWN); running into him = baton.
+- Results: `ResultsSheet.combat = false` hides SCRAP/PARRIES; `tiles` adds mode tiles
+  (GOLD, PERFECT, TRICKS).
+- Autopilot run verified: escaped, 17 tricks, 11 perfect landings, 2.8 s ahead.
+
+**Installer:** one file, `FatherAndSonSetup.exe` (~97.4 MiB) on branch `windows-installer`
+(single amended commit, force-with-lease). Raw link:
+`https://github.com/Rebelyouthz/HnT/raw/windows-installer/FatherAndSonSetup.exe`.
+GitHub's per-file cap is 100 MiB - margin is ~2.6 MiB; next growth needs more packing
+(lower backdrop quality, trim unused audio). Releases API is 403 for this session type.
+System makensis is `/usr/bin/makensis` (pack_windows.sh's default path does not exist here;
+run makensis in tools/windows after the export step).
+
+**Open:** parkour co-op (father as p2) not play-tested by a human; skyline far layers are flat
+shapes; enemy diagonal walks (Wan quota); red-hero watch item from 0x.
+
+## 0x. Seamless survivor ground, ground litter, survivor HUD
 
 Owner: the mirrored ground tiles showed seams ("klipps ihop... skumma
 skarvar") - wanted a real ground with no seams, plus asset sprites on it.
