@@ -7,7 +7,7 @@ extends CharacterBody2D
 @export var speed: float = 210.0
 @export var depth_speed: float = 110.0
 ## Walk clip stand-ins while a hero's profile walk is being redone.
-const SIDE_WALK := {"son": "walk_dr"}
+const SIDE_WALK := {}
 ## Story-street walk pace as a share of top speed (heroes walk; dash runs).
 const WALK_K := {"father": 0.6, "son": 0.56}
 @export var accent: Color = Palette.LEMON
