@@ -14,6 +14,10 @@ var fail_gold := 0
 var death_line := ""
 var lock_line := ""
 var state: RunState
+## Mode-specific reward tiles: [[icon, LABEL, value], ...].
+var tiles: Array = []
+## False for modes without fists (parkour): no SCRAP / PARRIES tiles.
+var combat := true
 var _xp_bar: ProgressBar
 var _xp_lab: Label
 
@@ -120,8 +124,10 @@ func _ready() -> void:
 	col.add_child(rewards)
 	rewards.add_child(_reward("star", "SCORE", "%d" % total))
 	rewards.add_child(_reward("xp", "XP", "+%d" % int(grant.get("gained", 0))))
-	if state:
+	if state and combat:
 		rewards.add_child(_reward("gold", "SCRAP", "+%d" % state.scrap))
+	for tile in tiles:
+		rewards.add_child(_reward(str(tile[0]), str(tile[1]), str(tile[2])))
 	if not win and fail_gold > 0:
 		rewards.add_child(_reward("gold", "GOLD", "+%d" % fail_gold))
 	# Weapon of the night: the one that put the most of them down.
@@ -153,7 +159,8 @@ func _ready() -> void:
 		rewards.add_child(_reward("meta_shard", "SHARDS", "+%d" % rs_n))
 	# Parries this run (the profile keeps the lifetime count).
 	var parried := int(FamilyProfile.data.get("parries", 0)) - int(Engine.get_meta("run_parries0", 0))
-	rewards.add_child(_reward("shield", "PARRIES", str(maxi(0, parried))))
+	if combat:
+		rewards.add_child(_reward("shield", "PARRIES", str(maxi(0, parried))))
 	# Account XP.
 	var xp_row := HBoxContainer.new()
 	xp_row.alignment = BoxContainer.ALIGNMENT_CENTER
