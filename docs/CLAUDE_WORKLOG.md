@@ -34,7 +34,69 @@ The rest is in English, like the code. Newest work first. Each block says
 
 ---
 
-## 0y. Rooftop parkour run (Vector-style) + one-file installer (latest)
+## 0z. Controls, start flow, entrances, walking, parkour fails, survivor parity, video clips (latest)
+
+Owner feedback round: pad did not move the hero in game, only right mouse
+did anything, video menu stuck on BACK; father glides when he runs (wants
+walking in the brawl maps); son idle half-steps; jump too snappy; roof
+pillar slides you up; glide only with the bat cape; the cape was a black
+box; level-up popped before the street was visible; enemies stood in shot;
+swap map 1/2 music; parkour BAD / EPIC FAIL with three falls; survivor
+should share the street weapons and cards; three hero levels with depth;
+"as smooth as possible" animations via Hugging Face (no Sorceress credits).
+
+- **Pads** (`src/input/pad_router.gd`): SOLO (`not App.two_bodies()`) binds
+  every pad to `p1_` (device -1); the last pad touched is `p1_device` (for
+  the right stick). Start on the playing pad is pause; drop-in only from a
+  second pad after the first was played. Couch keeps the 1-pad = Dad rule.
+- **Mouse** (`src/app/boot.gd`): LMB light, MMB heavy, RMB shoot.
+- **Menus**: rows are detached (`remove_child`) before `queue_free` in 15
+  menus, so the pad focus lands on the new rows; settings wrap to BACK.
+- **Start flow**: `StageCard` -> GET READY / GO! on the frozen street
+  (`closed` signal); `CouchCamera._snap` frames the heroes at once; the
+  starting draw waits for GO + 1.2 s (`create_timer(.., false)`).
+- **Entrances** (`src/levels/entry_director.gd`): story encounter rows spawn
+  when the camera nears them: walk in from the right, from behind, rappel
+  on a rope from the roofs, climb down an in-view fire-escape ladder,
+  fliers drop in. Group `entry_pending` keeps last-kill slow-mo honest.
+  Not used on FIELD / roof_start / remote co-op / versus.
+- **Walking** (`Fighter.WALK_K`, `SIDE_WALK`): story streets walk (father
+  0.6, son 0.56 of top speed); run clip only when dashing / >175 px/s. Son
+  uses `walk_dr` (real steps) for the profile walk until a new one lands.
+- **Feel**: GRAV 1815 / JUMP -539 (same height, ~15% more hang). Glide only
+  with the BAT top (`Fighter.can_glide`); sprite heroes never show the old
+  polygon cape (CapeFx used for glide/cape moves). Wall run -> wall kick.
+  Dock Street roof pillar is a low chimney. Music: Dock Street <-> Intake
+  Lot. Talk lines from an absent hero are skipped (`Talk._present`).
+- **Roof faces** (`NightStreet.painted`): on painted maps the roof faces are
+  a soft shadow + two corners, not a brick slab over the painting.
+- **Parkour** (`src/parkour/runner.gd`): release grades `bad` (d<-4 or >90)
+  and `epic` (d<-26 or >170); BAD LANDING stumble -45% speed; EPIC FAIL
+  (`_epic_fail`: trip / face / back, clips `fail_*`, 1.0/1.8/1.9 s);
+  `PARKOUR_SLOPPY=1` test autopilot. `_build()` reads ROOFTOPS level,
+  PARKOUR tree and parkour META (speed, jump, windows, boost, air control,
+  hang, coyote, score, IRON ANKLES, p_ghost). Tricks have `lv` (1..13);
+  locked = FREESTYLE + badge "LOCKED · ROOFTOPS LV n"; NEW TRICK toast on
+  level up; HEROES shows the next trick. `Heroes.mode()` = parkour in
+  `RooftopRun`.
+- **Survivor parity** (`SurviveRun._add_street_arsenal`, `street_cards`):
+  found street weapons are picks `w_<id>` (guns MANUAL with tracer
+  `bullet` projectiles + magazine from the gun; melee auto-swings with
+  `SurvProj.swipe`), damage x `Arsenal.power_mul`. Street level-up cards
+  with a `kind` (not `fixed`) deal into picks (kind "card") through the
+  act's RunState.
+- **Video clips** (Hugging Face, `/tmp`-style queue; spaces that worked:
+  `Rchoks/wan555` (fast), `r3gm/wan2-2-fp8da-aoti-preview`; they take
+  `input_image` + `last_image` - same image = a closed loop; upload two
+  different files or gradio 404s the second). Son `idle`, `fail_trip`,
+  `fail_face`, `fail_back` installed (video2sprite --stand-frame 0 --stand
+  199). `tools/install_hero_clips.py` batch-installs moves (hit frame =
+  furthest-forward silhouette). A standing start pose gives timid steps;
+  start from a mid-stride frame for a real walk. `tools/tween_frames.py`
+  (optical-flow in-betweens) ghosts fast limbs - not for strikes.
+- `tools/anim_probe.gd`: films a scripted input line (full frames).
+
+## 0y. Rooftop parkour run (Vector-style) + one-file installer
 
 **Fire Escapes is now a side-scrolling rooftop chase** (`scenes/levels/fire_escapes.tscn` ->
 `src/parkour/rooftop_run.gd`; the old `src/levels/fire_escapes.gd` stays because smoke.gd checks it).
