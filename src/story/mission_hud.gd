@@ -12,6 +12,7 @@ var _wrap: Control
 var _fold: Tween
 var _col: VBoxContainer
 var _quests: Dictionary = {}
+var _line_w := 356.0
 
 
 ## Show the full card for a while, then fold it down to just the title and
@@ -86,15 +87,20 @@ func _ready() -> void:
 		wrap.position = Vector2(1030, 280)
 		wrap.custom_minimum_size = Vector2(236, 0)
 		head.add_theme_font_size_override("font_size", 13)
+		_line_w = 212.0
 		for l in [_main, _side, _lunch]:
 			(l as Label).custom_minimum_size = Vector2(212, 0)
 			(l as Label).add_theme_font_size_override("font_size", 11)
+		wrap.size = Vector2.ZERO
+		wrap.reset_size()
 
 
 func _line(col: VBoxContainer) -> Label:
 	var l := Label.new()
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	l.custom_minimum_size = Vector2(356, 0)
+	l.custom_minimum_size = Vector2(_line_w, 0)
+	if _line_w < 300.0:
+		l.add_theme_font_size_override("font_size", 11)
 	UiKit.apply_label(l, 12, Palette.TEXT)
 	col.add_child(l)
 	return l
