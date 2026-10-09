@@ -90,6 +90,9 @@ func _ready() -> void:
 	if not enter_lock.is_empty() or not boss_lock.is_empty():
 		var lock_lab := Label.new()
 		lock_lab.text = PowerBook.line(enter_lock if not enter_lock.is_empty() else boss_lock)
+		var way := PowerBook.path_line(hop)
+		if way != "":
+			lock_lab.text += "\nNEXT:  " + way
 		lock_lab.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		UiKit.apply_label(lock_lab, 14, Palette.BRICK)
 		col.add_child(lock_lab)

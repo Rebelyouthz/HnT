@@ -412,11 +412,13 @@ func _paint_lock(lab: Label) -> void:
 	var enter_lock := PowerBook.lock(hop, "enter")
 	if not enter_lock.is_empty():
 		lab.text = PowerBook.line(enter_lock)
+		lab.text += ("\nNEXT:  " + PowerBook.path_line(hop)) if PowerBook.path_line(hop) != "" else ""
 		lab.visible = true
 		return
 	var boss_lock := PowerBook.lock(hop, "boss")
 	if not boss_lock.is_empty():
 		lab.text = PowerBook.line(boss_lock)
+		lab.text += ("\nNEXT:  " + PowerBook.path_line(hop)) if PowerBook.path_line(hop) != "" else ""
 		lab.visible = true
 		return
 	lab.text = ""

@@ -201,6 +201,16 @@ func _ready() -> void:
 			why.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			UiKit.apply_label(why, 15, Palette.BRICK)
 			col.add_child(why)
+			var way := PowerBook.path_line(next_id)
+			if way != "":
+				var funded := PowerBook.fund(next_id)
+				var how := Label.new()
+				how.text = "AT CAMP:  %s%s" % [way, ("\nTHE CLINIC CHIPPED IN +%d GOLD FOR IT." % funded) if funded > 0 else ""]
+				how.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+				how.custom_minimum_size = Vector2(860, 0)
+				how.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+				UiKit.apply_label(how, 15, Palette.LEMON)
+				col.add_child(how)
 		else:
 			var nxt := UiKit.button(next_label, Vector2(330, 60))
 			nxt.add_theme_font_override("font", UiKit.title_font())
@@ -209,7 +219,7 @@ func _ready() -> void:
 			nxt.pressed.connect(_go_next)
 			row.add_child(nxt)
 			nxt.call_deferred("grab_focus")
-	var b := UiKit.button("BACK TO THE HIDEOUT", Vector2(300, 60))
+	var b := UiKit.button("GO BUILD IT AT CAMP" if lock_line != "" else "BACK TO THE HIDEOUT", Vector2(300, 60))
 	b.process_mode = Node.PROCESS_MODE_ALWAYS
 	b.pressed.connect(_go_hub)
 	row.add_child(b)

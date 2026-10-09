@@ -954,23 +954,33 @@ func lock_boss_card(line: String) -> void:
 	card.set_anchors_preset(Control.PRESET_CENTER)
 	card.offset_left = -280
 	card.offset_right = 280
-	card.offset_top = -140
-	card.offset_bottom = 140
+	card.offset_top = -170
+	card.offset_bottom = 170
 	ui.add_child(card)
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 10)
 	card.add_child(col)
-	col.add_child(UiKit.portrait(SpriteBook.icon("therapy_couch"), Vector2(56, 56)))
+	col.add_child(UiKit.portrait(SpriteBook.icon(str(PowerBook.spec(map_id).get("need", {}).get("shop", "therapy_couch"))), Vector2(56, 56)))
 	var t := Label.new()
 	t.text = line
 	t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	UiKit.apply_label(t, 22, Palette.LEMON)
 	col.add_child(t)
-	var back := UiKit.button("BACK TO THE CLINIC", Vector2(280, 48))
+	var way := PowerBook.path_line(map_id)
+	if way != "":
+		var how := Label.new()
+		how.text = "AT CAMP:  " + way
+		how.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		UiKit.apply_label(how, 15, Palette.TEXT)
+		col.add_child(how)
+	var back := UiKit.button("GO BUILD IT AT CAMP", Vector2(280, 48))
 	back.process_mode = Node.PROCESS_MODE_ALWAYS
 	back.pressed.connect(func() -> void:
 		get_tree().paused = false
 		layer.queue_free()
+		var funded := PowerBook.fund(map_id)
+		if funded > 0:
+			Juice.toast("reward", "NIGHT CLASS FUND", "+%d gold from the clinic jar. Spend it on: %s" % [funded, way])
 		if not _state.failed:
 			_state.failed = true
 			_state.run_failed.emit()

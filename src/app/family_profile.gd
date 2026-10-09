@@ -352,6 +352,9 @@ func nights_for(id: String) -> int:
 func build_blocker(id: String) -> String:
 	if building_level(id) > 0:
 		return ""
+	# The room the next story map needs skips the queue and the nights.
+	if PowerBook.story_shops().has(id):
+		return ""
 	var i := BUILD_ORDER.find(id)
 	if i < 0:
 		return ""

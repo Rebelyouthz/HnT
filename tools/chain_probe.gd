@@ -38,6 +38,7 @@ func _process(_d: float) -> bool:
 			g.append(str(gk))
 		fp.data["guides_done"] = g
 		Engine.set_meta("probe_no_draw", true)
+		_camp_buys("dock_street", "boss")
 		root.get_node("App").call("start_run")
 	var cs := current_scene
 	var nm := str(cs.scene_file_path) if cs else "<none>"
@@ -65,15 +66,25 @@ func _process(_d: float) -> bool:
 			_acted = true
 			print("CHAIN clear ", map_id, " next=", cs.get("next_id"))
 			get_root().get_tree().paused = false
-			cs.call("_banner", "CLEARED", "", true, true)
+			if cs.has_method("_on_gate"):
+				cs.call("_on_gate")
+			else:
+				cs.call("_banner", "CLEARED", "", true, true)
 		if cs.has_method("_win") and _since == 600 and not _acted:
 			_acted = true
-			print("CHAIN win ", map_id)
+			print("CHAIN win ", map_id, " done_before=", cs.get("_done"))
+			for n in cs.find_children("*", "", true, false):
+				if n.get_script() != null and str(n.get_script().resource_path).ends_with("results_sheet.gd"):
+					n.queue_free()
+			cs.set("_done", false)
 			cs.call("_win")
 		if _acted and _since % 120 == 0:
 			for n in cs.find_children("*", "", true, false):
 				if n.get_script() != null and str(n.get_script().resource_path).ends_with("results_sheet.gd"):
 					print("CHAIN next from results (", map_id, ")")
+					var nid := str(n.get("next_id"))
+					_camp_buys(nid, "enter")
+					print("CHAIN results next_id=", nid, " lock=", PowerBook.lock(nid, "enter"), " state=", n.get("state"))
 					n.call("_go_next")
 					break
 		# The hideout: take the portal.
@@ -86,3 +97,31 @@ func _process(_d: float) -> bool:
 		print("CHAIN TIMEOUT in ", _scene)
 		quit()
 	return false
+
+
+## What a player does at camp after a gate: take the fund, then buy each step
+## with the real purchase calls. Fails loudly when a step cannot be bought.
+func _camp_buys(map_id: String, when: String) -> void:
+	if PowerBook.lock(map_id, when).is_empty():
+		return
+	var fp := root.get_node("FamilyProfile")
+	print("CHAIN gate ", map_id, " ", PowerBook.path_line(map_id), "  gold=", fp.data["gold"])
+	print("CHAIN next_run_map=", fp.call("next_run_map"), " shops=", PowerBook.story_shops(), " filed=", fp.data.get("maps_filed", []))
+	print("CHAIN fund +", PowerBook.fund(map_id))
+	for s in PowerBook.path(map_id):
+		var d := s as Dictionary
+		var id := str(d["id"])
+		var ok := false
+		match str(d["what"]):
+			"BUILD":
+				ok = fp.call("try_build", id)
+			"BUY":
+				ok = fp.call("try_buy_gear", id)
+			"RESEARCH":
+				ok = fp.call("try_research", id)
+			"CRAFT":
+				ok = fp.call("try_craft", id)
+			_:
+				ok = fp.call("try_cbt", id) or fp.call("try_dojo", id)
+		print("CHAIN buy ", d["what"], " ", id, " -> ", ok, "  gold=", fp.data["gold"])
+	print("CHAIN gate ", map_id, " open=", PowerBook.lock(map_id, when).is_empty())
