@@ -119,7 +119,10 @@ func _follow() -> void:
 	if v is float:
 		hop = minf(0.0, float(v))
 	# Works for actors in the world and in film CanvasLayers alike.
-	var p := target.get_global_transform_with_canvas() * Vector2(0, -HEAD + hop)
+	# Heroes stand on their feet (origin at the soles) and are drawn tall:
+	# the balloon goes over the hair, not over the face.
+	var head := HEAD + (26.0 if target is Fighter else 0.0)
+	var p := target.get_global_transform_with_canvas() * Vector2(0, -head + hop)
 	var k := float(PixelStage.DESIGN.x) / float(PixelStage.LOGICAL.x)
 	var d := p * k
 	var half := 0.0
