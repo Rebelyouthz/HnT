@@ -21,17 +21,29 @@ func _peek(hold: float) -> void:
 		return
 	if _fold and _fold.is_valid():
 		_fold.kill()
-	_side.visible = true
-	_lunch.visible = true
+	_set_folded(false)
 	_wrap.modulate.a = 1.0
 	_fold = create_tween()
 	_fold.tween_interval(hold)
-	_fold.tween_callback(func() -> void:
-		_side.visible = false
-		_lunch.visible = false
-		_wrap.reset_size()
-	)
-	_fold.tween_property(_wrap, "modulate:a", 0.7, 0.4)
+	_fold.tween_callback(_set_folded.bind(true))
+	_fold.tween_property(_wrap, "modulate:a", 0.62, 0.4)
+
+
+## Folded: one trimmed line (the main job), every other line hidden, so the
+## card is a slim strip under the boss bar instead of a block over the street.
+func _set_folded(on: bool) -> void:
+	if _wrap == null:
+		return
+	_side.visible = not on
+	_lunch.visible = not on
+	for k in _quests.keys():
+		var q := _quests[k] as Label
+		if q:
+			q.visible = not on
+	_main.autowrap_mode = TextServer.AUTOWRAP_OFF if on else TextServer.AUTOWRAP_WORD_SMART
+	_main.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS if on else TextServer.OVERRUN_NO_TRIMMING
+	_main.clip_text = on
+	_wrap.reset_size()
 
 
 ## Objective card at the top right (under the Father's plate in co-op):

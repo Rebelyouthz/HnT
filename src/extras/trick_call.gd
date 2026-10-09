@@ -150,6 +150,11 @@ func _tick(f: Fighter, delta: float) -> void:
 			r["gate"] = null
 			_to(f, r, "idle")
 			return
+		# Stopped to fight (or walked off): an unheld call goes away.
+		if s == "call" and (absf(f.velocity.x) < 40.0 or signf(f.velocity.x) != signf(gx)):
+			r["gate"] = null
+			_to(f, r, "idle")
+			return
 		_hold_step(f, r, s)
 		return
 	match s:

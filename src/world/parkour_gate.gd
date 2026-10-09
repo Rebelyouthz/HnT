@@ -100,12 +100,28 @@ func _pick_trick() -> Dictionary:
 	return _next
 
 
+## Only a hero actually running at the gate (not brawling next to it) gets
+## the trick prompt: a fight beside a crate stays clean.
+func _running_at(f: Fighter) -> bool:
+	var dx := global_position.x - f.global_position.x
+	if absf(f.velocity.x) < 70.0 or signf(f.velocity.x) != signf(dx):
+		return false
+	for e in get_tree().get_nodes_in_group("enemies"):
+		var en := e as Node2D
+		if en == null or not en.is_visible_in_tree() or en.global_position.distance_to(f.global_position) >= 200.0:
+			continue
+		var hp: Variant = en.get("hp")
+		if hp == null or float(hp) > 0.0:
+			return false
+	return true
+
+
 func _process(_delta: float) -> void:
 	# The prompt only shows when a hero is coming up on the gate.
 	if _hint:
 		var near := 9999.0
 		for p in get_tree().get_nodes_in_group("players"):
-			if p is Node2D:
+			if p is Fighter and _running_at(p as Fighter):
 				near = minf(near, absf((p as Node2D).global_position.x - global_position.x))
 		var want := clampf((230.0 - near) / 110.0, 0.0, 1.0)
 		# Running at it: the trick call goes up on that hero's screen.
@@ -114,7 +130,7 @@ func _process(_delta: float) -> void:
 			for p in get_tree().get_nodes_in_group("players"):
 				if p is Fighter and not (p as Fighter).downed:
 					var dx := global_position.x - (p as Fighter).global_position.x
-					if absf(dx) < 240.0 and absf(dx) > 30.0 and signf(dx) == float((p as Fighter).facing) and absf((p as Fighter).global_position.y - global_position.y) < 90.0:
+					if absf(dx) < 240.0 and absf(dx) > 30.0 and signf(dx) == float((p as Fighter).facing) and absf((p as Fighter).global_position.y - global_position.y) < 90.0 and _running_at(p as Fighter):
 						tc.call_gate(p as Fighter, self, _pick_trick())
 		_hint.modulate.a = lerpf(_hint.modulate.a, want, 0.15)
 	if _used:

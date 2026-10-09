@@ -54,7 +54,10 @@ func _ready() -> void:
 			p.polygon = PackedVector2Array([Vector2(-20, -4), Vector2(20, -4), Vector2(20, 4), Vector2(-20, 4)])
 	add_child(p)
 	p.color = Rarity.color(Rarity.of_pickup(kind))
-	if SpriteBook.attach_living(self, kind):
+	# Weapons lie on the street at hand size: the held / gun art first (the
+	# old living pickup sprites were drawn about three times too big).
+	var has_art := ResourceLoader.exists("res://assets/sprites/held/%s.png" % kind) or ResourceLoader.exists("res://assets/sprites/guns/%s.png" % kind)
+	if not has_art and SpriteBook.attach_living(self, kind):
 		p.visible = false
 	elif ResourceLoader.exists("res://assets/sprites/held/%s.png" % kind):
 		# New melee lies on the street as its held art, glinting.
