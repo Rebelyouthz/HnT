@@ -87,8 +87,11 @@ func _ready() -> void:
 			App.start_run()
 		)
 	col.add_child(play)
+	var lock_lab_ref: Label = null
 	if not enter_lock.is_empty() or not boss_lock.is_empty():
 		var lock_lab := Label.new()
+		lock_lab_ref = lock_lab
+		lock_lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		lock_lab.text = PowerBook.line(enter_lock if not enter_lock.is_empty() else boss_lock)
 		var way := PowerBook.path_line(hop)
 		if way != "":
@@ -105,12 +108,19 @@ func _ready() -> void:
 	var featured := preload("res://src/ui/clinic_featured.gd").new()
 	featured.pick.connect(_detail)
 	col.add_child(featured)
-	col.move_child(featured, 1)
 	var all_rooms := UiKit.button("ALL CAMP ROOMS  ▸", Vector2(300, 44))
 	all_rooms.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	all_rooms.pressed.connect(_all_rooms)
 	col.add_child(all_rooms)
-	col.move_child(all_rooms, 2)
+	# PLAY (and what still blocks it) right under the title, then the rooms:
+	# a new family sees how to go out before the camp board.
+	var at := head.get_index() + 1
+	col.move_child(play, at)
+	if lock_lab_ref != null:
+		col.move_child(lock_lab_ref, at + 1)
+		at += 1
+	col.move_child(featured, at + 1)
+	col.move_child(all_rooms, at + 2)
 	play.grab_focus()
 
 

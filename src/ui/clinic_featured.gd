@@ -21,13 +21,32 @@ func _ready() -> void:
 		for b: Variant in list:
 			if b is Dictionary:
 				_names[str((b as Dictionary)["id"])] = str((b as Dictionary)["name"])
-	for row_ids: Array in [FEATURED.slice(0, 4), FEATURED.slice(4)]:
+	var ids := picks()
+	for row_ids: Array in [ids.slice(0, 4), ids.slice(4)]:
 		var row := HBoxContainer.new()
 		row.alignment = BoxContainer.ALIGNMENT_CENTER
 		row.add_theme_constant_override("separation", 18)
 		for id: String in row_ids:
 			row.add_child(_card(id))
 		add_child(row)
+
+
+## The seven cards: what the story needs next comes first (lit), then the
+## next room in the build plan, then the usual board.
+static func picks() -> Array:
+	var out: Array = []
+	for id in PowerBook.story_shops():
+		if not out.has(id):
+			out.append(id)
+	var nb := FamilyProfile.next_build()
+	if nb != "" and not out.has(nb):
+		out.append(nb)
+	for id in FEATURED:
+		if out.size() >= FEATURED.size():
+			break
+		if not out.has(id):
+			out.append(id)
+	return out.slice(0, FEATURED.size())
 
 
 ## Wide menu art made for the cards (assets/ui/cards/<id>.png); the Dojo
@@ -130,6 +149,15 @@ func _card(id: String) -> Control:
 	pic.size = Vector2(CARD.x - 28, 112)
 	pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	b.add_child(pic)
+	if lvl <= 0 and PowerBook.story_shops().has(id):
+		var need := Label.new()
+		need.text = "NEEDED NEXT"
+		need.add_theme_font_override("font", UiKit.pixel_font())
+		UiKit.apply_label(need, 13, Palette.LEMON)
+		need.position = Vector2(14, 12)
+		need.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		b.add_child(need)
+		b.add_theme_stylebox_override("normal", lit)
 	if lvl <= 0:
 		pic.modulate = Color(0.7, 0.7, 0.78)
 		var lock := PixelIcon.new()
