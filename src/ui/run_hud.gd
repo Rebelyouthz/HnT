@@ -135,6 +135,20 @@ func _ready() -> void:
 	_combo.add_theme_color_override("font_outline_color", Color(0, 0, 0))
 	_combo.add_theme_constant_override("outline_size", 8)
 	_put(_combo)
+	# A soft dark plate behind the counter (drawn behind the label, rides
+	# its fade and pop) so neon signs never swallow the number.
+	var plate := Panel.new()
+	var pst := StyleBoxFlat.new()
+	pst.bg_color = Color(0.0, 0.0, 0.02, 0.5)
+	pst.set_corner_radius_all(8)
+	pst.shadow_color = Color(0, 0, 0, 0.35)
+	pst.shadow_size = 10
+	plate.add_theme_stylebox_override("panel", pst)
+	plate.show_behind_parent = true
+	plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	plate.position = Vector2(-10, -2)
+	plate.size = Vector2(220, 74)
+	_combo.add_child(plate)
 	_rank = Label.new()
 	_rank.position = Vector2(22, 590)
 	_rank.add_theme_color_override("font_outline_color", Color(0, 0, 0))
