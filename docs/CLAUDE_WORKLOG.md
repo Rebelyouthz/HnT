@@ -34,7 +34,34 @@ The rest is in English, like the code. Newest work first. Each block says
 
 ---
 
-## 0zc. HF clip passes 2-4, clinic page, parkour skyline (latest)
+## 0zd. HF pass 5, local queue for the rest, fight-bot review (latest)
+
+- **HF pass 5** (`tools/hf_queue2/genq5.py`) until the ZeroGPU quota ran out
+  (~22 h reset): low kicks for punk, cop, mohawk, shift_lead, bag_snatch and
+  the clamp king overhead smash went in. Still weak on HF: survivor hurts,
+  back/front walks for clipboard_flier / lot_hydra / valet, shift_lead hurt
+  (a red stick keeps appearing), bag_snatch punch, son roll.
+- **Local GPU queue**: those were added to `tools/local_gpu/queue.json`
+  (walk toward/away marked `"free"` so `local_wan.py` drops the side-view
+  rule); valet start image added. `docs/LOCAL_AGENT_PROMPT.md`: keep the PC
+  awake (powercfg), downloads and the queue resume on re-run.
+- **Fight bot** `tools/fight_probe.gd` (walks at thugs, mashes, frame dumps)
+  ran all 14 story maps with no script errors. Fixes from what it showed:
+  - vault/trick prompts only when running at the gate and no live thug
+    within 200 px; an unheld call drops when the hero stops or turns
+  - OBJECTIVES folds to one trimmed line; the survivor card fits on screen
+  - weapon pickups use the held/gun art (the living pistol was ~3x size)
+  - dark plate behind the hit counter (neon signs swallowed it)
+  - hero speech bubbles over the hair, not the face
+- **Menus**: `UiKit.ready_style` keeps claim/buy buttons lit on pad focus
+  (17 buttons); ready chests say CLAIM; title footer no longer under QUIT;
+  NEXT GOAL leads with the story's camp buy.
+- **Art**: waiting-room chairs recoloured from clip-art blue to clinic teal;
+  pink fringe off the reception desk and snow pile.
+- chain_probe plays on a scratch save and restores the real one.
+- Installer 102.0 MB (limit 104.9 MB - next growth needs packing).
+
+## 0zc. HF clip passes 2-4, clinic page, parkour skyline
 
 Owner: redo the clips that came out worse on HF (not the ones the Ally X
 agent makes), find what else is missing, and fix what looks wrong.
