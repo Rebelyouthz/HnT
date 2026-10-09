@@ -464,6 +464,12 @@ func _arrive() -> void:
 			{"who": _buddy.role, "text": "You made it back. The portal's still humming."},
 			{"who": _walker.role, "text": "Patch up, gear up, then %s." % App.camp_next.replace("_", " ")},
 		]
+	# The story owes a camp buy: say which one, plainly.
+	var hop := App.camp_next if App.camp_next != "" else FamilyProfile.next_run_map()
+	var steps := PowerBook.path(hop)
+	if not steps.is_empty():
+		var first: Dictionary = steps[0]
+		lines[1] = {"who": _buddy.role, "text": "Before %s: %s %s, %d gold. Then we go." % [hop.replace("_", " "), str(first["what"]).to_lower(), str(first["name"]).capitalize(), int(first["gold"])]}
 	_talk.play(lines)
 	var tab := App.camp_open_tab
 	App.camp_open_tab = ""
