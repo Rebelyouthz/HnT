@@ -1193,6 +1193,11 @@ func _hit_noise(kind: String, from: Node) -> void:
 		dir = signf(global_position.x - (from as Node2D).global_position.x)
 	var big := kind in ["heavy", "combo", "uppercut", "air-upper", "roundhouse", "air-spin", "launcher", "dive", "finish", "web-slam"]
 	var blood := get_tree().get_first_node_in_group("blood_sim")
+	# A second, recorded body/face smack under the base hit, a different
+	# take each time, so a long chain never sounds like one sample looping.
+	var smack := "imp_heavy" if big else "imp_light"
+	var takes := 8 if big else 7
+	Mixer.play_sfx("res://assets/audio/sfx/%s_%d.ogg" % [smack, 1 + randi() % takes], 1.0, -3.0 if big else -5.0)
 	if kind == "light" or kind == "jab" or kind == "cross" or kind == "jump-kick":
 		Mixer.play_sfx("res://assets/audio/sfx/punch_light.ogg", 1.0, -4.0)
 	elif big:

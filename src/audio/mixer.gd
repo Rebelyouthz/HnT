@@ -6,6 +6,8 @@ var _music_a: AudioStreamPlayer
 var _music_b: AudioStreamPlayer
 var _using_a := true
 var _pool: Array[AudioStreamPlayer] = []
+var _grunts: Array[AudioStreamPlayer] = []
+var _grunt_i := 0
 
 
 func _ready() -> void:
@@ -17,6 +19,10 @@ func _ready() -> void:
 	for i in 6:
 		var p := _make("sfx")
 		_pool.append(p)
+	# Fight breath and shouts: own voices on the vo bus, so a jab's exhale
+	# never cuts a spoken line and never ducks the music.
+	for i in 2:
+		_grunts.append(_make("vo"))
 	apply_volumes()
 
 
@@ -61,6 +67,21 @@ func play_sfx(path: String, pitch := 1.0, vol_db := 0.0) -> void:
 	p.stream = load(path)
 	p.pitch_scale = clampf(pitch * randf_range(0.94, 1.06), 0.8, 1.25)
 	p.volume_db = quiet
+	p.play()
+
+
+## A fighter's breath / grunt / kiai: round-robin over two players so a
+## fast jab chain overlaps naturally instead of chopping itself off.
+func play_grunt(path: String, pitch := 1.0, vol_db := 0.0) -> void:
+	if not ResourceLoader.exists(path):
+		return
+	if _vo.playing and vol_db < -3.0:
+		return
+	var p := _grunts[_grunt_i]
+	_grunt_i = (_grunt_i + 1) % _grunts.size()
+	p.stream = load(path)
+	p.pitch_scale = pitch
+	p.volume_db = vol_db
 	p.play()
 
 

@@ -172,21 +172,50 @@ static func line(who: String, ev: String, chance: float = 1.0) -> void:
 
 
 static var _effort_last: Dictionary = {}
+static var _effort_n: Dictionary = {}
+static var _effort_prev: Dictionary = {}
 
 
-## A short fighting shout (hah! hyah! hngh!) on a swing: its own clock so it
-## never waits behind a bark, and never on every single jab.
-static func effort(role: String, weight: float) -> void:
+## Fight voice on every swing, the way a boxer breathes: a sharp "tss" /
+## "pshh" exhale on jabs and crosses, a grunt on mid strikes, a full kiai
+## ("HYAH!", "HWAA!") on heavies, kicks and finishers. Never the same take
+## twice in a row, a little pitch drift, its own clock and its own players.
+static func effort(role: String, weight: float, clip := "") -> void:
 	var now := Time.get_ticks_msec() / 1000.0
-	if now - float(_effort_last.get(role, -10.0)) < 0.35:
+	var kick := clip.contains("kick") or clip == "roundhouse" or clip == "dropkick" or clip == "sweep"
+	var set := "jab"
+	if weight >= 0.75 or (kick and weight >= 0.6):
+		set = "kiai"
+	elif weight >= 0.45:
+		set = "effort"
+	var gap := 0.09 if set == "jab" else 0.22
+	if now - float(_effort_last.get(role, -10.0)) < gap:
 		return
-	if randf() > 0.35 + 0.55 * weight:
+	var chance := 0.9 if set == "jab" else (0.75 if set == "effort" else 0.92)
+	if randf() > chance:
 		return
-	var n := 6
-	var path := "res://assets/audio/vo/%s_effort_%d.ogg" % [role, 1 + randi() % n]
-	if ResourceLoader.exists(path):
-		_effort_last[role] = now
-		Mixer.play_vo(path)
+	var key := "%s_%s" % [role, set]
+	var n := _count(key)
+	if n == 0:
+		return
+	var k := 1 + randi() % n
+	if n > 1 and k == int(_effort_prev.get(key, 0)):
+		k = 1 + k % n
+	_effort_prev[key] = k
+	_effort_last[role] = now
+	var vol := -7.0 if set == "jab" else (-2.0 if set == "effort" else 0.0)
+	Mixer.play_grunt("res://assets/audio/vo/%s_%d.ogg" % [key, k], randf_range(0.95, 1.06), vol)
+
+
+## How many numbered takes a set has (<key>_1.ogg, <key>_2.ogg ...).
+static func _count(key: String) -> int:
+	if _effort_n.has(key):
+		return int(_effort_n[key])
+	var n := 0
+	while ResourceLoader.exists("res://assets/audio/vo/%s_%d.ogg" % [key, n + 1]):
+		n += 1
+	_effort_n[key] = n
+	return n
 
 
 static var _attack_last: Dictionary = {}
@@ -197,6 +226,13 @@ static var _attack_last: Dictionary = {}
 static func attack(who: String, chance: float = 0.45) -> void:
 	var now := Time.get_ticks_msec() / 1000.0
 	if now - float(_attack_last.get(who, -10.0)) < 1.2 or randf() > chance:
+		# No line this swing: a low grunt instead, now and then, so thugs
+		# fight with their breath too.
+		if randf() < 0.4 and now - float(_effort_last.get(who, -10.0)) > 0.5:
+			var n := _count("father_effort")
+			if n > 0:
+				_effort_last[who] = now
+				Mixer.play_grunt("res://assets/audio/vo/father_effort_%d.ogg" % (1 + randi() % n), randf_range(0.8, 0.9), -5.0)
 		return
 	var path := "res://assets/audio/vo/%s_attack_%d.ogg" % [who, 1 + randi() % 2]
 	if ResourceLoader.exists(path):

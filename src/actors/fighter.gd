@@ -1690,7 +1690,7 @@ func _begin_strike(kind: String, size: Vector2, life: float, reach: float) -> vo
 	_drift_t = 0.0
 	stance_t = 0.0
 	_whoosh(clip, float(mv["weight"]))
-	VoBank.effort(role, float(mv["weight"]))
+	VoBank.effort(role, float(mv["weight"]), clip)
 	if startup > 0.0:
 		await get_tree().create_timer(startup, false).timeout
 	if id != _strike_id or downed or not is_inside_tree():
@@ -1892,7 +1892,11 @@ func _whoosh(clip: String, weight: float) -> void:
 	if not ResourceLoader.exists(path):
 		return
 	var pitch := (1.14 if role == "son" else 0.94) * randf_range(0.95, 1.06)
-	Mixer.play_sfx(path, pitch)
+	# Half the swings cut the air with a recorded swish instead, so the
+	# whoosh is not one sample on every throw.
+	if randf() < 0.5:
+		path = "res://assets/audio/sfx/swish_%d.ogg" % (1 + randi() % 4)
+	Mixer.play_sfx(path, pitch, -4.0 if weight < 0.45 else -1.0)
 
 
 func _dive() -> void:
