@@ -954,8 +954,8 @@ func lock_boss_card(line: String) -> void:
 	card.set_anchors_preset(Control.PRESET_CENTER)
 	card.offset_left = -280
 	card.offset_right = 280
-	card.offset_top = -170
-	card.offset_bottom = 170
+	card.offset_top = -135
+	card.offset_bottom = 135
 	ui.add_child(card)
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 10)
@@ -964,6 +964,7 @@ func lock_boss_card(line: String) -> void:
 	var t := Label.new()
 	t.text = line
 	t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	UiKit.apply_label(t, 22, Palette.LEMON)
 	col.add_child(t)
 	var way := PowerBook.path_line(map_id)
@@ -971,6 +972,7 @@ func lock_boss_card(line: String) -> void:
 		var how := Label.new()
 		how.text = "AT CAMP:  " + way
 		how.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		how.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		UiKit.apply_label(how, 15, Palette.TEXT)
 		col.add_child(how)
 	var back := UiKit.button("GO BUILD IT AT CAMP", Vector2(280, 48))
