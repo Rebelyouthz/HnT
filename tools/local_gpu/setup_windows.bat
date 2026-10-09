@@ -6,10 +6,13 @@ where python >nul 2>nul || (echo Install Python 3.11 from python.org first, tick
 python -m venv venv
 call venv\Scripts\activate
 python -m pip install --upgrade pip
-REM AMD Radeon 890M (Ally X): try ROCm-on-Windows PyTorch first, fall back to DirectML.
-pip install --index-url https://rocm.nightlies.amd.com/v2/gfx1151/ torch torchvision 2>nul || (
-  echo ROCm build not available - using DirectML instead.
-  pip install torch-directml
+REM AMD Radeon 890M (ROG Ally X) is gfx1150: try the ROCm-on-Windows PyTorch
+REM nightlies for gfx1150, then gfx1151 (Strix Halo), else DirectML.
+pip install --index-url https://rocm.nightlies.amd.com/v2/gfx1150/ torch torchvision 2>nul || (
+  pip install --index-url https://rocm.nightlies.amd.com/v2/gfx1151/ torch torchvision 2>nul || (
+    echo ROCm build not available - using DirectML instead.
+    pip install torch-directml
+  )
 )
 pip install diffusers transformers accelerate sentencepiece ftfy imageio imageio-ffmpeg pillow
 echo.
