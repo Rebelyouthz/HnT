@@ -43,6 +43,16 @@
   "hurt_hard": [
    1.6,
    "{d} gets hit hard in the face: his head and shoulders whip backward, arms fly up, he stumbles one big step backward, then straightens up again."
+  ],
+  "walk_up": [
+   3.5,
+   "{d} turns around so we see his back and walks straight away from the camera into the distance on a treadmill, back view, the back of his head toward us, continuous walk cycle.",
+   "free"
+  ],
+  "walk_down": [
+   3.5,
+   "{d} turns to face the camera and walks toward the viewer on a treadmill with big clear steps, front view, continuous walk cycle.",
+   "free"
   ]
  },
  "who": {
@@ -56,7 +66,9 @@
   "clamp_king": {
    "desc": "The burly man with the giant golden wheel clamp",
    "moves": [
-    "death"
+    "death",
+    "hurt",
+    "kick_low"
    ]
   },
   "clipboard_flier": {
@@ -64,7 +76,10 @@
    "moves": [
     "death",
     "punch_high",
-    "kick_low"
+    "kick_low",
+    "hurt",
+    "walk_up",
+    "walk_down"
    ]
   },
   "coping_imp": {
@@ -72,7 +87,8 @@
    "moves": [
     "death",
     "punch_high",
-    "kick_low"
+    "kick_low",
+    "hurt"
    ]
   },
   "lot_hydra": {
@@ -80,7 +96,10 @@
    "moves": [
     "death",
     "punch_high",
-    "kick_low"
+    "kick_low",
+    "hurt",
+    "walk_up",
+    "walk_down"
    ]
   },
   "npc_old_woman": {
@@ -166,7 +185,15 @@
     "walk",
     "punch_high",
     "hurt",
-    "death"
+    "death",
+    "kick_low"
+   ]
+  },
+  "valet": {
+   "desc": "The parking valet in a dark vest and cap",
+   "moves": [
+    "hurt",
+    "walk_up"
    ]
   }
  }

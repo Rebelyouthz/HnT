@@ -34,7 +34,7 @@ def queue():
     jobs = []
     for who, row in q["who"].items():
         for move in row["moves"]:
-            jobs.append((who, move, row["desc"], q["moves"][move]))
+            jobs.append((who, move, row["desc"], q["moves"][move][:2], len(q["moves"][move]) > 2 and q["moves"][move][2] == "free"))
     return jobs
 
 
@@ -77,14 +77,17 @@ def main():
     except Exception:
         pipe.to(dev)
     w, h = (int(v) for v in a.size.split("x"))
-    for who, move, desc, (dur, text) in todo:
+    for who, move, desc, (dur, text), free in todo:
         start = STARTS / f"{who}.png"
         if not start.exists():
             print("no start image for", who, "-> put one in", start)
             continue
         t0 = time.time()
-        frames = pipe(image=load_image(str(start)).resize((w, h)), prompt=text.format(d=desc) + TAIL,
-                      negative_prompt=NEG, height=h, width=w, num_frames=a.frames,
+        # "free" moves (walk toward / away from the camera) drop the side-view rule.
+        tail = TAIL.replace(" Strict side view,", "").replace(" facing right,", "") if free else TAIL
+        neg = NEG.replace(", turning toward camera", "") if free else NEG
+        frames = pipe(image=load_image(str(start)).resize((w, h)), prompt=text.format(d=desc) + tail,
+                      negative_prompt=neg, height=h, width=w, num_frames=a.frames,
                       num_inference_steps=a.steps, guidance_scale=5.0).frames[0]
         out = OUT / f"{who}_{move}.mp4"
         export_to_video(frames, str(out), fps=16)
