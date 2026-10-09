@@ -427,7 +427,12 @@ static func _lamp(act: Node2D, at: Vector2, col: Color) -> void:
 	pool.z_as_relative = false
 	Blockout.add_glow(pool)
 	n.add_child(pool)
-	if not SpriteBook.attach_living(n, "sodium_lamp" if SpriteBook.has_who("sodium_lamp") else "lamp"):
+	var tall := 1.0
+	if SpriteBook.attach_living(n, "sodium_lamp" if SpriteBook.has_who("sodium_lamp") else "lamp"):
+		# A lamp post stands well over a grown man's head.
+		tall = 1.9
+		SpriteBook.grow(n.get_child(n.get_child_count() - 1) as Node2D, tall)
+	else:
 		var post := Line2D.new()
 		post.points = PackedVector2Array([Vector2(0, 0), Vector2(0, -96), Vector2(14, -104)])
 		post.width = 4.0
@@ -438,7 +443,7 @@ static func _lamp(act: Node2D, at: Vector2, col: Color) -> void:
 	l.texture_scale = 3.0
 	l.color = col
 	l.energy = 1.15
-	l.position = Vector2(16, -40)
+	l.position = Vector2(16, -40) * tall
 	n.add_child(l)
 
 

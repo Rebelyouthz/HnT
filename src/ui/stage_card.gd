@@ -185,7 +185,7 @@ func _ready_beat() -> void:
 	var l := UiKit.title("GET READY", 58, Palette.LEMON)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	l.size = Vector2(1280, 90)
-	l.position = Vector2(0, 250)
+	l.position = Vector2(0, 150)
 	l.pivot_offset = Vector2(640, 45)
 	l.add_theme_color_override("font_outline_color", Color(0, 0, 0))
 	l.add_theme_constant_override("outline_size", 12)
