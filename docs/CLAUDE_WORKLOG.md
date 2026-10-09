@@ -34,7 +34,38 @@ The rest is in English, like the code. Newest work first. Each block says
 
 ---
 
-## 0zb. Playthrough fixes, story gates with a way through, HF clips (latest)
+## 0zc. HF clip passes 2-4, clinic page, parkour skyline (latest)
+
+Owner: redo the clips that came out worse on HF (not the ones the Ally X
+agent makes), find what else is missing, and fix what looks wrong.
+
+- **Why pass 1 failed:** the Space needs a last frame; pass 1 used the idle
+  for both ends, so deaths stood back up and punches barely moved.
+  `tools/hf_queue2/keys.py` cuts first/last frames from the game's own poses
+  (punch at full reach, hurt peak, body lying flat) on a green canvas with
+  the cell's bottom-centre anchor; `genq2/3/4.py` run the passes (token read
+  from ~/.cache at runtime, never committed).
+- **Kept** (frame-by-frame, despilled, timed: punches 0.85 s with the hit on
+  the last extended frame, hurts 0.45 s, deaths 1.1 s and stay down):
+  punk/cop/mohawk/roof_runner punch_high+hurt+death, shift_lead punch_high+
+  death, bag_snatch hurt+death, punch_mid for coping_imp, roof_runner,
+  clamp_king, clipboard_flier, lot_hydra, valet; valet death; walk_down for
+  coping_imp and roof_runner. **Dropped:** son hurt/roll retakes (old ones
+  read better), outfit-morphing takes, kick_low (no motion), most up/down
+  walks (stayed side-on). `tools/clip_wall.gd` shows clips as the game draws
+  them.
+- **Clinic page:** PLAY right under the title with the lock line and NEXT
+  path; the story rooms lead the card board, marked NEEDED NEXT.
+- **Hideout greeting** names the buy the next map needs.
+- **Pad focus:** a page with nothing to press yet focuses its scroll box
+  (AWARDS on a fresh save failed focus_test).
+- **Survivor:** lamp posts 1.9x (taller than a man); GET READY moved up off
+  the hero's head.
+- **Rooftop run:** the painted rooftop strip is the far view (night, rain)
+  instead of flat purple boxes; boss wall card tightened.
+- Chain probe again clean through rail_bridge. Installer 101.1 MB.
+
+## 0zb. Playthrough fixes, story gates with a way through, HF clips
 
 Owner: "få de funka ända fram tills efter survivor delen", no intro film,
 lamp posts flicker and change size, artifacts here and there.
