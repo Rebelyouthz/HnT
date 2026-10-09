@@ -34,7 +34,38 @@ The rest is in English, like the code. Newest work first. Each block says
 
 ---
 
-## 0zd. HF pass 5, local queue for the rest, fight-bot review (latest)
+## 0ze. Fight voices, wheel, chests, packing (latest)
+
+- **Fight voices** (`VoBank.effort(role, weight, clip)`): every swing breathes
+  like a boxer. Jabs/crosses (weight < 0.45) play `<role>_jab_N` exhales
+  ("tss", "pshh"), mid strikes `<role>_effort_N` grunts, heavies, kicks and
+  finishers `<role>_kiai_N` ("HYAH!", "HWAA!"). Recorded takes from Epidemic
+  Sound (Boxer Energetic Grunt Hyah, Fight Grunts, Boxing Exhales, Attack
+  Yell), cut by onset with librosa, dad pitched down, never the same take
+  twice in a row. They play on `Mixer.play_grunt` (two round-robin players on
+  the vo bus: never cut a spoken line, never duck the music). Take counts are
+  read from disk (`VoBank._count`), so dropping in `son_kiai_10.ogg` just
+  works. Thugs grunt between their lines (`VoBank.attack`). The old TTS
+  effort rows are gone from data/vo_lines.json so `tools/eleven_vo.py` cannot
+  overwrite the recordings.
+- **Hit variety**: `Punk._hit_noise` layers one of 15 recorded smacks
+  (`sfx/imp_light_N`, `sfx/imp_heavy_N`) under the base hit; half the swings
+  use a recorded swish (`sfx/swish_N`) instead of the one whoosh.
+- **LUCKY WHEEL** (src/ui/lucky_wheel.gd) rebuilt: swings in, PRESS TO SPIN
+  (auto after 2.4 s), pulls back before launch, rim bulbs chase, a rubber
+  flapper clacks on each peg (spring), clicks get heavier as it crawls, the
+  win slice lights while the rest go dark, rays + confetti, JACKPOT title on
+  big slices, gold/gems/flow fly to their counters. Capture: `ui:wheel`.
+- **Chests**: `ChestPop` (src/juice/chest_pop.gd) is the world chest for
+  BossChest and SurviveChest (the survive chest was a yellow box): real
+  chest art (`hub/chest_closed.png`, cut from chest_ready), bob, glints,
+  motes; open() rattles three clicks, lid bursts open, light column, coins
+  and gems spray and bounce, reward pays on the pop. Hub AWARDS chests
+  rattle and burst open before the claim. Capture: `ui:chest ... walk`.
+- **Packing**: big music tracks at vorbis q0 (19.5 -> 13.4 MB). The NSIS
+  installer is already solid LZMA; zip/rar on top gains nothing.
+
+## 0zd. HF pass 5, local queue for the rest, fight-bot review
 
 - **HF pass 5** (`tools/hf_queue2/genq5.py`) until the ZeroGPU quota ran out
   (~22 h reset): low kicks for punk, cop, mohawk, shift_lead, bag_snatch and

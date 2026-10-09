@@ -125,13 +125,32 @@ func _chest(kind: String, chest: Dictionary, value: int) -> Control:
 		UiKit.ready_style(b)
 		UiKit.pulse_ready(b)
 	b.pressed.connect(func() -> void:
-		if already or value < at:
+		if already or value < at or claimed.has(at):
 			return
 		claimed.append(at)
-		FamilyProfile.grant(int(chest["gold"]), int(chest["gems"]), str(chest["line"]))
-		Juice.claim_burst(get_viewport_rect().size * 0.5, str(chest["line"]), int(chest["gold"]), int(chest["gems"]))
-		Juice.toast("quest" if kind == "daily" else "challenge", str(chest["line"]), "CLAIMED. THE CLIPBOARD NOTICED.")
-		need_refresh.emit()
+		b.disabled = true
+		# The chest fights back first: it rattles harder and harder, the lid
+		# bursts open, then the reward pours out of it.
+		pic.pivot_offset = pic.size * Vector2(0.5, 0.9)
+		var tw := pic.create_tween()
+		for i in 7:
+			var k := float(i + 1) / 7.0
+			tw.tween_property(pic, "rotation", 0.16 * k * (1.0 if i % 2 == 0 else -1.0), 0.045)
+			if i % 2 == 0:
+				tw.tween_callback(func() -> void: Mixer.play_sfx("res://assets/audio/ui/part_click.wav", 0.9 + 0.12 * float(i), -4.0))
+		tw.tween_callback(func() -> void:
+			pic.rotation = 0.0
+			pic.texture = SpriteBook.icon("chest_open")
+			Mixer.play_sfx("res://assets/audio/chest.wav", 1.0, 0.0)
+			Juice.pulse_shake(4.0)
+			FamilyProfile.grant(int(chest["gold"]), int(chest["gems"]), str(chest["line"]))
+			Juice.claim_burst(RewardFly.vp_of(pic), str(chest["line"]), int(chest["gold"]), int(chest["gems"]))
+			Juice.toast("quest" if kind == "daily" else "challenge", str(chest["line"]), "CLAIMED. THE CLIPBOARD NOTICED."))
+		tw.tween_property(pic, "scale", Vector2(1.35, 0.75), 0.05)
+		tw.tween_property(pic, "scale", Vector2(0.9, 1.2), 0.08)
+		tw.tween_property(pic, "scale", Vector2.ONE, 0.25).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+		tw.tween_interval(0.35)
+		tw.tween_callback(func() -> void: need_refresh.emit())
 	)
 	wrap.add_child(b)
 	if ready:

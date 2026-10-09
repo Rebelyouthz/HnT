@@ -381,6 +381,18 @@ func _process(_delta: float) -> bool:
 								cpk.queue_free()
 						var pz: Control = hud.get("_pause")
 						hud.call("_move_list", pz, pz)
+			"chest":
+				var pc: Node2D = root.get_tree().get_first_node_in_group("players")
+				for e in root.get_tree().get_nodes_in_group("enemies"):
+					e.queue_free()
+				if pc:
+					load("res://src/survive/boss_chest.gd").call("drop", current_scene, pc.global_position + Vector2(70, 0), true)
+					var sc: Node2D = load("res://src/survive/survive_chest.gd").new()
+					current_scene.add_child(sc)
+					sc.global_position = pc.global_position + Vector2(170, 0)
+			"wheel":
+				var wm := OS.get_environment("WHEEL")
+				load("res://src/ui/lucky_wheel.gd").call("spin", root.get_tree(), wm if wm != "" else "story")
 			"toasts":
 				var j := root.get_node("Juice")
 				j.call("toast", "reward", "SECRET FOUND", "The Harbour Clock  ·  128 metres")
