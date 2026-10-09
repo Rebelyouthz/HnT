@@ -213,6 +213,14 @@ static func focus_first(root: Node) -> void:
 		var b := _first_focusable(root)
 		if b:
 			b.grab_focus()
+			return
+		# Nothing to press yet (a fresh save): park focus on the page's
+		# scroll box so a pad can still scroll it and back out.
+		var sc := root.find_children("*", "ScrollContainer", true, false)
+		if not sc.is_empty():
+			var box := sc[0] as ScrollContainer
+			box.focus_mode = Control.FOCUS_ALL
+			box.grab_focus()
 	, CONNECT_ONE_SHOT)
 
 
