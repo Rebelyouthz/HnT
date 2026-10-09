@@ -32,9 +32,16 @@ var _p1_used := false
 func _enter_tree() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	Input.joy_connection_changed.connect(_on_joy)
+	# Newer / odd pads (iPega PG-9777 ...): the shipped controller database,
+	# then a best guess for unknown iPegas (PadCompat).
+	PadCompat.load_db()
+	for d in Input.get_connected_joypads():
+		PadCompat.guess(int(d))
 	_bind_ui()
 	_solo = _is_solo()
 	refresh()
+	# FamilyProfile (custom pad maps) loads after us: bind again once it is up.
+	refresh.call_deferred()
 
 
 ## Solo vs couch can flip any time (Run-tab toggle, drop-in, scene change).
@@ -81,8 +88,26 @@ func _moved(event: InputEvent) -> bool:
 	return absf((event as InputEventJoypadMotion).axis_value) > 0.5
 
 
-func _on_joy(_device: int, _connected: bool) -> void:
+func _on_joy(device: int, connected: bool) -> void:
+	if connected:
+		var guessed := PadCompat.guess(device)
+		var juice := get_node_or_null("/root/Juice")
+		if juice and juice.has_method("toast"):
+			if custom_map(device).is_empty() and (guessed or not Input.is_joy_known(device)):
+				juice.call("toast", "info", "NEW PAD: " + Input.get_joy_name(device).to_upper(), "Buttons wrong? OPTIONS > CONTROLS > CONTROLLER SETUP")
 	refresh()
+
+
+## A pad's own button map from CONTROLLER SETUP (empty = the standard map).
+## {action: {"t": "b", "i": button} | {"t": "a", "i": axis, "v": +-1.0}}
+func custom_map(device: int) -> Dictionary:
+	if device < 0:
+		return {}
+	var fp := get_node_or_null("/root/FamilyProfile")
+	if fp == null or not (fp.get("data") is Dictionary):
+		return {}
+	var maps: Dictionary = (fp.get("data") as Dictionary).get("pad_maps", {})
+	return maps.get(Input.get_joy_guid(device), {}) as Dictionary
 
 
 func refresh() -> void:
@@ -147,7 +172,9 @@ func _apply_pad_map() -> void:
 		for a in ACTIONS:
 			_strip_joy(StringName(prefix + a))
 	if _solo and p1_device >= 0:
-		_bind_device("p1_", -1)
+		# Every connected pad drives P1, each with its own map.
+		for d in Input.get_connected_joypads():
+			_bind_device("p1_", int(d))
 	elif p1_device >= 0:
 		_bind_device("p1_", p1_device)
 	if p2_device >= 0:
@@ -156,6 +183,10 @@ func _apply_pad_map() -> void:
 
 
 func _bind_device(prefix: String, device: int) -> void:
+	var cm := custom_map(device)
+	if not cm.is_empty():
+		_bind_custom(prefix, device, cm)
+		return
 	_joy_btn(prefix + "jump", JOY_BUTTON_A, device)
 	_joy_btn(prefix + "light", JOY_BUTTON_X, device)
 	_joy_btn(prefix + "heavy", JOY_BUTTON_Y, device)
@@ -185,6 +216,34 @@ func _strip_joy(name: StringName) -> void:
 	for e in InputMap.action_get_events(name):
 		if e is InputEventJoypadButton or e is InputEventJoypadMotion:
 			InputMap.action_erase_event(name, e)
+
+
+## CONTROLLER SETUP map: each action on the button / axis the player pressed.
+## Left / up are the opposite of the recorded right / down; the d-pad still
+## moves and works the belt; Jump / Special also confirm / back in menus.
+func _bind_custom(prefix: String, device: int, cm: Dictionary) -> void:
+	for a: String in cm.keys():
+		var m: Dictionary = cm[a]
+		var acts: Array = [a]
+		if a == "right":
+			acts = ["right", "left"]
+		elif a == "down":
+			acts = ["down", "up"]
+		elif a in ["aim_x", "aim_y"]:
+			continue
+		for k in acts.size():
+			var act := prefix + str(acts[k])
+			if str(m.get("t", "b")) == "a":
+				var v := float(m.get("v", 1.0)) * (1.0 if k == 0 else -1.0)
+				_axis(act, int(m.get("i", 0)) as JoyAxis, v, device)
+			else:
+				_joy_btn(act, int(m.get("i", 0)) as JoyButton, device)
+	for pair in [["left", JOY_BUTTON_DPAD_LEFT], ["right", JOY_BUTTON_DPAD_RIGHT], ["up", JOY_BUTTON_DPAD_UP], ["down", JOY_BUTTON_DPAD_DOWN]]:
+		_joy_btn(prefix + str(pair[0]), pair[1], device)
+	for ui in [["ui_accept", "jump"], ["ui_cancel", "special"]]:
+		var m2: Dictionary = cm.get(str(ui[1]), {})
+		if str(m2.get("t", "")) == "b":
+			_joy_btn(str(ui[0]), int(m2["i"]) as JoyButton, device)
 
 
 func _joy_btn(name: StringName, button: JoyButton, device: int) -> void:
@@ -228,7 +287,18 @@ func rstick(prefix: StringName) -> Vector2:
 	var dev := device_of(prefix)
 	if dev < 0:
 		return Vector2.ZERO
-	var v := Vector2(Input.get_joy_axis(dev, JOY_AXIS_RIGHT_X), Input.get_joy_axis(dev, JOY_AXIS_RIGHT_Y))
+	var ax := JOY_AXIS_RIGHT_X
+	var ay := JOY_AXIS_RIGHT_Y
+	var sx := 1.0
+	var sy := 1.0
+	var cm := custom_map(dev)
+	if cm.has("aim_x"):
+		ax = int(cm["aim_x"]["i"]) as JoyAxis
+		sx = float(cm["aim_x"].get("v", 1.0))
+	if cm.has("aim_y"):
+		ay = int(cm["aim_y"]["i"]) as JoyAxis
+		sy = float(cm["aim_y"].get("v", 1.0))
+	var v := Vector2(Input.get_joy_axis(dev, ax) * sx, Input.get_joy_axis(dev, ay) * sy)
 	return v if v.length() > DEAD else Vector2.ZERO
 
 

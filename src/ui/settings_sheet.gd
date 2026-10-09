@@ -136,6 +136,13 @@ func _show(i: int) -> void:
 			_toggle("SPEECH BUBBLES AUTO", func() -> bool: return bool(FamilyProfile.data.get("talk_auto", false)), func(v: bool) -> void: _flag("talk_auto", v))
 			_action("RESET GAME PROGRESS", "Start completely over on a clean save (options kept)", _confirm_reset, Palette.BRICK)
 		"CONTROLS":
+			_action("CONTROLLER SETUP", "Pad buttons wrong (iPega, Bluetooth pads)? Press each one once", _pad_setup, Palette.LEMON)
+			for d in Input.get_connected_joypads():
+				var pl := Label.new()
+				pl.text = PadCompat.describe(int(d))
+				pl.add_theme_font_override("font", UiKit.pixel_font())
+				UiKit.apply_label(pl, 14, Palette.MUTED)
+				_list.add_child(pl)
 			for line in PadRouter.map_lines():
 				var l := Label.new()
 				l.text = str(line)
@@ -306,6 +313,14 @@ func _action(title: String, sub: String, cb: Callable, col: Color) -> void:
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	b.add_child(l)
 	b.pressed.connect(cb)
+
+
+func _pad_setup() -> void:
+	var sh: Control = load("res://src/ui/pad_setup_sheet.gd").new()
+	add_child(sh)
+	sh.closed.connect(func() -> void:
+		sh.queue_free()
+		_show(_tab))
 
 
 func _vol(key: String, v: float) -> void:
