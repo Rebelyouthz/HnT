@@ -13,6 +13,16 @@ charger in and use Turbo mode). Your job: generate animation video clips
 locally with Wan 2.2 TI2V-5B and push them to GitHub. Do not change any game
 code.
 
+0. Keep the machine awake for the whole job (it stopped overnight last
+   time). In an admin PowerShell:
+   `powercfg /change standby-timeout-ac 0`
+   `powercfg /change hibernate-timeout-ac 0`
+   `powercfg /change monitor-timeout-ac 0`
+   Keep the charger in. If the model download (~30 GB) stopped half way,
+   just run the same command again: Hugging Face downloads resume from where
+   they stopped (the cache is in `%USERPROFILE%\.cache\huggingface`). If it
+   keeps failing, run `set HF_HUB_ENABLE_HF_TRANSFER=1` after
+   `pip install hf_transfer` in the venv, then retry.
 1. Get the code (skip if it is already on disk):
    `git clone https://github.com/Rebelyouthz/HnT.git` then
    `git checkout claude/gallant-galileo-5ctrmf` (pull if it already exists).
@@ -46,6 +56,9 @@ code.
    (pull --rebase first if the push is rejected). Never commit tokens, keys,
    the venv folder or the model cache.
 5. Report which clips were made, the time per clip, and any errors.
+6. If the run stops (crash, sleep, reboot): open the folder again, activate
+   the venv (`tools\local_gpu\venv\Scripts\activate`) and run
+   `python local_wan.py` again. Finished clips are skipped; it carries on.
 
 Quality check before pushing: open a couple of clips. The character should
 stay in a strict side view facing right on a flat green background, full
