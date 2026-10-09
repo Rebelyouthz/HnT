@@ -43,7 +43,7 @@ func _ready() -> void:
 	if not FamilyProfile.fax_ready():
 		fax.disabled = true
 	else:
-		fax.add_theme_stylebox_override("normal", UiKit.panel(Palette.READY, Palette.LEMON))
+		UiKit.ready_style(fax)
 		UiKit.dark_text(fax)
 		UiKit.pulse_ready(fax)
 	fax.pressed.connect(func() -> void:

@@ -54,7 +54,7 @@ func _paint() -> void:
 	var all := _btn("CLAIM ALL  (%d)" % rows.size(), Vector2(200, 44), "all")
 	all.disabled = rows.is_empty()
 	if not rows.is_empty():
-		all.add_theme_stylebox_override("normal", UiKit.panel(Palette.READY, Palette.LEMON))
+		UiKit.ready_style(all)
 		UiKit.dark_text(all)
 		UiKit.pulse_ready(all)
 	all.pressed.connect(func() -> void: _claim_all(all))
@@ -160,7 +160,7 @@ func _daily() -> Control:
 	var ob := _btn("OPEN CRATE" if ready else "NEXT IN %s" % _hms(RewardBook.daily_wait()), Vector2(220, 40), "crate")
 	ob.disabled = not ready
 	if ready:
-		ob.add_theme_stylebox_override("normal", UiKit.panel(Palette.READY, Palette.LEMON))
+		UiKit.ready_style(ob)
 		UiKit.dark_text(ob)
 	ob.pressed.connect(func() -> void: _open_crate(ob))
 	v.add_child(ob)

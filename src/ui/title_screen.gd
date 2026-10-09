@@ -163,7 +163,7 @@ func _build_logo() -> void:
 
 func _build_menu() -> void:
 	_menu = VBoxContainer.new()
-	_menu.position = Vector2(830, 330)
+	_menu.position = Vector2(830, 292)
 	_menu.size = Vector2(280, 300)
 	_menu.add_theme_constant_override("separation", 12)
 	add_child(_menu)
@@ -210,7 +210,7 @@ func _add_item(text: String, cb: Callable) -> void:
 func _build_footer() -> void:
 	var f := Label.new()
 	f.text = "A  %s  &  %s  GAME" % [DEFAULT_FATHER.to_upper(), DEFAULT_SON.to_upper()]
-	f.position = Vector2(700, 676)
+	f.position = Vector2(700, 690)
 	f.size = Vector2(540, 24)
 	f.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	UiKit.apply_label(f, 13, Palette.MUTED)

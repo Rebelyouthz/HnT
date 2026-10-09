@@ -105,6 +105,10 @@ const NEWS := [
 
 
 func next_goal() -> String:
+	# The story's camp buy comes first: without it the next map stays shut.
+	var way := PowerBook.path_line(FamilyProfile.next_run_map())
+	if way != "":
+		return "NEXT GOAL  ·  " + way
 	var gold := int(FamilyProfile.data.get("gold", 0))
 	var best := ""
 	var best_c := 1 << 30

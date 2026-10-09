@@ -167,7 +167,7 @@ func _chest_btn(kind: String, chest: Dictionary, value: int) -> Button:
 		b.disabled = true
 		b.text = "CHEST %d" % at
 	else:
-		b.add_theme_stylebox_override("normal", UiKit.panel(Palette.READY, Palette.LEMON))
+		UiKit.ready_style(b)
 		UiKit.dark_text(b)
 		UiKit.pulse_ready(b)
 	b.pressed.connect(func() -> void:

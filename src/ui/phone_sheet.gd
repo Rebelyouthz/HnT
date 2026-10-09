@@ -43,7 +43,7 @@ func _ready() -> void:
 	if not FamilyProfile.payphone_ready():
 		call.disabled = true
 	else:
-		call.add_theme_stylebox_override("normal", UiKit.panel(Palette.READY, Palette.LEMON))
+		UiKit.ready_style(call)
 		UiKit.dark_text(call)
 		UiKit.pulse_ready(call)
 	call.pressed.connect(func() -> void:

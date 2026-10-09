@@ -23,6 +23,9 @@ func _initialize() -> void:
 	if a.size() > 2:
 		_max = int(a[2])
 	DirAccess.make_dir_recursive_absolute(_dir)
+	# Play on a scratch save; the real one comes back on quit.
+	if FileAccess.file_exists("user://family.json"):
+		DirAccess.copy_absolute("user://family.json", "user://family.chain_backup.json")
 
 
 func _process(_d: float) -> bool:
@@ -52,6 +55,7 @@ func _process(_d: float) -> bool:
 		var map_id := nm.get_file().get_basename()
 		if map_id == _stop and _since > 900:
 			print("CHAIN REACHED ", _stop)
+			_restore()
 			quit()
 			return false
 		# Films / talk: tap confirm.
@@ -95,6 +99,7 @@ func _process(_d: float) -> bool:
 		root.get_texture().get_image().save_png("%s/c_%05d.png" % [_dir, _n])
 	if _n >= _max:
 		print("CHAIN TIMEOUT in ", _scene)
+		_restore()
 		quit()
 	return false
 
@@ -125,3 +130,11 @@ func _camp_buys(map_id: String, when: String) -> void:
 				ok = fp.call("try_cbt", id) or fp.call("try_dojo", id)
 		print("CHAIN buy ", d["what"], " ", id, " -> ", ok, "  gold=", fp.data["gold"])
 	print("CHAIN gate ", map_id, " open=", PowerBook.lock(map_id, when).is_empty())
+
+
+func _restore() -> void:
+	if FileAccess.file_exists("user://family.chain_backup.json"):
+		DirAccess.copy_absolute("user://family.chain_backup.json", "user://family.json")
+		DirAccess.remove_absolute("user://family.chain_backup.json")
+	else:
+		DirAccess.remove_absolute("user://family.json")

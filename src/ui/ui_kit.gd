@@ -516,6 +516,16 @@ static func portrait(tex: Texture2D, size: Vector2 = Vector2(48, 48)) -> Texture
 
 
 ## Dark, readable text on a bright (READY green / gold) button.
+## A lit "ready" button (claim / buy / go) that stays lit in every state:
+## focus gets a white rim instead of falling back to the dark plate.
+static func ready_style(b: Control) -> void:
+	b.add_theme_stylebox_override("normal", panel(Palette.READY, Palette.LEMON))
+	b.add_theme_stylebox_override("hover", panel(Palette.READY.lightened(0.12), Palette.LEMON))
+	b.add_theme_stylebox_override("pressed", panel(Palette.READY.darkened(0.15), Palette.LEMON))
+	b.add_theme_stylebox_override("focus", panel(Palette.READY.lightened(0.12), Color(1, 1, 1)))
+	dark_text(b)
+
+
 static func dark_text(b: Control) -> void:
 	var c := Color(0.05, 0.12, 0.06)
 	for k in ["font_color", "font_hover_color", "font_focus_color", "font_pressed_color", "font_hover_pressed_color"]:

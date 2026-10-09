@@ -139,7 +139,7 @@ func _paint(keep := "") -> void:
 		var bb := UiKit.button("OPEN" if Contracts.bonus_ready() else "LOCKED", Vector2(150, 44))
 		bb.disabled = not Contracts.bonus_ready()
 		if Contracts.bonus_ready():
-			bb.add_theme_stylebox_override("normal", UiKit.panel(Palette.READY, Palette.LEMON))
+			UiKit.ready_style(bb)
 			UiKit.dark_text(bb)
 			UiKit.pulse_ready(bb)
 			focus = bb
