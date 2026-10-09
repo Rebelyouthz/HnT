@@ -34,7 +34,35 @@ The rest is in English, like the code. Newest work first. Each block says
 
 ---
 
-## 0za. Rewards centre stage, survivor feel, active skills, survivor cards (latest)
+## 0zb. Playthrough fixes, story gates with a way through, HF clips (latest)
+
+Owner: "få de funka ända fram tills efter survivor delen", no intro film,
+lamp posts flicker and change size, artifacts here and there.
+
+- **Intro:** old saves had `intro_done` set and never saw it; it now plays
+  once (`intro_plays`), and the title has WATCH INTRO.
+- **Lamps:** `ambient_prop.gd` holds one frame (the clip jittered in size).
+- **Artifacts:** `tools/clean_magenta.py` stripped magenta fringe from world
+  sprites and props.
+- **Story gates (the real blocker):** a fresh save hit the dock_street boss
+  wall (therapy couch after desk + dojo + a night, then THICK SKIN) and the
+  results sheet only said LOCKED. Now `PowerBook.path/path_line` lists the
+  missing buys with costs on the wall card, results sheet, clinic and RUN
+  tab; `PowerBook.fund` tops up what is short once per gated map; the room
+  the next two story maps need may be built out of order without nights
+  (`PowerBook.story_shops`, used by `FamilyProfile.build_blocker`). Buttons
+  read GO BUILD IT AT CAMP.
+- **Verified:** `tools/chain_probe.gd` (headless) buys each gate with the
+  real purchase calls and runs dock_street -> intake_lot -> fire_escapes ->
+  group_circle -> neon_exchange -> waiting_room -> rail_bridge -> city_hall
+  -> copay_orchard with no script errors.
+- **HF clips:** all 30 queued clips came through. Kept only what beat the
+  current art: son parkour_run (sprint), cop/mohawk/shift_lead idle, punk
+  walk, roof_runner walk. The death takes stand back up (the end frame is
+  the idle), so hurt/punch/death stay as they were.
+- Installer rebuilt (97.3 MB).
+
+## 0za. Rewards centre stage, survivor feel, active skills, survivor cards
 
 Owner round: claims / upgrades / equips / rewards were hard to see (should
 show big in the middle, then shrink and fly to the corner or the slot);
