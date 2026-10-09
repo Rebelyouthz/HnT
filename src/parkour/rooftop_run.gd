@@ -87,18 +87,19 @@ func _sky() -> void:
 	sh.code = """
 shader_type canvas_item;
 uniform float t = 0.0;
+uniform float night = 0.0;
 void fragment() {
 	vec2 uv = UV;
-	vec3 top = vec3(0.10, 0.07, 0.22);
-	vec3 mid = vec3(0.48, 0.20, 0.42);
-	vec3 low = vec3(1.00, 0.55, 0.30);
+	vec3 top = mix(vec3(0.10, 0.07, 0.22), vec3(0.02, 0.05, 0.07), night);
+	vec3 mid = mix(vec3(0.48, 0.20, 0.42), vec3(0.05, 0.13, 0.15), night);
+	vec3 low = mix(vec3(1.00, 0.55, 0.30), vec3(0.10, 0.20, 0.22), night);
 	vec3 c = mix(top, mid, smoothstep(0.0, 0.55, uv.y));
 	c = mix(c, low, smoothstep(0.5, 0.95, uv.y));
 	// The sun low on the left, a soft halo.
 	vec2 sp = vec2(0.22, 0.78);
 	float d = distance(uv * vec2(1.78, 1.0), sp * vec2(1.78, 1.0));
-	c += vec3(1.0, 0.65, 0.35) * smoothstep(0.45, 0.0, d) * 0.55;
-	c = mix(c, vec3(1.0, 0.86, 0.6), smoothstep(0.075, 0.06, d));
+	c += vec3(1.0, 0.65, 0.35) * smoothstep(0.45, 0.0, d) * 0.55 * (1.0 - night);
+	c = mix(c, vec3(1.0, 0.86, 0.6), smoothstep(0.075, 0.06, d) * (1.0 - night));
 	// Thin cloud bands.
 	float band = sin(uv.y * 40.0 + sin(uv.x * 6.0 + t * 0.05) * 2.0);
 	c += vec3(0.25, 0.12, 0.18) * smoothstep(0.92, 1.0, band) * smoothstep(0.2, 0.6, uv.y) * 0.5;
@@ -109,8 +110,15 @@ void fragment() {
 	m.shader = sh
 	sky.material = m
 	bg.add_child(sky)
-	# Three skyline silhouettes, far to near, hazier the further away.
+	# Three skyline silhouettes, far to near, hazier the further away. With
+	# the painted rooftop strip (the Fire Escapes art) the strip is the view
+	# and only a low, dark near row of roofs frames the bottom.
 	var specs := [[0.08, Color(0.52, 0.28, 0.44), 200.0, 0.0], [0.22, Color(0.3, 0.17, 0.32), 150.0, 0.25], [0.45, Color(0.17, 0.1, 0.2), 110.0, 0.4]]
+	var painted := _painted_strip()
+	if painted != null:
+		m.set_shader_parameter("night", 1.0)
+		specs = [[0.45, Color(0.035, 0.06, 0.075), 70.0, 0.5]]
+		_layers.append(painted)
 	var k := 0
 	for sp in specs:
 		var layer := Skyline.new()
@@ -123,6 +131,42 @@ void fragment() {
 		add_child(layer)
 		_layers.append(layer)
 		k += 1
+
+
+## The painted rooftop strip (assets/backdrops/roofs_strip_*.png) as a slow
+## far layer, repeated along the run. Null when the art is missing.
+func _painted_strip() -> Node2D:
+	var meta_path := "res://assets/backdrops/roofs_strip.json"
+	if not FileAccess.file_exists(meta_path):
+		return null
+	var meta: Variant = JSON.parse_string(FileAccess.get_file_as_string(meta_path))
+	if typeof(meta) != TYPE_DICTIONARY:
+		return null
+	var parts: Array = (meta as Dictionary).get("parts", [])
+	var texs: Array = []
+	for i in parts.size():
+		var p := "res://assets/backdrops/roofs_strip_%d.png" % i
+		if not ResourceLoader.exists(p):
+			return null
+		texs.append(load(p))
+	var layer := Node2D.new()
+	layer.set_meta("factor", 0.1)
+	layer.set("z_index", -31)
+	var k := 430.0 / float((texs[0] as Texture2D).get_height())
+	var bottom := RoofCourse.ROOF_BASE + 170.0
+	var x := -1200.0
+	for rep in 3:
+		for t in texs:
+			var sp := Sprite2D.new()
+			sp.texture = t
+			sp.centered = false
+			sp.scale = Vector2(k, k)
+			sp.position = Vector2(x, bottom - (t as Texture2D).get_height() * k)
+			sp.texture_filter = SpriteBook.world_filter()
+			layer.add_child(sp)
+			x += (t as Texture2D).get_width() * k
+	add_child(layer)
+	return layer
 
 
 class Skyline extends Node2D:
@@ -171,7 +215,8 @@ func _physics_process(delta: float) -> void:
 	_camera(delta)
 	for l in _layers:
 		var sl := l as Node2D
-		sl.position = Vector2(cam.position.x * (1.0 - float(sl.get("factor"))), cam.position.y * 0.15 * (1.0 - float(sl.get("factor"))))
+		var f := float(sl.get_meta("factor")) if sl.has_meta("factor") else float(sl.get("factor"))
+		sl.position = Vector2(cam.position.x * (1.0 - f), cam.position.y * 0.15 * (1.0 - f))
 	_card_t -= delta
 	for g in course.guards:
 		(g as RoofGuard).watch(_lead().position.x)
