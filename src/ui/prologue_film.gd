@@ -30,6 +30,7 @@ var _done := false
 
 
 func _ready() -> void:
+	FamilyProfile.data["intro_plays"] = int(FamilyProfile.data.get("intro_plays", 0)) + 1
 	_build_set()
 	_build_ui()
 	Mixer.play_music("res://assets/audio/music/music_menu.ogg")

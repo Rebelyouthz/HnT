@@ -282,7 +282,8 @@ func _start() -> void:
 	tw.tween_property(self, "modulate", Color(0, 0, 0, 1), 0.35)
 	tw.tween_callback(func() -> void:
 		# First night: the prologue and the alley film, then Stage 1's card.
-		if not bool(FamilyProfile.data.get("intro_done", false)):
+		# Saves from older builds (where the intro could fail) get it once.
+		if not bool(FamilyProfile.data.get("intro_done", false)) or int(FamilyProfile.data.get("intro_plays", 0)) == 0:
 			App.play_intro()
 		else:
 			App.start_run()

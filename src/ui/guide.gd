@@ -181,7 +181,8 @@ func _show(i: int) -> void:
 	var bs := _bubble.size
 	var at := Vector2.ZERO
 	if _rect.size == Vector2.ZERO:
-		at = (vp - bs) * 0.5
+		# Nothing to point at: low in the middle, never over the cards / menu.
+		at = Vector2((vp.x - bs.x) * 0.5, vp.y - bs.y - 18.0)
 	elif _rect.end.y + bs.y + 16.0 < vp.y:
 		at = Vector2(_rect.get_center().x - bs.x * 0.5, _rect.end.y + 12.0)
 	else:

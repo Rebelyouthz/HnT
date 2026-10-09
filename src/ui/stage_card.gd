@@ -71,6 +71,8 @@ const TIPS := [
 func _ready() -> void:
 	layer = 90
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	# Banners (UNLOCKED ...) wait until the card and GET READY / GO are gone.
+	add_to_group("stage_card")
 	get_tree().paused = true
 	_root = PixelStage.attach_canvas(self)
 	var bg := ColorRect.new()

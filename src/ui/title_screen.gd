@@ -171,6 +171,7 @@ func _build_menu() -> void:
 	_add_item("PLAY GAME", _play)
 	if has_save:
 		_add_item("CONTINUE", _continue)
+		_add_item("WATCH INTRO", _start_game)
 	_add_item("OPTIONS", _options)
 	_add_item("CREDITS", _credits)
 	if not OS.has_feature("web") and not OS.has_feature("mobile"):

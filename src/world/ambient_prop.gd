@@ -1,7 +1,9 @@
 class_name AmbientProp
 extends Node2D
 
-## Living street motion. Lamps breathe. Bystanders already walk themselves.
+## Street props drawn from sprite clips. Lamps stand still (their clip was
+## cut from video: every frame a few texels off, so the post wobbled and
+## changed size); the lamp light itself flickers in LightRig.
 
 
 static func lamp(host: Node, at: Vector2, z: int = 3) -> void:
@@ -18,8 +20,11 @@ static func place(host: Node, who: String, at: Vector2, z: int = 3) -> void:
 		var n := AmbientProp.new()
 		n.z_index = z
 		n.global_position = at
-		n.add_child(SpriteBook.make_anim(who))
+		var a := SpriteBook.make_anim(who)
+		n.add_child(a)
 		if who == "lamp":
+			a.stop()
+			a.frame = 4
 			n.add_to_group("street_lamps")
 			# A street lamp stands well over a grown man.
 			n.scale = Vector2(2.9, 2.9)

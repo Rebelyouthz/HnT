@@ -774,6 +774,17 @@ func unlock_banner(title: String, sub: String = "", tex: Texture2D = null) -> vo
 
 
 func _banner_next() -> void:
+	# Never over the stage card or GET READY / GO: show it once that is gone.
+	var card := get_tree().get_first_node_in_group("stage_card")
+	if card != null and not _banner_q.is_empty():
+		_banner_on = true
+		card.tree_exited.connect(func() -> void:
+			_banner_on = false
+			get_tree().create_timer(0.4, true, false, true).timeout.connect(func() -> void:
+				if not _banner_on:
+					_banner_next())
+		, CONNECT_ONE_SHOT)
+		return
 	if _banner_q.is_empty():
 		_banner_on = false
 		return

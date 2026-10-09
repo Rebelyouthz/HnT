@@ -466,10 +466,16 @@ func _ready() -> void:
 			_queue_starting_draw()
 
 
-func _queue_starting_draw() -> void:
-	# Game time (pauses with the game), so nothing pops over a title card.
-	get_tree().create_timer(1.2, false).timeout.connect(func() -> void:
-		if is_inside_tree() and get_node_or_null("CardPick") == null and not Engine.has_meta("probe_no_draw"):
+func _queue_starting_draw(wait := 1.2) -> void:
+	# Game time (pauses with the game), so nothing pops over a title card;
+	# an UNLOCKED banner still on screen goes first.
+	get_tree().create_timer(wait, false).timeout.connect(func() -> void:
+		if not is_inside_tree():
+			return
+		if bool(Juice.get("_banner_on")):
+			_queue_starting_draw(0.5)
+			return
+		if get_node_or_null("CardPick") == null and not Engine.has_meta("probe_no_draw"):
 			_starting_draw()
 	)
 
