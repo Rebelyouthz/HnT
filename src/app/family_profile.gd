@@ -26,11 +26,30 @@ func load_or_create() -> void:
 		var raw := FileAccess.get_file_as_string(SAVE_PATH)
 		var parsed: Variant = JSON.parse_string(raw)
 		if typeof(parsed) == TYPE_DICTIONARY:
-			data = parsed
+			data = _whole(parsed) as Dictionary
 			_migrate()
 			return
 	data = _defaults()
 	save()
+
+
+## JSON has one number type: counters saved as 40 load back as 40.0 and the
+## menus printed "GOLD 40.0". Whole floats become ints again; volume sliders
+## (vol_*) stay floats.
+static func _whole(v: Variant, key: String = "") -> Variant:
+	if v is Dictionary:
+		var d := {}
+		for k in (v as Dictionary):
+			d[k] = _whole((v as Dictionary)[k], str(k))
+		return d
+	if v is Array:
+		var a := []
+		for x in (v as Array):
+			a.append(_whole(x, key))
+		return a
+	if v is float and not key.begins_with("vol_") and is_equal_approx(float(v), roundf(float(v))) and absf(float(v)) < 9.0e15:
+		return int(v)
+	return v
 
 
 func backup_to(path: String) -> void:
@@ -48,6 +67,18 @@ func save() -> void:
 		return
 	f.store_string(JSON.stringify(data, "\t"))
 	changed.emit()
+	# Any milestone that just moved may unlock a suit part (once a frame).
+	if not _suit_check_queued:
+		_suit_check_queued = true
+		call_deferred("_suit_check")
+
+
+var _suit_check_queued := false
+
+
+func _suit_check() -> void:
+	_suit_check_queued = false
+	Suits.check_progress()
 
 
 func _defaults() -> Dictionary:
@@ -263,6 +294,7 @@ func mark_map_filed(id: String) -> void:
 	filed.append(id)
 	data["maps_filed"] = filed
 	save()
+	VaultCards.add_tokens(1, "First time %s is filed." % id.replace("_", " ").to_upper())
 
 
 func cash_fail(scrap: int, score: int) -> int:
@@ -277,7 +309,7 @@ func has_craft(id: String) -> bool:
 
 func tab_unlocked(tab: String) -> bool:
 	match tab:
-		"clinic", "run":
+		"clinic", "run", "heroes":
 			return true
 		"build":
 			return is_built("therapy_couch")
@@ -289,16 +321,81 @@ func tab_unlocked(tab: String) -> bool:
 			return false
 
 
+## The planned order rooms open in: each first build needs the one before
+## it, and costs a little more. The basics (desk, dojo, tree, locker, bench)
+## come first so the menus open one at a time, each with its guide.
+const BUILD_ORDER := [
+	"front_desk", "dojo", "therapy_couch", "street_map", "wardrobe_cage", "workshop",
+	"trophy_cabinet", "pawn_shop", "research_lab", "compare_mirrors", "punching_bag",
+	"bounty_board", "blood_fridge", "patrol_desk", "mail_slot", "bulletin_board",
+	"radio_tower", "album_wall", "streak_locker", "invoice_wheel", "warrant_fax",
+	"tip_jar", "lost_found", "payphone", "water_cooler", "coat_check", "time_clock", "bleach_closet",
+]
+
+
+## Nights (finished runs) before each room in BUILD_ORDER can go up, so the
+## camp and its menus open one at a time with the story instead of all at
+## once on a fat wallet: desk and dojo on night one, the skill tree after the
+## first night out, the locker after two, then roughly one room a night.
+const NIGHTS_FOR := [0, 0, 1, 1, 2, 3, 3, 4, 5, 6, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+
+
+func nights_for(id: String) -> int:
+	var i := BUILD_ORDER.find(id)
+	if i < 0:
+		return 0
+	return int(NIGHTS_FOR[mini(i, NIGHTS_FOR.size() - 1)])
+
+
+## What stands in the way of the first build ("" when nothing does): the
+## room before it in the plan, or "@N" when N more nights are needed.
+func build_blocker(id: String) -> String:
+	if building_level(id) > 0:
+		return ""
+	# The room the next story map needs skips the queue and the nights.
+	if PowerBook.story_shops().has(id):
+		return ""
+	var i := BUILD_ORDER.find(id)
+	if i < 0:
+		return ""
+	for k in range(i - 1, -1, -1):
+		if building_level(str(BUILD_ORDER[k])) <= 0:
+			return str(BUILD_ORDER[k])
+	var left := nights_for(id) - int(data.get("runs", 0))
+	if left > 0:
+		return "@%d" % left
+	return ""
+
+
+## The blocker as a line for a button or prompt.
+func blocker_text(id: String) -> String:
+	var b := build_blocker(id)
+	if b == "":
+		return ""
+	if b.begins_with("@"):
+		var n := int(b.substr(1))
+		return "OPENS IN %d NIGHT%s" % [n, "" if n == 1 else "S"]
+	return "BUILD THE %s FIRST" % b.replace("_", " ").to_upper()
+
+
+## The next room in the planned order that is not built yet.
+func next_build() -> String:
+	for id in BUILD_ORDER:
+		if building_level(str(id)) <= 0:
+			return str(id)
+	return ""
+
+
 func build_cost(id: String) -> int:
 	var lvl := building_level(id)
 	if lvl == 0:
-		return 15
+		return 15 + 6 * maxi(0, BUILD_ORDER.find(id))
 	return 20 + lvl * 10
 
 
 func try_build(id: String) -> bool:
 	var cost := build_cost(id)
-	if int(data["gold"]) < cost:
+	if build_blocker(id) != "" or int(data["gold"]) < cost:
 		return false
 	data["gold"] = int(data["gold"]) - cost
 	data["buildings"][id] = building_level(id) + 1
@@ -330,6 +427,7 @@ func grant(gold: int, gems: int, line: String) -> void:
 
 
 func mark_run_finished(ok: bool = true) -> void:
+	VaultCards.on_night()
 	data["runs"] = int(data["runs"]) + 1
 	data["lifetime_points"] = int(data["lifetime_points"]) + (2 if ok else 1)
 	data["rep"] = int(data["rep"]) + (1 if ok else 0)
@@ -339,7 +437,19 @@ func mark_run_finished(ok: bool = true) -> void:
 		flag_unseen("build_streak_locker")
 	else:
 		data["streak"] = 0
+	# Run history (STATS): the last ten nights.
+	var hist: Array = data.get("run_history", [])
+	var k0 := int(Engine.get_meta("run_kills0", int(data.get("kills_total", 0))))
+	var t0 := float(Engine.get_meta("run_t0", Time.get_ticks_msec() / 1000.0))
+	hist.push_front({"map": str(App.current_map), "ok": ok, "kills": int(data.get("kills_total", 0)) - k0,
+		"secs": int(Time.get_ticks_msec() / 1000.0 - t0), "peak": int(Juice.combo_peak), "date": Time.get_date_string_from_system()})
+	data["run_history"] = hist.slice(0, 10)
 	_bump_daily("run")
+	# The night that opens the next room says so.
+	var nb := next_build()
+	if nb != "" and nights_for(nb) == int(data["runs"]) and build_blocker(nb) == "":
+		flag_unseen("build_%s" % nb)
+		Juice.toast("unlock", "NEW ROOM READY", "%s can go up at camp." % nb.replace("_", " ").to_upper())
 	save()
 
 
@@ -420,6 +530,11 @@ func has_cbt(id: String) -> bool:
 	return (data["cbt"] as Array).has(id)
 
 
+## Gems for the step from rank `rank` to the next: only the master rank.
+static func dojo_gem_cost(rank: int) -> int:
+	return 1 if rank == 2 else 0
+
+
 func try_cbt(id: String) -> bool:
 	if has_cbt(id):
 		return false
@@ -438,17 +553,27 @@ func try_cbt(id: String) -> bool:
 		return false
 	if int(data.get("rep", 0)) < int(spec.get("rep", 0)):
 		return false
+	if int(data.get("gems", 0)) < int(spec.get("gems", 0)):
+		return false
 	data["gold"] = int(data["gold"]) - int(spec.get("gold", 0))
+	# Capstones also take a gem: gems buy the late, special stuff.
+	data["gems"] = int(data.get("gems", 0)) - int(spec.get("gems", 0))
 	(data["cbt"] as Array).append(id)
 	save()
 	Rarity.juice(str(spec.get("rarity", "common")), str(spec.get("name", id)))
-	Juice.claim_burst(Vector2(640, 360), "COPING MECHANISM INSTALLED", 0, 0)
+	Juice.claim_burst(Vector2(320, 180), "COPING MECHANISM INSTALLED", 0, 0)
 	Juice.toast("reward", str(spec.get("name", id)), "COPING MECHANISM INSTALLED")
 	return true
 
 
 func note_tower() -> void:
 	data["towers_climbed"] = int(data.get("towers_climbed", 0)) + 1
+	var topped: Array = data.get("tower_tokens", [])
+	if not topped.has(App.current_map):
+		topped.append(App.current_map)
+		data["tower_tokens"] = topped
+		VaultCards.add_tokens(1, "Top of the tower. The view pays.")
+	Trees.add_flow(15)
 	save()
 
 
@@ -491,8 +616,7 @@ func equipped_id(role: String, slot: String) -> String:
 
 
 func owns_gear(id: String) -> bool:
-	var owned: Array = data.get("owned_gear", [])
-	return owned.has(id)
+	return GearInv.tier(id) >= 0
 
 
 func gear_level(id: String) -> int:
@@ -507,28 +631,51 @@ func gear_stat_bonus(role: String) -> Dictionary:
 		if spec.is_empty():
 			continue
 		var st: Variant = spec.get("stats", {})
-		var lvl := gear_level(str(spec.get("id", "")))
+		var gid := str(spec.get("id", ""))
+		var lvl := gear_level(gid)
 		if typeof(st) != TYPE_DICTIONARY:
 			continue
+		# Rarity above the piece's base multiplies it (GearInv.stat_mul).
+		var mul := GearInv.stat_mul(gid)
 		for k in out.keys():
-			out[k] = int(out[k]) + int((st as Dictionary).get(k, 0)) + lvl
+			var base := int((st as Dictionary).get(k, 0))
+			out[k] = int(out[k]) + int(round(float(base) * mul)) + (lvl if base >= 0 else 0)
+	# The hero suit worn over everything adds its own bit.
+	var ss := Suits.stats(role)
+	for k in out.keys():
+		out[k] = int(out[k]) + int(ss.get(k, 0))
 	return out
 
 
 func try_buy_gear(id: String) -> bool:
 	var spec := GearBook.item(id)
-	if spec.is_empty() or owns_gear(id):
+	if spec.is_empty():
 		return false
-	if int(data.get("gold", 0)) < int(spec.get("gold", 0)):
+	# Owned already: buy another copy (three combine into a rarer one).
+	var price := gear_price(id)
+	if int(data.get("gold", 0)) < price:
 		return false
 	if int(data.get("rep", 0)) < int(spec.get("rep", 0)):
 		return false
-	data["gold"] = int(data["gold"]) - int(spec.get("gold", 0))
-	(data["owned_gear"] as Array).append(id)
+	var had := owns_gear(id)
+	data["gold"] = int(data["gold"]) - price
+	GearInv.add(id)
+	if had:
+		save()
+		Juice.toast("reward", "+1 COPY", "%s  ·  three alike combine into a rarer one." % str(spec.get("title", spec.get("name", id))))
+		return true
 	flag_unseen("gear_%s" % id)
 	save()
 	Juice.unlock_logo(str(spec.get("name", id)), str(spec.get("blurb", "Clothes with opinions.")), "GEAR  ·  %s" % Rarity.label(str(spec.get("rarity", "common"))))
 	return true
+
+
+## A copy costs its price; free starter pieces cost 25 gold as copies.
+func gear_price(id: String) -> int:
+	var g := int(GearBook.item(id).get("gold", 0))
+	if owns_gear(id) and g <= 0:
+		return 25
+	return g
 
 
 func try_upgrade_gear(id: String) -> bool:
@@ -536,7 +683,7 @@ func try_upgrade_gear(id: String) -> bool:
 		return false
 	var spec := GearBook.item(id)
 	var lvl := gear_level(id)
-	if lvl >= 3:
+	if lvl >= GearInv.level_cap(id):
 		return false
 	var cost := int(spec.get("upgrade", 20)) * (lvl + 1)
 	if int(data.get("gold", 0)) < cost:
@@ -591,6 +738,8 @@ func grant_account_xp(n: int) -> Dictionary:
 		data["account_xp"] = int(data["account_xp"]) - account_need()
 		data["account_level"] = int(data.get("account_level", 1)) + 1
 		data["gold"] = int(data.get("gold", 0)) + 8
+		data["gems"] = int(data.get("gems", 0)) + 3
+		data["card_tokens"] = int(data.get("card_tokens", 0)) + 1
 		dings += 1
 		flag_unseen("level_%d" % int(data["account_level"]))
 	save()
@@ -613,13 +762,35 @@ func note_score(total: int) -> void:
 		save()
 
 
+## A clean slate: every save, backup, open room and photo is deleted and the
+## profile goes back to defaults. Only the options (graphics, volumes) stay.
+## Call restart_clean() after it so nothing from the old run lives on in
+## memory either.
 func reset_progress() -> void:
-	var stamp := Time.get_datetime_string_from_system().replace(":", "-").replace("T", "_")
-	backup_to("user://family.json.bak")
-	backup_to("user://family-%s.bak.json" % stamp)
+	var keep := {}
+	for k in data.keys():
+		var key := str(k)
+		if key == "gfx" or key.begins_with("vol_"):
+			keep[key] = data[k]
+	var dir := DirAccess.open("user://")
+	if dir != null:
+		for f in dir.get_files():
+			if f.begins_with("family") or f == "open_room.json":
+				dir.remove(f)
+	var shots := DirAccess.open("user://photos")
+	if shots != null:
+		for f in shots.get_files():
+			shots.remove(f)
 	data = _defaults()
+	for k in keep.keys():
+		data[k] = keep[k]
 	save()
-	Juice.toast("challenge", "PROGRESS WIPED", "Backup kept. The fridge does not remember you.")
+
+
+## Start the whole game again (fresh autoloads, no leftover run state).
+func restart_clean() -> void:
+	OS.set_restart_on_exit(true)
+	get_tree().quit()
 
 
 func mark_ending() -> void:
@@ -864,6 +1035,12 @@ func try_dojo(id: String) -> bool:
 			spec = row
 			break
 	if spec.is_empty():
+		# Combos live in their own book (data/combos.json).
+		spec = ComboBook.by_id(id)
+		if not spec.is_empty():
+			spec = spec.duplicate()
+			spec["kind"] = "combat"
+	if spec.is_empty():
 		return false
 	var rank := dojo_rank(id)
 	if rank >= 3:
@@ -872,7 +1049,12 @@ func try_dojo(id: String) -> bool:
 	var cost := int(costs[mini(rank, costs.size() - 1)])
 	if int(data.get("gold", 0)) < cost:
 		return false
+	# Master rank (the badge) also costs a gem.
+	var gem_cost := dojo_gem_cost(rank)
+	if int(data.get("gems", 0)) < gem_cost:
+		return false
 	data["gold"] = int(data["gold"]) - cost
+	data["gems"] = int(data.get("gems", 0)) - gem_cost
 	var d: Dictionary = data.get("dojo", {})
 	d[id] = rank + 1
 	data["dojo"] = d
@@ -881,6 +1063,7 @@ func try_dojo(id: String) -> bool:
 		grant_cosmetic("badge", "badge_shaolin", true)
 	flag_unseen("dojo_%s" % id)
 	save()
+	Suits.check_progress()
 	var title := str(spec.get("title", id))
 	if int(d[id]) == 1:
 		Juice.unlock_logo("%s  LEARNED" % title, "Dojo gates the move. Rank 1 unlocks. Rank 3 pins a badge.", "MOVE  ·  UNLOCKED")
@@ -985,12 +1168,16 @@ func claim_patrol() -> Dictionary:
 
 func mark_trick() -> void:
 	data["tricks"] = int(data.get("tricks", 0)) + 1
+	Trees.add_flow(int(round(1.0 * Meta.trick_flow_mul() * (1.5 if Artifacts.has("rush_job") else 1.0))))
+	_trick_perks(false)
 	sync_cosmetics(true)
 	save()
 
 
 func mark_perfect() -> void:
 	data["perfect_tricks"] = int(data.get("perfect_tricks", 0)) + 1
+	Trees.add_flow(int(round(2.0 * Meta.trick_flow_mul())))
+	_trick_perks(true)
 	save()
 
 
@@ -1217,6 +1404,7 @@ func mark_pole() -> void:
 
 func mark_wallkick() -> void:
 	data["wallkicks"] = int(data.get("wallkicks", 0)) + 1
+	Trees.add_flow(1)
 	save()
 
 
@@ -1407,7 +1595,7 @@ func grant_prize(id: String) -> void:
 	if id.begins_with("gear_"):
 		var gid := id.substr(5)
 		if not owns_gear(gid):
-			(data["owned_gear"] as Array).append(gid)
+			GearInv.add(gid)
 			flag_unseen("gear_%s" % gid)
 			save()
 			Juice.unlock_logo(gid.replace("_", " ").to_upper(), "It fell out of a chest. Wear it.", "GEAR")
@@ -1458,3 +1646,30 @@ func try_craft(id: String) -> bool:
 	Juice.unlock_logo(str(spec.get("title", id)), str(spec.get("blurb", "Crafted. Filed.")), "CRAFT  ·  %s" % Rarity.label(str(spec.get("rarity", "common"))))
 	Rarity.juice(str(spec.get("rarity", "common")), str(spec.get("title", id)))
 	return true
+
+
+
+## PARKOUR tree perks that fire on every trick (all living fighters).
+func _trick_perks(perfect: bool) -> void:
+	var tree := get_tree()
+	if tree == null:
+		return
+	for n in tree.get_nodes_in_group("players"):
+		if not (n is Fighter) or (n as Fighter).downed:
+			continue
+		var f := n as Fighter
+		if Trees.has("p_trick_steam"):
+			f.steam = minf(Fighter.STEAM_MAX, f.steam + 10.0)
+		if perfect and Trees.has("p_flow_heal"):
+			f.hp = mini(f.max_hp, f.hp + 4)
+			Juice.popup_number(f.global_position + Vector2(0, -100), "+4", Palette.READY)
+		if Trees.has("p_ghost"):
+			f.invuln = maxi(f.invuln, 30)
+		if Trees.has("p_chain"):
+			f.trick_t *= 1.5
+		if Trees.has("p_combo_keep"):
+			Juice.keep_combo()
+		var rs := tree.get_first_node_in_group("run_state")
+		if Trees.has("p_score") and rs and rs.has_method("add_points"):
+			rs.add_points(f.role, 50, "trick")
+

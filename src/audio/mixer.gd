@@ -6,6 +6,8 @@ var _music_a: AudioStreamPlayer
 var _music_b: AudioStreamPlayer
 var _using_a := true
 var _pool: Array[AudioStreamPlayer] = []
+var _grunts: Array[AudioStreamPlayer] = []
+var _grunt_i := 0
 
 
 func _ready() -> void:
@@ -17,6 +19,10 @@ func _ready() -> void:
 	for i in 6:
 		var p := _make("sfx")
 		_pool.append(p)
+	# Fight breath and shouts: own voices on the vo bus, so a jab's exhale
+	# never cuts a spoken line and never ducks the music.
+	for i in 2:
+		_grunts.append(_make("vo"))
 	apply_volumes()
 
 
@@ -64,6 +70,21 @@ func play_sfx(path: String, pitch := 1.0, vol_db := 0.0) -> void:
 	p.play()
 
 
+## A fighter's breath / grunt / kiai: round-robin over two players so a
+## fast jab chain overlaps naturally instead of chopping itself off.
+func play_grunt(path: String, pitch := 1.0, vol_db := 0.0) -> void:
+	if not ResourceLoader.exists(path):
+		return
+	if _vo.playing and vol_db < -3.0:
+		return
+	var p := _grunts[_grunt_i]
+	_grunt_i = (_grunt_i + 1) % _grunts.size()
+	p.stream = load(path)
+	p.pitch_scale = pitch
+	p.volume_db = vol_db
+	p.play()
+
+
 func play_vo(path: String) -> void:
 	if not ResourceLoader.exists(path):
 		return
@@ -90,15 +111,27 @@ func _duck(on: bool) -> void:
 
 
 func play_music(path: String) -> void:
+	# Composed tracks (tools/music_gen.py) sit next to the old synth loops as
+	# .ogg with the same name and win when present.
+	# Tracks in assets/audio/music/ (tools/ace_music.py) win over both.
+	var named := "res://assets/audio/music/%s.ogg" % path.get_file().get_basename()
+	var ogg := path.get_basename() + ".ogg"
+	if ResourceLoader.exists(named):
+		path = named
+	elif ResourceLoader.exists(ogg):
+		path = ogg
 	if not ResourceLoader.exists(path):
 		return
 	var incoming := _music_b if _using_a else _music_a
 	var outgoing := _music_a if _using_a else _music_b
 	if outgoing.playing and outgoing.stream and outgoing.stream.resource_path == path:
 		return
+	_music_path = path
 	incoming.stream = load(path)
 	if incoming.stream is AudioStreamWAV:
 		(incoming.stream as AudioStreamWAV).loop_mode = AudioStreamWAV.LOOP_FORWARD
+	elif incoming.stream is AudioStreamOggVorbis:
+		(incoming.stream as AudioStreamOggVorbis).loop = true
 	incoming.volume_db = -40.0
 	incoming.play()
 	var tw := create_tween().set_parallel(true).set_ignore_time_scale(true)
@@ -106,6 +139,22 @@ func play_music(path: String) -> void:
 	tw.tween_property(incoming, "volume_db", 0.0, 0.7)
 	tw.chain().tween_callback(outgoing.stop)
 	_using_a = not _using_a
+
+
+var _music_path := ""
+var _music_saved := ""
+
+
+## Swap to a track for a while (a shop) and come back to what played.
+func push_music(path: String) -> void:
+	_music_saved = _music_path
+	play_music(path)
+
+
+func pop_music() -> void:
+	if _music_saved != "":
+		play_music(_music_saved)
+		_music_saved = ""
 
 
 func stop_music() -> void:

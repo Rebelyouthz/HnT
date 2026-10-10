@@ -57,6 +57,13 @@ func _ready() -> void:
 			_poly.color = Color(0.45, 0.32, 0.2)
 			_poly.polygon = PackedVector2Array([Vector2(-20, -4), Vector2(20, -4), Vector2(20, 4), Vector2(-20, 4)])
 	add_child(_poly)
+	if ResourceLoader.exists("res://assets/sprites/held/%s.png" % kind):
+		var art := Sprite2D.new()
+		art.texture = load("res://assets/sprites/held/%s.png" % kind)
+		art.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
+		art.texture_filter = SpriteBook.world_filter()
+		_poly.add_child(art)
+		_poly.color.a = 0.0
 	body_entered.connect(_on_body)
 	area_entered.connect(_on_area)
 	Juice.play("res://assets/audio/throw.wav")

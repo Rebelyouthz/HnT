@@ -6,6 +6,28 @@ func _enter_tree() -> void:
 	_bind_keyboard()
 
 
+func _ready() -> void:
+	# Video options and the pixel cursor once the profile is loaded.
+	call_deferred("_apply_settings")
+
+
+func _apply_settings() -> void:
+	if DisplayServer.get_name() != "headless":
+		Gfx.apply(get_tree())
+	PixelCursor.install(get_tree())
+
+
+## F11 / Alt+Enter: fullscreen <-> window. The game boots fullscreen.
+func _unhandled_key_input(event: InputEvent) -> void:
+	var k := event as InputEventKey
+	if k == null or not k.pressed or k.echo:
+		return
+	if k.keycode == KEY_F11 or (k.keycode == KEY_ENTER and k.alt_pressed):
+		var full := DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED if full else DisplayServer.WINDOW_MODE_FULLSCREEN)
+		get_viewport().set_input_as_handled()
+
+
 func _bind_keyboard() -> void:
 	_act("p1_left", [KEY_A])
 	_act("p1_right", [KEY_D])
@@ -16,12 +38,15 @@ func _bind_keyboard() -> void:
 	_act("p1_heavy", [KEY_K])
 	_act("p1_special", [KEY_L])
 	_act("p1_shoot", [KEY_O])
-	_act("p1_block", [KEY_I])
-	_act("p1_throw", [KEY_U])
+	_act("p1_block", [KEY_I, KEY_Q])
+	_act("p1_throw", [KEY_U, KEY_E])
 	_act("p1_dash", [KEY_SHIFT])
 	_act("p1_snap", [KEY_F])
 	_act("p1_duck", [KEY_C])
 	_act("p1_pause", [KEY_ESCAPE])
+	# Mouse: left punch, middle heavy, right shoot (aim follows the cursor).
+	_mouse("p1_light", MOUSE_BUTTON_LEFT)
+	_mouse("p1_heavy", MOUSE_BUTTON_MIDDLE)
 	_mouse("p1_shoot", MOUSE_BUTTON_RIGHT)
 	_act("p2_left", [KEY_LEFT])
 	_act("p2_right", [KEY_RIGHT])
@@ -38,6 +63,15 @@ func _bind_keyboard() -> void:
 	_act("p2_snap", [KEY_N])
 	_act("p2_duck", [KEY_M])
 	_act("p2_pause", [KEY_P])
+	# QUICK BELT slots.
+	_act("p1_slot1", [KEY_1])
+	_act("p1_slot2", [KEY_2])
+	_act("p1_slot3", [KEY_3])
+	_act("p1_slot4", [KEY_4])
+	_act("p2_slot1", [KEY_7])
+	_act("p2_slot2", [KEY_8])
+	_act("p2_slot3", [KEY_9])
+	_act("p2_slot4", [KEY_0])
 	_act("ui_accept", [KEY_ENTER, KEY_SPACE])
 	_act("ui_cancel", [KEY_ESCAPE])
 

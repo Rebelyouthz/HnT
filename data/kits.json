@@ -14,6 +14,16 @@
     "block": 0.22, "hp": 70, "speed": 28, "weapon": "fist",
     "blurb": "Headbutt window. Throws refuse 50%."
   },
+  "Repo Goon": {
+    "tier": "medium", "armor": "none", "style": "brawl", "attack": "heavy",
+    "block": 0.18, "hp": 58, "speed": 36, "weapon": "fist",
+    "blurb": "Repossesses teeth. Takes the cash, then the molars as interest."
+  },
+  "Bailiff": {
+    "tier": "elite", "armor": "heavy", "style": "brawl", "attack": "heavy",
+    "block": 0.4, "hp": 120, "speed": 30, "weapon": "fist",
+    "blurb": "ELITE. The vest eats bullets and lights. Heavies, throws, a face shot. He is only following orders, which is worse."
+  },
   "Beat Cop": {
     "tier": "medium", "armor": "light", "style": "gun", "attack": "gun",
     "block": 0.18, "hp": 48, "speed": 44, "weapon": "pistol", "cop": true,

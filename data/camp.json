@@ -1,0 +1,150 @@
+{
+ "note": "Hideout stations: id + x as a fraction of the painted camp backdrop width (assets/backdrops/camp.png). painted=false draws the building icon instead.",
+ "stations": [
+  {
+   "id": "workshop",
+   "x": 0.025,
+   "painted": true
+  },
+  {
+   "id": "trophy_cabinet",
+   "x": 0.055,
+   "painted": true
+  },
+  {
+   "id": "wardrobe_cage",
+   "x": 0.088,
+   "painted": true
+  },
+  {
+   "id": "radio_tower",
+   "x": 0.112,
+   "painted": true
+  },
+  {
+   "id": "street_map",
+   "x": 0.15,
+   "painted": true
+  },
+  {
+   "id": "punching_bag",
+   "x": 0.19,
+   "painted": true
+  },
+  {
+   "id": "mail_slot",
+   "x": 0.226,
+   "painted": true
+  },
+  {
+   "id": "dojo",
+   "x": 0.3,
+   "painted": true
+  },
+  {
+   "id": "bulletin_board",
+   "x": 0.345,
+   "painted": true
+  },
+  {
+   "id": "bounty_board",
+   "x": 0.405,
+   "painted": true
+  },
+  {
+   "id": "research_lab",
+   "x": 0.445,
+   "painted": true
+  },
+  {
+   "id": "command_board",
+   "x": 0.492,
+   "painted": true
+  },
+  {
+   "id": "water_cooler",
+   "x": 0.508,
+   "painted": true
+  },
+  {
+   "id": "blood_fridge",
+   "x": 0.524,
+   "painted": true
+  },
+  {
+   "id": "streak_locker",
+   "x": 0.548,
+   "painted": true
+  },
+  {
+   "id": "payphone",
+   "x": 0.566,
+   "painted": true
+  },
+  {
+   "id": "warrant_fax",
+   "x": 0.584,
+   "painted": true
+  },
+  {
+   "id": "album_wall",
+   "x": 0.602,
+   "painted": true
+  },
+  {
+   "id": "therapy_couch",
+   "x": 0.622,
+   "painted": true
+  },
+  {
+   "id": "time_clock",
+   "x": 0.646,
+   "painted": true
+  },
+  {
+   "id": "coat_check",
+   "x": 0.67,
+   "painted": true
+  },
+  {
+   "id": "front_desk",
+   "x": 0.695,
+   "painted": true
+  },
+  {
+   "id": "lost_found",
+   "x": 0.765,
+   "painted": true
+  },
+  {
+   "id": "pawn_shop",
+   "x": 0.79,
+   "painted": true
+  },
+  {
+   "id": "tip_jar",
+   "x": 0.808,
+   "painted": true
+  },
+  {
+   "id": "invoice_wheel",
+   "x": 0.828,
+   "painted": true
+  },
+  {
+   "id": "bleach_closet",
+   "x": 0.875,
+   "painted": true
+  },
+  {
+   "id": "compare_mirrors",
+   "x": 0.915,
+   "painted": true
+  },
+  {
+   "id": "patrol_desk",
+   "x": 0.95,
+   "painted": true
+  }
+ ]
+}

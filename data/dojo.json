@@ -1,82 +1,314 @@
 [
-  {
-    "id": "uppercut",
-    "title": "UPPERCUT",
-    "blurb": "Up + heavy. Launch. Master rank adds hang-time and points.",
-    "rarity": "uncommon",
-    "gold": [20, 35, 55],
-    "kind": "combat"
-  },
-  {
-    "id": "roundhouse",
-    "title": "ROUNDHOUSE",
-    "blurb": "After two lights, heavy. The kick is the invoice.",
-    "rarity": "rare",
-    "gold": [24, 40, 60],
-    "kind": "combat"
-  },
-  {
-    "id": "stomp_finish",
-    "title": "FACE STOMP",
-    "blurb": "Three stomps on a crushed skull. Smash, pop, splash. Brain on three.",
-    "rarity": "epic",
-    "gold": [30, 50, 80],
-    "kind": "combat"
-  },
-  {
-    "id": "speed_vault",
-    "title": "SPEED VAULT",
-    "blurb": "Vector called. Hands on the rail, legs through. Easy path is just-jump.",
-    "rarity": "uncommon",
-    "gold": [18, 32, 48],
-    "kind": "parkour"
-  },
-  {
-    "id": "kong",
-    "title": "KONG / CAT PASS",
-    "blurb": "Dive the hands. Harder. More points. The Son teaches this for money.",
-    "rarity": "rare",
-    "gold": [26, 44, 70],
-    "kind": "parkour"
-  },
-  {
-    "id": "dash_vault",
-    "title": "DASH VAULT",
-    "blurb": "Dash into the rail. One foot, one lie about grace.",
-    "rarity": "rare",
-    "gold": [22, 38, 58],
-    "kind": "parkour"
-  },
-  {
-    "id": "land_roll",
-    "title": "LANDING ROLL",
-    "blurb": "Vector+. High drop, down or dash on contact. Converts fall into speed.",
-    "rarity": "epic",
-    "gold": [28, 46, 72],
-    "kind": "parkour"
-  },
-  {
-    "id": "grab_slam",
-    "title": "GRAB SLAM",
-    "blurb": "Throw on a crushed skull becomes a slam. SoR4 wall setup. Rank 1 unlocks.",
-    "rarity": "rare",
-    "gold": [24, 40, 64],
-    "kind": "combat"
-  },
-  {
-    "id": "wall_bounce",
-    "title": "WALL BOUNCE",
-    "blurb": "Heavies near a wall juggle. Rank 1 unlocks the bounce. Rank 3 is greedy.",
-    "rarity": "epic",
-    "gold": [32, 50, 78],
-    "kind": "combat"
-  },
-  {
-    "id": "air_mix",
-    "title": "AIR MIX",
-    "blurb": "Special in the air. Rank 1 unlocks. The Son already bills for hang-time.",
-    "rarity": "rare",
-    "gold": [26, 44, 68],
-    "kind": "combat"
-  }
+ {
+  "id": "uppercut",
+  "title": "UPPERCUT",
+  "blurb": "Up + heavy. Launch. Master rank adds hang-time and points.",
+  "rarity": "uncommon",
+  "gold": [
+   20,
+   35,
+   55
+  ],
+  "kind": "combat"
+ },
+ {
+  "id": "roundhouse",
+  "title": "ROUNDHOUSE",
+  "blurb": "After two lights, heavy. The kick is the invoice.",
+  "rarity": "rare",
+  "gold": [
+   24,
+   40,
+   60
+  ],
+  "kind": "combat"
+ },
+ {
+  "id": "stomp_finish",
+  "title": "FACE STOMP",
+  "blurb": "Three stomps on a crushed skull. Smash, pop, splash. Brain on three.",
+  "rarity": "epic",
+  "gold": [
+   30,
+   50,
+   80
+  ],
+  "kind": "combat"
+ },
+ {
+  "id": "speed_vault",
+  "title": "SPEED VAULT",
+  "blurb": "Vector called. Hands on the rail, legs through. Easy path is just-jump.",
+  "rarity": "uncommon",
+  "gold": [
+   18,
+   32,
+   48
+  ],
+  "kind": "parkour"
+ },
+ {
+  "id": "kong",
+  "title": "KONG / CAT PASS",
+  "blurb": "Dive the hands. Harder. More points. The Son teaches this for money.",
+  "rarity": "rare",
+  "gold": [
+   26,
+   44,
+   70
+  ],
+  "kind": "parkour"
+ },
+ {
+  "id": "dash_vault",
+  "title": "DASH VAULT",
+  "blurb": "Dash into the rail. One foot, one lie about grace.",
+  "rarity": "rare",
+  "gold": [
+   22,
+   38,
+   58
+  ],
+  "kind": "parkour"
+ },
+ {
+  "id": "land_roll",
+  "title": "LANDING ROLL",
+  "blurb": "Vector+. High drop, down or dash on contact. Converts fall into speed.",
+  "rarity": "epic",
+  "gold": [
+   28,
+   46,
+   72
+  ],
+  "kind": "parkour"
+ },
+ {
+  "id": "grab_slam",
+  "title": "GRAB SLAM",
+  "blurb": "Throw on a crushed skull becomes a slam. SoR4 wall setup. Rank 1 unlocks.",
+  "rarity": "rare",
+  "gold": [
+   24,
+   40,
+   64
+  ],
+  "kind": "combat"
+ },
+ {
+  "id": "wall_bounce",
+  "title": "WALL BOUNCE",
+  "blurb": "Heavies near a wall juggle. Rank 1 unlocks the bounce. Rank 3 is greedy.",
+  "rarity": "epic",
+  "gold": [
+   32,
+   50,
+   78
+  ],
+  "kind": "combat"
+ },
+ {
+  "id": "air_mix",
+  "title": "AIR MIX",
+  "blurb": "Special in the air. Rank 1 unlocks. The Son already bills for hang-time.",
+  "rarity": "rare",
+  "gold": [
+   26,
+   44,
+   68
+  ],
+  "kind": "combat"
+ },
+ {
+  "id": "tic_tac",
+  "title": "TIC-TAC",
+  "blurb": "Kick off the wall, change direction mid-air. UP at the wall. The Son calls it physics.",
+  "rarity": "uncommon",
+  "gold": [
+   22,
+   38,
+   56
+  ],
+  "kind": "parkour"
+ },
+ {
+  "id": "wall_kick",
+  "title": "WALL CLING KICK",
+  "blurb": "Stick to the wall for a heartbeat, then launch. SPECIAL at the wall.",
+  "rarity": "rare",
+  "gold": [
+   30,
+   50,
+   76
+  ],
+  "kind": "parkour"
+ },
+ {
+  "id": "king_kong",
+  "title": "KING KONG JUMPOFF",
+  "blurb": "Double-hand kong over a gap and keep flying. SPECIAL at the gap. Epic.",
+  "rarity": "epic",
+  "gold": [
+   40,
+   66,
+   96
+  ],
+  "kind": "parkour"
+ },
+ {
+  "id": "lazy_vault",
+  "title": "LAZY VAULT",
+  "blurb": "Hand on, swing the legs over sideways. Lazy is a lie, it's efficient.",
+  "rarity": "rare",
+  "gold": [
+   20,
+   34,
+   52
+  ],
+  "kind": "parkour"
+ },
+ {
+  "id": "reverse_vault",
+  "title": "REVERSE VAULT",
+  "blurb": "Turn your back to the box mid-air, hand plant, land facing forward.",
+  "rarity": "rare",
+  "gold": [
+   26,
+   42,
+   64
+  ],
+  "kind": "parkour"
+ },
+ {
+  "id": "double_kong",
+  "title": "DOUBLE KONG",
+  "blurb": "Two hand plants on one long box. The Son's party trick.",
+  "rarity": "epic",
+  "gold": [
+   38,
+   58,
+   88
+  ],
+  "kind": "parkour"
+ },
+ {
+  "id": "cat_leap",
+  "title": "CAT LEAP",
+  "blurb": "Jump, catch the wall edge with hands and feet. Hang like a cat.",
+  "rarity": "rare",
+  "gold": [
+   26,
+   42,
+   64
+  ],
+  "kind": "parkour"
+ },
+ {
+  "id": "dive_roll",
+  "title": "DIVE ROLL",
+  "blurb": "Dive over, hands first, roll out on the shoulder. Never on the head.",
+  "rarity": "rare",
+  "gold": [
+   26,
+   42,
+   64
+  ],
+  "kind": "parkour"
+ },
+ {
+  "id": "front_flip",
+  "title": "FRONT FLIP",
+  "blurb": "Tuck forward, spot the landing, legs under you.",
+  "rarity": "rare",
+  "gold": [
+   32,
+   50,
+   76
+  ],
+  "kind": "parkour"
+ },
+ {
+  "id": "back_flip",
+  "title": "BACK FLIP",
+  "blurb": "Arms up, chest up, tuck back. Don't look for the floor too early.",
+  "rarity": "rare",
+  "gold": [
+   32,
+   50,
+   76
+  ],
+  "kind": "parkour"
+ },
+ {
+  "id": "side_flip",
+  "title": "SIDE FLIP",
+  "blurb": "Kick the lead leg, rotate sideways, land facing the way you went.",
+  "rarity": "rare",
+  "gold": [
+   32,
+   50,
+   76
+  ],
+  "kind": "parkour"
+ },
+ {
+  "id": "palm_spin",
+  "title": "PALM SPIN",
+  "blurb": "Hand on the obstacle, spin a full turn around it.",
+  "rarity": "rare",
+  "gold": [
+   32,
+   50,
+   76
+  ],
+  "kind": "parkour"
+ },
+ {
+  "id": "webster",
+  "title": "WEBSTER",
+  "blurb": "Front flip off one leg. Coach-level.",
+  "rarity": "epic",
+  "gold": [
+   38,
+   58,
+   88
+  ],
+  "kind": "parkour"
+ },
+ {
+  "id": "gainer",
+  "title": "GAINER",
+  "blurb": "A back flip that travels forward. Running gainer = legends.",
+  "rarity": "epic",
+  "gold": [
+   38,
+   58,
+   88
+  ],
+  "kind": "parkour"
+ },
+ {
+  "id": "cork",
+  "title": "CORK",
+  "blurb": "Back flip with a full twist. The Son says don't try this at home.",
+  "rarity": "legendary",
+  "gold": [
+   44,
+   66,
+   100
+  ],
+  "kind": "parkour"
+ },
+ {
+  "id": "aerial",
+  "title": "AERIAL",
+  "blurb": "A cartwheel with no hands. Fly sideways.",
+  "rarity": "epic",
+  "gold": [
+   38,
+   58,
+   88
+  ],
+  "kind": "parkour"
+ }
 ]

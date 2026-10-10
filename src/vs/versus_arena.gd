@@ -96,7 +96,7 @@ func _process(_delta: float) -> void:
 	_paint()
 	if Input.is_action_just_pressed("p1_pause"):
 		App.versus = false
-		Mixer.play_music("res://assets/audio/music_clinic.wav")
+		Mixer.play_music("res://assets/audio/music/music_menu.ogg")
 		App.back_to_hub("run")
 
 
@@ -201,7 +201,7 @@ func _end(winner: String) -> void:
 	b.pressed.connect(func() -> void:
 		get_tree().paused = false
 		App.versus = false
-		Mixer.play_music("res://assets/audio/music_clinic.wav")
+		Mixer.play_music("res://assets/audio/music/music_menu.ogg")
 		App.back_to_hub("awards")
 	)
 	col.add_child(b)

@@ -1,7 +1,10 @@
 extends Node
 
-## Couch pads. Keyboard always stays on both prefixes (debug + P1 default).
-## 0 pads: keyboard. 1 pad: that pad is The Father (P2). 2+ pads: device 0 The Son, device 1 The Father.
+## Pads. Keyboard always stays on both prefixes (debug + P1 default).
+## SOLO (one body on screen): EVERY pad drives P1 - whichever pad you pick up
+## works, and the last pad touched is the one the right stick reads.
+## COUCH: 1 pad = The Father (P2, keyboard is The Son); 2+ pads = the pad that
+## was already P1 stays The Son, the next one is The Father.
 
 signal pads_changed
 signal drop_in(device: int)
@@ -9,7 +12,8 @@ signal drop_in(device: int)
 const DEAD := 0.22
 const ACTIONS := [
 	"left", "right", "up", "down", "jump", "light", "heavy", "special",
-	"shoot", "block", "throw", "dash", "snap", "pause", "duck"
+	"shoot", "block", "throw", "dash", "snap", "pause", "duck",
+	"slot1", "slot2", "slot3", "slot4"
 ]
 
 var p1_device := -1
@@ -17,19 +21,53 @@ var p2_device := -1
 var last_kind := "kb"
 var last_p1_kind := "kb"
 var last_p2_kind := "kb"
+## Mouse aim is live for a few seconds after the mouse last moved (P1 only).
+var _mouse_t := -100.0
+var _solo := true
+## Solo: has the P1 pad actually been played with? Until then a Start press on
+## any pad is just pause, so picking up the "other" pad never spawns Dad.
+var _p1_used := false
 
 
 func _enter_tree() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	Input.joy_connection_changed.connect(_on_joy)
+	# Newer / odd pads (iPega PG-9777 ...): the shipped controller database,
+	# then a best guess for unknown iPegas (PadCompat).
+	PadCompat.load_db()
+	for d in Input.get_connected_joypads():
+		PadCompat.guess(int(d))
 	_bind_ui()
+	_solo = _is_solo()
 	refresh()
+	# FamilyProfile (custom pad maps) loads after us: bind again once it is up.
+	refresh.call_deferred()
+
+
+## Solo vs couch can flip any time (Run-tab toggle, drop-in, scene change).
+func _process(_delta: float) -> void:
+	var s := _is_solo()
+	if s != _solo:
+		_solo = s
+		refresh()
+
+
+func _is_solo() -> bool:
+	var app := get_node_or_null("/root/App")
+	if app == null:
+		return true
+	return not bool(app.call("two_bodies"))
 
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventJoypadButton or event is InputEventJoypadMotion:
 		if event.device >= 0:
 			last_kind = "pad"
+			# Solo: the pad in your hands is P1 (Start on another pad drops in).
+			var start: bool = event is InputEventJoypadButton and event.button_index == JOY_BUTTON_START
+			if _solo and not start and _moved(event):
+				p1_device = event.device
+				_p1_used = true
 			if event.device == p1_device:
 				last_p1_kind = "pad"
 			elif event.device == p2_device:
@@ -38,10 +76,38 @@ func _input(event: InputEvent) -> void:
 			_handle_start(event.device)
 	elif event is InputEventKey and event.pressed:
 		last_kind = "kb"
+	elif event is InputEventMouseMotion and (event as InputEventMouseMotion).relative.length() > 2.0:
+		_mouse_t = Time.get_ticks_msec() / 1000.0
+		last_kind = "kb"
+		last_p1_kind = "kb"
 
 
-func _on_joy(_device: int, _connected: bool) -> void:
+func _moved(event: InputEvent) -> bool:
+	if event is InputEventJoypadButton:
+		return (event as InputEventJoypadButton).pressed
+	return absf((event as InputEventJoypadMotion).axis_value) > 0.5
+
+
+func _on_joy(device: int, connected: bool) -> void:
+	if connected:
+		var guessed := PadCompat.guess(device)
+		var juice := get_node_or_null("/root/Juice")
+		if juice and juice.has_method("toast"):
+			if custom_map(device).is_empty() and (guessed or not Input.is_joy_known(device)):
+				juice.call("toast", "info", "NEW PAD: " + Input.get_joy_name(device).to_upper(), "Buttons wrong? OPTIONS > CONTROLS > CONTROLLER SETUP")
 	refresh()
+
+
+## A pad's own button map from CONTROLLER SETUP (empty = the standard map).
+## {action: {"t": "b", "i": button} | {"t": "a", "i": axis, "v": +-1.0}}
+func custom_map(device: int) -> Dictionary:
+	if device < 0:
+		return {}
+	var fp := get_node_or_null("/root/FamilyProfile")
+	if fp == null or not (fp.get("data") is Dictionary):
+		return {}
+	var maps: Dictionary = (fp.get("data") as Dictionary).get("pad_maps", {})
+	return maps.get(Input.get_joy_guid(device), {}) as Dictionary
 
 
 func refresh() -> void:
@@ -49,17 +115,29 @@ func refresh() -> void:
 	if pads.is_empty():
 		p1_device = -1
 		p2_device = -1
+	elif _solo:
+		if not pads.has(p1_device):
+			p1_device = int(pads[0])
+		p2_device = -1
 	elif pads.size() == 1:
 		p1_device = -1
 		p2_device = int(pads[0])
 	else:
-		p1_device = int(pads[0])
-		p2_device = int(pads[1])
+		if not pads.has(p1_device):
+			p1_device = int(pads[0])
+		p2_device = -1
+		for d in pads:
+			if int(d) != p1_device:
+				p2_device = int(d)
+				break
 	_apply_pad_map()
 	pads_changed.emit()
 
 
 func _handle_start(device: int) -> void:
+	# Solo: Start on the pad you play with is pause, not a second player.
+	if _solo and (device == p1_device or not _p1_used or Input.get_connected_joypads().size() < 2):
+		return
 	var assigned := device == p1_device or device == p2_device
 	if not assigned:
 		var pads := Input.get_connected_joypads()
@@ -93,7 +171,11 @@ func _apply_pad_map() -> void:
 	for prefix in ["p1_", "p2_"]:
 		for a in ACTIONS:
 			_strip_joy(StringName(prefix + a))
-	if p1_device >= 0:
+	if _solo and p1_device >= 0:
+		# Every connected pad drives P1, each with its own map.
+		for d in Input.get_connected_joypads():
+			_bind_device("p1_", int(d))
+	elif p1_device >= 0:
 		_bind_device("p1_", p1_device)
 	if p2_device >= 0:
 		_bind_device("p2_", p2_device)
@@ -101,6 +183,10 @@ func _apply_pad_map() -> void:
 
 
 func _bind_device(prefix: String, device: int) -> void:
+	var cm := custom_map(device)
+	if not cm.is_empty():
+		_bind_custom(prefix, device, cm)
+		return
 	_joy_btn(prefix + "jump", JOY_BUTTON_A, device)
 	_joy_btn(prefix + "light", JOY_BUTTON_X, device)
 	_joy_btn(prefix + "heavy", JOY_BUTTON_Y, device)
@@ -109,11 +195,12 @@ func _bind_device(prefix: String, device: int) -> void:
 	_joy_btn(prefix + "block", JOY_BUTTON_LEFT_SHOULDER, device)
 	_joy_btn(prefix + "snap", JOY_BUTTON_RIGHT_STICK, device)
 	_joy_btn(prefix + "pause", JOY_BUTTON_START, device)
-	_joy_btn(prefix + "duck", JOY_BUTTON_DPAD_DOWN, device)
-	_joy_btn(prefix + "left", JOY_BUTTON_DPAD_LEFT, device)
-	_joy_btn(prefix + "right", JOY_BUTTON_DPAD_RIGHT, device)
-	_joy_btn(prefix + "up", JOY_BUTTON_DPAD_UP, device)
-	_joy_btn(prefix + "down", JOY_BUTTON_DPAD_DOWN, device)
+	# The d-pad is the QUICK BELT; moving is the left stick, duck its click.
+	_joy_btn(prefix + "duck", JOY_BUTTON_LEFT_STICK, device)
+	_joy_btn(prefix + "slot1", JOY_BUTTON_DPAD_LEFT, device)
+	_joy_btn(prefix + "slot2", JOY_BUTTON_DPAD_UP, device)
+	_joy_btn(prefix + "slot3", JOY_BUTTON_DPAD_RIGHT, device)
+	_joy_btn(prefix + "slot4", JOY_BUTTON_DPAD_DOWN, device)
 	_axis(prefix + "left", JOY_AXIS_LEFT_X, -1.0, device)
 	_axis(prefix + "right", JOY_AXIS_LEFT_X, 1.0, device)
 	_axis(prefix + "up", JOY_AXIS_LEFT_Y, -1.0, device)
@@ -129,6 +216,34 @@ func _strip_joy(name: StringName) -> void:
 	for e in InputMap.action_get_events(name):
 		if e is InputEventJoypadButton or e is InputEventJoypadMotion:
 			InputMap.action_erase_event(name, e)
+
+
+## CONTROLLER SETUP map: each action on the button / axis the player pressed.
+## Left / up are the opposite of the recorded right / down; the d-pad still
+## moves and works the belt; Jump / Special also confirm / back in menus.
+func _bind_custom(prefix: String, device: int, cm: Dictionary) -> void:
+	for a: String in cm.keys():
+		var m: Dictionary = cm[a]
+		var acts: Array = [a]
+		if a == "right":
+			acts = ["right", "left"]
+		elif a == "down":
+			acts = ["down", "up"]
+		elif a in ["aim_x", "aim_y"]:
+			continue
+		for k in acts.size():
+			var act := prefix + str(acts[k])
+			if str(m.get("t", "b")) == "a":
+				var v := float(m.get("v", 1.0)) * (1.0 if k == 0 else -1.0)
+				_axis(act, int(m.get("i", 0)) as JoyAxis, v, device)
+			else:
+				_joy_btn(act, int(m.get("i", 0)) as JoyButton, device)
+	for pair in [["left", JOY_BUTTON_DPAD_LEFT], ["right", JOY_BUTTON_DPAD_RIGHT], ["up", JOY_BUTTON_DPAD_UP], ["down", JOY_BUTTON_DPAD_DOWN]]:
+		_joy_btn(prefix + str(pair[0]), pair[1], device)
+	for ui in [["ui_accept", "jump"], ["ui_cancel", "special"]]:
+		var m2: Dictionary = cm.get(str(ui[1]), {})
+		if str(m2.get("t", "")) == "b":
+			_joy_btn(str(ui[0]), int(m2["i"]) as JoyButton, device)
 
 
 func _joy_btn(name: StringName, button: JoyButton, device: int) -> void:
@@ -163,26 +278,56 @@ func stick(prefix: StringName) -> Vector2:
 	return Input.get_vector(prefix + "left", prefix + "right", prefix + "up", prefix + "down", DEAD)
 
 
+func device_of(prefix: StringName) -> int:
+	return p1_device if str(prefix) == "p1_" else p2_device
+
+
+## The right stick of this player's pad (zero inside the dead zone).
+func rstick(prefix: StringName) -> Vector2:
+	var dev := device_of(prefix)
+	if dev < 0:
+		return Vector2.ZERO
+	var ax := JOY_AXIS_RIGHT_X
+	var ay := JOY_AXIS_RIGHT_Y
+	var sx := 1.0
+	var sy := 1.0
+	var cm := custom_map(dev)
+	if cm.has("aim_x"):
+		ax = int(cm["aim_x"]["i"]) as JoyAxis
+		sx = float(cm["aim_x"].get("v", 1.0))
+	if cm.has("aim_y"):
+		ay = int(cm["aim_y"]["i"]) as JoyAxis
+		sy = float(cm["aim_y"].get("v", 1.0))
+	var v := Vector2(Input.get_joy_axis(dev, ax) * sx, Input.get_joy_axis(dev, ay) * sy)
+	return v if v.length() > DEAD else Vector2.ZERO
+
+
+## True while P1 is steering with the mouse (it moved in the last 3 s).
+func mouse_live(prefix: StringName) -> bool:
+	return str(prefix) == "p1_" and Time.get_ticks_msec() / 1000.0 - _mouse_t < 3.0
+
+
 func p1_prompt() -> String:
 	if p1_device >= 0 and last_p1_kind == "pad":
-		return "PAD1  LS move  A jump  X light  Y heavy  B cape  RB batwing  RT dash  RS SNAP"
-	return "SON  WASD  SPACE jump  C duck  J light  K heavy  L cape  O batwing  SHIFT dash  F SNAP"
+		return "PAD1  LS move  A jump  X light  Y heavy  B cape  RB batwing  RT dash  RS SNAP  D-PAD belt"
+	return "WASD move  SPACE jump  C duck  J / LEFT CLICK light  K / MIDDLE CLICK heavy  L special  O / RIGHT CLICK shoot  SHIFT dash  1-4 belt"
 
 
 func p2_prompt() -> String:
 	if p2_device >= 0:
-		return "PAD2  LS move  A jump  X light  Y heavy  B web  RB snare  RT dash  RS SNAP"
+		return "PAD2  LS move  A jump  X light  Y heavy  B web  RB snare  RT dash  RS SNAP  D-PAD belt"
 	return "P2 JOIN  Start or keyboard P  ·  then arrows  CTRL jump  M duck  . light  / heavy  ; web  ' snare  ALT dash  N SNAP"
 
 
 func map_lines() -> PackedStringArray:
 	return PackedStringArray([
-		"Xbox layout. Keyboard always works. Hub GO does not wait for a second player.",
-		"Solo is the default. One body, fewer enemies. Couch 2P is a Run-tab toggle.",
-		"P1 The Son  keyboard WASD + J K L O  ·  pad 0 only when two pads are plugged in.",
-		"P2 The Father  first pad if one is plugged  ·  pad 1 if two  ·  arrows after join.",
+		"Xbox layout (Xbox, iPega and other pads). Keyboard and mouse always work too.",
+		"SOLO: any pad you pick up plays your hero. Couch 2P is a Run-tab toggle.",
+		"Mouse: LEFT click light attack  ·  MIDDLE click heavy  ·  RIGHT click shoot.",
+		"Keyboard: WASD move  SPACE jump  C duck  J light  K heavy  L special  O shoot  I block  U throw  SHIFT dash.",
+		"COUCH: one pad = The Father (keyboard is The Son)  ·  two pads = one each.",
 		"A jump   X light (SNAP confirm in the window)   Y heavy   B special",
 		"LB block   RB shoot   LT throw   RT dash/slide   RS click SNAP   Start pause",
-		"D-pad or left stick. Hold RT + down to slide. Hold A in the air to cape-glide (The Son).",
+		"D-pad or left stick. Hold RT + down to slide. Hold A in the air to glide (BAT suit cape only).",
 		"Start on a pad (or keyboard P) drops the empty chair in. Enemies stay the count you booked."
 	])

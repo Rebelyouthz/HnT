@@ -1,0 +1,1068 @@
+{
+ "_doc": "Voiced barks. who = speaker, ev = when it plays (kill, combo, hurt, taunt, death, start, perfect...). voice/emotion/pitch/speed drive tools/vo_gen.py (Sorceress speech_generate). Files land in assets/audio/vo/<id>.ogg. Tone: dark, dry, absurd; a family that bills its violence.",
+ "voices": {
+  "son": {
+   "voice": "Decent_Boy",
+   "pitch": 1,
+   "speed": 1.08
+  },
+  "father": {
+   "voice": "Determined_Man",
+   "pitch": -2,
+   "speed": 0.96
+  },
+  "thug": {
+   "voice": "Casual_Guy",
+   "pitch": -3,
+   "speed": 1.05
+  },
+  "mohawk": {
+   "voice": "Imposing_Manner",
+   "pitch": -1,
+   "speed": 1.0
+  },
+  "cop": {
+   "voice": "Patient_Man",
+   "pitch": -2,
+   "speed": 0.95
+  },
+  "shift_lead": {
+   "voice": "Friendly_Person",
+   "pitch": -1,
+   "speed": 1.05
+  },
+  "gant": {
+   "voice": "Elegant_Man",
+   "pitch": -2,
+   "speed": 0.92
+  },
+  "announcer": {
+   "voice": "Deep_Voice_Man",
+   "pitch": -3,
+   "speed": 0.9
+  },
+  "npc_woman": {
+   "voice": "Wise_Woman",
+   "pitch": 0,
+   "speed": 0.95
+  },
+  "npc_sal": {
+   "voice": "Casual_Guy",
+   "pitch": -1,
+   "speed": 1.0
+  },
+  "npc_old": {
+   "voice": "Patient_Man",
+   "pitch": -4,
+   "speed": 0.88
+  },
+  "repo": {
+   "voice": "Imposing_Manner",
+   "pitch": -4,
+   "speed": 0.95
+  },
+  "bailiff": {
+   "voice": "Deep_Voice_Man",
+   "pitch": -1,
+   "speed": 1.0
+  },
+  "runner": {
+   "voice": "Young_Knight",
+   "pitch": 1,
+   "speed": 1.15
+  },
+  "snatch": {
+   "voice": "Casual_Guy",
+   "pitch": 2,
+   "speed": 1.2
+  },
+  "imp": {
+   "voice": "Decent_Boy",
+   "pitch": 3,
+   "speed": 1.15
+  },
+  "valet": {
+   "voice": "Friendly_Person",
+   "pitch": 0,
+   "speed": 1.1
+  },
+  "bystander": {
+   "voice": "Casual_Guy",
+   "pitch": 0,
+   "speed": 1.05
+  },
+  "bystander_f": {
+   "voice": "Wise_Woman",
+   "pitch": 1,
+   "speed": 1.05
+  }
+ },
+ "lines": [
+  {
+   "id": "son_kill_1",
+   "who": "son",
+   "ev": "kill",
+   "emotion": "happy",
+   "text": "Parkour! On your face."
+  },
+  {
+   "id": "son_kill_2",
+   "who": "son",
+   "ev": "kill",
+   "emotion": "happy",
+   "text": "Your spine just unsubscribed."
+  },
+  {
+   "id": "son_kill_3",
+   "who": "son",
+   "ev": "kill",
+   "emotion": "surprised",
+   "text": "Dad, I think he's dead. Is this a learning moment?"
+  },
+  {
+   "id": "son_kill_4",
+   "who": "son",
+   "ev": "kill",
+   "emotion": "none",
+   "text": "I'm not violent. I'm cardio with consequences."
+  },
+  {
+   "id": "son_kill_5",
+   "who": "son",
+   "ev": "kill",
+   "emotion": "disgusted",
+   "text": "Ugh. It got in my shoes."
+  },
+  {
+   "id": "son_combo_1",
+   "who": "son",
+   "ev": "combo",
+   "emotion": "happy",
+   "text": "Flip, kick, therapy later!"
+  },
+  {
+   "id": "son_combo_2",
+   "who": "son",
+   "ev": "combo",
+   "emotion": "happy",
+   "text": "Look, no hands! Also, no teeth. His."
+  },
+  {
+   "id": "son_combo_3",
+   "who": "son",
+   "ev": "combo",
+   "emotion": "happy",
+   "text": "Ten out of ten, would kick again."
+  },
+  {
+   "id": "son_combo_4",
+   "who": "son",
+   "ev": "combo",
+   "emotion": "none",
+   "text": "I learned that on the internet. Mostly the bad parts."
+  },
+  {
+   "id": "son_hurt_1",
+   "who": "son",
+   "ev": "hurt",
+   "emotion": "angry",
+   "text": "Ow! That's going in my diary!"
+  },
+  {
+   "id": "son_hurt_2",
+   "who": "son",
+   "ev": "hurt",
+   "emotion": "fearful",
+   "text": "Not the face! Dad, he did the face!"
+  },
+  {
+   "id": "son_block_1",
+   "who": "son",
+   "ev": "block",
+   "emotion": "happy",
+   "text": "Nope."
+  },
+  {
+   "id": "father_kill_1",
+   "who": "father",
+   "ev": "kill",
+   "emotion": "none",
+   "text": "That's for the late fees."
+  },
+  {
+   "id": "father_kill_2",
+   "who": "father",
+   "ev": "kill",
+   "emotion": "none",
+   "text": "Stay down. It's cheaper."
+  },
+  {
+   "id": "father_kill_3",
+   "who": "father",
+   "ev": "kill",
+   "emotion": "calm",
+   "text": "Somebody mop that up. Not me. Somebody."
+  },
+  {
+   "id": "father_kill_4",
+   "who": "father",
+   "ev": "kill",
+   "emotion": "none",
+   "text": "Your dental plan just expired."
+  },
+  {
+   "id": "father_kill_5",
+   "who": "father",
+   "ev": "kill",
+   "emotion": "sad",
+   "text": "I'm getting too old for this. Hand me the next one."
+  },
+  {
+   "id": "father_combo_1",
+   "who": "father",
+   "ev": "combo",
+   "emotion": "angry",
+   "text": "That elbow was forty years of overtime."
+  },
+  {
+   "id": "father_combo_2",
+   "who": "father",
+   "ev": "combo",
+   "emotion": "none",
+   "text": "Son, never do what I just did. Unless it works."
+  },
+  {
+   "id": "father_combo_3",
+   "who": "father",
+   "ev": "combo",
+   "emotion": "calm",
+   "text": "I'm not angry. I'm just billing you."
+  },
+  {
+   "id": "father_combo_4",
+   "who": "father",
+   "ev": "combo",
+   "emotion": "none",
+   "text": "Back in my day we had one fist. We shared it."
+  },
+  {
+   "id": "father_hurt_1",
+   "who": "father",
+   "ev": "hurt",
+   "emotion": "angry",
+   "text": "My back! My actual back!"
+  },
+  {
+   "id": "father_hurt_2",
+   "who": "father",
+   "ev": "hurt",
+   "emotion": "angry",
+   "text": "Ow. Okay. Now I'm motivated."
+  },
+  {
+   "id": "father_block_1",
+   "who": "father",
+   "ev": "block",
+   "emotion": "calm",
+   "text": "Cute."
+  },
+  {
+   "id": "thug_taunt_1",
+   "who": "thug",
+   "ev": "taunt",
+   "emotion": "happy",
+   "text": "Hand over the wallet. Or the kidney. Your call."
+  },
+  {
+   "id": "thug_taunt_2",
+   "who": "thug",
+   "ev": "taunt",
+   "emotion": "none",
+   "text": "I got a family! I owe them money too."
+  },
+  {
+   "id": "thug_taunt_3",
+   "who": "thug",
+   "ev": "taunt",
+   "emotion": "none",
+   "text": "Is this a robbery? I forget. Long day."
+  },
+  {
+   "id": "thug_hurt_1",
+   "who": "thug",
+   "ev": "hurt",
+   "emotion": "angry",
+   "text": "Ow! My everything!"
+  },
+  {
+   "id": "thug_death_1",
+   "who": "thug",
+   "ev": "death",
+   "emotion": "sad",
+   "text": "Tell my mom... actually don't. She'll gloat."
+  },
+  {
+   "id": "thug_death_2",
+   "who": "thug",
+   "ev": "death",
+   "emotion": "sad",
+   "text": "I regret nothing. Wait. Everything."
+  },
+  {
+   "id": "thug_death_3",
+   "who": "thug",
+   "ev": "death",
+   "emotion": "sad",
+   "text": "Worth it. No. No it wasn't."
+  },
+  {
+   "id": "mohawk_taunt_1",
+   "who": "mohawk",
+   "ev": "taunt",
+   "emotion": "angry",
+   "text": "Bo don't do gentle!"
+  },
+  {
+   "id": "mohawk_taunt_2",
+   "who": "mohawk",
+   "ev": "taunt",
+   "emotion": "angry",
+   "text": "I'm gonna fold you like a lawn chair!"
+  },
+  {
+   "id": "mohawk_hurt_1",
+   "who": "mohawk",
+   "ev": "hurt",
+   "emotion": "angry",
+   "text": "That's my good hair!"
+  },
+  {
+   "id": "mohawk_death_1",
+   "who": "mohawk",
+   "ev": "death",
+   "emotion": "sad",
+   "text": "Bo... is... tired."
+  },
+  {
+   "id": "cop_taunt_1",
+   "who": "cop",
+   "ev": "taunt",
+   "emotion": "none",
+   "text": "Stop resisting. I'm on my break."
+  },
+  {
+   "id": "cop_taunt_2",
+   "who": "cop",
+   "ev": "taunt",
+   "emotion": "none",
+   "text": "I'm writing you a ticket. For being alive."
+  },
+  {
+   "id": "cop_hurt_1",
+   "who": "cop",
+   "ev": "hurt",
+   "emotion": "angry",
+   "text": "That's assault on a public servant! Also on me!"
+  },
+  {
+   "id": "cop_death_1",
+   "who": "cop",
+   "ev": "death",
+   "emotion": "sad",
+   "text": "Tell the union... I want overtime for this."
+  },
+  {
+   "id": "shift_lead_taunt_1",
+   "who": "shift_lead",
+   "ev": "taunt",
+   "emotion": "happy",
+   "text": "You're clocking out early. Permanently."
+  },
+  {
+   "id": "shift_lead_taunt_2",
+   "who": "shift_lead",
+   "ev": "taunt",
+   "emotion": "none",
+   "text": "I'm docking your pay. And your teeth."
+  },
+  {
+   "id": "shift_lead_death_1",
+   "who": "shift_lead",
+   "ev": "death",
+   "emotion": "sad",
+   "text": "Who's gonna... approve my timesheet..."
+  },
+  {
+   "id": "gant_taunt_1",
+   "who": "gant",
+   "ev": "taunt",
+   "emotion": "calm",
+   "text": "Your account is overdue. So is your funeral."
+  },
+  {
+   "id": "gant_taunt_2",
+   "who": "gant",
+   "ev": "taunt",
+   "emotion": "calm",
+   "text": "Interest compounds. So does pain."
+  },
+  {
+   "id": "gant_taunt_3",
+   "who": "gant",
+   "ev": "taunt",
+   "emotion": "happy",
+   "text": "Sign here. And here. And here's my fist."
+  },
+  {
+   "id": "gant_hurt_1",
+   "who": "gant",
+   "ev": "hurt",
+   "emotion": "angry",
+   "text": "You're denting the paperwork!"
+  },
+  {
+   "id": "gant_death_1",
+   "who": "gant",
+   "ev": "death",
+   "emotion": "sad",
+   "text": "This... will go... on your record..."
+  },
+  {
+   "id": "ann_perfect",
+   "who": "announcer",
+   "ev": "perfect",
+   "emotion": "none",
+   "text": "Perfect!"
+  },
+  {
+   "id": "ann_combo",
+   "who": "announcer",
+   "ev": "combo",
+   "emotion": "none",
+   "text": "Combo!"
+  },
+  {
+   "id": "ann_counter",
+   "who": "announcer",
+   "ev": "counter",
+   "emotion": "none",
+   "text": "Counter!"
+  },
+  {
+   "id": "ann_guard_break",
+   "who": "announcer",
+   "ev": "guard_break",
+   "emotion": "none",
+   "text": "Guard break!"
+  },
+  {
+   "id": "ann_brutal",
+   "who": "announcer",
+   "ev": "brutal",
+   "emotion": "none",
+   "text": "Brutal!"
+  },
+  {
+   "id": "ann_overkill",
+   "who": "announcer",
+   "ev": "overkill",
+   "emotion": "none",
+   "text": "Overkill!"
+  },
+  {
+   "id": "son_banter_1",
+   "who": "son",
+   "ev": "banter",
+   "emotion": "happy",
+   "text": "Dad, keep up. This is the warm-up."
+  },
+  {
+   "id": "son_banter_2",
+   "who": "son",
+   "ev": "banter",
+   "emotion": "happy",
+   "text": "You call that a punch? That was a strongly worded letter."
+  },
+  {
+   "id": "son_banter_3",
+   "who": "son",
+   "ev": "banter",
+   "emotion": "happy",
+   "text": "I'm putting this on my college essay."
+  },
+  {
+   "id": "son_banter_4",
+   "who": "son",
+   "ev": "banter",
+   "emotion": "happy",
+   "text": "Dad, your knees are making the noise again."
+  },
+  {
+   "id": "son_banter_5",
+   "who": "son",
+   "ev": "banter",
+   "emotion": "happy",
+   "text": "Okay, that one counted. Mostly."
+  },
+  {
+   "id": "son_banter_6",
+   "who": "son",
+   "ev": "banter",
+   "emotion": "happy",
+   "text": "Is it just me, or are they getting uglier?"
+  },
+  {
+   "id": "father_banter_1",
+   "who": "father",
+   "ev": "banter",
+   "emotion": "none",
+   "text": "Stay behind me. Or in front. Somewhere I can see you."
+  },
+  {
+   "id": "father_banter_2",
+   "who": "father",
+   "ev": "banter",
+   "emotion": "none",
+   "text": "Your mother would hate this. I love it."
+  },
+  {
+   "id": "father_banter_3",
+   "who": "father",
+   "ev": "banter",
+   "emotion": "none",
+   "text": "Hands up, chin down. Like we practiced."
+  },
+  {
+   "id": "father_banter_4",
+   "who": "father",
+   "ev": "banter",
+   "emotion": "none",
+   "text": "That's my boy. Mostly my genes."
+  },
+  {
+   "id": "father_banter_5",
+   "who": "father",
+   "ev": "banter",
+   "emotion": "none",
+   "text": "I am too old for this. Give me another one."
+  },
+  {
+   "id": "father_banter_6",
+   "who": "father",
+   "ev": "banter",
+   "emotion": "none",
+   "text": "Nobody touches my kid. Except to lose."
+  },
+  {
+   "id": "son_reload_1",
+   "who": "son",
+   "ev": "reload",
+   "emotion": "none",
+   "text": "Reloading!"
+  },
+  {
+   "id": "son_reload_2",
+   "who": "son",
+   "ev": "reload",
+   "emotion": "none",
+   "text": "Mag's out!"
+  },
+  {
+   "id": "father_reload_1",
+   "who": "father",
+   "ev": "reload",
+   "emotion": "none",
+   "text": "Cover me!"
+  },
+  {
+   "id": "father_reload_2",
+   "who": "father",
+   "ev": "reload",
+   "emotion": "none",
+   "text": "Changing mags!"
+  },
+  {
+   "id": "son_death_1",
+   "who": "son",
+   "ev": "death",
+   "emotion": "sad",
+   "text": "Dad... I think I need a minute."
+  },
+  {
+   "id": "father_death_1",
+   "who": "father",
+   "ev": "death",
+   "emotion": "sad",
+   "text": "Not yet... not in front of my son..."
+  },
+  {
+   "id": "npc_woman_talk_1",
+   "who": "npc_woman",
+   "ev": "talk",
+   "emotion": "sad",
+   "text": "Please, have you seen my Biscuit? Brown ears, red collar, no sense at all."
+  },
+  {
+   "id": "npc_woman_talk_2",
+   "who": "npc_woman",
+   "ev": "talk",
+   "emotion": "sad",
+   "text": "Oh, bless you! Biscuit, you terrible, wonderful dog."
+  },
+  {
+   "id": "npc_sal_talk_1",
+   "who": "npc_sal",
+   "ev": "talk",
+   "emotion": "none",
+   "text": "Somebody keeps kicking my bins over. I swept this street twice already."
+  },
+  {
+   "id": "npc_sal_talk_2",
+   "who": "npc_sal",
+   "ev": "talk",
+   "emotion": "none",
+   "text": "Clean street. Clean conscience. Thanks, kid."
+  },
+  {
+   "id": "npc_old_talk_1",
+   "who": "npc_old",
+   "ev": "talk",
+   "emotion": "none",
+   "text": "Those repo goons took my television. Forty years I watched that thing."
+  },
+  {
+   "id": "npc_old_talk_2",
+   "who": "npc_old",
+   "ev": "talk",
+   "emotion": "none",
+   "text": "Hah! Serves them right. You're good boys."
+  },
+  {
+   "id": "repo_taunt_1",
+   "who": "repo",
+   "ev": "taunt",
+   "emotion": "angry",
+   "text": "Nice sneakers. They're mine now."
+  },
+  {
+   "id": "repo_taunt_2",
+   "who": "repo",
+   "ev": "taunt",
+   "emotion": "angry",
+   "text": "Payment's overdue. Interest is a beating."
+  },
+  {
+   "id": "repo_hurt_1",
+   "who": "repo",
+   "ev": "hurt",
+   "emotion": "angry",
+   "text": "Ugh!"
+  },
+  {
+   "id": "repo_hurt_2",
+   "who": "repo",
+   "ev": "hurt",
+   "emotion": "angry",
+   "text": "You'll pay for that!"
+  },
+  {
+   "id": "repo_death_1",
+   "who": "repo",
+   "ev": "death",
+   "emotion": "sad",
+   "text": "Account... closed..."
+  },
+  {
+   "id": "bailiff_taunt_1",
+   "who": "bailiff",
+   "ev": "taunt",
+   "emotion": "none",
+   "text": "By order of the clinic, you are hereby flattened."
+  },
+  {
+   "id": "bailiff_taunt_2",
+   "who": "bailiff",
+   "ev": "taunt",
+   "emotion": "none",
+   "text": "Court is in session. Sentence: pain."
+  },
+  {
+   "id": "bailiff_hurt_1",
+   "who": "bailiff",
+   "ev": "hurt",
+   "emotion": "angry",
+   "text": "Contempt of court!"
+  },
+  {
+   "id": "bailiff_hurt_2",
+   "who": "bailiff",
+   "ev": "hurt",
+   "emotion": "angry",
+   "text": "Hrgh!"
+  },
+  {
+   "id": "bailiff_death_1",
+   "who": "bailiff",
+   "ev": "death",
+   "emotion": "sad",
+   "text": "Case... dismissed..."
+  },
+  {
+   "id": "runner_taunt_1",
+   "who": "runner",
+   "ev": "taunt",
+   "emotion": "happy",
+   "text": "Catch me if you can, grandpa!"
+  },
+  {
+   "id": "runner_taunt_2",
+   "who": "runner",
+   "ev": "taunt",
+   "emotion": "happy",
+   "text": "Too slow! Way too slow!"
+  },
+  {
+   "id": "runner_hurt_1",
+   "who": "runner",
+   "ev": "hurt",
+   "emotion": "angry",
+   "text": "Ow! Cheap shot!"
+  },
+  {
+   "id": "runner_hurt_2",
+   "who": "runner",
+   "ev": "hurt",
+   "emotion": "angry",
+   "text": "Ah!"
+  },
+  {
+   "id": "runner_death_1",
+   "who": "runner",
+   "ev": "death",
+   "emotion": "sad",
+   "text": "Shoulda... kept running..."
+  },
+  {
+   "id": "snatch_taunt_1",
+   "who": "snatch",
+   "ev": "taunt",
+   "emotion": "happy",
+   "text": "Ooh, what's in the pocket?"
+  },
+  {
+   "id": "snatch_taunt_2",
+   "who": "snatch",
+   "ev": "taunt",
+   "emotion": "happy",
+   "text": "Finders keepers!"
+  },
+  {
+   "id": "snatch_hurt_1",
+   "who": "snatch",
+   "ev": "hurt",
+   "emotion": "angry",
+   "text": "Hey! Not the face!"
+  },
+  {
+   "id": "snatch_hurt_2",
+   "who": "snatch",
+   "ev": "hurt",
+   "emotion": "angry",
+   "text": "Ow!"
+  },
+  {
+   "id": "snatch_death_1",
+   "who": "snatch",
+   "ev": "death",
+   "emotion": "sad",
+   "text": "I just wanted... the wallet..."
+  },
+  {
+   "id": "imp_taunt_1",
+   "who": "imp",
+   "ev": "taunt",
+   "emotion": "happy",
+   "text": "Coping! Coping! Coping!"
+  },
+  {
+   "id": "imp_taunt_2",
+   "who": "imp",
+   "ev": "taunt",
+   "emotion": "happy",
+   "text": "I'm totally fine. Are you fine?"
+  },
+  {
+   "id": "imp_hurt_1",
+   "who": "imp",
+   "ev": "hurt",
+   "emotion": "angry",
+   "text": "Ow, my feelings!"
+  },
+  {
+   "id": "imp_hurt_2",
+   "who": "imp",
+   "ev": "hurt",
+   "emotion": "angry",
+   "text": "Hey!"
+  },
+  {
+   "id": "imp_death_1",
+   "who": "imp",
+   "ev": "death",
+   "emotion": "sad",
+   "text": "Not... fine..."
+  },
+  {
+   "id": "valet_taunt_1",
+   "who": "valet",
+   "ev": "taunt",
+   "emotion": "happy",
+   "text": "Ticket, please. No ticket? Big problem."
+  },
+  {
+   "id": "valet_taunt_2",
+   "who": "valet",
+   "ev": "taunt",
+   "emotion": "happy",
+   "text": "I'll park you somewhere permanent."
+  },
+  {
+   "id": "valet_hurt_1",
+   "who": "valet",
+   "ev": "hurt",
+   "emotion": "angry",
+   "text": "My vest!"
+  },
+  {
+   "id": "valet_hurt_2",
+   "who": "valet",
+   "ev": "hurt",
+   "emotion": "angry",
+   "text": "Argh!"
+  },
+  {
+   "id": "valet_death_1",
+   "who": "valet",
+   "ev": "death",
+   "emotion": "sad",
+   "text": "Keys... on the hook..."
+  },
+  {
+   "id": "bystander_react_1",
+   "who": "bystander",
+   "ev": "react",
+   "emotion": "surprised",
+   "text": "Hey! Take it somewhere else!"
+  },
+  {
+   "id": "bystander_react_2",
+   "who": "bystander",
+   "ev": "react",
+   "emotion": "surprised",
+   "text": "Somebody call the clinic!"
+  },
+  {
+   "id": "bystander_react_3",
+   "who": "bystander",
+   "ev": "react",
+   "emotion": "surprised",
+   "text": "Oh, not again."
+  },
+  {
+   "id": "bystander_react_4",
+   "who": "bystander",
+   "ev": "react",
+   "emotion": "surprised",
+   "text": "Is that the dad and the kid? Run!"
+  },
+  {
+   "id": "bystander_react_5",
+   "who": "bystander",
+   "ev": "react",
+   "emotion": "surprised",
+   "text": "I'm filming this. For insurance."
+  },
+  {
+   "id": "bystander_f_react_1",
+   "who": "bystander_f",
+   "ev": "react",
+   "emotion": "surprised",
+   "text": "Oh my god, are you okay?"
+  },
+  {
+   "id": "bystander_f_react_2",
+   "who": "bystander_f",
+   "ev": "react",
+   "emotion": "surprised",
+   "text": "Not on my clean street!"
+  },
+  {
+   "id": "bystander_f_react_3",
+   "who": "bystander_f",
+   "ev": "react",
+   "emotion": "surprised",
+   "text": "Go get them, sweetie!"
+  },
+  {
+   "id": "bystander_f_react_4",
+   "who": "bystander_f",
+   "ev": "react",
+   "emotion": "surprised",
+   "text": "I'm calling somebody. Anybody."
+  },
+  {
+   "id": "thug_attack_1",
+   "who": "thug",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Hyah!"
+  },
+  {
+   "id": "thug_attack_2",
+   "who": "thug",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Take this!"
+  },
+  {
+   "id": "mohawk_attack_1",
+   "who": "mohawk",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "RAAH!"
+  },
+  {
+   "id": "mohawk_attack_2",
+   "who": "mohawk",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Eat it!"
+  },
+  {
+   "id": "cop_attack_1",
+   "who": "cop",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Freeze!"
+  },
+  {
+   "id": "cop_attack_2",
+   "who": "cop",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Stop resisting!"
+  },
+  {
+   "id": "gant_attack_1",
+   "who": "gant",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Pay up!"
+  },
+  {
+   "id": "gant_attack_2",
+   "who": "gant",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Collection time!"
+  },
+  {
+   "id": "repo_attack_1",
+   "who": "repo",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Hrrgh!"
+  },
+  {
+   "id": "repo_attack_2",
+   "who": "repo",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Repossessed!"
+  },
+  {
+   "id": "bailiff_attack_1",
+   "who": "bailiff",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Order!"
+  },
+  {
+   "id": "bailiff_attack_2",
+   "who": "bailiff",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Hah!"
+  },
+  {
+   "id": "runner_attack_1",
+   "who": "runner",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Hup!"
+  },
+  {
+   "id": "runner_attack_2",
+   "who": "runner",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Too slow!"
+  },
+  {
+   "id": "snatch_attack_1",
+   "who": "snatch",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Gimme!"
+  },
+  {
+   "id": "snatch_attack_2",
+   "who": "snatch",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Hah!"
+  },
+  {
+   "id": "imp_attack_1",
+   "who": "imp",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Wheee!"
+  },
+  {
+   "id": "imp_attack_2",
+   "who": "imp",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Cope!"
+  },
+  {
+   "id": "valet_attack_1",
+   "who": "valet",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Valet!"
+  },
+  {
+   "id": "valet_attack_2",
+   "who": "valet",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Hyah!"
+  },
+  {
+   "id": "shift_lead_attack_1",
+   "who": "shift_lead",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Clock out!"
+  },
+  {
+   "id": "shift_lead_attack_2",
+   "who": "shift_lead",
+   "ev": "attack",
+   "emotion": "angry",
+   "text": "Hngh!"
+  }
+ ]
+}

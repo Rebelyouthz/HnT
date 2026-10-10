@@ -1,0 +1,200 @@
+{
+ "moves": {
+  "idle": [
+   2.5,
+   "{d} stands in a loose fighting stance, breathing heavily and bouncing slightly, shifting his weight, ready to brawl."
+  ],
+  "walk": [
+   2.5,
+   "{d} walks forward to the right with a menacing swagger, fists ready, steady pace."
+  ],
+  "punch_high": [
+   2.5,
+   "{d} throws a hard right hook at head height with a big shoulder turn, then returns to his fighting stance."
+  ],
+  "punch_mid": [
+   2.5,
+   "{d} steps in and throws a heavy straight punch at stomach height, leaning forward, then returns to his fighting stance."
+  ],
+  "kick_low": [
+   2.5,
+   "{d} snaps a low kick at shin height with his right leg, then puts the foot back down in his fighting stance."
+  ],
+  "hurt": [
+   2.0,
+   "{d} flinches hard as if shoved, his head jerks back and he staggers one step backward, then recovers his balance."
+  ],
+  "death": [
+   3.0,
+   "Like a movie stuntman, {d} goes limp, collapses and falls backward flat onto the ground, and lies completely still."
+  ],
+  "npc_idle": [
+   2.5,
+   "{d} stands on the pavement waiting, shifting weight, glancing around and gesturing a little, calm, not fighting."
+  ],
+  "sprint": [
+   3.0,
+   "{d} sprints to the right on a treadmill at full speed like an athlete, legs driving hard, knees high, arms pumping, body leaning forward, continuous running cycle."
+  ],
+  "roll": [
+   2.0,
+   "{d} dives forward and tucks into a full somersault forward roll on the ground, back rolling over the floor with knees tucked, then pops back up onto his feet facing right."
+  ],
+  "hurt_hard": [
+   1.6,
+   "{d} gets hit hard in the face: his head and shoulders whip backward, arms fly up, he stumbles one big step backward, then straightens up again."
+  ],
+  "walk_up": [
+   3.5,
+   "{d} turns around so we see his back and walks straight away from the camera into the distance on a treadmill, back view, the back of his head toward us, continuous walk cycle.",
+   "free"
+  ],
+  "walk_down": [
+   3.5,
+   "{d} turns to face the camera and walks toward the viewer on a treadmill with big clear steps, front view, continuous walk cycle.",
+   "free"
+  ]
+ },
+ "who": {
+  "bailiff": {
+   "desc": "The armored bailiff in the black vest and helmet",
+   "moves": [
+    "punch_mid",
+    "kick_low"
+   ]
+  },
+  "clamp_king": {
+   "desc": "The burly man with the giant golden wheel clamp",
+   "moves": [
+    "death",
+    "hurt",
+    "kick_low"
+   ]
+  },
+  "clipboard_flier": {
+   "desc": "The office clerk with the clipboard",
+   "moves": [
+    "death",
+    "punch_high",
+    "kick_low",
+    "hurt",
+    "walk_up",
+    "walk_down"
+   ]
+  },
+  "coping_imp": {
+   "desc": "The skinny kid in the green hoodie",
+   "moves": [
+    "death",
+    "punch_high",
+    "kick_low",
+    "hurt"
+   ]
+  },
+  "lot_hydra": {
+   "desc": "The huge man with the golden claw arm",
+   "moves": [
+    "death",
+    "punch_high",
+    "kick_low",
+    "hurt",
+    "walk_up",
+    "walk_down"
+   ]
+  },
+  "npc_old_woman": {
+   "desc": "The old woman in the purple raincoat",
+   "moves": [
+    "npc_idle"
+   ]
+  },
+  "npc_sanitation": {
+   "desc": "The sanitation worker in the green vest",
+   "moves": [
+    "npc_idle"
+   ]
+  },
+  "npc_old_man": {
+   "desc": "The old man with the cane",
+   "moves": [
+    "npc_idle"
+   ]
+  },
+  "son": {
+   "desc": "The teenage boy in the black jacket",
+   "moves": [
+    "sprint",
+    "roll",
+    "hurt_hard"
+   ]
+  },
+  "bag_snatch": {
+   "desc": "The bag snatcher in the hoodie",
+   "moves": [
+    "idle",
+    "walk",
+    "punch_high",
+    "hurt",
+    "death"
+   ]
+  },
+  "punk": {
+   "desc": "The street punk",
+   "moves": [
+    "idle",
+    "walk",
+    "punch_high",
+    "hurt",
+    "death"
+   ]
+  },
+  "mohawk": {
+   "desc": "The punk with the mohawk",
+   "moves": [
+    "idle",
+    "walk",
+    "punch_high",
+    "hurt",
+    "death"
+   ]
+  },
+  "shift_lead": {
+   "desc": "The shift lead in the work vest",
+   "moves": [
+    "idle",
+    "walk",
+    "punch_high",
+    "hurt",
+    "death"
+   ]
+  },
+  "cop": {
+   "desc": "The police officer",
+   "moves": [
+    "idle",
+    "walk",
+    "punch_high",
+    "hurt",
+    "death"
+   ]
+  },
+  "roof_runner": {
+   "desc": "The rooftop runner",
+   "moves": [
+    "idle",
+    "walk",
+    "punch_high",
+    "hurt",
+    "death",
+    "kick_low"
+   ]
+  },
+  "valet": {
+   "desc": "The parking valet in a dark vest and cap",
+   "moves": [
+    "hurt",
+    "walk_up"
+   ]
+  }
+ }
+}

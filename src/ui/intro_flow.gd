@@ -1,183 +1,218 @@
 extends Node2D
 
-## Film 1 → comic slam → tutorial alley. Skip: pause or light.
+## Opening film, staged in the alley: rain, the painted backstreet, Father
+## and Son on the kerb talking in speech bubbles (Talk), then the comic slam,
+## then the tutorial. JUMP / LIGHT / ENTER moves on, PAUSE skips.
+
+## Inner actor so Talk finds the speakers like it finds Fighters.
+class FilmActor extends Node2D:
+	var role := ""
+	var hop := 0.0
 
 enum Beat { FILM1, COMIC, DONE }
 var _beat: Beat = Beat.FILM1
-var _i := 0
-var _layer: CanvasLayer
-var _ui: Control
-var _caption: Label
-var _who: Label
-var _skip: Label
 var _film: Dictionary = {}
-var _sil_a: ColorRect
-var _sil_b: ColorRect
-var _letter_t: ColorRect
-var _letter_b: ColorRect
+var _talk: Talk
+var _ui: Control
 var _comic_wrap: Control
+var _cam: Camera2D
+var _dad: FilmActor
+var _kid: FilmActor
+var _t := 0.0
 
 
 func _ready() -> void:
-	var sky := ColorRect.new()
-	sky.color = Color(0.04, 0.045, 0.07)
-	sky.position = Vector2.ZERO
-	sky.size = Vector2(1280, 720)
-	add_child(sky)
 	_film = StoryBook.all().get("intro", {})
-	_layer = CanvasLayer.new()
-	_layer.layer = 50
-	_layer.process_mode = Node.PROCESS_MODE_ALWAYS
-	add_child(_layer)
-	var ui := PixelStage.attach_canvas(_layer)
-	_ui = ui
-	_letter_t = ColorRect.new()
-	_letter_t.color = Color(0, 0, 0, 1)
-	_letter_t.position = Vector2(0, 0)
-	_letter_t.size = Vector2(1280, 90)
-	_ui.add_child(_letter_t)
-	_letter_b = ColorRect.new()
-	_letter_b.color = Color(0, 0, 0, 1)
-	_letter_b.position = Vector2(0, 630)
-	_letter_b.size = Vector2(1280, 90)
-	_ui.add_child(_letter_b)
-	_sil_a = ColorRect.new()
-	_sil_a.color = Palette.BRICK
-	_sil_a.size = Vector2(70, 160)
-	_sil_a.position = Vector2(420, 360)
-	_ui.add_child(_sil_a)
-	_sil_b = ColorRect.new()
-	_sil_b.color = Palette.LEMON
-	_sil_b.size = Vector2(54, 150)
-	_sil_b.position = Vector2(760, 370)
-	_ui.add_child(_sil_b)
-	_who = Label.new()
-	_who.position = Vector2(80, 520)
-	_who.size = Vector2(1120, 28)
-	UiKit.apply_label(_who, 14, Palette.EDGE)
-	_ui.add_child(_who)
-	_caption = Label.new()
-	_caption.position = Vector2(80, 552)
-	_caption.size = Vector2(1120, 70)
-	_caption.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	UiKit.apply_label(_caption, 22, Palette.TEXT)
-	_ui.add_child(_caption)
-	_skip = Label.new()
-	_skip.position = Vector2(40, 24)
-	_skip.text = Copy.SKIP_FILM
-	UiKit.apply_label(_skip, 14, Palette.MUTED)
-	_ui.add_child(_skip)
-	Mixer.play_music("res://assets/audio/music_clinic.wav")
+	_build_set()
+	_build_ui()
+	Mixer.play_music("res://assets/audio/music/music_menu.ogg")
 	Juice.play("res://assets/audio/sting_intro.wav")
-	_paint_film()
+	_talk = Talk.new()
+	add_child(_talk)
+	_talk.closed.connect(_on_film_done)
+	# A beat of rain and the street before anyone talks.
+	await get_tree().create_timer(1.1).timeout
+	if _beat == Beat.FILM1:
+		_talk.play(_lines("film1"))
 
 
-func _process(_delta: float) -> void:
-	_sil_a.position.y = 360.0 + 6.0 * sin(Time.get_ticks_msec() * 0.004)
-	_sil_b.position.y = 370.0 + 5.0 * sin(Time.get_ticks_msec() * 0.005 + 1.2)
-	if Input.is_action_just_pressed("p1_pause") or Input.is_action_just_pressed("p2_pause"):
-		_advance_hard()
-		return
-	if Input.is_action_just_pressed("p1_light") or Input.is_action_just_pressed("p1_jump") or Input.is_action_just_pressed("p2_light"):
-		_advance()
+func _build_set() -> void:
+	var map_w := 1400.0
+	NightStreet.parallax(self, map_w, "tutorial")
+	NightStreet.wet_floor(self, map_w, true)
+	NightStreet.pixel_dock(self, map_w, false)
+	NightStreet.rain(self, 700.0)
+	AmbientProp.lamp(self, Vector2(470.0, 500.0), 3)
+	var mod := CanvasModulate.new()
+	mod.color = Palette.NIGHT
+	add_child(mod)
+	_dad = _actor("father", Vector2(560, 492), 1)
+	_kid = _actor("son", Vector2(700, 496), -1)
+	_cam = Camera2D.new()
+	_cam.zoom = Vector2(CouchCamera.ZOOM, CouchCamera.ZOOM)
+	_cam.position = Vector2(640, 400)
+	add_child(_cam)
+	_cam.make_current()
 
 
-func _film_lines() -> Array:
-	var key := "film1" if _beat == Beat.FILM1 else "film2"
+func _actor(who: String, at: Vector2, face: int) -> FilmActor:
+	var a := FilmActor.new()
+	a.role = who
+	a.position = at
+	a.add_to_group("players")
+	add_child(a)
+	var shadow := Polygon2D.new()
+	var pts := PackedVector2Array()
+	for i in 16:
+		var ang := TAU * float(i) / 16.0
+		pts.append(Vector2(cos(ang) * 16.0, sin(ang) * 3.5))
+	shadow.polygon = pts
+	shadow.color = Color(0, 0, 0, 0.45)
+	shadow.position = Vector2(0, 3)
+	a.add_child(shadow)
+	if SpriteBook.has_who(who):
+		var anim := SpriteBook.make_anim(who)
+		anim.flip_h = face < 0
+		a.add_child(anim)
+	return a
+
+
+func _build_ui() -> void:
+	var layer := CanvasLayer.new()
+	layer.layer = 50
+	layer.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(layer)
+	_ui = PixelStage.attach_canvas(layer)
+	_ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for y in [0.0, 650.0]:
+		var bar := ColorRect.new()
+		bar.color = Color.BLACK
+		bar.position = Vector2(0, y)
+		bar.size = Vector2(1280, 70)
+		_ui.add_child(bar)
+	var skip := Label.new()
+	skip.position = Vector2(40, 22)
+	skip.text = "JUMP  ·  NEXT LINE        PAUSE  ·  SKIP FILM"
+	UiKit.apply_label(skip, 13, Palette.MUTED)
+	_ui.add_child(skip)
+	var title := UiKit.title("RAVEN WHARF", 26, Palette.EDGE)
+	title.position = Vector2(980, 16)
+	_ui.add_child(title)
+	var fade := ColorRect.new()
+	fade.color = Color.BLACK
+	fade.set_anchors_preset(Control.PRESET_FULL_RECT)
+	fade.size = Vector2(1280, 720)
+	fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui.add_child(fade)
+	fade.create_tween().tween_property(fade, "color:a", 0.0, 0.9)
+
+
+func _lines(key: String) -> Array:
 	var v: Variant = _film.get(key, [])
 	return v if typeof(v) == TYPE_ARRAY else []
 
 
-func _paint_film() -> void:
-	var lines := _film_lines()
-	if _i >= lines.size():
-		if _beat == Beat.FILM1:
-			_start_comics()
-		else:
-			_to_dock()
+func _process(delta: float) -> void:
+	_t += delta
+	# Slow push-in while they talk.
+	if _cam and _beat == Beat.FILM1:
+		_cam.position.x = lerpf(_cam.position.x, 630.0, delta * 0.15)
+	if Input.is_action_just_pressed("p1_pause") or Input.is_action_just_pressed("p2_pause"):
+		_advance_hard()
 		return
-	var row: Variant = lines[_i]
-	if typeof(row) != TYPE_DICTIONARY:
-		_i += 1
-		_paint_film()
-		return
-	var d: Dictionary = row
-	var who := str(d.get("who", ""))
-	_who.text = StoryBook.who_name(who) if who != "" else "INTRO"
-	_caption.text = str(d.get("text", ""))
-	_caption.modulate.a = 0.0
-	var tw := create_tween()
-	tw.tween_property(_caption, "modulate:a", 1.0, 0.18)
+	if _beat == Beat.COMIC and (Input.is_action_just_pressed("p1_light") or Input.is_action_just_pressed("p1_jump") or Input.is_action_just_pressed("ui_accept") or Input.is_action_just_pressed("p2_light")):
+		_to_tutorial()
+
+
+func _on_film_done() -> void:
+	if _beat == Beat.FILM1:
+		_start_comics()
 
 
 func _start_comics() -> void:
 	_beat = Beat.COMIC
-	_i = 0
-	_sil_a.visible = false
-	_sil_b.visible = false
-	_who.text = "FILE PHOTOS"
-	_caption.text = ""
 	_comic_wrap = Control.new()
 	_comic_wrap.size = Vector2(1280, 720)
+	_comic_wrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_ui.add_child(_comic_wrap)
-	var comics: Variant = _film.get("comics", [])
-	if typeof(comics) != TYPE_ARRAY:
+	var dim := ColorRect.new()
+	dim.color = Color(0, 0, 0.02, 0.6)
+	dim.size = Vector2(1280, 720)
+	_comic_wrap.add_child(dim)
+	var arr := _lines("comics")
+	if arr.is_empty():
 		_to_tutorial()
 		return
-	var arr: Array = comics
+	var whos := ["", "father", "son"]
 	for i in arr.size():
 		var row: Variant = arr[i]
 		if typeof(row) != TYPE_DICTIONARY:
 			continue
 		var d: Dictionary = row
 		var panel := PanelContainer.new()
-		panel.add_theme_stylebox_override("panel", UiKit.panel(Palette.PANEL_2, Palette.LEMON if i == 1 else Palette.BRICK))
-		panel.size = Vector2(340, 280)
-		panel.position = Vector2(1280, 180)
+		var st := StyleBoxFlat.new()
+		st.bg_color = Color(0.98, 0.96, 0.9)
+		st.border_color = Color(0.05, 0.05, 0.08)
+		st.set_border_width_all(5)
+		st.shadow_color = Color(0, 0, 0, 0.5)
+		st.shadow_size = 10
+		st.shadow_offset = Vector2(6, 8)
+		st.content_margin_left = 16
+		st.content_margin_right = 16
+		st.content_margin_top = 12
+		st.content_margin_bottom = 14
+		panel.add_theme_stylebox_override("panel", st)
+		panel.custom_minimum_size = Vector2(350, 330)
+		panel.position = Vector2(1300, 170)
+		panel.rotation = deg_to_rad([-3.0, 2.0, -1.5][i % 3])
 		_comic_wrap.add_child(panel)
 		var col := VBoxContainer.new()
+		col.add_theme_constant_override("separation", 10)
 		panel.add_child(col)
-		var t := Label.new()
-		t.text = str(d.get("title", ""))
-		UiKit.apply_label(t, 18, Palette.EDGE)
+		var t := UiKit.title(str(d.get("title", "")), 24, Talk.accent(str(whos[i % 3])) if i > 0 else Palette.BRICK)
+		t.add_theme_color_override("font_outline_color", Color(0.05, 0.05, 0.08))
 		col.add_child(t)
+		var who := str(whos[i % 3])
+		if who != "":
+			var pic := UiKit.portrait(SpriteBook.bust(who, 0.55), Vector2(318, 150))
+			col.add_child(pic)
 		var b := Label.new()
 		b.text = str(d.get("text", ""))
 		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		b.custom_minimum_size = Vector2(310, 0)
-		UiKit.apply_label(b, 16, Palette.TEXT)
+		b.custom_minimum_size = Vector2(318, 0)
+		b.add_theme_font_size_override("font_size", 19)
+		b.add_theme_color_override("font_color", Color(0.06, 0.06, 0.09))
 		col.add_child(b)
 		var tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-		tw.tween_interval(0.12 * i)
-		tw.tween_property(panel, "position", Vector2(90 + i * 370, 180), 0.32)
-		Juice.play("res://assets/audio/card.wav")
+		tw.tween_interval(0.22 * i)
+		tw.tween_callback(func() -> void:
+			Juice.play("res://assets/audio/card.wav")
+			Juice.pulse_shake(4.0)
+		)
+		tw.tween_property(panel, "position", Vector2(70 + i * 395, 160), 0.3)
+	var hint := Label.new()
+	hint.text = "PRESS JUMP"
+	hint.position = Vector2(0, 590)
+	hint.size = Vector2(1280, 30)
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	UiKit.apply_label(hint, 18, Palette.LEMON)
+	_comic_wrap.add_child(hint)
+	UiKit.pulse_ready(hint)
 	Juice.unlock_logo("INTAKE COMIC", "Three panels. Zero attendance. Maximum billing.")
-
-
-func _advance() -> void:
-	if _beat == Beat.COMIC:
-		_to_tutorial()
-		return
-	_i += 1
-	_paint_film()
 
 
 func _advance_hard() -> void:
 	if _beat == Beat.FILM1:
-		_start_comics()
+		_talk._close()
 	elif _beat == Beat.COMIC:
 		_to_tutorial()
-	else:
-		_to_dock()
 
 
 func _to_tutorial() -> void:
 	if _beat == Beat.DONE:
 		return
 	_beat = Beat.DONE
-	App.enter_map("tutorial_alley")
-
-
-func _to_dock() -> void:
+	# Straight from the film into Stage 1 (its title card plays there).
+	# The tutorial alley is still in the dojo menu as TRAINING ALLEY.
 	FamilyProfile.mark_intro()
 	App.enter_map("dock_street")

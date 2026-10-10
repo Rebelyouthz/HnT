@@ -35,6 +35,7 @@ func _ready() -> void:
 	var awards: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/awards.json"))
 	for a in awards:
 		col.add_child(_award(a))
+	UiKit.focus_first(self)
 
 
 func _section(title: String, kind: String, value: int, maxv: int) -> Control:
@@ -43,19 +44,42 @@ func _section(title: String, kind: String, value: int, maxv: int) -> Control:
 	var v := VBoxContainer.new()
 	box.add_child(v)
 	var t := Label.new()
-	t.text = "%s  ·  %d / %d" % [title, value, maxv]
+	t.text = "%s  ·  %d / %d" % [title, mini(value, maxv), maxv]
 	UiKit.apply_label(t, 16, Palette.LEMON)
 	v.add_child(t)
-	v.add_child(StatPanel.new([
-		{"name": "FILLED", "value": "%d / %d" % [value, maxv], "color": Palette.READY},
-		{"name": "LEFT", "value": str(maxi(0, maxv - value)), "color": Palette.MUTED}
-	]))
-	var bar := ProgressBar.new()
-	bar.max_value = maxv
-	bar.value = value
-	bar.show_percentage = false
-	bar.custom_minimum_size = Vector2(0, 18)
-	v.add_child(bar)
+	# A segmented meter: one block per step, filled blocks lit green, the
+	# steps that open a chest marked in gold.
+	var table0: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/milestones.json"))
+	var marks: Array = []
+	for c in table0[kind]:
+		marks.append(int(c["at"]))
+	var seg := HBoxContainer.new()
+	seg.add_theme_constant_override("separation", 3)
+	var w := clampf(820.0 / float(maxv) - 3.0, 12.0, 120.0)
+	for i in maxv:
+		var on := i < value
+		var cell := ColorRect.new()
+		cell.custom_minimum_size = Vector2(w, 16)
+		cell.color = Palette.READY if on else Color(0.1, 0.11, 0.16)
+		var hi := ColorRect.new()
+		hi.color = Color(1, 1, 1, 0.28 if on else 0.05)
+		hi.size = Vector2(w, 3)
+		cell.add_child(hi)
+		if marks.has(i + 1):
+			var m := ColorRect.new()
+			m.color = UiKit.GOLD
+			m.size = Vector2(w, 3)
+			m.position = Vector2(0, 13)
+			cell.add_child(m)
+		seg.add_child(cell)
+		if on and i == value - 1:
+			UiKit.pulse_ready(cell)
+	v.add_child(seg)
+	var left := Label.new()
+	left.text = ("%d LEFT TO THE NEXT CHEST" % maxi(0, _next_mark(marks, value) - value)) if _next_mark(marks, value) > value else "ALL FILLED"
+	left.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(left, 10, Palette.MUTED)
+	v.add_child(left)
 	var row := HBoxContainer.new()
 	var table: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/milestones.json"))
 	for chest in table[kind]:
@@ -64,36 +88,74 @@ func _section(title: String, kind: String, value: int, maxv: int) -> Control:
 	return box
 
 
+func _next_mark(marks: Array, value: int) -> int:
+	for m in marks:
+		if int(m) > value:
+			return int(m)
+	return value
+
+
 func _chest(kind: String, chest: Dictionary, value: int) -> Control:
 	var key := "daily_claimed" if kind == "daily" else "lifetime_claimed"
 	var claimed: Array = FamilyProfile.data[key]
 	var at := int(chest["at"])
 	var wrap := Control.new()
-	wrap.custom_minimum_size = Vector2(128, 48)
+	wrap.custom_minimum_size = Vector2(128, 120)
 	var b := UiKit.button("CHEST %d" % at, Vector2(120, 40))
+	b.position = Vector2(0, 76)
 	var already := claimed.has(at)
 	var ready := value >= at and not already
+	# The chest itself: locked, glowing when it can be claimed, open after.
+	var pic := UiKit.portrait(SpriteBook.icon("chest_open" if already else ("chest_ready" if ready else "chest_locked")), Vector2(80, 80))
+	pic.position = Vector2(20, -4)
+	pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	wrap.add_child(pic)
+	if ready:
+		var tw := pic.create_tween().set_loops()
+		tw.tween_property(pic, "position:y", -10.0, 0.45).set_trans(Tween.TRANS_SINE)
+		tw.tween_property(pic, "position:y", -4.0, 0.45).set_trans(Tween.TRANS_SINE)
 	if already:
 		b.text = Copy.CLAIMED
 		b.disabled = true
 	elif not ready:
 		b.disabled = true
 	else:
-		b.add_theme_stylebox_override("normal", UiKit.panel(Palette.READY, Palette.LEMON))
+		b.text = "CLAIM"
+		# Every state lit, so focus does not turn it back into a dark plate.
+		UiKit.ready_style(b)
 		UiKit.pulse_ready(b)
 	b.pressed.connect(func() -> void:
-		if already or value < at:
+		if already or value < at or claimed.has(at):
 			return
 		claimed.append(at)
-		FamilyProfile.grant(int(chest["gold"]), int(chest["gems"]), str(chest["line"]))
-		Juice.claim_burst(get_viewport_rect().size * 0.5, str(chest["line"]), int(chest["gold"]), int(chest["gems"]))
-		Juice.toast("quest" if kind == "daily" else "challenge", str(chest["line"]), "CLAIMED. THE CLIPBOARD NOTICED.")
-		need_refresh.emit()
+		b.disabled = true
+		# The chest fights back first: it rattles harder and harder, the lid
+		# bursts open, then the reward pours out of it.
+		pic.pivot_offset = pic.size * Vector2(0.5, 0.9)
+		var tw := pic.create_tween()
+		for i in 7:
+			var k := float(i + 1) / 7.0
+			tw.tween_property(pic, "rotation", 0.16 * k * (1.0 if i % 2 == 0 else -1.0), 0.045)
+			if i % 2 == 0:
+				tw.tween_callback(func() -> void: Mixer.play_sfx("res://assets/audio/ui/part_click.wav", 0.9 + 0.12 * float(i), -4.0))
+		tw.tween_callback(func() -> void:
+			pic.rotation = 0.0
+			pic.texture = SpriteBook.icon("chest_open")
+			Mixer.play_sfx("res://assets/audio/chest.wav", 1.0, 0.0)
+			Juice.pulse_shake(4.0)
+			FamilyProfile.grant(int(chest["gold"]), int(chest["gems"]), str(chest["line"]))
+			Juice.claim_burst(RewardFly.vp_of(pic), str(chest["line"]), int(chest["gold"]), int(chest["gems"]))
+			Juice.toast("quest" if kind == "daily" else "challenge", str(chest["line"]), "CLAIMED. THE CLIPBOARD NOTICED."))
+		tw.tween_property(pic, "scale", Vector2(1.35, 0.75), 0.05)
+		tw.tween_property(pic, "scale", Vector2(0.9, 1.2), 0.08)
+		tw.tween_property(pic, "scale", Vector2.ONE, 0.25).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+		tw.tween_interval(0.35)
+		tw.tween_callback(func() -> void: need_refresh.emit())
 	)
 	wrap.add_child(b)
 	if ready:
 		var bang := UiKit.bang()
-		bang.position = Vector2(100, -6)
+		bang.position = Vector2(100, 0)
 		wrap.add_child(bang)
 	return wrap
 
@@ -149,7 +211,8 @@ func _award(a: Dictionary) -> Control:
 		btn.disabled = true
 		btn.text = "NOT YET"
 	else:
-		btn.add_theme_stylebox_override("normal", UiKit.panel(Palette.READY, Palette.LEMON))
+		UiKit.ready_style(btn)
+		UiKit.dark_text(btn)
 		UiKit.pulse_ready(btn)
 	btn.pressed.connect(func() -> void:
 		if already or not ok:

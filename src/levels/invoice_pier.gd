@@ -22,8 +22,6 @@ func _configure() -> void:
 
 
 func build_world() -> void:
-	var sky := Blockout.poly(self, Rect2(0, 0, map_w, 720), Color(0.04, 0.09, 0.08), -8)
-	sky.z_index = -8
 	NightStreet.parallax(self, map_w, "pier")
 	NightStreet.water_band(self, map_w, 560.0)
 	Blockout.poly(self, Rect2(0, 500, map_w, 28), Color(0.22, 0.18, 0.12), 1)
@@ -37,6 +35,8 @@ func build_world() -> void:
 	Blockout.poly(self, Rect2(1980, 220, 280, 18), Color(0.24, 0.3, 0.2), 2)
 	Blockout.solid(self, Rect2(2420, 492, 980, 18), true)
 	Blockout.poly(self, Rect2(2420, 492, 980, 18), Color(0.22, 0.18, 0.12), 2)
+	# Painted pier sections (backdrops/pier_strip) are the scenery;
+	# the flat blockout buildings only without them.
 	NightStreet.crane(self, Vector2(860, 80), 340.0)
 	NightStreet.crane(self, Vector2(2040, 40), 380.0)
 	NightStreet.chapel(self, Rect2(2680, 160, 420, 340))

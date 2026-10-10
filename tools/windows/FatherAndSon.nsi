@@ -4,6 +4,7 @@ OutFile "..\..\build\windows\FatherAndSonSetup.exe"
 InstallDir "$LOCALAPPDATA\FatherAndSon"
 RequestExecutionLevel user
 SetCompressor /SOLID lzma
+SetCompressorDictSize 64
 
 !include "MUI2.nsh"
 
@@ -13,11 +14,14 @@ SetCompressor /SOLID lzma
 
 BrandingText "FnS"
 
-!insertmacro MUI_PAGE_DIRECTORY
+; One click: no folder question, it just installs, then offers to start.
+!define MUI_FINISHPAGE_RUN "$INSTDIR\FatherAndSon.exe"
+!define MUI_FINISHPAGE_RUN_TEXT "Starta Father & Son nu"
 !insertmacro MUI_PAGE_INSTFILES
+!insertmacro MUI_PAGE_FINISH
 !insertmacro MUI_UNPAGE_CONFIRM
 !insertmacro MUI_UNPAGE_INSTFILES
-!insertmacro MUI_LANGUAGE "English"
+!insertmacro MUI_LANGUAGE "Swedish"
 
 Section "Install"
   SetOutPath "$INSTDIR"
@@ -30,7 +34,7 @@ Section "Install"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\FatherAndSon" "UninstallString" "$INSTDIR\Uninstall.exe"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\FatherAndSon" "DisplayIcon" "$INSTDIR\FatherAndSon.exe"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\FatherAndSon" "Publisher" "FnS"
-  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\FatherAndSon" "DisplayVersion" "0.2.0"
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\FatherAndSon" "DisplayVersion" "0.3.0"
   WriteRegDWORD HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\FatherAndSon" "NoModify" 1
   WriteRegDWORD HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\FatherAndSon" "NoRepair" 1
 SectionEnd

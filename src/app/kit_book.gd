@@ -45,7 +45,9 @@ static func apply(p: Punk) -> void:
 	p.speed = float(s.get("speed", p.speed))
 	p._walk = p.speed
 	if int(s.get("hp", 0)) > 0 and p.hp == p.max_hp:
-		p.hp = int(s.get("hp", p.hp))
+		# The kit's health, still scaled by whatever spawned it (the horde's
+		# clock, story difficulty): it used to drop that multiplier.
+		p.hp = int(round(float(s.get("hp", p.hp)) * float(p.get_meta("hp_mul", 1.0))))
 		p.max_hp = p.hp
 	if bool(s.get("cop", false)):
 		p.cop = true

@@ -43,7 +43,8 @@ func _ready() -> void:
 	col.add_child(sub)
 	if ready:
 		var claim := UiKit.button("CLAIM PATROL", Vector2(240, 48))
-		claim.add_theme_stylebox_override("normal", UiKit.panel(Palette.READY, Palette.LEMON))
+		UiKit.ready_style(claim)
+		UiKit.dark_text(claim)
 		claim.pressed.connect(func() -> void:
 			FamilyProfile.claim_patrol()
 			need_refresh.emit()

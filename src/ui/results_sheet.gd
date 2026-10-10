@@ -10,50 +10,69 @@ var gate := false
 var next_id := ""
 var next_label := "NEXT"
 var fail_gold := 0
+## Lost runs: how it ended ("GOT SHOT WITH A 9MM BY SHIFT LEAD").
+var death_line := ""
 var lock_line := ""
 var state: RunState
+## Mode-specific reward tiles: [[icon, LABEL, value], ...].
+var tiles: Array = []
+## False for modes without fists (parkour): no SCRAP / PARRIES tiles.
+var combat := true
 var _xp_bar: ProgressBar
 var _xp_lab: Label
 
 
+## Pixel reward screen: gold title on a ribbon, rank stars that slam in, the
+## two of them with their scores counting up (crown on the winner), reward
+## tiles, highlight chips, the account XP bar filling (LEVEL UP burst), and
+## big 3D buttons.
 func _ready() -> void:
 	layer = 42
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	get_tree().paused = true
 	var ui := PixelStage.attach_canvas(self)
 	var dim := ColorRect.new()
-	dim.color = Color(0, 0, 0, 0.78)
+	dim.color = Color(0, 0, 0.02, 0.8)
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.size = Vector2(1280, 720)
 	ui.add_child(dim)
+	var accent := UiKit.GOLD if win else Palette.BRICK
 	var card := PanelContainer.new()
-	card.add_theme_stylebox_override("panel", UiKit.panel(Palette.PANEL, Palette.LEMON if win else Palette.BRICK))
-	card.set_anchors_preset(Control.PRESET_CENTER)
-	card.offset_left = -420
-	card.offset_right = 420
-	card.offset_top = -300
-	card.offset_bottom = 300
+	var cs := preload("res://src/ui/clinic_featured.gd").card_style(true)
+	cs.border_color = accent
+	cs.shadow_color = Color(accent.r, accent.g, accent.b, 0.4)
+	cs.content_margin_left = 34
+	cs.content_margin_right = 34
+	cs.content_margin_top = 20
+	cs.content_margin_bottom = 20
+	card.add_theme_stylebox_override("panel", cs)
+	card.position = Vector2(170, 34)
+	card.custom_minimum_size = Vector2(940, 0)
+	card.resized.connect(func() -> void:
+		card.position = Vector2((1280.0 - card.size.x) * 0.5, maxf(8.0, (720.0 - card.size.y) * 0.5)).round()
+	)
 	ui.add_child(card)
-	var sc := ScrollContainer.new()
-	sc.custom_minimum_size = Vector2(820, 580)
-	card.add_child(sc)
+	# Re-fit once the wrapped text has its real width.
+	get_tree().process_frame.connect(func() -> void:
+		if is_instance_valid(card):
+			card.reset_size()
+	, CONNECT_ONE_SHOT)
 	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 10)
-	sc.add_child(col)
-	var t := Label.new()
-	t.text = headline
-	UiKit.apply_label(t, 30, Palette.LEMON if win else Palette.BRICK)
+	col.add_theme_constant_override("separation", 12)
+	card.add_child(col)
+	var t := UiKit.title(headline, 46, Palette.EDGE if win else Palette.BRICK)
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(t)
+	if not win:
+		_death_plate(col)
 	var s := Label.new()
 	s.text = sub
+	s.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	s.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	s.custom_minimum_size = Vector2(780, 0)
-	UiKit.apply_label(s, 15, Palette.TEXT)
+	# A wrapping label needs its width up front or the card grows tall.
+	s.custom_minimum_size = Vector2(860, 0)
+	UiKit.apply_label(s, 17, Palette.TEXT)
 	col.add_child(s)
-	if not win and fail_gold > 0:
-		var pay := Label.new()
-		pay.text = "+%d GOLD  ·  %s" % [fail_gold, Copy.FAIL_GOLD]
-		UiKit.apply_label(pay, 16, Palette.EDGE)
-		col.add_child(pay)
 	var son_n := FamilyProfile.son_name()
 	var dad_n := FamilyProfile.father_name()
 	var son_s := 0
@@ -63,90 +82,229 @@ func _ready() -> void:
 		son_s = state.score_son
 		dad_s = state.score_dad
 		total = state.score_total
-	col.add_child(StatPanel.new([
-		{"name": son_n, "value": "%06d" % son_s, "color": Palette.LEMON},
-		{"name": dad_n, "value": "%06d" % dad_s, "color": Palette.BRICK},
-		{"name": "TABLE", "value": "%06d" % total, "color": Palette.EDGE},
-		{"name": "WINNER", "value": _winner(son_s, dad_s, son_n, dad_n), "color": Palette.READY}
-	]))
-	var lead := Label.new()
-	if son_s == dad_s:
-		lead.text = "TIE. The clinic bills you both. That's fair, in hell."
-	elif son_s > dad_s:
-		lead.text = "%s put more points on the table. %s will workshop that." % [son_n, dad_n]
-	else:
-		lead.text = "%s outscored the kid. The tutoring license just winced." % dad_n
-	lead.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	UiKit.apply_label(lead, 14, Palette.MUTED)
-	col.add_child(lead)
-	col.add_child(StatPanel.new([
-		{"name": "SMASH", "value": str(int(FamilyProfile.data.get("smash_kills", 0))), "color": Palette.EDGE},
-		{"name": "PARRY", "value": str(int(FamilyProfile.data.get("parries", 0))), "color": Palette.LEMON},
-		{"name": "CATCH", "value": str(int(FamilyProfile.data.get("catches", 0))), "color": Palette.EDGE},
-		{"name": "CLASH", "value": str(int(FamilyProfile.data.get("clashes", 0))), "color": Palette.BRICK},
-		{"name": "DRUM", "value": str(int(FamilyProfile.data.get("barrels", 0))), "color": Palette.BRICK},
-		{"name": "DIVE", "value": str(int(FamilyProfile.data.get("dives", 0))), "color": Palette.LEMON},
-		{"name": "HOOD", "value": str(int(FamilyProfile.data.get("hoods", 0))), "color": Palette.LEMON},
-		{"name": "SLIDE", "value": str(int(FamilyProfile.data.get("slides", 0))), "color": Palette.EDGE}
-	]))
+	# Rank stars.
+	var stars := HBoxContainer.new()
+	stars.alignment = BoxContainer.ALIGNMENT_CENTER
+	stars.add_theme_constant_override("separation", 14)
+	col.add_child(stars)
+	var n_stars := 0
+	if win:
+		n_stars = 1 + int(total >= 1500) + int(total >= 4000)
+	for k in 3:
+		var st := PixelIcon.new()
+		st.kind = "star"
+		st.dim = k >= n_stars
+		st.custom_minimum_size = Vector2(58, 58)
+		st.pivot_offset = Vector2(29, 29)
+		st.scale = Vector2.ZERO
+		stars.add_child(st)
+		var tw := st.create_tween().set_ignore_time_scale(true).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tw.tween_interval(0.25 + 0.22 * float(k))
+		tw.tween_property(st, "scale", Vector2.ONE, 0.25)
+		if k < n_stars:
+			tw.tween_callback(func() -> void:
+				Juice.play("res://assets/audio/claim.wav")
+				Juice.pulse_shake(2.5)
+			)
+	# The two of them.
+	var duo := HBoxContainer.new()
+	duo.alignment = BoxContainer.ALIGNMENT_CENTER
+	duo.add_theme_constant_override("separation", 40)
+	col.add_child(duo)
+	# Solo: only the one who played (no "VS Dad 0" for an empty chair).
+	var solo := not App.two_bodies()
+	var show_son := not solo or son_s > 0 or (dad_s == 0 and App.solo_role != "father")
+	var show_dad := not solo or dad_s > 0 or (son_s == 0 and App.solo_role == "father")
+	if show_son:
+		duo.add_child(_player_tile("son", son_n, son_s, show_dad and son_s >= dad_s and son_s > 0, Palette.LEMON))
+	if show_son and show_dad:
+		var vs := UiKit.title("VS", 28, Palette.MUTED)
+		vs.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		duo.add_child(vs)
+	if show_dad:
+		duo.add_child(_player_tile("father", dad_n, dad_s, show_son and dad_s > son_s, Palette.BRICK))
 	var grant := _grant_xp(total)
-	_xp_lab = Label.new()
-	_xp_lab.text = "ACCOUNT  LV %d" % int(grant.get("level", 1))
-	UiKit.apply_label(_xp_lab, 16, Palette.EDGE)
-	col.add_child(_xp_lab)
-	_xp_bar = ProgressBar.new()
-	_xp_bar.custom_minimum_size = Vector2(760, 22)
+	# Reward tiles.
+	var rewards := HBoxContainer.new()
+	rewards.alignment = BoxContainer.ALIGNMENT_CENTER
+	rewards.add_theme_constant_override("separation", 14)
+	col.add_child(rewards)
+	rewards.add_child(_reward("star", "SCORE", "%d" % total))
+	rewards.add_child(_reward("xp", "XP", "+%d" % int(grant.get("gained", 0))))
+	if state and combat:
+		rewards.add_child(_reward("gold", "SCRAP", "+%d" % state.scrap))
+	for tile in tiles:
+		rewards.add_child(_reward(str(tile[0]), str(tile[1]), str(tile[2])))
+	if not win and fail_gold > 0:
+		rewards.add_child(_reward("gold", "GOLD", "+%d" % fail_gold))
+	# Weapon of the night: the one that put the most of them down.
+	var bw := Arsenal.run_best()
+	if bw != "":
+		var run_k: Dictionary = Engine.get_meta("run_weapon_kills", {})
+		rewards.add_child(_reward("fist", str(WeaponBook.spec(bw).get("title", bw)).to_upper(), "%d KO" % int(run_k.get(bw, 0))))
+	var tk := int(Engine.get_meta("run_tokens", 0))
+	if tk > 0:
+		rewards.add_child(_reward("tokens", "S-COINS", "+%d" % tk))
+	# DPS meter: the survivor abilities that did the work this hour.
+	var srun := SurviveRun.get_run(get_tree())
+	if srun and not srun.dealt.is_empty():
+		var keys := srun.dealt.keys()
+		keys.sort_custom(func(a, b) -> bool: return int(srun.dealt[a]) > int(srun.dealt[b]))
+		var dealt_all := 0
+		for k in keys:
+			dealt_all += int(srun.dealt[k])
+		var bits: Array[String] = []
+		for k in keys.slice(0, 4):
+			bits.append("%s %d%%" % [str(srun.row("abilities", str(k)).get("name", k)).to_upper(), int(round(100.0 * float(srun.dealt[k]) / float(maxi(1, dealt_all))))])
+		var dl := Label.new()
+		dl.text = "DAMAGE  ·  " + "   ".join(bits)
+		dl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		UiKit.apply_label(dl, 12, Color(0.6, 0.9, 1.0))
+		col.add_child(dl)
+	var rs_n := int(Engine.get_meta("run_shards", 0))
+	if rs_n > 0:
+		rewards.add_child(_reward("meta_shard", "SHARDS", "+%d" % rs_n))
+	# Parries this run (the profile keeps the lifetime count).
+	var parried := int(FamilyProfile.data.get("parries", 0)) - int(Engine.get_meta("run_parries0", 0))
+	if combat:
+		rewards.add_child(_reward("shield", "PARRIES", str(maxi(0, parried))))
+	# Account XP.
+	var xp_row := HBoxContainer.new()
+	xp_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	xp_row.add_theme_constant_override("separation", 12)
+	col.add_child(xp_row)
+	_xp_lab = UiKit.title("LV %d" % int(grant.get("level", 1)), 26, Palette.EDGE)
+	xp_row.add_child(_xp_lab)
+	_xp_bar = UiKit.glow_bar(0.0, UiKit.GOLD, Vector2(560, 20))
 	_xp_bar.max_value = float(grant.get("need", 100))
-	_xp_bar.value = 0.0
-	_xp_bar.show_percentage = false
-	col.add_child(_xp_bar)
+	_xp_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	xp_row.add_child(_xp_bar)
 	var xp_line := Label.new()
-	xp_line.text = "+%d ACCOUNT XP  ·  %d / %d to next growth spurt" % [
-		int(grant.get("gained", 0)), int(grant.get("xp", 0)), int(grant.get("need", 100))
-	]
-	UiKit.apply_label(xp_line, 13, Palette.TEXT)
-	col.add_child(xp_line)
+	xp_line.text = "%d / %d" % [int(grant.get("xp", 0)), int(grant.get("need", 100))]
+	xp_line.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(xp_line, 15, Palette.TEXT)
+	xp_row.add_child(xp_line)
+	# Buttons.
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 18)
+	col.add_child(row)
 	if gate and next_id != "":
 		var enter_lock := PowerBook.lock(next_id, "enter")
 		if lock_line == "" and not enter_lock.is_empty():
 			lock_line = PowerBook.line(enter_lock)
 		if lock_line != "":
-			var lock_row := HBoxContainer.new()
-			lock_row.add_theme_constant_override("separation", 8)
-			var shop := str(enter_lock.get("shop_id", "dojo"))
-			if shop == "":
-				shop = "dojo"
-			lock_row.add_child(UiKit.portrait(SpriteBook.icon(shop), Vector2(48, 48)))
-			var locked := UiKit.button(lock_line, Vector2(460, 52))
-			locked.disabled = true
-			locked.process_mode = Node.PROCESS_MODE_ALWAYS
-			lock_row.add_child(locked)
-			col.add_child(lock_row)
 			var why := Label.new()
 			why.text = lock_line
 			why.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			UiKit.apply_label(why, 13, Palette.BRICK)
+			why.custom_minimum_size = Vector2(860, 0)
+			why.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			UiKit.apply_label(why, 15, Palette.BRICK)
 			col.add_child(why)
+			var way := PowerBook.path_line(next_id)
+			if way != "":
+				var funded := PowerBook.fund(next_id)
+				var how := Label.new()
+				how.text = "AT CAMP:  %s%s" % [way, ("\nTHE CLINIC CHIPPED IN +%d GOLD FOR IT." % funded) if funded > 0 else ""]
+				how.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+				how.custom_minimum_size = Vector2(860, 0)
+				how.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+				UiKit.apply_label(how, 15, Palette.LEMON)
+				col.add_child(how)
 		else:
-			var nxt := UiKit.button(next_label, Vector2(360, 52))
+			var nxt := UiKit.button(next_label, Vector2(330, 60))
+			nxt.add_theme_font_override("font", UiKit.title_font())
+			nxt.add_theme_font_size_override("font_size", 22)
 			nxt.process_mode = Node.PROCESS_MODE_ALWAYS
 			nxt.pressed.connect(_go_next)
-			col.add_child(nxt)
-			nxt.grab_focus()
-	var b := UiKit.button("BACK TO THE CLINIC", Vector2(280, 48))
+			row.add_child(nxt)
+			nxt.call_deferred("grab_focus")
+	var b := UiKit.button("GO BUILD IT AT CAMP" if lock_line != "" else "BACK TO THE HIDEOUT", Vector2(300, 60))
 	b.process_mode = Node.PROCESS_MODE_ALWAYS
 	b.pressed.connect(_go_hub)
-	col.add_child(b)
+	row.add_child(b)
 	if not gate or lock_line != "":
-		b.grab_focus()
+		b.call_deferred("grab_focus")
+	UiKit.pop_in(card)
 	Juice.pulse_shake(8.0 if win else 5.0)
-	if win:
-		Juice.unlock_logo(headline, sub)
 	_tween_xp(float(grant.get("xp", 0)), int(grant.get("dings", 0)))
-	Juice.toast("reward", "PINBALL", "%s %06d  ·  %s %06d" % [son_n, son_s, dad_n, dad_s])
 	if state and state.score_total > 0 and state.score_total == int(FamilyProfile.data.get("high_score", 0)):
 		Juice.unlock_logo("HIGH TABLE", "The clipboard wrote it in gold ink.")
 		Juice.shout("HIGH TABLE")
+
+
+func _player_tile(who: String, name_text: String, score: int, crown: bool, accent: Color) -> Control:
+	var box := PanelContainer.new()
+	var st := UiKit.panel(UiKit.NAVY_HI, accent)
+	st.content_margin_left = 16
+	st.content_margin_right = 16
+	box.add_theme_stylebox_override("panel", st)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	box.add_child(row)
+	row.add_child(UiKit.portrait(SpriteBook.bust(who), Vector2(70, 80)))
+	var col := VBoxContainer.new()
+	col.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_child(col)
+	var n := UiKit.title(name_text + ("  ♛" if crown else ""), 20, accent)
+	col.add_child(n)
+	var v := UiKit.title("0", 34, Palette.TEXT)
+	col.add_child(v)
+	var tw := v.create_tween().set_ignore_time_scale(true)
+	tw.tween_interval(0.6)
+	tw.tween_method(func(x: float) -> void: v.text = "%d" % int(x), 0.0, float(score), 0.9)
+	return box
+
+
+var _tiles := 0
+
+
+func _reward(icon: String, label: String, value: String) -> Control:
+	var box := PanelContainer.new()
+	var st := UiKit.panel(UiKit.NAVY, UiKit.RIM)
+	st.content_margin_left = 12
+	st.content_margin_right = 12
+	box.add_theme_stylebox_override("panel", st)
+	box.custom_minimum_size = Vector2(130, 0)
+	var col := VBoxContainer.new()
+	col.alignment = BoxContainer.ALIGNMENT_CENTER
+	col.add_theme_constant_override("separation", 2)
+	box.add_child(col)
+	var ic := PixelIcon.new()
+	ic.kind = icon
+	ic.custom_minimum_size = Vector2(IconBook.SIZE_S, IconBook.SIZE_S)
+	ic.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	col.add_child(ic)
+	var v := UiKit.title(value, 22, Palette.TEXT)
+	v.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(v)
+	# "+N" rewards count up one tile after another, then pop; gold and
+	# S-COINS then fly off to the purse.
+	if value.begins_with("+") and value.substr(1).is_valid_int():
+		var n := int(value.substr(1))
+		var order := _tiles
+		_tiles += 1
+		v.text = "+0"
+		var tw := v.create_tween().set_ignore_time_scale(true)
+		tw.tween_interval(1.1 + 0.45 * float(order))
+		tw.tween_method(func(x: float) -> void:
+			var t := "+%d" % int(round(x))
+			if v.text != t:
+				v.text = t
+				RewardFly.snd("coin_tick", 1.0 + 0.8 * x / float(maxi(1, n)), -10.0)
+		, 0.0, float(n), clampf(0.3 + float(n) / 400.0, 0.3, 0.8))
+		tw.tween_callback(func() -> void:
+			Juice.upgrade_fx(box, UiKit.GOLD, "", false)
+			var key := {"GOLD": "gold", "S-COINS": "tokens"}.get(label, "") as String
+			if key != "" and n > 0:
+				Juice.rewards.give(key, n, RewardFly.vp_of(ic), false))
+	var l := Label.new()
+	l.text = label
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(l, 12, UiKit.GOLD)
+	col.add_child(l)
+	return box
 
 
 func _winner(son_s: int, dad_s: int, son_n: String, dad_n: String) -> String:
@@ -171,7 +329,7 @@ func _tween_xp(xp: float, dings: int) -> void:
 			Juice.unlock_logo("ACCOUNT LEVEL UP", "Growth. Billed. The fridge stays.")
 			Juice.toast("achievement", "LEVEL UP", "The clipboard added a zero.")
 			if _xp_lab:
-				_xp_lab.text = "ACCOUNT  LV %d" % int(FamilyProfile.data.get("account_level", 1))
+				_xp_lab.text = "LV %d" % int(FamilyProfile.data.get("account_level", 1))
 		)
 
 
@@ -192,7 +350,67 @@ func _go_hub() -> void:
 		if App.is_solo_density():
 			FamilyProfile.mark_solo_clear()
 		FamilyProfile.push_log(headline, sub)
-	Mixer.play_music("res://assets/audio/music_clinic.wav")
+	Mixer.play_music("res://assets/audio/music/music_menu.ogg")
 	if App.remote_coop:
 		NetSession.shutdown()
 	App.back_to_hub("awards" if win else "clinic")
+
+
+## A red plate with a skull-ish cross under the title: the cause of death.
+func _death_plate(col: VBoxContainer) -> void:
+	var line := death_line
+	if line == "":
+		line = DeathCause.for_run(get_tree())
+	if line == "":
+		return
+	var plate := PanelContainer.new()
+	var st := UiKit.panel(Color(0.18, 0.03, 0.04), Palette.BRICK)
+	st.content_margin_left = 18
+	st.content_margin_right = 18
+	st.content_margin_top = 8
+	st.content_margin_bottom = 8
+	plate.add_theme_stylebox_override("panel", st)
+	plate.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	plate.add_child(row)
+	var ic := PixelIcon.new()
+	ic.kind = "cross"
+	ic.custom_minimum_size = Vector2(30, 30)
+	row.add_child(ic)
+	var l := Label.new()
+	l.text = line
+	l.add_theme_font_override("font", UiKit.title_font())
+	l.add_theme_font_size_override("font_size", 22)
+	l.add_theme_color_override("font_color", Color(1.0, 0.82, 0.78))
+	l.add_theme_color_override("font_outline_color", UiKit.INK)
+	l.add_theme_constant_override("outline_size", 6)
+	row.add_child(l)
+	col.add_child(plate)
+	# Roguelite nudge: what would make the next try go better.
+	var tip := ""
+	for r in Heroes.ROLES:
+		if tip == "" and Heroes.can_level_any(r):
+			tip = "TIP  ·  you can afford a level in HEROES."
+		elif tip == "" and Heroes.can_rank(r):
+			tip = "TIP  ·  enough shards for a rarity up in HEROES."
+	if tip == "":
+		for id in Meta.LIST.keys():
+			if Meta.blocker(id) == "":
+				tip = "TIP  ·  a META upgrade is ready in HEROES."
+				break
+	if tip == "" and Heroes.map_tier() > 0:
+		tip = "TIP  ·  thugs get tougher deeper in the city. Grow your heroes and gear."
+	if tip != "":
+		var tl := Label.new()
+		tl.text = tip
+		tl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		UiKit.apply_label(tl, 14, UiKit.GOLD)
+		col.add_child(tl)
+	plate.pivot_offset = Vector2(200, 20)
+	plate.scale = Vector2(1.4, 1.4)
+	plate.modulate.a = 0.0
+	var tw := plate.create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_interval(0.25)
+	tw.tween_property(plate, "scale", Vector2.ONE, 0.25)
+	tw.parallel().tween_property(plate, "modulate:a", 1.0, 0.15)

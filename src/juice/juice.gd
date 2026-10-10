@@ -1,10 +1,14 @@
 extends Node
 
 var trauma := 0.0
+var _kick := Vector2.ZERO
 var combo := 0
 var combo_ttl := 0.0
 var combo_peak := 0
 var last_hitter := "son"
+## PINBALL XP: kills inside 1.2 s of each other chain into a multi-kill.
+var multi := 0
+var _multi_t := 0.0
 var callout := ""
 var _callout_t := 0.0
 var _base_scale := 1.0
@@ -14,9 +18,11 @@ var _overlay: CanvasLayer
 var _sfx: AudioStreamPlayer
 var _toast_box: VBoxContainer
 var _toast_at: Dictionary = {}
+## Rewards that count up and fly to their counter; upgrade juice.
+var rewards: RewardFly
 
 const TOAST_COOL_MS := 2800
-const TOAST_MAX := 3
+const TOAST_MAX := 1
 
 const DECAY := 1.35
 const MAX_OFFSET := Vector2(12, 8)
@@ -30,30 +36,33 @@ func _ready() -> void:
 	_overlay.layer = 80
 	_overlay.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(_overlay)
-	var toast_root := Control.new()
-	toast_root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	# Toasts live in the 1280x720 design space like the rest of the HUD,
+	# stacked on the right under the objectives card.
+	var toast_root := PixelStage.attach_canvas(_overlay)
 	toast_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_overlay.add_child(toast_root)
 	_toast_box = VBoxContainer.new()
-	_toast_box.anchor_left = 1.0
-	_toast_box.anchor_right = 1.0
-	_toast_box.anchor_top = 0.0
-	_toast_box.offset_left = -268
-	_toast_box.offset_right = -10
-	_toast_box.offset_top = 8
-	_toast_box.offset_bottom = 240
+	# Tucked into the top-right corner, one at a time (the rest queue), so
+	# the fight on the right of the screen stays clear.
+	_toast_box.position = Vector2(1010, 96)
+	_toast_box.size = Vector2(262, 60)
 	_toast_box.add_theme_constant_override("separation", 4)
 	_toast_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	toast_root.add_child(_toast_box)
 	_sfx = AudioStreamPlayer.new()
 	_sfx.bus = "sfx"
 	add_child(_sfx)
+	rewards = RewardFly.new()
+	add_child(rewards)
 
 
 func _process(delta: float) -> void:
 	if trauma > 0.0:
 		trauma = maxf(trauma - DECAY * delta, 0.0)
 	_noise_t += delta * 30.0
+	if _kick != Vector2.ZERO:
+		_kick = _kick.lerp(Vector2.ZERO, 1.0 - exp(-14.0 * delta))
+		if _kick.length() < 0.05:
+			_kick = Vector2.ZERO
 	if combo > 0:
 		_combo_clock(delta)
 	if _callout_t > 0.0:
@@ -73,11 +82,18 @@ func add_trauma(amount: float) -> void:
 	trauma = clampf(trauma + amount, 0.0, 1.0)
 
 
+## Directional camera shove (a blow pushes the view the way it travels),
+## springing back in world time so it holds through hitstop.
+func kick(dir: Vector2, px: float) -> void:
+	_kick = (_kick + dir.normalized() * px * float(Gfx.get_v("shake"))).limit_length(12.0)
+
+
 func shake_offset() -> Vector2:
-	var shake := trauma * trauma
+	# Options: SCREEN SHAKE scales every shake (0 turns it off).
+	var shake := trauma * trauma * float(Gfx.get_v("shake")) * 1.25
 	if shake <= 0.002:
-		return Vector2.ZERO
-	return Vector2(
+		return _kick
+	return _kick + Vector2(
 		MAX_OFFSET.x * shake * sin(_noise_t * 1.7),
 		MAX_OFFSET.y * shake * sin(_noise_t * 2.3)
 	)
@@ -110,6 +126,8 @@ func _apply_scale() -> void:
 
 
 func hitstop(frames: int) -> void:
+	# OPTIONS > HIT STOP scales every freeze (0 turns them off).
+	frames = int(round(float(frames) * float(FamilyProfile.data.get("hitstop_k", 1.0))))
 	if frames <= 0:
 		return
 	_hitstop_depth += 1
@@ -121,6 +139,7 @@ func hitstop(frames: int) -> void:
 
 
 func freeze_frames(frames: int) -> void:
+	frames = int(round(float(frames) * float(FamilyProfile.data.get("hitstop_k", 1.0))))
 	if frames <= 0:
 		return
 	_hitstop_depth += 1
@@ -144,6 +163,9 @@ func flash_red(node: CanvasItem, frames: int = 2) -> void:
 func flash_white_red(node: CanvasItem) -> void:
 	if node == null:
 		return
+	if reduce_flash():
+		flash_red(node, 2)
+		return
 	var original := node.modulate
 	node.modulate = Color(1.0, 1.0, 1.0, 1.0)
 	await get_tree().create_timer(1.0 / 60.0, true, false, true).timeout
@@ -156,6 +178,12 @@ func flash_white_red(node: CanvasItem) -> void:
 
 func squash(node: Node2D, facing: int) -> void:
 	if node == null:
+		return
+	var owner_f := node.get_parent()
+	while owner_f != null and not owner_f.has_method("_squash_to") and not (owner_f is Window):
+		owner_f = owner_f.get_parent()
+	if owner_f != null and owner_f.has_method("_squash_to") and owner_f.get("_anim") != null:
+		owner_f.call("_squash_to", Vector2(1.16, 0.84))
 		return
 	node.scale = Vector2(1.28 * float(facing), 0.7)
 	var tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
@@ -202,6 +230,57 @@ func register_hit(kind: String, global_pos: Vector2, dmg: int) -> void:
 		toaster_pop("S+")
 	if combo == 5 or combo == 10 or combo == 20:
 		toaster_pop(combo_rank())
+	_jackpot(combo)
+
+
+## Story XP is a pinball table: every kill's XP is multiplied by the live
+## combo (+6% a hit, up to x3.5), multi-kills add +0.5 each, style kills
+## (in the air, into the scenery, overkill) add theirs, and combo
+## milestones pay a JACKPOT. Returns the XP to grant.
+func xp_mul() -> float:
+	var live := multi if Time.get_ticks_msec() / 1000.0 - _multi_t < 1.2 else 0
+	return minf(3.5, 1.0 + 0.06 * float(combo)) + 0.5 * float(maxi(0, live - 1))
+
+
+func pinball_kill(at: Vector2, base: int, tags: Array) -> int:
+	var now := Time.get_ticks_msec() / 1000.0
+	multi = multi + 1 if now - _multi_t < 1.2 else 1
+	_multi_t = now
+	var mul := xp_mul()
+	var names: Array[String] = []
+	for t in tags:
+		match str(t):
+			"air":
+				mul += 0.5
+				names.append("AIR KILL")
+			"env":
+				mul += 0.5
+				names.append("SCENERY")
+			"overkill":
+				mul += 0.25
+				names.append("OVERKILL")
+			"elite":
+				mul += 0.5
+	if multi >= 2:
+		names.push_front(["", "", "DOUBLE KILL", "TRIPLE KILL", "QUAD KILL"][mini(multi, 4)] if multi <= 4 else "MULTI x%d" % multi)
+	var xp := int(round(float(base) * mul))
+	var col := Palette.READY.lerp(UiKit.GOLD, clampf((mul - 1.0) / 3.0, 0.0, 1.0))
+	popup_number(at + Vector2(0, -64), "+%d XP  x%.1f" % [xp, mul], col)
+	if not names.is_empty():
+		popup_number(at + Vector2(0, -84), "  ·  ".join(names), UiKit.GOLD)
+	return xp
+
+
+## Combo milestones: a JACKPOT of XP straight in.
+func _jackpot(n: int) -> void:
+	var bonus := {10: 20, 20: 45, 30: 80, 40: 130, 60: 220}.get(n, 0) as int
+	if bonus <= 0:
+		return
+	var rs := get_tree().get_first_node_in_group("run_state")
+	if rs and rs.has_method("add_xp") and SurviveRun.get_run(get_tree()) == null:
+		rs.add_xp(bonus)
+		popup_number(Vector2(640, 180), "JACKPOT  +%d XP" % bonus, UiKit.GOLD)
+		play("res://assets/audio/claim.wav")
 
 
 func shout(line: String) -> void:
@@ -278,58 +357,62 @@ func claim_burst(from: Vector2, line: String, gold: int, gems: int) -> void:
 	wrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	wrap.process_mode = Node.PROCESS_MODE_ALWAYS
 	_overlay.add_child(wrap)
+	# The line stands big over the middle on a dark band (readable over any
+	# menu); the reward itself then counts up centre stage under it.
+	var mid := get_viewport().get_visible_rect().size * 0.5
+	var y := mid.y - (96.0 if gold or gems else 18.0)
+	var band := ColorRect.new()
+	band.color = Color(0, 0, 0.03, 0.62)
+	band.position = Vector2(0, y - 8)
+	band.size = Vector2(mid.x * 2.0, 44)
+	band.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	wrap.add_child(band)
 	var lab := Label.new()
 	lab.text = line
 	lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lab.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	lab.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	lab.add_theme_font_override("font", UiKit.title_font())
 	lab.add_theme_font_size_override("font_size", 28)
 	lab.add_theme_color_override("font_color", Palette.LEMON)
-	lab.add_theme_color_override("font_outline_color", Color(0, 0, 0, 1))
-	lab.add_theme_constant_override("outline_size", 8)
-	lab.position = from + Vector2(-160, -20)
-	lab.size = Vector2(320, 40)
+	lab.add_theme_color_override("font_outline_color", UiKit.INK)
+	lab.add_theme_constant_override("outline_size", 5)
+	lab.position = Vector2(mid.x - 300, y - 6)
+	lab.size = Vector2(600, 34)
+	lab.pivot_offset = Vector2(300, 17)
+	lab.scale = Vector2(0.3, 0.3)
 	wrap.add_child(lab)
-	var extra := Label.new()
-	var bits: PackedStringArray = []
-	if gold:
-		bits.append("+%d GOLD" % gold)
-	if gems:
-		bits.append("+%d GEMS" % gems)
-	extra.text = "  ·  ".join(bits)
-	extra.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	extra.position = from + Vector2(-160, 22)
-	extra.size = Vector2(320, 28)
-	extra.add_theme_font_size_override("font_size", 18)
-	extra.add_theme_color_override("font_color", Palette.EDGE)
-	wrap.add_child(extra)
 	var tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.set_ignore_time_scale(true)
-	tw.tween_property(lab, "scale", Vector2(1.12, 1.12), 0.18)
-	tw.tween_interval(0.52)
-	tw.tween_property(wrap, "modulate:a", 0.0, 0.2)
+	tw.tween_property(lab, "scale", Vector2(1.18, 1.18), 0.18)
+	tw.tween_property(lab, "scale", Vector2.ONE, 0.08)
+	tw.tween_interval(0.85 if gold or gems else 0.7)
+	tw.tween_property(lab, "scale", Vector2(0.6, 0.6), 0.16).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(lab, "position:y", lab.position.y - 40.0, 0.2)
+	tw.parallel().tween_property(wrap, "modulate:a", 0.0, 0.2)
 	tw.finished.connect(wrap.queue_free)
 	if gold or gems:
-		fly_pills(from, gold, gems)
+		# The reward pops in under the line, counts up and flies home.
+		fly_pills(from + Vector2(0, 46), gold, gems)
 
 
 func fly_pills(from: Vector2, gold: int, gems: int) -> void:
-	for i in maxi(gold, 0) / 4 + (1 if gold else 0):
-		_fly_chip(from, Vector2(980, 18), Palette.EDGE)
-	for i in maxi(gems, 0):
-		_fly_chip(from, Vector2(1100, 18), Palette.LEMON)
+	# `from` is on the 640x360 grid (viewport coordinates).
+	if gold > 0:
+		rewards.give("gold", gold, from, true)
+	if gems > 0:
+		rewards.give("gems", gems, from + Vector2(0, -6), true)
 
 
-func _fly_chip(from: Vector2, to: Vector2, color: Color) -> void:
-	var chip := ColorRect.new()
-	chip.size = Vector2(14, 14)
-	chip.color = color
-	chip.position = from
-	chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_overlay.add_child(chip)
-	var tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN_OUT)
-	tw.set_ignore_time_scale(true)
-	tw.tween_property(chip, "position", to + Vector2(randf_range(-12, 12), randf_range(-6, 6)), 0.7)
-	tw.tween_property(chip, "modulate:a", 0.0, 0.12)
-	tw.finished.connect(chip.queue_free)
+## A reward you can see: the icon pops in, counts up, then flies to its
+## counter (gold / gems / tokens / rep / flow / xp). `from` on the 640x360 grid.
+func give(key: String, amount: int, from := Vector2(-1, -1)) -> void:
+	rewards.give(key, amount, from)
+
+
+## Reward-grow juice on a control that was just bought or levelled.
+func upgrade_fx(target: Control, color: Color = UiKit.GOLD, text := "", big := false, icon := "") -> void:
+	rewards.upgrade(target, color, text, big, icon)
 
 
 func keep_combo() -> void:
@@ -382,7 +465,8 @@ func cash_out() -> void:
 		combo_peak = 0
 		return
 	var scrap_n := maxi(1, n / 4)
-	var xp_n := n / 6
+	# Banking pays more the longer the line ran (pinball bonus count).
+	var xp_n := n * n / 30
 	var rs := get_tree().get_first_node_in_group("run_state")
 	if rs and rs.has_method("has_card") and rs.has_card("street_credit"):
 		scrap_n *= 2
@@ -425,7 +509,7 @@ func land_puff(global_pos: Vector2) -> void:
 		p.queue_free()
 
 
-func toast(kind: String, title: String, body: String) -> void:
+func toast(kind: String, title: String, body: String, icon := "") -> void:
 	if _toast_box == null:
 		return
 	var now := Time.get_ticks_msec()
@@ -433,10 +517,27 @@ func toast(kind: String, title: String, body: String) -> void:
 	if _toast_at.has(key) and now - int(_toast_at[key]) < TOAST_COOL_MS:
 		return
 	_toast_at[key] = now
-	while _toast_box.get_child_count() >= TOAST_MAX:
-		var oldest := _toast_box.get_child(0)
-		_toast_box.remove_child(oldest)
-		oldest.queue_free()
+	# One on screen; the next waits its turn (at most three wait, the
+	# oldest waiting one is dropped).
+	if _toast_box.get_child_count() >= TOAST_MAX:
+		_toast_q.append([kind, title, body, icon])
+		if _toast_q.size() > 3:
+			_toast_q.pop_front()
+		return
+	_toast_show(kind, title, body, icon)
+
+
+var _toast_q: Array = []
+
+
+func _toast_next() -> void:
+	if _toast_q.is_empty() or _toast_box == null:
+		return
+	var n: Array = _toast_q.pop_front()
+	_toast_show(str(n[0]), str(n[1]), str(n[2]), str(n[3]))
+
+
+func _toast_show(kind: String, title: String, body: String, icon: String) -> void:
 	var accent := Palette.EDGE
 	match kind:
 		"achievement", "unlock":
@@ -445,41 +546,102 @@ func toast(kind: String, title: String, body: String) -> void:
 			accent = Palette.READY
 		"challenge":
 			accent = Palette.BRICK
+		"codex":
+			accent = Color(1.0, 0.56, 0.12)
 		_:
 			accent = Palette.EDGE
+	# Pixel toast: chunky framed plate, a glyph medallion by kind, title in
+	# the pixel caps; slides in from the side with a bounce, shines once.
+	var glyph := {"achievement": "ach_trophy", "unlock": "star", "quest": "eye", "challenge": "fist", "reward": "gold", "codex": "node_school"}.get(kind, "star") as String
+	if icon != "":
+		glyph = icon
 	var wrap := PanelContainer.new()
 	wrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	wrap.process_mode = Node.PROCESS_MODE_ALWAYS
-	wrap.add_theme_stylebox_override("panel", UiKit.panel(Color(0.06, 0.06, 0.08, 0.82), accent))
-	wrap.custom_minimum_size = Vector2(250, 0)
+	var st := UiKit.panel(Color(0.05, 0.07, 0.14, 0.94), accent)
+	st.set_border_width_all(3)
+	st.shadow_color = Color(0, 0, 0.02, 0.85)
+	st.shadow_size = 1
+	st.shadow_offset = Vector2(0, 4)
+	st.content_margin_left = 8
+	st.content_margin_right = 10
+	st.content_margin_top = 5
+	st.content_margin_bottom = 5
+	wrap.add_theme_stylebox_override("panel", st)
+	wrap.custom_minimum_size = Vector2(262, 0)
 	_toast_box.add_child(wrap)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	wrap.add_child(row)
+	# The icon sits in a lit medallion so every toast leads with a picture.
+	var medal := PanelContainer.new()
+	var ms := StyleBoxFlat.new()
+	ms.bg_color = Color(accent.r * 0.25, accent.g * 0.25, accent.b * 0.3, 1.0)
+	ms.border_color = accent
+	ms.set_border_width_all(2)
+	ms.set_corner_radius_all(20)
+	ms.content_margin_left = 3
+	ms.content_margin_right = 3
+	ms.content_margin_top = 3
+	ms.content_margin_bottom = 3
+	medal.add_theme_stylebox_override("panel", ms)
+	medal.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(medal)
+	var ic := PixelIcon.new()
+	ic.kind = glyph
+	ic.custom_minimum_size = Vector2(34, 34)
+	ic.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	ic.pivot_offset = Vector2(17, 17)
+	medal.add_child(ic)
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 0)
-	wrap.add_child(col)
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(col)
+	if kind == "achievement":
+		var hd := Label.new()
+		hd.text = "ACHIEVEMENT UNLOCKED"
+		hd.add_theme_font_override("font", UiKit.pixel_font())
+		UiKit.apply_label(hd, 9, Color(1.0, 0.85, 0.35))
+		col.add_child(hd)
 	var t := Label.new()
 	t.text = title
 	t.clip_text = true
 	t.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	UiKit.apply_label(t, 13, accent)
+	t.add_theme_font_override("font", UiKit.title_font())
+	UiKit.apply_label(t, 14, accent)
 	col.add_child(t)
 	if body != "":
 		var b := Label.new()
 		b.text = body
 		b.clip_text = true
 		b.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-		UiKit.apply_label(b, 11, Palette.MUTED)
+		b.add_theme_font_override("font", UiKit.pixel_font())
+		UiKit.apply_label(b, 11, Palette.TEXT)
 		col.add_child(b)
 	wrap.modulate.a = 0.0
-	var tw := create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	wrap.position.x = 60.0
+	var tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.set_ignore_time_scale(true)
-	tw.tween_property(wrap, "modulate:a", 1.0, 0.08)
+	tw.tween_property(wrap, "modulate:a", 1.0, 0.1)
+	tw.parallel().tween_property(ic, "scale", Vector2(1.3, 1.3), 0.12)
+	tw.tween_property(ic, "scale", Vector2.ONE, 0.1)
 	tw.tween_interval(1.6)
-	tw.tween_property(wrap, "modulate:a", 0.0, 0.18)
-	tw.finished.connect(wrap.queue_free)
+	tw.tween_property(wrap, "modulate:a", 0.0, 0.2)
+	tw.finished.connect(func() -> void:
+		wrap.queue_free()
+		_toast_next.call_deferred())
+	if kind == "reward" or kind == "achievement" or kind == "unlock":
+		play("res://assets/audio/cling.wav")
+	elif kind == "codex":
+		RewardFly.snd("gem_land", 1.3, -6.0)
 
 
-func unlock_logo(title: String, sub: String, reward: String = "") -> void:
+func unlock_logo(title: String, sub: String, reward: String = "", icon: Texture2D = null) -> void:
 	var body := reward if reward != "" else sub
+	# Mid-fight a corner note; in the camp and menus the big banner.
+	if get_tree().get_first_node_in_group("run_state") == null:
+		unlock_banner(title, sub if reward == "" else "%s  ·  %s" % [reward, sub], icon)
+		return
 	toast("unlock", title, body)
 
 
@@ -495,92 +657,264 @@ func level_up(grant: Dictionary) -> void:
 	dim.color = Color(0, 0, 0, 0.55)
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	wrap.add_child(dim)
+	# Rays behind the card.
+	var rays := Control.new()
+	rays.set_anchors_preset(Control.PRESET_FULL_RECT)
+	rays.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	wrap.add_child(rays)
+	var t0 := Time.get_ticks_msec()
+	rays.draw.connect(func() -> void:
+		var c := rays.size * 0.5
+		var a0 := float(Time.get_ticks_msec() - t0) / 1000.0 * 0.4
+		for k in 16:
+			var a := a0 + TAU * float(k) / 16.0
+			rays.draw_colored_polygon(PackedVector2Array([c, c + Vector2(cos(a - 0.06), sin(a - 0.06)) * 900.0, c + Vector2(cos(a + 0.06), sin(a + 0.06)) * 900.0]), Color(1.0, 0.85, 0.35, 0.08))
+	)
+	var spin := create_tween().set_loops(30)
+	spin.set_ignore_time_scale(true)
+	spin.tween_callback(rays.queue_redraw).set_delay(0.033)
 	var card := PanelContainer.new()
-	card.add_theme_stylebox_override("panel", UiKit.panel(Palette.PANEL, Palette.EDGE))
+	var cs := preload("res://src/ui/clinic_featured.gd").card_style(true)
+	cs.set_border_width_all(7)
+	cs.content_margin_left = 34
+	cs.content_margin_right = 34
+	cs.content_margin_top = 18
+	cs.content_margin_bottom = 18
+	card.add_theme_stylebox_override("panel", cs)
 	card.set_anchors_preset(Control.PRESET_CENTER)
 	card.offset_left = -300
 	card.offset_right = 300
-	card.offset_top = -160
-	card.offset_bottom = 160
+	card.offset_top = -170
+	card.offset_bottom = 170
+	card.pivot_offset = Vector2(300, 170)
 	wrap.add_child(card)
 	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 8)
+	col.add_theme_constant_override("separation", 10)
 	card.add_child(col)
-	var mark := LogoMark.new()
-	mark.custom_minimum_size = Vector2(64, 64)
-	col.add_child(mark)
-	var t := Label.new()
-	t.text = "ACCOUNT LEVEL UP"
+	var t := UiKit.title("PROFILE LEVEL %d" % int(grant.get("level", 1)), 40, UiKit.GOLD)
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	UiKit.apply_label(t, 28, Palette.LEMON)
 	col.add_child(t)
 	var av := Label.new()
-	av.text = "%s  ·  %s" % [FamilyProfile.son_name(), FamilyProfile.father_name()]
+	av.text = "%s  &  %s" % [FamilyProfile.son_name().to_upper(), FamilyProfile.father_name().to_upper()]
 	av.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	av.add_theme_font_override("font", UiKit.pixel_font())
 	UiKit.apply_label(av, 16, Palette.TEXT)
 	col.add_child(av)
-	var bar := ProgressBar.new()
-	bar.custom_minimum_size = Vector2(520, 22)
-	bar.max_value = float(grant.get("need", 100))
-	bar.value = float(grant.get("xp", 0))
-	bar.show_percentage = false
+	# Segmented XP bar that fills up.
+	var bar := Control.new()
+	bar.custom_minimum_size = Vector2(520, 26)
 	col.add_child(bar)
-	var got2 := Label.new()
-	got2.text = "YOU GOT  ·  LV %d  ·  +8 GOLD  ·  PROFILE FRAME CHECK" % int(grant.get("level", 1))
-	got2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	UiKit.apply_label(got2, 15, Palette.EDGE)
-	col.add_child(got2)
-	card.scale = Vector2(0.7, 0.7)
+	var frac := clampf(float(grant.get("xp", 0)) / maxf(1.0, float(grant.get("need", 100))), 0.0, 1.0)
+	var fill := [0.0]
+	bar.draw.connect(func() -> void:
+		for k in 20:
+			var x := float(k) * 26.0
+			bar.draw_rect(Rect2(x, 0, 24, 22), Color(0, 0, 0.02))
+			var on: bool = float(k) / 20.0 < float(fill[0])
+			bar.draw_rect(Rect2(x + 3, 3, 18, 12), UiKit.GOLD if on else Color(0.16, 0.18, 0.26))
+			bar.draw_rect(Rect2(x + 3, 15, 18, 4), (UiKit.GOLD.darkened(0.45)) if on else Color(0.1, 0.11, 0.16))
+	)
+	var tf := create_tween()
+	tf.set_ignore_time_scale(true)
+	tf.tween_method(func(v: float) -> void:
+		fill[0] = v
+		bar.queue_redraw(), 0.0, maxf(frac, 0.05), 0.6).set_delay(0.3)
+	var rewards := HBoxContainer.new()
+	rewards.alignment = BoxContainer.ALIGNMENT_CENTER
+	rewards.add_theme_constant_override("separation", 14)
+	col.add_child(rewards)
+	for pair: Array in [["gold", "+8 GOLD", UiKit.GOLD], ["star", "LV %d" % int(grant.get("level", 1)), Color(0.45, 1.0, 0.55)], ["gem", "FRAME CHECK", Color(0.45, 0.85, 1.0)]]:
+		var tile := PanelContainer.new()
+		tile.add_theme_stylebox_override("panel", UiKit.panel(Color(0.08, 0.1, 0.2), UiKit.GOLD))
+		var tv := VBoxContainer.new()
+		tv.alignment = BoxContainer.ALIGNMENT_CENTER
+		tile.add_child(tv)
+		var ic := PixelIcon.new()
+		ic.kind = str(pair[0])
+		ic.custom_minimum_size = Vector2(40, 40)
+		ic.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		tv.add_child(ic)
+		var tl := Label.new()
+		tl.text = str(pair[1])
+		tl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		tl.add_theme_font_override("font", UiKit.title_font())
+		UiKit.apply_label(tl, 14, pair[2] as Color)
+		tv.add_child(tl)
+		tile.custom_minimum_size = Vector2(150, 84)
+		rewards.add_child(tile)
+	card.scale = Vector2(0.6, 0.6)
 	var tw2 := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw2.set_ignore_time_scale(true)
 	tw2.tween_property(card, "scale", Vector2(1.1, 1.1), 0.24)
 	tw2.tween_property(card, "scale", Vector2.ONE, 0.12)
-	tw2.tween_interval(1.6)
-	tw2.tween_property(wrap, "modulate:a", 0.0, 0.22)
+	tw2.tween_interval(2.2)
+	tw2.tween_property(wrap, "modulate:a", 0.0, 0.25)
 	tw2.finished.connect(wrap.queue_free)
 	toast("achievement", "LEVEL UP", "YOU GOT  ·  LV %d  ·  +8 GOLD" % int(grant.get("level", 1)))
 
 
-func carpenter(title: String, reward: String) -> void:
+func carpenter(title: String, reward: String, icon_id: String = "") -> void:
 	play("res://assets/audio/hammer.wav" if ResourceLoader.exists("res://assets/audio/hammer.wav") else "res://assets/audio/chest.wav")
-	pulse_shake(5.0)
+	var tex: Texture2D = SpriteBook.icon(icon_id) if icon_id != "" else null
+	unlock_banner(title, "YOU GOT  ·  %s" % reward, tex)
+
+
+var _banner_q: Array = []
+var _banner_on := false
+
+
+## The big one: a feature opened up (a camp room, a menu, a move set). A
+## dark band opens across the middle of the screen, gold rays turn behind the
+## icon as it pops in, the name slams in from the left and UNLOCKED from the
+## right, sparks fall; after a beat the band folds shut. Queued, one at a time.
+func unlock_banner(title: String, sub: String = "", tex: Texture2D = null) -> void:
+	_banner_q.append([title, sub, tex])
+	if not _banner_on:
+		_banner_next()
+
+
+func _banner_next() -> void:
+	# Never over the stage card or GET READY / GO: show it once that is gone.
+	var card := get_tree().get_first_node_in_group("stage_card")
+	if card != null and not _banner_q.is_empty():
+		_banner_on = true
+		card.tree_exited.connect(func() -> void:
+			_banner_on = false
+			get_tree().create_timer(0.4, true, false, true).timeout.connect(func() -> void:
+				if not _banner_on:
+					_banner_next())
+		, CONNECT_ONE_SHOT)
+		return
+	if _banner_q.is_empty():
+		_banner_on = false
+		return
+	_banner_on = true
+	var job: Array = _banner_q.pop_front()
+	var title := str(job[0]).to_upper()
+	var sub := str(job[1])
+	var tex: Texture2D = job[2]
+	play("res://assets/audio/levelup.wav" if ResourceLoader.exists("res://assets/audio/levelup.wav") else "res://assets/audio/chest.wav")
+	pulse_shake(6.0)
+	var vs := get_viewport().get_visible_rect().size
+	var cy := vs.y * 0.42
 	var wrap := Control.new()
 	wrap.set_anchors_preset(Control.PRESET_FULL_RECT)
 	wrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	wrap.process_mode = Node.PROCESS_MODE_ALWAYS
 	_overlay.add_child(wrap)
-	var plank := ColorRect.new()
-	plank.color = Color(0.45, 0.32, 0.18)
-	plank.size = Vector2(160, 18)
-	plank.position = Vector2(560, 380)
-	wrap.add_child(plank)
-	var saw := ColorRect.new()
-	saw.color = Palette.EDGE
-	saw.size = Vector2(40, 10)
-	saw.position = Vector2(540, 360)
-	wrap.add_child(saw)
-	var lab := Label.new()
-	lab.text = "CAMP UNLOCKED"
-	lab.position = Vector2(400, 250)
-	lab.size = Vector2(480, 40)
-	lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	UiKit.apply_label(lab, 32, Palette.LEMON)
-	wrap.add_child(lab)
-	var sub := Label.new()
-	sub.text = "%s\nYOU GOT  ·  %s" % [title, reward]
-	sub.position = Vector2(360, 300)
-	sub.size = Vector2(560, 60)
-	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	UiKit.apply_label(sub, 16, Palette.TEXT)
-	wrap.add_child(sub)
-	var tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	# The band, with lit rims.
+	var band := Control.new()
+	band.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	band.position = Vector2(0, cy)
+	band.size = Vector2(vs.x, 1)
+	band.scale = Vector2(1, 0)
+	wrap.add_child(band)
+	var bh := 300.0
+	var fill := ColorRect.new()
+	fill.color = Color(0.03, 0.03, 0.06, 0.88)
+	fill.position = Vector2(0, -bh * 0.5)
+	fill.size = Vector2(vs.x, bh)
+	band.add_child(fill)
+	for yy in [-bh * 0.5, bh * 0.5 - 3.0]:
+		var rim := ColorRect.new()
+		rim.color = Palette.LEMON
+		rim.position = Vector2(0, yy)
+		rim.size = Vector2(vs.x, 3)
+		band.add_child(rim)
+	# Rays behind the icon.
+	var ix := vs.x * 0.5
+	var rays := Control.new()
+	rays.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rays.size = vs
+	wrap.add_child(rays)
+	var t0 := Time.get_ticks_msec()
+	rays.draw.connect(func() -> void:
+		var tt := float(Time.get_ticks_msec() - t0) / 1000.0
+		var c := Vector2(ix, cy - 34.0)
+		for i in 14:
+			var a := tt * 0.6 + float(i) * TAU / 14.0
+			var r := 150.0
+			rays.draw_colored_polygon(PackedVector2Array([c, c + Vector2(cos(a - 0.08), sin(a - 0.08)) * r, c + Vector2(cos(a + 0.08), sin(a + 0.08)) * r]), Color(1.0, 0.82, 0.3, 0.16))
+		rays.draw_circle(c, 62.0, Color(1.0, 0.8, 0.3, 0.12))
+	)
+	var spin := create_tween().set_loops()
+	spin.set_ignore_time_scale(true)
+	spin.tween_callback(rays.queue_redraw).set_delay(0.03)
+	rays.modulate.a = 0.0
+	# The icon.
+	var icon := TextureRect.new()
+	icon.texture = tex if tex != null else IconBook.tex("cur_key")
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	icon.size = Vector2(112, 112)
+	icon.pivot_offset = icon.size * 0.5
+	icon.position = Vector2(ix - 56.0, cy - 34.0 - 56.0)
+	icon.scale = Vector2.ZERO
+	wrap.add_child(icon)
+	# Name from the left, UNLOCKED from the right.
+	var name_l := Label.new()
+	name_l.text = title
+	name_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_l.size = Vector2(vs.x, 60)
+	name_l.position = Vector2(-vs.x, cy + 18.0)
+	UiKit.apply_label(name_l, 44, Palette.LEMON)
+	name_l.add_theme_constant_override("outline_size", 10)
+	wrap.add_child(name_l)
+	var un := Label.new()
+	un.text = "U N L O C K E D"
+	un.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	un.size = Vector2(vs.x, 30)
+	un.position = Vector2(vs.x, cy + 66.0)
+	UiKit.apply_label(un, 22, Color.WHITE)
+	wrap.add_child(un)
+	var sl := Label.new()
+	sl.text = sub
+	sl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sl.size = Vector2(vs.x, 22)
+	sl.position = Vector2(0, cy + 128.0)
+	sl.modulate.a = 0.0
+	UiKit.apply_label(sl, 14, Palette.TEXT)
+	wrap.add_child(sl)
+	# Sparks raining from the band.
+	var sp := CPUParticles2D.new()
+	sp.position = Vector2(ix, cy - 110.0)
+	sp.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	sp.emission_rect_extents = Vector2(vs.x * 0.35, 4)
+	sp.amount = 40
+	sp.lifetime = 1.4
+	sp.gravity = Vector2(0, 160)
+	sp.initial_velocity_min = 10.0
+	sp.initial_velocity_max = 60.0
+	sp.scale_amount_min = 2.0
+	sp.scale_amount_max = 4.0
+	sp.color = Color(1.0, 0.85, 0.35)
+	sp.emitting = false
+	wrap.add_child(sp)
+	var tw := create_tween()
 	tw.set_ignore_time_scale(true)
-	tw.tween_property(saw, "position:x", 720.0, 0.35)
-	tw.parallel().tween_property(plank, "rotation", 0.4, 0.4)
-	tw.tween_interval(0.55)
-	tw.tween_property(wrap, "modulate:a", 0.0, 0.2)
-	tw.finished.connect(wrap.queue_free)
+	tw.tween_property(band, "scale:y", 1.0, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_callback(func() -> void: sp.emitting = true)
+	tw.parallel().tween_property(rays, "modulate:a", 1.0, 0.25)
+	tw.parallel().tween_property(icon, "scale", Vector2(1.25, 1.25), 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(icon, "scale", Vector2.ONE, 0.12)
+	tw.parallel().tween_property(name_l, "position:x", 0.0, 0.24).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(un, "position:x", 0.0, 0.28).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT).set_delay(0.06)
+	tw.tween_callback(func() -> void: pulse_shake(3.0))
+	tw.tween_property(sl, "modulate:a", 1.0, 0.2)
+	# A backlog after a big night: keep each one short.
+	tw.tween_interval(1.7 if _banner_q.size() < 2 else 0.8)
+	tw.tween_property(name_l, "position:x", vs.x, 0.22).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(un, "position:x", -vs.x, 0.22).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(icon, "scale", Vector2.ZERO, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(sl, "modulate:a", 0.0, 0.15)
+	tw.parallel().tween_property(rays, "modulate:a", 0.0, 0.2)
+	tw.tween_property(band, "scale:y", 0.0, 0.16)
+	tw.tween_callback(func() -> void:
+		spin.kill()
+		wrap.queue_free()
+		_banner_next.call_deferred()
+	)
 
 
 func muzzle(at: Vector2, facing: int, caliber: String) -> void:
@@ -633,6 +967,84 @@ func sparks(at: Vector2) -> void:
 	)
 
 
+## Contact flash for a landed strike: a hot star at the contact point, a
+## shock ring and debris thrown the way the blow travelled. Weight 0..1
+## scales size, count and life (a jab pops, a haymaker blooms).
+func impact(at: Vector2, weight: float, dir: int) -> void:
+	var host: Node = get_tree().get_first_node_in_group("dock_world")
+	if host == null:
+		host = self
+	var w := clampf(weight, 0.0, 1.0)
+	var star := Polygon2D.new()
+	var pts := PackedVector2Array()
+	var spikes := 8
+	# No debris: the blood sim throws what a blow really throws.
+	var r_out := 6.0 + 8.0 * w
+	for i in spikes * 2:
+		var ang := TAU * float(i) / float(spikes * 2) + 0.2
+		var r := r_out if i % 2 == 0 else r_out * 0.38
+		pts.append(Vector2(cos(ang) * r * 1.25, sin(ang) * r))
+	star.polygon = pts
+	star.color = Color(1.0, 0.97, 0.82, 0.95)
+	star.global_position = at
+	star.z_index = 40
+	host.add_child(star)
+	var ring := Line2D.new()
+	var rp := PackedVector2Array()
+	for i in 25:
+		var ang := TAU * float(i) / 24.0
+		rp.append(Vector2(cos(ang), sin(ang)) * 6.0)
+	ring.points = rp
+	ring.width = 2.0 + 2.0 * w
+	ring.default_color = Color(1.0, 0.78, 0.4, 0.9)
+	ring.global_position = at
+	ring.z_index = 39
+	host.add_child(ring)
+	var life := 0.12 + 0.12 * w
+	var tw := star.create_tween().set_parallel(true)
+	tw.tween_property(star, "scale", Vector2(1.5, 1.5), life).from(Vector2(0.4, 0.4)).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
+	tw.tween_property(star, "modulate:a", 0.0, life)
+	tw.tween_property(star, "rotation", 0.35 * float(dir), life)
+	var tr := ring.create_tween().set_parallel(true)
+	tr.tween_property(ring, "scale", Vector2.ONE * (3.0 + 4.0 * w), life * 1.4).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
+	tr.tween_property(ring, "modulate:a", 0.0, life * 1.4)
+	get_tree().create_timer(0.7, true, false, true).timeout.connect(func() -> void:
+		for n: Node in [star, ring]:
+			if is_instance_valid(n):
+				n.queue_free()
+	)
+
+
+## A strike that met nothing: a thin pale smear along the limb's path that
+## fades fast. No star, no shake, no stop - the absence is the feedback.
+func whiff(at: Vector2, dir: int, reach: float, rising: bool) -> void:
+	var host: Node = get_tree().get_first_node_in_group("dock_world")
+	if host == null:
+		host = self
+	var arc := Line2D.new()
+	var pts := PackedVector2Array()
+	for i in 9:
+		var t := float(i) / 8.0
+		var x := float(dir) * reach * t
+		var y := -sin(t * PI) * 8.0 if not rising else -reach * 0.8 * t
+		pts.append(Vector2(x, y))
+	arc.points = pts
+	var wc := Curve.new()
+	wc.add_point(Vector2(0.0, 0.1))
+	wc.add_point(Vector2(0.75, 1.0))
+	wc.add_point(Vector2(1.0, 0.3))
+	arc.width_curve = wc
+	arc.width = 5.0
+	arc.default_color = Color(0.9, 0.94, 1.0, 0.38)
+	arc.global_position = at
+	arc.z_index = 38
+	host.add_child(arc)
+	var tw := arc.create_tween().set_parallel(true)
+	tw.tween_property(arc, "modulate:a", 0.0, 0.14)
+	tw.tween_property(arc, "position:x", arc.position.x + float(dir) * 10.0, 0.14)
+	tw.chain().tween_callback(arc.queue_free)
+
+
 func bam(at: Vector2, role: String = "son") -> void:
 	shout("BAM")
 	pulse_shake(6.0)
@@ -649,16 +1061,32 @@ func trick_chain(n: int, title: String = "") -> void:
 
 
 func hole(at: Vector2) -> void:
-	var h := ColorRect.new()
-	h.color = Color(0.05, 0.04, 0.05, 0.85)
-	h.size = Vector2(6, 6)
+	# A small round chip with a dark core that fades out (it used to be a
+	# black square left on the street forever). Capped at 20.
+	var host := get_tree().get_first_node_in_group("dock_world")
+	var h := _Hole.new()
 	h.global_position = at
 	h.z_index = 2
-	var host := get_tree().get_first_node_in_group("dock_world")
 	if host:
 		host.add_child(h)
 	else:
 		add_child(h)
+	var all := get_tree().get_nodes_in_group("holes")
+	if all.size() > 20:
+		(all[0] as Node).queue_free()
+
+
+class _Hole extends Node2D:
+	func _ready() -> void:
+		add_to_group("holes")
+		var tw := create_tween()
+		tw.tween_interval(8.0)
+		tw.tween_property(self, "modulate:a", 0.0, 1.0)
+		tw.tween_callback(queue_free)
+
+	func _draw() -> void:
+		draw_circle(Vector2.ZERO, 1.8, Color(0.55, 0.5, 0.45, 0.5))
+		draw_circle(Vector2.ZERO, 1.1, Color(0.04, 0.03, 0.04, 0.9))
 
 
 func named_slowmo() -> void:
@@ -677,6 +1105,30 @@ func smash_burst(at: Vector2, kind: String) -> void:
 	kill_burst(at, "heavy")
 	popup_number(at + Vector2(0, -36), kind.to_upper(), Palette.EDGE)
 	play("res://assets/audio/smash.wav" if ResourceLoader.exists("res://assets/audio/smash.wav") else "res://assets/audio/hit_heavy.wav")
+
+
+## The last thug of a fight drops in slow motion for a moment.
+func last_kill(body: Node2D = null) -> void:
+	if get_tree().get_first_node_in_group("chase_crash"):
+		return
+	# Let the killing blow's own hitstop finish first.
+	var guard := 0
+	while _hitstop_depth > 0 and guard < 40:
+		guard += 1
+		await get_tree().process_frame
+	_hitstop_depth += 1
+	Engine.time_scale = 0.25
+	pulse_shake(6.0)
+	await get_tree().create_timer(0.5, true, false, true).timeout
+	# The last body of the fight: stay slow until it has hit the street
+	# (the camera follows it there), at most another second.
+	var held := 0.0
+	while body != null and is_instance_valid(body) and held < 1.0 and not bool(body.get("settled")) and not bool(body.get("_lying")):
+		held += get_process_delta_time() / maxf(Engine.time_scale, 0.01)
+		await get_tree().process_frame
+	_hitstop_depth = maxi(0, _hitstop_depth - 1)
+	if _hitstop_depth == 0:
+		Engine.time_scale = _base_scale
 
 
 func kill_cam(at: Vector2) -> void:
@@ -912,3 +1364,106 @@ func slip(at: Vector2) -> void:
 	popup_number(at + Vector2(0, -70), Copy.THAT_WALKER, Color(0.95, 0.86, 0.12))
 	kill_burst(at, "heavy")
 
+
+
+
+## OPTIONS > REDUCE FLASHES: no white frames, no full-screen flashes.
+static func reduce_flash() -> bool:
+	return bool(FamilyProfile.data.get("reduce_flash", false))
+
+
+## Menu equip/claim juice: `tex` flies from `from` to `to` (both in `host`
+## coordinates) with a spin and a pop, then each stat change rises out of
+## the slot - "▲ DMG +2" in green, "▼ SPD -1" in red - one after another.
+func equip_fly(host: Control, tex: Texture2D, from: Vector2, to: Vector2, deltas: Dictionary, names: Dictionary = {}) -> void:
+	# Menus rebuild themselves on a change: fly on our own overlay, in screen
+	# space, so the effect outlives the old panel.
+	if host != null and is_instance_valid(host):
+		from = host.get_global_transform_with_canvas() * from
+		to = host.get_global_transform_with_canvas() * to
+	var lay := Control.new()
+	lay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_overlay.add_child(lay)
+	get_tree().create_timer(3.4, true, false, true).timeout.connect(lay.queue_free)
+	host = lay
+	var pic := TextureRect.new()
+	pic.texture = tex
+	pic.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	pic.size = Vector2(64, 64)
+	pic.pivot_offset = Vector2(32, 32)
+	pic.position = from - Vector2(32, 32)
+	pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pic.z_index = 50
+	host.add_child(pic)
+	play("res://assets/audio/whoosh_light.wav" if ResourceLoader.exists("res://assets/audio/whoosh_light.wav") else "res://assets/audio/card.wav")
+	# Seen first: it rises to the middle of the screen, big, with rays and a
+	# dark veil behind it; then it shrinks and drops into its slot.
+	var stage := lay.get_viewport_rect().size * 0.5 + Vector2(0, -20)
+	var veil := ColorRect.new()
+	veil.color = Color(0, 0, 0.03, 0.0)
+	veil.set_anchors_preset(Control.PRESET_FULL_RECT)
+	veil.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	host.add_child(veil)
+	host.move_child(veil, 0)
+	var rays := RewardFly.Rays.new()
+	rays.color = Palette.LEMON
+	rays.position = stage + Vector2(0, 8)
+	rays.scale = Vector2(3.2, 3.2)
+	rays.modulate.a = 0.0
+	host.add_child(rays)
+	var mid := (stage + to) * 0.5 + Vector2(0, -90)
+	var tw := pic.create_tween()
+	tw.tween_method(func(t: float) -> void:
+		pic.position = from.lerp(stage, t) - Vector2(32, 32)
+		pic.scale = Vector2.ONE * lerpf(1.0, 3.0, t)
+		pic.rotation = sin(t * PI) * 0.25
+	, 0.0, 1.0, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(veil, "color:a", 0.45, 0.2)
+	tw.parallel().tween_property(rays, "modulate:a", 1.0, 0.2)
+	tw.tween_interval(0.42)
+	tw.tween_property(rays, "modulate:a", 0.0, 0.15)
+	tw.parallel().tween_property(veil, "color:a", 0.0, 0.3)
+	tw.parallel().tween_method(func(t: float) -> void:
+		var a := stage.lerp(mid, t)
+		var b := mid.lerp(to, t)
+		pic.position = a.lerp(b, t) - Vector2(32, 32)
+		pic.rotation = sin(t * PI) * 0.5
+		pic.scale = Vector2.ONE * lerpf(3.0, 1.0, t)
+	, 0.0, 1.0, 0.4).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tw.tween_callback(func() -> void:
+		rays.queue_free()
+		veil.queue_free())
+	tw.tween_callback(func() -> void:
+		play("res://assets/audio/cling.wav")
+		UiKit.blast(host, to, Palette.LEMON, 90.0)
+	)
+	tw.tween_property(pic, "scale", Vector2(1.4, 1.4), 0.08)
+	tw.tween_property(pic, "modulate:a", 0.0, 0.18)
+	tw.tween_callback(pic.queue_free)
+	var i := 0
+	for k: String in deltas.keys():
+		var d := int(deltas[k])
+		if d == 0:
+			continue
+		var l := Label.new()
+		l.text = "%s %s %s%d" % ["▲" if d > 0 else "▼", str(names.get(k, k.to_upper())), "+" if d > 0 else "", d]
+		l.add_theme_font_override("font", UiKit.title_font())
+		UiKit.apply_label(l, 20, Color(0.45, 1.0, 0.5) if d > 0 else Color(1.0, 0.4, 0.35))
+		l.add_theme_color_override("font_outline_color", Color(0, 0, 0))
+		l.add_theme_constant_override("outline_size", 6)
+		l.position = to + Vector2(-50, -20)
+		l.modulate.a = 0.0
+		l.z_index = 51
+		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		host.add_child(l)
+		var lt := l.create_tween()
+		lt.tween_interval(1.1 + 0.16 * float(i))
+		lt.tween_callback(func() -> void: RewardFly.snd("gem_land", 1.2 + 0.1 * float(i), -8.0) if d > 0 else null)
+		lt.tween_property(l, "modulate:a", 1.0, 0.08)
+		lt.parallel().tween_property(l, "position:y", l.position.y - 46.0, 0.9).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		lt.tween_property(l, "modulate:a", 0.0, 0.3)
+		lt.tween_callback(l.queue_free)
+		i += 1

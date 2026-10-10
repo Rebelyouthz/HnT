@@ -23,13 +23,16 @@ func _configure() -> void:
 
 
 func build_world() -> void:
-	var sky := Blockout.poly(self, Rect2(0, 0, map_w, 720), Color(0.06, 0.07, 0.1), -8)
-	sky.z_index = -8
 	NightStreet.parallax(self, map_w, "rail")
-	NightStreet.wet_floor(self, map_w)
-	Blockout.poly(self, Rect2(0, 80, map_w, 36), Color(0.18, 0.16, 0.14), -2)
-	NightStreet.tenement(self, Rect2(40, 120, 200, 200), Color(0.12, 0.11, 0.12))
-	NightStreet.tenement(self, Rect2(2600, 100, 220, 220), Color(0.13, 0.12, 0.11))
+	# Painted rail sections (backdrops/rail_strip) replace the blockout
+	# tenements; the painted wet street is the floor.
+	if NightStreet.has_backdrop("rail") and WetStreet.available():
+		WetStreet.lay(self, map_w)
+	else:
+		NightStreet.wet_floor(self, map_w)
+		NightStreet.tenement(self, Rect2(40, 120, 200, 200), Color(0.12, 0.11, 0.12))
+		NightStreet.tenement(self, Rect2(2600, 100, 220, 220), Color(0.13, 0.12, 0.11))
+		Blockout.poly(self, Rect2(0, 80, map_w, 36), Color(0.18, 0.16, 0.14), -2)
 	NightStreet.boxcar(self, Rect2(380, CAR_Y, 280, 70))
 	NightStreet.boxcar(self, Rect2(820, CAR_Y, 260, 70))
 	NightStreet.boxcar(self, Rect2(1280, ROOF_Y, 300, 70))

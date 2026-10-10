@@ -18,11 +18,11 @@ func _configure() -> void:
 	next_label = Copy.NEXT_LOT
 	gate_sub = Copy.GATE_LOT
 	win_mode = "boss"
+	# Swapped with the Intake Lot on request: the survive track opens the game.
+	music = "res://assets/audio/music/music_survive.ogg"
 
 
 func build_world() -> void:
-	var sky := Blockout.poly(self, Rect2(0, 0, map_w, 720), Color(0.07, 0.08, 0.13), -8)
-	sky.z_index = -8
 	NightStreet.parallax(self, map_w, "dock")
 	NightStreet.wet_floor(self, map_w, true)
 	for r in [
@@ -34,7 +34,10 @@ func build_world() -> void:
 		Rect2(2920, 140, 220, 290)
 	]:
 		Blockout.occluder(self, r)
-		NightStreet.pixel_tenement(self, r)
+		# The painted backdrop is the street's buildings; tile patches only
+		# stand in when it is missing.
+		if not NightStreet.has_backdrop("dock"):
+			NightStreet.pixel_tenement(self, r)
 	NightStreet.pixel_dock(self, map_w)
 	Blockout.solid(self, Rect2(400, ROOF_Y, 840, 22), true)
 	NightStreet.pixel_roof(self, Rect2(400, ROOF_Y, 840, 22))
@@ -42,9 +45,11 @@ func build_world() -> void:
 	NightStreet.pixel_roof(self, Rect2(1420, ROOF_Y, 580, 22))
 	Blockout.solid(self, Rect2(2480, ROOF_Y, 440, 22), true)
 	NightStreet.pixel_roof(self, Rect2(2480, ROOF_Y, 440, 22))
-	var wall := Blockout.solid(self, Rect2(1234, 140, 18, 110), false)
+	# A brick chimney stack on the roof edge: low enough to hop, the son can
+	# also wall-kick it.
+	var wall := Blockout.solid(self, Rect2(1234, 196, 18, 54), false)
 	wall.add_to_group("metal")
-	NightStreet.pixel_tenement(self, Rect2(1230, 140, 32, 110))
+	NightStreet.pixel_tenement(self, Rect2(1230, 196, 32, 54))
 	fire_escape(480.0)
 	fire_escape(1920.0)
 	fire_escape(2520.0)

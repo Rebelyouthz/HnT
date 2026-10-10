@@ -23,6 +23,7 @@ func _ready() -> void:
 	card.add_child(sc)
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 10)
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	sc.add_child(col)
 	var head := HBoxContainer.new()
 	var mark := LogoMark.new()

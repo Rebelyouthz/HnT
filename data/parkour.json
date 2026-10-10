@@ -1,0 +1,441 @@
+{
+ "note": "Real parkour tricks. combo = the buttons, timed one after another in shrinking rings. learn = dojo id ('' = known from the start). anim = body move. kinds = gate kinds it fits.",
+ "tricks": [
+  {
+   "id": "jump",
+   "title": "JUMP",
+   "input": "jump",
+   "learn": "",
+   "kinds": [
+    "rail",
+    "crate",
+    "gap",
+    "wall",
+    "pad",
+    "drop",
+    "wire",
+    "rope",
+    "escape",
+    "hill"
+   ],
+   "points": 8,
+   "speed": 1.0,
+   "tier": 0,
+   "combo": [
+    "jump"
+   ],
+   "anim": "hop"
+  },
+  {
+   "id": "safety_vault",
+   "title": "SAFETY VAULT",
+   "input": "up",
+   "learn": "",
+   "kinds": [
+    "crate",
+    "rail"
+   ],
+   "points": 22,
+   "speed": 1.05,
+   "tier": 1,
+   "combo": [
+    "up"
+   ],
+   "anim": "vault"
+  },
+  {
+   "id": "land_roll",
+   "title": "LAND ROLL",
+   "input": "dash",
+   "learn": "land_roll",
+   "kinds": [
+    "drop",
+    "escape",
+    "pad"
+   ],
+   "points": 30,
+   "speed": 1.1,
+   "tier": 1,
+   "combo": [
+    "dash"
+   ],
+   "anim": "roll"
+  },
+  {
+   "id": "speed_vault",
+   "title": "SPEED VAULT",
+   "input": "up",
+   "learn": "speed_vault",
+   "kinds": [
+    "rail",
+    "crate"
+   ],
+   "points": 28,
+   "speed": 1.07,
+   "tier": 2,
+   "combo": [
+    "up",
+    "jump"
+   ],
+   "anim": "vault"
+  },
+  {
+   "id": "tic_tac",
+   "title": "TIC-TAC",
+   "input": "up",
+   "learn": "tic_tac",
+   "kinds": [
+    "wall",
+    "gap"
+   ],
+   "points": 34,
+   "speed": 1.08,
+   "tier": 2,
+   "combo": [
+    "jump",
+    "jump"
+   ],
+   "anim": "wall"
+  },
+  {
+   "id": "dash_vault",
+   "title": "DASH VAULT",
+   "input": "dash",
+   "learn": "dash_vault",
+   "kinds": [
+    "crate",
+    "rail"
+   ],
+   "points": 40,
+   "speed": 1.09,
+   "tier": 3,
+   "combo": [
+    "dash",
+    "up"
+   ],
+   "anim": "dash_vault"
+  },
+  {
+   "id": "kong",
+   "title": "KONG VAULT",
+   "input": "special",
+   "learn": "kong",
+   "kinds": [
+    "rail",
+    "crate",
+    "gap"
+   ],
+   "points": 48,
+   "speed": 1.11,
+   "tier": 3,
+   "combo": [
+    "special",
+    "jump"
+   ],
+   "anim": "kong"
+  },
+  {
+   "id": "wall_kick",
+   "title": "WALL CLING KICK",
+   "input": "special",
+   "learn": "wall_kick",
+   "kinds": [
+    "wall"
+   ],
+   "points": 52,
+   "speed": 1.11,
+   "tier": 3,
+   "combo": [
+    "jump",
+    "special"
+   ],
+   "anim": "wall_spin"
+  },
+  {
+   "id": "king_kong",
+   "title": "KING KONG JUMPOFF",
+   "input": "special",
+   "learn": "king_kong",
+   "kinds": [
+    "gap",
+    "rail"
+   ],
+   "points": 58,
+   "speed": 1.13,
+   "tier": 4,
+   "combo": [
+    "special",
+    "special",
+    "jump"
+   ],
+   "anim": "kong"
+  },
+  {
+   "id": "lazy_vault",
+   "title": "LAZY VAULT",
+   "input": "up",
+   "combo": [
+    "up",
+    "dash"
+   ],
+   "learn": "lazy_vault",
+   "kinds": [
+    "rail",
+    "crate"
+   ],
+   "points": 18,
+   "speed": 1.04,
+   "tier": 1,
+   "anim": "lazy"
+  },
+  {
+   "id": "reverse_vault",
+   "title": "REVERSE VAULT",
+   "input": "up",
+   "combo": [
+    "up",
+    "heavy"
+   ],
+   "learn": "reverse_vault",
+   "kinds": [
+    "crate",
+    "rail"
+   ],
+   "points": 34,
+   "speed": 1.06,
+   "tier": 2,
+   "anim": "reverse"
+  },
+  {
+   "id": "double_kong",
+   "title": "DOUBLE KONG",
+   "input": "special",
+   "combo": [
+    "special",
+    "special"
+   ],
+   "learn": "double_kong",
+   "kinds": [
+    "crate",
+    "rail",
+    "gap"
+   ],
+   "points": 60,
+   "speed": 1.14,
+   "tier": 4,
+   "anim": "kong2"
+  },
+  {
+   "id": "precision",
+   "title": "PRECISION JUMP",
+   "input": "jump",
+   "combo": [
+    "jump",
+    "dash"
+   ],
+   "learn": "",
+   "kinds": [
+    "gap",
+    "pad",
+    "drop"
+   ],
+   "points": 16,
+   "speed": 1.04,
+   "tier": 1,
+   "anim": "precision"
+  },
+  {
+   "id": "cat_leap",
+   "title": "CAT LEAP",
+   "input": "jump",
+   "combo": [
+    "jump",
+    "up"
+   ],
+   "learn": "cat_leap",
+   "kinds": [
+    "wall",
+    "escape",
+    "gap"
+   ],
+   "points": 28,
+   "speed": 1.06,
+   "tier": 2,
+   "anim": "cat"
+  },
+  {
+   "id": "dive_roll",
+   "title": "DIVE ROLL",
+   "input": "dash",
+   "combo": [
+    "dash",
+    "dash"
+   ],
+   "learn": "dive_roll",
+   "kinds": [
+    "drop",
+    "gap",
+    "pad"
+   ],
+   "points": 36,
+   "speed": 1.1,
+   "tier": 2,
+   "anim": "dive_roll"
+  },
+  {
+   "id": "front_flip",
+   "title": "FRONT FLIP",
+   "input": "jump",
+   "combo": [
+    "jump",
+    "light"
+   ],
+   "learn": "front_flip",
+   "kinds": [
+    "drop",
+    "pad",
+    "gap",
+    "crate"
+   ],
+   "points": 48,
+   "speed": 1.08,
+   "tier": 3,
+   "anim": "front_flip"
+  },
+  {
+   "id": "back_flip",
+   "title": "BACK FLIP",
+   "input": "jump",
+   "combo": [
+    "jump",
+    "heavy"
+   ],
+   "learn": "back_flip",
+   "kinds": [
+    "drop",
+    "pad",
+    "wall"
+   ],
+   "points": 52,
+   "speed": 1.06,
+   "tier": 3,
+   "anim": "back_flip"
+  },
+  {
+   "id": "side_flip",
+   "title": "SIDE FLIP",
+   "input": "jump",
+   "combo": [
+    "jump",
+    "dash"
+   ],
+   "learn": "side_flip",
+   "kinds": [
+    "pad",
+    "drop",
+    "rail"
+   ],
+   "points": 44,
+   "speed": 1.08,
+   "tier": 3,
+   "anim": "side_flip"
+  },
+  {
+   "id": "palm_spin",
+   "title": "PALM SPIN",
+   "input": "up",
+   "combo": [
+    "up",
+    "special"
+   ],
+   "learn": "palm_spin",
+   "kinds": [
+    "wall",
+    "crate"
+   ],
+   "points": 40,
+   "speed": 1.05,
+   "tier": 3,
+   "anim": "palm_spin"
+  },
+  {
+   "id": "webster",
+   "title": "WEBSTER",
+   "input": "jump",
+   "combo": [
+    "jump",
+    "light",
+    "light"
+   ],
+   "learn": "webster",
+   "kinds": [
+    "drop",
+    "pad",
+    "gap"
+   ],
+   "points": 70,
+   "speed": 1.1,
+   "tier": 4,
+   "anim": "webster"
+  },
+  {
+   "id": "gainer",
+   "title": "GAINER",
+   "input": "jump",
+   "combo": [
+    "jump",
+    "heavy",
+    "heavy"
+   ],
+   "learn": "gainer",
+   "kinds": [
+    "drop",
+    "pad",
+    "wall"
+   ],
+   "points": 76,
+   "speed": 1.1,
+   "tier": 4,
+   "anim": "gainer"
+  },
+  {
+   "id": "cork",
+   "title": "CORK",
+   "input": "jump",
+   "combo": [
+    "jump",
+    "heavy",
+    "special"
+   ],
+   "learn": "cork",
+   "kinds": [
+    "drop",
+    "pad"
+   ],
+   "points": 90,
+   "speed": 1.12,
+   "tier": 5,
+   "anim": "cork"
+  },
+  {
+   "id": "aerial",
+   "title": "AERIAL",
+   "input": "jump",
+   "combo": [
+    "jump",
+    "dash",
+    "light"
+   ],
+   "learn": "aerial",
+   "kinds": [
+    "pad",
+    "drop",
+    "rail"
+   ],
+   "points": 66,
+   "speed": 1.1,
+   "tier": 4,
+   "anim": "aerial"
+  }
+ ]
+}

@@ -1,6 +1,6 @@
 extends Control
 
-const TABS := ["clinic", "run", "build", "locker", "awards"]
+const TABS := ["clinic", "run", "heroes", "build", "locker", "awards"]
 
 var _content: Control
 var _tab_bar: HBoxContainer
@@ -8,21 +8,30 @@ var _gold_pill: HBoxContainer
 var _gems_pill: HBoxContainer
 var _rep_pill: HBoxContainer
 var _log_bang: Control
+var _codex_dot: Control
 var _tab_bangs: Dictionary = {}
 var _current := "clinic"
 var _modal: Control
 var _safe: MarginContainer
 var _pill_vals := {"gold": "", "gems": "", "rep": ""}
 var _avatar_btn: Button
+var _avatar_names: Label
+var _avatar_lv: Label
+var _avatar_xp: ProgressBar
 var _avatar_dot: ColorRect
 var _logo_dot: ColorRect
 var _tab_dots: Dictionary = {}
+var _rewards_bang: Control
+var _armory_dot: Control
+var _rewards_n: Label
+var _avatar_title: Label
+var _avatar_pwr: Label
 
 
 func _ready() -> void:
 	PixelStage.apply_control(self)
 	FamilyProfile._roll_daily()
-	Mixer.play_music("res://assets/audio/music_clinic.wav")
+	Mixer.play_music("res://assets/audio/music/music_menu.ogg")
 	_build_chrome()
 	var start_tab := App.pending_tab if App.pending_tab in TABS else "clinic"
 	App.pending_tab = "clinic"
@@ -31,6 +40,9 @@ func _ready() -> void:
 		_open_intake()
 	App.tab_wanted.connect(_show_tab)
 	FamilyProfile.changed.connect(_refresh_pills)
+	if FamilyProfile.data.get("named", false):
+		Guides.show(self, "hub", 0.8)
+		_power_rise()
 
 
 func _build_chrome() -> void:
@@ -38,10 +50,24 @@ func _build_chrome() -> void:
 	bg.color = Palette.BG
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
+	# The wharf at night behind every menu (reference board), dimmed so the
+	# navy cards read on top; 8/3 design px per texel = 4 screen px.
+	if ResourceLoader.exists("res://assets/backdrops/dock.png"):
+		var city := TextureRect.new()
+		city.texture = load("res://assets/backdrops/dock.png")
+		city.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		city.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		city.stretch_mode = TextureRect.STRETCH_SCALE
+		var tw := float(city.texture.get_width()) * 8.0 / 3.0
+		city.size = Vector2(tw, float(city.texture.get_height()) * 8.0 / 3.0)
+		city.position = Vector2((1280.0 - tw) * 0.5, 0.0)
+		city.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(city)
 
 	var night := ColorRect.new()
-	night.color = Color(0.22, 0.25, 0.38, 0.35)
+	night.color = Color(0.02, 0.03, 0.08, 0.62)
 	night.set_anchors_preset(Control.PRESET_FULL_RECT)
+	night.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(night)
 
 	_safe = MarginContainer.new()
@@ -60,29 +86,208 @@ func _build_chrome() -> void:
 	_content.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	root.add_child(_content)
 	root.add_child(_make_tabs())
+	_build_ticker()
+
+
+## NEWS TICKER along the bottom edge, led by the NEXT GOAL: the cheapest
+## thing you can afford right now, so the menus always point somewhere.
+const NEWS := [
+	"RAVEN WHARF: CLINIC RAISES COPAY FOR BEING PUNCHED",
+	"LOCAL DAD CLAIMS HE 'DID THAT ON PURPOSE'",
+	"PIGEONS FORM UNION, DEMAND BREAD",
+	"BAILIFF VEST RECALLED: STOPS EVERYTHING EXCEPT ARMOR PIERCING",
+	"WEATHER: RAIN. AGAIN. FOREVER.",
+	"STRAY CAT ELECTED NEIGHBOURHOOD WATCH",
+	"DOJO SENSEI: 'THE TUTORIAL IS NOT OPTIONAL. IT IS GOLD.'",
+	"SURVEY: NINE IN TEN THUGS FEAR THE TAUNT",
+	"HARBOUR CLOCK STILL WRONG, STILL CLIMBABLE",
+]
+
+
+func next_goal() -> String:
+	# The story's camp buy comes first: without it the next map stays shut.
+	var way := PowerBook.path_line(FamilyProfile.next_run_map())
+	if way != "":
+		return "NEXT GOAL  ·  " + way
+	var gold := int(FamilyProfile.data.get("gold", 0))
+	var best := ""
+	var best_c := 1 << 30
+	for role in ["son", "father"]:
+		if Heroes.can_level(role) and Heroes.level_cost(role) < best_c:
+			best_c = Heroes.level_cost(role)
+			best = "LEVEL UP %s  %dG" % [(FamilyProfile.son_name() if role == "son" else FamilyProfile.father_name()).to_upper(), best_c]
+		for a: Dictionary in Elements.arts(role):
+			var pr := Elements.next_price(str(a["id"]))
+			if pr > 0 and pr <= gold and pr < best_c:
+				best_c = pr
+				best = "%s %s  %dG" % ["LEVEL" if Elements.owned(str(a["id"])) else "UNLOCK", str(a["title"]), pr]
+	if best == "":
+		var left := DojoSchool.LESSONS.size() - (FamilyProfile.data.get("school_paid", []) as Array).size()
+		if left > 0:
+			return "NEXT GOAL  ·  DOJO TUTORIAL: %d LESSONS LEFT (GOLD EACH)" % left
+		return "NEXT GOAL  ·  GO ON A RUN AND BRING BACK GOLD"
+	return "NEXT GOAL  ·  " + best
+
+
+func _build_ticker() -> void:
+	var clip := Control.new()
+	clip.clip_contents = true
+	clip.position = Vector2(0, 703)
+	clip.size = Vector2(1280, 17)
+	clip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(clip)
+	var band := ColorRect.new()
+	band.color = Color(0, 0, 0, 0.55)
+	band.size = clip.size
+	clip.add_child(band)
+	var l := Label.new()
+	l.text = "%s        ★        %s" % [next_goal(), "        ·        ".join(PackedStringArray(NEWS))]
+	UiKit.apply_label(l, 11, UiKit.GOLD)
+	l.position = Vector2(1280, 0)
+	clip.add_child(l)
+	var w := l.get_minimum_size().x
+	var tw := l.create_tween().set_loops()
+	tw.tween_property(l, "position:x", -w, (1280.0 + w) / 60.0).from(1280.0)
 
 
 func _make_top() -> Control:
 	var bar := PanelContainer.new()
-	bar.add_theme_stylebox_override("panel", UiKit.panel(Palette.PANEL, Palette.EDGE))
+	# No slab across the top: the city shows through (reference board).
+	bar.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 12)
+	row.add_theme_constant_override("separation", 8)
 	bar.add_child(row)
 
 	var avatar_wrap := Control.new()
-	avatar_wrap.custom_minimum_size = Vector2(228, 56)
-	var avatar := UiKit.button("", Vector2(220, 56))
+	avatar_wrap.custom_minimum_size = Vector2(246, 64)
+	var avatar := UiKit.button("", Vector2(240, 64))
 	_avatar_btn = avatar
-	avatar.text = "%s  LV %d\nTHE SON\n%s\nTHE FATHER" % [
-		FamilyProfile.son_name(), int(FamilyProfile.data.get("account_level", 1)), FamilyProfile.father_name()
-	]
 	avatar.pressed.connect(_open_profile)
 	avatar.set_anchors_preset(Control.PRESET_FULL_RECT)
 	avatar_wrap.add_child(avatar)
+	# Profile card: both patients, names, account level and XP to next.
+	var card := HBoxContainer.new()
+	card.set_anchors_preset(Control.PRESET_FULL_RECT)
+	card.offset_left = 8
+	card.offset_right = -8
+	card.add_theme_constant_override("separation", 6)
+	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for who in ["son", "father"]:
+		var pic := UiKit.portrait(SpriteBook.bust(who), Vector2(44, 56))
+		pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		card.add_child(pic)
+		# Living portraits: a slow breath, out of step with each other.
+		pic.pivot_offset = Vector2(22, 56)
+		var br := pic.create_tween().set_loops()
+		br.tween_interval(0.0 if who == "son" else 0.9)
+		br.tween_property(pic, "scale", Vector2(1.0, 1.035), 1.4).set_trans(Tween.TRANS_SINE)
+		br.tween_property(pic, "scale", Vector2.ONE, 1.4).set_trans(Tween.TRANS_SINE)
+	var info := VBoxContainer.new()
+	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info.alignment = BoxContainer.ALIGNMENT_CENTER
+	info.add_theme_constant_override("separation", 2)
+	info.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_avatar_names = UiKit.title("", 15, Palette.TEXT)
+	_avatar_names.clip_text = true
+	_avatar_names.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_avatar_names.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	info.add_child(_avatar_names)
+	_avatar_title = Label.new()
+	_avatar_title.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(_avatar_title, 8, UiKit.GOLD)
+	_avatar_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	info.add_child(_avatar_title)
+	var lv_row := HBoxContainer.new()
+	lv_row.add_theme_constant_override("separation", 6)
+	lv_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_avatar_lv = Label.new()
+	UiKit.apply_label(_avatar_lv, 13, Palette.LEMON)
+	lv_row.add_child(_avatar_lv)
+	_avatar_xp = UiKit.glow_bar(0.0, Palette.READY, Vector2(54, 8))
+	_avatar_xp.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	lv_row.add_child(_avatar_xp)
+	# POWER: one number for the family; counts up when it grew (_power_rise).
+	_avatar_pwr = Label.new()
+	_avatar_pwr.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(_avatar_pwr, 9, Color(1.0, 0.75, 0.4))
+	_avatar_pwr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_avatar_pwr.set_meta("key", "power")
+	lv_row.add_child(_avatar_pwr)
+	info.add_child(lv_row)
+	card.add_child(info)
+	avatar.add_child(card)
 	_avatar_dot = UiKit.new_dot()
-	_avatar_dot.position = Vector2(206, -2)
+	_avatar_dot.position = Vector2(232, -2)
 	avatar_wrap.add_child(_avatar_dot)
 	row.add_child(avatar_wrap)
+	var log_btn := UiKit.button("LOG", Vector2(64, 38))
+	log_btn.pressed.connect(_open_log)
+	var log_wrap := Control.new()
+	log_wrap.custom_minimum_size = Vector2(66, 40)
+	log_btn.set_anchors_preset(Control.PRESET_FULL_RECT)
+	log_wrap.add_child(log_btn)
+	_log_bang = UiKit.bang()
+	_log_bang.position = Vector2(48, -4)
+	log_wrap.add_child(_log_bang)
+	row.add_child(log_wrap)
+	# REWARDS: the gift box with a count of everything claimable.
+	var rw := UiKit.button("", Vector2(52, 38))
+	rw.set_meta("key", "rewards_btn")
+	rw.tooltip_text = "REWARDS"
+	rw.pressed.connect(_open_rewards)
+	var rw_ic := IconBook.rect("cur_gift", 32)
+	rw_ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rw_ic.position = Vector2(10, 3)
+	rw.add_child(rw_ic)
+	_rewards_bang = PanelContainer.new()
+	var rsb := StyleBoxFlat.new()
+	rsb.bg_color = Color(0.85, 0.12, 0.1)
+	rsb.border_color = Color(1, 0.9, 0.8)
+	rsb.set_border_width_all(1)
+	rsb.set_corner_radius_all(2)
+	rsb.content_margin_left = 3
+	rsb.content_margin_right = 3
+	_rewards_bang.add_theme_stylebox_override("panel", rsb)
+	_rewards_bang.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_rewards_bang.position = Vector2(38, -6)
+	_rewards_n = Label.new()
+	_rewards_n.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(_rewards_n, 9, Color.WHITE)
+	_rewards_bang.add_child(_rewards_n)
+	rw.add_child(_rewards_bang)
+	row.add_child(rw)
+	var stats := UiKit.button("STATS", Vector2(76, 38))
+	stats.pressed.connect(_open_stats)
+	row.add_child(stats)
+	var armory := UiKit.button("ARMORY", Vector2(96, 38))
+	armory.pressed.connect(_open_armory)
+	row.add_child(armory)
+	# Red dot while a new gun part waits in the armory.
+	_armory_dot = UiKit.new_dot()
+	_armory_dot.position = Vector2(84, -4)
+	armory.add_child(_armory_dot)
+	var codex := UiKit.button("CODEX", Vector2(96, 38))
+	codex.pressed.connect(_open_codex)
+	row.add_child(codex)
+	# Red dot while codex entries wait to be claimed.
+	_codex_dot = UiKit.new_dot()
+	_codex_dot.position = Vector2(84, -4)
+	codex.add_child(_codex_dot)
+	var jobs := UiKit.button("JOBS", Vector2(76, 38))
+	jobs.pressed.connect(_open_jobs)
+	var jobs_wrap := Control.new()
+	jobs_wrap.custom_minimum_size = Vector2(78, 40)
+	jobs.set_anchors_preset(Control.PRESET_FULL_RECT)
+	jobs_wrap.add_child(jobs)
+	_jobs_bang = UiKit.bang()
+	_jobs_bang.position = Vector2(60, -4)
+	_jobs_bang.visible = Contracts.ready_count() > 0
+	jobs_wrap.add_child(_jobs_bang)
+	row.add_child(jobs_wrap)
+	var gear := UiKit.button(Copy.OPTIONS, Vector2(94, 38))
+	gear.pressed.connect(_open_settings)
+	row.add_child(gear)
+
 
 	var logo_box := VBoxContainer.new()
 	logo_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -95,66 +300,73 @@ func _make_top() -> Control:
 	_logo_dot = UiKit.new_dot()
 	_logo_dot.position = Vector2(48, -2)
 	logo_wrap.add_child(_logo_dot)
-	var title := Label.new()
-	title.text = "%s  ·  %s" % [Copy.LOGO, Copy.SUB]
-	UiKit.apply_label(title, 22, Palette.LEMON)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	var tag := Label.new()
-	tag.text = Copy.TAGLINE
-	UiKit.apply_label(tag, 13, Palette.MUTED)
-	tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	var brand := HBoxContainer.new()
-	brand.alignment = BoxContainer.ALIGNMENT_CENTER
-	brand.add_child(logo_wrap)
-	var names := VBoxContainer.new()
-	names.add_child(title)
-	names.add_child(tag)
-	brand.add_child(names)
-	logo_box.add_child(brand)
+	logo_wrap.visible = false
+	logo_box.add_child(logo_wrap)
 	row.add_child(logo_box)
-
+	# Currency exactly like the reference board: big pixel icon, the name and
+	# the number in cream pixel caps, no boxes, spaced out at the top right.
+	var purse := HBoxContainer.new()
+	purse.add_theme_constant_override("separation", 14)
+	purse.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_gold_pill = UiKit.pill("GOLD", "0", Palette.EDGE)
 	_gems_pill = UiKit.pill("GEMS", "0", Palette.LEMON)
+	_gold_pill.set_meta("key", "pill_gold")
+	_gems_pill.set_meta("key", "pill_gems")
 	_rep_pill = UiKit.pill("REP", "0", Palette.BRICK)
-	row.add_child(_gold_pill)
-	row.add_child(_gems_pill)
-	row.add_child(_rep_pill)
+	purse.add_child(_gold_pill)
+	purse.add_child(_gems_pill)
+	purse.add_child(_rep_pill)
+	# Names small, numbers big: all three fit next to the button row.
+	for pl: HBoxContainer in [_gold_pill, _gems_pill, _rep_pill]:
+		(pl.get_child(1) as Label).add_theme_font_size_override("font_size", 13)
+		(pl.get_child(1) as Label).add_theme_color_override("font_color", Palette.MUTED)
+		pl.add_theme_constant_override("separation", 5)
+	# Rewards fly to these icons; the numbers tick up as each coin lands.
+	Juice.rewards.register("gold", _gold_pill.get_child(0))
+	Juice.rewards.register("gems", _gems_pill.get_child(0))
+	Juice.rewards.register("rep", _rep_pill.get_child(0))
+	Juice.rewards.landed.connect(_on_reward_landed)
 
-	var log_btn := UiKit.button("LOG", Vector2(72, 52))
-	log_btn.pressed.connect(_open_log)
-	var log_wrap := Control.new()
-	log_wrap.custom_minimum_size = Vector2(80, 52)
-	log_btn.set_anchors_preset(Control.PRESET_FULL_RECT)
-	log_wrap.add_child(log_btn)
-	_log_bang = UiKit.bang()
-	_log_bang.position = Vector2(56, -4)
-	log_wrap.add_child(_log_bang)
-	row.add_child(log_wrap)
-	var gear := UiKit.button(Copy.OPTIONS, Vector2(96, 52))
-	gear.pressed.connect(_open_settings)
-	row.add_child(gear)
+	row.add_child(purse)
 
 	_refresh_pills()
 	return bar
 
 
+## Bottom tab bar like the reference: one framed strip, an icon + pixel
+## caps per tab, the open tab in a lit gold box.
+const TAB_ICON := {"clinic": "front_desk", "run": "street_map", "build": "therapy_couch", "locker": "wardrobe_cage", "awards": "trophy_cabinet", "heroes": "punching_bag"}
+
+
 func _make_tabs() -> Control:
+	var center := CenterContainer.new()
 	var bar := PanelContainer.new()
-	bar.add_theme_stylebox_override("panel", UiKit.panel(Palette.PANEL, Palette.EDGE))
+	var st := UiKit.panel(UiKit.NAVY, UiKit.RIM)
+	st.content_margin_left = 6
+	st.content_margin_right = 6
+	st.content_margin_top = 5
+	st.content_margin_bottom = 5
+	bar.add_theme_stylebox_override("panel", st)
+	bar.custom_minimum_size = Vector2(1180, 0)
+	center.add_child(bar)
 	_tab_bar = HBoxContainer.new()
-	_tab_bar.add_theme_constant_override("separation", 8)
+	_tab_bar.add_theme_constant_override("separation", 4)
 	bar.add_child(_tab_bar)
 	for id in TABS:
 		var wrap := Control.new()
 		wrap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		wrap.custom_minimum_size = Vector2(0, 64)
-		var b := UiKit.button(_tab_title(id), Vector2(0, 64))
+		wrap.custom_minimum_size = Vector2(0, 52)
+		var b := UiKit.button(_tab_title(id), Vector2(0, 52))
+		b.icon = SpriteBook.icon(str(TAB_ICON.get(id, "")))
+		b.expand_icon = true
+		b.add_theme_constant_override("icon_max_width", 34)
+		b.add_theme_constant_override("h_separation", 10)
 		b.name = id
 		b.set_anchors_preset(Control.PRESET_FULL_RECT)
 		b.pressed.connect(_show_tab.bind(id))
 		wrap.add_child(b)
 		var bang := UiKit.bang()
-		bang.position = Vector2(12, 6)
+		bang.position = Vector2(2, -12)
 		bang.visible = false
 		wrap.add_child(bang)
 		_tab_bangs[id] = bang
@@ -165,7 +377,7 @@ func _make_tabs() -> Control:
 		_tab_dots[id] = dot
 		_tab_bar.add_child(wrap)
 	_refresh_tab_locks()
-	return bar
+	return center
 
 
 func _tab_title(id: String) -> String:
@@ -178,19 +390,50 @@ func _tab_title(id: String) -> String:
 			return Copy.TAB_BUILD
 		"locker":
 			return Copy.TAB_LOCKER
+		"heroes":
+			return "HEROES"
 		_:
 			return Copy.TAB_AWARDS
 
 
+## Pad / keyboard: LB / RB (or Q / E) step through the tabs.
+func _unhandled_input(event: InputEvent) -> void:
+	var step := 0
+	if event is InputEventJoypadButton and event.pressed:
+		if event.button_index == JOY_BUTTON_LEFT_SHOULDER:
+			step = -1
+		elif event.button_index == JOY_BUTTON_RIGHT_SHOULDER:
+			step = 1
+	elif event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_Q:
+			step = -1
+		elif event.keycode == KEY_E:
+			step = 1
+	if step == 0:
+		return
+	var i := TABS.find(_current)
+	for k in TABS.size():
+		i = (i + step + TABS.size()) % TABS.size()
+		if FamilyProfile.tab_unlocked(TABS[i]):
+			_show_tab(TABS[i])
+			Juice.play("res://assets/audio/ui_click.wav")
+			get_viewport().set_input_as_handled()
+			return
+
+
 func _show_tab(id: String) -> void:
 	if not FamilyProfile.tab_unlocked(id):
-		Juice.claim_burst(Vector2(640, 360), Copy.LOCKED, 0, 0)
+		Juice.claim_burst(get_viewport().get_visible_rect().size * 0.5, Copy.LOCKED, 0, 0)
 		Juice.play("res://assets/audio/ui_click.wav")
 		return
 	_current = id
+	# First visit to a tab: Dad shows how it works.
+	if id in ["heroes", "build", "locker", "awards"]:
+		Guides.show(self, id, 0.6)
 	FamilyProfile.data["seen"][id] = true
 	FamilyProfile.save()
 	for child in _content.get_children():
+		_content.remove_child(child)
 		child.queue_free()
 	var page: Control
 	match id:
@@ -202,6 +445,8 @@ func _show_tab(id: String) -> void:
 			page = preload("res://src/ui/hub_build.gd").new()
 		"locker":
 			page = preload("res://src/ui/hub_locker.gd").new()
+		"heroes":
+			page = preload("res://src/ui/hub_heroes.gd").new()
 		_:
 			page = preload("res://src/ui/hub_awards.gd").new()
 	page.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -225,16 +470,35 @@ func _after_page() -> void:
 	_show_tab(_current)
 
 
+func _on_reward_landed(_key: String) -> void:
+	_refresh_pills()
+
+
 func _refresh_pills() -> void:
-	_set_pill(_gold_pill, str(FamilyProfile.data["gold"]), "gold")
-	_set_pill(_gems_pill, str(FamilyProfile.data["gems"]), "gems")
-	_set_pill(_rep_pill, str(FamilyProfile.data["rep"]), "rep")
+	var r := Juice.rewards
+	_set_pill(_gold_pill, UiKit.num(int(FamilyProfile.data["gold"]) - r.pending("gold")), "gold")
+	_set_pill(_gems_pill, UiKit.num(int(FamilyProfile.data["gems"]) - r.pending("gems")), "gems")
+	_set_pill(_rep_pill, UiKit.num(int(FamilyProfile.data["rep"]) - r.pending("rep")), "rep")
 	_log_bang.visible = FamilyProfile.unread_log_count() > 0
+	if _codex_dot:
+		_codex_dot.visible = Discover.unclaimed() > 0
+	if _armory_dot:
+		_armory_dot.visible = FamilyProfile.is_unseen("armory")
+	if _rewards_bang:
+		var n := RewardBook.count() + RewardBook.new_titles()
+		_rewards_bang.visible = n > 0
+		_rewards_n.text = str(n)
 	_refresh_new_dots()
-	if _avatar_btn:
-		_avatar_btn.text = "%s  LV %d\nTHE SON\n%s\nTHE FATHER" % [
-			FamilyProfile.son_name(), int(FamilyProfile.data.get("account_level", 1)), FamilyProfile.father_name()
-		]
+	call_deferred("_power_rise")
+	if _avatar_names:
+		_avatar_names.text = "%s  &  %s" % [FamilyProfile.son_name(), FamilyProfile.father_name()]
+		var need := maxf(1.0, float(FamilyProfile.account_need()))
+		var xp := float(FamilyProfile.data.get("account_xp", 0))
+		_avatar_lv.text = "LV %d" % int(FamilyProfile.data.get("account_level", 1))
+		_avatar_title.text = RewardBook.title()
+		if not _avatar_pwr.has_meta("rising"):
+			_avatar_pwr.text = "PWR %d" % RewardBook.power()
+		_avatar_xp.value = clampf(xp / need, 0.0, 1.0)
 	if _log_bang.visible:
 		if not _log_bang.has_meta("pulsing"):
 			_log_bang.set_meta("pulsing", true)
@@ -264,21 +528,29 @@ func _refresh_tab_locks() -> void:
 				wrap = child
 				var unlocked := FamilyProfile.tab_unlocked(id)
 				btn.disabled = false
-				if unlocked:
-					btn.text = _tab_title(id)
-				else:
-					btn.text = "%s  LOCK" % _tab_title(id)
+				btn.text = _tab_title(id)
+				# Locked tabs read as dark, not as a word glued on the label.
+				btn.modulate = Color.WHITE if unlocked else Color(0.45, 0.45, 0.52)
 				var bang: Control = _tab_bangs[id]
 				var unseen: bool = unlocked and not bool(FamilyProfile.data["seen"].get(id, false))
 				var awards_ready: bool = id == "awards" and unlocked and _has_claim()
-				bang.visible = unseen or awards_ready
+				# HEROES: something to spend on (a level, a rarity, a META rank).
+				var heroes_ready: bool = id == "heroes" and _heroes_ready()
+				bang.visible = unseen or awards_ready or heroes_ready
 				var dot: Control = _tab_dots.get(id)
 				if dot:
-					dot.visible = FamilyProfile.has_menu_alert()
+					dot.visible = id == "clinic" and FamilyProfile.has_menu_alert() and not bang.visible
 				if id == _current:
-					btn.add_theme_stylebox_override("normal", UiKit.panel(Palette.BRICK, Palette.LEMON))
+					var on := UiKit.panel(UiKit.NAVY_HI, UiKit.GOLD)
+					on.shadow_color = Color(UiKit.GOLD.r, UiKit.GOLD.g, UiKit.GOLD.b, 0.45)
+					on.shadow_size = 10
+					btn.add_theme_stylebox_override("normal", on)
 				else:
-					btn.add_theme_stylebox_override("normal", UiKit.panel(Palette.PANEL_2, Palette.EDGE))
+					var off := StyleBoxFlat.new()
+					off.bg_color = Color(0, 0, 0, 0)
+					off.border_color = Color(UiKit.RIM.r, UiKit.RIM.g, UiKit.RIM.b, 0.35)
+					off.border_width_right = 1
+					btn.add_theme_stylebox_override("normal", off)
 
 
 func _has_claim() -> bool:
@@ -294,10 +566,37 @@ func _has_claim() -> bool:
 	return false
 
 
+func _open_vault() -> void:
+	_clear_modal()
+	var sheet := preload("res://src/ui/vault_sheet.gd").new()
+	add_child(sheet)
+	_modal = sheet
+	sheet.closed.connect(func() -> void:
+		_clear_modal()
+		_refresh_pills()
+	)
+
+
+## THE COPING HOURS: the survivor lobby.
+func _open_survivor() -> void:
+	_clear_modal()
+	var sheet := preload("res://src/ui/survivor_lobby.gd").new()
+	add_child(sheet)
+	_modal = sheet
+	sheet.closed.connect(func() -> void:
+		_clear_modal()
+		_refresh_pills()
+	)
+
+
 func _open_log() -> void:
 	FamilyProfile.mark_log_read()
 	_refresh_pills()
-	_modal_text("SESSION LOG", _log_body())
+	_clear_modal()
+	var sheet := preload("res://src/ui/log_sheet.gd").new()
+	add_child(sheet)
+	_modal = sheet
+	sheet.closed.connect(_clear_modal)
 
 
 func _log_body() -> String:
@@ -313,10 +612,13 @@ func _refresh_new_dots() -> void:
 		_avatar_dot.visible = alert
 	if _logo_dot:
 		_logo_dot.visible = alert
+	# One global alert reads on the home tab only (and never next to a "!"),
+	# not as a red square on every tab.
 	for id in _tab_dots.keys():
 		var d: Control = _tab_dots[id]
+		var bg: Control = _tab_bangs.get(id)
 		if d:
-			d.visible = alert
+			d.visible = alert and id == "clinic" and not (bg != null and bg.visible)
 
 
 func _open_profile() -> void:
@@ -337,52 +639,95 @@ func _open_profile() -> void:
 		)
 
 
+var _jobs_bang: Control
+
+
+func _open_jobs() -> void:
+	_clear_modal()
+	var sheet := preload("res://src/ui/desk_sheet.gd").new()
+	sheet.mode = "contracts"
+	add_child(sheet)
+	_modal = sheet
+	sheet.closed.connect(func() -> void:
+		_clear_modal()
+		if _jobs_bang:
+			_jobs_bang.visible = Contracts.ready_count() > 0
+	)
+	sheet.need_refresh.connect(_refresh_pills)
+
+
+func _open_codex() -> void:
+	_clear_modal()
+	var sheet := preload("res://src/ui/codex_sheet.gd").new()
+	sheet.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(sheet)
+	_modal = sheet
+	sheet.closed.connect(_clear_modal)
+	sheet.closed.connect(_refresh_pills)
+
+
+func _open_rewards() -> void:
+	_clear_modal()
+	var sheet := preload("res://src/ui/rewards_sheet.gd").new()
+	sheet.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(sheet)
+	_modal = sheet
+	sheet.closed.connect(_clear_modal)
+	sheet.closed.connect(_refresh_pills)
+	sheet.closed.connect(_power_rise)
+
+
+## POWER went up since the hub last showed it: count it up in the header
+## with a green +N and a chime.
+func _power_rise() -> void:
+	if _avatar_pwr == null or _avatar_pwr.has_meta("rising") or not bool(FamilyProfile.data.get("named", false)):
+		return
+	var now := RewardBook.power()
+	var was := int(FamilyProfile.data.get("power_seen", -1))
+	FamilyProfile.data["power_seen"] = now
+	if was < 0 or now <= was or _avatar_pwr == null:
+		return
+	_avatar_pwr.set_meta("rising", true)
+	_avatar_pwr.text = "PWR %d" % was
+	var tw := _avatar_pwr.create_tween()
+	tw.tween_interval(0.9)
+	tw.tween_callback(func() -> void: RewardFly.snd("up_rise", 1.1, -6.0))
+	tw.tween_method(func(v: float) -> void:
+		_avatar_pwr.text = "PWR %d" % int(v)
+		_avatar_pwr.add_theme_color_override("font_color", Color(0.45, 1.0, 0.6))
+	, float(was), float(now), 0.9).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_callback(func() -> void:
+		_avatar_pwr.remove_meta("rising")
+		Juice.upgrade_fx(_avatar_pwr, Color(1.0, 0.75, 0.4), "+%d POWER" % (now - was), false)
+		var back := _avatar_pwr.create_tween()
+		back.tween_interval(0.6)
+		back.tween_callback(func() -> void: _avatar_pwr.add_theme_color_override("font_color", Color(1.0, 0.75, 0.4))))
+
+
+func _open_armory() -> void:
+	_clear_modal()
+	var sheet := preload("res://src/ui/armory_sheet.gd").new()
+	sheet.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(sheet)
+	_modal = sheet
+	sheet.closed.connect(_clear_modal)
+	sheet.closed.connect(_refresh_pills)
+
+
+func _open_stats() -> void:
+	_clear_modal()
+	var sheet := preload("res://src/ui/stats_sheet.gd").new()
+	sheet.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(sheet)
+	_modal = sheet
+	sheet.closed.connect(_clear_modal)
+
+
 func _open_camp_sheet(id: String) -> void:
 	_clear_modal()
-	var path := ""
-	match id:
-		"pawn_shop":
-			path = "res://src/ui/dopamine_shop.gd"
-		"patrol_desk":
-			path = "res://src/ui/patrol_sheet.gd"
-		"research_lab":
-			path = "res://src/ui/research_sheet.gd"
-		"dojo":
-			path = "res://src/ui/dojo_sheet.gd"
-		"workshop":
-			path = "res://src/ui/workshop_sheet.gd"
-		"bounty_board":
-			path = "res://src/ui/bounty_sheet.gd"
-		"radio_tower":
-			path = "res://src/ui/radio_sheet.gd"
-		"album_wall":
-			path = "res://src/ui/album_sheet.gd"
-		"blood_fridge":
-			path = "res://src/ui/fridge_sheet.gd"
-		"streak_locker":
-			path = "res://src/ui/streak_sheet.gd"
-		"invoice_wheel":
-			path = "res://src/ui/lottery_sheet.gd"
-		"punching_bag":
-			path = "res://src/ui/bag_sheet.gd"
-		"warrant_fax":
-			path = "res://src/ui/fax_sheet.gd"
-		"tip_jar":
-			path = "res://src/ui/tip_sheet.gd"
-		"lost_found":
-			path = "res://src/ui/lost_sheet.gd"
-		"payphone":
-			path = "res://src/ui/phone_sheet.gd"
-		"water_cooler":
-			path = "res://src/ui/cooler_sheet.gd"
-		"coat_check":
-			path = "res://src/ui/coat_sheet.gd"
-		"time_clock":
-			path = "res://src/ui/clock_sheet.gd"
-		"bleach_closet":
-			path = "res://src/ui/bleach_sheet.gd"
-		_:
-			return
+	var path := CampSheets.path(id)
+	if path == "":
+		return
 	var sheet: Control = load(path).new()
 	sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(sheet)
@@ -513,3 +858,14 @@ func _clear_modal() -> void:
 	if _modal and is_instance_valid(_modal):
 		_modal.queue_free()
 	_modal = null
+
+
+
+func _heroes_ready() -> bool:
+	for r in Heroes.ROLES:
+		if Heroes.can_level_any(r) or Heroes.can_rank(r):
+			return true
+	for id in Meta.LIST.keys():
+		if Meta.blocker(id) == "":
+			return true
+	return false

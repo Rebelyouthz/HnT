@@ -26,6 +26,8 @@ func _configure() -> void:
 func build_world() -> void:
 	NightStreet.parallax(self, map_w, "roofs")
 	NightStreet.wet_floor(self, map_w, true)
+	# The alley under the roofs: the same wet cobbles as the street.
+	NightStreet.pixel_dock(self, map_w, false)
 	for r in [
 		Rect2(40, 40, 280, 210),
 		Rect2(420, 20, 300, 190),
@@ -35,7 +37,9 @@ func build_world() -> void:
 		Rect2(2520, 50, 240, 160)
 	]:
 		Blockout.occluder(self, r)
-		NightStreet.pixel_tenement(self, r)
+		# The painted skyline (roofs_strip) is the view; drawn tenements only without it.
+		if not NightStreet.has_backdrop("roofs"):
+			NightStreet.pixel_tenement(self, r)
 	Blockout.solid(self, Rect2(0, ROOF_Y, 520, 22), true)
 	NightStreet.pixel_roof(self, Rect2(0, ROOF_Y, 520, 22))
 	Blockout.solid(self, Rect2(700, ROOF_Y, 420, 22), true)

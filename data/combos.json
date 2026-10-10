@@ -1,0 +1,450 @@
+{
+ "_doc": "Combos learned in the dojo. Each step is one input: L light, H heavy, J jump, D dash; a prefix F/B/U/Dn is the stick (forward = toward the way you face). Steps before the last play the normal move for that button; the last step is the finisher clip. Timing: after each strike connects (or a jump/dash starts) a ring closes on the fighter; pressing the next input as it closes is PERFECT (x1.5 damage, slow-mo), anywhere else in the window is GOOD, too late and the chain drops. fx: launch (pops them up and back), fling (sends them flying), knockdown (on the floor), stun (doubled over, can't swing), crush (smashed down).",
+ "styles": {
+  "son": {
+   "name": "FREERUN",
+   "blurb": "Parkour on people. Momentum, flips, feet first. Light hits open, the street finishes."
+  },
+  "father": {
+   "name": "DOCKYARD",
+   "blurb": "Boxing with a dock worker's manners. Short, heavy, dirty: elbows, head, knees, shoulder."
+  }
+ },
+ "combos": [
+  {
+   "id": "tic_tac_tornado",
+   "who": "son",
+   "title": "TIC-TAC TORNADO",
+   "rarity": "rare",
+   "gold": [
+    30,
+    50,
+    80
+   ],
+   "blurb": "Jab, cross, then up + heavy: he jumps, turns a full circle and the heel comes round at head height.",
+   "steps": [
+    "L",
+    "L",
+    "U+H"
+   ],
+   "clip": "jump_roundhouse",
+   "dmg": 30,
+   "fx": "launch",
+   "box": [
+    80,
+    56
+   ],
+   "reach": 34,
+   "vx": 60
+  },
+  {
+   "id": "flash_back",
+   "who": "son",
+   "title": "FLASH BACK",
+   "rarity": "rare",
+   "gold": [
+    30,
+    50,
+    80
+   ],
+   "blurb": "Jab, then back + heavy: a backflip with the foot coming straight up through the chin. Gets you out, too.",
+   "steps": [
+    "L",
+    "B+H"
+   ],
+   "clip": "backflip_kick",
+   "dmg": 26,
+   "fx": "launch",
+   "box": [
+    56,
+    86
+   ],
+   "reach": 22,
+   "vx": -150
+  },
+  {
+   "id": "freight_train",
+   "who": "son",
+   "title": "FREIGHT TRAIN",
+   "rarity": "epic",
+   "gold": [
+    40,
+    65,
+    100
+   ],
+   "blurb": "Dash, jump, heavy: run, take off and put both feet in his chest. You land on your back and kip up - worth it.",
+   "steps": [
+    "D",
+    "J",
+    "H"
+   ],
+   "clip": "dropkick",
+   "dmg": 36,
+   "fx": "fling",
+   "box": [
+    86,
+    46
+   ],
+   "reach": 40,
+   "vx": 340,
+   "air": true
+  },
+  {
+   "id": "knee_express",
+   "who": "son",
+   "starter": true,
+   "title": "KNEE EXPRESS",
+   "rarity": "uncommon",
+   "gold": [
+    24,
+    40,
+    64
+   ],
+   "blurb": "Jab, cross, forward + light: two running steps and a flying knee to the ribs. Doubles them over.",
+   "steps": [
+    "L",
+    "L",
+    "F+L"
+   ],
+   "clip": "flying_knee",
+   "dmg": 24,
+   "fx": "stun",
+   "box": [
+    64,
+    50
+   ],
+   "reach": 30,
+   "vx": 220
+  },
+  {
+   "id": "floor_sweep",
+   "who": "son",
+   "title": "FLOOR SWEEP",
+   "rarity": "uncommon",
+   "gold": [
+    24,
+    40,
+    64
+   ],
+   "blurb": "Down + light, down + light, heavy: drop, spin on a hand, take both legs. They go down; you spring back up.",
+   "steps": [
+    "Dn+L",
+    "Dn+L",
+    "H"
+   ],
+   "clip": "sweep",
+   "dmg": 20,
+   "fx": "knockdown",
+   "box": [
+    96,
+    30
+   ],
+   "reach": 10,
+   "low": true
+  },
+  {
+   "id": "cartwheel_chop",
+   "who": "son",
+   "title": "CARTWHEEL CHOP",
+   "rarity": "rare",
+   "gold": [
+    30,
+    50,
+    80
+   ],
+   "blurb": "Heavy, then forward + heavy: a cartwheel whose top leg comes down like an axe.",
+   "steps": [
+    "H",
+    "F+H"
+   ],
+   "clip": "cartwheel_kick",
+   "dmg": 28,
+   "fx": "knockdown",
+   "box": [
+    78,
+    70
+   ],
+   "reach": 34,
+   "vx": 120
+  },
+  {
+   "id": "superman",
+   "who": "son",
+   "title": "SUPERMAN",
+   "rarity": "uncommon",
+   "gold": [
+    24,
+    40,
+    64
+   ],
+   "blurb": "Dash, light, light: skip in, kick the back leg out and fly fist-first.",
+   "steps": [
+    "D",
+    "L",
+    "L"
+   ],
+   "clip": "superman_punch",
+   "dmg": 22,
+   "fx": "launch",
+   "box": [
+    66,
+    44
+   ],
+   "reach": 36,
+   "vx": 240
+  },
+  {
+   "id": "shift_whistle",
+   "who": "father",
+   "starter": true,
+   "title": "SHIFT WHISTLE",
+   "rarity": "uncommon",
+   "gold": [
+    24,
+    40,
+    64
+   ],
+   "blurb": "Jab, cross, forward + heavy: step in and turn the hips through a horizontal elbow.",
+   "steps": [
+    "L",
+    "L",
+    "F+H"
+   ],
+   "clip": "elbow",
+   "dmg": 28,
+   "fx": "stun",
+   "box": [
+    58,
+    44
+   ],
+   "reach": 26,
+   "vx": 90
+  },
+  {
+   "id": "union_break",
+   "who": "father",
+   "title": "UNION BREAK",
+   "rarity": "epic",
+   "gold": [
+    40,
+    65,
+    100
+   ],
+   "blurb": "Jab, heavy, up + heavy: both fists locked together over the head and down like a sledge. Puts them in the asphalt.",
+   "steps": [
+    "L",
+    "H",
+    "U+H"
+   ],
+   "clip": "hammer",
+   "dmg": 36,
+   "fx": "crush",
+   "box": [
+    62,
+    70
+   ],
+   "reach": 28
+  },
+  {
+   "id": "dock_boot",
+   "who": "father",
+   "title": "DOCK BOOT",
+   "rarity": "rare",
+   "gold": [
+    30,
+    50,
+    80
+   ],
+   "blurb": "Down + light twice, then forward + heavy: knee up high and the sole of the work boot goes through his chest. Sends him down the street.",
+   "steps": [
+    "Dn+L",
+    "Dn+L",
+    "F+H"
+   ],
+   "clip": "boot_kick",
+   "dmg": 30,
+   "fx": "fling",
+   "box": [
+    72,
+    48
+   ],
+   "reach": 34
+  },
+  {
+   "id": "freight_shoulder",
+   "who": "father",
+   "title": "FREIGHT SHOULDER",
+   "rarity": "rare",
+   "gold": [
+    30,
+    50,
+    80
+   ],
+   "blurb": "Jab, dash, heavy: head down, shoulder first, three steps of dock worker.",
+   "steps": [
+    "L",
+    "D",
+    "H"
+   ],
+   "clip": "shoulder_charge",
+   "dmg": 26,
+   "fx": "fling",
+   "box": [
+    70,
+    60
+   ],
+   "reach": 28,
+   "vx": 360
+  },
+  {
+   "id": "night_shift",
+   "who": "father",
+   "title": "NIGHT SHIFT",
+   "rarity": "rare",
+   "gold": [
+    30,
+    50,
+    80
+   ],
+   "blurb": "Down + light, heavy: dip, liver hook, then the overhand right over the top.",
+   "steps": [
+    "Dn+L",
+    "H"
+   ],
+   "clip": "body_hook",
+   "dmg": 30,
+   "fx": "stun",
+   "box": [
+    60,
+    50
+   ],
+   "reach": 28,
+   "vx": 60
+  },
+  {
+   "id": "clock_out",
+   "who": "father",
+   "title": "CLOCK OUT",
+   "rarity": "rare",
+   "gold": [
+    30,
+    50,
+    80
+   ],
+   "blurb": "Heavy, then back + heavy: turn your back, spin, and the back of the fist ends the shift.",
+   "steps": [
+    "H",
+    "B+H"
+   ],
+   "clip": "spin_backfist",
+   "dmg": 30,
+   "fx": "knockdown",
+   "box": [
+    80,
+    44
+   ],
+   "reach": 32
+  },
+  {
+   "id": "collar_crown",
+   "who": "father",
+   "title": "COLLAR & CROWN",
+   "rarity": "uncommon",
+   "gold": [
+    24,
+    40,
+    64
+   ],
+   "blurb": "Jab, cross, up + light: grab the collar, pull him in, forehead.",
+   "steps": [
+    "L",
+    "L",
+    "U+L"
+   ],
+   "clip": "headbutt",
+   "dmg": 26,
+   "fx": "stun",
+   "box": [
+    50,
+    44
+   ],
+   "reach": 22
+  },
+  {
+   "id": "last_orders",
+   "who": "father",
+   "title": "LAST ORDERS",
+   "rarity": "epic",
+   "gold": [
+    40,
+    65,
+    100
+   ],
+   "blurb": "Jab, heavy, forward + light: take the head in a clinch and drive the knee up. Twice.",
+   "steps": [
+    "L",
+    "H",
+    "F+L"
+   ],
+   "clip": "clinch_knee",
+   "dmg": 32,
+   "fx": "stun",
+   "box": [
+    52,
+    50
+   ],
+   "reach": 22
+  },
+  {
+   "id": "tornado_heel",
+   "who": "father",
+   "title": "TORNADO HEEL",
+   "rarity": "epic",
+   "gold": [
+    40,
+    65,
+    100
+   ],
+   "blurb": "Down + light, then up + heavy: he jumps, turns his back, spins a full circle and the heel lands on the jaw. A dock worker should not be able to do this.",
+   "steps": [
+    "Dn+L",
+    "U+H"
+   ],
+   "clip": "jump_spin_kick",
+   "dmg": 34,
+   "fx": "launch",
+   "box": [
+    84,
+    60
+   ],
+   "reach": 34,
+   "vx": 60
+  },
+  {
+   "id": "high_tide",
+   "who": "father",
+   "title": "HIGH TIDE",
+   "rarity": "rare",
+   "gold": [
+    30,
+    50,
+    80
+   ],
+   "blurb": "Jab, cross, forward + light: hop off the back foot and kick straight through the chin.",
+   "steps": [
+    "L",
+    "L",
+    "F+L"
+   ],
+   "clip": "jump_high_kick",
+   "dmg": 26,
+   "fx": "launch",
+   "box": [
+    70,
+    56
+   ],
+   "reach": 32,
+   "vx": 40
+  }
+ ]
+}

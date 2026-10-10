@@ -29,6 +29,7 @@ var _hud: CanvasLayer
 var _end: Node
 var _cam: CouchCamera
 var _join_grace := 0
+var _draw_pending := false
 var _wanted_cop := false
 var _heli: Node2D
 var _phone_ghost := false
@@ -58,14 +59,14 @@ func _place_parkour() -> void:
 		"fire_escapes": [[560.0, 248.0, "rail"], [1100.0, 248.0, "gap"], [2000.0, 500.0, "crate"]],
 		"neon_exchange": [[640.0, 500.0, "crate"], [1320.0, 500.0, "rail"], [2100.0, 500.0, "gap"]],
 		"rail_bridge": [[700.0, 500.0, "rail"], [1500.0, 500.0, "gap"], [2300.0, 500.0, "crate"]],
-		"city_hall": [[480.0, 500.0, "crate"], [980.0, 500.0, "rail"]],
-		"invoice_pier": [[900.0, 500.0, "gap"], [1600.0, 500.0, "rail"], [2600.0, 500.0, "crate"]],
-		"processing_floor": [[620.0, 500.0, "rail"], [1480.0, 500.0, "gap"]],
+		"city_hall": [[480.0, 500.0, "crate"], [980.0, 500.0, "rail"], [1380.0, 500.0, "sledgehammer"]],
+		"invoice_pier": [[900.0, 500.0, "gap"], [1600.0, 500.0, "rail"], [2600.0, 500.0, "crate"], [1100.0, 500.0, "flare_gun"]],
+		"processing_floor": [[620.0, 500.0, "rail"], [1480.0, 500.0, "gap"], [1200.0, 500.0, "machete"]],
 		"tutorial_alley": [[640.0, 500.0, "crate"], [1100.0, 500.0, "rail"]],
 		"intake_lot": [[520.0, 500.0, "crate"], [1280.0, 500.0, "rail"]],
 		"group_circle": [[640.0, 500.0, "rail"]],
-		"waiting_room": [[720.0, 500.0, "crate"], [1400.0, 500.0, "gap"]],
-		"copay_orchard": [[720.0, 500.0, "crate"], [2100.0, 500.0, "gap"]],
+		"waiting_room": [[720.0, 500.0, "crate"], [1400.0, 500.0, "gap"], [1620.0, 500.0, "revolver"]],
+		"copay_orchard": [[720.0, 500.0, "crate"], [2100.0, 500.0, "gap"], [980.0, 500.0, "baseball_bat"]],
 		"sleet_hour": [[700.0, 500.0, "rail"], [1500.0, 500.0, "crate"]],
 		"raven_grid": [[900.0, 500.0, "rail"], [2200.0, 500.0, "gap"]],
 		"ledger_dive": [[720.0, 500.0, "crate"], [1600.0, 500.0, "rail"]]
@@ -73,14 +74,19 @@ func _place_parkour() -> void:
 	var list: Variant = rows.get(map_id, [])
 	if typeof(list) != TYPE_ARRAY:
 		return
+	# Survivor arenas are for fighting the horde: no vault prompts, no
+	# parkour toys, no bystanders wandering through the crowd.
+	var arena := StoryBook.is_survive(map_id)
 	for row in list:
-		if typeof(row) != TYPE_ARRAY or (row as Array).size() < 3:
+		if arena or typeof(row) != TYPE_ARRAY or (row as Array).size() < 3:
 			continue
 		ParkourGate.place(self, Vector2(float(row[0]), float(row[1])), str(row[2]))
-	_place_toys()
+	if not arena:
+		_place_toys()
 	_place_smash()
 	_place_towers()
 	_place_secrets()
+	_place_extras()
 
 
 func _place_toys() -> void:
@@ -134,21 +140,31 @@ func _place_smash() -> void:
 	var list: Variant = rows.get(map_id, [])
 	if typeof(list) != TYPE_ARRAY:
 		return
+	var placed: Array = []
 	for row in list:
 		if typeof(row) != TYPE_ARRAY or (row as Array).size() < 2:
 			continue
 		var x := float(row[0])
 		if map_id == "raven_grid" and x > 2200.0:
 			continue
-		SmashProp.place(self, Vector2(x, 500.0), str(row[1]))
+		var sp := SmashProp.place(self, Vector2(x, 500.0), str(row[1]))
+		placed.append(sp)
+	# One adrenaline syringe per street, inside one of the breakables.
+	if not placed.is_empty():
+		var rng := RandomNumberGenerator.new()
+		rng.seed = hash(map_id)
+		var first := rng.randi() % placed.size()
+		(placed[first] as Node).set_meta("syringe", true)
+		if Charms.has("moms_ring") and placed.size() > 1:
+			(placed[(first + 1 + rng.randi() % (placed.size() - 1)) % placed.size()] as Node).set_meta("syringe", true)
 	_place_weapons()
 	_place_life()
 
 
 func _place_weapons() -> void:
 	var rows: Dictionary = {
-		"dock_street": [[900.0, 500.0, "chain"]],
-		"intake_lot": [[760.0, 500.0, "crowbar"]],
+		"dock_street": [[620.0, 500.0, "baseball_bat"], [900.0, 500.0, "chain"], [1160.0, 500.0, "pistol"], [1460.0, 510.0, "flare_gun"], [1740.0, 500.0, "shotgun"], [1980.0, 505.0, "machete"], [2180.0, 500.0, "smg"], [2560.0, 500.0, "nailgun"]],
+		"intake_lot": [[560.0, 505.0, "sledgehammer"], [760.0, 500.0, "crowbar"], [980.0, 500.0, "shotgun"], [1160.0, 510.0, "revolver"], [1340.0, 500.0, "smg"], [1560.0, 500.0, "machete"], [1760.0, 500.0, "ray"]],
 		"fire_escapes": [[860.0, 248.0, "stapler"]],
 		"group_circle": [[1180.0, 500.0, "clipboard"]],
 		"neon_exchange": [[1480.0, 248.0, "nailgun"]],
@@ -192,6 +208,8 @@ func _place_life() -> void:
 	for at in crowd:
 		if map_id == "raven_grid" and at.x > 2100.0:
 			continue
+		if StoryBook.is_survive(map_id):
+			continue
 		Bystander.place(self, at)
 	if map_id == "neon_exchange":
 		NightStreet.neon(self, Vector2(480, 120), "CASH ONLY FEELINGS  ·  STILL OPEN", Palette.LEMON)
@@ -201,20 +219,132 @@ func _place_life() -> void:
 		NightStreet.neon(self, Vector2(240, 120), "EVICTION PROCESSED HERE", Palette.EDGE)
 
 
+## Spray cans, Rufus the dog, photo mode and tonight's bounty.
+func _place_extras() -> void:
+	SprayCan.place_all(self, map_id)
+	if map_id == "dock_street":
+		StreetLife.dress(self, [380.0, 1180.0, 1700.0, 2600.0])
+	elif map_id == "tutorial_alley":
+		StreetLife.dress(self, [520.0, 1050.0])
+	add_child(PhotoMode.new())
+	if map_id in ["dock_street", "intake_lot", "tutorial_alley"] or App.ORDER.has(map_id):
+		NightExtras.place(self, map_id, map_w)
+	if DogBuddy.joined():
+		var dog := DogBuddy.new()
+		dog.position = spawn_at + Vector2(-30, 6)
+		add_child(dog)
+	elif map_id == "dock_street":
+		var stray := StrayDog.new()
+		stray.position = Vector2(1320, 494)
+		add_child(stray)
+	get_tree().create_timer(3.0).timeout.connect(_pick_bounty)
+
+
+var _banter_t := 18.0
+
+
+## Father and son talk while they walk: a line every 25-45 s when nobody is
+## swinging at them.
+func _banter(delta: float) -> void:
+	_banter_t -= delta
+	if _banter_t > 0.0:
+		return
+	_banter_t = randf_range(25.0, 45.0)
+	var players := get_tree().get_nodes_in_group("players")
+	if players.is_empty():
+		return
+	var p := players[0] as Node2D
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if e is Node2D and (e as Node2D).global_position.distance_to(p.global_position) < 260.0:
+			_banter_t = 6.0
+			return
+	VoBank.line("son" if randf() < 0.5 else "father", "banter", 1.0)
+
+
+## One ordinary thug per street is WANTED: tougher, badged, and worth
+## gems and gold when he drops.
+func _pick_bounty() -> void:
+	if not is_inside_tree() or get_tree().get_first_node_in_group("bounty"):
+		return
+	var pool: Array = []
+	for n in get_tree().get_nodes_in_group("enemies"):
+		if n is Punk and not (n is ActBoss) and not (n is TrainingDummy) and is_instance_valid(n) and (n as Punk).hp > 0:
+			pool.append(n)
+	if pool.is_empty():
+		get_tree().create_timer(4.0).timeout.connect(_pick_bounty)
+		return
+	var p := pool[randi() % pool.size()] as Punk
+	p.add_to_group("bounty")
+	p.max_hp = int(round(float(p.max_hp) * 1.6))
+	p.hp = p.max_hp
+	# A bounty badge floats over his head (not a crown stuck on it).
+	OverheadBadge.attach(p, "bounty")
+	Juice.toast("challenge", "WANTED: %s" % p.title.to_upper(), "The one with the gold badge. 2 gems and 40 gold on his head.")
+	p.died.connect(func() -> void:
+		FamilyProfile.data["wanted_claimed"] = int(FamilyProfile.data.get("wanted_claimed", 0)) + 1
+		FamilyProfile.add_gems(2)
+		FamilyProfile.add_gold(40)
+		Juice.unlock_logo("BOUNTY CLAIMED", "%s won't collect anything again." % p.title, "+2 GEMS  ·  +40 GOLD")
+	)
+
+
 func _place_towers() -> void:
 	ViewpointTower.place(self, map_id)
 
 
 func _place_secrets() -> void:
 	SecretStash.place(self, map_id)
+	_extra_ways_up.call_deferred()
+	(func() -> void: SecretLedge.place(self, map_id)).call_deferred()
+	# After everything else has been dropped in (wheel tokens, gates).
+	get_tree().create_timer(0.15).timeout.connect(_spread_props)
 
 
 func boss_filed() -> bool:
 	return _boss_down
 
 
+## A crew member waiting in an impound cage on this map (data/story.json
+## acts.<map>.rescue), until the family breaks them out once.
+func _place_rescue() -> void:
+	var r := StoryBook.rescue(map_id)
+	if r.is_empty():
+		return
+	var who := str(r.get("who", ""))
+	if who == "" or StoryBook.has_crew(who):
+		return
+	var cage := RescueCage.new()
+	cage.who = who
+	var v: Variant = r.get("lines", [])
+	cage.lines = v if v is Array else []
+	cage.position = Vector2(float(r.get("x", spawn_at.x + 600.0)), 498.0)
+	add_child(cage)
+
+
 func _ready() -> void:
+	VaultCards.reset_run()
+	# Every act starts on the story street band; survivor hours open the
+	# top-down field (SurviveField.setup).
+	Fighter.FIELD = false
+	Fighter.STREET_MIN = 430.0
+	Fighter.STREET_MAX = 520.0
 	_configure()
+	if self is SurviveAct:
+		SurviveField.setup(self)
+		# Played from the SURVIVOR lobby: the hour is the whole run.
+		if App.surv_solo:
+			next_id = ""
+	Arsenal.reset_run()
+	var place := scene_file_path.get_file().get_basename()
+	if Discover.PLACES.has(place):
+		var pname := str(Discover.PLACES[place])
+		(func() -> void: Discover.see("place", place, pname)).call_deferred()
+	_suit_toast.call_deferred()
+	var resumed := App.resume_map == map_id and App.resume_pos != Vector2.ZERO
+	if resumed:
+		spawn_at = App.resume_pos
+	App.resume_map = ""
+	_save_resume(spawn_at, false)
 	add_to_group("dock_world")
 	add_to_group("run_act")
 	_state = RunState.new()
@@ -227,28 +357,82 @@ func _ready() -> void:
 	add_child(_state)
 	if not App.run_bag.is_empty():
 		_state.unpack(App.run_bag)
-	build_world()
-	_place_parkour()
+	if Fighter.FIELD:
+		SurviveField.build(self, map_id)
+	else:
+		build_world()
+	# The halfway cart on every story stage.
+	if App.ORDER.has(map_id) and not StoryBook.is_survive(map_id):
+		NightCondition.dress(self, map_id)
+		ShopCart.place(self, map_w * 0.5)
+		QuestGiver.place_for(self, map_id, map_w)
+		Hazard.place_for(self, map_w)
+	if not Fighter.FIELD:
+		_place_parkour()
+		_place_rescue()
 	_rig = LightRig.new()
-	_rig.preset = light_preset
+	_rig.preset = "field" if Fighter.FIELD else light_preset
 	add_child(_rig)
+	if Fighter.FIELD and _rig.get_node_or_null("Night"):
+		(_rig.get_node("Night") as CanvasModulate).color = SurviveField.theme(map_id)["night"]
 	add_child(SnapDirector.new())
 	add_child(DuoDirector.new())
 	add_child(BloodSim.new())
+	# The coping hour has its own driving track.
+	if self is SurviveAct and not music.contains("/music/") and ResourceLoader.exists("res://assets/audio/music_survive.wav"):
+		music = "res://assets/audio/music_survive.wav"
 	Mixer.play_music(music)
 	var party: Dictionary = Party.spawn(self, spawn_at)
 	_son = party.get("son") as Fighter
 	_dad = party.get("dad") as Fighter
+	# META starter kit: armed from the first step.
+	var kit := Meta.starter_weapon()
+	# ARMORY "CARRY IN": a found weapon chosen to start with (STARTER KIT).
+	var carry := str(FamilyProfile.data.get("carry_weapon", ""))
+	if kit != "" and carry != "" and Arsenal.found(carry):
+		kit = carry
+	if kit != "":
+		for f in [_son, _dad]:
+			if f and f.pickup == "":
+				f.equip_pickup(kit)
 	if roof_start:
 		for f in [_son, _dad]:
 			if f:
 				f.plane = "roof"
 				f._enter_roof()
 	NetSession.bind_run(_son, _dad)
-	for row in Party.encounters(map_id):
-		Party.spawn_row(self, row, _state.hp_mul())
+	if App.ORDER.has(map_id) and not StoryBook.is_survive(map_id):
+		Nemesis.maybe_spawn(self, map_id, map_w, _state.hp_mul())
+	var enc_hp := _state.hp_mul() * NightCondition.mul(map_id, "hp") * Heroes.enemy_hp_mul() * Artifacts.enemy_hp()
+	if Fighter.FIELD or roof_start or App.remote_coop or App.versus:
+		for row in Party.encounters(map_id):
+			var pk := Party.spawn_row(self, row, enc_hp)
+			if pk:
+				pk.speed *= NightCondition.mul(map_id, "speed")
+	else:
+		# Story streets: thugs ARRIVE off camera (walk in, rope down, ladder).
+		var ed := EntryDirector.new()
+		ed.name = "EntryDirector"
+		ed.host = self
+		ed.hp_mul = enc_hp
+		ed.speed_mul = NightCondition.mul(map_id, "speed")
+		add_child(ed)
+		ed.setup(Party.encounters(map_id))
+	add_child(ItemRack.new())
+	add_child(BodySense.new())
+	add_child(BrawlMore.new())
+	Engine.set_meta("run_kills0", int(FamilyProfile.data.get("kills_total", 0)))
+	Engine.set_meta("run_parries0", int(FamilyProfile.data.get("parries", 0)))
+	Engine.set_meta("run_t0", Time.get_ticks_msec() / 1000.0)
+	if roof_start or not get_tree().get_nodes_in_group("roof_solids").is_empty():
+		ParkourPlus.place(self, map_id, goal_x, check_x)
+	TrickCall.place(self)
+	QuickBelt.place(self)
 	_cam = CouchCamera.new()
 	_cam.limit_right = int(map_w)
+	if Fighter.FIELD:
+		_cam.field = true
+		_cam.limit_bottom = int(SurviveField.H)
 	_cam.targets = _targets()
 	add_child(_cam)
 	var hud_script := preload("res://src/ui/run_hud.gd")
@@ -258,12 +442,42 @@ func _ready() -> void:
 	if DisplayServer.is_touchscreen_available():
 		add_child(preload("res://src/ui/touch_hud.gd").new())
 	_state.need_cards.connect(_cards)
+	# Story nights: a LUCKY WHEEL token mid-map, and a STARTING DRAW of item
+	# cards on the first map of a run.
+	if App.ORDER.has(map_id) and not StoryBook.is_survive(map_id):
+		WheelToken.place(self, Vector2(map_w * 0.42, 492.0), "parkour" if roof_start else "story")
+		if _state.cards.is_empty():
+			_draw_pending = true
 	PadRouter.drop_in.connect(_on_dropin)
 	var body := toast_body
 	if body == "":
 		body = Copy.COUCH_HINT if App.density_coop else Copy.SOLO_HINT
 	Juice.toast("quest", toast_title, body)
 	_boot_story()
+	# Fresh entry: the stage's title card over the painted street. The
+	# starting draw waits until the street has been on screen for a moment.
+	var card: StageCard = null
+	if not resumed:
+		card = StageCard.show_for(self, map_id)
+	if _draw_pending:
+		if card:
+			card.closed.connect(_queue_starting_draw)
+		else:
+			_queue_starting_draw()
+
+
+func _queue_starting_draw(wait := 1.2) -> void:
+	# Game time (pauses with the game), so nothing pops over a title card;
+	# an UNLOCKED banner still on screen goes first.
+	get_tree().create_timer(wait, false).timeout.connect(func() -> void:
+		if not is_inside_tree():
+			return
+		if bool(Juice.get("_banner_on")):
+			_queue_starting_draw(0.5)
+			return
+		if get_node_or_null("CardPick") == null and not Engine.has_meta("probe_no_draw"):
+			_starting_draw()
+	)
 
 
 func _targets() -> Array[Node2D]:
@@ -276,6 +490,8 @@ func _targets() -> Array[Node2D]:
 
 
 func _process(_delta: float) -> void:
+	NightCondition.follow(self, _cam)
+	_banter(_delta)
 	if _join_grace > 0:
 		_join_grace -= 1
 	if _state.failed or _state.cleared or _state.gated:
@@ -290,7 +506,10 @@ func _process(_delta: float) -> void:
 	_tick_talk(lead_x)
 	_tick_boss_intro(lead_x)
 	if check_x > 0.0 and lead_x > check_x:
-		_state.mark_checkpoint(check_pos if check_pos != Vector2.ZERO else Vector2(check_x, spawn_at.y))
+		var cp := check_pos if check_pos != Vector2.ZERO else Vector2(check_x, spawn_at.y)
+		if _state.checkpoint != cp:
+			_save_resume(cp, true)
+		_state.mark_checkpoint(cp)
 	if win_mode == "boss":
 		return
 	if _boss_down and next_id != "":
@@ -307,7 +526,17 @@ func _process(_delta: float) -> void:
 
 
 func _cards() -> void:
-	if get_node_or_null("CardPick"):
+	if get_node_or_null("CardPick") or get_node_or_null("LevelUpFx"):
+		return
+	# Glow, LEVEL UP over the heads and the force wave first; then the cards.
+	var fighters: Array = []
+	for n in get_tree().get_nodes_in_group("players"):
+		if n is Fighter and not (n as Fighter).downed:
+			fighters.append(n)
+	var fx := LevelUpFx.play(self, fighters)
+	fx.name = "LevelUpFx"
+	await fx.done
+	if not is_inside_tree():
 		return
 	var pick := CardPick.new()
 	pick.name = "CardPick"
@@ -315,12 +544,42 @@ func _cards() -> void:
 		var pool: Array = []
 		var table: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/cards.json"))
 		for c in table:
-			if not bool(c.get("fixed", false)) and not _state.cards.has(c["id"]):
+			if not bool(c.get("fixed", false)) and RunState.offerable(c, _state.cards, _state.card_lv):
 				pool.append(c["id"])
+		# Owned vault cards join the draw (twice, so they show up).
+		for vid: String in VaultCards.offers():
+			pool.append(vid)
+			pool.append(vid)
 		pool.shuffle()
+		# No doubles in one hand.
+		var uniq: Array = []
+		for pid in pool:
+			if not uniq.has(pid):
+				uniq.append(pid)
+		pool = uniq
 		pick.ids = pool.slice(0, 3)
 		_state.card_reroll = false
 	add_child(pick)
+	pick.picked.connect(func(id: String) -> void:
+		_state.take_card(id)
+	)
+
+
+## STARTING DRAW: three item cards (drones, pets, actives, weapons) before
+## the first fight of a run.
+func _starting_draw() -> void:
+	var table: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/cards.json"))
+	var pool: Array = []
+	if table is Array:
+		for c in table:
+			if (c as Dictionary).has("kind"):
+				pool.append(c["id"])
+	pool.shuffle()
+	var pick := CardPick.new()
+	pick.name = "CardPick"
+	pick.ids = pool.slice(0, 3)
+	add_child(pick)
+	Juice.shout("STARTING DRAW")
 	pick.picked.connect(func(id: String) -> void:
 		_state.take_card(id)
 	)
@@ -394,16 +653,52 @@ func _on_wanted() -> void:
 		Juice.toast("challenge", "WANTED 5", "Spotlight. Hide under a ledge or eat it.")
 
 
+## Save to continue later: the map and where to stand. CONTINUE on the title
+## screen drops you back here.
+func _save_resume(at: Vector2, announce: bool) -> void:
+	if App.remote_coop or App.versus:
+		return
+	FamilyProfile.data["resume"] = {"map": map_id, "x": at.x, "y": at.y}
+	FamilyProfile.save()
+	if announce:
+		Juice.toast("quest", "GAME SAVED", "Checkpoint. CONTINUE starts here.")
+
+
+func _clear_resume() -> void:
+	FamilyProfile.data.erase("resume")
+	FamilyProfile.save()
+
+
 func _on_fail() -> void:
+	_clear_resume()
+	if SurviveRun.get_run(get_tree()):
+		SurviveRun.get_run(get_tree()).award_tokens(false)
 	FamilyProfile.mark_run_finished(false)
 	var g := 0
 	if _state:
 		FamilyProfile.note_score(_state.score_total)
 		g = FamilyProfile.cash_fail(_state.scrap, _state.score_total)
+	# Fell at the boss: an attempt bonus so the next try comes back stronger.
+	var bs := get_tree().get_first_node_in_group("act_final_boss")
+	if bs != null:
+		var bonus := 40 + 15 * Heroes.map_tier()
+		FamilyProfile.add_gold(bonus)
+		g += bonus
+		var who: String = App.solo_role if App.solo_role in ["son", "father"] else "son"
+		Heroes.add_shards(who, 4)
+		var tries := int(FamilyProfile.data.get("boss_tries_" + map_id, 0)) + 1
+		FamilyProfile.data["boss_tries_" + map_id] = tries
+		Juice.toast("reward", "BOSS ATTEMPT %d" % tries, "+%d gold, +4 shards. Learn the red zones. Spend in HEROES." % bonus)
 	_banner(Copy.FAIL, fail_sub if fail_sub != "" else Copy.FAIL_GOLD, false, false, g)
+	if _end is ResultsSheet:
+		(_end as ResultsSheet).death_line = DeathCause.for_run(get_tree())
 
 
 func _on_gate() -> void:
+	# Filed: CONTINUE picks up at the start of the next street.
+	if next_id != "":
+		FamilyProfile.data["resume"] = {"map": next_id, "x": 0.0, "y": 0.0}
+		FamilyProfile.save()
 	if _missions:
 		_missions.complete_main()
 	match map_id:
@@ -411,6 +706,8 @@ func _on_gate() -> void:
 			FamilyProfile.mark_city_clear()
 		"intake_lot", "group_circle", "waiting_room", "sleet_hour", "ledger_dive":
 			FamilyProfile.mark_survive(map_id)
+			if SurviveRun.get_run(get_tree()):
+				SurviveRun.get_run(get_tree()).award_tokens(true)
 		"invoice_pier":
 			FamilyProfile.mark_annex()
 	FamilyProfile.mark_map_filed(map_id)
@@ -421,6 +718,7 @@ func _on_gate() -> void:
 
 
 func _on_clear() -> void:
+	_clear_resume()
 	FamilyProfile.mark_run_finished(true)
 	FamilyProfile.mark_map_filed(map_id)
 	if App.is_solo_density():
@@ -433,6 +731,9 @@ func _on_clear() -> void:
 		FamilyProfile.mark_family_plan()
 	if map_id in ["intake_lot", "group_circle", "waiting_room", "sleet_hour", "ledger_dive"]:
 		FamilyProfile.mark_survive(map_id)
+		Agony.on_win(map_id)
+	if SurviveRun.get_run(get_tree()):
+		SurviveRun.get_run(get_tree()).award_tokens(true)
 	if App.remote_coop:
 		FamilyProfile.mark_remote_clear()
 	if _missions:
@@ -504,6 +805,11 @@ func _spawn_story_unit(mini: bool) -> void:
 	var x := float(d.get("x", spawn_at.x + 800.0))
 	if StoryBook.is_survive(map_id) and cam:
 		x = cam.global_position.x + (280.0 if mini else 340.0)
+	var y := float(d.get("y", 500.0))
+	if Fighter.FIELD:
+		var at := SurviveField.ring_point(get_tree())
+		x = at.x
+		y = at.y
 	var unit := ActBoss.new()
 	unit.title = str(d.get("title", "Named Problem"))
 	unit.display = unit.title
@@ -515,7 +821,7 @@ func _spawn_story_unit(mini: bool) -> void:
 	unit.patrol_max = float(d.get("pmax", x + 160.0))
 	unit.speed = 34.0 if not mini else 40.0
 	unit.armored = not mini
-	unit.global_position = Vector2(x, float(d.get("y", 500.0)))
+	unit.global_position = Vector2(x, y)
 	unit.accent = Palette.EDGE if mini else Palette.BRICK
 	add_child(unit)
 
@@ -545,6 +851,8 @@ func _spawn_skinwalker(d: Dictionary, mini: bool) -> void:
 	unit.patrol_min = float(d.get("pmin", x - 180.0))
 	unit.patrol_max = float(d.get("pmax", x + 180.0))
 	unit.global_position = Vector2(x, float(d.get("y", 500.0)))
+	if Fighter.FIELD:
+		unit.global_position = SurviveField.ring_point(get_tree())
 	unit.dormant = false
 	add_child(unit)
 	unit.hp = int(round(float(d.get("hp", 128)) * _state.hp_mul()))
@@ -646,23 +954,35 @@ func lock_boss_card(line: String) -> void:
 	card.set_anchors_preset(Control.PRESET_CENTER)
 	card.offset_left = -280
 	card.offset_right = 280
-	card.offset_top = -140
-	card.offset_bottom = 140
+	card.offset_top = -135
+	card.offset_bottom = 135
 	ui.add_child(card)
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 10)
 	card.add_child(col)
-	col.add_child(UiKit.portrait(SpriteBook.icon("therapy_couch"), Vector2(56, 56)))
+	col.add_child(UiKit.portrait(SpriteBook.icon(str(PowerBook.spec(map_id).get("need", {}).get("shop", "therapy_couch"))), Vector2(56, 56)))
 	var t := Label.new()
 	t.text = line
 	t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	UiKit.apply_label(t, 22, Palette.LEMON)
 	col.add_child(t)
-	var back := UiKit.button("BACK TO THE CLINIC", Vector2(280, 48))
+	var way := PowerBook.path_line(map_id)
+	if way != "":
+		var how := Label.new()
+		how.text = "AT CAMP:  " + way
+		how.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		how.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		UiKit.apply_label(how, 15, Palette.TEXT)
+		col.add_child(how)
+	var back := UiKit.button("GO BUILD IT AT CAMP", Vector2(280, 48))
 	back.process_mode = Node.PROCESS_MODE_ALWAYS
 	back.pressed.connect(func() -> void:
 		get_tree().paused = false
 		layer.queue_free()
+		var funded := PowerBook.fund(map_id)
+		if funded > 0:
+			Juice.toast("reward", "NIGHT CLASS FUND", "+%d gold from the clinic jar. Spend it on: %s" % [funded, way])
 		if not _state.failed:
 			_state.failed = true
 			_state.run_failed.emit()
@@ -688,7 +1008,105 @@ func fire_escape(at_x: float, top_y: float = 248.0, bottom: float = 500.0) -> vo
 	add_child(fe)
 
 
+## Ladders aren't the only way up: in each long stretch between two
+## fire escapes a drainpipe or a bin-and-awning boost goes in (taking turns),
+## kept clear of parked cars and parkour gates.
+func _extra_ways_up() -> void:
+	var lads: Array[float] = []
+	var bottom := 500.0
+	for c in get_children():
+		if c is FireEscape:
+			lads.append((c as FireEscape).climb_x)
+			bottom = (c as FireEscape).bottom_y
+	if lads.is_empty():
+		return
+	var blocked: Array[Vector2] = []
+	for c in get_tree().get_nodes_in_group("parked_cars"):
+		if c is Node2D:
+			var w := float(c.get_meta("w", 150.0))
+			blocked.append(Vector2((c as Node2D).global_position.x - w * 0.5 - 40.0, (c as Node2D).global_position.x + w * 0.5 + 40.0))
+	for c in get_children():
+		if c is ViewpointTower:
+			blocked.append(Vector2((c as Node2D).global_position.x - 240.0, (c as Node2D).global_position.x + 240.0))
+		elif c is ParkourGate or c is ShopCart or c is StreetShop or c is CrewNPC or c is ParkourToy:
+			blocked.append(Vector2((c as Node2D).global_position.x - 130.0, (c as Node2D).global_position.x + 130.0))
+	var turn := 0
+	for n in get_tree().get_nodes_in_group("roof_solids"):
+		if not n.has_meta("rect") or not is_ancestor_of(n):
+			continue
+		var r: Rect2 = n.get_meta("rect")
+		if r.size.x < 260.0 or r.position.y < 120.0:
+			continue
+		# The spot on this roof furthest from every ladder.
+		var best := -1.0
+		var best_d := 0.0
+		var x := maxf(r.position.x + 50.0, 180.0)
+		while x <= minf(r.end.x - 50.0, map_w - 180.0):
+			var ok := true
+			for bl in blocked:
+				if x > bl.x and x < bl.y:
+					ok = false
+					break
+			if ok:
+				var d := INF
+				for lx in lads:
+					d = minf(d, absf(lx - x))
+				if d > best_d:
+					best_d = d
+					best = x
+			x += 20.0
+		if best < 0.0 or best_d < 240.0:
+			continue
+		var fe := FireEscape.new()
+		fe.configure(best, r.position.y, bottom, "pipe" if turn % 2 == 0 else "boost")
+		add_child(fe)
+		lads.append(best)
+		turn += 1
+
+
 func anchor(at: Vector2) -> void:
 	var a := WebAnchor.new()
 	a.position = at
 	add_child(a)
+
+
+
+## Wearing a full suit: say what it does as the night starts.
+func _suit_toast() -> void:
+	await get_tree().create_timer(2.5).timeout
+	for role in ["son", "father"]:
+		var f := Suits.full_set(role)
+		if f != "" and is_inside_tree():
+			Juice.toast("reward", "%s SET  ·  %s" % [str(Suits.LIST[f]["title"]), role.to_upper()], str(Suits.LIST[f]["set"]))
+
+
+## Nothing stacks on the street: pickups, stashes, spray cans and
+## breakables that ended up closer than 56 px (or inside a parked car) are
+## pushed along until each stands on its own.
+func _spread_props() -> void:
+	var items: Array[Node2D] = []
+	for c in get_children():
+		if c is WeaponPickup or c is SecretStash or c is SmashProp or c is SprayCan or c is WheelToken:
+			if absf((c as Node2D).global_position.y - 500.0) < 30.0:
+				items.append(c)
+	items.sort_custom(func(a: Node2D, b: Node2D) -> bool: return a.global_position.x < b.global_position.x)
+	var cars: Array[Vector2] = []
+	for c in get_tree().get_nodes_in_group("parked_cars"):
+		if c is Node2D:
+			var w := float(c.get_meta("w", 150.0))
+			cars.append(Vector2((c as Node2D).global_position.x - w * 0.5, (c as Node2D).global_position.x + w * 0.5))
+	# Parkour gates carry their own hint text: keep loot and toys off them.
+	for c in get_children():
+		if c is ParkourGate:
+			cars.append(Vector2((c as Node2D).global_position.x - 70.0, (c as Node2D).global_position.x + 70.0))
+	var last := -9999.0
+	var right := float(map_w) - 80.0 if map_w > 0 else 99999.0
+	for n in items:
+		var x := n.global_position.x
+		x = maxf(x, last + 64.0)
+		for pass_i in 3:
+			for span in cars:
+				if x > span.x - 10.0 and x < span.y + 10.0:
+					x = span.y + 24.0
+		n.global_position.x = minf(x, right)
+		last = n.global_position.x

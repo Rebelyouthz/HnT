@@ -28,12 +28,33 @@ static func is_survive(map_id: String) -> bool:
 	return bool(act(map_id).get("survive", false))
 
 
+## Names of the street people who talk (quest givers), by speaker key.
+static var npc_names: Dictionary = {}
+
+
 static func who_name(who: String) -> String:
+	if npc_names.has(who):
+		return str(npc_names[who])
 	if who == "father":
 		return FamilyProfile.father_name()
 	if who == "son":
 		return FamilyProfile.son_name()
+	if who == "collector":
+		return "COLLECTOR GANT"
+	var crew: Variant = all().get("crew", {})
+	if crew is Dictionary and (crew as Dictionary).has(who):
+		return str(((crew as Dictionary)[who] as Dictionary).get("name", who.to_upper()))
 	return "THE STREET"
+
+
+## Has the family rescued this crew member (benny / rico)?
+static func has_crew(who: String) -> bool:
+	return bool(FamilyProfile.data.get("crew_" + who, false))
+
+
+static func rescue(map_id: String) -> Dictionary:
+	var v: Variant = act(map_id).get("rescue", {})
+	return v if v is Dictionary else {}
 
 
 static func bridge_key(from_id: String, to_id: String) -> String:

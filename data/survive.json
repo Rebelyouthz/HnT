@@ -1,0 +1,899 @@
+{
+ "_doc": "The coping hour (Halls of Torment style). abilities auto-fire from every fighter and level 1-7; traits stack (max); items drop from elites (pick 1 of 3, four slots) and one can be carried out through the Lost & Found well into later hours. Numbers are per level unless noted.",
+ "xp_curve": {
+  "base": 14,
+  "growth": 1.22
+ },
+ "abilities": [
+  {
+   "id": "invoice_toss",
+   "name": "INVOICE TOSS",
+   "icon": "invoice",
+   "cd": 1.1,
+   "dmg": 9,
+   "per": 3,
+   "proj": 1,
+   "proj_at": [
+    3,
+    5,
+    7
+   ],
+   "blurb": "Throws a spinning invoice at the nearest thug. Paper cuts are still cuts."
+  },
+  {
+   "id": "stapler",
+   "name": "STAPLER SPRAY",
+   "icon": "stapler",
+   "cd": 1.6,
+   "dmg": 5,
+   "per": 2,
+   "proj": 4,
+   "proj_at": [
+    2,
+    4,
+    6,
+    7
+   ],
+   "blurb": "A cone of staples where you face. Office supplies, weaponised."
+  },
+  {
+   "id": "coffee",
+   "name": "COFFEE SPILL",
+   "icon": "coffee",
+   "cd": 3.2,
+   "dmg": 4,
+   "per": 2,
+   "area": 34,
+   "life": 3.0,
+   "blurb": "Leaves a scalding puddle that burns whoever stands in it. Contents hot."
+  },
+  {
+   "id": "clipboards",
+   "name": "ORBITING CLIPBOARDS",
+   "icon": "clipboard",
+   "cd": 0.0,
+   "dmg": 7,
+   "per": 3,
+   "proj": 2,
+   "proj_at": [
+    3,
+    5,
+    7
+   ],
+   "area": 44,
+   "blurb": "Clipboards circle you and slap anything they pass. Paperwork orbits you now."
+  },
+  {
+   "id": "late_fee",
+   "name": "LATE FEE LIGHTNING",
+   "icon": "bolt",
+   "cd": 2.2,
+   "dmg": 14,
+   "per": 5,
+   "chain": 2,
+   "chain_per": 1,
+   "blurb": "Lightning jumps between thugs. Every jump adds interest."
+  },
+  {
+   "id": "dad_joke",
+   "name": "DAD JOKE SHOCKWAVE",
+   "icon": "wave",
+   "cd": 4.0,
+   "dmg": 16,
+   "per": 6,
+   "area": 90,
+   "blurb": "A ground-shaking pun knocks everyone around you flat. Groaning is damage."
+  },
+  {
+   "id": "hold_music",
+   "name": "HOLD MUSIC",
+   "icon": "note",
+   "cd": 2.6,
+   "dmg": 11,
+   "per": 4,
+   "pierce": 99,
+   "blurb": "A wave of hold music pierces the whole line. Your call is important to us."
+  },
+  {
+   "id": "magnet_mines",
+   "name": "FRIDGE MAGNET MINES",
+   "icon": "mine",
+   "cd": 2.8,
+   "dmg": 22,
+   "per": 7,
+   "area": 46,
+   "proj": 1,
+   "proj_at": [
+    3,
+    6
+   ],
+   "blurb": "Drops magnets that blow up when a thug steps close. The drawings survive."
+  },
+  {
+   "id": "photo_flash",
+   "name": "FAMILY PHOTO FLASH",
+   "icon": "camera",
+   "cd": 5.0,
+   "dmg": 8,
+   "per": 3,
+   "area": 120,
+   "stun": 0.9,
+   "blurb": "Say cheese: a flash that stuns and singes the room."
+  },
+  {
+   "id": "drip",
+   "name": "IV DRIP AURA",
+   "icon": "drip",
+   "cd": 0.5,
+   "dmg": 3,
+   "per": 1,
+   "area": 54,
+   "blurb": "A cold drip aura that hurts everything close, all the time. Hydration with intent."
+  },
+  {
+   "id": "cart",
+   "name": "SHOPPING CART",
+   "icon": "cart",
+   "cd": 3.4,
+   "dmg": 18,
+   "per": 6,
+   "pierce": 99,
+   "unlock": "u_cart",
+   "blurb": "A runaway cart ploughs through the whole street. No receipt."
+  },
+  {
+   "id": "bag",
+   "name": "GARBAGE BAG",
+   "icon": "bag",
+   "cd": 0.0,
+   "dmg": 10,
+   "per": 3,
+   "proj": 1,
+   "proj_at": [
+    4,
+    7
+   ],
+   "area": 70,
+   "unlock": "u_bag",
+   "blurb": "A bag of hot garbage swung round on a rope. Wide, slow, smelly."
+  },
+  {
+   "id": "hydrant",
+   "name": "HYDRANT",
+   "icon": "hydrant",
+   "cd": 3.0,
+   "dmg": 8,
+   "per": 3,
+   "area": 110,
+   "unlock": "u_hydrant",
+   "blurb": "A burst of water from the kerb shoves every thug away from you."
+  },
+  {
+   "id": "mailbomb",
+   "name": "MAIL BOMB",
+   "icon": "mailbomb",
+   "cd": 2.6,
+   "dmg": 26,
+   "per": 8,
+   "area": 60,
+   "proj": 1,
+   "proj_at": [
+    4,
+    7
+   ],
+   "unlock": "u_mail",
+   "blurb": "A parcel lobbed into the thickest crowd. Return to sender."
+  },
+  {
+   "id": "sprinkler",
+   "name": "SPRINKLER",
+   "icon": "sprinkler",
+   "cd": 1.9,
+   "dmg": 6,
+   "per": 2,
+   "proj": 8,
+   "proj_at": [
+    3,
+    5,
+    7
+   ],
+   "unlock": "u_sprinkler",
+   "blurb": "Staples in a ring, every direction at once. Lawn of pain."
+  },
+  {
+   "id": "audit",
+   "name": "TAX AUDIT",
+   "icon": "audit",
+   "cd": 3.2,
+   "dmg": 20,
+   "per": 6,
+   "chain": 5,
+   "chain_per": 1,
+   "unlock": "u_audit",
+   "blurb": "One bolt that jumps through half the street. Everyone owes."
+  },
+  {
+   "id": "gravy",
+   "name": "GRAVY SPILL",
+   "icon": "gravy",
+   "cd": 3.6,
+   "dmg": 6,
+   "per": 3,
+   "area": 56,
+   "life": 4.0,
+   "unlock": "u_gravy",
+   "blurb": "Hot gravy pools under the biggest crowd and slows them down."
+  },
+  {
+   "id": "name_badge",
+   "name": "BADGE BOOMERANG",
+   "icon": "name_badge",
+   "cd": 1.8,
+   "dmg": 8,
+   "per": 3,
+   "proj": 1,
+   "proj_at": [
+    3,
+    6
+   ],
+   "blurb": "Your name badge flies out and comes back, through everyone both ways. HELLO, MY NAME IS: PAIN."
+  },
+  {
+   "id": "shredder",
+   "name": "SHREDDER BLADE",
+   "icon": "shredder",
+   "cd": 4.5,
+   "dmg": 6,
+   "per": 2,
+   "proj": 1,
+   "proj_at": [
+    4,
+    7
+   ],
+   "life": 4.0,
+   "blurb": "A shredder blade bounces round the screen for four seconds. Confidential. Also you."
+  },
+  {
+   "id": "fax_beam",
+   "name": "FAX BEAM",
+   "icon": "fax_beam",
+   "cd": 2.6,
+   "dmg": 14,
+   "per": 4,
+   "area": 260,
+   "blurb": "A screeching fax beam burns a straight line where you face. Every thug on it gets the memo."
+  },
+  {
+   "id": "rubber_stamp",
+   "name": "RUBBER STAMP",
+   "icon": "rubber_stamp",
+   "cd": 3.0,
+   "dmg": 22,
+   "per": 6,
+   "proj": 1,
+   "proj_at": [
+    3,
+    5,
+    7
+   ],
+   "area": 46,
+   "blurb": "A giant DENIED stamp slams down on a thug and everyone around him. Application rejected."
+  },
+  {
+   "id": "nail_driver",
+   "name": "NAIL DRIVER",
+   "icon": "nail_driver",
+   "cd": 0.13,
+   "dmg": 4,
+   "per": 1,
+   "proj": 1,
+   "proj_at": [
+    4,
+    7
+   ],
+   "manual": true,
+   "blurb": "MANUAL: hold fire for a stream of nails where you aim. 24 to a magazine; dry, it swaps to your next gun."
+  },
+  {
+   "id": "paperweight",
+   "name": "PAPERWEIGHT",
+   "icon": "paperweight",
+   "cd": 0.9,
+   "dmg": 18,
+   "per": 5,
+   "area": 52,
+   "manual": true,
+   "blurb": "MANUAL: tap fire to lob a glass paperweight where you aim. Four to a magazine."
+  },
+  {
+   "id": "sprayer",
+   "name": "STAPLE SHOTGUN",
+   "icon": "stapler",
+   "cd": 0.55,
+   "dmg": 5,
+   "per": 1,
+   "proj": 0,
+   "proj_at": [
+    3,
+    5,
+    7
+   ],
+   "manual": true,
+   "blurb": "MANUAL: a pump-action fan of staples where you aim. Six to a magazine."
+  },
+  {
+   "id": "rivet_rifle",
+   "name": "RIVET RIFLE",
+   "icon": "nail_driver",
+   "cd": 0.32,
+   "dmg": 15,
+   "per": 4,
+   "proj": 1,
+   "proj_at": [],
+   "manual": true,
+   "blurb": "MANUAL: hold to fire rivets that punch through a whole row. Eight to a magazine."
+  },
+  {
+   "id": "pigeon_flock",
+   "name": "PIGEON FLOCK",
+   "icon": "pigeon",
+   "cd": 2.0,
+   "dmg": 7,
+   "per": 2,
+   "proj": 2,
+   "proj_at": [
+    3,
+    5,
+    7
+   ],
+   "deck": true,
+   "rarity": "uncommon",
+   "blurb": "City pigeons dive at the nearest thugs, one bird each. More birds every few levels."
+  },
+  {
+   "id": "vending_drop",
+   "name": "VENDING DROP",
+   "icon": "vending",
+   "cd": 5.5,
+   "dmg": 34,
+   "per": 9,
+   "area": 70,
+   "proj": 1,
+   "proj_at": [
+    4,
+    7
+   ],
+   "deck": true,
+   "rarity": "rare",
+   "blurb": "A vending machine falls from a balcony onto the thickest crowd. Exact change only."
+  },
+  {
+   "id": "leaf_blower",
+   "name": "LEAF BLOWER",
+   "icon": "blower",
+   "cd": 2.4,
+   "dmg": 6,
+   "per": 2,
+   "area": 150,
+   "deck": true,
+   "rarity": "common",
+   "blurb": "A roaring cone that shoves everything in front of you back and chips at it."
+  },
+  {
+   "id": "taser_web",
+   "name": "TASER WEB",
+   "icon": "taser",
+   "cd": 2.8,
+   "dmg": 11,
+   "per": 3,
+   "chain": 3,
+   "chain_per": 1,
+   "stun": 0.5,
+   "deck": true,
+   "rarity": "rare",
+   "blurb": "A jolt that jumps thug to thug and locks each one up for a moment."
+  },
+  {
+   "id": "roomba",
+   "name": "ROGUE ROOMBA",
+   "icon": "roomba",
+   "cd": 5.0,
+   "dmg": 8,
+   "per": 2,
+   "proj": 1,
+   "proj_at": [
+    4,
+    7
+   ],
+   "life": 5.0,
+   "deck": true,
+   "rarity": "uncommon",
+   "blurb": "A robot vacuum with a grudge zig-zags out from your feet and runs over ankles."
+  },
+  {
+   "id": "spray_tag",
+   "name": "SPRAY TAG",
+   "icon": "spray",
+   "cd": 3.0,
+   "dmg": 5,
+   "per": 2,
+   "area": 48,
+   "life": 4.5,
+   "slow": 0.45,
+   "deck": true,
+   "rarity": "common",
+   "blurb": "Wet paint under the pack: they slip, slow down and take damage while they stand in it."
+  }
+ ],
+ "traits": [
+  {
+   "id": "t_dmg",
+   "name": "SPITE",
+   "icon": "t_dmg",
+   "max": 5,
+   "blurb": "+12% ability damage per stack."
+  },
+  {
+   "id": "t_area",
+   "name": "PERSONAL SPACE",
+   "icon": "t_area",
+   "max": 5,
+   "blurb": "+14% ability area per stack."
+  },
+  {
+   "id": "t_cd",
+   "name": "CAFFEINE",
+   "icon": "t_cd",
+   "max": 5,
+   "blurb": "-8% ability cooldowns per stack."
+  },
+  {
+   "id": "t_proj",
+   "name": "OVERCOMMIT",
+   "icon": "t_proj",
+   "max": 2,
+   "blurb": "+1 projectile on every ability that throws things."
+  },
+  {
+   "id": "t_speed",
+   "name": "NERVOUS ENERGY",
+   "icon": "t_speed",
+   "max": 4,
+   "blurb": "+7% move speed per stack."
+  },
+  {
+   "id": "t_hp",
+   "name": "STRESS EATING",
+   "icon": "t_hp",
+   "max": 5,
+   "blurb": "+12 max health per stack, healed now."
+  },
+  {
+   "id": "t_regen",
+   "name": "DENIAL",
+   "icon": "t_regen",
+   "max": 4,
+   "blurb": "Regenerate 0.6 health a second per stack."
+  },
+  {
+   "id": "t_armor",
+   "name": "THICK FILE",
+   "icon": "t_armor",
+   "max": 4,
+   "blurb": "-7% damage taken per stack."
+  },
+  {
+   "id": "t_pickup",
+   "name": "NEEDY",
+   "icon": "t_pickup",
+   "max": 4,
+   "blurb": "+30% gem pickup range per stack."
+  },
+  {
+   "id": "t_crit",
+   "name": "LUCKY BREAK",
+   "icon": "t_crit",
+   "max": 5,
+   "blurb": "+6% chance for abilities to crit for double."
+  },
+  {
+   "id": "t_xp",
+   "name": "OVERACHIEVER",
+   "icon": "t_xp",
+   "max": 3,
+   "blurb": "+12% XP from gems per stack."
+  },
+  {
+   "id": "t_curse",
+   "name": "CURSE",
+   "icon": "t_curse",
+   "max": 5,
+   "blurb": "+10% more thugs, +15% experience and +10% tokens per stack."
+  },
+  {
+   "id": "t_thorns",
+   "name": "THORNS",
+   "icon": "t_thorns",
+   "max": 5,
+   "blurb": "Thugs that hit you take 6 damage back per stack."
+  },
+  {
+   "id": "t_luck",
+   "name": "LUCK",
+   "icon": "t_luck",
+   "max": 5,
+   "blurb": "+4% crit per stack, and chests roll rarer items."
+  },
+  {
+   "id": "t_vamp",
+   "name": "VAMPIRE",
+   "icon": "t_vamp",
+   "max": 3,
+   "blurb": "Every 25 kills heal 3 HP per stack."
+  }
+ ],
+ "items": [
+  {
+   "id": "lucky_coin",
+   "name": "LUCKY COIN",
+   "rarity": "uncommon",
+   "icon": "i_coin",
+   "blurb": "+10% crit chance. Heads you win, tails they lose teeth.",
+   "mods": {
+    "crit": 0.1
+   }
+  },
+  {
+   "id": "gym_card",
+   "name": "GYM MEMBERSHIP",
+   "rarity": "common",
+   "icon": "i_card",
+   "blurb": "+25 max health. You went once. It counts.",
+   "mods": {
+    "hp": 25
+   }
+  },
+  {
+   "id": "parking_ticket",
+   "name": "PARKING TICKET",
+   "rarity": "rare",
+   "icon": "i_ticket",
+   "blurb": "Ability hits slow thugs by 30% for a second.",
+   "mods": {
+    "slow": 0.3
+   }
+  },
+  {
+   "id": "hug_amulet",
+   "name": "GROUP HUG AMULET",
+   "rarity": "rare",
+   "icon": "i_amulet",
+   "blurb": "Every level up heals 20% of max health.",
+   "mods": {
+    "lvl_heal": 0.2
+   }
+  },
+  {
+   "id": "bike_bell",
+   "name": "BIKE BELL",
+   "rarity": "common",
+   "icon": "i_bell",
+   "blurb": "+12% move speed. Ding.",
+   "mods": {
+    "speed": 0.12
+   }
+  },
+  {
+   "id": "thermos",
+   "name": "BOTTOMLESS THERMOS",
+   "rarity": "uncommon",
+   "icon": "i_thermos",
+   "blurb": "-15% cooldowns. The coffee never ends. Neither does the shift.",
+   "mods": {
+    "cd": 0.15
+   }
+  },
+  {
+   "id": "loud_shirt",
+   "name": "LOUD SHIRT",
+   "rarity": "uncommon",
+   "icon": "i_shirt",
+   "blurb": "+20% ability area. People make room.",
+   "mods": {
+    "area": 0.2
+   }
+  },
+  {
+   "id": "brass_tooth",
+   "name": "BRASS TOOTH",
+   "rarity": "rare",
+   "icon": "i_tooth",
+   "blurb": "+25% ability damage. Bite the bill.",
+   "mods": {
+    "dmg": 0.25
+   }
+  },
+  {
+   "id": "magnet_glove",
+   "name": "MAGNET GLOVE",
+   "rarity": "common",
+   "icon": "i_glove",
+   "blurb": "Gems fly in from twice as far.",
+   "mods": {
+    "pickup": 1.0
+   }
+  },
+  {
+   "id": "vampire_mug",
+   "name": "WORLD'S BEST DAD MUG",
+   "rarity": "epic",
+   "icon": "i_mug",
+   "blurb": "Kills heal 1 health. The mug was a gift. From himself.",
+   "mods": {
+    "kill_heal": 1
+   }
+  },
+  {
+   "id": "extra_hands",
+   "name": "SECOND PAIR OF HANDS",
+   "rarity": "epic",
+   "icon": "i_hands",
+   "blurb": "+1 projectile on every throwing ability.",
+   "mods": {
+    "proj": 1
+   }
+  },
+  {
+   "id": "receipt_roll",
+   "name": "ENDLESS RECEIPT",
+   "rarity": "legendary",
+   "icon": "i_receipt",
+   "blurb": "Abilities fire twice as often for 5s after every level up. Itemised fury.",
+   "mods": {
+    "frenzy": 5.0
+   }
+  }
+ ],
+ "elite_mods": [
+  {
+   "id": "swift",
+   "name": "SWIFT",
+   "color": [
+    0.4,
+    0.9,
+    1.0
+   ]
+  },
+  {
+   "id": "armored",
+   "name": "ARMORED",
+   "color": [
+    0.75,
+    0.75,
+    0.8
+   ]
+  },
+  {
+   "id": "vampiric",
+   "name": "VAMPIRIC",
+   "color": [
+    0.9,
+    0.15,
+    0.25
+   ]
+  },
+  {
+   "id": "splitter",
+   "name": "SPLITTER",
+   "color": [
+    0.7,
+    1.0,
+    0.4
+   ]
+  },
+  {
+   "id": "bomber",
+   "name": "BOMBER",
+   "color": [
+    1.0,
+    0.6,
+    0.15
+   ]
+  }
+ ],
+ "phases": [
+  {
+   "at": 0,
+   "titles": [
+    "Coping Imp"
+   ],
+   "rate": 1.0,
+   "cap": 8
+  },
+  {
+   "at": 45,
+   "titles": [
+    "Coping Imp",
+    "Bag Snatch"
+   ],
+   "rate": 1.25,
+   "cap": 10
+  },
+  {
+   "at": 90,
+   "titles": [
+    "Coping Imp",
+    "Bag Snatch",
+    "Clipboard"
+   ],
+   "rate": 1.5,
+   "cap": 12,
+   "elite_every": 30
+  },
+  {
+   "at": 150,
+   "titles": [
+    "Bag Snatch",
+    "Clipboard",
+    "Repo Goon"
+   ],
+   "rate": 1.8,
+   "cap": 13,
+   "elite_every": 25,
+   "mini": true
+  },
+  {
+   "at": 210,
+   "titles": [
+    "Coping Imp",
+    "Clipboard",
+    "Repo Goon",
+    "Mohawk Bo"
+   ],
+   "rate": 2.2,
+   "cap": 15,
+   "elite_every": 18,
+   "swarm": true
+  },
+  {
+   "at": 270,
+   "titles": [
+    "Repo Goon",
+    "Mohawk Bo",
+    "Coping Imp"
+   ],
+   "rate": 2.6,
+   "cap": 16,
+   "elite_every": 14
+  }
+ ],
+ "duration": 300,
+ "boss_at": 285,
+ "evolutions": [
+  {
+   "ability": "invoice_toss",
+   "item": "receipt_roll",
+   "name": "AUDIT STORM",
+   "blurb": "Invoices in every direction, through everyone."
+  },
+  {
+   "ability": "stapler",
+   "item": "extra_hands",
+   "name": "NAIL GUN NIGHTMARE",
+   "blurb": "Twice the staples, twice as fast."
+  },
+  {
+   "ability": "coffee",
+   "item": "thermos",
+   "name": "BOTTOMLESS POT",
+   "blurb": "Huge burning puddles that never cool."
+  },
+  {
+   "ability": "clipboards",
+   "item": "gym_card",
+   "name": "BOARD MEETING",
+   "blurb": "A ring of clipboards, wider and harder."
+  },
+  {
+   "ability": "late_fee",
+   "item": "parking_ticket",
+   "name": "COMPOUND INTEREST",
+   "blurb": "The bolt never stops jumping."
+  },
+  {
+   "ability": "dad_joke",
+   "item": "loud_shirt",
+   "name": "PUNCHLINE",
+   "blurb": "The whole screen groans."
+  },
+  {
+   "ability": "hold_music",
+   "item": "bike_bell",
+   "name": "ON HOLD FOREVER",
+   "blurb": "A wall of notes in both directions."
+  },
+  {
+   "ability": "magnet_mines",
+   "item": "magnet_glove",
+   "name": "FRIDGE DOOR",
+   "blurb": "Mines everywhere, bigger blasts."
+  },
+  {
+   "ability": "photo_flash",
+   "item": "lucky_coin",
+   "name": "PAPARAZZI",
+   "blurb": "Flash after flash; they never see again."
+  },
+  {
+   "ability": "drip",
+   "item": "vampire_mug",
+   "name": "LEAKY ROOF",
+   "blurb": "A wide aura that heals you as it hurts."
+  },
+  {
+   "ability": "cart",
+   "item": "brass_tooth",
+   "name": "BLACK FRIDAY STAMPEDE",
+   "blurb": "Three carts at once, both ways."
+  },
+  {
+   "ability": "bag",
+   "item": "hug_amulet",
+   "name": "LANDFILL",
+   "blurb": "Bags orbit wide and heavy."
+  },
+  {
+   "ability": "hydrant",
+   "item": "thermos",
+   "name": "WATER MAIN",
+   "blurb": "The whole street floods outward."
+  },
+  {
+   "ability": "mailbomb",
+   "item": "extra_hands",
+   "name": "PARCEL STORM",
+   "blurb": "Bombs rain on the crowd."
+  },
+  {
+   "ability": "sprinkler",
+   "item": "receipt_roll",
+   "name": "CAR WASH",
+   "blurb": "A ring of sixteen jets."
+  },
+  {
+   "ability": "audit",
+   "item": "parking_ticket",
+   "name": "IRS",
+   "blurb": "Every thug on screen gets audited."
+  },
+  {
+   "ability": "gravy",
+   "item": "vampire_mug",
+   "name": "THANKSGIVING",
+   "blurb": "Gravy everywhere; it heals the family."
+  }
+ ],
+ "ultimates": [
+  {
+   "id": "copay_crash",
+   "name": "COPAY CRASH",
+   "icon": "u_crash",
+   "unlock": "",
+   "blurb": "Everything on screen takes a heavy hit and is shoved back."
+  },
+  {
+   "id": "panic_room",
+   "name": "PANIC ROOM",
+   "icon": "u_dome",
+   "unlock": "s_ult2",
+   "blurb": "Six seconds in a dome: you can't be touched and anything inside burns."
+  },
+  {
+   "id": "black_friday",
+   "name": "BLACK FRIDAY",
+   "icon": "u_friday",
+   "unlock": "s_ult3",
+   "blurb": "Every thug on screen takes damage and drops experience and coins."
+  }
+ ]
+}

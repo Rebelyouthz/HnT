@@ -3,227 +3,557 @@ extends Control
 signal need_refresh
 
 var _focus: Dictionary = {}
-var _stats: StatPanel
-var _board: HBoxContainer
+var _tip: PanelContainer
+var _tip_box: HBoxContainer
+var _stage: Control
+## Which of the three trees is open (Trees.MODES); kept between visits.
+static var mode := "brawl"
+
+## BUILD page after Timmie's reference board: the clinic room behind, three
+## vine trees (BODY / STREET / SHOW) of round skill nodes, a tooltip with the
+## price and BUY / NEED GOLD, a legend box, a progress bar under each tree.
+const CENTER_X := [300.0, 640.0, 980.0]
+const TOP := 128.0
+const STEP := 84.0
+const ARM := 74.0
 
 
 func _ready() -> void:
+	if Engine.has_meta("build_mode"):
+		mode = str(Engine.get_meta("build_mode"))
+		Engine.remove_meta("build_mode")
 	set_anchors_preset(Control.PRESET_FULL_RECT)
-	var m := MarginContainer.new()
-	m.set_anchors_preset(Control.PRESET_FULL_RECT)
-	m.add_theme_constant_override("margin_left", 16)
-	m.add_theme_constant_override("margin_top", 8)
-	m.add_theme_constant_override("margin_right", 16)
-	add_child(m)
-	var root := VBoxContainer.new()
-	root.add_theme_constant_override("separation", 8)
-	m.add_child(root)
-	var head := HBoxContainer.new()
-	head.add_theme_constant_override("separation", 10)
-	head.add_child(LogoMark.new())
-	head.add_child(UiKit.portrait(SpriteBook.icon("therapy_couch"), Vector2(48, 48)))
-	var h := Label.new()
-	h.text = "THE CBT TREE"
-	UiKit.apply_label(h, 24, Palette.LEMON)
-	head.add_child(h)
-	root.add_child(head)
-	var s := Label.new()
-	s.text = "Three trunks. Each splits left / core / right. Dark until the parent is owned. Lit when it lives in you. Gold in, violence out. Compare is split-screen menus only."
-	s.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	UiKit.apply_label(s, 13, Palette.MUTED)
-	root.add_child(s)
-	var tools := HBoxContainer.new()
-	tools.add_theme_constant_override("separation", 10)
-	var compare := UiKit.button("BUILD COMPARE", Vector2(200, 40))
-	compare.pressed.connect(_compare)
-	tools.add_child(compare)
-	root.add_child(tools)
-	_board = HBoxContainer.new()
-	_board.add_theme_constant_override("separation", 12)
-	root.add_child(_board)
-	var list: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/cbt.json"))
-	for trunk in ["BODY", "STREET", "SHOW"]:
-		_board.add_child(_trunk(trunk, list))
-	_stats = StatPanel.new(_stat_rows({}))
-	_stats.custom_minimum_size = Vector2(220, 160)
-	_board.add_child(_stats)
+	_stage = Control.new()
+	_stage.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(_stage)
+	if ResourceLoader.exists("res://assets/ui/clinic_room.png"):
+		var room := TextureRect.new()
+		room.texture = load("res://assets/ui/clinic_room.png")
+		room.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		room.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		room.texture_filter = SpriteBook.UI_FILTER
+		room.position = Vector2(-16, -8)
+		room.size = Vector2(1280, 580)
+		room.modulate = Color(0.42, 0.42, 0.52)
+		_stage.add_child(room)
+		# A soft dark well behind the three trees so the nodes, not the
+		# bedroom, carry the screen.
+		var well := TextureRect.new()
+		well.texture = LightRig.radial_tex()
+		well.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		well.position = Vector2(80, 40)
+		well.size = Vector2(1100, 560)
+		well.modulate = Color(0.0, 0.0, 0.03, 0.75)
+		well.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_stage.add_child(well)
+	var frame := Panel.new()
+	var fs := StyleBoxFlat.new()
+	fs.bg_color = Color(0, 0, 0, 0)
+	fs.border_color = UiKit.RIM
+	fs.set_border_width_all(3)
+	frame.add_theme_stylebox_override("panel", fs)
+	frame.position = Vector2(-8, -4)
+	frame.size = Vector2(1264, 572)
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_stage.add_child(frame)
+	var title := UiKit.title("BUILD", 54, Palette.EDGE)
+	UiKit.title_icon(title, "head_build")
+	title.position = Vector2(0, 2)
+	title.size = Vector2(1248, 64)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_stage.add_child(title)
+	for x in [470.0, 714.0]:
+		var orn := ColorRect.new()
+		orn.color = Color(UiKit.GOLD.r, UiKit.GOLD.g, UiKit.GOLD.b, 0.7)
+		orn.position = Vector2(x, 34)
+		orn.size = Vector2(64, 3)
+		_stage.add_child(orn)
+	var brand := UiKit.title("FATHER\n& SON", 20, Palette.TEXT)
+	brand.position = Vector2(16, 10)
+	_stage.add_child(brand)
+	# The therapy couch is where the tree lives.
+	var couch := UiKit.portrait(SpriteBook.icon("therapy_couch"), Vector2(56, 56))
+	couch.position = Vector2(118, 10)
+	_stage.add_child(couch)
+	var list: Array = Trees.nodes(mode)
+	var trunks: Array = Trees.TRUNKS[mode]
+	for i in trunks.size():
+		_tree(str(trunks[i]), list, CENTER_X[i])
+	_legend()
+	# One tree per way of playing: BRAWL / SURVIVOR / PARKOUR.
+	var tabs := VBoxContainer.new()
+	tabs.position = Vector2(14, 120)
+	tabs.add_theme_constant_override("separation", 6)
+	_stage.add_child(tabs)
+	for m: String in Trees.MODES:
+		var tb := UiKit.button(str(Trees.TITLES[m]), Vector2(150, 34))
+		tb.add_theme_font_size_override("font_size", 12)
+		if m == mode:
+			tb.add_theme_stylebox_override("normal", UiKit.panel(Palette.BRICK, Palette.LEMON))
+		tb.pressed.connect(func() -> void:
+			mode = m
+			Juice.play("res://assets/audio/ui_click.wav")
+			need_refresh.emit()
+		)
+		tabs.add_child(tb)
+	var wallet := Label.new()
+	wallet.text = "%s %d" % [Trees.cur_label(mode), Trees.balance(mode)]
+	wallet.position = Vector2(1000, 50)
+	wallet.size = Vector2(240, 20)
+	wallet.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	wallet.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(wallet, 15, UiKit.GOLD)
+	_stage.add_child(wallet)
+	# Survivor: the gear locker for the hours.
+	if mode == "survivor":
+		var gb := UiKit.button("SURVIVOR GEAR", Vector2(150, 34))
+		gb.add_theme_font_size_override("font_size", 11)
+		gb.position = Vector2(14, 272)
+		gb.pressed.connect(func() -> void:
+			var sh: Control = load("res://src/ui/surv_gear_sheet.gd").new()
+			add_child(sh)
+			sh.closed.connect(func() -> void:
+				sh.queue_free()
+				need_refresh.emit()
+			)
+		)
+		_stage.add_child(gb)
+		var sw := UiKit.button("STARTER WEAPON", Vector2(150, 34))
+		sw.add_theme_font_size_override("font_size", 11)
+		sw.position = Vector2(14, 230)
+		sw.set_meta("key", "starter_btn")
+		if FamilyProfile.is_unseen("surv_starter"):
+			var dt := UiKit.new_dot()
+			dt.position = Vector2(140, -4)
+			sw.add_child(dt)
+		sw.pressed.connect(func() -> void:
+			FamilyProfile.mark_seen("surv_starter")
+			var st: Control = load("res://src/ui/starter_sheet.gd").new()
+			add_child(st)
+			st.closed.connect(func() -> void:
+				st.queue_free()
+				need_refresh.emit()
+			)
+		)
+		_stage.add_child(sw)
+	# Parkour records: medal, best time and tags found per roof map.
+	if mode == "parkour":
+		var rec: Array[String] = []
+		for mid in ["fire_escapes", "neon_exchange", "dock_street", "rail_bridge"]:
+			var best := float(FamilyProfile.data.get("best_" + mid, 0.0))
+			var tags := ((FamilyProfile.data.get("tags", {}) as Dictionary).get(mid, []) as Array).size()
+			if best > 0.0 or tags > 0:
+				rec.append("%s  %s  %s  TAGS %d/5" % [StageCard.title_of(mid), str(FamilyProfile.data.get("medal_" + mid, "-")), ("%.1fs" % best) if best > 0.0 else "--", tags])
+		var rl := Label.new()
+		rl.text = "RECORDS\n" + ("\n".join(rec) if not rec.is_empty() else "Run a roof map to the goal: medals, ghost and tags show here.")
+		rl.position = Vector2(990, 74)
+		rl.size = Vector2(270, 120)
+		rl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		rl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		UiKit.apply_label(rl, 11, Color(0.6, 0.9, 1.0))
+		_stage.add_child(rl)
+	# RESPEC: every node in this tree back for its full price.
+	var refund := UiKit.button("REFUND TREE", Vector2(150, 30))
+	refund.add_theme_font_size_override("font_size", 11)
+	refund.disabled = Trees.count(mode).x == 0
+	refund.position = Vector2(14, 232)
+	var armed := [false]
+	refund.pressed.connect(func() -> void:
+		if not armed[0]:
+			armed[0] = true
+			refund.text = "SURE? PRESS AGAIN"
+			return
+		var back := Trees.refund(mode)
+		Juice.toast("reward", "TREE REFUNDED", "+%d %s back. Plant it again your way." % [back, Trees.cur_label(mode)])
+		Juice.play("res://assets/audio/cash.wav" if ResourceLoader.exists("res://assets/audio/cash.wav") else "res://assets/audio/claim.wav")
+		need_refresh.emit()
+	)
+	_stage.add_child(refund)
+	if mode == "brawl":
+		var compare := UiKit.button("BUILD COMPARE", Vector2(170, 32))
+		compare.add_theme_font_size_override("font_size", 12)
+		compare.position = Vector2(1062, 16)
+		compare.pressed.connect(_compare)
+		_stage.add_child(compare)
+	_tip = PanelContainer.new()
+	_tip.add_theme_stylebox_override("panel", UiKit.frame(UiKit.GOLD, 0.3))
+	_tip.visible = false
+	_stage.add_child(_tip)
+	_tip_box = HBoxContainer.new()
+	_tip_box.add_theme_constant_override("separation", 22)
+	_tip.add_child(_tip_box)
+	UiKit.focus_first(self)
 
 
-func _trunk(name: String, list: Array) -> Control:
+func _depth(node: Dictionary, by_id: Dictionary) -> int:
+	var d := 0
+	var req := str(node.get("requires", ""))
+	while req != "" and by_id.has(req) and d < 8:
+		d += 1
+		req = str((by_id[req] as Dictionary).get("requires", ""))
+	return d
+
+
+## Each node its own picture: a survivor icon, a stat icon or the move it
+## improves (the hero's own frame), before falling back to a pixel glyph.
+const NODE_ICON := {
+	# brawl
+	"thick_skin": "t_hp", "second_lungs": "t_regen", "bandage_pocket": "t_vamp", "wardrobe_stats": "i_shirt",
+	"iron_gut": "t_armor", "farm_patience": "t_cd", "disarm_habit": "i_glove", "pocket_sand": "i_hands",
+	"heavy_wrist": "@heavy", "cling_callus": "i_tooth", "long_commute": "t_pickup", "quiet_hands": "t_crit",
+	"xp_magnet": "t_xp", "crown": "i_amulet", "night_eyes": "camera", "pinball_brain": "bolt",
+	"school_pride": "i_ticket", "group_rate": "i_card", "summit_joke": "note",
+	# survivor
+	"s_slot": "i_hands", "s_reroll": "i_card", "s_banish": "t_curse", "s_evolve": "evolve", "s_item_slot": "i_thermos",
+	"s_ult2": "u_dome", "s_ult3": "u_friday", "f_start": "t_luck", "f_chest": "i_receipt", "f_magnet": "t_pickup",
+	"f_tokens": "i_coin", "f_luck": "t_luck", "f_revive": "t_regen", "f_gold": "i_coin",
+	"s_boxes": "i_receipt", "s_four": "i_card", "f_gear": "i_shirt", "f_wheel": "i_bell", "u_limit": "t_dmg", "u_start2": "coffee",
+	# parkour
+	"p_trick_steam": "t_regen", "p_flow_heal": "t_vamp", "p_chain": "@cartwheel_kick", "p_combo_keep": "t_cd",
+	"p_speed": "@parkour_run", "p_ghost": "t_speed", "p_score": "i_ticket", "p_air_jump": "@jump",
+	"p_float": "@air_mix", "p_coyote": "@jump_roundhouse", "p_high": "@flying_knee", "p_wall": "@backflip_kick",
+	"p_air_ctrl": "@air_spin_kick", "p_hang": "@duck", "p_stomp": "@dive", "p_bounce": "@dropkick",
+	"p_slide_kick": "@slide", "p_quake": "wave", "p_roll": "@roll", "p_meteor": "@dive", "p_iron": "t_armor",
+}
+
+
+func _node_tex(node: Dictionary) -> Texture2D:
+	var id := str(node.get("id", ""))
+	# Own pixel-art icon for every node (tools/icon_pack.py).
+	var own := IconBook.tex(IconBook.for_node(id))
+	if own != null:
+		return own
+	if id.begins_with("u_") and not NODE_ICON.has(id):
+		# Survivor ability unlocks: that ability's icon.
+		var book: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/survive.json"))
+		if book is Dictionary:
+			for a: Dictionary in (book as Dictionary).get("abilities", []):
+				if str(a.get("unlock", "")) == id:
+					return SurviveIcons.tex(str(a.get("icon", "")))
+	var key := str(NODE_ICON.get(id, ""))
+	if key.begins_with("@"):
+		return SpriteBook.move_icon("son", key.substr(1))
+	if key != "":
+		return SurviveIcons.tex(key)
+	return null
+
+
+func _glyph(node: Dictionary) -> String:
+	var st := (str(node.get("stat", "")) + " " + str(node.get("id", ""))).to_lower()
+	# SURVIVOR / PARKOUR nodes.
+	if "+ability" in st:
+		return "fist"
+	if "slot" in st or "item" in st:
+		return "shield"
+	if "reroll" in st or "banish" in st:
+		return "eye"
+	if "evolution" in st or "ultimate" in st or "stun" in st:
+		return "bolt"
+	if "trait" in st or "luck" in st:
+		return "gems"
+	if "chest" in st or "token" in st or "+50% gold" in st:
+		return "gold"
+	if "revive" in st or "heal" in st:
+		return "heart"
+	if "jump" in st or "glide" in st or "hang" in st or "air" in st or "coyote" in st or "wall" in st or "speed" in st:
+		return "boot"
+	if "stomp" in st or "slide" in st or "quake" in st or "roll" in st or "falls" in st:
+		return "fist"
+	if "i-frames" in st or "combo" in st or "score" in st or "boost" in st:
+		return "star"
+	if "hp" in st:
+		return "heart"
+	if "steam" in st:
+		return "drop"
+	if "bandage" in st:
+		return "cross"
+	if "gear" in st or "wanted" in st:
+		return "shield"
+	if "fall" in st or "cling" in st:
+		return "boot"
+	if "throw" in st or "charge" in st:
+		return "fist"
+	if "snap" in st:
+		return "bolt"
+	if "shadow" in st or "eyes" in st:
+		return "eye"
+	if "gems" in st:
+		return "gems"
+	if "drops" in st or "lunch" in st or "magnet" in st:
+		return "gold"
+	return "star"
+
+
+func _tree(trunk: String, list: Array, cx: float) -> void:
+	var by_id := {}
+	var nodes: Array = []
+	for n: Dictionary in list:
+		if str(n.get("trunk", "")) == trunk:
+			nodes.append(n)
+			by_id[str(n["id"])] = n
+	var pos := {}
+	var owned_n := 0
+	# Deeper trees squeeze their rows so the last one stays above the info strip.
+	var maxd := 0
+	for n: Dictionary in nodes:
+		maxd = maxi(maxd, _depth(n, by_id))
+	var step := STEP * 3.0 / float(maxd) if maxd > 3 else STEP
+	for n: Dictionary in nodes:
+		var d := _depth(n, by_id)
+		var br := str(n.get("branch", "core"))
+		var x := cx
+		if d > 0:
+			x += -ARM if br == "left" else ARM
+		pos[str(n["id"])] = Vector2(x, TOP + float(d) * step + (0.0 if d == 0 else 26.0))
+		if Trees.owned(mode, str(n["id"])):
+			owned_n += 1
+	var vines := VineDraw.new()
+	vines.position = Vector2.ZERO
+	vines.size = Vector2(1280, 600)
+	vines.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for n: Dictionary in nodes:
+		var req := str(n.get("requires", ""))
+		var a: Vector2 = pos[str(n["id"])]
+		var b: Vector2 = pos[req] if pos.has(req) else Vector2(cx, a.y + 60.0)
+		vines.links.append([b, a, Trees.owned(mode, str(n["id"]))])
+	vines.trunk_x = cx
+	vines.trunk_top = TOP
+	vines.trunk_bottom = TOP + STEP * 3.0 + 70.0
+	_stage.add_child(vines)
+	var name_l := UiKit.title(trunk, 22, Palette.EDGE)
+	name_l.position = Vector2(cx - 80, TOP - 66)
+	name_l.size = Vector2(160, 28)
+	name_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_stage.add_child(name_l)
+	for n: Dictionary in nodes:
+		_stage.add_child(_node_button(n, pos[str(n["id"])]))
+	# Progress sits with the tree's name (the band below holds the info strip).
+	name_l.text = "%s  %d/%d" % [trunk, owned_n, nodes.size()]
+	name_l.position = Vector2(cx - 110, TOP - 66)
+	name_l.size = Vector2(220, 28)
+	var bar := UiKit.glow_bar(float(owned_n) / float(maxi(1, nodes.size())), UiKit.GOLD, Vector2(150, 6))
+	bar.position = Vector2(cx - 75, TOP - 36)
+	_stage.add_child(bar)
+
+
+func _state(node: Dictionary) -> String:
+	return Trees.state(mode, node)
+
+
+func _node_button(node: Dictionary, at: Vector2) -> Control:
+	var st := _state(node)
+	var b := Button.new()
+	b.custom_minimum_size = Vector2(62, 62)
+	b.size = Vector2(62, 62)
+	b.position = at - Vector2(31, 31)
+	b.focus_mode = Control.FOCUS_ALL
+	b.set_meta("key", "node_" + str(node.get("id", "")))
+	var ring := StyleBoxFlat.new()
+	ring.set_corner_radius_all(31)
+	ring.set_border_width_all(4)
+	ring.bg_color = Color(0.05, 0.06, 0.1, 0.96)
+	ring.anti_aliasing = true
+	match st:
+		"owned":
+			ring.border_color = UiKit.GOLD
+			ring.bg_color = Color(0.32, 0.22, 0.08)
+			ring.shadow_color = Color(UiKit.GOLD.r, UiKit.GOLD.g, UiKit.GOLD.b, 0.5)
+			ring.shadow_size = 8
+		"can":
+			ring.border_color = UiKit.GOLD
+			ring.shadow_color = Color(UiKit.GOLD.r, UiKit.GOLD.g, UiKit.GOLD.b, 0.75)
+			ring.shadow_size = 16
+		"poor":
+			ring.border_color = UiKit.RIM
+		_:
+			ring.border_color = Color(0.3, 0.28, 0.3)
+	var hover := ring.duplicate() as StyleBoxFlat
+	hover.border_color = Color.WHITE.lerp(UiKit.GOLD, 0.4)
+	hover.shadow_color = Color(UiKit.GOLD.r, UiKit.GOLD.g, UiKit.GOLD.b, 0.8)
+	hover.shadow_size = 18
+	b.add_theme_stylebox_override("normal", ring)
+	b.add_theme_stylebox_override("hover", hover)
+	b.add_theme_stylebox_override("focus", hover)
+	b.add_theme_stylebox_override("pressed", hover)
+	var tex := _node_tex(node)
+	if tex != null:
+		var pic := TextureRect.new()
+		pic.texture = tex
+		pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		# 32 texels at 2 screen px each: crisp pixel art, no blur.
+		pic.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		pic.size = Vector2(IconBook.SIZE_S, IconBook.SIZE_S)
+		pic.position = Vector2(31, 31) - pic.size * 0.5
+		pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		if st == "locked":
+			pic.modulate = Color(0.35, 0.35, 0.4)
+		elif st == "poor":
+			pic.modulate = Color(0.75, 0.75, 0.8)
+		b.add_child(pic)
+	else:
+		var icon := PixelIcon.new()
+		icon.kind = _glyph(node)
+		icon.dim = st == "locked"
+		icon.size = Vector2(36, 36)
+		icon.position = Vector2(13, 13)
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		b.add_child(icon)
+	Bevel.dress(b, true)
+	if st == "can":
+		b.pivot_offset = Vector2(31, 31)
+		UiKit.pulse_ready(b)
+	b.mouse_entered.connect(func() -> void: _show_tip(node, at))
+	b.focus_entered.connect(func() -> void: _show_tip(node, at))
+	b.pressed.connect(func() -> void:
+		_show_tip(node, at)
+		if st == "can":
+			_buy(node)
+	)
+	return b
+
+
+func _show_tip(node: Dictionary, _at: Vector2) -> void:
+	# One fixed info strip under the trees (it never covers the nodes).
+	_focus = node
+	for c in _tip_box.get_children():
+		_tip_box.remove_child(c)
+		c.queue_free()
+	var st := _state(node)
+	var big_tex := _node_tex(node)
+	if big_tex:
+		var big := TextureRect.new()
+		big.texture = big_tex
+		big.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		big.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		big.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		big.custom_minimum_size = Vector2(IconBook.SIZE_M, IconBook.SIZE_M)
+		big.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		_tip_box.add_child(big)
+	var left := VBoxContainer.new()
+	left.custom_minimum_size = Vector2(190, 0)
+	var name_l := Label.new()
+	name_l.text = str(node["name"])
+	name_l.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(name_l, 17, UiKit.GOLD)
+	left.add_child(name_l)
+	var stat := Label.new()
+	stat.text = str(node.get("stat", ""))
+	stat.add_theme_font_override("font", UiKit.pixel_font())
+	var stxt := str(node.get("stat", ""))
+	UiKit.apply_label(stat, 15, Color(0.36, 1.0, 0.54) if not stxt.begins_with("-") else Color(1.0, 0.35, 0.29))
+	left.add_child(stat)
+	_tip_box.add_child(left)
+	var blurb := Label.new()
+	blurb.text = str(node.get("blurb", ""))
+	blurb.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	blurb.custom_minimum_size = Vector2(380, 0)
+	blurb.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	UiKit.apply_label(blurb, 13, Palette.MUTED)
+	_tip_box.add_child(blurb)
+	var right := VBoxContainer.new()
+	right.custom_minimum_size = Vector2(190, 0)
+	var cost := Label.new()
+	cost.text = "%d %s%s%s" % [int(node["gold"]), Trees.cur_label(mode), ("  ·  %d REP" % int(node["rep"])) if int(node["rep"]) > 0 else "", ("  ·  %d GEM" % int(node.get("gems", 0))) if int(node.get("gems", 0)) > 0 else ""]
+	cost.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(cost, 13, Palette.TEXT)
+	right.add_child(cost)
+	match st:
+		"owned":
+			var o := Label.new()
+			o.text = "OWNED"
+			o.add_theme_font_override("font", UiKit.pixel_font())
+			UiKit.apply_label(o, 15, Palette.READY)
+			right.add_child(o)
+		"locked":
+			var l := Label.new()
+			l.text = "BUY %s FIRST" % str(Trees.node(mode, str(node.get("requires", ""))).get("name", str(node.get("requires", "")))).to_upper()
+			l.add_theme_font_override("font", UiKit.pixel_font())
+			UiKit.apply_label(l, 13, Palette.MUTED)
+			right.add_child(l)
+		"poor":
+			var p := Label.new()
+			p.text = ("NEED " + Trees.cur_label(mode)) if Trees.balance(mode) < int(node["gold"]) else ("NEED REP" if int(FamilyProfile.data["rep"]) < int(node["rep"]) else "NEED GEM")
+			p.add_theme_font_override("font", UiKit.pixel_font())
+			UiKit.apply_label(p, 16, Color(0.95, 0.25, 0.22))
+			right.add_child(p)
+		_:
+			var buy := UiKit.button("BUY", Vector2(150, 34))
+			buy.pressed.connect(func() -> void: _buy(node))
+			right.add_child(buy)
+	_tip_box.add_child(right)
+	_tip.visible = true
+	_tip.size = Vector2.ZERO
+	_tip.position = Vector2(170, 470)
+
+
+func _buy(node: Dictionary) -> void:
+	if Trees.try_buy(mode, str(node["id"])):
+		Juice.play("res://assets/audio/claim.wav")
+		var tr := get_tree()
+		need_refresh.emit()
+		UiKit.fx_after(tr.root, "node_" + str(node["id"]), UiKit.GOLD, str(node["name"]), false)
+	else:
+		Juice.rewards.deny(null)
+		Juice.claim_burst(get_viewport_rect().size * 0.5, "NOT ENOUGH " + Trees.cur_label(mode), 0, 0)
+
+
+func _legend() -> void:
+	var box := PanelContainer.new()
+	box.add_theme_stylebox_override("panel", UiKit.frame(UiKit.RIM, 0.2))
+	box.position = Vector2(14, 300)
+	_stage.add_child(box)
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 6)
-	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var top := HBoxContainer.new()
-	top.add_child(LogoMark.new())
-	var t := Label.new()
-	t.text = name
-	UiKit.apply_label(t, 16, Palette.EDGE if name == "SHOW" else (Palette.BRICK if name == "STREET" else Palette.LEMON))
-	top.add_child(t)
-	col.add_child(top)
-	var owned_n := 0
-	var total := 0
-	var nodes: Array = []
-	for n in list:
-		if str(n.get("trunk", "")) != name:
-			continue
-		total += 1
-		if FamilyProfile.has_cbt(str(n.get("id", ""))):
-			owned_n += 1
-		nodes.append(n)
-	var meter := ColorRect.new()
-	meter.custom_minimum_size = Vector2(240, 10)
-	meter.color = Color(0.08, 0.08, 0.1)
-	col.add_child(meter)
-	var fill := ColorRect.new()
-	fill.color = Palette.READY if owned_n == total else Palette.LEMON
-	fill.position = Vector2(0, 0)
-	fill.size = Vector2(240.0 * (float(owned_n) / float(maxi(total, 1))), 10)
-	meter.add_child(fill)
-	var count := Label.new()
-	count.text = "%d / %d  ·  %s" % [owned_n, total, "LIT" if owned_n > 0 else "DARK"]
-	UiKit.apply_label(count, 12, Palette.MUTED)
-	col.add_child(count)
-	var graph := HBoxContainer.new()
-	graph.add_theme_constant_override("separation", 6)
-	graph.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	col.add_child(graph)
-	var left := VBoxContainer.new()
-	var core := VBoxContainer.new()
-	var right := VBoxContainer.new()
-	for arm in [left, core, right]:
-		arm.add_theme_constant_override("separation", 6)
-		arm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		graph.add_child(arm)
-	var left_l := Label.new()
-	left_l.text = "LEFT"
-	UiKit.apply_label(left_l, 11, Palette.MUTED)
-	left.add_child(left_l)
-	var core_l := Label.new()
-	core_l.text = "CORE"
-	UiKit.apply_label(core_l, 11, Palette.LEMON)
-	core.add_child(core_l)
-	var right_l := Label.new()
-	right_l.text = "RIGHT"
-	UiKit.apply_label(right_l, 11, Palette.MUTED)
-	right.add_child(right_l)
-	for n in nodes:
-		var branch := str(n.get("branch", "core"))
-		if str(n.get("requires", "")) == "":
-			branch = "core"
-		match branch:
-			"left":
-				left.add_child(_node_card(n))
-			"right":
-				right.add_child(_node_card(n))
-			_:
-				core.add_child(_node_card(n))
-	return col
+	box.add_child(col)
+	for pair in [["heart", "HP"], ["fist", "DAMAGE"], ["boot", "SPEED"], ["drop", "STEAM"], ["bolt", "SNAP"]]:
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 8)
+		var ic := PixelIcon.new()
+		ic.kind = str(pair[0])
+		ic.custom_minimum_size = Vector2(24, 24)
+		row.add_child(ic)
+		var l := Label.new()
+		l.text = str(pair[1])
+		l.add_theme_font_override("font", UiKit.pixel_font())
+		UiKit.apply_label(l, 14, Palette.TEXT)
+		row.add_child(l)
+		col.add_child(row)
 
 
-func _node_card(node: Dictionary) -> Control:
-	var id := str(node.get("id", ""))
-	var rarity := Rarity.normalize(str(node.get("rarity", "common")))
-	var owned := FamilyProfile.has_cbt(id)
-	var req := str(node.get("requires", ""))
-	var locked := req != "" and not FamilyProfile.has_cbt(req)
-	var can := (not owned) and (not locked) and int(FamilyProfile.data["gold"]) >= int(node["gold"]) and int(FamilyProfile.data["rep"]) >= int(node["rep"])
-	var row := PanelContainer.new()
-	var border := Palette.LOCK
-	var fill := Color(0.06, 0.06, 0.08)
-	if owned:
-		border = Palette.READY
-		fill = Rarity.fill(rarity)
-	elif can:
-		border = Palette.LEMON
-		fill = Palette.PANEL
-	elif locked:
-		border = Palette.LOCK
-		fill = Color(0.05, 0.05, 0.07)
-	else:
-		border = Rarity.color(rarity)
-		fill = Palette.PANEL
-	row.add_theme_stylebox_override("panel", UiKit.panel(fill, border))
-	var box := HBoxContainer.new()
-	row.add_child(box)
-	box.add_child(UiKit.portrait(SpriteBook.icon("therapy_couch"), Vector2(36, 36)))
-	var pip := ColorRect.new()
-	pip.custom_minimum_size = Vector2(8, 36)
-	if owned:
-		pip.color = Palette.READY
-	elif locked:
-		pip.color = Palette.LOCK
-	elif can:
-		pip.color = Palette.LEMON
-	else:
-		pip.color = Rarity.color(rarity)
-	box.add_child(pip)
-	var txt := VBoxContainer.new()
-	txt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var t := Label.new()
-	t.text = "%s  ·  %s" % [str(node["name"]), Rarity.label(rarity)]
-	UiKit.apply_label(t, 13, Palette.MUTED if locked else Rarity.color(rarity))
-	txt.add_child(t)
-	var got := Label.new()
-	got.text = str(node.get("stat", node.get("blurb", "")))
-	UiKit.apply_label(got, 11, Palette.LEMON if not locked else Palette.MUTED)
-	txt.add_child(got)
-	var b := Label.new()
-	if locked:
-		b.text = "DARK  ·  BUY %s FIRST" % req.replace("_", " ").to_upper()
-	elif owned:
-		b.text = str(node["blurb"])
-	elif int(FamilyProfile.data["gold"]) < int(node["gold"]):
-		b.text = "NEED %d GOLD" % int(node["gold"])
-	elif int(FamilyProfile.data["rep"]) < int(node["rep"]):
-		b.text = "NEED %d REP" % int(node["rep"])
-	else:
-		b.text = str(node["blurb"])
-	b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	UiKit.apply_label(b, 11, Palette.TEXT if not locked else Palette.LOCK)
-	txt.add_child(b)
-	box.add_child(txt)
-	var buy := UiKit.button("OWNED" if owned else ("%dG" % int(node["gold"])), Vector2(90, 36))
-	buy.disabled = owned or locked or int(FamilyProfile.data["gold"]) < int(node["gold"]) or int(FamilyProfile.data["rep"]) < int(node["rep"])
-	if can:
-		buy.add_theme_stylebox_override("normal", UiKit.panel(Palette.READY, Palette.LEMON))
-		UiKit.pulse_ready(buy)
-	buy.pressed.connect(func() -> void:
-		if FamilyProfile.try_cbt(id):
-			need_refresh.emit()
-		else:
-			Juice.claim_burst(get_viewport_rect().size * 0.5, "GOLD AND PARENTS FIRST", 0, 0)
-	)
-	box.add_child(buy)
-	row.gui_input.connect(func(ev: InputEvent) -> void:
-		if ev is InputEventMouseButton and (ev as InputEventMouseButton).pressed:
-			_focus = node
-			_refresh_stats()
-	)
-	return row
+## Brown vines with leaves from each node up to its parent, plus the trunk.
+class VineDraw extends Control:
+	var links: Array = []
+	var trunk_x := 0.0
+	var trunk_top := 0.0
+	var trunk_bottom := 0.0
 
-
-func _stat_rows(node: Dictionary) -> Array:
-	if node.is_empty():
-		return [
-			{"name": "GOLD", "value": str(int(FamilyProfile.data.get("gold", 0))), "color": Palette.EDGE},
-			{"name": "REP", "value": str(int(FamilyProfile.data.get("rep", 0))), "color": Palette.BRICK},
-			{"name": "OWNED", "value": str((FamilyProfile.data.get("cbt", []) as Array).size()), "color": Palette.READY}
-		]
-	return [
-		{"name": "STAT", "value": str(node.get("stat", "—")), "color": Palette.LEMON},
-		{"name": "GOLD", "value": str(int(node.get("gold", 0))), "color": Palette.EDGE},
-		{"name": "REP", "value": str(int(node.get("rep", 0))), "color": Palette.BRICK},
-		{"name": "TRUNK", "value": str(node.get("trunk", "")), "color": Palette.TEXT}
-	]
-
-
-func _refresh_stats() -> void:
-	if _stats and is_instance_valid(_stats):
-		_stats.queue_free()
-	_stats = StatPanel.new(_stat_rows(_focus))
-	_stats.custom_minimum_size = Vector2(220, 160)
-	if _board:
-		_board.add_child(_stats)
+	func _draw() -> void:
+		var bark := Color(0.33, 0.22, 0.12)
+		var bark_lit := Color(0.5, 0.36, 0.2)
+		var leaf := Color(0.27, 0.48, 0.2)
+		draw_line(Vector2(trunk_x, trunk_top), Vector2(trunk_x, trunk_bottom), bark, 12.0)
+		draw_line(Vector2(trunk_x - 3, trunk_top), Vector2(trunk_x - 3, trunk_bottom), bark_lit, 3.0)
+		for l: Array in links:
+			var a: Vector2 = l[0]
+			var b: Vector2 = l[1]
+			var lit: bool = l[2]
+			var mid := Vector2(a.x, (a.y + b.y) * 0.5)
+			var pts := PackedVector2Array()
+			for i in 13:
+				var t := float(i) / 12.0
+				pts.append(a.lerp(mid, t).lerp(mid.lerp(b, t), t))
+			draw_polyline(pts, bark, 7.0)
+			draw_polyline(pts, Color(0.9, 0.7, 0.3, 0.8) if lit else bark_lit, 2.0)
+			for i in [3, 7, 10]:
+				var p: Vector2 = pts[i]
+				var side := 7.0 if i % 2 == 0 else -7.0
+				draw_colored_polygon(PackedVector2Array([p, p + Vector2(side, -4), p + Vector2(side * 1.6, 1), p + Vector2(side, 4)]), leaf)
+		for k in 5:
+			var y := lerpf(trunk_top + 20.0, trunk_bottom - 10.0, float(k) / 4.0)
+			var s := 9.0 if k % 2 == 0 else -9.0
+			var p := Vector2(trunk_x, y)
+			draw_colored_polygon(PackedVector2Array([p, p + Vector2(s, -5), p + Vector2(s * 1.7, 1), p + Vector2(s, 5)]), leaf)
 
 
 func _compare() -> void:

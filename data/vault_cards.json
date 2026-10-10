@@ -1,0 +1,291 @@
+{
+ "_doc": "CARD VAULT: level-up cards drawn in the vault. Every draw gives a copy of a card at a rolled rarity (common..legendary). Two copies of the same card at the same rarity MERGE into one of the next rarity; the best copy you own decides its power (rarity 1-5 = vault level). SYNERGY cards can be drawn once you own both halves (+ CARD SYNERGY node). EVOLUTION: two cards at LEGENDARY fuse into one stronger mixed card (+ CARD EVOLUTION node). Owned cards join level-up draws in story runs and survivor hours; picking one again in a run (max 3) adds half again.",
+ "cards": [
+  {
+   "id": "v_cold_coffee",
+   "name": "COLD COFFEE",
+   "rarity": "common",
+   "tag": "SPEED",
+   "stats": {
+    "speed": 6
+   },
+   "blurb": "Yesterday's pot. Still legal. +{speed} speed."
+  },
+  {
+   "id": "v_spare_change",
+   "name": "SPARE CHANGE",
+   "rarity": "common",
+   "tag": "GOLD",
+   "stats": {
+    "gold": 0.05
+   },
+   "blurb": "Couch cushions pay out. +{gold} gold."
+  },
+  {
+   "id": "v_band_aid_stack",
+   "name": "BAND-AID STACK",
+   "rarity": "common",
+   "tag": "HP",
+   "stats": {
+    "hp": 6
+   },
+   "blurb": "Cartoon plasters, layered. +{hp} max HP."
+  },
+  {
+   "id": "v_homework_pile",
+   "name": "HOMEWORK PILE",
+   "rarity": "common",
+   "tag": "XP",
+   "stats": {
+    "xp": 0.05
+   },
+   "blurb": "Due yesterday. Learned today. +{xp} XP."
+  },
+  {
+   "id": "v_knuckle_tape",
+   "name": "KNUCKLE TAPE",
+   "rarity": "uncommon",
+   "tag": "DMG",
+   "stats": {
+    "dmg": 0.04
+   },
+   "blurb": "Wrapped tight like a grudge. +{dmg} damage."
+  },
+  {
+   "id": "v_magnet_pocket",
+   "name": "MAGNET POCKET",
+   "rarity": "uncommon",
+   "tag": "MAGNET",
+   "stats": {
+    "pickup": 0.1
+   },
+   "blurb": "The fridge magnet came along. +{pickup} pickup reach."
+  },
+  {
+   "id": "v_second_breakfast",
+   "name": "SECOND BREAKFAST",
+   "rarity": "uncommon",
+   "tag": "HEAL",
+   "stats": {
+    "heal": 1
+   },
+   "blurb": "Every take-down is a snack. Heal {heal} per kill."
+  },
+  {
+   "id": "v_steam_whistle",
+   "name": "STEAM WHISTLE",
+   "rarity": "uncommon",
+   "tag": "STEAM",
+   "stats": {
+    "steam": 0.08
+   },
+   "blurb": "Kettle energy. +{steam} steam gain."
+  },
+  {
+   "id": "v_dads_belt",
+   "name": "DAD'S BELT",
+   "rarity": "rare",
+   "tag": "CRIT",
+   "stats": {
+    "crit": 0.04
+   },
+   "blurb": "Not for that. For this. {crit} chance to hit double."
+  },
+  {
+   "id": "v_report_card",
+   "name": "REPORT CARD",
+   "rarity": "rare",
+   "tag": "XP",
+   "stats": {
+    "xp": 0.1
+   },
+   "blurb": "Straight Bs in violence. +{xp} XP."
+  },
+  {
+   "id": "v_overdue_notice",
+   "name": "OVERDUE NOTICE",
+   "rarity": "rare",
+   "tag": "DMG",
+   "stats": {
+    "dmg": 0.07
+   },
+   "blurb": "Red ink, red knuckles. +{dmg} damage."
+  },
+  {
+   "id": "v_fire_drill",
+   "name": "FIRE DRILL",
+   "rarity": "rare",
+   "tag": "COOLDOWN",
+   "stats": {
+    "cd": 0.05
+   },
+   "blurb": "Single file, faster. Survivor weapons -{cd} cooldown."
+  },
+  {
+   "id": "v_block_party",
+   "name": "BLOCK PARTY",
+   "rarity": "rare",
+   "tag": "AREA",
+   "stats": {
+    "area": 0.08
+   },
+   "blurb": "Everyone's invited to the blast. Survivor area +{area}."
+  },
+  {
+   "id": "v_midnight_snack",
+   "name": "MIDNIGHT SNACK",
+   "rarity": "epic",
+   "tag": "HEAL",
+   "stats": {
+    "heal": 3
+   },
+   "blurb": "Fridge light, no witnesses. Heal {heal} per kill."
+  },
+  {
+   "id": "v_family_discount",
+   "name": "FAMILY DISCOUNT",
+   "rarity": "epic",
+   "tag": "GOLD",
+   "stats": {
+    "gold": 0.15
+   },
+   "blurb": "Two for one, both hit back. +{gold} gold."
+  },
+  {
+   "id": "v_grounded_forever",
+   "name": "GROUNDED FOREVER",
+   "rarity": "epic",
+   "tag": "HP",
+   "stats": {
+    "hp": 15
+   },
+   "blurb": "Nowhere to go but through. +{hp} max HP."
+  },
+  {
+   "id": "v_iron_curfew",
+   "name": "IRON CURFEW",
+   "rarity": "epic",
+   "tag": "CRIT",
+   "stats": {
+    "crit": 0.07
+   },
+   "blurb": "Home by ten or else. {crit} chance to hit double."
+  },
+  {
+   "id": "v_father_of_year",
+   "name": "FATHER OF THE YEAR",
+   "rarity": "legendary",
+   "tag": "DMG",
+   "stats": {
+    "dmg": 0.12
+   },
+   "blurb": "The mug says so. +{dmg} damage."
+  },
+  {
+   "id": "v_the_talk",
+   "name": "THE TALK",
+   "rarity": "legendary",
+   "tag": "ALL",
+   "stats": {
+    "dmg": 0.06,
+    "speed": 6,
+    "hp": 8
+   },
+   "blurb": "Awkward for everyone. +{dmg} dmg, +{speed} speed, +{hp} HP."
+  },
+  {
+   "id": "v_coffee_tape",
+   "name": "CAFFEINATED KNUCKLES",
+   "rarity": "epic",
+   "tag": "SYNERGY",
+   "kind": "synergy",
+   "needs": [
+    "v_cold_coffee",
+    "v_knuckle_tape"
+   ],
+   "stats": {
+    "dmg": 0.06,
+    "speed": 6
+   },
+   "blurb": "SYNERGY: coffee + tape. +{dmg} dmg, +{speed} speed."
+  },
+  {
+   "id": "v_piggy_bank",
+   "name": "PIGGY BANK HEIST",
+   "rarity": "epic",
+   "tag": "SYNERGY",
+   "kind": "synergy",
+   "needs": [
+    "v_spare_change",
+    "v_family_discount"
+   ],
+   "stats": {
+    "gold": 0.12,
+    "pickup": 0.1
+   },
+   "blurb": "SYNERGY: break it open. +{gold} gold, +{pickup} reach."
+  },
+  {
+   "id": "v_detention",
+   "name": "DETENTION",
+   "rarity": "epic",
+   "tag": "SYNERGY",
+   "kind": "synergy",
+   "needs": [
+    "v_report_card",
+    "v_homework_pile"
+   ],
+   "stats": {
+    "xp": 0.14
+   },
+   "blurb": "SYNERGY: stay after class. +{xp} XP."
+  },
+  {
+   "id": "v_belt_judgement",
+   "name": "BELT OF JUDGEMENT",
+   "rarity": "legendary",
+   "tag": "EVOLVED",
+   "kind": "evolution",
+   "needs": [
+    "v_dads_belt",
+    "v_iron_curfew"
+   ],
+   "stats": {
+    "crit": 0.12,
+    "dmg": 0.06
+   },
+   "blurb": "EVOLVED: Dad's Belt + Iron Curfew. {crit} double hits, +{dmg} dmg."
+  },
+  {
+   "id": "v_brass_tape",
+   "name": "BRASS TAPE",
+   "rarity": "legendary",
+   "tag": "EVOLVED",
+   "kind": "evolution",
+   "needs": [
+    "v_knuckle_tape",
+    "v_overdue_notice"
+   ],
+   "stats": {
+    "dmg": 0.16
+   },
+   "blurb": "EVOLVED: Knuckle Tape + Overdue Notice. +{dmg} damage."
+  },
+  {
+   "id": "v_family_dinner",
+   "name": "FAMILY DINNER",
+   "rarity": "legendary",
+   "tag": "EVOLVED",
+   "kind": "evolution",
+   "needs": [
+    "v_midnight_snack",
+    "v_second_breakfast"
+   ],
+   "stats": {
+    "heal": 6,
+    "hp": 10
+   },
+   "blurb": "EVOLVED: Midnight Snack + Second Breakfast. Heal {heal} per kill, +{hp} HP."
+  }
+ ]
+}
