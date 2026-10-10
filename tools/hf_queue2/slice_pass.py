@@ -2,9 +2,12 @@
 import json, subprocess, sys, os
 from PIL import Image
 HN = "/home/user/hnt"; Q = HN + "/tools/hf_queue2"; ST = "/tmp/claude-0/pol/e2"
-def idle_h(who):
-    d = json.load(open(f"{HN}/assets/sprites/{who}/idle.json")); f = d["frames"][0]
-    im = Image.open(f"{HN}/assets/sprites/{who}/idle.png").convert("RGBA").crop((f["x"], f["y"], f["x"] + f["w"], f["y"] + f["h"]))
+def idle_h(who, ref=""):
+    # The key frame's own pose sets the scale (a crawl is not standing height).
+    if not ref:
+        ref = "idle" if os.path.exists(f"{HN}/assets/sprites/{who}/idle.json") else "walk"
+    d = json.load(open(f"{HN}/assets/sprites/{who}/{ref}.json")); f = d["frames"][0]
+    im = Image.open(f"{HN}/assets/sprites/{who}/{ref}.png").convert("RGBA").crop((f["x"], f["y"], f["x"] + f["w"], f["y"] + f["h"]))
     bb = im.getchannel("A").point(lambda v: 255 if v > 40 else 0).getbbox()
     return bb[3] - bb[1]
 # name -> (who, clip, extra args)
@@ -21,6 +24,10 @@ MAP = {
  "clamp_king_hurt2": ("clamp_king", "hurt", ["--frames", "13"]),
  "repo_goon_idle": ("repo_goon", "idle", ["--loop", "--frames", "16", "--min-cycle", "1.0", "--max-cycle", "1.8"]),
  "son_roll_full": ("son", "roll", ["--frames", "18", "--anchor", "ground"]),
+ "father_run": ("father", "parkour_run", ["--loop", "--frames", "16", "--fps", "20", "--start", "0.8", "--min-cycle", "0.5", "--max-cycle", "1.0"]),
+ "son_run": ("son", "parkour_run", ["--loop", "--frames", "16", "--fps", "20", "--start", "0.8", "--min-cycle", "0.5", "--max-cycle", "1.0"]),
+ "skinwalker_crawl": ("skinwalker", "crawl", ["--loop", "--frames", "16", "--fps", "15", "--start", "0.8"]),
+ "skinwalker_gape": ("skinwalker", "gape", ["--frames", "16"]),
  "valet_hurt2": ("valet", "hurt", ["--frames", "13"]),
  "valet_walk": ("valet", "walk", ["--loop", "--frames", "16", "--fps", "15", "--start", "0.8"]),
  "son_walk_down": ("son", "walk_down", ["--loop", "--frames", "16", "--fps", "15", "--start", "1.0"]),
@@ -65,10 +72,12 @@ def spec(name):
     for clip, extra in (("punch_high", STRIKE), ("kick_low", STRIKE), ("punch_mid", STRIKE), ("hurt", ["--frames", "13"]), ("death", ["--frames", "20"])):
         if base.endswith("_" + clip):
             return (base[: -len(clip) - 1], clip, extra)
+    if base.endswith("_walk"):
+        return (base[:-5], "walk", ["--loop", "--frames", "16", "--fps", "15", "--start", "0.8"])
     raise KeyError(name)
 for name in sys.argv[1:]:
     who, clip, extra = spec(name)
-    h = idle_h(who)
+    h = idle_h(who, {"skinwalker_crawl": "crawl", "skinwalker_gape": "gape"}.get(name, ""))
     vid = smooth(name)
     if "PEAK" in extra:
         pk = peak(vid)

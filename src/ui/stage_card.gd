@@ -55,6 +55,7 @@ static func title_of(id: String) -> String:
 const TIPS := [
 	"LIGHT + HEAVY together fires an element art. The stick picks which.",
 	"Same buttons next to a thug: a grab. Bosses do not grab.",
+	"Hold DASH or double-tap forward to RUN. Attack out of a run for a running strike.",
 	"Hit a thug during his wind-up to INTERRUPT him.",
 	"From behind it is a BACKSTAB: a quarter more.",
 	"Roll just as the swing lands: PERFECT DODGE.",

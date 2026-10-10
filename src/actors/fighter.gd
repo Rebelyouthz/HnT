@@ -8,8 +8,11 @@ extends CharacterBody2D
 @export var depth_speed: float = 110.0
 ## Walk clip stand-ins while a hero's profile walk is being redone.
 const SIDE_WALK := {}
-## Story-street walk pace as a share of top speed (heroes walk; dash runs).
-const WALK_K := {"father": 0.6, "son": 0.56}
+## Story-street walk pace as a share of top speed: a brisk street walk,
+## Streets of Rage pace, never a stroll. Holding DASH (or a double tap
+## forward) breaks it into a run at full speed.
+const WALK_K := {"father": 0.64, "son": 0.66}
+const RUN_K := 1.12
 @export var accent: Color = Palette.LEMON
 
 ## Same jump height as before, ~15% more hang time (it read too snappy).
@@ -137,6 +140,12 @@ var _ice_v := Vector2.ZERO
 ## move, and DASH is a spin-dodge along the stick.
 var _field_v := Vector2.ZERO
 var _backpedal := false
+## Story streets: running (DASH held, or a double tap forward) instead of
+## the walk; the double tap is remembered for a short window.
+var running := false
+var _tap_dir := 0
+var _tap_t := -9.0
+var _run_puff := 0.0
 var _spin_t := 0.0
 var _spin_dir := Vector2.ZERO
 var _spin_cd := 0.0
@@ -546,7 +555,7 @@ func _tick_sprite() -> void:
 		clip = SpriteBook.dir_clip(_anim.sprite_frames, velocity, true)
 		if clip == "walk" and absf(velocity.x) > 110.0 and not _backpedal:
 			clip = "parkour_run"
-	elif dashing or parkour_lock > 0.0 or absf(velocity.x) > (175.0 if plane == "street" else 110.0):
+	elif dashing or parkour_lock > 0.0 or (running and plane == "street" and absf(velocity.x) > 60.0) or (plane != "street" and absf(velocity.x) > 110.0):
 		clip = "parkour_run"
 	elif absf(velocity.x) > 18.0 or (plane == "street" and absf(velocity.y) > 18.0):
 		clip = "walk"
@@ -1028,10 +1037,10 @@ func _process_street(delta: float) -> void:
 		if stumble_t > 0.0:
 			limp *= 0.4
 		var run_k := speed * limp * (1.0 + (trick_boost - 1.0) * Meta.flow_mul()) * Meta.run_speed_mul() * NightExtras.speed_mul() * combo_spd * (1.0 + 0.12 * float(_cart("energy_drink"))) * _surv_speed() * ItemRack.speed_k
-		# Story streets are walked, not run (the dash runs): a walking pace
-		# the walk cycle's feet actually cover.
+		# Story streets are walked; hold DASH or double-tap forward to run.
 		if not FIELD and plane == "street":
-			run_k *= WALK_K.get(role, 0.6)
+			_tick_run(x)
+			run_k *= RUN_K if running else WALK_K.get(role, 0.7)
 		velocity.x = x * run_k
 		if FIELD:
 			# Top-down: the same speed every way, diagonals not faster
@@ -1423,6 +1432,35 @@ func _combat() -> void:
 			_attack("jump-kick", false)
 		else:
 			_attack("light", false)
+
+
+## Walk or run on the story street. A run starts from a held DASH (after
+## the dash burst) or from two quick taps the same way, Double Dragon style,
+## and ends when the stick lets go, turns round, or you guard / duck.
+func _tick_run(x: float) -> void:
+	var dir := int(signf(x)) if absf(x) > 0.35 else 0
+	var hard := absf(x) > 0.6
+	if hard and dir != 0 and _last_x_dir == 0:
+		if dir == _tap_dir and _clock - _tap_t < 0.28:
+			running = true
+		_tap_dir = dir
+		_tap_t = _clock
+	_last_x_dir = dir if hard else 0
+	if _pressed("dash") and dir != 0 and not blocking:
+		running = true
+	if dir == 0 or blocking or ducking or (running and dir != int(facing) and anim_atk == ""):
+		running = false
+	if running and _street_grounded():
+		_run_puff -= get_physics_process_delta_time()
+		if _run_puff <= 0.0:
+			_run_puff = 0.22
+			Juice.land_puff(global_position + Vector2(-float(facing) * 10.0, 0))
+		visual.skew = lerpf(visual.skew, float(facing) * 0.06, 0.2)
+	elif absf(visual.skew) > 0.001 and not FIELD:
+		visual.skew = lerpf(visual.skew, 0.0, 0.25)
+
+
+var _last_x_dir := 0
 
 
 func _dash() -> void:
