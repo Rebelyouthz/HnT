@@ -17,6 +17,7 @@ J += [
  ("repo_goon_hurt", "repo_goon", "hurt_same", ("idle", 0), hp("repo_goon"), 606),
  ("bailiff_hurt", "bailiff", "hurt_same", ("idle", 0), hp("bailiff"), 606),
  ("gant_hurt", "gant", "hurt_same", ("idle", 0), hp("gant"), 606),
+ ("lot_hydra_hurt2", "lot_hydra", "hurt_same", ("idle", 0), ("idle", 0), 808),
  ("gant_kick_low", "gant", "kick_low", ("idle", 0), ("kick_low", keys.hit_of("gant", "kick_low")), 606),
 ]
 if __name__ == "__main__":
