@@ -57,8 +57,8 @@ J = [
  ("son_roll_b", "son", "roll_b", ("roll", n("son", "roll") // 2), ("roll", -1), 77),
 ]
 SPACES = ["Rchoks/wan555", "kulkas2pintu/wan777", "r3gm/wan2-2-fp8da-aoti-preview"]
-if __name__ == "__main__":
-    only = set(sys.argv[1:])
+def run(J, only=()):
+    only = set(only)
     si = 0
     pending = [j for j in J if not os.path.exists(f"{D}/{j[0]}.mp4") and (not only or j[0] in only)]
     print("JOBS", len(pending), flush=True)
@@ -88,3 +88,7 @@ if __name__ == "__main__":
         si += 1
         time.sleep(20 if si % len(SPACES) else 300)
     print("ALLDONE", flush=True)
+
+
+if __name__ == "__main__":
+    run(J, sys.argv[1:])

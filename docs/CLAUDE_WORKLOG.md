@@ -34,7 +34,36 @@ The rest is in English, like the code. Newest work first. Each block says
 
 ---
 
-## 0ze. Fight voices, wheel, chests, packing (latest)
+## 0zf. Animation audit, HF passes 6-7, gentle local generator (latest)
+
+- **Audit** (per clip: frames, fps, duplicate frames, body-height jumps,
+  foot travel, then a visual strip of the suspects): found a still-standing
+  cop walk_down, outfit swaps mid-punch (punk, shift_lead punch_mid; valet
+  hurt/walk in a white outfit while every other valet clip is dark),
+  6-8 frame deaths on survivor enemies, frozen repo_goon idle, and
+  10-frame / 4 fps strikes on survivor enemies, repo_goon and bailiff.
+- **HF passes** `tools/hf_queue2/genq6.py` (run(J, only) is reusable) and
+  `genq7.py`. Keys are cut from the character's own frames; when a
+  character's clips disagree on the outfit, pick an end key in the right
+  outfit (valet: death frame 2, son walk_up: old walk_up last frame, the
+  only back view).
+- **Smoother slicing**: every HF clip (16 fps) is first raised to 48 fps
+  with ffmpeg `minterpolate` (motion-compensated in-betweens), then sliced:
+  strikes = the 0.42 s before peak reach (found by the furthest-right
+  pixel) + hold 1 + retract 4; hurts 13 frames; deaths 20; walks 16-frame
+  loops at 15 fps. Slicer: `tools/hf_queue2/slice_pass.py <name...>` (stages to
+  /tmp/claude-0/pol/e2), then `install_pass.py who/clip ...`;
+  install with game timing (punch 0.85 s, hurt 0.45 s, death 1.1 s, walks
+  and idles loop at their sliced speed).
+- **Kept old** where HF still failed: son roll (a backpack appeared),
+  bag_snatch punch (mask swap / no punch), clamp_king hurt (weapon flies
+  off), bailiff walk_up (keeps facing the camera).
+- **Local generator** (`tools/local_gpu/local_wan.py`) no longer locks the
+  Ally X: prompts are encoded first and the ~11 GB text encoder is dropped,
+  GPU capped with `--vram` (default 11 GB), tiled VAE, half the CPU
+  threads, low priority, `--rest` seconds between clips.
+
+## 0ze. Fight voices, wheel, chests, packing
 
 - **Fight voices** (`VoBank.effort(role, weight, clip)`): every swing breathes
   like a boxer. Jabs/crosses (weight < 0.45) play `<role>_jab_N` exhales
