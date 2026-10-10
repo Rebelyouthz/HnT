@@ -20,6 +20,7 @@ MAP = {
  "bag_snatch_punch_high2": ("bag_snatch", "punch_high", STRIKE),
  "clamp_king_hurt2": ("clamp_king", "hurt", ["--frames", "13"]),
  "repo_goon_idle": ("repo_goon", "idle", ["--loop", "--frames", "16", "--min-cycle", "1.0", "--max-cycle", "1.8"]),
+ "son_roll_full": ("son", "roll", ["--frames", "18", "--anchor", "ground"]),
  "valet_hurt2": ("valet", "hurt", ["--frames", "13"]),
  "valet_walk": ("valet", "walk", ["--loop", "--frames", "16", "--fps", "15", "--start", "0.8"]),
  "son_walk_down": ("son", "walk_down", ["--loop", "--frames", "16", "--fps", "15", "--start", "1.0"]),
