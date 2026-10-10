@@ -15,7 +15,9 @@ genq2.DESC.setdefault("skinwalker", "The pale, emaciated skinwalker creature wit
 P["creep_walk"] = (3.0, "{d} stalks slowly to the right on a treadmill, side view, hunched, long bony legs taking clear jerky steps, arms swaying, a continuous unsettling walk cycle, staying in place.")
 P["crawl_fast"] = (3.0, "{d} crawls fast to the right on all fours like a spider, side view, limbs reaching forward one after another in a continuous crawl cycle, staying in place.")
 P["gape"] = (2.0, "{d} stands still, then its jaw drops open impossibly wide in a silent scream, the head tilting back, then the mouth snaps shut.")
+P["dog_idle"] = (2.5, "{d} sits on its haunches like a dog, panting, ribs heaving, the head twitching and tilting in small unnatural jerks, staying in place.")
 J = [
+ ("skinwalker_dog", "skinwalker", "dog_idle", ("dog", 0), ("dog", 0), 1414),
  ("skinwalker_walk", "skinwalker", "creep_walk", ("walk", 0), ("walk", 0), 1313),
  ("skinwalker_crawl", "skinwalker", "crawl_fast", ("crawl", 0), ("crawl", 0), 1313),
  ("skinwalker_gape", "skinwalker", "gape", ("gape", 0), ("gape", 0), 1313),

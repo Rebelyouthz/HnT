@@ -27,6 +27,7 @@ MAP = {
  "father_run": ("father", "parkour_run", ["--loop", "--frames", "16", "--fps", "20", "--start", "0.8", "--min-cycle", "0.5", "--max-cycle", "1.0"]),
  "son_run": ("son", "parkour_run", ["--loop", "--frames", "16", "--fps", "20", "--start", "0.8", "--min-cycle", "0.5", "--max-cycle", "1.0"]),
  "skinwalker_crawl": ("skinwalker", "crawl", ["--loop", "--frames", "16", "--fps", "15", "--start", "0.8"]),
+ "skinwalker_dog": ("skinwalker", "dog", ["--loop", "--frames", "16", "--min-cycle", "1.0", "--max-cycle", "2.0"]),
  "skinwalker_gape": ("skinwalker", "gape", ["--frames", "16"]),
  "valet_hurt2": ("valet", "hurt", ["--frames", "13"]),
  "valet_walk": ("valet", "walk", ["--loop", "--frames", "16", "--fps", "15", "--start", "0.8"]),
@@ -77,7 +78,7 @@ def spec(name):
     raise KeyError(name)
 for name in sys.argv[1:]:
     who, clip, extra = spec(name)
-    h = idle_h(who, {"skinwalker_crawl": "crawl", "skinwalker_gape": "gape"}.get(name, ""))
+    h = idle_h(who, {"skinwalker_crawl": "crawl", "skinwalker_gape": "gape", "skinwalker_dog": "dog"}.get(name, ""))
     vid = smooth(name)
     if "PEAK" in extra:
         pk = peak(vid)
