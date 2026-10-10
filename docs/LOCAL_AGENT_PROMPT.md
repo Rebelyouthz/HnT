@@ -36,6 +36,11 @@ code.
    the install (latest AMD Adrenalin driver, try the other backend) before
    generating; CPU would take days.
 3. Generate, in this order (from `tools/local_gpu`, venv active):
+   **The machine froze last time at 100 % memory.** First `git pull` (the
+   script is now gentle: max 11 GB on the GPU, the text model is thrown out
+   of memory after the prompts are read, half the CPU cores, low priority,
+   30 s rest between clips). If it still struggles, close everything else and
+   use `python local_wan.py --vram 10 --rest 60 --frames 41`.
    `python local_wan.py --list` to see what is missing, then
    `python local_wan.py --only son`
    `python local_wan.py --only punk`
