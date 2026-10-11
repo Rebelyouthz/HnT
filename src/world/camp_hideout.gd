@@ -847,6 +847,24 @@ func _leave() -> void:
 	var tw := create_tween()
 	tw.tween_property(_walker, "position:x", _portal.position.x, 0.35)
 	tw.parallel().tween_property(_walker, "modulate", Color(0.6, 0.9, 1.0, 0.0), 0.45)
+	# The rift pulls him in: he thins and lifts into its middle, the ring
+	# flares and spins up, a whoosh.
+	tw.parallel().tween_property(_walker, "scale", Vector2(0.35, 1.25), 0.45).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(_walker, "position:y", _walker.position.y - 18.0, 0.45).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	var spr := _portal.get_node_or_null("PortalSprite") as AnimatedSprite2D
+	if spr != null:
+		spr.speed_scale = 3.0
+		var t2 := create_tween()
+		t2.tween_property(spr, "modulate", Color(1.6, 1.8, 2.2), 0.25)
+		t2.tween_property(spr, "scale", spr.scale * 1.06, 0.2).set_trans(Tween.TRANS_BACK)
+	for c in _portal.get_children():
+		if c is PointLight2D:
+			create_tween().tween_property(c, "energy", 2.6, 0.4)
+		elif c is CPUParticles2D:
+			(c as CPUParticles2D).initial_velocity_max = 70.0
+			(c as CPUParticles2D).amount = 80
+	Juice.pulse_shake(3.0)
+	Mixer.play_sfx("res://assets/audio/dash.wav", 0.6, -2.0)
 	var flash := ColorRect.new()
 	flash.color = Color(0.6, 0.85, 1.0, 0.0)
 	flash.size = Vector2(1280, 720)
