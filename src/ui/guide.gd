@@ -127,7 +127,7 @@ func _input(event: InputEvent) -> void:
 
 
 func _next() -> void:
-	RewardFly.snd("coin_tick", 1.4, -8.0)
+	Mixer.play_sfx("res://assets/audio/ui_click.wav", 1.25, -8.0)
 	if _i + 1 >= steps.size():
 		_finish()
 	else:

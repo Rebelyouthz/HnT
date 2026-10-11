@@ -64,7 +64,8 @@ func _input(event: InputEvent) -> void:
 func _process(delta: float) -> void:
 	_t += delta
 	var f := get_viewport().gui_get_focus_owner()
-	var ok := f != null and f.is_visible_in_tree() and f.size.x > 2.0 and f.size.y > 2.0 and not _hidden(f) and _menu_up()
+	var ok := f != null and f.is_visible_in_tree() and f.size.x > 2.0 and f.size.y > 2.0 and not _hidden(f) and _menu_up() \
+			and get_tree().get_first_node_in_group("guide") == null
 	if ok:
 		var tf := f.get_global_transform_with_canvas()
 		var want := Rect2(tf.origin, f.size * tf.get_scale()).grow(PAD)
@@ -142,24 +143,20 @@ func _hidden(c: Control) -> bool:
 func _paint() -> void:
 	if _alpha <= 0.0 or _rect.size.x < 2.0:
 		return
-	var breathe := 0.5 + 0.5 * sin(_t * 4.0)
-	var r := _rect.grow(1.0 * breathe + 3.0 * _pop)
+	var breathe := 0.5 + 0.5 * sin(_t * 3.0)
+	var r := _rect.grow(0.5 * breathe + 1.5 * _pop)
 	var gold := Color(1.0, 0.8, 0.3, _alpha)
-	var glow := Color(1.0, 0.8, 0.3, _alpha * (0.16 + 0.12 * breathe))
-	_draw.draw_rect(r.grow(2.0), glow, false, 3.0)
-	_draw.draw_rect(r, Color(gold.r, gold.g, gold.b, _alpha * 0.85), false, 1.5)
-	# Corner brackets, standing a little proud of the frame.
-	var L := clampf(minf(r.size.x, r.size.y) * 0.28, 5.0, 14.0)
-	var o := 2.0 + 1.5 * breathe
-	var ink := Color(0.04, 0.03, 0.06, _alpha * 0.8)
+	_draw.draw_rect(r.grow(1.5), Color(1.0, 0.8, 0.3, _alpha * (0.06 + 0.05 * breathe)), false, 2.0)
+	_draw.draw_rect(r, Color(gold.r, gold.g, gold.b, _alpha * 0.6), false, 1.0)
+	# Small corner brackets on the frame.
+	var L := clampf(minf(r.size.x, r.size.y) * 0.18, 4.0, 9.0)
+	var ink := Color(0.04, 0.03, 0.06, _alpha * 0.55)
 	for c in [[r.position, Vector2(1, 1)], [Vector2(r.end.x, r.position.y), Vector2(-1, 1)],
 			[Vector2(r.position.x, r.end.y), Vector2(1, -1)], [r.end, Vector2(-1, -1)]]:
-		var p: Vector2 = c[0] - c[1] * o
+		var p: Vector2 = c[0]
 		var s: Vector2 = c[1]
 		for pass_i in 2:
 			var col := ink if pass_i == 0 else gold
-			var w := 4.0 if pass_i == 0 else 2.0
+			var w := 3.0 if pass_i == 0 else 1.5
 			_draw.draw_line(p, p + Vector2(s.x * L, 0), col, w)
 			_draw.draw_line(p, p + Vector2(0, s.y * L), col, w)
-	# A soft fill so the focused button reads lit.
-	_draw.draw_rect(_rect, Color(1.0, 0.85, 0.4, _alpha * 0.05 * (1.0 + _pop)), true)

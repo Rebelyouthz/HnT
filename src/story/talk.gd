@@ -272,7 +272,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		_close()
 		get_viewport().set_input_as_handled()
 		return
-	if event.is_action_pressed("p1_jump") or event.is_action_pressed("p2_jump") or event.is_action_pressed("ui_accept"):
+	var click := event is InputEventMouseButton and (event as InputEventMouseButton).pressed and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT
+	if click or event.is_action_pressed("p1_jump") or event.is_action_pressed("p2_jump") or event.is_action_pressed("ui_accept") \
+			or event.is_action_pressed("p1_light") or event.is_action_pressed("p2_light"):
+		# One press shows the whole line; the next one moves on.
+		Mixer.play_sfx("res://assets/audio/ui_click.wav", 1.25 if _typed() else 1.05, -8.0)
 		if not _typed():
 			_finish_typing()
 		else:

@@ -267,9 +267,10 @@ static func button(text: String, min_size: Vector2 = Vector2(120, 44)) -> Button
 	pressed.content_margin_top += 4
 	pressed.content_margin_bottom -= 2
 	var focus := hover.duplicate() as StyleBoxFlat
-	focus.shadow_color = Color(GOLD.r, GOLD.g, GOLD.b, 0.45)
-	focus.shadow_size = 9
-	focus.shadow_offset = Vector2(0, 3)
+	# The gliding frame (FocusGlide) already marks focus: keep the glow faint.
+	focus.shadow_color = Color(GOLD.r, GOLD.g, GOLD.b, 0.18)
+	focus.shadow_size = 4
+	focus.shadow_offset = Vector2(0, 2)
 	var off := panel(Color(0.06, 0.06, 0.08, 0.9), Palette.LOCK)
 	off.shadow_size = 0
 	b.add_theme_stylebox_override("normal", normal)

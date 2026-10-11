@@ -132,16 +132,21 @@ func play_music(path: String) -> void:
 		(incoming.stream as AudioStreamWAV).loop_mode = AudioStreamWAV.LOOP_FORWARD
 	elif incoming.stream is AudioStreamOggVorbis:
 		(incoming.stream as AudioStreamOggVorbis).loop = true
+	# A swap still fading (results -> camp in one frame) would stop the
+	# player this track just landed on when its tween ends: cut it short.
+	if _music_tw != null and _music_tw.is_valid():
+		_music_tw.kill()
 	incoming.volume_db = -40.0
 	incoming.play()
-	var tw := create_tween().set_parallel(true).set_ignore_time_scale(true)
-	tw.tween_property(outgoing, "volume_db", -40.0, 0.7)
-	tw.tween_property(incoming, "volume_db", 0.0, 0.7)
-	tw.chain().tween_callback(outgoing.stop)
+	_music_tw = create_tween().set_parallel(true).set_ignore_time_scale(true)
+	_music_tw.tween_property(outgoing, "volume_db", -40.0, 0.7)
+	_music_tw.tween_property(incoming, "volume_db", 0.0, 0.7)
+	_music_tw.chain().tween_callback(outgoing.stop)
 	_using_a = not _using_a
 
 
 var _music_path := ""
+var _music_tw: Tween
 var _music_saved := ""
 
 
