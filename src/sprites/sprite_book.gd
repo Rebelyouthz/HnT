@@ -59,7 +59,9 @@ static func dir_clip(sf: SpriteFrames, v: Vector2, eight: bool) -> String:
 	var ay := absf(v.y)
 	var pick := "walk"
 	if not eight:
-		if ay > 18.0 and ay > ax * 0.55:
+		# Street: the back / front walk only when heading (almost) straight
+		# into or out of the lane. A diagonal keeps the smooth profile walk.
+		if ay > 18.0 and ay > ax * 1.6:
 			pick = "walk_up" if v.y < 0.0 else "walk_down"
 	else:
 		var deg := rad_to_deg(atan2(ay, ax))

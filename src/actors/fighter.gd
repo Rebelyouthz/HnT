@@ -12,6 +12,10 @@ const SIDE_WALK := {}
 ## Streets of Rage pace, never a stroll. Holding DASH (or a double tap
 ## forward) breaks it into a run at full speed.
 const WALK_K := {"father": 0.64, "son": 0.66}
+## The heroes' street walk takes a slightly longer step than the stride
+## table: the legs keep the hideout's calm cadence (~30 frames/s) instead
+## of whirring at a jog's rate.
+const HERO_WALK_STEP := 0.88
 const RUN_K := 1.12
 @export var accent: Color = Palette.LEMON
 
@@ -612,6 +616,8 @@ func _drive_clip(clip: String) -> void:
 	match clip:
 		"walk":
 			_anim.speed_scale = SpriteBook.stride_rate(_anim, "walk", maxf(absf(velocity.x), absf(velocity.y) * 1.4))
+			if not FIELD:
+				_anim.speed_scale *= HERO_WALK_STEP
 			# Backpedalling (FIELD, gun the other way): the feet step backwards.
 			if FIELD and _backpedal:
 				_anim.speed_scale = -_anim.speed_scale
