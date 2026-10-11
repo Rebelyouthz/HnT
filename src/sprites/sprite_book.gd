@@ -277,10 +277,20 @@ static func make_anim(who: String) -> AnimatedSprite2D:
 ## hitboxes/reach follow (Fighter._spawn_hit, Punk hurtbox and swing range).
 const ACTOR_K := 1.25
 ## Re-measured (tests/size_probe.gd) so everyone is about a painted door
-## tall: the heroes the biggest people on the street (son ~67, father ~70
-## units), thugs ~57 (brutes more), townsfolk ~55; props a touch smaller.
+## tall: the heroes the biggest people on the street (son ~72, father ~70
+## in his crouched guard, ~80 walking upright), thugs ~57 (brutes more),
+## townsfolk ~55; props a touch smaller.
 const FIGHTER_SCALE := 1.22 * ACTOR_K
 const FATHER_K := 1.06
+## The Son's clips stand upright, the Father's idle is a low guard: at 1.0
+## the boy read a head shorter than his walking dad (84%). A teenager near
+## his dad's height: ~90%.
+const SON_K := 1.08
+
+
+## The hero's own size on top of the shared actor scale.
+static func hero_k(role: String) -> float:
+	return FATHER_K if role == "father" else SON_K
 const ENEMY_SCALE := 1.06 * ACTOR_K
 const NPC_SCALE := 0.98 * ACTOR_K
 const PROP_K := 0.9

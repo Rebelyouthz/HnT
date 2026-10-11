@@ -150,7 +150,7 @@ func _ready() -> void:
 	art.pressed.connect(func() -> void:
 		var sh := preload("res://src/ui/desk_sheet.gd").new()
 		sh.mode = "artifacts"
-		get_tree().current_scene.add_child(sh)
+		UiKit.open_over(self, sh)
 		sh.closed.connect(func() -> void:
 			sh.queue_free()
 			art.text = "ARTIFACTS %d/%d" % [Artifacts.on().size(), Artifacts.MAX_ON]
@@ -166,12 +166,12 @@ func _ready() -> void:
 	if vault_open:
 		vb.add_theme_color_override("font_color", UiKit.GOLD)
 	vb.pressed.connect(func() -> void:
-		var hub := get_tree().current_scene
+		var hub := _hub()
 		if hub and hub.has_method("_open_vault"):
 			hub.call("_open_vault")
 		else:
 			var sh := preload("res://src/ui/vault_sheet.gd").new()
-			get_tree().current_scene.add_child(sh)
+			UiKit.open_over(self, sh)
 			sh.closed.connect(sh.queue_free)
 	)
 	vb.position = Vector2(40, 514)
@@ -185,7 +185,7 @@ func _ready() -> void:
 	if surv_open:
 		sv.add_theme_color_override("font_color", Color(0.45, 1.0, 0.6))
 	sv.pressed.connect(func() -> void:
-		var hub := get_tree().current_scene
+		var hub := _hub()
 		if hub and hub.has_method("_open_survivor"):
 			hub.call("_open_survivor")
 	)
@@ -463,3 +463,12 @@ func _weekly_card() -> Control:
 	go.pressed.connect(App.start_weekly)
 	v.add_child(go)
 	return card
+
+
+## The hub this tab sits in: the scene itself on the clinic screen, an
+## overlay inside the hideout (where the current scene is the room).
+func _hub() -> Node:
+	var n: Node = get_parent()
+	while n != null and not n.has_method("_open_survivor"):
+		n = n.get_parent()
+	return n

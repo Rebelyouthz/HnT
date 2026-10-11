@@ -41,7 +41,7 @@ class CampWalker extends Node2D:
 			anim = SpriteBook.make_anim(who)
 			# The hideout room is painted big: a grown man stands about a
 			# door frame tall (CAMP_K), not two thirds of one.
-			SpriteBook.grow(anim, CAMP_K * (SpriteBook.FATHER_K if who == "father" else 1.0))
+			SpriteBook.grow(anim, CAMP_K * SpriteBook.hero_k(who))
 			# Actors land at 1.67 px per texel here: filter, don't nearest.
 			anim.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 			add_child(anim)
@@ -81,6 +81,9 @@ var _leaving := false
 var _busy := false
 var _focus_x := 0.0
 var _crew := {}
+## The purse pills' value labels (gold / gems / rep), kept live: buys in a
+## menu over the room used to leave the old sums showing.
+var _purse := {}
 ## Rico runs these: they open only once he is back from the Intake Lot.
 const RICO_SHOP := ["pawn_shop", "invoice_wheel", "tip_jar", "lost_found"]
 const CREW_SPOT := {"benny": 0.045, "rico": 0.775, "dot": 0.262}
@@ -434,9 +437,10 @@ func _build_ui() -> void:
 	var pills := HBoxContainer.new()
 	pills.position = Vector2(860, 28)
 	pills.add_theme_constant_override("separation", 10)
-	pills.add_child(UiKit.pill("GOLD", UiKit.num(FamilyProfile.data.get("gold", 0)), Palette.LEMON))
-	pills.add_child(UiKit.pill("GEMS", UiKit.num(FamilyProfile.data.get("gems", 0)), Palette.EDGE))
-	pills.add_child(UiKit.pill("REP", UiKit.num(FamilyProfile.data.get("rep", 0)), Palette.BRICK))
+	for pr in [["GOLD", "gold", Palette.LEMON], ["GEMS", "gems", Palette.EDGE], ["REP", "rep", Palette.BRICK]]:
+		var pill := UiKit.pill(pr[0], UiKit.num(FamilyProfile.data.get(pr[1], 0)), pr[2])
+		_purse[pr[1]] = pill.get_node("Value")
+		pills.add_child(pill)
 	_ui.add_child(pills)
 	_prompt = PanelContainer.new()
 	_prompt.add_theme_stylebox_override("panel", UiKit.frame(Palette.LEMON, 0.35))
@@ -503,6 +507,10 @@ func overlay_open() -> bool:
 
 func _process(delta: float) -> void:
 	_t += delta
+	for k: String in _purse:
+		var v := UiKit.num(FamilyProfile.data.get(k, 0))
+		if (_purse[k] as Label).text != v:
+			(_purse[k] as Label).text = v
 	for c in _portal.get_children():
 		if c is Line2D:
 			(c as Line2D).rotation = sin(_t * float(c.get_meta("spin", 1.0))) * 0.25

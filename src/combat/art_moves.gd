@@ -699,7 +699,7 @@ func _bring_partner() -> void:
 	_phantom.global_position = f.global_position + Vector2(-260.0 * float(_dir), 0)
 	f.get_parent().add_child(_phantom)
 	_p_anim = SpriteBook.make_anim(_other_role())
-	SpriteBook.grow(_p_anim, SpriteBook.FIGHTER_SCALE * (SpriteBook.FATHER_K if _other_role() == "father" else 1.0))
+	SpriteBook.grow(_p_anim, SpriteBook.FIGHTER_SCALE * SpriteBook.hero_k(_other_role()))
 	_phantom.add_child(_p_anim)
 	Suits.dress(_p_anim, _other_role())
 	Palettes.apply(_p_anim, _other_role())

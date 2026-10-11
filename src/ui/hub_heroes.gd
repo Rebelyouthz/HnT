@@ -20,6 +20,10 @@ func _ready() -> void:
 
 
 func _paint(keep: String = "") -> void:
+	# A buy's need_refresh can make the hub rebuild this tab first; the old
+	# one, already out of the tree, has nothing left to paint.
+	if not is_inside_tree():
+		return
 	for c in _root.get_children():
 		_root.remove_child(c)
 		c.queue_free()
@@ -37,7 +41,7 @@ func _paint(keep: String = "") -> void:
 		mv.add_child(mdot)
 	mv.pressed.connect(func() -> void:
 		var sh := preload("res://src/ui/moves_sheet.gd").new()
-		get_tree().current_scene.add_child(sh)
+		UiKit.open_over(self, sh)
 		sh.closed.connect(func() -> void:
 			sh.queue_free()
 			need_refresh.emit()

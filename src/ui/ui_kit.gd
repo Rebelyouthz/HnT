@@ -384,6 +384,33 @@ static func fx_after(root: Node, key: String, col: Color = GOLD, text := "", big
 	, CONNECT_ONE_SHOT)
 
 
+## Open a full-screen sheet over the menu `host` lives in: its own canvas
+## layer one above host's, at the design scale. Adding sheets to the
+## current scene put them under the hub whenever the hub is an overlay
+## (the hideout opens it on layer 45), so the button seemed dead. The
+## layer goes when the sheet does, or when the scene changes.
+static func open_over(host: Control, sheet: Control) -> CanvasLayer:
+	var tree := host.get_tree()
+	var cl := CanvasLayer.new()
+	cl.layer = FocusGlide.layer_above(host) + 1
+	tree.root.add_child(cl)
+	var wrap := Control.new()
+	cl.add_child(wrap)
+	PixelStage.apply_control(wrap)
+	wrap.add_child(sheet)
+	sheet.tree_exited.connect(func() -> void:
+		if is_instance_valid(cl):
+			cl.queue_free()
+	, CONNECT_ONE_SHOT)
+	var scene := tree.current_scene
+	if scene != null:
+		scene.tree_exiting.connect(func() -> void:
+			if is_instance_valid(cl):
+				cl.queue_free()
+		, CONNECT_ONE_SHOT)
+	return cl
+
+
 static func pulse_ready(b: Control) -> void:
 	b.pivot_offset = b.custom_minimum_size * 0.5
 	var tw := b.create_tween().set_loops()

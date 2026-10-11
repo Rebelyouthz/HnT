@@ -138,7 +138,7 @@ func _ready() -> void:
 	pivot.position = Vector2(0, -34)
 	add_child(pivot)
 	anim = SpriteBook.make_anim(role)
-	SpriteBook.grow(anim, SpriteBook.FIGHTER_SCALE * (SpriteBook.FATHER_K if role == "father" else 1.0))
+	SpriteBook.grow(anim, SpriteBook.FIGHTER_SCALE * SpriteBook.hero_k(role))
 	anim.position += Vector2(0, 34)
 	_anim_base = anim.position
 	pivot.add_child(anim)
