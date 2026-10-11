@@ -58,7 +58,7 @@ func _ready() -> void:
 	layer = 40
 	_panel = PanelContainer.new()
 	_panel.add_theme_stylebox_override("panel", UiKit.frame(Palette.LEMON, 0.35))
-	_panel.custom_minimum_size = Vector2(440, 0)
+	_panel.custom_minimum_size = Vector2(380, 0)
 	PixelStage.attach_canvas(self).add_child(_panel)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 4)
@@ -82,7 +82,7 @@ func _ready() -> void:
 	v.add_child(_btns)
 	_line = Label.new()
 	_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_line.custom_minimum_size = Vector2(420, 0)
+	_line.custom_minimum_size = Vector2(360, 0)
 	UiKit.apply_label(_line, 12, Palette.TEXT)
 	v.add_child(_line)
 	var done: Array = FamilyProfile.data.get("school", [])
@@ -110,7 +110,20 @@ func _start() -> void:
 	_paint()
 	UiKit.pop_in(_panel)
 	_panel.reset_size()
-	_panel.position = Vector2(420.0 - _panel.size.x * 0.5, 230.0)
+	# Left column under the player plate: above the fighter's head, clear
+	# of the style chart on the right and the drill buttons below.
+	_panel.position = Vector2(16.0, 150.0)
+
+
+## If the fighter jumps up under the card anyway, it turns see-through.
+func _fade_over_hero(delta: float) -> void:
+	if _panel == null or hero == null or not is_instance_valid(hero):
+		return
+	var k := float(PixelStage.DESIGN.x) / float(PixelStage.LOGICAL.x)
+	var feet := hero.get_viewport().get_canvas_transform() * hero.global_position * k
+	var body := Rect2(feet - Vector2(40, 190), Vector2(80, 196))
+	var over := Rect2(_panel.position, _panel.size).intersects(body)
+	_panel.modulate.a = move_toward(_panel.modulate.a, 0.2 if over else 1.0, delta * 5.0)
 
 
 func _paint() -> void:
@@ -182,6 +195,7 @@ func _pass() -> void:
 func _process(delta: float) -> void:
 	if hero == null or not is_instance_valid(hero):
 		return
+	_fade_over_hero(delta)
 	if _done_t > 0.0:
 		_done_t -= delta
 		if _done_t <= 0.0:

@@ -13,6 +13,7 @@ var _fold: Tween
 var _col: VBoxContainer
 var _quests: Dictionary = {}
 var _line_w := 356.0
+var _has_job := true
 
 
 ## Show the full card for a while, then fold it down to just the title and
@@ -117,6 +118,10 @@ func _paint() -> void:
 	var row := StoryBook.act(map_id)
 	var main := str(row.get("main", ""))
 	var side := str(row.get("side", ""))
+	# No job on this map (the dojo, practice): no empty card.
+	_has_job = main != ""
+	if _wrap:
+		_wrap.visible = _has_job and not get_tree().paused
 	_main.text = ("☑  " if _main_done else "☐  ") + main
 	_side.text = ("☑  " if _side_done else "☐  ") + side
 	_main.add_theme_color_override("font_color", Palette.READY if _main_done else Palette.TEXT)
@@ -129,7 +134,7 @@ func _paint() -> void:
 func _process(_delta: float) -> void:
 	# Pause, level-up picks and sheets: the objective card steps aside.
 	if _wrap:
-		_wrap.visible = not get_tree().paused
+		_wrap.visible = _has_job and not get_tree().paused
 	if get_tree().paused:
 		return
 	if _lunch_done:

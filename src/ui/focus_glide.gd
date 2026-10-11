@@ -146,6 +146,10 @@ func _first_button() -> Control:
 func _hidden(c: Control) -> bool:
 	if c.has_meta("no_glide"):
 		return true
+	# Only things you press or slide get the frame: a panel that kept focus
+	# (a chart row, a card) must not draw a box across the screen.
+	if not (c is BaseButton or c is Range or c is ItemList or c is TabBar or c is Tree):
+		return true
 	return c is LineEdit or c is TextEdit
 
 

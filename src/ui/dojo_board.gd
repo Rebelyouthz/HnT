@@ -64,8 +64,9 @@ func _build() -> void:
 		col.add_child(row)
 	# Guard drill strip along the bottom.
 	_guide = Label.new()
-	_guide.position = Vector2(140, 662)
-	_guide.size = Vector2(1000, 50)
+	# Left of the style chart (x 850+) so the last combo row stays readable.
+	_guide.position = Vector2(230, 650)
+	_guide.size = Vector2(600, 64)
 	_guide.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_guide.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	UiKit.apply_label(_guide, 13, Color(0.75, 0.88, 1.0))
@@ -92,7 +93,7 @@ func _build() -> void:
 
 ## The chart covers the right of the mat: when the fighter walks in under
 ## it, it turns see-through so you never lose him behind it.
-func _process(delta: float) -> void:
+func _fade_card(delta: float) -> void:
 	if _card == null or _who == null or not is_instance_valid(_who):
 		return
 	var k := float(PixelStage.DESIGN.x) / float(PixelStage.LOGICAL.x)
@@ -174,7 +175,8 @@ func _toggle_spar() -> void:
 	Juice.shout("SPAR" if _spar_on else "STILL")
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	_fade_card(delta)
 	if _guide == null:
 		return
 	if (PadRouter.last_kind == "pad") != _pad:
