@@ -4,7 +4,7 @@ extends RefCounted
 ## Your own fighting style. Every hero has a LOADOUT of move slots; any
 ## learned strike (data/moves.json) that fits a slot can go in it:
 ##   L1 L2 L3   the light string (1st, 2nd, 3rd press)
-##   H          heavy        F+H  forward + heavy     U+H  guard + heavy (hold BLOCK, press HEAVY)
+##   H          heavy        F+H  forward + heavy     U+H  up + heavy
 ##   STR        heavy after two lights (the string ender)
 ##   AIR_L      light in the air                       AIR_H  heavy in the air
 ## Damage follows the move's weight against the slot's default (a dropkick
@@ -16,7 +16,7 @@ extends RefCounted
 
 const SLOTS := ["L1", "L2", "L3", "H", "F+H", "U+H", "STR", "AIR_L", "AIR_H"]
 const SLOT_KIND := {"L1": "light", "L2": "light", "L3": "light", "H": "heavy", "F+H": "heavy", "U+H": "heavy", "STR": "heavy", "AIR_L": "air", "AIR_H": "air"}
-const SLOT_NAME := {"L1": "LIGHT 1", "L2": "LIGHT 2", "L3": "LIGHT 3", "H": "HEAVY", "F+H": "FWD + HEAVY", "U+H": "GUARD + HEAVY", "STR": "STRING ENDER", "AIR_L": "AIR LIGHT", "AIR_H": "AIR HEAVY"}
+const SLOT_NAME := {"L1": "LIGHT 1", "L2": "LIGHT 2", "L3": "LIGHT 3", "H": "HEAVY", "F+H": "FWD + HEAVY", "U+H": "UP + HEAVY", "STR": "STRING ENDER", "AIR_L": "AIR LIGHT", "AIR_H": "AIR HEAVY"}
 const DEFAULT := {"L1": "jab", "L2": "cross", "L3": "gut", "H": "heavy", "F+H": "heavy", "U+H": "uppercut", "STR": "roundhouse", "AIR_L": "front_kick", "AIR_H": "air_spin_kick"}
 const TOKENS := ["L", "H", "F+L", "F+H", "B+H", "U+H", "U+L", "Dn+L", "D", "J"]
 const MAX_CUSTOM := 6

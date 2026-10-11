@@ -77,6 +77,13 @@ func setup(who: String) -> void:
 		add_child(_hammer)
 
 
+## Top of the hair above the feet, in this node's units (SpeechBubble).
+func bubble_head() -> float:
+	if _spr == null or _spr.texture == null:
+		return BODY_H + 6.0
+	return float(_spr.texture.get_height()) * _spr.scale.y + 6.0
+
+
 func face(dir: int) -> void:
 	facing = 1 if dir >= 0 else -1
 

@@ -47,6 +47,11 @@ func _process(_d: float) -> bool:
 			if str(st["id"]) == _args[0]:
 				print("crew: ", current_scene.get("_crew").keys(), " busy ", current_scene.get("_busy"), " paused ", paused)
 				print("station children: ", (st["node"] as Node).get_children().map(func(c: Node) -> String: return c.get_class()))
+	if _n == 110 and _args.size() > 2 and _args[2] == "talk":
+		var tk2: Object = current_scene.get("_talk")
+		tk2.call("play", [{"who": "father", "text": "Gant hits like a late fee. I need thick skin before I take him again."}, {"who": "son", "text": "Then we buy it. Follow the arrow."}], true)
+	if _n == 160 and _args.size() > 2 and _args[2] == "talk":
+		current_scene.get("_talk").call("_next")
 	if _args.size() > 2 and _n in [50, 62, 74, 86, 100, 130, 160, 190, 220]:
 		root.get_texture().get_image().save_png(_args[1].replace(".png", "_%d.png" % _n))
 	if _n == (330 if _args.size() > 2 else 100):

@@ -25,6 +25,20 @@ class CampWalker extends Node2D:
 	var facing := 1
 	var walking := false
 
+	## Top of the hair above the feet (SpeechBubble): the idle frame's
+	## trimmed height at the room's size.
+	func bubble_head() -> float:
+		if anim == null or anim.sprite_frames == null or not anim.sprite_frames.has_animation("idle"):
+			return 70.0
+		var t := anim.sprite_frames.get_frame_texture("idle", 0)
+		var cell_h := float(t.get_height())
+		var top := 0.0
+		if t is AtlasTexture:
+			# AtlasTexture margins restore the cell: the body starts margin.y down.
+			top = (t as AtlasTexture).margin.position.y
+		var off := anim.offset.y - (cell_h * 0.5 if anim.centered else 0.0)
+		return -(anim.position.y + (off + top) * absf(anim.scale.y)) + 6.0
+
 	func setup(who: String) -> void:
 		role = who
 		add_to_group("players")
@@ -497,7 +511,8 @@ func _arrive() -> void:
 func station_world(id: String) -> Vector2:
 	for st in _stations:
 		if str(st["id"]) == id:
-			return Vector2(float(st["x"]), WALK_Y - 66.0)
+			# Just over the heads, under the station's floating prompt.
+			return Vector2(float(st["x"]), WALK_Y - _walker.bubble_head() - 2.0)
 	return Vector2.INF
 
 
@@ -566,7 +581,8 @@ func _pick_near() -> void:
 			c.a = 0.0
 			(ring as Line2D).default_color = c
 	_near = best
-	if best.is_empty():
+	# While someone talks, the floating prompt would sit on the balloon.
+	if best.is_empty() or (_talk != null and _talk.busy()):
 		_prompt.visible = false
 		return
 	_prompt_label.text = _prompt_for(best)
@@ -578,10 +594,11 @@ func _pick_near() -> void:
 	_prompt.size = Vector2.ZERO
 	var sz := _prompt.get_combined_minimum_size()
 	# Float the prompt over the station, above head height.
-	var at := get_viewport().get_canvas_transform() * Vector2(float(best["x"]), WALK_Y - 62.0)
+	# Over the hair, not across the faces of whoever stands at the station.
+	var at := get_viewport().get_canvas_transform() * Vector2(float(best["x"]), WALK_Y - _walker.bubble_head() - 10.0)
 	var k := float(PixelStage.DESIGN.x) / float(PixelStage.LOGICAL.x)
 	var px := clampf(at.x * k - sz.x * 0.5, 16.0, 1264.0 - sz.x)
-	var py := clampf(at.y * k - sz.y, 130.0, 560.0)
+	var py := clampf(at.y * k - sz.y, 96.0, 560.0)
 	_prompt.position = Vector2(px, py).round()
 
 
@@ -607,6 +624,12 @@ func _prompt_for(st: Dictionary) -> String:
 func _use(st: Dictionary) -> void:
 	var id := str(st["id"])
 	if _busy:
+		return
+	# Story first: while the errand points at a room, only that room opens.
+	var eg := get_tree().get_first_node_in_group("errand_guide")
+	if eg != null and not bool(eg.call("allows_station", id)):
+		eg.call("nudge")
+		_talk.play([{"who": _walker.role, "text": str(eg.call("step_line"))}], true)
 		return
 	Juice.play("res://assets/audio/ui_click.wav")
 	if id == "portal":

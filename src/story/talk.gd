@@ -32,6 +32,7 @@ var _type_label: Label
 
 
 func _ready() -> void:
+	add_to_group("talk")
 	layer = 35
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_ui = PixelStage.attach_canvas(self)
@@ -167,7 +168,9 @@ func _speaker(who: String) -> Node2D:
 				return n as Node2D
 			var half := get_viewport().get_visible_rect().size * 0.5 / cam.zoom
 			var d := (n as Node2D).global_position - cam.get_screen_center_position()
-			if absf(d.x) < half.x - 20.0 and absf(d.y) < half.y + 40.0:
+			# On screen sideways is what counts: feet sit low in a tall frame
+			# (the hideout's camera looks at chest height), so allow depth.
+			if absf(d.x) < half.x - 20.0 and absf(d.y) < half.y * 1.6 + 60.0:
 				return n as Node2D
 	return null
 
@@ -205,7 +208,8 @@ func _show_dock(who: String, text: String) -> void:
 	_dock.visible = true
 	# Father docks left, Son right, so a back-and-forth reads like a call.
 	var sz := _dock.get_combined_minimum_size()
-	_dock.position = Vector2(40, 560 - sz.y) if who == "father" else Vector2(1240 - sz.x, 560 - sz.y)
+	# Off screen speakers dock along the bottom edge, clear of the people.
+	_dock.position = Vector2(40, 700 - sz.y) if who == "father" else Vector2(1240 - sz.x, 700 - sz.y)
 	_start_typing(_dock_body)
 	UiKit.pop_in(_dock)
 	_wait = 1.4 + float(text.length()) * 0.045

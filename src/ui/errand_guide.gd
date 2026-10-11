@@ -51,6 +51,9 @@ var _placed_for := Rect2()
 var _placed_size := Vector2.ZERO
 var _cap_text: Label
 var _cap_sub: Label
+## The control the arrow is on (menus), for the story lock.
+var _target_ctrl: Control = null
+var _nudge := 0.0
 
 
 ## The map whose gate still wants a buy, or "".
@@ -126,6 +129,7 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_t += delta
+	_nudge = move_toward(_nudge, 0.0, delta * 2.5)
 	# Leaving the hideout ends the errand guide; the next visit makes a new one.
 	if get_tree().current_scene != _last_scene:
 		queue_free()
@@ -142,6 +146,9 @@ func _process(delta: float) -> void:
 		_target_step(steps[0])
 	# Hide while a first-use Guide is talking: one voice at a time.
 	var talking := get_tree().get_first_node_in_group("guide") != null
+	for tk in get_tree().get_nodes_in_group("talk"):
+		if tk.has_method("busy") and bool(tk.call("busy")):
+			talking = true
 	_draw.visible = not talking and _rect.size != Vector2.ZERO
 	_cap.visible = _draw.visible
 	if _cap.visible:
@@ -160,6 +167,10 @@ func _process(delta: float) -> void:
 func _place_caption() -> Vector2:
 	var vp := get_viewport().get_visible_rect().size
 	var sz := _cap.size
+	# A room on the floor: the story line sits fixed at the top, clear of
+	# the people and the room's own prompt over their heads.
+	if target.begins_with("station:"):
+		return Vector2((vp.x - sz.x) * 0.5, 44.0)
 	var cx := _rect.get_center().x - sz.x * 0.5
 	var cy := _rect.get_center().y - sz.y * 0.5
 	var spots := [
@@ -194,6 +205,68 @@ func _place_caption() -> Vector2:
 	return best
 
 
+## The story leads until the way is open: while the arrow is on a room of
+## the hideout, only that room opens (the rest say what comes first); while
+## it is on a button in a menu, only that button presses.
+func allows_station(id: String) -> bool:
+	if not target.begins_with("station:"):
+		return true
+	return id == target.substr(8)
+
+
+## Said when something off the path is tried: what to do instead.
+func step_line() -> String:
+	var what := _label.get_slice("·", 0).strip_edges().capitalize()
+	return "Story first. %s - follow the arrow." % what if what != "" else "Story first - follow the arrow."
+
+
+func nudge() -> void:
+	_nudge = 1.0
+	Mixer.play_sfx("res://assets/audio/ui_click.wav", 0.7, -6.0)
+
+
+func _menu_locked() -> bool:
+	if _target_ctrl == null or not is_instance_valid(_target_ctrl) or not _target_ctrl.is_visible_in_tree():
+		return false
+	# A step that cannot be done (no gold for it) never traps you.
+	var tb := _target_ctrl as BaseButton
+	if tb != null and tb.disabled:
+		return false
+	if get_tree().get_first_node_in_group("guide") != null:
+		return false
+	for tk in get_tree().get_nodes_in_group("talk"):
+		if tk.has_method("busy") and bool(tk.call("busy")):
+			return false
+	return true
+
+
+## Would the story lock eat a press on this control right now?
+func blocks(c: Control) -> bool:
+	if not _menu_locked():
+		return false
+	while c != null and not (c is BaseButton):
+		c = c.get_parent() as Control
+	if c == null or (c as BaseButton).disabled:
+		return false
+	return not (c == _target_ctrl or _target_ctrl.is_ancestor_of(c) or c.is_ancestor_of(_target_ctrl))
+
+
+func _input(event: InputEvent) -> void:
+	if not _menu_locked():
+		return
+	var mouse := event is InputEventMouseButton and (event as InputEventMouseButton).pressed and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT
+	var accept := not mouse and event.is_action_pressed("ui_accept") and not event.is_echo()
+	if not mouse and not accept:
+		return
+	var c: Control = get_viewport().gui_get_hovered_control() if mouse else get_viewport().gui_get_focus_owner()
+	if not blocks(c):
+		return
+	get_viewport().set_input_as_handled()
+	nudge()
+	if accept and _target_ctrl.focus_mode != Control.FOCUS_NONE:
+		_target_ctrl.grab_focus()
+
+
 func _scene() -> Node:
 	return get_tree().current_scene
 
@@ -224,6 +297,12 @@ func _aim_control(c: Control) -> void:
 			p = p.get_parent()
 	var tf := c.get_global_transform_with_canvas()
 	_rect = Rect2(tf.origin, c.size * tf.get_scale()).grow(3.0)
+	# The pad lands on it: one press of A does the step.
+	if c != _target_ctrl:
+		_target_ctrl = c
+		var b := c as BaseButton
+		if b != null and not b.disabled and b.focus_mode != Control.FOCUS_NONE and get_tree().get_first_node_in_group("guide") == null:
+			b.grab_focus.call_deferred()
 	# Just above the menu it points into: an UNLOCKED banner or a popup
 	# over that menu covers the frame instead of the frame sitting on it.
 	layer = FocusGlide.layer_above(c)
@@ -241,7 +320,8 @@ func _aim_world(at: Vector2) -> void:
 	elif p.x > vp.x - 20.0:
 		_edge = 1
 		p.x = vp.x - 28.0
-	_rect = Rect2(p - Vector2(14, 22), Vector2(28, 44))
+	# The chevron hangs from the top of this rect: its tip lands on `at`.
+	_rect = Rect2(p - Vector2(14, -2), Vector2(28, 44))
 
 
 func _overlay_open() -> bool:
@@ -277,6 +357,7 @@ func _chain(keys: Array, station: String) -> bool:
 
 func _target_step(step: Dictionary) -> void:
 	_rect = Rect2()
+	_target_ctrl = null
 	var need: Dictionary = PowerBook.spec(_map).get("need", {})
 	var shop := str(need.get("shop", ""))
 	var what := str(step.get("what", ""))
@@ -319,6 +400,7 @@ func _target_step(step: Dictionary) -> void:
 
 func _target_done() -> void:
 	_rect = Rect2()
+	_target_ctrl = null
 	var need: Dictionary = PowerBook.spec(_map).get("need", {})
 	# Bought gear goes on: point at WEAR once before the portal.
 	if str(need.get("kind", "")) == "gear":
@@ -341,7 +423,7 @@ func _paint() -> void:
 	if _rect.size == Vector2.ZERO:
 		return
 	var pulse := 0.5 + 0.5 * sin(_t * 5.0)
-	var r := _rect.grow(2.0 + 2.0 * pulse)
+	var r := _rect.grow(2.0 + 2.0 * pulse + 6.0 * _nudge)
 	var col := Color(UiKit.GOLD.r, UiKit.GOLD.g, UiKit.GOLD.b, 0.55 + 0.45 * pulse)
 	# A room on the floor gets the arrow only: a box there just framed
 	# whoever stood in front of it.

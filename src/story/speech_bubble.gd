@@ -122,6 +122,10 @@ func _follow() -> void:
 	# Heroes stand on their feet (origin at the soles) and are drawn tall:
 	# the balloon goes over the hair, not over the face.
 	var head := HEAD + (26.0 if target is Fighter else 0.0)
+	# Actors drawn at another size (the hideout's big room) know their own
+	# head height: the balloon goes just over the hair, never on the chest.
+	if target.has_method("bubble_head"):
+		head = float(target.call("bubble_head"))
 	var p := target.get_global_transform_with_canvas() * Vector2(0, -head + hop)
 	var k := float(PixelStage.DESIGN.x) / float(PixelStage.LOGICAL.x)
 	var d := p * k
