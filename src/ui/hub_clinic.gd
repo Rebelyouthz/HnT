@@ -285,6 +285,7 @@ func _detail(id: String) -> void:
 	var can_pay := int(FamilyProfile.data["gold"]) >= cost
 	if lvl > 0 and (id in CampSheets.PATHS or CampSheets.TAB_OF.has(id)):
 		var open := UiKit.button("OPEN", Vector2(170, 50))
+		open.set_meta("key", "open_btn_" + id)
 		open.pressed.connect(func() -> void:
 			layer.queue_free()
 			if CampSheets.TAB_OF.has(id):
@@ -295,6 +296,7 @@ func _detail(id: String) -> void:
 		row.add_child(open)
 	if lvl < 4:
 		var b := UiKit.button(("BUILD  %d G" if lvl == 0 else "UPGRADE  %d G") % cost, Vector2(220, 50))
+		b.set_meta("key", "build_btn_" + id)
 		b.disabled = not can_pay
 		if not can_pay:
 			b.text = "NEED %d GOLD" % cost

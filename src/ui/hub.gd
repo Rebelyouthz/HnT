@@ -362,6 +362,7 @@ func _make_tabs() -> Control:
 		b.add_theme_constant_override("icon_max_width", 34)
 		b.add_theme_constant_override("h_separation", 10)
 		b.name = id
+		b.set_meta("key", "tab_" + id)
 		b.set_anchors_preset(Control.PRESET_FULL_RECT)
 		b.pressed.connect(_show_tab.bind(id))
 		wrap.add_child(b)

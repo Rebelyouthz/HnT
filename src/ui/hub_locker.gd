@@ -41,6 +41,9 @@ func _ready() -> void:
 
 
 func _paint() -> void:
+	# A buy can repaint a page the hub already swapped out.
+	if not is_inside_tree():
+		return
 	_last_slot = _slot
 	_last_role = _role
 	for c in _root.get_children():
@@ -173,6 +176,7 @@ func _set_box() -> Control:
 func _slot_box(slot: String) -> Control:
 	var b := Button.new()
 	b.set_meta("slot", slot)
+	b.set_meta("key", "slot_" + slot)
 	b.focus_mode = Control.FOCUS_ALL
 	Bevel.dress(b)
 	UiKit.press_feel(b)
@@ -493,6 +497,7 @@ func _gear_card(item: Dictionary) -> Control:
 		btns.add_child(on)
 	elif owned:
 		var wear := UiKit.button(Copy.WEAR, Vector2(150, 36))
+		wear.set_meta("key", "gear_wear_" + id)
 		wear.pressed.connect(func() -> void:
 			var old_st := _item_stats(GearBook.item(FamilyProfile.equipped_id(_role, _slot)))
 			var from := _root.get_global_transform().affine_inverse() * gi.get_global_rect().get_center()
@@ -506,6 +511,7 @@ func _gear_card(item: Dictionary) -> Control:
 	else:
 		var cost := FamilyProfile.gear_price(id)
 		var buy := UiKit.button("%d GOLD" % cost if cost > 0 else "CLAIM", Vector2(150, 36))
+		buy.set_meta("key", "gear_buy_" + id)
 		var need_gold := int(FamilyProfile.data.get("gold", 0)) < cost
 		var need_rep := int(FamilyProfile.data.get("rep", 0)) < int(item.get("rep", 0))
 		buy.disabled = need_gold or need_rep

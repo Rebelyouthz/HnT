@@ -475,6 +475,23 @@ func _arrive() -> void:
 	App.camp_open_tab = ""
 	if tab != "" and tab != "clinic":
 		_open_hub(tab)
+	# A story errand (the gate's buy) gets its arrow once the hello is said.
+	get_tree().create_timer(3.2).timeout.connect(func() -> void:
+		if is_inside_tree():
+			ErrandGuide.ensure(self)
+	)
+
+
+## Errand guide: where a station stands on the floor, INF if none.
+func station_world(id: String) -> Vector2:
+	for st in _stations:
+		if str(st["id"]) == id:
+			return Vector2(float(st["x"]), WALK_Y - 66.0)
+	return Vector2.INF
+
+
+func overlay_open() -> bool:
+	return _overlay != null and is_instance_valid(_overlay)
 
 
 func _process(delta: float) -> void:

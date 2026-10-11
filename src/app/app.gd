@@ -212,9 +212,27 @@ func leave_camp() -> void:
 	if _film_seen == film_from + "->" + next_id:
 		_film_seen = ""
 		film_kind = ""
-		_hop(next_id)
+		# The chapter card already played before the hideout; a set piece
+		# film (skinwalker, parachute) still runs on the way out.
+		if not _set_piece(next_id):
+			_hop(next_id)
 		return
 	_advance_core(next_id)
+
+
+## The two story beats that are their own scene, not a chapter card.
+func _set_piece(next_id: String) -> bool:
+	film_from = current_map
+	film_next = next_id
+	if current_map == "copay_orchard" and next_id == "sleet_hour":
+		film_kind = "parachute"
+		_hop("parachute_fall")
+		return true
+	if current_map == "neon_exchange" and next_id == "waiting_room":
+		film_kind = "skinwalker"
+		_hop("skinwalker_film")
+		return true
+	return false
 
 
 ## act_film calls this when a bridge film that leads into the hideout ends.
@@ -234,13 +252,7 @@ func _advance_core(next_id: String) -> void:
 		film_next = "hub"
 		_hop("act_film")
 		return
-	if current_map == "copay_orchard" and next_id == "sleet_hour":
-		film_kind = "parachute"
-		_hop("parachute_fall")
-		return
-	if current_map == "neon_exchange" and next_id == "waiting_room":
-		film_kind = "skinwalker"
-		_hop("skinwalker_film")
+	if _set_piece(next_id):
 		return
 	film_kind = "bridge"
 	var hop := next_id

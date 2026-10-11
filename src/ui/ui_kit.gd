@@ -369,6 +369,8 @@ static func pill(title: String, value: String, accent: Color) -> HBoxContainer:
 ## Upgrade juice on the control tagged `key` (meta "key") under `root`
 ## once a repaint has rebuilt it (next frame).
 static func fx_after(root: Node, key: String, col: Color = GOLD, text := "", big := false) -> void:
+	if root == null or not root.is_inside_tree():
+		return
 	var tree := root.get_tree()
 	tree.process_frame.connect(func() -> void:
 		var top: Node = root if is_instance_valid(root) and root.is_inside_tree() else tree.root

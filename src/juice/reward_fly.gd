@@ -237,12 +237,14 @@ func upgrade(target: Control, color: Color, text := "", big := false, icon := ""
 		_show_busy = _now() + 0.6
 		# Seen first: the word (and icon) stands big in the middle, then
 		# shrinks and flies into the thing that was bought / levelled / worn.
-		_showcase(icon, text, color, "", big, func() -> Vector2: return vp_of(target) if is_instance_valid(target) and target.is_inside_tree() else _center(),
+		# A weak ref: the menu that held the target may be rebuilt mid-flight.
+		var wr: WeakRef = weakref(target)
+		_showcase(icon, text, color, "", big, func() -> Vector2:
+				var tg: Control = wr.get_ref()
+				return vp_of(tg) if tg != null and tg.is_inside_tree() else _center(),
 			func() -> void:
-				if is_instance_valid(target) and target.is_inside_tree():
-					_hit_target(target, color, "", big)
-				else:
-					_hit_target(null, color, "", big))
+				var tg2: Control = wr.get_ref()
+				_hit_target(tg2 if tg2 != null and tg2.is_inside_tree() else null, color, "", big))
 		return
 	_hit_target(target, color, text, big)
 
@@ -296,7 +298,12 @@ func _showcase(icon_name: String, title: String, color: Color, sub: String, big:
 		snd("up_boom", 1.0, -5.0)
 	_sparks(c, color, 16 if big else 8, 70.0 if big else 46.0)
 	var keep := hold if hold >= 0.0 else (0.55 if big else 0.32)
-	var tw := create_tween()
+	# The tween lives on the card: a scene change that frees it ends the
+	# flight instead of calling into a freed node.
+	var tw := root.create_tween()
+	root.tree_exiting.connect(func() -> void:
+		if is_instance_valid(veil):
+			veil.queue_free())
 	var hs := SHOW * (1.2 if big else 1.0)
 	tw.tween_property(root, "scale", Vector2(hs * 1.2, hs * 1.2), 0.16).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.tween_property(root, "scale", Vector2(hs, hs), 0.08)
@@ -305,6 +312,8 @@ func _showcase(icon_name: String, title: String, color: Color, sub: String, big:
 	tw.parallel().tween_property(veil, "color:a", 0.0, 0.2)
 	var bend := Vector2(randf_range(-40.0, 40.0), -50.0)
 	tw.tween_method(func(k: float) -> void:
+		if not is_instance_valid(root):
+			return
 		var dest: Vector2 = to.call()
 		var m := (c + dest) * 0.5 + bend
 		root.position = c.lerp(m, k).lerp(m.lerp(dest, k), k).round()
@@ -333,9 +342,14 @@ func _veil(a: float) -> ColorRect:
 ## Something new landed in a slot / list: showcase, then into `slot`
 ## (or the top-right corner where the bag lives when there is none).
 func equip(icon_name: String, title: String, color: Color, slot: Control = null, sub := "") -> void:
+	var wr: WeakRef = weakref(slot) if slot != null else null
 	_showcase(icon_name, title, color, sub, false,
-		func() -> Vector2: return vp_of(slot) if slot != null and is_instance_valid(slot) and slot.is_inside_tree() else Vector2(get_viewport().get_visible_rect().size.x - 30.0, 16.0),
-		func() -> void: _hit_target(slot if slot != null and is_instance_valid(slot) and slot.is_inside_tree() else null, color, "", false))
+		func() -> Vector2:
+			var s2: Control = wr.get_ref() if wr != null else null
+			return vp_of(s2) if s2 != null and s2.is_inside_tree() else Vector2(get_viewport().get_visible_rect().size.x - 30.0, 16.0),
+		func() -> void:
+			var s3: Control = wr.get_ref() if wr != null else null
+			_hit_target(s3 if s3 != null and s3.is_inside_tree() else null, color, "", false))
 
 
 func _hit_target(target: Control, color: Color, text := "", big := false) -> void:

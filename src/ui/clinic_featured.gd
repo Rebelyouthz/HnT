@@ -112,6 +112,7 @@ static func card_style(lit: bool) -> StyleBoxFlat:
 func _card(id: String) -> Control:
 	var lvl := FamilyProfile.building_level(id)
 	var b := Button.new()
+	b.set_meta("key", "card_" + id)
 	b.custom_minimum_size = CARD
 	b.focus_mode = Control.FOCUS_ALL
 	Bevel.dress(b)

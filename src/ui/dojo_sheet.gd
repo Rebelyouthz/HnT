@@ -145,6 +145,7 @@ func _row(info: Dictionary) -> Control:
 	var gem_cost := FamilyProfile.dojo_gem_cost(rank)
 	var label := "TRAIN  %dG" % cost if gem_cost == 0 else "MASTER  %dG + %d GEM" % [cost, gem_cost]
 	var go := UiKit.button("MASTERED" if rank >= 3 else label, Vector2(150, 40))
+	go.set_meta("key", "dojo_" + id)
 	go.disabled = rank >= 3
 	if rank < 3 and int(FamilyProfile.data.get("gold", 0)) < cost:
 		go.disabled = true

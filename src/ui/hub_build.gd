@@ -479,6 +479,7 @@ func _show_tip(node: Dictionary, _at: Vector2) -> void:
 			right.add_child(p)
 		_:
 			var buy := UiKit.button("BUY", Vector2(150, 34))
+			buy.set_meta("key", "node_buy_" + str(node.get("id", "")))
 			buy.pressed.connect(func() -> void: _buy(node))
 			right.add_child(buy)
 	_tip_box.add_child(right)
