@@ -76,3 +76,10 @@ func build_world() -> void:
 	shop.hint = "SPECIAL TAPE 9  ·  DOWN PIPE 7  ·  UP SELL 0"
 	shop.global_position = Vector2(2720, 490)
 	add_child(shop)
+	# The agents' smile cams: a red cone sweeps the strip; get seen and an
+	# agent walks in. Duck under it, sneak past on the roofs, or break it.
+	for x in [700.0, 1660.0, 2200.0]:
+		SmileCam.place(self, Vector2(x, 500.0))
+	SmileCam.place(self, Vector2(620.0, ROOF_Y), true)
+	SmileCam.place(self, Vector2(1420.0, ROOF_Y), true)
+	NightStreet.plaque(self, Vector2(640, 214), "SMILE CAMS  ·  DUCK OR BREAK", Palette.MUTED, 13)

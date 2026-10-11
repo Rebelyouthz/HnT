@@ -251,6 +251,16 @@ func _thing(at: Vector2, s: float = 1.0) -> void:
 			draw_colored_polygon(tr * pts, col)
 			draw_line(tr * Vector2(-4, -4), tr * Vector2(4, -4), Color(0.8, 0.1, 0.1), 1.0)
 			draw_line(tr * Vector2(-4, 0), tr * Vector2(4, 0), Color(0.3, 0.3, 0.35), 1.0)
+		"warrant":
+			var tw := Transform2D(spin, at)
+			var wp := PackedVector2Array([Vector2(-7, -9), Vector2(7, -9), Vector2(7, 9), Vector2(-7, 9)])
+			draw_colored_polygon(tw * wp, Color(0.78, 0.86, 1.0))
+			draw_line(tw * Vector2(-4, -5), tw * Vector2(4, -5), Color(0.2, 0.3, 0.6), 1.0)
+			draw_circle(tw * Vector2(2, 4), 2.5, Color(0.95, 0.75, 0.2))
+		"cuffs":
+			draw_arc(at + Vector2(-7, -10) * s, 7.0 * s, 0, TAU, 14, Color(0.78, 0.8, 0.85), 3.0 * s)
+			draw_arc(at + Vector2(7, -10) * s, 7.0 * s, 0, TAU, 14, Color(0.78, 0.8, 0.85), 3.0 * s)
+			draw_line(at + Vector2(-1, -10) * s, at + Vector2(1, -10) * s, Color(0.6, 0.62, 0.66), 2.0 * s)
 		"boot":
 			draw_rect(Rect2(at + Vector2(-16, -26) * s, Vector2(32, 26) * s), Color(0.95, 0.75, 0.1))
 			draw_rect(Rect2(at + Vector2(-10, -20) * s, Vector2(20, 14) * s), Color(0.12, 0.12, 0.14))

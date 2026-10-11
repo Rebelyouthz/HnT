@@ -26,7 +26,16 @@
   },
   "Lease Hawk": {"names": {"slam": "DIVE BOMB", "volley": "LEASE PAPERS", "rain": "EVICTION NOTICES"}, "stages": [["slam", "volley"], ["rain"], ["charge"], ["spin"]]},
   "The Facilitator": {"names": {"volley": "TALKING STICK", "summon": "SHARE CIRCLE", "spin": "ICEBREAKER"}, "stages": [["volley", "summon"], ["lane_wave"], ["spin"], ["rain"]]},
-  "Agent Prime": {"names": {"volley": "BURST FIRE", "charge": "TACKLE", "grab": "CUFFS"}, "stages": [["volley", "charge"], ["grab"], ["summon"], ["lane_wave", "rain"]]},
+  "Badge Broker": {
+    "hp_mul": 1.5, "add": "Agent Lin", "shot": "warrant", "drop": "crate",
+    "names": {"charge": "BADGE FLASH", "volley": "CITATIONS", "summon": "CALL IT IN", "grab": "PAT DOWN"},
+    "stages": [["charge"], ["volley"], ["grab"], ["summon"]]
+  },
+  "Agent Prime": {
+    "hp_mul": 2.2, "add": "Agent Lin", "shot": "warrant", "drop": "cuffs",
+    "names": {"volley": "BURST FIRE", "charge": "TACKLE", "grab": "CUFFS", "summon": "BACKUP", "lane_wave": "WARRANT LIGHT", "rain": "SEIZED ASSETS"},
+    "stages": [["volley", "charge"], ["grab"], ["summon"], ["lane_wave", "rain"]]
+  },
   "Number 88": {"names": {"rain": "TICKETS CALLED", "lane_wave": "QUEUE JUMP"}, "stages": [["rain", "lane_wave"], ["charge"], ["summon"], ["spin"]]},
   "Conductor 9": {"names": {"charge": "EXPRESS", "lane_wave": "RAIL SHOCK", "volley": "PUNCHED TICKETS"}, "stages": [["charge", "lane_wave"], ["volley"], ["slam"], ["summon"]]},
   "Combine Brute": {"names": {"charge": "HARVEST", "spin": "THRESHER", "rain": "HAY BALES"}, "stages": [["charge", "spin"], ["rain"], ["slam"], ["summon"]]},

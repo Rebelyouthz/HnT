@@ -52,6 +52,12 @@ static func has_crew(who: String) -> bool:
 	return bool(FamilyProfile.data.get("crew_" + who, false))
 
 
+## Dot Vale fences what falls out of broken things: cash is worth more once
+## she is home from the Neon Exchange.
+static func crew_gold_mul() -> float:
+	return 1.2 if has_crew("dot") else 1.0
+
+
 static func rescue(map_id: String) -> Dictionary:
 	var v: Variant = act(map_id).get("rescue", {})
 	return v if v is Dictionary else {}

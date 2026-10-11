@@ -29,6 +29,23 @@
      "done": "Group's back on schedule. I'm writing you in as 'progress'.",
      "reward": {"gold": 45, "xp": 40}}
   ],
+  "neon_exchange": [
+    {"id": "pawned_ring", "sprite": "npc_old_woman", "giver": "Widow Marisol", "tint": [0.9, 0.7, 0.95], "x": 560,
+     "lines": ["My late husband's ring. The agents 'appraised' it right off my finger.", "They dropped it running from a cop. It's down the strip, shining like guilt."],
+     "goal": {"type": "fetch", "item": "ring", "item_dx": 1150, "label": "Find Marisol's wedding ring"},
+     "done": "Forty years. He'd say I should have sold it. I'd say shut up, Arturo.",
+     "reward": {"gold": 45, "xp": 35}},
+    {"id": "smile_cams", "sprite": "npc_sanitation", "giver": "Sign Guy Pell", "tint": [0.7, 0.85, 0.95], "x": 900,
+     "lines": ["I hang the neon. The agents hang cameras in it. Every smile gets billed.", "Break three of their smile cams. Red light, little lens. I'll file it as 'weather'."],
+     "goal": {"type": "smash", "n": 3, "label": "Smash 3 smile cams (or crates) for Pell"},
+     "done": "Dark spots in the neon. Best thing that's happened to this street.",
+     "reward": {"gold": 35, "xp": 30}},
+    {"id": "vest_ollie", "sprite": "npc_old_man", "giver": "Cabbie Dex", "tint": [0.95, 0.85, 0.55], "x": 1900,
+     "lines": ["Vest Ollie took my cab. Took the fares. Took the little tree air freshener.", "Knock the vest off him and I drive you anywhere. Once. Downhill."],
+     "goal": {"type": "kill", "n": 1, "title": "Vest Ollie", "label": "Drop Vest Ollie"},
+     "done": "The tree! He kept the tree! You're a good family. Weird, but good.",
+     "reward": {"gold": 50, "xp": 40, "gems": 1}}
+  ],
   "any": [
     {"id": "noise_complaint", "giver": "Night Neighbour", "tint": [0.85, 0.8, 0.95],
      "lines": ["The thugs out here are LOUD. I have work at six.", "Make five of them quiet. Permanently-ish."],

@@ -144,6 +144,8 @@ static func accent(who: String) -> Color:
 			return Color(0.95, 0.55, 0.22)
 		"rico":
 			return Color(0.45, 0.78, 0.42)
+		"dot":
+			return Color(0.42, 0.62, 0.95)
 		"collector":
 			return Color(0.75, 0.2, 0.25)
 	return Palette.EDGE

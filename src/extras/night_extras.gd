@@ -8,7 +8,7 @@ extends Node
 ##   StreetEvents     every minute or so: BLACKOUT, CASH RAIN or RUSH HOUR
 ##   (wall bounces live in Punk._fling: bodies bounce off the screen edge)
 
-const MACHINE_AT := {"dock_street": 1520.0, "intake_lot": 860.0, "tutorial_alley": 760.0}
+const MACHINE_AT := {"dock_street": 1520.0, "intake_lot": 860.0, "tutorial_alley": 760.0, "neon_exchange": 1520.0}
 
 static var blessing := ""
 static var blessing_t := 0.0

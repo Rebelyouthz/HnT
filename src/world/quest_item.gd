@@ -52,6 +52,9 @@ func _draw() -> void:
 		"collar":
 			draw_arc(Vector2(0, y), 5.0, 0, TAU, 16, Color(0.85, 0.15, 0.2), 2.0)
 			draw_circle(Vector2(0, y + 5), 1.8, Color(0.95, 0.8, 0.3))
+		"ring":
+			draw_arc(Vector2(0, y), 4.0, 0, TAU, 14, Color(0.98, 0.82, 0.3), 2.0)
+			draw_circle(Vector2(0, y - 4.5), 2.0, Color(0.75, 0.95, 1.0))
 		"ticket":
 			draw_rect(Rect2(Vector2(-6, y - 4), Vector2(12, 8)), Color(0.96, 0.94, 0.86))
 			draw_line(Vector2(-4, y - 1), Vector2(4, y - 1), Color(0.5, 0.5, 0.55), 1.0)

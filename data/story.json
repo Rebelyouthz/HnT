@@ -628,7 +628,7 @@
     },
     "neon_exchange": {
       "title": "NEON EXCHANGE",
-      "main": "Cash the feelings before the agents pawn your pulse.",
+      "main": "Cash the feelings, break Dot Vale out of the pawn cage, and stamp Agent Prime before he pawns your pulse.",
       "side": "Pick up a board or a pistol. Sharing is a weapon.",
       "talk": [
         {
@@ -645,6 +645,32 @@
           ]
         },
         {
+          "at": 640,
+          "lines": [
+            {
+              "who": "son",
+              "text": "Every sign here is a camera. Every camera is a bill."
+            },
+            {
+              "who": "father",
+              "text": "Then we break the expensive ones first."
+            }
+          ]
+        },
+        {
+          "at": 1100,
+          "lines": [
+            {
+              "who": "father",
+              "text": "Roof route. The agents don't climb. Union rules."
+            },
+            {
+              "who": "son",
+              "text": "Neither do you, usually."
+            }
+          ]
+        },
+        {
           "at": 1700,
           "lines": [
             {
@@ -654,6 +680,19 @@
             {
               "who": "son",
               "text": "That's the mission statement."
+            }
+          ]
+        },
+        {
+          "at": 2240,
+          "lines": [
+            {
+              "who": "son",
+              "text": "Dot's cage is past the warrant light. Prime's guarding it."
+            },
+            {
+              "who": "father",
+              "text": "Good. I wanted to meet the man who invoices hugs."
             }
           ]
         }
@@ -677,6 +716,32 @@
         "pmin": 2420,
         "pmax": 2760,
         "sub": "SMILE FOR THE WARRANT"
+      },
+      "rescue": {
+        "who": "dot",
+        "x": 2660,
+        "lines": [
+          {
+            "who": "dot",
+            "text": "Took you long enough. They tried to pawn me as 'vintage'."
+          },
+          {
+            "who": "son",
+            "text": "Dot! Benny and Rico are home. The hideout's back."
+          },
+          {
+            "who": "dot",
+            "text": "Then I'm fencing everything you two break. Cash comes out heavier with me around."
+          },
+          {
+            "who": "father",
+            "text": "Is that legal?"
+          },
+          {
+            "who": "dot",
+            "text": "It's family."
+          }
+        ]
       }
     },
     "waiting_room": {
@@ -1114,6 +1179,12 @@
       "full": "Rico Vale",
       "job": "RUNS THE SHOP",
       "rescue_map": "intake_lot"
+    },
+    "dot": {
+      "name": "DOT",
+      "full": "Dot Vale",
+      "job": "FENCES THE LOOT  ·  CASH DROPS +20%",
+      "rescue_map": "neon_exchange"
     }
   },
   "prologue": [
@@ -1176,6 +1247,12 @@
       "Shop's open. Prices are emotional.",
       "Benny builds it, I sell it, you two break it. Family business.",
       "I kept the clipboard. Collectors hate it when you take their clipboard."
+    ],
+    "dot": [
+      "Everything's worth something. Mostly to someone dumber.",
+      "Benny builds, Rico sells, I make sure nobody asks where it came from.",
+      "Bring me broken stuff. I'll bring you money and no questions.",
+      "The agents pawned my toolbox. I bought it back with their wallets."
     ]
   }
 }

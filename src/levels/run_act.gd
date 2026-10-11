@@ -226,6 +226,8 @@ func _place_extras() -> void:
 		StreetLife.dress(self, [380.0, 1180.0, 1700.0, 2600.0])
 	elif map_id == "tutorial_alley":
 		StreetLife.dress(self, [520.0, 1050.0])
+	elif map_id == "neon_exchange":
+		StreetLife.dress(self, [460.0, 1240.0, 1900.0, 2500.0])
 	add_child(PhotoMode.new())
 	if map_id in ["dock_street", "intake_lot", "tutorial_alley"] or App.ORDER.has(map_id):
 		NightExtras.place(self, map_id, map_w)

@@ -2558,7 +2558,9 @@ func _spawn_hit(kind: String, size: Vector2, life: float, offset: Vector2) -> vo
 			return
 		hits.append(node)
 		var victim: Node = node
-		if node is Area2D:
+		# A hurt box child stands in for its owner; an Area2D that takes hits
+		# itself (smash props, smile cams, rescue cages) is the victim.
+		if node is Area2D and not node.has_method("take_hit"):
 			victim = (node as Area2D).get_parent()
 		if victim == self:
 			return

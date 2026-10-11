@@ -9,6 +9,7 @@ const SPOTS := {
 	"dock_street": [Vector2(600, 248), Vector2(1940, 490), Vector2(2700, 248)],
 	"tutorial_alley": [Vector2(900, 490)],
 	"intake_lot": [Vector2(520, 490), Vector2(1250, 490), Vector2(1900, 490)],
+	"neon_exchange": [Vector2(780, 248), Vector2(1960, 228), Vector2(2460, 490)],
 }
 
 var map_id := ""

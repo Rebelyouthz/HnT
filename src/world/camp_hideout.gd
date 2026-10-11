@@ -83,7 +83,7 @@ var _focus_x := 0.0
 var _crew := {}
 ## Rico runs these: they open only once he is back from the Intake Lot.
 const RICO_SHOP := ["pawn_shop", "invoice_wheel", "tip_jar", "lost_found"]
-const CREW_SPOT := {"benny": 0.045, "rico": 0.775}
+const CREW_SPOT := {"benny": 0.045, "rico": 0.775, "dot": 0.262}
 
 
 func _ready() -> void:
@@ -187,7 +187,7 @@ func _build_actors() -> void:
 	_buddy.facing = 1
 	add_child(_buddy)
 	_buddy.set_motion(0.0)
-	for who in ["benny", "rico"]:
+	for who in CREW_SPOT:
 		if StoryBook.has_crew(who):
 			var npc := CrewNPC.new()
 			npc.setup(who)
