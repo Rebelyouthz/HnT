@@ -132,6 +132,9 @@ static func clip_info(who: String, clip: String) -> Dictionary:
 		"count": n,
 		"hit": int(meta.get("hit", -1)),
 		"anchor": str(meta.get("anchor", "feet")),
+		"mode": str(meta.get("mode", "loop")),
+		"rest": int(meta.get("rest", 0)),
+		"moments": meta.get("moments", []),
 	}
 	_info[key] = info
 	return info
@@ -252,6 +255,14 @@ static func make_anim(who: String) -> AnimatedSprite2D:
 	a.texture_filter = world_filter()
 	if a.sprite_frames.has_animation("idle"):
 		a.play("idle")
+		# Props hold still and have the odd moment (tools/prop_moments.py).
+		var info := clip_info(who, "idle")
+		if str(info.get("mode", "loop")) == "moments":
+			var pm := PropMoments.new()
+			pm.anim = a
+			pm.rest = clampi(int(info["rest"]), 0, a.sprite_frames.get_frame_count("idle") - 1)
+			pm.moments = (info["moments"] as Array).filter(func(v: Variant) -> bool: return int(v) < a.sprite_frames.get_frame_count("idle"))
+			a.add_child(pm)
 	elif a.sprite_frames.has_animation("dog"):
 		a.play("dog")
 	return a
