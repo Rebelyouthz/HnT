@@ -27,7 +27,17 @@ func _process(_d: float) -> bool:
 		_film.call("_drag_off")
 	if _n in [150, 200, 260]:
 		_shot("drag%d" % _n)
+	if _n % 20 == 0 and _n > 40:
+		_log("f%d" % _n)
 	return _n > 262
+
+
+func _log(tag: String) -> void:
+	var out: Array = []
+	for a in [_film.get("_gant")] + Array(_film.get("_goons")):
+		if a != null:
+			out.append("%s anim=%s x=%.0f flip=%s vis=%s" % [a.role, a.anim.animation, a.position.x, a.anim.flip_h, a.visible])
+	print(tag, " ", out, " pace=", _film.call("_pace", _film.get("_gant")), "/", _film.call("_pace", _film.get("_goons")[0]))
 
 
 func _shot(tag: String) -> void:

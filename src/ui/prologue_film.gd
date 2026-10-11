@@ -179,16 +179,28 @@ func _enter_collectors() -> void:
 	tw.tween_property(_cam, "position:x", _cx + 30.0, 1.0).set_trans(Tween.TRANS_SINE)
 
 
-## Walk there with the walk clip playing, then stand in idle.
-func _tween_walk(a: FilmActor, x: float, dur: float) -> void:
+## Walk there with the walk clip playing (at the pace its feet step, so
+## nobody skates), then stand in idle.
+func _tween_walk(a: FilmActor, x: float, _dur: float = 0.0) -> void:
 	if a.anim and a.anim.sprite_frames.has_animation("walk"):
 		a.anim.play("walk")
+		a.anim.speed_scale = 1.0
 	var tw := create_tween()
-	tw.tween_property(a, "position:x", x, dur)
+	tw.tween_property(a, "position:x", x, absf(x - a.position.x) / _pace(a))
 	tw.tween_callback(func() -> void:
 		if a.anim and a.anim.sprite_frames.has_animation("idle"):
 			a.anim.play("idle")
 	)
+
+
+## World px per second the walk clip covers at speed 1 (SpriteBook stride).
+func _pace(a: FilmActor) -> float:
+	if a.anim == null or not a.anim.sprite_frames.has_animation("walk"):
+		return 52.0
+	var sf := a.anim.sprite_frames
+	var cycle := float(sf.get_frame_count("walk")) / maxf(1.0, sf.get_animation_speed("walk"))
+	var stride := 200.0 * absf(a.anim.scale.y) * float(SpriteBook.STRIDE.get("walk", 1.25))
+	return clampf(stride / maxf(cycle, 0.05), 30.0, 120.0)
 
 
 func _drag_off() -> void:
@@ -208,9 +220,11 @@ func _drag_off() -> void:
 				who.anim.flip_h = false
 				if who.anim.sprite_frames.has_animation("walk"):
 					who.anim.play("walk")
-			bro.walk_to(exit_x + 18.0, 52.0)
+					who.anim.speed_scale = 1.0
+			var pace := _pace(who)
+			bro.walk_to(exit_x + 18.0, pace)
 			var tw := create_tween()
-			tw.tween_property(who, "position:x", exit_x, (exit_x - who.position.x) / 52.0)
+			tw.tween_property(who, "position:x", exit_x, (exit_x - who.position.x) / pace)
 			tw.tween_callback(func() -> void: who.visible = false)
 		)
 	var dim := create_tween()

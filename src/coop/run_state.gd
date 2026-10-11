@@ -33,6 +33,7 @@ signal scrap_changed
 signal xp_changed
 signal wanted_changed
 signal need_cards
+signal enemy_killed
 
 
 func mark_checkpoint(pos: Vector2) -> void:
@@ -96,6 +97,15 @@ func add_scrap(n: int) -> void:
 ## Stacks of a cart buy this night.
 func buff(id: String) -> int:
 	return int(buffs.get(id, 0))
+
+
+## Every thug that goes down (the run's first one opens the STARTING DRAW).
+var kills: int = 0
+
+
+func note_kill() -> void:
+	kills += 1
+	enemy_killed.emit()
 
 
 func add_xp(n: int) -> void:

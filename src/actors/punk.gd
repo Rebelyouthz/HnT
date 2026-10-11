@@ -1379,6 +1379,8 @@ func _drops(from: Node) -> void:
 		ThrowKnife.drop(get_parent(), global_position + Vector2(randf_range(-10, 10), 4))
 	var host := get_parent()
 	var rs := get_tree().get_first_node_in_group("run_state")
+	if rs and rs.has_method("note_kill"):
+		rs.call("note_kill")
 	# XP leaves as insight gems to pick up; gold as coins.
 	var xp_n := 30 if title == "Bailiff" else (18 if title == "Mohawk Bo" or title == "Repo Goon" else 10)
 	# Night condition and the combo rank bend the payout.

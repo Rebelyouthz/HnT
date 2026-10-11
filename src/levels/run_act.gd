@@ -462,14 +462,15 @@ func _ready() -> void:
 	_boot_story()
 	# Fresh entry: the stage's title card over the painted street. The
 	# starting draw waits until the street has been on screen for a moment.
-	var card: StageCard = null
 	if not resumed:
-		card = StageCard.show_for(self, map_id)
+		StageCard.show_for(self, map_id)
+	# The STARTING DRAW (level-up style cards) waits for the first thug
+	# down: nobody levels up just for walking in.
 	if _draw_pending:
-		if card:
-			card.closed.connect(_queue_starting_draw)
-		else:
+		if _state.kills > 0:
 			_queue_starting_draw()
+		else:
+			_state.enemy_killed.connect(func() -> void: _queue_starting_draw(0.9), CONNECT_ONE_SHOT)
 
 
 func _queue_starting_draw(wait := 1.2) -> void:

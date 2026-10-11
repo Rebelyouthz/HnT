@@ -199,13 +199,15 @@ func _build_actors() -> void:
 	_walker.position = Vector2(_w - 40.0, WALK_Y)
 	_walker.facing = -1
 	add_child(_walker)
-	_buddy = CampWalker.new()
-	_buddy.setup(other)
-	# The other hero tags along a step behind, so whoever talks is on screen.
-	_buddy.position = Vector2(_walker.position.x + BUDDY_GAP, WALK_Y - 2.0)
-	_buddy.facing = -1
-	add_child(_buddy)
-	_buddy.set_motion(0.0)
+	# Couch nights: the other hero tags along a step behind. Solo: only the
+	# hero you picked is home.
+	if App.two_bodies():
+		_buddy = CampWalker.new()
+		_buddy.setup(other)
+		_buddy.position = Vector2(_walker.position.x + BUDDY_GAP, WALK_Y - 2.0)
+		_buddy.facing = -1
+		add_child(_buddy)
+		_buddy.set_motion(0.0)
 	for who in CREW_SPOT:
 		if StoryBook.has_crew(who):
 			var npc := CrewNPC.new()
@@ -227,8 +229,15 @@ func _build_actors() -> void:
 	_cam.reset_smoothing()
 
 
+## Who answers in the hideout: the other hero on a couch night, yourself solo.
+func _mate() -> String:
+	return _buddy.role if _buddy != null else _walker.role
+
+
 ## The buddy walks to a spot a step behind you and turns to face you there.
 func _follow_buddy(delta: float) -> void:
+	if _buddy == null:
+		return
 	var want := _walker.position.x - float(_walker.facing) * BUDDY_GAP
 	var dx := want - _buddy.position.x
 	if absf(dx) < 6.0:
@@ -491,11 +500,11 @@ func _arrive() -> void:
 	await get_tree().create_timer(0.9).timeout
 	var lines := [
 		{"who": _walker.role, "text": "Home. Technically a basement."},
-		{"who": _buddy.role, "text": "Fridge first. Then we argue about the map."},
+		{"who": _mate(), "text": "Fridge first. Then we argue about the map." if _buddy != null else "Fridge first. Then I argue with the map."},
 	]
 	if App.camp_next != "":
 		lines = [
-			{"who": _buddy.role, "text": "You made it back. The portal's still humming."},
+			{"who": _mate(), "text": "You made it back. The portal's still humming." if _buddy != null else "Made it back. The portal's still humming."},
 			{"who": _walker.role, "text": "Patch up, gear up, then %s." % App.camp_next.replace("_", " ")},
 		]
 	# The story owes a camp buy: say which one, plainly.
@@ -503,7 +512,7 @@ func _arrive() -> void:
 	var steps := PowerBook.path(hop)
 	if not steps.is_empty():
 		var first: Dictionary = steps[0]
-		lines[1] = {"who": _buddy.role, "text": "Before %s: %s %s, %d gold. Then we go." % [hop.replace("_", " "), str(first["what"]).to_lower(), str(first["name"]).capitalize(), int(first["gold"])]}
+		lines[1] = {"who": _mate(), "text": "Before %s: %s %s, %d gold. Then we go." % [hop.replace("_", " "), str(first["what"]).to_lower(), str(first["name"]).capitalize(), int(first["gold"])]}
 	_talk.play(lines)
 	var tab := App.camp_open_tab
 	App.camp_open_tab = ""
@@ -665,7 +674,7 @@ func _use(st: Dictionary) -> void:
 			_talk.play([{"who": "benny", "text": "Love the plan. Love it more with gold for lumber."}], true)
 		return
 	if id in RICO_SHOP and not StoryBook.has_crew("rico"):
-		_talk.play([{"who": _buddy.role, "text": "That's Rico's counter. Nobody touches the till till he's home."}], true)
+		_talk.play([{"who": _mate(), "text": "That's Rico's counter. Nobody touches the till till he's home."}], true)
 		return
 	if CampSheets.TAB_OF.has(id):
 		_open_hub(str(CampSheets.TAB_OF[id]))

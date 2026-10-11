@@ -41,7 +41,7 @@ static func play(from: Node, gid: String, gsteps: Array, delay := 0.35) -> void:
 		return
 	var g := Guide.new()
 	g.id = gid
-	g.steps = gsteps
+	g.steps = _solo_voices(gsteps)
 	g.host = from
 	var tree := from.get_tree()
 	tree.create_timer(delay, true, false, true).timeout.connect(func() -> void:
@@ -50,6 +50,24 @@ static func play(from: Node, gid: String, gsteps: Array, delay := 0.35) -> void:
 		else:
 			g.free()
 	)
+
+
+## Solo: lines written for the hero who stayed home are said by the one
+## you play, so nobody talks from off screen.
+static func _solo_voices(gsteps: Array) -> Array:
+	var app := (Engine.get_main_loop() as SceneTree).root.get_node_or_null("App")
+	if app == null or bool(app.call("two_bodies")):
+		return gsteps
+	var me := str(app.get("solo_role"))
+	var out: Array = []
+	for st in gsteps:
+		if st is Dictionary and str((st as Dictionary).get("who", "")) in ["father", "son"] and str((st as Dictionary).get("who", "")) != me:
+			var d := (st as Dictionary).duplicate()
+			d["who"] = me
+			out.append(d)
+		else:
+			out.append(st)
+	return out
 
 
 func _ready() -> void:
