@@ -344,6 +344,7 @@ func _paint_roles() -> void:
 			b.add_theme_stylebox_override("normal", UiKit.panel(UiKit.NAVY_HI, UiKit.GOLD))
 		b.pressed.connect(func() -> void:
 			App.solo_role = pair[0]
+			FamilyProfile.data["solo_role"] = pair[0]
 			need_refresh.emit()
 		)
 		var who := str(pair[0])

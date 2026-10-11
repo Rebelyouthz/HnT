@@ -34,7 +34,15 @@ func _process(_d: float) -> bool:
 		m.axis = 4 as JoyAxis
 		m.axis_value = -0.9
 		Input.parse_input_event(m)
+		# Plain pads (iPega and friends) steer with the d-pad too.
+		pr.call("_bind_device", "p1_", 6)
+		var dp := InputEventJoypadButton.new()
+		dp.device = 6
+		dp.button_index = JOY_BUTTON_DPAD_LEFT
+		dp.pressed = true
+		Input.parse_input_event(dp)
 	if _n == 6:
+		_check(Input.is_action_pressed("p1_left"), "d-pad -> move left")
 		_check(Input.is_action_pressed("p2_jump"), "custom button -> jump")
 		_check(Input.is_action_pressed("p2_right"), "custom axis (inverted) -> right")
 		_check(not Input.is_action_pressed("p2_left"), "left stays off")

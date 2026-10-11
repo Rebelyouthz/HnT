@@ -221,7 +221,12 @@ func _bind_device(prefix: String, device: int) -> void:
 	_joy_btn(prefix + "block", JOY_BUTTON_LEFT_SHOULDER, device)
 	_joy_btn(prefix + "snap", JOY_BUTTON_RIGHT_STICK, device)
 	_joy_btn(prefix + "pause", JOY_BUTTON_START, device)
-	# The d-pad is the QUICK BELT; moving is the left stick, duck its click.
+	# The d-pad moves like the left stick (iPega pads in d-pad mode send the
+	# stick as d-pad too); with LB held it works the QUICK BELT (QuickBelt).
+	_joy_btn(prefix + "left", JOY_BUTTON_DPAD_LEFT, device)
+	_joy_btn(prefix + "right", JOY_BUTTON_DPAD_RIGHT, device)
+	_joy_btn(prefix + "up", JOY_BUTTON_DPAD_UP, device)
+	_joy_btn(prefix + "down", JOY_BUTTON_DPAD_DOWN, device)
 	_joy_btn(prefix + "duck", JOY_BUTTON_LEFT_STICK, device)
 	_joy_btn(prefix + "slot1", JOY_BUTTON_DPAD_LEFT, device)
 	_joy_btn(prefix + "slot2", JOY_BUTTON_DPAD_UP, device)
@@ -335,13 +340,13 @@ func mouse_live(prefix: StringName) -> bool:
 
 func p1_prompt() -> String:
 	if p1_device >= 0 and last_p1_kind == "pad":
-		return "PAD1  LS move  A jump  X light  Y heavy  B cape  RB batwing  RT dash  RS SNAP  D-PAD belt"
+		return "PAD1  LS move  A jump  X light  Y heavy  B cape  RB batwing  RT dash  RS SNAP  LB+D-PAD belt"
 	return "WASD move  SPACE jump  C duck  J / LEFT CLICK light  K / MIDDLE CLICK heavy  L special  O / RIGHT CLICK shoot  SHIFT dash  1-4 belt"
 
 
 func p2_prompt() -> String:
 	if p2_device >= 0:
-		return "PAD2  LS move  A jump  X light  Y heavy  B web  RB snare  RT dash  RS SNAP  D-PAD belt"
+		return "PAD2  LS move  A jump  X light  Y heavy  B web  RB snare  RT dash  RS SNAP  LB+D-PAD belt"
 	return "P2 JOIN  Start or keyboard P  ·  then arrows  CTRL jump  M duck  . light  / heavy  ; web  ' snare  ALT dash  N SNAP"
 
 
@@ -354,6 +359,6 @@ func map_lines() -> PackedStringArray:
 		"COUCH: one pad = The Father (keyboard is The Son)  ·  two pads = one each.",
 		"A jump   X light (SNAP confirm in the window)   Y heavy   B special",
 		"LB block   RB shoot   LT throw   RT dash/slide   RS click SNAP   Start pause",
-		"D-pad or left stick. Hold RT + down to slide. Hold A in the air to glide (BAT suit cape only).",
+		"D-pad or left stick moves; LB + d-pad uses the quick belt. Hold RT + down to slide. Hold A in the air to glide (BAT suit cape only).",
 		"Start on a pad (or keyboard P) drops the empty chair in. Enemies stay the count you booked."
 	])

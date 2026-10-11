@@ -69,7 +69,21 @@ func _physics_process(_delta: float) -> void:
 		for i in 4:
 			var act := StringName("%sslot%d" % [str(f.prefix), i + 1])
 			if InputMap.has_action(act) and Input.is_action_just_pressed(act):
+				# On a pad the d-pad also moves: the belt wants LB held with it
+				# (keys 1-4 work alone).
+				if _from_pad(act) and not Input.is_action_pressed(StringName(str(f.prefix) + "block")):
+					continue
 				use(f, ORDER[i])
+
+
+## Was this slot press a pad button (not the 1-4 key)?
+static func _from_pad(act: StringName) -> bool:
+	for e in InputMap.action_get_events(act):
+		if e is InputEventKey and Input.is_physical_key_pressed((e as InputEventKey).physical_keycode if (e as InputEventKey).physical_keycode != 0 else (e as InputEventKey).keycode):
+			return false
+		if e is InputEventKey and Input.is_key_pressed((e as InputEventKey).keycode):
+			return false
+	return true
 
 
 ## Uses one from the belt. An empty slot just clicks.

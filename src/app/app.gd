@@ -8,6 +8,17 @@ var pending_tab: String = "clinic"
 ## Couch 2P is opt-in. Hub GO / Clinic PLAY start immediately with one body.
 var couch: bool = false
 var solo_role: String = "son"
+
+
+## The hero picked last time (character select / RUN tab) comes back on launch.
+func _ready() -> void:
+	(func() -> void:
+		var fp := get_node_or_null("/root/FamilyProfile")
+		if fp != null and fp.get("data") is Dictionary:
+			var r := str((fp.get("data") as Dictionary).get("solo_role", solo_role))
+			if r in ["son", "father"]:
+				solo_role = r
+	).call_deferred()
 ## Locked when the run starts. Drop-in does not thicken the spawn.
 var density_coop: bool = false
 var remote_coop: bool = false

@@ -169,22 +169,20 @@ func _enter_collectors() -> void:
 	_gant = _actor("gant", Vector2(door_x, WALK_Y), -1)
 	# Lines are written for "collector": that is who Talk looks for.
 	_gant.role = "collector"
-	for k in 2:
-		var g := _actor("punk", Vector2(door_x + 24.0 + 16.0 * float(k), WALK_Y + 1.0), -1)
-		g.remove_from_group("players")
-		_goons.append(g)
+	# One goon with him: a pair of identical twins read as a copy-paste.
+	var g := _actor("punk", Vector2(door_x + 28.0, WALK_Y + 1.0), -1)
+	g.remove_from_group("players")
+	_goons.append(g)
 	_tween_walk(_gant, _cx + 74.0, 0.9)
-	_tween_walk(_goons[0], _cx + 96.0, 1.0)
-	_tween_walk(_goons[1], _cx + 116.0, 1.1)
+	_tween_walk(_goons[0], _cx + 100.0, 1.0)
 	var tw := create_tween()
 	tw.tween_property(_cam, "position:x", _cx + 30.0, 1.0).set_trans(Tween.TRANS_SINE)
 
 
+## Walk there with the walk clip playing, then stand in idle.
 func _tween_walk(a: FilmActor, x: float, dur: float) -> void:
 	if a.anim and a.anim.sprite_frames.has_animation("walk"):
-		# The son's three-quarter walk has real steps (Fighter.SIDE_WALK).
-		var clip := str(Fighter.SIDE_WALK.get(str(a.get("role")), "walk"))
-		a.anim.play(clip if a.anim.sprite_frames.has_animation(clip) else "walk")
+		a.anim.play("walk")
 	var tw := create_tween()
 	tw.tween_property(a, "position:x", x, dur)
 	tw.tween_callback(func() -> void:
@@ -194,23 +192,27 @@ func _tween_walk(a: FilmActor, x: float, dur: float) -> void:
 
 
 func _drag_off() -> void:
-	# Goons grab a brother each and haul them out the door; lights die.
+	# The goon takes Benny, Gant takes Rico: each turns round from standing,
+	# walks out the door (walk clip, never a glide), the brother marched
+	# ahead of him; lights die.
 	var exit_x := _cx + 260.0
-	_benny.face(1)
-	_rico.face(1)
 	_benny.remove_from_group("players")
 	_rico.remove_from_group("players")
-	for pair in [[_goons[0], _benny], [_goons[1], _rico]]:
-		var goon: FilmActor = pair[0]
+	var pairs := [[_goons[0], _benny, 0.3], [_gant, _rico, 0.9]]
+	for pair in pairs:
+		var who: FilmActor = pair[0]
 		var bro: CrewNPC = pair[1]
-		if goon.anim:
-			goon.anim.flip_h = false
-		var tw := create_tween().set_parallel(true)
-		tw.tween_property(goon, "position:x", exit_x, 2.4).set_delay(0.2)
-		tw.tween_property(bro, "position:x", exit_x - 14.0, 2.4).set_delay(0.35)
-	if _gant.anim:
-		_gant.anim.flip_h = false
-	create_tween().tween_property(_gant, "position:x", exit_x + 20.0, 2.6).set_delay(0.8)
+		var delay: float = pair[2]
+		get_tree().create_timer(delay).timeout.connect(func() -> void:
+			if who.anim:
+				who.anim.flip_h = false
+				if who.anim.sprite_frames.has_animation("walk"):
+					who.anim.play("walk")
+			bro.walk_to(exit_x + 18.0, 52.0)
+			var tw := create_tween()
+			tw.tween_property(who, "position:x", exit_x, (exit_x - who.position.x) / 52.0)
+			tw.tween_callback(func() -> void: who.visible = false)
+		)
 	var dim := create_tween()
 	dim.tween_interval(1.6)
 	for k in 3:

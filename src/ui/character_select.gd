@@ -34,7 +34,9 @@ var _guide: Control
 
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
-	_pick = App.solo_role if App.solo_role in WHO else "son"
+	var saved := str(FamilyProfile.data.get("solo_role", App.solo_role))
+	_pick = saved if saved in WHO else "son"
+	App.solo_role = _pick
 	_mode = "couch" if App.couch else "solo"
 	var dim := ColorRect.new()
 	dim.color = Color(0.01, 0.01, 0.03, 0.9)
@@ -269,6 +271,8 @@ func _paint() -> void:
 
 func _apply() -> void:
 	App.solo_role = _pick
+	# Remembered across launches: the next session starts on the same hero.
+	FamilyProfile.data["solo_role"] = _pick
 	App.couch = _mode == "couch"
 	App.remote_coop = false
 	FamilyProfile.data["named"] = true

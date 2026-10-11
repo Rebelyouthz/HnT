@@ -73,6 +73,8 @@ func _actor(who: String, at: Vector2, face: int) -> FilmActor:
 	if SpriteBook.has_who(who):
 		var anim := SpriteBook.make_anim(who)
 		anim.flip_h = face < 0
+		# The size they have in the game that starts right after.
+		SpriteBook.grow(anim, SpriteBook.FIGHTER_SCALE * SpriteBook.hero_k(who))
 		a.add_child(anim)
 	return a
 
