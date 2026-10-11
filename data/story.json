@@ -965,7 +965,7 @@
     },
     "copay_orchard": {
       "title": "COPAY ORCHARD",
-      "main": "File the wellness weekend they never booked. Lake, forest, fields, a silo with a rope.",
+      "main": "Cross the orchard, topple Scarecrow Ken, stop the Combine Brute.",
       "side": "Slide the hill. Rope-swing the silo. Don't tip the scarecrow.",
       "talk": [
         {
@@ -982,6 +982,19 @@
           ]
         },
         {
+          "at": 700,
+          "lines": [
+            {
+              "who": "son",
+              "text": "Slide hill. Sit, push, scream. That's the whole tutorial."
+            },
+            {
+              "who": "father",
+              "text": "I've been doing that at work for years."
+            }
+          ]
+        },
+        {
           "at": 1500,
           "lines": [
             {
@@ -991,6 +1004,32 @@
             {
               "who": "son",
               "text": "Land it. The lake still wants a copay."
+            }
+          ]
+        },
+        {
+          "at": 2300,
+          "lines": [
+            {
+              "who": "father",
+              "text": "Barn cops. Even the hay has a badge out here."
+            },
+            {
+              "who": "son",
+              "text": "Then the hay can file a complaint."
+            }
+          ]
+        },
+        {
+          "at": 2950,
+          "lines": [
+            {
+              "who": "son",
+              "text": "That's the Combine Brute. He harvests invoices."
+            },
+            {
+              "who": "father",
+              "text": "Then we're the bad weather."
             }
           ]
         }
@@ -1083,6 +1122,32 @@
               "text": "I am on the rail. That's called coparenting."
             }
           ]
+        },
+        {
+          "at": 1500,
+          "lines": [
+            {
+              "who": "son",
+              "text": "Wire across the gap. I'm taking it."
+            },
+            {
+              "who": "father",
+              "text": "I'm taking the long way. It has a floor."
+            }
+          ]
+        },
+        {
+          "at": 2600,
+          "lines": [
+            {
+              "who": "father",
+              "text": "That chopper is following the courier."
+            },
+            {
+              "who": "son",
+              "text": "Then we give it something to chase."
+            }
+          ]
         }
       ],
       "miniboss": {
@@ -1162,6 +1227,19 @@
           ]
         },
         {
+          "at": 1300,
+          "lines": [
+            {
+              "who": "son",
+              "text": "Cranes are moving. Nobody's driving them."
+            },
+            {
+              "who": "father",
+              "text": "Automation. They took the crane operator's job and his aim."
+            }
+          ]
+        },
+        {
           "at": 1500,
           "lines": [
             {
@@ -1237,6 +1315,32 @@
             {
               "who": "son",
               "text": "If you SNAP too early I will bill you myself."
+            }
+          ]
+        },
+        {
+          "at": 900,
+          "lines": [
+            {
+              "who": "son",
+              "text": "This is it. Where they process families."
+            },
+            {
+              "who": "father",
+              "text": "Then let's be the paperwork they can't file."
+            }
+          ]
+        },
+        {
+          "at": 1900,
+          "lines": [
+            {
+              "who": "father",
+              "text": "Whatever happens in there, I'm proud of you."
+            },
+            {
+              "who": "son",
+              "text": "Save it for the car, Dad. We're winning first."
             }
           ]
         }

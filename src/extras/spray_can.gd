@@ -12,6 +12,10 @@ const SPOTS := {
 	"neon_exchange": [Vector2(780, 248), Vector2(1960, 228), Vector2(2460, 490)],
 	"rail_bridge": [Vector2(560, 236), Vector2(1420, 248), Vector2(2100, 490)],
 	"city_hall": [Vector2(620, 248), Vector2(1180, 208), Vector2(1960, 490)],
+	"copay_orchard": [Vector2(700, 248), Vector2(1800, 200), Vector2(3000, 490)],
+	"raven_grid": [Vector2(1100, 490), Vector2(1700, 490), Vector2(2000, 490)],
+	"invoice_pier": [Vector2(500, 492), Vector2(950, 248), Vector2(2100, 220)],
+	"processing_floor": [Vector2(700, 490), Vector2(1500, 490), Vector2(2300, 490)],
 }
 
 var map_id := ""

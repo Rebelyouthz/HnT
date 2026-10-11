@@ -36,6 +36,21 @@
     "names": {"charge": "STAR DASH", "volley": "THROWING STARS", "grab": "ESCORTED OUT", "summon": "SECURITY"},
     "stages": [["charge"], ["volley"], ["grab"], ["summon"]]
   },
+  "Grid Kid": {
+    "hp_mul": 1.6, "add": "Bag Snatch", "shot": "ticket", "drop": "crate",
+    "names": {"charge": "GRID RUSH", "volley": "PARKING FINES", "spin": "DONUT", "summon": "RIDE ALONG"},
+    "stages": [["charge"], ["volley"], ["spin"], ["summon"]]
+  },
+  "Usher Prime": {
+    "hp_mul": 1.7, "add": "Chapel Usher", "shot": "invoice", "drop": "crate",
+    "names": {"charge": "AISLE RUSH", "volley": "HYMN SHEETS", "grab": "SEE YOU OUT", "summon": "COLLECTION PLATE"},
+    "stages": [["charge"], ["volley"], ["grab"], ["summon"]]
+  },
+  "Adjuster Prime": {
+    "hp_mul": 1.8, "add": "Invoice Clerk", "shot": "invoice", "drop": "safe",
+    "names": {"charge": "CLAIM DENIED", "volley": "FINE PRINT", "slam": "DEDUCTIBLE", "summon": "SECOND OPINION"},
+    "stages": [["charge"], ["volley"], ["slam"], ["summon"]]
+  },
   "Agent Prime": {
     "hp_mul": 2.2, "add": "Agent Lin", "shot": "warrant", "drop": "cuffs",
     "names": {"volley": "BURST FIRE", "charge": "TACKLE", "grab": "CUFFS", "summon": "BACKUP", "lane_wave": "WARRANT LIGHT", "rain": "SEIZED ASSETS"},
@@ -52,9 +67,18 @@
     "names": {"charge": "EXPRESS", "lane_wave": "RAIL SHOCK", "volley": "PUNCHED TICKETS", "slam": "EMERGENCY BRAKE", "summon": "ALL ABOARD"},
     "stages": [["charge", "lane_wave"], ["volley"], ["slam"], ["summon"]]
   },
-  "Combine Brute": {"names": {"charge": "HARVEST", "spin": "THRESHER", "rain": "HAY BALES"}, "stages": [["charge", "spin"], ["rain"], ["slam"], ["summon"]]},
+  "Scarecrow Ken": {
+    "hp_mul": 1.6, "add": "Hay Pin", "shot": "paper", "drop": "crate",
+    "names": {"charge": "STRAW RUSH", "volley": "CROW CALL", "spin": "WINDMILL", "summon": "PITCHFORK FRIENDS"},
+    "stages": [["charge"], ["volley"], ["spin"], ["summon"]]
+  },
+  "Combine Brute": {
+    "hp_mul": 2.3, "add": "Tractor Kid", "shot": "ticket", "drop": "crate",
+    "names": {"charge": "HARVEST", "spin": "THRESHER", "rain": "HAY BALES", "slam": "BALER", "summon": "FARMHANDS"},
+    "stages": [["charge", "spin"], ["rain"], ["slam"], ["summon"]]
+  },
   "Snowmobile": {"names": {"charge": "WHITEOUT RUN", "rain": "ICICLES", "lane_wave": "AVALANCHE"}, "stages": [["charge", "rain"], ["lane_wave"], ["volley"], ["spin"]]},
-  "Invoice Chopper": {"names": {"rain": "PAPER RAIN", "volley": "ROTOR WASH", "lane_wave": "SEARCHLIGHT"}, "stages": [["rain", "volley"], ["lane_wave"], ["summon"], ["charge"]]},
+  "Invoice Chopper": {"hp_mul": 2.2, "add": "Neon Scooter", "shot": "invoice", "drop": "safe", "names": {"rain": "PAPER RAIN", "volley": "ROTOR WASH", "lane_wave": "SEARCHLIGHT"}, "stages": [["rain", "volley"], ["lane_wave"], ["summon"], ["charge"]]},
   "Cenote Elite": {"names": {"slam": "DEPTH CHARGE", "grab": "UNDERTOW"}, "stages": [["slam", "grab"], ["volley"], ["lane_wave"], ["rain"]]},
-  "Dr. Splint": {"names": {"volley": "SYRINGES", "grab": "CHECK-UP", "summon": "ORDERLIES"}, "stages": [["volley", "grab"], ["summon"], ["slam"], ["rain", "spin"]]}
+  "Dr. Splint": {"hp_mul": 2.4, "add": "Invoice Clerk", "shot": "paper", "drop": "safe", "names": {"volley": "SYRINGES", "grab": "CHECK-UP", "summon": "ORDERLIES"}, "stages": [["volley", "grab"], ["summon"], ["slam"], ["rain", "spin"]]}
 }

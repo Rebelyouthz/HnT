@@ -68,3 +68,7 @@ func build_world() -> void:
 	NightStreet.plaque(self, Vector2(640, 210), "GAP  ·  THE WATER BILLS LATE FEES", Palette.MUTED, 13)
 	NightStreet.plaque(self, Vector2(2680, 120), "CHAPEL OF COPAY", Palette.EDGE, 16)
 	NightStreet.rain(self, 1700.0)
+	# The cranes still work the night shift: crates come down where the
+	# shadow is. Lure the ushers under them.
+	CabinetDrop.place(self, map_w, "crate")
+	NightStreet.plaque(self, Vector2(1300, 214), "CRANES ON SHIFT  ·  WATCH THE SHADOWS", Palette.MUTED, 13)

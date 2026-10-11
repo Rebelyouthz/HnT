@@ -11,13 +11,18 @@ const FALL := 1.25
 const R := Vector2(30, 13)
 
 var map_w := 2200.0
+## cabinet (City Hall clerks) or crate (Invoice Pier cranes).
+var look := "cabinet"
+var word := "FILED"
 var _cd := 7.0
 var _drops: Array = []   # {at: Vector2, t: float, landed: bool, life: float, seed: int}
 
 
-static func place(host: Node, width: float) -> CabinetDrop:
+static func place(host: Node, width: float, kind := "cabinet") -> CabinetDrop:
 	var c := CabinetDrop.new()
 	c.map_w = width
+	c.look = kind
+	c.word = "FILED" if kind == "cabinet" else "CRATED"
 	c.name = "CabinetDrop"
 	host.add_child(c)
 	return c
@@ -65,7 +70,7 @@ func _under(n: Node2D, at: Vector2) -> bool:
 func _land(at: Vector2) -> void:
 	Juice.pulse_shake(5.0)
 	Mixer.play_sfx("res://assets/audio/hit_heavy.wav", 0.6, -1.0)
-	Juice.popup_number(at + Vector2(0, -50), "FILED", UiKit.GOLD)
+	Juice.popup_number(at + Vector2(0, -50), word, UiKit.GOLD)
 	for f in get_tree().get_nodes_in_group("players"):
 		if f is Fighter and not (f as Fighter).downed and (f as Fighter).hop > -20.0 and _under(f, at):
 			(f as Fighter).take_hit("heavy", self)
@@ -79,7 +84,7 @@ func _land(at: Vector2) -> void:
 			p.hp = maxi(1, p.hp - maxi(1, int(round(float(p.max_hp) * 0.2))))
 			p.take_hit("heavy", self)
 			continue
-		Juice.shout("FILED")
+		Juice.shout(word)
 		p.hp = 1
 		p.take_hit("finish", self)
 		var host := get_parent()
@@ -123,6 +128,14 @@ func _draw() -> void:
 
 func _cabinet(base: Vector2, tilt: float, mod: Color) -> void:
 	var tr := Transform2D(sin(tilt) * 0.3, base)
+	if look == "crate":
+		var box := PackedVector2Array([Vector2(-20, -36), Vector2(20, -36), Vector2(20, 0), Vector2(-20, 0)])
+		draw_colored_polygon(tr * box, Color(0.5, 0.34, 0.18) * mod)
+		draw_line(tr * Vector2(-20, -36), tr * Vector2(20, 0), Color(0.32, 0.2, 0.1) * mod, 3.0)
+		draw_line(tr * Vector2(20, -36), tr * Vector2(-20, 0), Color(0.32, 0.2, 0.1) * mod, 3.0)
+		draw_polyline(tr * (box + PackedVector2Array([box[0]])), Color(0.28, 0.18, 0.08) * mod, 2.0)
+		draw_line(tr * Vector2(0, -36), tr * Vector2(0, -60), Color(0.2, 0.2, 0.22) * mod, 1.0)
+		return
 	var body := PackedVector2Array([Vector2(-14, -46), Vector2(14, -46), Vector2(14, 0), Vector2(-14, 0)])
 	draw_colored_polygon(tr * body, Color(0.46, 0.5, 0.46) * mod)
 	for k in 3:
