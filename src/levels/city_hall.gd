@@ -47,6 +47,10 @@ func build_world() -> void:
 	NightStreet.section(self, Vector2(1100, 140), "gun")
 	NightStreet.plaque(self, Vector2(980, 160), "STATUES CLIMB. RAVEN DOES NOT SHARE.", Palette.MUTED, 13)
 	NightStreet.rain(self, 1100.0)
+	# The clerks upstairs throw filing cabinets: watch the shadows, lure
+	# the guards under them.
+	CabinetDrop.place(self, map_w)
+	NightStreet.plaque(self, Vector2(300, 214), "CLERKS THROW CABINETS  ·  WATCH THE SHADOWS", Palette.MUTED, 13)
 	var raven := MayorRaven.new()
 	raven.global_position = Vector2(1500, 500)
 	raven.died.connect(func() -> void:

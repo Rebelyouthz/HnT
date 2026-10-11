@@ -11,6 +11,7 @@ const SPOTS := {
 	"intake_lot": [Vector2(520, 490), Vector2(1250, 490), Vector2(1900, 490)],
 	"neon_exchange": [Vector2(780, 248), Vector2(1960, 228), Vector2(2460, 490)],
 	"rail_bridge": [Vector2(560, 236), Vector2(1420, 248), Vector2(2100, 490)],
+	"city_hall": [Vector2(620, 248), Vector2(1180, 208), Vector2(1960, 490)],
 }
 
 var map_id := ""

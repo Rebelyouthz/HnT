@@ -35,6 +35,18 @@ bailiff, lot_hydra, clipboard_flier, roof_runner, bag_snatch, punk, cop,
 mohawk, shift_lead, valet, clamp_king (22 clips: `<who>_walk_ur.mp4`,
 `<who>_walk_dr.mp4`).
 
+## Priority 3: Mayor Raven (act 1 final boss) needs his own art
+
+He borrows Collector Gant's clips under a charcoal tint and a cape drawn in
+code. He needs a design first (Claude makes it with FLUX when the HF quota
+is back and drops it in `tools/local_gpu/starts/mayor_raven.png`; skip him
+until that file exists): a city mayor in a charcoal three-piece suit and
+red tie, long black ninja cape, black raven-beak half mask, slicked grey
+hair, throwing stars. Then the usual set: idle, walk, punch_high (throws a
+star), kick_low, hurt, death, plus walk_up / walk_down. Deputy Raven (City
+Hall mini boss) uses the generic punk today and could share the design in a
+grey suit.
+
 ## Quality check before pushing
 
 - The character stays the same person in the same clothes the whole clip.

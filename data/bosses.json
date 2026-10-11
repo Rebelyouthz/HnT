@@ -31,6 +31,11 @@
     "names": {"charge": "BADGE FLASH", "volley": "CITATIONS", "summon": "CALL IT IN", "grab": "PAT DOWN"},
     "stages": [["charge"], ["volley"], ["grab"], ["summon"]]
   },
+  "Deputy Raven": {
+    "hp_mul": 1.6, "add": "Hall Guard", "shot": "invoice", "drop": "safe",
+    "names": {"charge": "STAR DASH", "volley": "THROWING STARS", "grab": "ESCORTED OUT", "summon": "SECURITY"},
+    "stages": [["charge"], ["volley"], ["grab"], ["summon"]]
+  },
   "Agent Prime": {
     "hp_mul": 2.2, "add": "Agent Lin", "shot": "warrant", "drop": "cuffs",
     "names": {"volley": "BURST FIRE", "charge": "TACKLE", "grab": "CUFFS", "summon": "BACKUP", "lane_wave": "WARRANT LIGHT", "rain": "SEIZED ASSETS"},

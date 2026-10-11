@@ -878,8 +878,8 @@
     },
     "city_hall": {
       "title": "CITY HALL",
-      "main": "Climb the statues. The landlord has throwing stars and a mortgage on your name.",
-      "side": "Put the Deputy on the floor. Then the Mayor.",
+      "main": "Floor the Deputy. Climb the statues. Evict Mayor Raven.",
+      "side": "Get a guard FILED: lure him under a falling cabinet.",
       "talk": [
         {
           "at": 0,
@@ -895,6 +895,19 @@
           ]
         },
         {
+          "at": 420,
+          "lines": [
+            {
+              "who": "son",
+              "text": "Shadow on the ground. Something's coming out of that window."
+            },
+            {
+              "who": "father",
+              "text": "Paperwork. It always comes down on the little guy."
+            }
+          ]
+        },
+        {
           "at": 900,
           "lines": [
             {
@@ -904,6 +917,32 @@
             {
               "who": "son",
               "text": "If you win, we still get the invoice."
+            }
+          ]
+        },
+        {
+          "at": 1300,
+          "lines": [
+            {
+              "who": "son",
+              "text": "Statues climb. Raven's up top."
+            },
+            {
+              "who": "father",
+              "text": "Then we bring the statue's opinion down with us."
+            }
+          ]
+        },
+        {
+          "at": 1450,
+          "lines": [
+            {
+              "who": "father",
+              "text": "Mayor. You billed my son for a couch he never sat on."
+            },
+            {
+              "who": "son",
+              "text": "Dad. Less speech. More eviction."
             }
           ]
         }

@@ -63,6 +63,23 @@
      "done": "Lunch is saved. Here, have the half I wasn't going to eat.",
      "reward": {"gold": 40, "xp": 30}}
   ],
+  "city_hall": [
+    {"id": "filed_guard", "sprite": "npc_old_man", "giver": "Retired Clerk Abe", "tint": [0.8, 0.8, 0.9], "x": 360,
+     "lines": ["Thirty years I filed things. Now they file me under 'retired'.", "Those clerks upstairs throw cabinets. Get a guard under one. File him properly."],
+     "goal": {"type": "filed", "n": 1, "label": "Get a guard FILED by a falling cabinet"},
+     "done": "Alphabetical. Under G for gone. I could cry.",
+     "reward": {"gold": 55, "xp": 45, "gems": 1}},
+    {"id": "eviction_letter", "sprite": "npc_old_woman", "giver": "Tenant Rosa", "tint": [0.95, 0.7, 0.7], "x": 760,
+     "lines": ["Raven's office sent my eviction twice. The second one blew out the window.", "Find it before it gets stamped. A letter in the gutter is a letter that never arrived."],
+     "goal": {"type": "fetch", "item": "letter", "item_dx": 700, "label": "Catch Rosa's eviction letter"},
+     "done": "Never arrived! Legally! I'm keeping the apartment and the envelope.",
+     "reward": {"gold": 45, "xp": 35}},
+    {"id": "guard_duty", "sprite": "npc_sanitation", "giver": "Night Janitor Luz", "tint": [0.7, 0.9, 0.85], "x": 1300,
+     "lines": ["The Hall Guards track mud on my marble. Every night. On purpose.", "Put two of them down. I'll mop around them."],
+     "goal": {"type": "kill", "n": 2, "title": "Hall Guard", "label": "Drop 2 Hall Guards"},
+     "done": "Clean floors and quiet halls. You two are welcome back. Wipe your feet.",
+     "reward": {"gold": 50, "xp": 40}}
+  ],
   "any": [
     {"id": "noise_complaint", "giver": "Night Neighbour", "tint": [0.85, 0.8, 0.95],
      "lines": ["The thugs out here are LOUD. I have work at six.", "Make five of them quiet. Permanently-ish."],
