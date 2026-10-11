@@ -290,18 +290,7 @@ func _build_stations() -> void:
 
 
 func _board_sign(node: Node2D) -> void:
-	# Glowing sign + a pinned board on the wall between the dojo and the lounge.
-	var board := Polygon2D.new()
-	board.polygon = PackedVector2Array([Vector2(-17, -74), Vector2(17, -74), Vector2(17, -44), Vector2(-17, -44)])
-	board.color = Color(0.32, 0.2, 0.12)
-	node.add_child(board)
-	for i in 6:
-		var note := Polygon2D.new()
-		var nx := -14.0 + float(i % 3) * 10.0
-		var ny := -71.0 + float(i / 3) * 13.0
-		note.polygon = PackedVector2Array([Vector2(nx, ny), Vector2(nx + 8, ny), Vector2(nx + 8, ny + 10), Vector2(nx, ny + 10)])
-		note.color = [Palette.LEMON, Palette.EDGE, Color(0.9, 0.9, 0.85), Palette.BRICK, Color(0.9, 0.9, 0.85), Palette.LEMON][i]
-		node.add_child(note)
+	# The pinned board is in the painting; only its glowing name plate here.
 	var lab := NightStreet.plaque(node, Vector2(-34, -86), "COMMAND BOARD", Palette.EDGE, 9)
 	lab.z_index = 3
 
@@ -755,17 +744,25 @@ func _construct(st: Dictionary, paid := false) -> void:
 		benny.face(1)
 		benny.hammering = true
 	_talk.play([{"who": "benny", "text": "Stand back. Art is happening."}], true)
-	var planks: Array[Polygon2D] = []
+	var planks: Array[Node2D] = []
+	var lumber: Texture2D = load("res://assets/sprites/camp/planks.png") if ResourceLoader.exists("res://assets/sprites/camp/planks.png") else null
 	for i in 6:
 		await get_tree().create_timer(0.36).timeout
 		Juice.play("res://assets/audio/hammer.wav")
 		Juice.pulse_shake(1.5)
 		_dust(node.global_position + Vector2(randf_range(-12, 12), -4))
-		var p := Polygon2D.new()
-		var w := randf_range(18.0, 30.0)
-		p.polygon = PackedVector2Array([Vector2(-w * 0.5, -1.5), Vector2(w * 0.5, -1.5), Vector2(w * 0.5, 1.5), Vector2(-w * 0.5, 1.5)])
-		p.color = Color(0.62, 0.43, 0.24).darkened(randf_range(0.0, 0.25))
-		p.z_index = 3
+		# A pixel-art plank (tools/plank_art.py) at the room's texel size.
+		var p := Sprite2D.new()
+		if lumber != null:
+			var at := AtlasTexture.new()
+			at.atlas = lumber
+			at.region = Rect2(56 * (i % 4), 0, 56, 10)
+			p.texture = at
+			p.scale = Vector2.ONE * (2.0 / 3.0)
+			p.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			p.modulate = Color.WHITE.darkened(randf_range(0.0, 0.18))
+		# Behind the people standing at the station, over the painted room.
+		p.z_index = -1
 		p.position = Vector2(randf_range(-6, 6), -90.0)
 		p.rotation = randf_range(-0.6, 0.6)
 		node.add_child(p)

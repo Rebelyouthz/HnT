@@ -224,9 +224,14 @@ func _aim_control(c: Control) -> void:
 			p = p.get_parent()
 	var tf := c.get_global_transform_with_canvas()
 	_rect = Rect2(tf.origin, c.size * tf.get_scale()).grow(3.0)
+	# Just above the menu it points into: an UNLOCKED banner or a popup
+	# over that menu covers the frame instead of the frame sitting on it.
+	layer = FocusGlide.layer_above(c)
 
 
 func _aim_world(at: Vector2) -> void:
+	# Over the room, under the hideout's talk bubbles and sheets.
+	layer = 31
 	var p := get_viewport().get_canvas_transform() * at
 	var vp := get_viewport().get_visible_rect().size
 	_edge = 0
@@ -338,7 +343,9 @@ func _paint() -> void:
 	var pulse := 0.5 + 0.5 * sin(_t * 5.0)
 	var r := _rect.grow(2.0 + 2.0 * pulse)
 	var col := Color(UiKit.GOLD.r, UiKit.GOLD.g, UiKit.GOLD.b, 0.55 + 0.45 * pulse)
-	if _edge == 0:
+	# A room on the floor gets the arrow only: a box there just framed
+	# whoever stood in front of it.
+	if _edge == 0 and not target.begins_with("station:"):
 		_draw.draw_rect(r, col, false, 2.0)
 		_draw.draw_rect(r.grow(3.0), Color(col.r, col.g, col.b, 0.18 * pulse), false, 3.0)
 	var bob := 3.0 * sin(_t * 6.0)

@@ -357,6 +357,15 @@ func popup_number(global_pos: Vector2, text: String, color: Color) -> void:
 
 
 func claim_burst(from: Vector2, line: String, gold: int, gems: int) -> void:
+	# One big line at a time: while a bought name stands centre stage, wait
+	# for it to fly home; a name bought right after this line juices its
+	# button instead of showcasing on top of it.
+	var now := float(Time.get_ticks_msec()) / 1000.0
+	if rewards._show_busy > now:
+		get_tree().create_timer(rewards._show_busy - now + 0.45, true, false, true).timeout.connect(
+			claim_burst.bind(from, line, gold, gems))
+		return
+	rewards._show_busy = now + 1.3
 	play("res://assets/audio/claim.wav")
 	var wrap := Control.new()
 	wrap.set_anchors_preset(Control.PRESET_FULL_RECT)

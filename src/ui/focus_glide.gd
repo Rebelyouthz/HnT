@@ -67,6 +67,9 @@ func _process(delta: float) -> void:
 	var ok := f != null and f.is_visible_in_tree() and f.size.x > 2.0 and f.size.y > 2.0 and not _hidden(f) and _menu_up() \
 			and get_tree().get_first_node_in_group("guide") == null
 	if ok:
+		# Drawn just above the layer the button lives on, so banners, popups
+		# and toasts in front of the menu cover the frame too.
+		layer = layer_above(f)
 		var tf := f.get_global_transform_with_canvas()
 		var want := Rect2(tf.origin, f.size * tf.get_scale()).grow(PAD)
 		if f != _target:
@@ -95,6 +98,12 @@ func _process(delta: float) -> void:
 	_pop = move_toward(_pop, 0.0, delta * 4.0)
 	if _alpha > 0.0 or ok:
 		_draw.queue_redraw()
+
+
+## One canvas layer above the one this item is drawn on.
+static func layer_above(c: CanvasItem) -> int:
+	var cl := c.get_canvas_layer_node() if c != null else null
+	return (cl.layer if cl != null else 0) + 1
 
 
 ## A menu is in front: the game is paused (pause, card picks, results), the
