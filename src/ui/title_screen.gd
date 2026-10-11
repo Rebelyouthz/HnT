@@ -215,6 +215,15 @@ func _build_footer() -> void:
 	f.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	UiKit.apply_label(f, 13, Palette.MUTED)
 	add_child(f)
+	# Which build this is (the installer writes data/build.json), so a photo
+	# of the title tells which version is being played.
+	var b: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/build.json")) if FileAccess.file_exists("res://data/build.json") else null
+	var v := Label.new()
+	v.text = "BUILD %s" % (str((b as Dictionary).get("id", "?")) if b is Dictionary else "DEV")
+	v.position = Vector2(16, 694)
+	v.size = Vector2(300, 20)
+	UiKit.apply_label(v, 11, Palette.MUTED)
+	add_child(v)
 
 
 func _process(delta: float) -> void:

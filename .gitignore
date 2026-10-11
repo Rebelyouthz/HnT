@@ -24,3 +24,4 @@ tools/balance_sim_out.json
 tools/local_gpu/starts/_game/
 tools/local_gpu/finished/_48fps/
 *.keyed.npz
+data/build.json
