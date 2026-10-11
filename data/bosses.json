@@ -37,7 +37,16 @@
     "stages": [["volley", "charge"], ["grab"], ["summon"], ["lane_wave", "rain"]]
   },
   "Number 88": {"names": {"rain": "TICKETS CALLED", "lane_wave": "QUEUE JUMP"}, "stages": [["rain", "lane_wave"], ["charge"], ["summon"], ["spin"]]},
-  "Conductor 9": {"names": {"charge": "EXPRESS", "lane_wave": "RAIL SHOCK", "volley": "PUNCHED TICKETS"}, "stages": [["charge", "lane_wave"], ["volley"], ["slam"], ["summon"]]},
+  "Boxcar Brute": {
+    "hp_mul": 1.6, "add": "Toll Bot", "shot": "ticket", "drop": "crate",
+    "names": {"charge": "COUPLING RAM", "slam": "BUFFER STOP", "grab": "FREIGHT HUG", "summon": "SHUNT IN"},
+    "stages": [["charge"], ["slam"], ["grab"], ["summon"]]
+  },
+  "Conductor 9": {
+    "hp_mul": 2.2, "add": "Toll Bot", "shot": "ticket", "drop": "crate",
+    "names": {"charge": "EXPRESS", "lane_wave": "RAIL SHOCK", "volley": "PUNCHED TICKETS", "slam": "EMERGENCY BRAKE", "summon": "ALL ABOARD"},
+    "stages": [["charge", "lane_wave"], ["volley"], ["slam"], ["summon"]]
+  },
   "Combine Brute": {"names": {"charge": "HARVEST", "spin": "THRESHER", "rain": "HAY BALES"}, "stages": [["charge", "spin"], ["rain"], ["slam"], ["summon"]]},
   "Snowmobile": {"names": {"charge": "WHITEOUT RUN", "rain": "ICICLES", "lane_wave": "AVALANCHE"}, "stages": [["charge", "rain"], ["lane_wave"], ["volley"], ["spin"]]},
   "Invoice Chopper": {"names": {"rain": "PAPER RAIN", "volley": "ROTOR WASH", "lane_wave": "SEARCHLIGHT"}, "stages": [["rain", "volley"], ["lane_wave"], ["summon"], ["charge"]]},

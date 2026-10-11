@@ -66,3 +66,7 @@ func build_world() -> void:
 	shop.hint = "SPECIAL GRENADE 10  ·  DOWN SPARK 6"
 	shop.global_position = Vector2(2680, 490)
 	add_child(shop)
+	# Freight on the back rails: crossing lights, a bell, then a train
+	# through the lane. Stand clear; push thugs in.
+	FreightLine.lay(self, map_w, [640.0, 1640.0, 2360.0])
+	NightStreet.plaque(self, Vector2(660, 214), "BACK RAILS LIVE  ·  BELL MEANS MOVE", Palette.MUTED, 13)

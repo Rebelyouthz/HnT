@@ -786,8 +786,8 @@
     },
     "rail_bridge": {
       "title": "RAIL BRIDGE",
-      "main": "Pay the toll in personality. Keep a grenade as a receipt.",
-      "side": "Ride a boxcar roof. The street still bites.",
+      "main": "Cross the bridge. Drop the Boxcar Brute. Derail Conductor 9.",
+      "side": "Push a thug onto the back rails when the bell rings.",
       "talk": [
         {
           "at": 0,
@@ -799,6 +799,58 @@
             {
               "who": "son",
               "text": "You blinked in 2011 and called it a sabbatical."
+            }
+          ]
+        },
+        {
+          "at": 560,
+          "lines": [
+            {
+              "who": "son",
+              "text": "Bell means train. Train means move."
+            },
+            {
+              "who": "father",
+              "text": "Or it means bring the thugs to the rails. Teamwork."
+            }
+          ]
+        },
+        {
+          "at": 1180,
+          "lines": [
+            {
+              "who": "father",
+              "text": "Boxcar Brute. He's freight with opinions."
+            },
+            {
+              "who": "son",
+              "text": "Hit the opinions first."
+            }
+          ]
+        },
+        {
+          "at": 1880,
+          "lines": [
+            {
+              "who": "son",
+              "text": "Drones overhead. They film everything."
+            },
+            {
+              "who": "father",
+              "text": "Then give them a good angle. My left side."
+            }
+          ]
+        },
+        {
+          "at": 2300,
+          "lines": [
+            {
+              "who": "father",
+              "text": "Conductor 9. Punches tickets. And people."
+            },
+            {
+              "who": "son",
+              "text": "Last stop is him. Not us."
             }
           ]
         }

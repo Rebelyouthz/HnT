@@ -46,6 +46,23 @@
      "done": "The tree! He kept the tree! You're a good family. Weird, but good.",
      "reward": {"gold": 50, "xp": 40, "gems": 1}}
   ],
+  "rail_bridge": [
+    {"id": "hobo_hank", "sprite": "npc_old_man", "giver": "Boxcar Hank", "tint": [0.8, 0.7, 0.55], "x": 520,
+     "lines": ["Forty years riding these rails. The trains never stop for thugs.", "Get two of 'em to meet the freight. Bell rings, you shove. Simple."],
+     "goal": {"type": "train", "n": 2, "label": "Shove 2 thugs in front of a train"},
+     "done": "Beautiful timing. You'd make a fine brakeman. Terrible person, fine brakeman.",
+     "reward": {"gold": 55, "xp": 45, "gems": 1}},
+    {"id": "toll_refund", "sprite": "npc_old_woman", "giver": "Commuter Gloria", "tint": [0.7, 0.85, 0.75], "x": 980,
+     "lines": ["The Toll Bot charged me twice. Then charged me for asking.", "Scrap one of them. I want my receipt back."],
+     "goal": {"type": "kill", "n": 1, "title": "Toll Bot", "label": "Scrap a Toll Bot"},
+     "done": "Refund processed. In bolts. I'll take it.",
+     "reward": {"gold": 45, "xp": 35}},
+    {"id": "lost_ticket", "sprite": "npc_sanitation", "giver": "Track Worker Ines", "tint": [0.95, 0.75, 0.35], "x": 1500,
+     "lines": ["My shift pass blew down the bridge. No pass, no pay, no lunch.", "It's a yellow ticket. Probably stuck on a sleeper by now."],
+     "goal": {"type": "fetch", "item": "ticket", "item_dx": 800, "label": "Find Ines's shift pass"},
+     "done": "Lunch is saved. Here, have the half I wasn't going to eat.",
+     "reward": {"gold": 40, "xp": 30}}
+  ],
   "any": [
     {"id": "noise_complaint", "giver": "Night Neighbour", "tint": [0.85, 0.8, 0.95],
      "lines": ["The thugs out here are LOUD. I have work at six.", "Make five of them quiet. Permanently-ish."],
