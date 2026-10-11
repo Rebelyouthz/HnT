@@ -628,6 +628,20 @@ func _process(_delta: float) -> bool:
 	# FIRE=frame: hold SHOOT from then on (manual weapons, magazines).
 	if OS.get_environment("FIRE") != "" and _n == int(OS.get_environment("FIRE")):
 		Input.action_press("p1_shoot")
+	# HEROX=x: put the hero (and the camera) at that street x on frame 60.
+	if OS.get_environment("HEROX") != "" and _n == 60:
+		for h in root.get_tree().get_nodes_in_group("players"):
+			if h is Node2D:
+				(h as Node2D).global_position.x = float(OS.get_environment("HEROX"))
+	# NODRAW=1: close the starting card draw (and any card pick) so the shot
+	# shows the street itself.
+	if OS.get_environment("NODRAW") != "" and _n > 30:
+		for cpk in root.find_children("*", "CanvasLayer", true, false):
+			if cpk.get_script() != null and str(cpk.get_script().resource_path).ends_with("card_pick.gd"):
+				cpk.queue_free()
+				root.get_tree().paused = false
+		if OS.get_environment("NODRAW") == "all":
+			root.get_tree().paused = false
 	if _walk and _n > 20:
 		Input.action_press("p1_left" if _left else "p1_right")
 		# WALKY=up|down: walk diagonally (eight-way checks on the field).

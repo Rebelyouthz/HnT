@@ -543,6 +543,9 @@ func _process(delta: float) -> void:
 		act = "  ·  " + str(App.current_map).replace("_", " ").to_upper()
 	_lives.text = "LIVES  " + stamps + scrap + act
 	_paint_purse()
+	# The label carries the dark plate as a child: hide it outright, or the
+	# empty plate sits over the street between combos.
+	_combo.visible = Juice.combo >= 2
 	if Juice.combo < 2:
 		_combo.text = ""
 		_combo.set_meta("n", 0)
@@ -621,11 +624,16 @@ func _paint_boss() -> void:
 	var best_max := 1
 	var best_name := ""
 	var plates := -1
+	# Only a boss the family has met: near the camera, or already hurt. A
+	# boss waiting at the far end of the street keeps its bar hidden.
+	var cam := get_viewport().get_camera_2d()
 	for n in get_tree().get_nodes_in_group("act_boss"):
 		if not is_instance_valid(n):
 			continue
 		if n is Punk:
 			var p: Punk = n
+			if cam != null and p.hp >= p.max_hp and absf(p.global_position.x - cam.get_screen_center_position().x) > 560.0:
+				continue
 			if p.hp > best_hp:
 				best = p
 				best_hp = p.hp
@@ -633,9 +641,15 @@ func _paint_boss() -> void:
 				best_name = p.title
 				plates = p.plates
 	if best == null:
-		_boss_wrap.visible = false
+		if _boss_wrap.visible and _boss_wrap.modulate.a > 0.99:
+			var out := create_tween()
+			out.tween_property(_boss_wrap, "modulate:a", 0.0, 0.25)
+			out.tween_callback(func() -> void: _boss_wrap.visible = false)
 		return
-	_boss_wrap.visible = true
+	if not _boss_wrap.visible or _boss_wrap.modulate.a < 0.01:
+		_boss_wrap.visible = true
+		_boss_wrap.modulate.a = 0.0
+		create_tween().tween_property(_boss_wrap, "modulate:a", 1.0, 0.35)
 	var frac := clampf(float(best_hp) / float(best_max), 0.0, 1.0)
 	_boss_fill.size.x = 470.0 * frac
 	_boss_fill.color = Palette.EDGE if plates > 0 else (Palette.BRICK if frac < 0.33 else Palette.LEMON)

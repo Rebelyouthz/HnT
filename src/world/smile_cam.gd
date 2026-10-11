@@ -148,19 +148,37 @@ func _draw() -> void:
 			draw_circle(hang + Vector2(0, 3), 4.0, Color(1.0, 0.85, 0.4, 0.8))
 		return
 	draw_line(Vector2.ZERO, head, steel, 4.0)
+	draw_line(Vector2(-1, 0), head + Vector2(-1, 0), steel.lightened(0.25), 1.0)
 	draw_rect(Rect2(Vector2(-6, -4), Vector2(12, 4)), steel.darkened(0.3))
-	# The cone first, so the camera body sits on top of it.
+	# The cone fades out with distance; where its middle meets the ground a
+	# red spot slides along the pavement so you can read where it looks.
 	var hot := clampf(_seen / SEE_T, 0.0, 1.0)
-	var col := Color(1.0, 0.18, 0.24, 0.1 + 0.18 * hot)
+	var near := Color(1.0, 0.16, 0.22, 0.26 + 0.24 * hot)
+	var far := Color(1.0, 0.16, 0.22, 0.02)
 	var a := head + Vector2.from_angle(_aim - spread) * reach
 	var b := head + Vector2.from_angle(_aim + spread) * reach
-	draw_colored_polygon(PackedVector2Array([head, a, b]), col)
-	draw_line(head, a, Color(1.0, 0.3, 0.35, 0.3 + 0.4 * hot), 1.0)
-	draw_line(head, b, Color(1.0, 0.3, 0.35, 0.3 + 0.4 * hot), 1.0)
+	draw_polygon(PackedVector2Array([head, a, b]), PackedColorArray([near, far, far]))
+	draw_line(head, a, Color(1.0, 0.3, 0.35, 0.22 + 0.4 * hot), 1.0)
+	draw_line(head, b, Color(1.0, 0.3, 0.35, 0.22 + 0.4 * hot), 1.0)
 	var dir := Vector2.from_angle(_aim)
-	draw_line(head, head + dir * 9.0, Color(0.12, 0.12, 0.14), 7.0)
-	draw_rect(Rect2(head + Vector2(-7, -6), Vector2(14, 9)), Color(0.85, 0.85, 0.9).lerp(Color.WHITE, _flash))
+	if dir.y > 0.05:
+		var hit := head + dir * minf(tall / dir.y, reach)
+		var rx := 16.0 + 10.0 * absf(dir.x)
+		var pts := PackedVector2Array()
+		for k in 16:
+			var ang := TAU * float(k) / 16.0
+			pts.append(hit + Vector2(cos(ang) * rx, sin(ang) * rx * 0.3))
+		draw_colored_polygon(pts, Color(1.0, 0.2, 0.25, 0.18 + 0.3 * hot))
+	# Camera body: a dark housing on a bracket, lens toward the aim.
+	var body := Transform2D(_aim, head)
+	var shell := PackedVector2Array([Vector2(-6, -5), Vector2(9, -5), Vector2(11, -3), Vector2(11, 3), Vector2(9, 5), Vector2(-6, 5)])
+	draw_colored_polygon(body * shell, Color(0.12, 0.12, 0.15).lerp(Color.WHITE, _flash * 0.6))
+	draw_polyline(body * (shell + PackedVector2Array([shell[0]])), Color(0.45, 0.45, 0.5), 1.0)
+	draw_line(body * Vector2(-6, -5), body * Vector2(8, -5), Color(0.6, 0.6, 0.66), 1.0)
+	draw_line(head, head + Vector2(-4, 6), steel, 2.0)
 	var blink := 0.5 + 0.5 * sin(_t * (6.0 + 10.0 * hot))
-	draw_circle(head + dir * 10.0, 2.2, Color(1.0, 0.15, 0.2, 0.6 + 0.4 * blink))
+	draw_circle(body * Vector2(11, 0), 2.6, Color(0.05, 0.05, 0.06))
+	draw_circle(body * Vector2(11, 0), 1.6, Color(1.0, 0.15, 0.2, 0.6 + 0.4 * blink))
+	draw_circle(body * Vector2(-2, -2), 1.2, Color(1.0, 0.2, 0.2, blink))
 	if hot > 0.05:
 		draw_string(ThemeDB.fallback_font, head + Vector2(-14, -12), "SMILE", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color(1.0, 0.35, 0.4, hot))
