@@ -49,8 +49,11 @@ grey suit.
 
 ## Quality check before pushing
 
-**Svenska:** Kör `python tools/check_clip.py tools/local_gpu/clips/*.mp4`
-innan du pushar. Skriptet säger PASS eller FAIL per klipp och sparar en
+**Svenska:** Följ `docs/LOCAL_AGENT_WALK_PROMPT.md`: varje klipp går genom
+`tools/local_gpu/finish_clip.py`, som skär ut exakt ett helt gångvarv, gör
+lika många bilder och lika stor gubbe som i spelet, och säger PASS eller FAIL.
+Den enklare kollen `python tools/check_clip.py tools/local_gpu/clips/*.mp4`
+finns kvar för att se råklippet. Skriptet säger PASS eller FAIL per klipp och sparar en
 bildremsa (`<namn>_check.png`) bredvid klippet. Pusha bara de klipp som
 får PASS. Gör om de som får FAIL med ett nytt seed.
 

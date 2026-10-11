@@ -111,6 +111,58 @@ def best_loop(keys: list[np.ndarray], min_len: int, max_len: int) -> tuple[int, 
     return best
 
 
+def _mask_sig(k: np.ndarray, size: int = 48) -> np.ndarray:
+    """Silhouette only (no colour): one step later the legs have swapped,
+    the outline is nearly the same, the colours are not."""
+    return _sig(k, size)[..., 3]
+
+
+def step_period(keys: list[np.ndarray], lo: int, hi: int) -> int:
+    """Frames per step (half a walk cycle): the first clear dip of the
+    silhouette distance averaged over the whole clip."""
+    m = [_mask_sig(k) for k in keys]
+    n = len(m)
+    D = []
+    for k in range(1, min(hi, n - 2) + 1):
+        D.append(float(np.mean([np.abs(m[i] - m[i + k]).mean() for i in range(0, n - k)])))
+    D = np.array(D)
+    best = None
+    for k in range(max(2, lo), len(D)):
+        # local minimum (k is 1-based: D[k-1])
+        if D[k - 1] <= D[k - 2] and (k >= len(D) or D[k - 1] <= D[k]):
+            best = k
+            break
+    if best is None:
+        best = int(np.argmin(D[max(1, lo) - 1:])) + max(1, lo)
+    return best
+
+
+def stride_loop(keys: list[np.ndarray], start: int = -1, fps: float = 16.0) -> tuple[int, int, float, int]:
+    """Exactly one full stride: two steps, both legs through a whole cycle,
+    ending on the frame that matches the first one (colour and outline) so
+    the loop closes without a pop or a half step."""
+    sigs = [_sig(k) for k in keys]
+    n = len(sigs)
+    # A walking step takes a quarter of a second to a second.
+    step = step_period(keys, max(3, int(0.25 * fps)), max(6, min(n // 2, int(1.0 * fps))))
+    lo, hi = int(round(step * 1.8)), int(round(step * 2.25))
+    hi = min(hi, n - 1)
+    starts = range(0, max(1, n - lo))
+    if start >= 0:
+        starts = range(max(0, start - 4), min(n - lo, start + 5))
+    best = (0, min(n - 1, 2 * step), 1e9)
+    for a in starts:
+        for b in range(a + lo, min(n, a + hi + 1)):
+            # Same pose AND moving the same way: the frames either side of
+            # the seam must match too, or the loop jerks even on a good pose.
+            d = float(np.abs(sigs[a] - sigs[b]).mean())
+            if 0 < a and b + 1 < n:
+                d = 0.6 * d + 0.2 * float(np.abs(sigs[a - 1] - sigs[b - 1]).mean()) + 0.2 * float(np.abs(sigs[a + 1] - sigs[b + 1]).mean())
+            if d < best[2]:
+                best = (a, b, d)
+    return best[0], best[1], best[2], step
+
+
 def trim_still(keys: list[np.ndarray], thresh: float = 0.004) -> tuple[int, int]:
     sigs = [_sig(k) for k in keys]
     motion = [float(np.abs(sigs[i + 1] - sigs[i]).mean()) for i in range(len(sigs) - 1)]
@@ -231,19 +283,29 @@ def main() -> None:
     ap.add_argument("--scale-ref", default="", help="use the body scale stored in this clip's JSON (one scale per character)")
     ap.add_argument("--stand-frame", type=int, default=-999, help="scale so the body in this source frame (-1 = last) is --stand px tall")
     ap.add_argument("--hit-at", type=float, default=-1.0, help="contact moment in the source (seconds): marks the hit frame")
-    ap.add_argument("--start", type=float, default=-1.0, help="force start (seconds)")
+    ap.add_argument("--stride", action="store_true", help="loop = exactly one full stride (two steps, both legs); for walks and runs")
+    ap.add_argument("--start", type=float, default=-1.0, help="force start (seconds); with --loop the cycle is searched from here")
     ap.add_argument("--end", type=float, default=-1.0, help="force end (seconds)")
     a = ap.parse_args()
     keys, vfps = keyed_cached(a.video)
-    if a.loop:
+    if a.loop and a.stride:
+        s, e, d, step = stride_loop(keys, int(a.start * vfps) if a.start >= 0 else -1, vfps)
+        print("stride %d..%d (%.2fs = 2 steps of %d frames), mismatch %.4f" % (s, e, (e - s) / vfps, step, d))
+        build.stride = {"step": step, "len": e - s, "mismatch": d}
+    elif a.loop:
         s, e, d = best_loop(keys, int(a.min_cycle * vfps), int(a.max_cycle * vfps))
+        if a.start >= 0:
+            # Keep the cycle length the search found; only move where it starts.
+            ln = e - s
+            s = int(a.start * vfps)
+            e = min(len(keys) - 1, s + ln)
         print("loop %d..%d (%.2fs), mismatch %.4f" % (s, e, (e - s) / vfps, d))
     else:
         s, e = trim_still(keys)
         print("action %d..%d (%.2fs)" % (s, e, (e - s) / vfps))
-    if a.start >= 0:
-        s = int(a.start * vfps)
-    if a.end >= 0:
+        if a.start >= 0:
+            s = int(a.start * vfps)
+    if a.end >= 0 and not a.loop:
         e = min(len(keys) - 1, int(a.end * vfps))
     idx = resample_idx(s, e, a.frames, a.loop)
     hit = -1

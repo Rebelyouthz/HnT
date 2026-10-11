@@ -67,6 +67,29 @@ FILL, FEET = 0.67, 0.94
 GREEN = (0, 184, 50)
 
 
+def game_still(who):
+    """The character exactly as the game draws him: frame 1 of his idle (or
+    walk) sheet on flat green. Starting the clip from this keeps the same
+    face, outfit, colours and proportions as the sprites already in the game."""
+    import json
+    from PIL import Image
+    for clip in ("idle", "walk"):
+        mp = ROOT / "assets" / "sprites" / who / f"{clip}.json"
+        if not mp.exists():
+            continue
+        meta = json.loads(mp.read_text())
+        f = meta["frames"][0]
+        sheet = Image.open(mp.with_suffix(".png")).convert("RGBA")
+        cw, ch = meta["cell"]
+        canvas = Image.new("RGBA", (cw, ch), GREEN + (255,))
+        canvas.alpha_composite(sheet.crop((f["x"], f["y"], f["x"] + f["w"], f["y"] + f["h"])), (f["ox"], f["oy"]))
+        out = HERE / "starts" / "_game" / f"{who}.png"
+        out.parent.mkdir(parents=True, exist_ok=True)
+        canvas.convert("RGB").save(out)
+        return out
+    return None
+
+
 def frame_start(path, w, h):
     """The start image placed like every other clip: never stretched, the
     character scaled to FILL of the height with his feet at FEET, on flat
@@ -97,6 +120,8 @@ def main():
     ap.add_argument("--frames", type=int, default=49)    # ~3 s at 16 fps
     ap.add_argument("--steps", type=int, default=30)
     ap.add_argument("--size", default="704x544")
+    ap.add_argument("--start-from", default="game", choices=["game", "design"],
+                    help="game: the character's own in-game sprite (same look); design: starts/<who>.png")
     ap.add_argument("--vram", type=float, default=11.0)   # GB the GPU may use
     ap.add_argument("--rest", type=int, default=30)       # seconds between clips
     ap.add_argument("--threads", type=int, default=0)     # CPU threads (0 = half the cores)
@@ -119,7 +144,7 @@ def main():
     # 1) Every prompt through the text encoder once, on the CPU, then drop it.
     jobs = []
     for who, move, desc, (dur, text), free in todo:
-        if not (STARTS / f"{who}.png").exists():
+        if game_still(who) is None and not (STARTS / f"{who}.png").exists():
             print("no start image for", who, "-> put one in", STARTS / f"{who}.png")
             continue
         # "free" moves (walk toward / away from the camera) drop the side-view rule.
@@ -145,7 +170,8 @@ def main():
     for i, (who, move, pe, ne) in enumerate(jobs):
         t0 = time.time()
         with torch.no_grad():
-            frames = pipe(image=frame_start(STARTS / f"{who}.png", w, h),
+            start = game_still(who) if a.start_from == "game" else None
+            frames = pipe(image=frame_start(start or (STARTS / f"{who}.png"), w, h),
                           prompt_embeds=pe, negative_prompt_embeds=ne, height=h, width=w, num_frames=a.frames,
                           num_inference_steps=a.steps, guidance_scale=5.0).frames[0]
         out = OUT / f"{who}_{move}.mp4"

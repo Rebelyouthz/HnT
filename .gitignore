@@ -19,3 +19,8 @@ Godot_v*
 # Tool output
 tools/__pycache__/
 tools/balance_sim_out.json
+
+# local clip pipeline scratch
+tools/local_gpu/starts/_game/
+tools/local_gpu/finished/_48fps/
+*.keyed.npz
