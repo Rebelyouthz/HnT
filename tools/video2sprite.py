@@ -137,14 +137,14 @@ def step_period(keys: list[np.ndarray], lo: int, hi: int) -> int:
     return best
 
 
-def stride_loop(keys: list[np.ndarray], start: int = -1, fps: float = 16.0) -> tuple[int, int, float, int]:
+def stride_loop(keys: list[np.ndarray], start: int = -1, fps: float = 16.0, step_s: tuple = (0.25, 1.0)) -> tuple[int, int, float, int]:
     """Exactly one full stride: two steps, both legs through a whole cycle,
     ending on the frame that matches the first one (colour and outline) so
     the loop closes without a pop or a half step."""
     sigs = [_sig(k) for k in keys]
     n = len(sigs)
     # A walking step takes a quarter of a second to a second.
-    step = step_period(keys, max(3, int(0.25 * fps)), max(6, min(n // 2, int(1.0 * fps))))
+    step = step_period(keys, max(3, int(step_s[0] * fps)), max(6, min(n // 2, int(step_s[1] * fps))))
     lo, hi = int(round(step * 1.8)), int(round(step * 2.25))
     hi = min(hi, n - 1)
     starts = range(0, max(1, n - lo))
@@ -283,13 +283,15 @@ def main() -> None:
     ap.add_argument("--scale-ref", default="", help="use the body scale stored in this clip's JSON (one scale per character)")
     ap.add_argument("--stand-frame", type=int, default=-999, help="scale so the body in this source frame (-1 = last) is --stand px tall")
     ap.add_argument("--hit-at", type=float, default=-1.0, help="contact moment in the source (seconds): marks the hit frame")
+    ap.add_argument("--step-range", default="0.25,1.0", help="with --stride: shortest,longest step in seconds (runs ~0.15,0.45)")
     ap.add_argument("--stride", action="store_true", help="loop = exactly one full stride (two steps, both legs); for walks and runs")
     ap.add_argument("--start", type=float, default=-1.0, help="force start (seconds); with --loop the cycle is searched from here")
     ap.add_argument("--end", type=float, default=-1.0, help="force end (seconds)")
     a = ap.parse_args()
     keys, vfps = keyed_cached(a.video)
     if a.loop and a.stride:
-        s, e, d, step = stride_loop(keys, int(a.start * vfps) if a.start >= 0 else -1, vfps)
+        rng = tuple(float(v) for v in a.step_range.split(","))
+        s, e, d, step = stride_loop(keys, int(a.start * vfps) if a.start >= 0 else -1, vfps, rng)
         print("stride %d..%d (%.2fs = 2 steps of %d frames), mismatch %.4f" % (s, e, (e - s) / vfps, step, d))
         build.stride = {"step": step, "len": e - s, "mismatch": d}
     elif a.loop:
