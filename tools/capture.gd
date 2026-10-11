@@ -637,7 +637,7 @@ func _process(_delta: float) -> bool:
 	# shows the street itself.
 	if OS.get_environment("NODRAW") != "" and _n > 30:
 		for cpk in root.find_children("*", "CanvasLayer", true, false):
-			if cpk.get_script() != null and str(cpk.get_script().resource_path).ends_with("card_pick.gd"):
+			if cpk.get_script() != null and (str(cpk.get_script().resource_path).ends_with("card_pick.gd") or str(cpk.get_script().resource_path).ends_with("survive_pick.gd")):
 				cpk.queue_free()
 				root.get_tree().paused = false
 		if OS.get_environment("NODRAW") == "all":
