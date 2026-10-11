@@ -201,6 +201,9 @@ func _apply_pad_map() -> void:
 		# Every connected pad drives P1, each with its own map.
 		for d in Input.get_connected_joypads():
 			_bind_device("p1_", int(d))
+		# And walking listens to any pad the way the menus do (ui_*), so a
+		# pad seen under an odd id or a half-done CONTROLLER SETUP still steers.
+		_bind_move("p1_", -1)
 	elif p1_device >= 0:
 		_bind_device("p1_", p1_device)
 	if p2_device >= 0:
@@ -238,6 +241,15 @@ func _bind_device(prefix: String, device: int) -> void:
 	_axis(prefix + "down", JOY_AXIS_LEFT_Y, 1.0, device)
 	_axis(prefix + "dash", JOY_AXIS_TRIGGER_RIGHT, 1.0, device)
 	_axis(prefix + "throw", JOY_AXIS_TRIGGER_LEFT, 1.0, device)
+
+
+func _bind_move(prefix: String, device: int) -> void:
+	for pair in [["left", JOY_BUTTON_DPAD_LEFT, -1.0], ["right", JOY_BUTTON_DPAD_RIGHT, 1.0]]:
+		_joy_btn(prefix + str(pair[0]), pair[1], device)
+		_axis(prefix + str(pair[0]), JOY_AXIS_LEFT_X, pair[2], device)
+	for pair in [["up", JOY_BUTTON_DPAD_UP, -1.0], ["down", JOY_BUTTON_DPAD_DOWN, 1.0]]:
+		_joy_btn(prefix + str(pair[0]), pair[1], device)
+		_axis(prefix + str(pair[0]), JOY_AXIS_LEFT_Y, pair[2], device)
 
 
 func _strip_joy(name: StringName) -> void:
@@ -300,7 +312,9 @@ func _axis(name: StringName, axis: JoyAxis, value: float, device: int) -> void:
 
 func _has(name: StringName, ev: InputEvent) -> bool:
 	for existing in InputMap.action_get_events(name):
-		if existing.as_text() == ev.as_text():
+		# as_text() leaves the device out: compare it too, or a second pad
+		# (or the any-pad binding) is taken for a copy and never bound.
+		if existing.device == ev.device and existing.as_text() == ev.as_text():
 			return true
 	return false
 

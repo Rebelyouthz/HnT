@@ -38,6 +38,13 @@ func _process(_d: float) -> bool:
 		pr.call("_bind_device", "p1_", 6)
 		var dp := InputEventJoypadButton.new()
 		dp.device = 6
+		# Solo: the stick on any pad id walks too.
+		pr.call("_bind_move", "p1_", -1)
+		var any := InputEventJoypadMotion.new()
+		any.axis = JOY_AXIS_LEFT_Y
+		any.axis_value = 1.0
+		any.device = -1
+		_check(InputMap.action_has_event("p1_down", any), "any-pad stick bound beside per-pad")
 		dp.button_index = JOY_BUTTON_DPAD_LEFT
 		dp.pressed = true
 		Input.parse_input_event(dp)

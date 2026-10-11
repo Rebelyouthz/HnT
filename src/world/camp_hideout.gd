@@ -12,6 +12,7 @@ const CAMP_K := 1.6
 
 const WALK_Y := 500.0
 const SPEED := 150.0
+const BUDDY_GAP := 34.0
 const REACH := 14.0
 ## Rooms are 2/3 u per texel; at 2.5x zoom on 1080p that is 5 screen px per
 ## texel (integer, crisp) and the room fills the frame top to bottom.
@@ -200,8 +201,9 @@ func _build_actors() -> void:
 	add_child(_walker)
 	_buddy = CampWalker.new()
 	_buddy.setup(other)
-	_buddy.position = Vector2(_couch_x() + 14.0, WALK_Y - 2.0)
-	_buddy.facing = 1
+	# The other hero tags along a step behind, so whoever talks is on screen.
+	_buddy.position = Vector2(_walker.position.x + BUDDY_GAP, WALK_Y - 2.0)
+	_buddy.facing = -1
 	add_child(_buddy)
 	_buddy.set_motion(0.0)
 	for who in CREW_SPOT:
@@ -225,15 +227,22 @@ func _build_actors() -> void:
 	_cam.reset_smoothing()
 
 
+## The buddy walks to a spot a step behind you and turns to face you there.
+func _follow_buddy(delta: float) -> void:
+	var want := _walker.position.x - float(_walker.facing) * BUDDY_GAP
+	var dx := want - _buddy.position.x
+	if absf(dx) < 6.0:
+		_buddy.set_motion(0.0)
+		_buddy.facing = 1 if _walker.position.x > _buddy.position.x else -1
+		_buddy.set_motion(0.0)
+		return
+	var vx := signf(dx) * minf(SPEED * (1.7 if absf(dx) > 90.0 else 1.0), absf(dx) / maxf(delta, 0.001))
+	_buddy.position.x += vx * delta
+	_buddy.set_motion(vx)
+
+
 func _cam_y() -> float:
 	return WALK_Y - _room_h * 0.5 + 6.0
-
-
-func _couch_x() -> float:
-	for s in _layout():
-		if str((s as Dictionary).get("id", "")) == "therapy_couch":
-			return float((s as Dictionary).get("x", 0.5)) * _w
-	return _w * 0.5
 
 
 func _layout() -> Array:
@@ -539,6 +548,7 @@ func _process(delta: float) -> void:
 		(g as PointLight2D).energy = float(g.get_meta("base", 0.35)) * (0.92 + 0.08 * sin(_t * 1.7 + (g as Node2D).position.x))
 	if _busy:
 		_cam.position.x = lerpf(_cam.position.x, _focus_x, minf(1.0, delta * 4.0))
+	_follow_buddy(delta)
 	if _overlay != null or _leaving or _busy:
 		_walker.set_motion(0.0)
 		_prompt.visible = false
@@ -550,9 +560,6 @@ func _process(delta: float) -> void:
 	_walker.position.x = clampf(_walker.position.x + vx * delta, 8.0, _w + 40.0)
 	_walker.set_motion(vx)
 	_cam.position = Vector2(_walker.position.x, _cam_y())
-	# The buddy turns to face you.
-	_buddy.facing = 1 if _walker.position.x > _buddy.position.x else -1
-	_buddy.set_motion(0.0)
 	_pick_near()
 	if not _near.is_empty() and _pressed_use():
 		_use(_near)
