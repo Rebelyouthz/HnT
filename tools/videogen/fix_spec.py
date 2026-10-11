@@ -23,3 +23,11 @@ for who,name in (("father",DAD),("son",SON)):
     for c,p in WALK.items():
         k="keys/%s_%s_a.png"%(who,c)
         JOBS.append((who,c,k,k,name+" "+p,2.1))
+
+# Second tries (seed 7): a still high cover, slower walks so frames do not smear.
+RETRY={
+ ("son","block_high"): SON+" lifts both forearms up vertically in front of his face like a boxer covering up, fists at his temples, elbows tucked, and holds completely still. He does not punch and his feet do not move.",
+}
+for who,name in (("father",DAD),("son",SON)):
+    for c in ("walk_down","walk_ur","walk_dr"):
+        RETRY[(who,c)]=name+" "+WALK[c].replace("a steady natural walking cycle","a slow relaxed walking cycle")
