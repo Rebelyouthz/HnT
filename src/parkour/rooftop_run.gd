@@ -601,6 +601,10 @@ func _paint_world_ui() -> void:
 		if hunter.position.x < left + 10.0:
 			var ay := clampf(hunter.position.y - 34.0, cam.position.y - 200.0, cam.position.y + 200.0)
 			var ax := left + 26.0
+			# Lift it over a runner who is hugging the left edge himself.
+			for rn in runners:
+				if absf(rn.position.x - ax) < 110.0 and ay > rn.position.y - 120.0:
+					ay = minf(ay, rn.position.y - 128.0)
 			var pulse := 1.0 + 0.2 * sin(_t * 10.0)
 			var c := Color(1.0, 0.3, 0.25)
 			_world_ui.draw_colored_polygon(PackedVector2Array([Vector2(ax - 14.0 * pulse, ay), Vector2(ax + 6.0, ay - 10.0 * pulse), Vector2(ax + 6.0, ay + 10.0 * pulse)]), c)
