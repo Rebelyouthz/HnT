@@ -41,15 +41,16 @@ code.
    of memory after the prompts are read, half the CPU cores, low priority,
    30 s rest between clips). If it still struggles, close everything else and
    use `python local_wan.py --vram 10 --rest 60 --frames 41`.
-   `python local_wan.py --list` to see what is missing, then
-   `python local_wan.py --only son`
-   `python local_wan.py --only punk`
-   `python local_wan.py --only cop`
-   `python local_wan.py --only bag_snatch`
-   `python local_wan.py --only mohawk`
-   `python local_wan.py --only shift_lead`
+   `python local_wan.py --list` to see what is missing (29 clips; the list
+   and the reasons are in `docs/LOCAL_AGENT_CLIPS.md`), then the ones
+   Hugging Face could not make, in this order:
+   `python local_wan.py --only bailiff`
+   `python local_wan.py --only lot_hydra`
+   `python local_wan.py --only clipboard_flier`
    `python local_wan.py --only roof_runner`
-   Then the rest: `python local_wan.py`.
+   `python local_wan.py --only bag_snatch`
+   `python local_wan.py --only son`
+   Then the rest (diagonal walks): `python local_wan.py`.
    Clips land in `tools/local_gpu/clips/<who>_<move>.mp4`; a finished clip is
    skipped on the next run, so it is safe to stop and restart.
    If it runs out of memory: `--size 576x448 --frames 33`. If one clip takes

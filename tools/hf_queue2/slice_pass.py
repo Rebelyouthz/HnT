@@ -48,6 +48,8 @@ MAP = {
  "coping_imp_death": ("coping_imp", "death", ["--frames", "20"]),
  "lot_hydra_death": ("lot_hydra", "death", ["--frames", "20"]),
  "clipboard_flier_death": ("clipboard_flier", "death", ["--frames", "20"]),
+ "clipboard_flier_walk_down": ("clipboard_flier", "walk_down", ["--loop", "--frames", "16", "--fps", "15", "--start", "1.0"]),
+ "lot_hydra_walk_up3": ("lot_hydra", "walk_up", ["--loop", "--frames", "16", "--fps", "15", "--start", "0.8"]),
 }
 FF = "/usr/local/lib/python3.11/dist-packages/imageio_ffmpeg/binaries/ffmpeg-linux-x86_64-v7.0.2"
 def smooth(name):
