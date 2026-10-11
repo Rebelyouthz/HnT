@@ -47,6 +47,8 @@ var _scrolled: Object = null
 var _edge := 0
 var _draw: Control
 var _cap: PanelContainer
+var _placed_for := Rect2()
+var _placed_size := Vector2.ZERO
 var _cap_text: Label
 var _cap_sub: Label
 
@@ -146,14 +148,50 @@ func _process(delta: float) -> void:
 		_cap_text.text = _label
 		_cap_sub.text = _sub
 		_cap.reset_size()
-		var vp := get_viewport().get_visible_rect().size
-		var at := Vector2(_rect.get_center().x - _cap.size.x * 0.5, _rect.position.y - _cap.size.y - 26.0)
-		if at.y < 4.0:
-			at.y = _rect.end.y + 16.0
-		at.x = clampf(at.x, 4.0, vp.x - _cap.size.x - 4.0)
-		at.y = clampf(at.y, 4.0, vp.y - _cap.size.y - 4.0)
-		_cap.position = at.round()
+		if _rect != _placed_for or _cap.size != _placed_size:
+			_placed_for = _rect
+			_placed_size = _cap.size
+			_cap.position = _place_caption().round()
 	_draw.queue_redraw()
+
+
+## Above the target unless that covers text (a popup's title, a card's
+## name); then below, left or right, whichever hides the least writing.
+func _place_caption() -> Vector2:
+	var vp := get_viewport().get_visible_rect().size
+	var sz := _cap.size
+	var cx := _rect.get_center().x - sz.x * 0.5
+	var cy := _rect.get_center().y - sz.y * 0.5
+	var spots := [
+		Vector2(cx, _rect.position.y - sz.y - 26.0),
+		Vector2(cx, _rect.end.y + 16.0),
+		Vector2(_rect.position.x - sz.x - 18.0, cy),
+		Vector2(_rect.end.x + 18.0, cy),
+	]
+	var words: Array[Rect2] = []
+	for c in get_tree().root.find_children("*", "Label", true, false):
+		var l := c as Label
+		if l.text.strip_edges() == "" or not l.is_visible_in_tree() or is_ancestor_of(l):
+			continue
+		var tf := l.get_global_transform_with_canvas()
+		var lr := Rect2(tf.origin, l.size * tf.get_scale())
+		if not lr.intersects(_rect):
+			words.append(lr)
+	var best := Vector2.ZERO
+	var best_cost := INF
+	for i in spots.size():
+		var at: Vector2 = spots[i]
+		at.x = clampf(at.x, 4.0, vp.x - sz.x - 4.0)
+		at.y = clampf(at.y, 4.0, vp.y - sz.y - 4.0)
+		var box := Rect2(at, sz)
+		# Never sit on the thing being pointed at.
+		var cost := box.intersection(_rect).get_area() * 4.0 + float(i) * 40.0
+		for w in words:
+			cost += box.intersection(w).get_area()
+		if cost < best_cost:
+			best_cost = cost
+			best = at
+	return best
 
 
 func _scene() -> Node:

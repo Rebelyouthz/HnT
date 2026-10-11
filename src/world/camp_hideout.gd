@@ -551,6 +551,10 @@ func _pick_near() -> void:
 		return
 	_prompt_label.text = _prompt_for(best)
 	_prompt.visible = true
+	# While a story errand points somewhere else, this station whispers.
+	var eg := get_tree().get_first_node_in_group("errand_guide")
+	var aside := eg != null and str(eg.get("target")).begins_with("station:") and str(eg.get("target")) != "station:" + str(best["id"])
+	_prompt.modulate.a = move_toward(_prompt.modulate.a, 0.45 if aside else 1.0, 0.1)
 	_prompt.size = Vector2.ZERO
 	var sz := _prompt.get_combined_minimum_size()
 	# Float the prompt over the station, above head height.
