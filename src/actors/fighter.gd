@@ -879,7 +879,7 @@ func _tick_meters(delta: float) -> void:
 			regen *= 1.15
 		steam = minf(STEAM_MAX, steam + regen * (1.0 + 0.3 * float(_cart("energy_drink"))) * (2.0 if suit_part("mask") == "shaolin" else 1.0) * Meta.steam_mul() * Heroes.steam_regen_mul(role) * delta)
 	# On the survivor field LB / LT are the two ACTIVE SKILLS (SurvActives).
-	blocking = _pressed("block") and steam > 2.0 and not downed and not trick_hold and not FIELD
+	blocking = _pressed("block") and steam > 2.0 and not downed and not trick_hold and not FIELD and attack_cd <= 0
 	if tape_t > 0.0:
 		tape_t -= delta
 		if tape_t <= 0.0:
@@ -1381,6 +1381,33 @@ func _combat() -> void:
 		_special()
 	if _just("shoot"):
 		_shoot()
+	# Guard + button: the strikes that used to need UP / DOWN on the stick,
+	# which also walked you up or down the lane. Hold BLOCK and press HEAVY
+	# for the uppercut (a stomp when a thug lies at your feet), BLOCK and
+	# LIGHT for the low strike. In combos they are the U+H / Dn+L steps.
+	if _pressed("block") and not FIELD and _street_grounded() and attack_cd == 0 and roll_t <= 0.0:
+		if _just("heavy"):
+			charge_frames = 0
+			_guard_chord = true
+			if _combo_press("H", "U+H"):
+				return
+			if not _try_stomp():
+				if FamilyProfile.dojo_learned("uppercut"):
+					_attack("uppercut", false)
+				else:
+					Juice.shout("DOJO LOCK")
+			return
+		if _just("light"):
+			if _combo_press("L", "Dn+L"):
+				return
+			_attack("light", false)
+			return
+	if _guard_chord:
+		# The heavy that made the chord: its release is not a second strike.
+		charge_frames = 0
+		if not _pressed("heavy"):
+			_guard_chord = false
+		return
 	var charge_need := 20
 	if FamilyProfile.has_cbt("heavy_wrist"):
 		charge_need = 16
@@ -1403,14 +1430,6 @@ func _combat() -> void:
 			_attack("air-spin", false)
 		elif airborne:
 			_attack("jump-kick", false)
-		elif y > 0.4 and _try_stomp():
-			charge_frames = 0
-		elif y < -0.35:
-			if not FamilyProfile.dojo_learned("uppercut"):
-				Juice.shout("DOJO LOCK")
-				charge_frames = 0
-			else:
-				_attack("uppercut", false)
 		elif string_n >= 2:
 			if FamilyProfile.dojo_learned("roundhouse"):
 				_attack("roundhouse", false)
@@ -1467,6 +1486,8 @@ func _tick_run(x: float) -> void:
 
 
 var _last_x_dir := 0
+## The heavy press of a guard chord is held: swallow its release.
+var _guard_chord := false
 
 
 func _dash() -> void:
@@ -1960,12 +1981,12 @@ func _dive() -> void:
 
 ## One press as a combo token: button plus stick, forward/back measured
 ## against the way the body faced before this frame's turn.
+## Up / down on the stick walk the lane, so they are never part of a
+## step: the U+H / Dn+L steps come from the guard chords (_combat).
 func _combo_tok(btn: String) -> String:
 	var st := _stick()
 	var d := ""
-	if absf(st.y) > 0.5 and absf(st.y) >= absf(st.x):
-		d = "U" if st.y < 0.0 else "Dn"
-	elif absf(st.x) > 0.5:
+	if absf(st.x) > 0.5 and absf(st.x) >= absf(st.y) * 0.6:
 		d = "F" if signf(st.x) == float(_pre_face) else "B"
 	return d + "+" + btn if d != "" else btn
 
@@ -1978,13 +1999,13 @@ func _combo_air_ok() -> bool:
 
 ## Feed a press to the chain reader. True when it finished a combo (the
 ## caller skips the normal move).
-func _combo_press(btn: String) -> bool:
+func _combo_press(btn: String, chord := "") -> bool:
 	if _combo == null:
 		return false
 	var pool := ComboBook.learned(role)
 	if pool.is_empty():
 		return false
-	var tok := _combo_tok(btn)
+	var tok := chord if chord != "" else _combo_tok(btn)
 	var c := _combo.feed(tok, _clock, pool)
 	if OS.has_environment("HNT_COMBO_DEBUG"):
 		print("stick=%s combo tok=%s t=%.2f beat=%.2f hist=%s grades=%s -> %s" % [str(_stick()), tok, _clock, _combo.beat_t, str(_combo.hist.map(func(h: Dictionary) -> String: return str(h["tok"]))), str(_combo.grades), str(c.get("id", ""))])

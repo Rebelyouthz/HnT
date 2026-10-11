@@ -20,6 +20,7 @@ var _dmg: Label
 var _spar: Button
 var _spar_on := false
 var _pad := false
+var _card: PanelContainer
 
 
 func bind(_act: Node, who: Fighter, dummy: TrainingDummy) -> void:
@@ -39,6 +40,7 @@ func _build() -> void:
 	var role := _who.role if _who != null else "son"
 	var st := ComboBook.style(role)
 	var card := PanelContainer.new()
+	_card = card
 	card.add_theme_stylebox_override("panel", UiKit.panel(Color(0.05, 0.04, 0.06, 0.86), UiKit.GOLD))
 	card.position = Vector2(850, 112)
 	card.custom_minimum_size = Vector2(420, 0)
@@ -62,8 +64,9 @@ func _build() -> void:
 		col.add_child(row)
 	# Guard drill strip along the bottom.
 	_guide = Label.new()
-	_guide.position = Vector2(300, 668)
-	_guide.size = Vector2(680, 40)
+	_guide.position = Vector2(140, 662)
+	_guide.size = Vector2(1000, 50)
+	_guide.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_guide.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	UiKit.apply_label(_guide, 13, Color(0.75, 0.88, 1.0))
 	_stage.add_child(_guide)
@@ -85,6 +88,18 @@ func _build() -> void:
 	out.pressed.connect(func() -> void: leave.emit())
 	_stage.add_child(out)
 	_refresh_labels()
+
+
+## The chart covers the right of the mat: when the fighter walks in under
+## it, it turns see-through so you never lose him behind it.
+func _process(delta: float) -> void:
+	if _card == null or _who == null or not is_instance_valid(_who):
+		return
+	var k := float(PixelStage.DESIGN.x) / float(PixelStage.LOGICAL.x)
+	var feet := _who.get_viewport().get_canvas_transform() * _who.global_position * k
+	var body := Rect2(feet - Vector2(40, 190), Vector2(80, 196))
+	var behind := Rect2(_card.position, _card.size).grow(12.0).intersects(body)
+	_card.modulate.a = move_toward(_card.modulate.a, 0.16 if behind else 1.0, delta * 5.0)
 
 
 func _row(c: Dictionary) -> Control:
@@ -134,9 +149,9 @@ func _refresh_labels() -> void:
 			_:
 				mark.text = "" if learned else "🔒"
 	if _pad:
-		_guide.text = "BLOCK: hold LB  ·  stick ↑ HIGH  ·  neutral MID  ·  ↓ LOW      ROLL: LB + RT      GET-UP: X / Y on the floor      AIR: A then Y = spinning heel      L3: spar"
+		_guide.text = "BLOCK: hold LB  ·  stick ↑ HIGH  ·  neutral MID  ·  ↓ LOW      ROLL: LB + RT      UPPERCUT: LB + Y      LOW: LB + X      GET-UP: X / Y on the floor      AIR: A then Y = spinning heel      L3: spar"
 	else:
-		_guide.text = "BLOCK: hold I  ·  W HIGH  ·  neutral MID  ·  S LOW      ROLL: I + SHIFT      GET-UP: J / K on the floor      AIR: SPACE then K = spinning heel      TAB: spar"
+		_guide.text = "BLOCK: hold I  ·  W HIGH  ·  neutral MID  ·  S LOW      ROLL: I + SHIFT      UPPERCUT: I + K      LOW: I + J      GET-UP: J / K on the floor      AIR: SPACE then K = spinning heel      TAB: spar"
 
 
 func _on_landed(id: String, perfect: bool) -> void:

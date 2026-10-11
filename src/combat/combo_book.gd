@@ -79,8 +79,15 @@ static func is_learned(c: Dictionary) -> bool:
 	return bool(c.get("starter", false)) or FamilyProfile.dojo_learned(str(c.get("id", "")))
 
 
-## Pretty label for one step, e.g. "U+H" -> "↑ + Y" on a pad, "↑ + K" on keys.
+## Pretty label for one step, e.g. "F+H" -> "→ Y" on a pad, "→ K" on keys.
+## The up / down steps are guard chords: "U+H" is BLOCK + HEAVY, "Dn+L"
+## BLOCK + LIGHT.
 static func step_label(tok: String, pad: bool) -> String:
+	match tok:
+		"U+H", "U+L":
+			return "LB+Y" if pad else "I+K"
+		"Dn+L", "Dn+H":
+			return "LB+X" if pad else "I+J"
 	var parts := tok.split("+")
 	var btn := parts[parts.size() - 1]
 	var dir := parts[0] if parts.size() > 1 else ""
