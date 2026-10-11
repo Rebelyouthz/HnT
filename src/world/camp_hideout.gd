@@ -349,26 +349,42 @@ func _build_portal() -> void:
 	_portal = Node2D.new()
 	_portal.position = Vector2(_w + 34.0, WALK_Y - 27.0)
 	add_child(_portal)
-	for i in 4:
-		var ring := Line2D.new()
-		var pts := PackedVector2Array()
-		for k in 33:
-			var a := TAU * float(k) / 32.0
-			pts.append(Vector2(cos(a) * (11.0 + 3.5 * float(i)), sin(a) * (24.0 + 2.5 * float(i))))
-		ring.points = pts
-		ring.width = 2.4 - 0.4 * float(i)
-		ring.default_color = Color(0.45, 0.8, 1.0, 0.85 - 0.18 * float(i)).lerp(Palette.LEMON, 0.15 * float(i))
-		ring.set_meta("spin", 0.6 + 0.35 * float(i))
-		_portal.add_child(ring)
-	var core := Polygon2D.new()
-	var cp := PackedVector2Array()
-	for k in 24:
-		var a := TAU * float(k) / 24.0
-		cp.append(Vector2(cos(a) * 10.5, sin(a) * 23.5))
-	core.polygon = cp
-	core.color = Color(0.1, 0.25, 0.45, 0.75)
-	_portal.add_child(core)
-	_portal.move_child(core, 0)
+	# Benny's welded pipe ring on a pallet, the rift swirling inside
+	# (assets/sprites/portal, tools/portal_art.py). Drawn rings without it.
+	var sheet_path := "res://assets/sprites/portal/portal_sheet.png"
+	if ResourceLoader.exists(sheet_path):
+		var sheet: Texture2D = load(sheet_path)
+		var fw := 144
+		var sf := SpriteFrames.new()
+		sf.set_animation_speed("default", 10.0)
+		for k in int(sheet.get_width() / fw):
+			var at := AtlasTexture.new()
+			at.atlas = sheet
+			at.region = Rect2(k * fw, 0, fw, sheet.get_height())
+			sf.add_frame("default", at)
+		var spr := AnimatedSprite2D.new()
+		spr.name = "PortalSprite"
+		spr.sprite_frames = sf
+		spr.scale = Vector2(0.34, 0.34)
+		# Pallet on the floor, the ring where the drawn one stood; the
+		# walker passes in front of it.
+		spr.position = Vector2(0, 31.0 - sheet.get_height() * 0.17)
+		spr.z_index = -1
+		spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		spr.play("default")
+		_portal.add_child(spr)
+	else:
+		for i in 4:
+			var ring := Line2D.new()
+			var pts := PackedVector2Array()
+			for k in 33:
+				var a := TAU * float(k) / 32.0
+				pts.append(Vector2(cos(a) * (11.0 + 3.5 * float(i)), sin(a) * (24.0 + 2.5 * float(i))))
+			ring.points = pts
+			ring.width = 2.4 - 0.4 * float(i)
+			ring.default_color = Color(0.45, 0.8, 1.0, 0.85 - 0.18 * float(i)).lerp(Palette.LEMON, 0.15 * float(i))
+			ring.set_meta("spin", 0.6 + 0.35 * float(i))
+			_portal.add_child(ring)
 	var light := PointLight2D.new()
 	var g := Gradient.new()
 	g.set_color(0, Color(0.5, 0.85, 1.0, 0.9))
@@ -388,7 +404,7 @@ func _build_portal() -> void:
 	sparks.amount = 40
 	sparks.lifetime = 1.0
 	sparks.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
-	sparks.emission_rect_extents = Vector2(10, 26)
+	sparks.emission_rect_extents = Vector2(9, 22)
 	sparks.direction = Vector2(0, -1)
 	sparks.spread = 30.0
 	sparks.gravity = Vector2(0, -20)
@@ -396,9 +412,11 @@ func _build_portal() -> void:
 	sparks.initial_velocity_max = 22.0
 	sparks.color = Color(0.6, 0.9, 1.0, 0.8)
 	sparks.emitting = true
+	sparks.z_index = -1
 	_portal.add_child(sparks)
-	var lab := NightStreet.plaque(_portal, Vector2(-14, -40), "PORTAL", Color(0.6, 0.9, 1.0), 10)
+	var lab := NightStreet.plaque(_portal, Vector2(-14, -50), "PORTAL", Color(0.6, 0.9, 1.0), 10)
 	lab.z_index = 3
+	lab.name = "PortalPlaque"
 	_stations.append({"id": "portal", "x": _portal.position.x, "name": _portal_name(), "painted": true, "locked": false, "node": _portal, "ring": null})
 
 
@@ -500,6 +518,11 @@ func _process(delta: float) -> void:
 		if c is Line2D:
 			(c as Line2D).rotation = sin(_t * float(c.get_meta("spin", 1.0))) * 0.25
 			(c as Line2D).scale = Vector2.ONE * (1.0 + 0.04 * sin(_t * 3.0 + float(c.get_meta("spin", 1.0))))
+	# The PORTAL sign steps aside while its own prompt is up.
+	var plq := _portal.get_node_or_null("PortalPlaque") as CanvasItem
+	if plq != null:
+		var near_portal := not _near.is_empty() and str(_near.get("id", "")) == "portal"
+		plq.modulate.a = move_toward(plq.modulate.a, 0.0 if near_portal else 1.0, delta * 4.0)
 	for g in get_tree().get_nodes_in_group("camp_glow"):
 		(g as PointLight2D).energy = float(g.get_meta("base", 0.35)) * (0.92 + 0.08 * sin(_t * 1.7 + (g as Node2D).position.x))
 	if _busy:
