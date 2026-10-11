@@ -130,7 +130,7 @@ func _show(i: int) -> void:
 			_toggle("LESS GORE", func() -> bool: return FamilyProfile.less_gore(), func(v: bool) -> void: _flag("less_gore", v))
 			_meter("BLOOD AMOUNT", func() -> float: return clampf(float(FamilyProfile.data.get("blood_k", 1.0)) / 1.5, 0.0, 1.0), func(v: float) -> void: _setf("blood_k", v * 1.5))
 			_pick("BODIES STAY", ["SHORT (8 S)", "NORMAL (18 S)", "LONG (45 S)"], func() -> int: return int(FamilyProfile.data.get("bodies_stay", 1)), func(v: int) -> void: _setf("bodies_stay", v))
-			_meter("HIT STOP", func() -> float: return float(FamilyProfile.data.get("hitstop_k", 1.0)), func(v: float) -> void: _setf("hitstop_k", v))
+			_meter("HIT STOP", func() -> float: return float(FamilyProfile.data.get("hitstop_k2", 0.0)), func(v: float) -> void: _setf("hitstop_k2", v))
 			_toggle("REDUCE FLASHES", func() -> bool: return bool(FamilyProfile.data.get("reduce_flash", false)), func(v: bool) -> void: _flag("reduce_flash", v))
 			_toggle("SKIP STORY FILMS", func() -> bool: return bool(FamilyProfile.data.get("skip_films", false)), func(v: bool) -> void: _flag("skip_films", v))
 			_toggle("SPEECH BUBBLES AUTO", func() -> bool: return bool(FamilyProfile.data.get("talk_auto", false)), func(v: bool) -> void: _flag("talk_auto", v))

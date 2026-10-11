@@ -174,8 +174,6 @@ func _finisher(e: Punk, by: Node) -> void:
 	impact(1.0)
 	Juice.shout("FINISHER")
 	Juice.pulse_shake(9.0)
-	Juice.slowmo(0.3)
-	get_tree().create_timer(0.45, true, false, true).timeout.connect(Juice.restore_time)
 	CouchCamera.punch(get_tree(), 0.18, 0.5, e.global_position + Vector2(0, -40))
 	for i in 3:
 		Juice.kill_burst(e.global_position + Vector2(randf_range(-10, 10), randf_range(-60, -20)), "heavy")

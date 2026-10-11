@@ -18,6 +18,11 @@ const ACTIONS := [
 
 var p1_device := -1
 var p2_device := -1
+## One physical pad that Windows shows as two devices (the ROG Ally: XInput
+## and DirectInput) sends every press twice. Such twins never drop in as a
+## second player (that made the Father copy every move of the Son).
+var _twins := {}          # device -> twin device
+var _last_press := {}     # button -> [device, msec]
 var last_kind := "kb"
 var last_p1_kind := "kb"
 var last_p2_kind := "kb"
@@ -60,6 +65,8 @@ func _is_solo() -> bool:
 
 
 func _input(event: InputEvent) -> void:
+	if event is InputEventJoypadButton and (event as InputEventJoypadButton).pressed and event.device >= 0:
+		_note_twin(event.device, (event as InputEventJoypadButton).button_index)
 	if event is InputEventJoypadButton or event is InputEventJoypadMotion:
 		if event.device >= 0:
 			last_kind = "pad"
@@ -80,6 +87,20 @@ func _input(event: InputEvent) -> void:
 		_mouse_t = Time.get_ticks_msec() / 1000.0
 		last_kind = "kb"
 		last_p1_kind = "kb"
+
+
+## The same button down on two devices within a few frames: one pad seen twice.
+func _note_twin(device: int, button: int) -> void:
+	var now := Time.get_ticks_msec()
+	var last: Array = _last_press.get(button, [-1, -100000])
+	if int(last[0]) >= 0 and int(last[0]) != device and now - int(last[1]) < 70:
+		_twins[device] = int(last[0])
+		_twins[int(last[0])] = device
+	_last_press[button] = [device, now]
+
+
+func is_twin_of(a: int, b: int) -> bool:
+	return a >= 0 and b >= 0 and int(_twins.get(a, -9)) == b
 
 
 func _moved(event: InputEvent) -> bool:
@@ -127,7 +148,7 @@ func refresh() -> void:
 			p1_device = int(pads[0])
 		p2_device = -1
 		for d in pads:
-			if int(d) != p1_device:
+			if int(d) != p1_device and not is_twin_of(int(d), p1_device):
 				p2_device = int(d)
 				break
 	_apply_pad_map()
@@ -137,6 +158,11 @@ func refresh() -> void:
 func _handle_start(device: int) -> void:
 	# Solo: Start on the pad you play with is pause, not a second player.
 	if _solo and (device == p1_device or not _p1_used or Input.get_connected_joypads().size() < 2):
+		return
+	# The other half of the pad you play with (pressed at the same moment);
+	# give its twin press a moment to arrive before anyone drops in.
+	await get_tree().create_timer(0.12, true, false, true).timeout
+	if is_twin_of(device, p1_device) or is_twin_of(device, p2_device):
 		return
 	var assigned := device == p1_device or device == p2_device
 	if not assigned:

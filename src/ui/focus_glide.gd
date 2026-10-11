@@ -49,8 +49,9 @@ func _input(event: InputEvent) -> void:
 					first.grab_focus()
 					get_viewport().set_input_as_handled()
 				return
-	# Pointing at a button focuses it (mouse, or the pad pointer warping it).
-	if event is InputEventMouseMotion:
+	# Pointing at a button focuses it (mouse, or the pad pointer warping it),
+	# on menus only: in play the hideout's floor stations are buttons too.
+	if event is InputEventMouseMotion and _menu_up():
 		var h := get_viewport().gui_get_hovered_control()
 		var b := h as BaseButton
 		while h != null and b == null and h.mouse_filter == Control.MOUSE_FILTER_PASS:
@@ -63,7 +64,7 @@ func _input(event: InputEvent) -> void:
 func _process(delta: float) -> void:
 	_t += delta
 	var f := get_viewport().gui_get_focus_owner()
-	var ok := f != null and f.is_visible_in_tree() and f.size.x > 2.0 and f.size.y > 2.0 and not _hidden(f)
+	var ok := f != null and f.is_visible_in_tree() and f.size.x > 2.0 and f.size.y > 2.0 and not _hidden(f) and _menu_up()
 	if ok:
 		var tf := f.get_global_transform_with_canvas()
 		var want := Rect2(tf.origin, f.size * tf.get_scale()).grow(PAD)

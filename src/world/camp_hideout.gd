@@ -564,9 +564,9 @@ func _pick_near() -> void:
 	for st in _stations:
 		var ring: Variant = st.get("ring")
 		if ring is Line2D:
-			var on := st == best
 			var c := (ring as Line2D).default_color
-			c.a = move_toward(c.a, 0.95 if on else 0.0, 0.15)
+			# The prompt over the station says you are in reach; no floor ring.
+			c.a = 0.0
 			(ring as Line2D).default_color = c
 	_near = best
 	if best.is_empty():

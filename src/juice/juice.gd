@@ -125,9 +125,15 @@ func _apply_scale() -> void:
 	Engine.time_scale = _base_scale
 
 
+## Hit stop froze the whole game clock (your own hero and your inputs too),
+## which read as lag on every punch. Off unless OPTIONS > HIT STOP is turned
+## up (a new key, so old saves holding 1.0 do not bring it back).
+func _stop_k() -> float:
+	return float(FamilyProfile.data.get("hitstop_k2", 0.0))
+
+
 func hitstop(frames: int) -> void:
-	# OPTIONS > HIT STOP scales every freeze (0 turns them off).
-	frames = int(round(float(frames) * float(FamilyProfile.data.get("hitstop_k", 1.0))))
+	frames = int(round(float(frames) * _stop_k()))
 	if frames <= 0:
 		return
 	_hitstop_depth += 1
@@ -139,7 +145,7 @@ func hitstop(frames: int) -> void:
 
 
 func freeze_frames(frames: int) -> void:
-	frames = int(round(float(frames) * float(FamilyProfile.data.get("hitstop_k", 1.0))))
+	frames = int(round(float(frames) * _stop_k()))
 	if frames <= 0:
 		return
 	_hitstop_depth += 1
@@ -1110,6 +1116,10 @@ func smash_burst(at: Vector2, kind: String) -> void:
 ## The last thug of a fight drops in slow motion for a moment.
 func last_kill(body: Node2D = null) -> void:
 	if get_tree().get_first_node_in_group("chase_crash"):
+		return
+	# Slows the whole game (your hero too); only with HIT STOP turned up.
+	if _stop_k() <= 0.0:
+		pulse_shake(6.0)
 		return
 	# Let the killing blow's own hitstop finish first.
 	var guard := 0
