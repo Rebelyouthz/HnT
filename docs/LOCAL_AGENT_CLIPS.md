@@ -49,6 +49,26 @@ grey suit.
 
 ## Quality check before pushing
 
+**Svenska:** Kör `python tools/check_clip.py tools/local_gpu/clips/*.mp4`
+innan du pushar. Skriptet säger PASS eller FAIL per klipp och sparar en
+bildremsa (`<namn>_check.png`) bredvid klippet. Pusha bara de klipp som
+får PASS. Gör om de som får FAIL med ett nytt seed.
+
+Every clip must match the ones already in the game, or it cannot be used:
+
+- **832 x 640** pixels (landscape), 16 fps, 1.2-4 s.
+- The character fills **about 67 %** of the frame height (65-70 %), with his
+  **feet about 94 %** of the way down. That is what the start frame in
+  `tools/local_gpu/starts/<who>.png` gives you: start every clip from that
+  image, do not crop, zoom or re-frame it.
+- Same size in every frame: no zooming camera, no character growing or
+  shrinking.
+- Never cut off at the frame edge (head, feet, a kicking leg).
+
+`tools/check_clip.py` measures all of this against the clips already made
+(`tools/clip_refs.json` holds the numbers), so a clip that passes it will
+slice to the same size as the rest.
+
 - The character stays the same person in the same clothes the whole clip.
 - Walks: clear steps, feet lift, and the view matches the move (back view
   for `walk_back`/`walk_ur`, front for `walk_front`/`walk_dr`). A clip

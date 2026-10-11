@@ -55,7 +55,15 @@ code.
    skipped on the next run, so it is safe to stop and restart.
    If it runs out of memory: `--size 576x448 --frames 33`. If one clip takes
    more than ~60 minutes, try `--steps 20`.
-4. After every few clips (and at the end), commit and push ONLY the clips:
+4. **First `git pull`** (local_wan.py now frames the start image the same way
+   as every clip already in the game and writes 832x640; the old version
+   stretched it, which is why the first clip came out wrong: delete any clip
+   made before this pull and make it again).
+   Check every clip before it goes up:
+   `python ../check_clip.py clips/*.mp4` (from `tools/local_gpu`).
+   Only clips that print PASS get pushed; a FAIL is remade with
+   `python local_wan.py --only <who>` after deleting that mp4.
+   After every few clips (and at the end), commit and push ONLY the clips:
    `git add tools/local_gpu/clips/*.mp4`
    `git commit -m "Local Wan clips: <list>"`
    `git push origin claude/gallant-galileo-5ctrmf`

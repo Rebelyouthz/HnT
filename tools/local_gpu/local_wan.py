@@ -60,6 +60,36 @@ def device():
     return "cpu", torch.float32
 
 
+## The clips already in the game: 832x640, the character standing 67 % of
+## the frame tall with his feet 94 % of the way down (tools/clip_refs.json).
+GAME_W, GAME_H = 832, 640
+FILL, FEET = 0.67, 0.94
+GREEN = (0, 184, 50)
+
+
+def frame_start(path, w, h):
+    """The start image placed like every other clip: never stretched, the
+    character scaled to FILL of the height with his feet at FEET, on flat
+    green. A start image of any shape works."""
+    import numpy as np
+    from PIL import Image
+    im = Image.open(path).convert("RGB")
+    a = np.asarray(im).astype(np.int16)
+    r, g, b = a[..., 0], a[..., 1], a[..., 2]
+    fg = ~((g > 90) & (g - np.maximum(r, b) > 40))
+    ys, xs = np.where(fg)
+    if len(ys) == 0:
+        return im.resize((w, h))
+    box = (int(xs.min()), int(ys.min()), int(xs.max()) + 1, int(ys.max()) + 1)
+    body = im.crop(box)
+    k = FILL * h / body.height
+    body = body.resize((max(1, round(body.width * k)), max(1, round(body.height * k))), Image.LANCZOS)
+    mask = Image.fromarray((fg[box[1]:box[3], box[0]:box[2]] * 255).astype("uint8")).resize(body.size, Image.LANCZOS)
+    canvas = Image.new("RGB", (w, h), GREEN)
+    canvas.paste(body, (round((w - body.width) / 2), round(FEET * h) - body.height), mask)
+    return canvas
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--list", action="store_true")
@@ -115,10 +145,13 @@ def main():
     for i, (who, move, pe, ne) in enumerate(jobs):
         t0 = time.time()
         with torch.no_grad():
-            frames = pipe(image=load_image(str(STARTS / f"{who}.png")).resize((w, h)),
+            frames = pipe(image=frame_start(STARTS / f"{who}.png", w, h),
                           prompt_embeds=pe, negative_prompt_embeds=ne, height=h, width=w, num_frames=a.frames,
                           num_inference_steps=a.steps, guidance_scale=5.0).frames[0]
         out = OUT / f"{who}_{move}.mp4"
+        # Same frame size as every clip already in the game.
+        from PIL import Image
+        frames = [(f if isinstance(f, Image.Image) else Image.fromarray((f * 255).clip(0, 255).astype("uint8") if f.dtype != "uint8" else f)).resize((GAME_W, GAME_H), Image.LANCZOS) for f in frames]
         export_to_video(frames, str(out), fps=16)
         print("OK", out, round(time.time() - t0), "s", flush=True)
         del frames
