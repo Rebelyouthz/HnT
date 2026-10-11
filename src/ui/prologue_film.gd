@@ -56,15 +56,17 @@ func _build_set() -> void:
 		var meta: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://assets/backdrops/camp.json"))
 		var ground := float(tex.get_height()) * 0.93
 		var texel := 2.0 / 3.0
+		var linear := false
 		if meta is Dictionary:
 			ground = float((meta as Dictionary).get("ground", ground))
 			texel = float((meta as Dictionary).get("texel", texel))
+			linear = str((meta as Dictionary).get("filter", "")) == "linear"
 		var s := Sprite2D.new()
 		s.texture = tex
 		s.centered = false
 		s.scale = Vector2(texel, texel)
 		s.position = Vector2(0, WALK_Y - ground * texel)
-		s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		s.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR if linear else CanvasItem.TEXTURE_FILTER_NEAREST
 		s.z_index = -5
 		add_child(s)
 		_w = float(tex.get_width()) * texel

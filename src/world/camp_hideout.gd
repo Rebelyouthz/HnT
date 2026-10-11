@@ -130,18 +130,22 @@ func _build_room() -> void:
 	var tex := load(path) as Texture2D
 	var ground := float(tex.get_height()) * 0.9
 	var texel := 2.0 / 3.0
+	# A painted (high-res) room draws filtered; the old pixel room nearest.
+	var filt := CanvasItem.TEXTURE_FILTER_NEAREST
 	var meta_path := "res://assets/backdrops/camp.json"
 	if FileAccess.file_exists(meta_path):
 		var meta: Variant = JSON.parse_string(FileAccess.get_file_as_string(meta_path))
 		if meta is Dictionary:
 			ground = float((meta as Dictionary).get("ground", ground))
 			texel = float((meta as Dictionary).get("texel", texel))
+			if str((meta as Dictionary).get("filter", "")) == "linear":
+				filt = CanvasItem.TEXTURE_FILTER_LINEAR
 	var s := Sprite2D.new()
 	s.texture = tex
 	s.centered = false
 	s.scale = Vector2(texel, texel)
 	s.position = Vector2(0.0, WALK_Y - ground * texel)
-	s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	s.texture_filter = filt
 	s.z_index = -5
 	add_child(s)
 	_w = float(tex.get_width()) * texel
@@ -149,7 +153,8 @@ func _build_room() -> void:
 	# The painting ends at _w but the portal and the camera reach past it:
 	# carry the room on with its own right edge, mirrored and shaded, so the
 	# portal stands in a dim back corner instead of a black void.
-	var strip_px := 180.0
+	# The last ~13 % of the painting (180 px of the old 1415 px room).
+	var strip_px := roundf(float(tex.get_width()) * 180.0 / 1415.0)
 	var at := AtlasTexture.new()
 	at.atlas = tex
 	at.region = Rect2(float(tex.get_width()) - strip_px, 0.0, strip_px, float(tex.get_height()))
@@ -159,7 +164,7 @@ func _build_room() -> void:
 	ext.flip_h = true
 	ext.scale = Vector2(texel, texel)
 	ext.position = Vector2(_w, s.position.y)
-	ext.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	ext.texture_filter = filt
 	ext.modulate = Color(0.55, 0.52, 0.6)
 	ext.z_index = -5
 	add_child(ext)
@@ -394,7 +399,8 @@ func _build_portal() -> void:
 		# walker passes in front of it.
 		spr.position = Vector2(0, 31.0 - sheet.get_height() * 0.17)
 		spr.z_index = -1
-		spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		# Filtered like the painted room around it (no chunky texels).
+		spr.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 		spr.play("default")
 		_portal.add_child(spr)
 	else:
