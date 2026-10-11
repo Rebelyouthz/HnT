@@ -300,22 +300,62 @@ func _draw_building(b: Dictionary) -> void:
 	var low_c := tint.darkened(0.55)
 	draw_polygon(PackedVector2Array([Vector2(x0, y), Vector2(x1, y), Vector2(x1, bottom), Vector2(x0, bottom)]),
 		PackedColorArray([top_c, top_c.darkened(0.12), low_c, low_c]))
-	# Windows: a grid, some lit warm, a few cold TV-blue.
 	var r := RandomNumberGenerator.new()
 	r.seed = int(b["seed"])
+	# Brick courses: faint mortar lines and staggered joints near the top,
+	# fading into the dark further down.
+	var mortar := tint.lightened(0.18)
+	for row in 60:
+		var by := y + 8.0 + float(row) * 7.0
+		var fade := clampf(1.0 - float(row) / 60.0, 0.0, 1.0)
+		draw_line(Vector2(x0, by), Vector2(x1, by), Color(mortar.r, mortar.g, mortar.b, 0.18 * fade), 1.0)
+		var stagger := 7.0 if row % 2 == 0 else 0.0
+		var jx := x0 + stagger
+		while jx < x1:
+			draw_line(Vector2(jx, by), Vector2(jx, by + 7.0), Color(0, 0, 0, 0.16 * fade), 1.0)
+			jx += 14.0
+	# Windows in bays: frame, sill and lintel; lit ones glow warm (some with
+	# a blind half down or a TV-blue flicker), dark ones catch a little sky.
 	var cols := int(w / 26.0)
 	var off := (w - float(cols) * 26.0) * 0.5 + 8.0
 	for row in 18:
 		var wy := y + 34.0 + float(row) * 34.0
+		var dim := clampf(float(row) / 22.0, 0.0, 0.6)
+		if row % 3 == 2:
+			# A stone string course between floors.
+			draw_rect(Rect2(x0, wy + 22.0, w, 3.0), tint.lightened(0.12).darkened(dim))
+			draw_rect(Rect2(x0, wy + 25.0, w, 1.0), Color(0, 0, 0, 0.3))
 		for c in cols:
 			var wx := x0 + off + float(c) * 26.0
 			var lit := r.randf()
-			var col := Color(0.07, 0.07, 0.11)
+			var frame := tint.darkened(0.35 + dim * 0.5)
+			draw_rect(Rect2(wx - 2.0, wy - 3.0, 14, 3), tint.lightened(0.16).darkened(dim))
+			draw_rect(Rect2(wx - 1.0, wy, 12, 17), frame)
+			var col := Color(0.06, 0.07, 0.11)
 			if lit < 0.14:
 				col = Color(1.0, 0.78, 0.42).darkened(r.randf() * 0.25)
 			elif lit < 0.18:
 				col = Color(0.45, 0.7, 1.0).darkened(0.2)
-			draw_rect(Rect2(wx, wy, 10, 15), col.darkened(clampf(float(row) / 22.0, 0.0, 0.6)))
+			col = col.darkened(dim)
+			if lit < 0.18:
+				draw_rect(Rect2(wx - 4.0, wy - 3.0, 18, 22), Color(col.r, col.g, col.b, 0.12))
+			draw_rect(Rect2(wx, wy, 10, 15), col)
+			if lit < 0.14 and r.randf() < 0.4:
+				draw_rect(Rect2(wx, wy, 10, 4.0 + r.randf() * 6.0), col.darkened(0.45))
+			elif lit >= 0.18:
+				draw_line(Vector2(wx + 1.0, wy + 1.0), Vector2(wx + 4.0, wy + 1.0), Color(0.3, 0.32, 0.45, 0.5 * (1.0 - dim)), 1.0)
+			draw_line(Vector2(wx + 5.0, wy), Vector2(wx + 5.0, wy + 15.0), frame, 1.0)
+			draw_rect(Rect2(wx - 2.0, wy + 15.0, 14, 2), tint.lightened(0.22).darkened(dim))
+			# Now and then an AC box hangs under the sill.
+			if row < 8 and r.randf() < 0.06:
+				draw_rect(Rect2(wx, wy + 18.0, 10, 7), Color(0.42, 0.44, 0.46).darkened(dim))
+				draw_line(Vector2(wx + 1.0, wy + 21.0), Vector2(wx + 9.0, wy + 21.0), Color(0.2, 0.2, 0.22), 1.0)
+	# A drainpipe down one side.
+	var px := x0 + 6.0 if r.randf() < 0.5 else x1 - 10.0
+	draw_rect(Rect2(px, y + 4.0, 3.0, FACADE_H), Color(0.22, 0.22, 0.26))
+	draw_rect(Rect2(px, y + 4.0, 1.0, FACADE_H), Color(0.5, 0.48, 0.5, 0.6))
+	for k in 12:
+		draw_rect(Rect2(px - 1.0, y + 30.0 + float(k) * 70.0, 5.0, 2.0), Color(0.16, 0.16, 0.18))
 	# Parapet: a lighter cap with a lit edge from the sunset side.
 	draw_rect(Rect2(x0 - 3.0, y - 6.0, w + 6.0, 9.0), tint.lightened(0.28))
 	draw_rect(Rect2(x0 - 3.0, y - 6.0, w + 6.0, 2.0), Color(1.0, 0.62, 0.38, 0.85))
