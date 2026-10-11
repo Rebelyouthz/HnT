@@ -18,6 +18,9 @@ var state: RunState
 var tiles: Array = []
 ## False for modes without fists (parkour): no SCRAP / PARRIES tiles.
 var combat := true
+## Modes that rank on something other than points (parkour: clean landings
+## and the gap to the hunter) set 1-3 here; -1 ranks on the score.
+var rank := -1
 var _xp_bar: ProgressBar
 var _xp_lab: Label
 
@@ -34,7 +37,6 @@ func _ready() -> void:
 	var dim := ColorRect.new()
 	dim.color = Color(0, 0, 0.02, 0.8)
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
-	dim.size = Vector2(1280, 720)
 	ui.add_child(dim)
 	var accent := UiKit.GOLD if win else Palette.BRICK
 	var card := PanelContainer.new()
@@ -90,6 +92,8 @@ func _ready() -> void:
 	var n_stars := 0
 	if win:
 		n_stars = 1 + int(total >= 1500) + int(total >= 4000)
+		if rank > 0:
+			n_stars = clampi(rank, 1, 3)
 	for k in 3:
 		var st := PixelIcon.new()
 		st.kind = "star"

@@ -165,6 +165,16 @@ func _painted_strip() -> Node2D:
 			sp.texture_filter = SpriteBook.world_filter()
 			layer.add_child(sp)
 			x += (t as Texture2D).get_width() * k
+	# Above the painting: its own teal sky carried up and darkened, so a high
+	# roof never shows the strip's top edge against a flat night.
+	var top := bottom - (texs[0] as Texture2D).get_height() * k
+	var cap := Polygon2D.new()
+	cap.polygon = PackedVector2Array([Vector2(-1200, top - 1400), Vector2(x, top - 1400), Vector2(x, top + 2), Vector2(-1200, top + 2)])
+	var edge := Color8(6, 40, 42)
+	var dark := Color(0.02, 0.05, 0.07)
+	cap.vertex_colors = PackedColorArray([dark, dark, edge, edge])
+	cap.z_index = -1
+	layer.add_child(cap)
 	add_child(layer)
 	return layer
 
@@ -373,6 +383,8 @@ func _win() -> void:
 		sheet.next_label = Copy.NEXT_CIRCLE
 		sheet.state = state
 		sheet.combat = false
+		# Three stars: got away, landed it clean (6+ perfect), kept him far back.
+		sheet.rank = 1 + int(lead.perfects >= 6) + int(hunter.lag >= 2.0)
 		sheet.tiles = [["gold", "GOLD", "+%d" % gold], ["boot", "PERFECT", str(lead.perfects)], ["bolt", "TRICKS", str(lead.tricks_done)]]
 		add_child(sheet)
 	)
