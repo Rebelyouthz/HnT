@@ -3,9 +3,9 @@ extends CanvasLayer
 
 ## The game's own mouse pointer: a chunky gold-rimmed pixel arrow that
 ## squashes and darkens while the button is held, with a little ring popping
-## out on every click. On a pad, the sticks fly the pointer around menus
-## (right stick always, left stick when the game is paused or on a menu
-## screen); A / Cross clicks where it points, B / Circle goes back.
+## out on every click. On a pad, the right stick flies the pointer around
+## menus (the left stick and d-pad move focus instead); A / Cross clicks
+## where it points, B / Circle goes back.
 
 const SPEED := 900.0
 const DEAD := 0.22
@@ -128,11 +128,9 @@ func _process(delta: float) -> void:
 			_ring_t = -1.0
 		_fx.queue_redraw()
 	_pad_t = maxf(0.0, _pad_t - delta)
+	# Right stick flies the pointer; the left stick and d-pad move menu focus
+	# (FocusGlide frames it), so the two never fight.
 	var v := Vector2(Input.get_joy_axis(0, JOY_AXIS_RIGHT_X), Input.get_joy_axis(0, JOY_AXIS_RIGHT_Y))
-	if _menu_time():
-		var l := Vector2(Input.get_joy_axis(0, JOY_AXIS_LEFT_X), Input.get_joy_axis(0, JOY_AXIS_LEFT_Y))
-		if l.length() > v.length():
-			v = l
 	if v.length() < DEAD:
 		return
 	# Curve: fine control near the centre, fast at the rim.

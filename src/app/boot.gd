@@ -15,6 +15,7 @@ func _apply_settings() -> void:
 	if DisplayServer.get_name() != "headless":
 		Gfx.apply(get_tree())
 	PixelCursor.install(get_tree())
+	FocusGlide.install(get_tree())
 
 
 ## F11 / Alt+Enter: fullscreen <-> window. The game boots fullscreen.

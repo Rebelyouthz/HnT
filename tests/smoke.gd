@@ -23,6 +23,11 @@ func _initialize() -> void:
 		failed += 1
 	failed += _encounters()
 	var fp := get_root().get_node("FamilyProfile")
+	# Checks below are about a fresh family: test on a clean save, put the
+	# real one back at the end.
+	if FileAccess.file_exists("user://family.json"):
+		DirAccess.copy_absolute("user://family.json", "user://family.smoke_backup.json")
+	fp.call("reset_progress")
 	if fp.tab_unlocked("clinic") == false or fp.tab_unlocked("run") == false:
 		push_error("Clinic and Run must start unlocked")
 		failed += 1
@@ -592,6 +597,9 @@ func _initialize() -> void:
 	if rooms == null:
 		push_error("RoomsServer autoload missing")
 		failed += 1
+	if FileAccess.file_exists("user://family.smoke_backup.json"):
+		DirAccess.copy_absolute("user://family.smoke_backup.json", "user://family.json")
+		DirAccess.remove_absolute("user://family.smoke_backup.json")
 	if failed > 0:
 		push_error("SMOKE FAILED %d" % failed)
 		quit(1)
