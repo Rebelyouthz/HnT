@@ -1112,7 +1112,8 @@ func dojo_pending() -> Array:
 	var out: Array = []
 	var tr: Dictionary = data.get("dojo_train", {})
 	for k in tr.keys():
-		if int(tr[k]) < TRAIN_REPS and dojo_rank(str(k)) >= 1:
+		var own := BrutalBook.owned(str(k).substr(2)) if str(k).begins_with("b_") else dojo_rank(str(k)) >= 1
+		if int(tr[k]) < TRAIN_REPS and own:
 			out.append(str(k))
 	return out
 

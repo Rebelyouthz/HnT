@@ -39,6 +39,7 @@ var _hit_once := {}
 var _first_contact := false
 var _ready_pulse := 0.0
 var _team_told := false
+var _fury_told := false
 
 
 static func attach(fighter: Fighter) -> ArtMoves:
@@ -117,6 +118,11 @@ func _physics_process(delta: float) -> void:
 	if f.team >= Elements.TEAM_MAX and not _team_told:
 		_team_told = true
 		Juice.popup_number(f.global_position + Vector2(0, -104), "TEAM READY · HOLD H + SPECIAL", UiKit.GOLD)
+	if f.fury >= Fighter.FURY_MAX and not _fury_told and BrutalBook.super_for(f.role, "N") != "":
+		_fury_told = true
+		Juice.popup_number(f.global_position + Vector2(0, -112), "FURY READY · BLOCK + SHOOT ON A BROKEN THUG", Color(1.0, 0.3, 0.2))
+	elif f.fury < Fighter.FURY_MAX:
+		_fury_told = false
 	if not _can_start():
 		return
 	if f._just("special") and f._pressed("heavy") and f.team >= Elements.TEAM_MAX:
@@ -126,6 +132,28 @@ func _physics_process(delta: float) -> void:
 		or (f._just("heavy") and f._pressed("light") and _light_age <= 6)
 	if lh:
 		_start_lh()
+
+
+## LB + RB: the hero's BONE YARD super on a broken thug in reach. True
+## when the press was used (even to say the meter isn't full yet).
+func try_super() -> bool:
+	if _seq != "" or not _can_start():
+		return false
+	var id := BrutalBook.super_for(f.role, _stick_dir())
+	if id == "":
+		return false
+	var near := _nearest(GRAB_REACH * 1.3, GRAB_DEPTH)
+	if near == null or near is ActBoss or near.vehicle != "" or not BrutalBook.broken(near):
+		return false
+	var mat := App.current_map == "dojo_practice"
+	if f.fury < Fighter.FURY_MAX and not mat:
+		Juice.popup_number(f.global_position + Vector2(0, -100), "FURY %d%%" % int(f.fury), Palette.MUTED)
+		return true
+	if not mat:
+		f.fury = 0.0
+	f.blocking = false
+	BrutalRun.start(f, near, id)
+	return true
 
 
 func _can_start() -> bool:
@@ -278,6 +306,11 @@ func _start_lh() -> void:
 	var d := _stick_dir()
 	var near := _nearest(GRAB_REACH, GRAB_DEPTH)
 	if near != null and d != "U" and d != "D" and not (near is ActBoss) and near.vehicle == "":
+		if BrutalBook.broken(near):
+			var bid := BrutalBook.for_grab(f.role, d, f.pickup)
+			if bid != "":
+				BrutalRun.start(f, near, bid)
+				return
 		_start_grab(near, d)
 		return
 	var r := Elements.art_for(f.role, "N" if d == "B" else d)

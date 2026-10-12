@@ -204,6 +204,10 @@ var chi := 0.0
 var knives_max := 6
 var knives := 2
 var team := 0.0
+## BONE YARD supers: FURY fills from kills (a brutal kill fills more) and
+## goes off with BLOCK + SHOOT (LB + RB) on a broken thug.
+const FURY_MAX := 100.0
+var fury := 0.0
 var art_lock := 0.0
 var art_vx := 0.0
 var art_hit := false
@@ -1453,6 +1457,8 @@ func _combat() -> void:
 			return
 		_special()
 	if _just("shoot"):
+		if _pressed("block") and arts and arts.try_super():
+			return
 		_shoot()
 	if _rs_gesture():
 		return
@@ -3223,6 +3229,7 @@ func _spend(n: float) -> bool:
 func gain_kill() -> void:
 	chi = minf(Elements.CHI_MAX, chi + Elements.CHI_KILL * ItemRack.chi_k)
 	team = minf(Elements.TEAM_MAX, team + Elements.TEAM_KILL)
+	fury = minf(FURY_MAX, fury + 14.0)
 	for n in get_tree().get_nodes_in_group("players"):
 		if n is Fighter and n != self:
 			(n as Fighter).team = minf(Elements.TEAM_MAX, (n as Fighter).team + Elements.TEAM_ASSIST)

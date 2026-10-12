@@ -103,7 +103,9 @@ func _ready() -> void:
 	var table: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/dojo.json"))
 	for id in FamilyProfile.dojo_pending():
 		var row := {}
-		if table is Array:
+		if id.begins_with("b_"):
+			row = BrutalBook.row(id.substr(2))
+		elif table is Array:
 			for r in table:
 				if str(r.get("id", "")) == id:
 					row = r
