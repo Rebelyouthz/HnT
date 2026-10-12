@@ -343,6 +343,13 @@ func _tick_sprite() -> void:
 
 
 var _bowled: Dictionary = {}
+## Juggle: height above the street (negative = up) after a launcher or an
+## uppercut. Each air hit pops him a little and turns him in the air; the
+## pull gets stronger every hit so a juggle always ends on the ground.
+var lift := 0.0
+var lift_v := 0.0
+var juggle_n := 0
+var _air_spin := 0.0
 var _edge_bounces := 0
 
 
@@ -437,6 +444,9 @@ func _physics_process(delta: float) -> void:
 				Discover.see("boss" if title in Discover.BOSSES else "enemy", title, title.to_upper())
 	if flung:
 		_fling(delta)
+		return
+	if lift < 0.0 or lift_v < 0.0:
+		_tick_air(delta)
 		return
 	if has_meta("bp_slam"):
 		remove_meta("bp_slam")
@@ -645,6 +655,65 @@ func _face_travel(t: Node2D) -> void:
 		return
 	facing = 1 if velocity.x > 0.0 else -1
 	visual.scale.x = float(facing)
+
+
+func airborne() -> bool:
+	return lift < -0.5 or lift_v < 0.0
+
+
+## Launchers send him up; any hit while he is up keeps him there a little.
+## Bosses, armour and the top-down field never juggle.
+func _juggle(kind: String, clip: String, dir: float, power: float) -> bool:
+	if Fighter.FIELD or home != "street" or tier == "boss" or plates > 0 or armored:
+		return false
+	var launch := kind in ["uppercut", "air-upper", "launcher"] or clip in ["uppercut", "getup_upper"]
+	if launch and not airborne():
+		juggle_n = 1
+		lift_v = -560.0
+		_air_spin = dir * randf_range(2.0, 4.0)
+		velocity.x = dir * 40.0
+	elif airborne():
+		juggle_n += 1
+		lift_v = minf(lift_v, -maxf(110.0, 330.0 - 46.0 * float(juggle_n)))
+		_air_spin = dir * randf_range(1.5, 4.5) * (1.5 if power >= 0.8 else 1.0)
+		velocity.x = dir * 70.0 * power
+	else:
+		return false
+	telegraph = 0.0
+	recover = maxf(recover, 0.6)
+	var old: Tween = visual.get_meta("react_tw") if visual.has_meta("react_tw") else null
+	if old != null and old.is_valid():
+		old.kill()
+	if juggle_n > 1:
+		Juice.popup_number(global_position + Vector2(0, -96 + lift), "%d HIT AIR" % juggle_n, Color(1.0, 0.85, 0.4))
+	return true
+
+
+func _tick_air(delta: float) -> void:
+	lift_v += (1500.0 + 260.0 * float(juggle_n)) * delta
+	lift += lift_v * delta
+	velocity.x = move_toward(velocity.x, 0.0, 260.0 * delta)
+	velocity.y = 0.0
+	move_and_slide()
+	_lane()
+	visual.rotation = clampf(visual.rotation + _air_spin * delta * 0.6, -1.5, 1.5)
+	visual.position.y = minf(0.0, lift)
+	if _hurt_t > 0.0:
+		_hurt_t -= delta
+	if lift >= 0.0:
+		# Down hard on the street: a bounce of dust, then flat on the back.
+		lift = 0.0
+		lift_v = 0.0
+		visual.position.y = 0.0
+		var side := signf(visual.rotation) if absf(visual.rotation) > 0.05 else float(-facing)
+		visual.rotation = 0.0
+		juggle_n = 0
+		hp = maxi(1, hp - 4)
+		Juice.pulse_shake(3.0)
+		Juice.play("res://assets/audio/hit_heavy.wav")
+		HitReact.react(visual, facing, "low", side, 0.9)
+		recover = maxf(recover, 1.1)
+	_tick_sprite()
 
 
 func _lane() -> void:
@@ -989,10 +1058,8 @@ func take_hit(kind: String, from: Node) -> void:
 	elif kind == "launcher":
 		dmg = 20
 		snared = 0.3
-		global_position.y -= 24.0
 	elif kind == "uppercut" or kind == "air-upper":
 		dmg = 18 + FamilyProfile.dojo_rank("uppercut") * 4
-		global_position.y -= 18.0
 	elif kind == "roundhouse":
 		dmg = 20 + FamilyProfile.dojo_rank("roundhouse") * 4
 	elif kind == "air-mix":
@@ -1537,7 +1604,11 @@ func _gore(kind: String, from: Node, dir: float) -> void:
 		if zone == "bullet":
 			var head := BloodSim.head_of(_anim)
 			BloodSim.add_hole(_anim, Vector2(head.x + randf_range(-7.0, 7.0), head.y + head.z * randf_range(2.4, 5.2)))
+	if hp > 0 and not flung and _juggle(kind, clip, dir, power):
+		return
 	if hp > 0 and not flung:
+		if zone == "head" and from is Fighter:
+			FaceDrip.bleed(self, _anim, dir, power)
 		var busy := HitReact.react(visual, facing, zone, dir, power)
 		if busy > 0.3:
 			telegraph = 0.0

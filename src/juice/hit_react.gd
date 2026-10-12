@@ -35,6 +35,8 @@ static func zone_of(kind: String, clip: String) -> String:
 			return "up"
 		"slide", "sweep":
 			return "low"
+		"kick_low", "low_kick", "leg_kick", "shin_kick":
+			return "trip"
 		"hammer":
 			return "crush"
 	return "head"
@@ -67,6 +69,7 @@ static func react(visual: Node2D, facing: int, zone: String, dir: float, power: 
 		old.kill()
 	visual.rotation = 0.0
 	visual.position.x = 0.0
+	visual.skew = 0.0
 	var tw := visual.create_tween()
 	visual.set_meta("react_tw", tw)
 	# Positive rotation tips the top of the body toward +x.
@@ -75,12 +78,18 @@ static func react(visual: Node2D, facing: int, zone: String, dir: float, power: 
 	var busy := 0.2
 	match zone:
 		"gut":
-			# Doubled over the fist: lean in toward the hitter, sink.
+			# Doubled over the fist: lean in toward the hitter, knees give,
+			# a half step back to breathe.
+			var sy := visual.scale.y
 			tw.tween_property(visual, "rotation", toward * deg_to_rad(18.0 + 14.0 * power), 0.06)
 			tw.parallel().tween_property(visual, "position:y", 3.0 + 3.0 * power, 0.06)
+			tw.parallel().tween_property(visual, "scale:y", sy * (0.95 - 0.04 * power), 0.06)
 			tw.tween_interval(0.22 + 0.2 * power)
 			tw.tween_property(visual, "rotation", 0.0, 0.18).set_trans(Tween.TRANS_QUAD)
 			tw.parallel().tween_property(visual, "position:y", 0.0, 0.18)
+			tw.parallel().tween_property(visual, "scale:y", sy, 0.18)
+			tw.parallel().tween_property(visual, "position:x", away * 3.0, 0.18)
+			tw.tween_property(visual, "position:x", 0.0, 0.12)
 			busy = 0.45 + 0.2 * power
 		"low", "crush":
 			# Legs gone: down on the back, a beat on the ground, up again.
@@ -113,14 +122,51 @@ static func react(visual: Node2D, facing: int, zone: String, dir: float, power: 
 			tw.parallel().tween_property(visual, "position:x", 0.0, 0.16)
 			busy = 0.22
 		_:
-			# Head snapped away; harder blows rock the whole body.
-			var a := deg_to_rad(6.0 + 16.0 * power)
-			tw.tween_property(visual, "rotation", away * a, 0.04)
-			tw.parallel().tween_property(visual, "position:x", away * (1.0 + 4.0 * power), 0.05)
-			tw.tween_property(visual, "rotation", -away * a * 0.25, 0.1)
-			tw.tween_property(visual, "rotation", 0.0, 0.12)
-			tw.parallel().tween_property(visual, "position:x", 0.0, 0.14)
-			busy = 0.18 + 0.2 * power
+			visual.skew = 0.0
+			var pick := randf()
+			if power >= 0.8 and pick < 0.35:
+				# A full swing to the jaw: he spins round on his heels (a twist
+				# through the body), staggers sideways and only just stays up.
+				tw.tween_property(visual, "skew", away * 0.55, 0.06)
+				tw.parallel().tween_property(visual, "rotation", away * deg_to_rad(16.0), 0.06)
+				tw.parallel().tween_property(visual, "position:x", away * 6.0, 0.06)
+				tw.tween_property(visual, "skew", -away * 0.5, 0.08)
+				tw.tween_property(visual, "skew", away * 0.25, 0.08)
+				tw.parallel().tween_property(visual, "position:x", away * 12.0, 0.16)
+				tw.tween_property(visual, "rotation", -away * deg_to_rad(8.0), 0.12)
+				tw.parallel().tween_property(visual, "skew", 0.0, 0.12)
+				tw.tween_property(visual, "rotation", 0.0, 0.16).set_trans(Tween.TRANS_BACK)
+				tw.parallel().tween_property(visual, "position:x", 0.0, 0.2)
+				busy = 0.75
+			elif power >= 0.45 and pick < 0.6:
+				# Off balance: head back, a stumble backwards, arms wheeling,
+				# a lurch forward to catch himself.
+				tw.tween_property(visual, "rotation", away * deg_to_rad(14.0 + 10.0 * power), 0.05)
+				tw.parallel().tween_property(visual, "position:x", away * 7.0, 0.1)
+				tw.tween_property(visual, "rotation", away * deg_to_rad(6.0), 0.08)
+				tw.tween_property(visual, "rotation", away * deg_to_rad(12.0), 0.08)
+				tw.tween_property(visual, "rotation", toward * deg_to_rad(6.0), 0.12).set_trans(Tween.TRANS_QUAD)
+				tw.parallel().tween_property(visual, "position:x", away * 2.0, 0.12)
+				tw.tween_property(visual, "rotation", 0.0, 0.12)
+				tw.parallel().tween_property(visual, "position:x", 0.0, 0.12)
+				busy = 0.5 + 0.15 * power
+			elif pick < 0.8:
+				# Hooked: the head twists to the side, then turns back.
+				tw.tween_property(visual, "skew", away * (0.18 + 0.2 * power), 0.04)
+				tw.parallel().tween_property(visual, "rotation", away * deg_to_rad(5.0 + 8.0 * power), 0.04)
+				tw.tween_interval(0.06 + 0.08 * power)
+				tw.tween_property(visual, "skew", 0.0, 0.14)
+				tw.parallel().tween_property(visual, "rotation", 0.0, 0.14)
+				busy = 0.2 + 0.2 * power
+			else:
+				# Head snapped straight back; harder blows rock the whole body.
+				var a := deg_to_rad(6.0 + 16.0 * power)
+				tw.tween_property(visual, "rotation", away * a, 0.04)
+				tw.parallel().tween_property(visual, "position:x", away * (1.0 + 4.0 * power), 0.05)
+				tw.tween_property(visual, "rotation", -away * a * 0.25, 0.1)
+				tw.tween_property(visual, "rotation", 0.0, 0.12)
+				tw.parallel().tween_property(visual, "position:x", 0.0, 0.14)
+				busy = 0.18 + 0.2 * power
 	return busy
 
 
