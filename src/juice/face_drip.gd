@@ -14,6 +14,8 @@ var _heavy := 0.0
 var _drops: Array = []   # [pos, vel, life, size, color]
 var _run := 0.0          # length of the trickle from nose to chin (px)
 var _side := 1.0
+## A black eye that darkens with every hard blow to the head (0..1).
+var _bruise := 0.0
 
 
 static func bleed(who: Node2D, art: AnimatedSprite2D, dir: float, power: float) -> void:
@@ -33,8 +35,15 @@ static func bleed(who: Node2D, art: AnimatedSprite2D, dir: float, power: float) 
 	d._left = minf(6.0, d._left + 1.6 + 2.4 * power)
 	d._heavy = minf(1.0, d._heavy + 0.25 + 0.4 * power)
 	d._side = -dir
+	d._bruise = minf(1.0, d._bruise + 0.12 + 0.22 * power)
 	if power >= 0.55:
 		d._spit(dir, power)
+
+
+## The front eye on screen right now (sprites face right in their texels).
+func _eye() -> Vector2:
+	var h := BloodSim.head_of(anim)
+	return anim.to_global(Vector2(h.x + h.z * 0.32, h.y - h.z * 0.12))
 
 
 ## Where nose and mouth are on screen right now.
@@ -83,6 +92,13 @@ func _process(delta: float) -> void:
 
 
 func _draw() -> void:
+	if _bruise > 0.25 and victim != null and is_instance_valid(victim) and anim != null and is_instance_valid(anim) and anim.is_visible_in_tree():
+		var e := to_local(_eye())
+		var a := clampf((_bruise - 0.25) * 1.3, 0.0, 0.85)
+		draw_set_transform(e, 0.0, Vector2(1.0, 0.7))
+		draw_circle(Vector2.ZERO, 3.2, Color(0.22, 0.05, 0.2, a))
+		draw_circle(Vector2(0.4, 0.3), 2.0, Color(0.1, 0.02, 0.08, a))
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	if _run > 0.5 and victim != null and is_instance_valid(victim):
 		var m := to_local(_mouth())
 		draw_line(m, m + Vector2(0.6, _run), Color(0.5, 0.02, 0.03, 0.9), 1.4)

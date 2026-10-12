@@ -3608,6 +3608,7 @@ func _throw() -> void:
 		e.global_position.x += float(facing) * 64.0
 		_try_wall_bounce(e)
 		Juice.shout("DISARMED")
+		_grab_clip()
 		return
 	if knives > 0 and not vs_mode:
 		knives -= 1
@@ -3616,6 +3617,20 @@ func _throw() -> void:
 		_restart_clip_throw()
 		return
 	_suit_gadget()
+
+
+## The hands-on part of a throw: reach, grab, wrench and shove (the
+## father's grab clip played fast; the son pulls into a clinch).
+func _grab_clip() -> void:
+	if _anim == null:
+		return
+	for c in ["b_grab_break", "clinch_knee", "cross"]:
+		if _anim.sprite_frames.has_animation(c):
+			anim_atk = c
+			_atk_t = 0.5
+			_anim.stop()
+			_anim.play(c, 1.8 if c == "b_grab_break" else 1.0)
+			return
 
 
 func _restart_clip_throw() -> void:
