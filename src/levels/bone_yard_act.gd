@@ -48,7 +48,10 @@ func _ready() -> void:
 func build_world() -> void:
 	var theme := str(_m.get("theme", "dock"))
 	NightStreet.parallax(self, map_w, theme)
-	if WetStreet.available():
+	# Pixel maps lay their own floor, one per place along the yard.
+	if WetStreet.has_road(theme + "_floor"):
+		WetStreet.lay(self, map_w, theme + "_floor")
+	elif WetStreet.available():
 		WetStreet.lay(self, map_w)
 	else:
 		NightStreet.wet_floor(self, map_w)
@@ -58,6 +61,9 @@ func build_world() -> void:
 	for c in _m.get("challenges", []):
 		NightStreet.plaque(self, Vector2(80, y), ("✓ " if BoneYard.done("%s:%s" % [yard_id, str(c["id"])]) else "○ ") + str(c["text"]), Palette.MUTED, 13)
 		y += 18.0
+	# The map's own smashable pixel props along the yard.
+	for pr in _m.get("props", []):
+		SmashProp.place(self, Vector2(map_w * float(pr[0]), 480.0 + float(pr[2]) if pr.size() > 2 else 492.0), str(pr[1]))
 	# A pipe for the weapon branch.
 	var pipe := WeaponPickup.new()
 	pipe.kind = "pipe"

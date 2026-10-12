@@ -41,7 +41,14 @@ THEMES = {
 		"the iron gates of an old victorian asylum on an island at night: stone walls, barbed wire, searchlights, a lightning storm over the towers",
 		"inside an old asylum: a long corridor of padded cell doors, flickering green fluorescent lights, broken gurneys, cracked tiles, eerie mist",
 	],
-	# BONE YARD map 2: a megacity night market.
+	# BONE YARD map 2: the meat district where the debt men hang their bills.
+	"butcher_row": [
+		"a night meat market street: butcher shop windows glowing red with hanging carcasses on hooks, striped awnings, crates of ice, a refrigerated truck, wet cobbles",
+		"a grim slaughterhouse loading dock at night: rows of meat hooks on rails, plastic strip curtains, steam, flickering red neon, stacked pallets, blood drains",
+		"a narrow alley behind butcher shops: dumpsters, chained back doors, hanging chains, a bare bulb, rats, puddles reflecting red and teal light",
+		"inside a huge cold slaughterhouse hall: hanging carcasses in long rows, chains, steel tables, cold blue fluorescent light, red emergency lamps, fog",
+	],
+	# BONE YARD map 3: a megacity night market.
 	"neon_maze": [
 		"a cyberpunk megacity street: towering buildings covered in holographic billboards, pink and cyan neon, flying cars far away, rain",
 		"a cyberpunk night market: food stalls under neon canopies, steaming noodle pots, tangled cables, glowing lanterns, purple light",

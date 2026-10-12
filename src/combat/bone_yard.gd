@@ -2,13 +2,13 @@ class_name BoneYard
 extends Object
 
 ## The BONE YARD: a one-life roguelike run through the yards behind the
-## dojo (data/boneyard.json): Grimhollow, the Neon Maze, Butcher Row, Cold
-## Storage and the Chapel of Bills. Each map pays FIGHT TOKENS for the
+## dojo (data/boneyard.json), all painted as pixel art: Grimhollow (the
+## cave to Ashgate Asylum), Butcher Row and the Neon Maze. Each map pays FIGHT TOKENS for the
 ## BONE YARD tree: 1 for every clear, plus 1 per challenge the first time
 ## it is done. Clearing every open yard in one life once fills the yard
 ## (boneyard_full) and opens the big supers. Maps open with the story: the
 ## first after the first survivor night, the next after the parkour roofs
-## and the next survivor night, then one per survivor night after that.
+## and the next survivor night, the last after the third survivor night.
 
 const PATH := "res://data/boneyard.json"
 static var _data: Dictionary = {}

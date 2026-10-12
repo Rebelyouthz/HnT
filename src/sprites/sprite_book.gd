@@ -403,6 +403,9 @@ static func prop(kind: String) -> Texture2D:
 	a = tex("res://assets/sprites/dock/toys/%s.png" % kind)
 	if a:
 		return a
+	# The pixel props of the BONE YARD maps (tools/pixel_props.py).
+	if kind.begins_with("yard_"):
+		return tex("res://assets/sprites/yard/props/%s.png" % kind)
 	return tex("res://assets/sprites/lot/props/%s.png" % kind)
 
 

@@ -57,9 +57,19 @@ func _ready() -> void:
 	var tex := load(road if full else "res://assets/backdrops/%s.png" % ground) as Texture2D
 	var region := Rect2(0, 0, ceilf(map_w / TEXEL) + 4.0, ceilf(300.0 / TEXEL_Y))
 	var sc := Vector2(TEXEL, TEXEL_Y)
+	# Pixel floors (tools/pixel_floor.py) carry their own texel size and draw
+	# with nearest filtering, like the pixel backdrops above them.
+	var pixel := false
 	if full:
-		region = Rect2(0, 0, ceilf(map_w / ROAD_TEXEL) + 4.0, float(tex.get_height()))
-		sc = Vector2(ROAD_TEXEL, ROAD_TEXEL)
+		var rt := ROAD_TEXEL
+		var meta_path := "res://assets/backdrops/%s_road.json" % ground
+		if FileAccess.file_exists(meta_path):
+			var meta: Variant = JSON.parse_string(FileAccess.get_file_as_string(meta_path))
+			if meta is Dictionary:
+				rt = float((meta as Dictionary).get("texel", rt))
+				pixel = bool((meta as Dictionary).get("pixel", false))
+		region = Rect2(0, 0, ceilf(map_w / rt) + 4.0, float(tex.get_height()))
+		sc = Vector2(rt, rt)
 	var base := Sprite2D.new()
 	base.texture = tex
 	base.centered = false
@@ -67,12 +77,14 @@ func _ready() -> void:
 	base.region_rect = region
 	base.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
 	base.scale = sc
-	base.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	base.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST if pixel else CanvasItem.TEXTURE_FILTER_LINEAR
 	base.position = Vector2(0, TOP)
 	base.z_index = 0
 	# The painted road is very dark (mean ~10%): lift it so the stones read
 	# under the night lights instead of sinking into one black mass.
 	base.modulate = (Color(1.4, 1.36, 1.45) if ground == "street" else Color(1.12, 1.1, 1.15)) if full else Color(1.5, 1.45, 1.6)
+	if pixel:
+		base.modulate = Color(0.92, 0.92, 0.96)
 	add_child(base)
 	# Depth: the near edge of the road falls off into shadow, which keeps
 	# the eye on the fighting line and gives the floor a little perspective.

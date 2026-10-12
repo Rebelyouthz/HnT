@@ -77,7 +77,7 @@ func _process(_d: float) -> bool:
 			if is_instance_valid(e) and int(e.get("hp")) > 0 and hero:
 				e.set("hp", 1)
 				e.call("take_hit", "finish", hero)
-		if root.get_node("App").get("current_map") == "neon_maze":
+		if root.get_node("App").get("current_map") == "butcher_row":
 			if bb.tokens() < _tok0 + 1:
 				_fail.append("no tokens for the clear")
 			if not by.done("grimhollow"):
@@ -87,7 +87,7 @@ func _process(_d: float) -> bool:
 			_phase = 3
 			_t = _n
 		elif _n > _t + 4800:
-			_fail.append("never reached the neon maze (wave %s)" % [act.get("_wave")])
+			_fail.append("never reached butcher row (wave %s)" % [act.get("_wave")])
 			_phase = 3
 	if _phase == 3 and _n > _t + 30:
 		print("BONEYARD OK" if _fail.is_empty() else "BONEYARD FAIL %s" % [_fail])

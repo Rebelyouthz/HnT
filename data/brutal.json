@@ -146,7 +146,7 @@
   "needs": [
    "heart_punch"
   ],
-  "map": "cold_storage",
+  "map": "butcher_row",
   "line": "Two knuckles into the windpipe. He folds over, clutching his throat, and the air never comes back.",
   "input": "GRAB + FORWARD on a BROKEN thug"
  },
@@ -161,7 +161,7 @@
    "spine_rip",
    "death_touch"
   ],
-  "map": "cold_storage",
+  "map": "butcher_row",
   "line": "PRESSURE POINT. Two fingers to the temple, once. His eyes roll back and he tips over like a felled tree.",
   "input": "GRAB on a BROKEN thug"
  },
@@ -175,7 +175,7 @@
   "needs": [
    "back_breaker"
   ],
-  "map": "cold_storage",
+  "map": "butcher_row",
   "weapon": [
    "baseball_bat",
    "pipe",
@@ -196,7 +196,7 @@
   "needs": [
    "throat_punch"
   ],
-  "map": "chapel_of_bills",
+  "map": "neon_maze",
   "line": "Five body hooks, left right left right left. Every one cracks a rib; the last one folds him in half.",
   "input": "GRAB on a BROKEN thug"
  },
@@ -210,7 +210,7 @@
   "needs": [
    "temple_tap"
   ],
-  "map": "chapel_of_bills",
+  "map": "neon_maze",
   "line": "An uppercut that pops the jaw out, then a spinning backfist that sends it the other way. Teeth everywhere.",
   "input": "GRAB + BACK on a BROKEN thug"
  },
@@ -224,7 +224,7 @@
   "needs": [
    "bat_homerun"
   ],
-  "map": "chapel_of_bills",
+  "map": "neon_maze",
   "weapon": [
    "chain"
   ],

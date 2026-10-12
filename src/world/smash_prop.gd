@@ -122,7 +122,7 @@ func _mount_sprite() -> void:
 	s.centered = false
 	s.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
 	s.position = Vector2(-float(tex.get_width()) * 0.5 * SpriteBook.DRAW_SCALE, -float(tex.get_height()) * SpriteBook.DRAW_SCALE)
-	s.texture_filter = SpriteBook.world_filter()
+	s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST if kind.begins_with("yard_") else SpriteBook.world_filter()
 	add_child(s)
 	_dress(s)
 
@@ -190,7 +190,8 @@ func _splinters(dir: float, n: int) -> void:
 ## What it is made of decides what you hear.
 func _material_sfx(final: bool) -> void:
 	var mat := "wood"
-	if kind in ["kiosk", "vending", "cop_car", "booth", "dumpster", "drum", "hydrant", "mail", "news", "barrier"]:
+	if kind in ["kiosk", "vending", "cop_car", "booth", "dumpster", "drum", "hydrant", "mail", "news", "barrier",
+			"yard_barricade", "yard_gurney", "yard_hook_cart", "yard_neon_vending", "yard_noodle_cart", "yard_holo_bin"]:
 		mat = "metal"
 	elif kind in ["window", "glass", "bottle"]:
 		mat = "glass"

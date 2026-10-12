@@ -92,7 +92,9 @@ const OWN := {"arm_breaker": "b_grab_break", "heart_punch": "b_heart_punch", "ba
 	"death_touch": "b_death_touch", "flamingo_reaper": "b_flamingo"}
 ## Victim reaction clips (tools/hf_react.py) per move.
 const REACT := {"knee_snap": "r_knee", "two_way": "r_knee", "eye_gouge": "r_blind", "death_touch": "r_heart", "heart_punch": "r_heart",
-	"throat_punch": "r_heart", "temple_tap": "r_heart", "rib_breaker": "r_knee"}
+	"throat_punch": "r_heart", "temple_tap": "r_heart", "rib_breaker": "r_knee", "neck_crack": "r_heart",
+	"spine_rip": "r_heart", "jaw_breaker": "r_blind", "chain_noose": "r_heart", "back_breaker": "r_knee",
+	"skull_crusher": "r_blind", "flamingo_reaper": "r_knee", "arm_breaker": "r_knee"}
 
 var f: Fighter
 var e: Punk
