@@ -76,7 +76,7 @@ func _section(title: String, kind: String, value: int, maxv: int) -> Control:
 			UiKit.pulse_ready(cell)
 	v.add_child(seg)
 	var left := Label.new()
-	left.text = ("%d LEFT TO THE NEXT CHEST" % maxi(0, _next_mark(marks, value) - value)) if _next_mark(marks, value) > value else "ALL FILLED"
+	left.text = ("%d LEFT TO THE NEXT CHEST" % maxi(0, _next_mark(marks, value) - value)) if _next_mark(marks, value) > value else "ALL COMPLETED"
 	left.add_theme_font_override("font", UiKit.pixel_font())
 	UiKit.apply_label(left, 10, Palette.MUTED)
 	v.add_child(left)
@@ -240,8 +240,8 @@ func _recap() -> Control:
 	var lines := [
 		"Account LV %d  ·  High table %06d" % [int(FamilyProfile.data.get("account_level", 1)), int(FamilyProfile.data.get("high_score", 0))],
 		"Intro %s  ·  Ending %s" % [
-			"FILED" if bool(FamilyProfile.data.get("intro_done", false)) else "UNSEEN",
-			"FILED" if bool(FamilyProfile.data.get("ending_seen", false)) else "UNSEEN"
+			"SEEN" if bool(FamilyProfile.data.get("intro_done", false)) else "UNSEEN",
+			"SEEN" if bool(FamilyProfile.data.get("ending_seen", false)) else "UNSEEN"
 		],
 		"Director Binder %d  ·  FILE ALIVE %d  ·  Legendary cards %d" % [
 			int(FamilyProfile.data.get("family_plan_kills", 0)),

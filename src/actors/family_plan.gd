@@ -351,6 +351,6 @@ func _score(from: Node, n: int) -> void:
 func _on_dead() -> void:
 	FamilyProfile.mark_family_plan()
 	var act := get_tree().get_first_node_in_group("run_act")
-	Juice.toast("quest", "DIRECTOR FILED", "The Family Plan is a corpse. The fridge stays.")
+	Juice.toast("quest", "DIRECTOR DOWN", "The Family Plan is a corpse. The fridge stays.")
 	if act and act.has_method("finish_boss"):
 		act.finish_boss()

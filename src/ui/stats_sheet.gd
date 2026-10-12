@@ -124,7 +124,7 @@ func _ready() -> void:
 
 func _playtime_line() -> String:
 	var maps: Array = FamilyProfile.data.get("maps_filed", [])
-	return "%d / 14 ACTS FILED" % maps.size()
+	return "%d / 14 ACTS COMPLETED" % maps.size()
 
 
 static func grouped(n: int) -> String:

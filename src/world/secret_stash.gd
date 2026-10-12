@@ -72,7 +72,7 @@ func _ready() -> void:
 	_hint.modulate.a = 0.0
 	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	UiKit.apply_label(_hint, 12, Palette.EDGE)
-	_hint.text = "FILED" if _taken else str(spec.get("title", "SECRET"))
+	_hint.text = "TAKEN" if _taken else str(spec.get("title", "SECRET"))
 	add_child(_hint)
 	SpriteBook.attach_living(self, "secret")
 
@@ -115,7 +115,7 @@ func _claim(f: Fighter) -> void:
 	if _taken:
 		return
 	_taken = true
-	_hint.text = "FILED"
+	_hint.text = "TAKEN"
 	FamilyProfile.note_secret(str(spec.get("id", "")))
 	if randf() < 0.25:
 		VaultCards.add_tokens(1, "Tucked behind the stash.")

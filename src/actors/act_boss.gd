@@ -58,11 +58,11 @@ func _on_dead() -> void:
 		LootBook.drop_chest(get_parent(), global_position + Vector2(float(randi_range(-20, 20)), 6), not is_mini)
 	if is_mini:
 		Juice.toast("challenge", "MINI DOWN", "%s filed. The street keeps going. That's the bit." % title.to_upper())
-		Juice.shout("MINI FILED")
+		Juice.shout("MINI-BOSS DOWN")
 		if act and act.has_method("on_mini_down"):
 			act.on_mini_down()
 		return
-	Juice.toast("quest", "BOSS FILED", "%s is a receipt now." % title.to_upper())
+	Juice.toast("quest", "BOSS DOWN", "%s is a receipt now." % title.to_upper())
 	# Gant's office had something hanging in the closet.
 	if act is RunAct and (act as RunAct).map_id == "dock_street":
 		Suits.grant("bat")

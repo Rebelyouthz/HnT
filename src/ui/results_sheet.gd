@@ -3,7 +3,7 @@ extends CanvasLayer
 
 ## After-act pinball recap + account XP. Death uses the same sheet, meaner.
 
-var headline := "FILED"
+var headline := "COMPLETED"
 var sub := ""
 var win := true
 var gate := false

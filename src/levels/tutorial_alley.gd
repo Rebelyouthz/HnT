@@ -55,7 +55,7 @@ func build_world() -> void:
 			_dummy_hit = true
 			if _missions:
 				_missions.complete_side()
-			Juice.toast("challenge", "DUMMY FILED", "It didn't even charge you. Growth.")
+			Juice.toast("challenge", "DUMMY DOWN", "It didn't even charge you. Growth.")
 		)
 
 

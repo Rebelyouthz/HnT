@@ -102,7 +102,7 @@ static func _stamp(title: String) -> String:
 		return "cur_title"
 	if "UNLOCK" in t or "OPEN" in t or "NEW" in t:
 		return "cur_key"
-	if "BOSS" in t or "FILED" in t or "BOUNTY" in t:
+	if "BOSS" in t or "FILED" in t or "DOWN" in t or "COMPLETED" in t or "BOUNTY" in t:
 		return "head_codex"
 	if "GOLD" in t or "REWARD" in t or "CRATE" in t or "CHEST" in t:
 		return "cur_chest"

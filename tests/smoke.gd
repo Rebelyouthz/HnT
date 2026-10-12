@@ -36,16 +36,16 @@ func _initialize() -> void:
 		failed += 1
 	if Copy.LOGO != "HnT":
 		failed += 1
-	if Copy.CLEAR != "DOCK STREET FILED":
+	if Copy.CLEAR != "DOCK STREET COMPLETED":
 		push_error("missing clear copy")
 		failed += 1
-	if Copy.GO_SOLO != "GO ALONE" or Copy.FIRE_CLEAR != "FIRE ESCAPES FILED":
+	if Copy.GO_SOLO != "GO ALONE" or Copy.FIRE_CLEAR != "FIRE ESCAPES COMPLETED":
 		push_error("missing solo/fire copy")
 		failed += 1
 	if Copy.WAITING != "WAITING FOR FATHER" or Copy.CONNECT != "CONNECT":
 		push_error("missing host/join copy")
 		failed += 1
-	if Copy.HALL_CLEAR != "CITY HALL FILED":
+	if Copy.HALL_CLEAR != "CITY HALL COMPLETED":
 		push_error("missing city hall copy")
 		failed += 1
 	if Copy.SKIP_FILM != "PAUSE SKIPS  ·  LIGHT ADVANCES":
@@ -54,7 +54,7 @@ func _initialize() -> void:
 	if Copy.VERSUS != "VERSUS" or Copy.FIRED != "YOU'RE FIRED":
 		push_error("missing versus copy")
 		failed += 1
-	if Copy.PIER_CLEAR != "INVOICE PIER FILED" or Copy.LOT_CLEAR != "INTAKE LOT FILED":
+	if Copy.PIER_CLEAR != "INVOICE PIER COMPLETED" or Copy.LOT_CLEAR != "INTAKE LOT COMPLETED":
 		push_error("missing pier/lot copy")
 		failed += 1
 	if Copy.PLAY_INTRO != "PLAY INTRO":
@@ -63,7 +63,7 @@ func _initialize() -> void:
 	if Copy.OPTIONS != "OPTIONS" or Copy.RESET != "RESET PROGRESS":
 		push_error("missing options/reset copy")
 		failed += 1
-	if Copy.FLOOR_CLEAR != "PROCESSING FLOOR FILED" or Copy.SKIP_BRIDGES != "SKIP INTER-ACT FILMS":
+	if Copy.FLOOR_CLEAR != "PROCESSING FLOOR COMPLETED" or Copy.SKIP_BRIDGES != "SKIP INTER-ACT FILMS":
 		push_error("missing floor/film copy")
 		failed += 1
 	if Copy.NEXT_FLOOR != "THE PROCESSING FLOOR":
