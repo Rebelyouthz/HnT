@@ -85,8 +85,8 @@
   },
   {
     "id": "bounty_board",
-    "name": "BOUNTY BOARD",
-    "blurb": "Street contracts. Claim is required. The radio will lie about who hired you.",
+    "name": "QUEST BOARD",
+    "blurb": "Street jobs and side quests, pinned up by Benny. Claim is required. The radio will lie about who hired you.",
     "unlocks": "Bounty"
   },
   {

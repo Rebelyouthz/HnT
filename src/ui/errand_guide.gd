@@ -33,6 +33,11 @@ const TOLD := {
 	],
 }
 
+const QUEST_TOLD := [
+	{"who": "father", "text": "Benny left plans on the wall. A QUEST BOARD: street jobs, side money."},
+	{"who": "son", "text": "Board first, then the couch. Two builds, then we go back out."},
+]
+
 var _map := ""
 ## What the arrow is on right now (a control key or station:id), for tests.
 var target := ""
@@ -56,14 +61,51 @@ var _target_ctrl: Control = null
 var _nudge := 0.0
 
 
-## The map whose gate still wants a buy, or "".
+## The map whose gate still wants a buy (or tonight's room is due), or "".
 static func errand_map() -> String:
 	if not PowerBook.enforced():
 		return ""
 	var hop := App.camp_next if App.camp_next != "" else FamilyProfile.next_run_map()
-	if hop == "" or PowerBook.path(hop).is_empty():
+	if hop == "" or steps(hop).is_empty():
 		return ""
 	return hop
+
+
+## Tonight's room in the camp plan, "" when none: the next unbuilt room
+## (story rooms come through the story path) once its nights are met and
+## fewer than two rooms went up since the last night out. The QUEST BOARD
+## after the first night, then the couch, then a run.
+static func night_room() -> String:
+	if not PowerBook.enforced():
+		return ""
+	if int(FamilyProfile.data.get("night_builds", 0)) >= FamilyProfile.BUILDS_PER_NIGHT:
+		return ""
+	var story := PowerBook.story_shops()
+	for id in FamilyProfile.BUILD_ORDER:
+		if FamilyProfile.is_built(str(id)) or story.has(str(id)):
+			continue
+		return str(id) if FamilyProfile.build_blocker(str(id)) == "" else ""
+	return ""
+
+
+static func room_name(id: String) -> String:
+	var rows: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/buildings.json"))
+	if rows is Array:
+		for r in rows:
+			if r is Dictionary and str((r as Dictionary).get("id", "")) == id:
+				return str((r as Dictionary).get("name", id.to_upper()))
+	return id.replace("_", " ").to_upper()
+
+
+## What the arrow walks through, in order: tonight's room when it can be
+## paid for, then the story gate's buys for the next map.
+static func steps(map_id: String) -> Array:
+	var out: Array = []
+	var r := night_room()
+	if r != "" and int(FamilyProfile.data.get("gold", 0)) >= FamilyProfile.build_cost(r):
+		out.append({"what": "BUILD", "id": r, "name": room_name(r), "gold": FamilyProfile.build_cost(r), "rep": 0, "parts": {}, "night": true})
+	out.append_array(PowerBook.path(map_id))
+	return out
 
 
 ## Put one guide in the tree when an errand is open (the hideout calls it).
@@ -78,6 +120,15 @@ static func ensure(host: Node) -> void:
 		return
 	# The clinic covers what is short the first night the gate turns us back.
 	PowerBook.fund(m)
+	# The QUEST BOARD is the first room of the plan: Benny's lumber money
+	# covers what is short, once.
+	if night_room() == "bounty_board" and not bool(FamilyProfile.data.get("quest_fund", false)):
+		FamilyProfile.data["quest_fund"] = true
+		var short := FamilyProfile.build_cost("bounty_board") - int(FamilyProfile.data.get("gold", 0))
+		if short > 0:
+			FamilyProfile.data["gold"] = int(FamilyProfile.data.get("gold", 0)) + short
+		FamilyProfile.save()
+		Guide.play(host, "errand_quest_board", QUEST_TOLD, 1.6)
 	var g := ErrandGuide.new()
 	g._map = m
 	tree.root.add_child(g)
@@ -134,7 +185,7 @@ func _process(delta: float) -> void:
 	if get_tree().current_scene != _last_scene:
 		queue_free()
 		return
-	var steps := PowerBook.path(_map)
+	var steps := ErrandGuide.steps(_map)
 	if steps.is_empty():
 		if _done_t < 0.0:
 			_done_t = 0.0
@@ -363,6 +414,11 @@ func _target_step(step: Dictionary) -> void:
 	var what := str(step.get("what", ""))
 	var gold := int(step.get("gold", 0))
 	_sub = "STORY  ·  BEFORE %s" % _map.replace("_", " ").to_upper()
+	if bool(step.get("night", false)):
+		_sub = "TONIGHT'S BUILD  ·  THEN THE PORTAL"
+		shop = str(step.get("id", shop))
+	elif what == "BUILD":
+		shop = str(step.get("id", shop))
 	if what == "BUILD":
 		_label = "BUILD THE %s  ·  %d G" % [str(step.get("name", shop)).to_upper(), gold]
 		# Benny raises rooms on the floor; while he is held, the board does it.

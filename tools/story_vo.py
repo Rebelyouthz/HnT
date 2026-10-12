@@ -23,6 +23,21 @@ ORDER = ["dock_street", "intake_lot", "fire_escapes", "group_circle", "neon_exch
          "invoice_pier", "processing_floor"]
 CAST = {"father": "father", "son": "son", "benny": "repo", "rico": "runner", "dot": "npc_woman", "collector": "gant"}
 KEEP = 40  # characters left on the quota, never spent
+CAMP_HERO = [
+    "Home. Technically a basement.",
+    "Fridge first. Then we argue about the map.",
+    "Fridge first. Then I argue with the map.",
+    "You made it back. The portal's still humming.",
+    "Made it back. The portal's still humming.",
+    "Patch up, gear up, then we go back out.",
+    "Before we go back out, we build something. Follow the arrow.",
+    "Benny would have this up in a minute. We need him back from Dock Street.",
+    "That's Rico's counter. Nobody touches the till till he's home.",
+]
+CAMP_CREW = [
+    ("benny", "Love the plan. Love it more with gold for lumber."),
+    ("benny", "Stand back. Art is happening."),
+]
 
 
 def lines_of(o):
@@ -59,6 +74,13 @@ def queue():
         if i + 1 < len(ORDER):
             q += list(lines_of(s.get("bridges", {}).get(m + "->" + ORDER[i + 1], {})))
     q += list(lines_of(s.get("ending", {})))
+    # The hideout: fixed lines in src/world/camp_hideout.gd (either hero may
+    # say the hero ones), then the crew's idle chatter.
+    for hero in ("father", "son"):
+        q += [(hero, t) for t in CAMP_HERO]
+    q += CAMP_CREW
+    for who, pool in s.get("crew_talk", {}).items():
+        q += [(who, str(t)) for t in pool]
     for tid, tk in t["talks"].items():
         if tid not in done_talks:
             if tk.get("eat_joke"):

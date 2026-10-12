@@ -216,14 +216,35 @@ func _build_actors() -> void:
 		_buddy.facing = -1
 		add_child(_buddy)
 		_buddy.set_motion(0.0)
+	var knock_at := 0.6
 	for who in CREW_SPOT:
 		if StoryBook.has_crew(who):
 			var npc := CrewNPC.new()
 			npc.setup(who)
-			npc.position = Vector2(_w * float(CREW_SPOT[who]), WALK_Y - 1.0)
+			var spot := Vector2(_w * float(CREW_SPOT[who]), WALK_Y - 1.0)
+			npc.position = spot
+			npc.set_meta("spot", spot.x)
 			npc.face(1)
 			add_child(npc)
 			_crew[who] = npc
+			# First night home after the rescue: a knock at the door, then
+			# they walk in to their corner (walk bob, never a pop-in).
+			var key := "crew_home_" + str(who)
+			if not bool(FamilyProfile.data.get(key, false)):
+				FamilyProfile.data[key] = true
+				FamilyProfile.save()
+				npc.position = Vector2(_w - 10.0, WALK_Y - 1.0)
+				npc.visible = false
+				var at := knock_at
+				knock_at += 1.4
+				get_tree().create_timer(at).timeout.connect(func() -> void:
+					for k in 2:
+						get_tree().create_timer(0.22 * float(k)).timeout.connect(func() -> void:
+							Mixer.play_sfx("res://assets/audio/smash.wav", 1.6, -10.0)
+						)
+					npc.visible = true
+					npc.walk_to(spot.x, 80.0).tween_callback(func() -> void: npc.face(1))
+				)
 	_cam = Camera2D.new()
 	_cam.zoom = Vector2(ZOOM, ZOOM)
 	_cam.limit_left = -20
@@ -328,7 +349,7 @@ func _build_stations() -> void:
 		_stations.append(st)
 	for who in _crew:
 		var npc: CrewNPC = _crew[who]
-		_stations.append({"id": "crew_" + who, "x": npc.position.x, "name": StoryBook.who_name(who), "painted": true, "locked": false, "node": npc, "ring": null})
+		_stations.append({"id": "crew_" + who, "x": float(npc.get_meta("spot", npc.position.x)), "name": StoryBook.who_name(who), "painted": true, "locked": false, "node": npc, "ring": null})
 	_refresh_locks()
 
 
@@ -514,14 +535,14 @@ func _arrive() -> void:
 	if App.camp_next != "":
 		lines = [
 			{"who": _mate(), "text": "You made it back. The portal's still humming." if _buddy != null else "Made it back. The portal's still humming."},
-			{"who": _walker.role, "text": "Patch up, gear up, then %s." % App.camp_next.replace("_", " ")},
+			{"who": _walker.role, "text": "Patch up, gear up, then we go back out."},
 		]
-	# The story owes a camp buy: say which one, plainly.
+	# The story owes a camp buy: say so (fixed words, so the line is voiced;
+	# the errand arrow and its card name the thing and the price).
 	var hop := App.camp_next if App.camp_next != "" else FamilyProfile.next_run_map()
 	var steps := PowerBook.path(hop)
 	if not steps.is_empty():
-		var first: Dictionary = steps[0]
-		lines[1] = {"who": _mate(), "text": "Before %s: %s %s, %d gold. Then we go." % [hop.replace("_", " "), str(first["what"]).to_lower(), str(first["name"]).capitalize(), int(first["gold"])]}
+		lines[1] = {"who": _mate(), "text": "Before we go back out, we build something. Follow the arrow."}
 	_talk.play(lines)
 	var tab := App.camp_open_tab
 	App.camp_open_tab = ""

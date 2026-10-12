@@ -177,7 +177,11 @@ func _on_line(_i: int, row: Dictionary) -> void:
 ## Benny and Rico walk in from their side with the keys to the hideout and
 ## stop on the far side of the family; the camera opens up to fit all four.
 func _enter_brothers() -> void:
-	Juice.play("res://assets/audio/card.wav")
+	# A friendly knock (their own rhythm), then they let themselves in.
+	for k in 3:
+		get_tree().create_timer(0.16 * float(k) + (0.12 if k == 2 else 0.0)).timeout.connect(func() -> void:
+			Mixer.play_sfx("res://assets/audio/smash.wav", 1.7, -9.0)
+		)
 	# Brisk: they arrive inside the next line, then turn to the family.
 	_benny.walk_to(_cx + 26.0, 95.0).tween_callback(func() -> void: _benny.face(-1))
 	_rico.walk_to(_cx + 50.0, 92.0).tween_callback(func() -> void: _rico.face(-1))

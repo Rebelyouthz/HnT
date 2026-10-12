@@ -325,19 +325,21 @@ func tab_unlocked(tab: String) -> bool:
 ## it, and costs a little more. The basics (desk, dojo, tree, locker, bench)
 ## come first so the menus open one at a time, each with its guide.
 const BUILD_ORDER := [
-	"front_desk", "dojo", "therapy_couch", "street_map", "wardrobe_cage", "workshop",
+	"front_desk", "bounty_board", "therapy_couch", "dojo", "street_map", "wardrobe_cage", "workshop",
 	"trophy_cabinet", "pawn_shop", "research_lab", "compare_mirrors", "punching_bag",
-	"bounty_board", "blood_fridge", "patrol_desk", "mail_slot", "bulletin_board",
+	"blood_fridge", "patrol_desk", "mail_slot", "bulletin_board",
 	"radio_tower", "album_wall", "streak_locker", "invoice_wheel", "warrant_fax",
 	"tip_jar", "lost_found", "payphone", "water_cooler", "coat_check", "time_clock", "bleach_closet",
 ]
 
 
 ## Nights (finished runs) before each room in BUILD_ORDER can go up, so the
-## camp and its menus open one at a time with the story instead of all at
-## once on a fat wallet: desk and dojo on night one, the skill tree after the
-## first night out, the locker after two, then roughly one room a night.
-const NIGHTS_FOR := [0, 0, 1, 1, 2, 3, 3, 4, 5, 6, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+## camp opens with the story, two rooms a night at most: after the first
+## night out the QUEST BOARD, then the THERAPY COUCH (the skill tree); the
+## dojo and the locker after the second; then two a night.
+const NIGHTS_FOR := [0, 1, 1, 2, 0, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13]
+## Rooms raised in one stay at the hideout before the next night out.
+const BUILDS_PER_NIGHT := 2
 
 
 func nights_for(id: String) -> int:
@@ -355,6 +357,9 @@ func build_blocker(id: String) -> String:
 	# The room the next story map needs skips the queue and the nights.
 	if PowerBook.story_shops().has(id):
 		return ""
+	# Two rooms a night, then out the portal before the next one.
+	if int(data.get("night_builds", 0)) >= BUILDS_PER_NIGHT:
+		return "#night"
 	var i := BUILD_ORDER.find(id)
 	if i < 0:
 		return ""
@@ -372,6 +377,8 @@ func blocker_text(id: String) -> String:
 	var b := build_blocker(id)
 	if b == "":
 		return ""
+	if b == "#night":
+		return "RUN FIRST  ·  %d BUILDS A NIGHT" % BUILDS_PER_NIGHT
 	if b.begins_with("@"):
 		var n := int(b.substr(1))
 		return "OPENS IN %d NIGHT%s" % [n, "" if n == 1 else "S"]
@@ -398,6 +405,8 @@ func try_build(id: String) -> bool:
 	if build_blocker(id) != "" or int(data["gold"]) < cost:
 		return false
 	data["gold"] = int(data["gold"]) - cost
+	if building_level(id) == 0:
+		data["night_builds"] = int(data.get("night_builds", 0)) + 1
 	data["buildings"][id] = building_level(id) + 1
 	data["buildings_tapped"] = int(data["buildings_tapped"]) + 1
 	_bump_daily("build")
@@ -429,6 +438,7 @@ func grant(gold: int, gems: int, line: String) -> void:
 func mark_run_finished(ok: bool = true) -> void:
 	VaultCards.on_night()
 	data["runs"] = int(data["runs"]) + 1
+	data["night_builds"] = 0
 	data["lifetime_points"] = int(data["lifetime_points"]) + (2 if ok else 1)
 	data["rep"] = int(data["rep"]) + (1 if ok else 0)
 	if ok:
