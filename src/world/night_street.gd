@@ -211,7 +211,8 @@ static func _strip(pb: ParallaxBackground, theme: String) -> bool:
 		s.centered = false
 		s.scale = Vector2(texel, texel)
 		s.position = Vector2(x, KERB_Y - ground * texel)
-		s.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+		# Pixel strips keep every art pixel a crisp square.
+		s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST if bool(m.get("pixel", false)) else CanvasItem.TEXTURE_FILTER_LINEAR
 		s.material = nm
 		s.z_index = -3
 		layer.add_child(s)

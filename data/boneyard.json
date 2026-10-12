@@ -1,48 +1,464 @@
 {
 	"maps": [
 		{
-			"id": "butcher_row", "title": "BUTCHER ROW", "theme": "butcher", "light": "neon_exchange",
-			"needs": ["intake_lot"], "opens": "Opens after the first SURVIVOR night (the Intake Lot).",
+			"id": "grimhollow",
+			"title": "GRIMHOLLOW",
+			"theme": "grimhollow",
+			"light": "dock_street",
+			"w": 1980,
+			"walk": true,
+			"needs": [
+				"intake_lot"
+			],
+			"opens": "Opens after the first SURVIVOR night (the Intake Lot).",
+			"blurb": "From the cave under the old mansion, through the gothic city, to the gates of Ashgate Asylum and the cells inside. Walk it in one life.",
+			"tint": [
+				0.84,
+				0.88,
+				1.0
+			],
+			"challenges": [
+				{
+					"id": "brutal2",
+					"kind": "brutal",
+					"n": 2,
+					"text": "FINISH 2 THUGS WITH BONE YARD MOVES"
+				},
+				{
+					"id": "fast",
+					"kind": "time",
+					"n": 240,
+					"text": "REACH THE ASHGATE CELLS IN UNDER 4:00"
+				}
+			],
+			"waves": [
+				[
+					{
+						"title": "Bag Snatch",
+						"hp": 44,
+						"side": "R"
+					},
+					{
+						"title": "Bag Snatch",
+						"hp": 44,
+						"side": "R"
+					}
+				],
+				[
+					{
+						"title": "Roof Runner",
+						"hp": 50,
+						"side": "R"
+					},
+					{
+						"title": "Repo Goon",
+						"hp": 60,
+						"side": "L"
+					},
+					{
+						"title": "Bag Snatch",
+						"hp": 44,
+						"side": "R"
+					}
+				],
+				[
+					{
+						"title": "Mohawk Bo",
+						"hp": 78,
+						"side": "R"
+					},
+					{
+						"title": "Beat Cop",
+						"hp": 64,
+						"side": "R"
+					},
+					{
+						"title": "Roof Runner",
+						"hp": 50,
+						"side": "L"
+					}
+				],
+				[
+					{
+						"title": "Beat Cop",
+						"hp": 64,
+						"side": "R"
+					},
+					{
+						"title": "Beat Cop",
+						"hp": 64,
+						"side": "L"
+					},
+					{
+						"title": "Repo Goon",
+						"hp": 60,
+						"side": "R"
+					}
+				],
+				[
+					{
+						"title": "Vest Ollie",
+						"hp": 200,
+						"side": "R",
+						"armored": true,
+						"name": "THE WARDEN"
+					},
+					{
+						"title": "Mohawk Bo",
+						"hp": 78,
+						"side": "L"
+					},
+					{
+						"title": "Bag Snatch",
+						"hp": 44,
+						"side": "R"
+					}
+				]
+			]
+		},
+		{
+			"id": "neon_maze",
+			"title": "NEON MAZE",
+			"theme": "neon_maze",
+			"light": "neon_exchange",
+			"w": 1700,
+			"walk": true,
+			"needs": [
+				"fire_escapes",
+				"group_circle"
+			],
+			"opens": "Opens after the PARKOUR roofs and the next SURVIVOR night.",
+			"blurb": "Holograms, noodle steam and drones. The collectors went chrome. Walk the market to the tower lobby.",
+			"tint": [
+				0.95,
+				0.85,
+				1.0
+			],
+			"challenges": [
+				{
+					"id": "juggle3",
+					"kind": "juggle",
+					"n": 3,
+					"text": "KEEP ONE THUG IN THE AIR FOR 3 HITS"
+				},
+				{
+					"id": "parry2",
+					"kind": "parry",
+					"n": 2,
+					"text": "PARRY 2 BLOWS"
+				}
+			],
+			"waves": [
+				[
+					{
+						"title": "Agent Lin",
+						"hp": 70,
+						"side": "R"
+					},
+					{
+						"title": "Beat Cop",
+						"hp": 64,
+						"side": "R"
+					}
+				],
+				[
+					{
+						"title": "Agent Lin",
+						"hp": 70,
+						"side": "R"
+					},
+					{
+						"title": "Roof Runner",
+						"hp": 50,
+						"side": "L"
+					},
+					{
+						"title": "Beat Cop",
+						"hp": 64,
+						"side": "R"
+					}
+				],
+				[
+					{
+						"title": "Hall Guard",
+						"hp": 90,
+						"side": "R",
+						"armored": true
+					},
+					{
+						"title": "Roof Runner",
+						"hp": 50,
+						"side": "L"
+					},
+					{
+						"title": "Agent Lin",
+						"hp": 70,
+						"side": "R"
+					}
+				],
+				[
+					{
+						"title": "Cenote Elite",
+						"hp": 240,
+						"side": "R",
+						"armored": true,
+						"name": "THE CHROME BROKER"
+					},
+					{
+						"title": "Roof Runner",
+						"hp": 50,
+						"side": "L"
+					},
+					{
+						"title": "Agent Lin",
+						"hp": 70,
+						"side": "R"
+					}
+				]
+			]
+		},
+		{
+			"id": "butcher_row",
+			"title": "BUTCHER ROW",
+			"theme": "butcher",
+			"light": "neon_exchange",
+			"needs": [
+				"waiting_room"
+			],
+			"opens": "Opens after the third SURVIVOR night (the Waiting Room).",
 			"blurb": "Meat hooks, cold neon and the men who hang the debts. Learn to break things here.",
-			"tint": [1.0, 0.82, 0.8],
+			"tint": [
+				1.0,
+				0.82,
+				0.8
+			],
 			"challenges": [
-				{"id": "brutal3", "kind": "brutal", "n": 3, "text": "FINISH 3 THUGS WITH BONE YARD MOVES"},
-				{"id": "hp50", "kind": "hp_left", "n": 50, "text": "END THE YARD WITH OVER HALF YOUR HEALTH"}
+				{
+					"id": "brutal3",
+					"kind": "brutal",
+					"n": 3,
+					"text": "FINISH 3 THUGS WITH BONE YARD MOVES"
+				},
+				{
+					"id": "hp50",
+					"kind": "hp_left",
+					"n": 50,
+					"text": "END THE YARD WITH OVER HALF YOUR HEALTH"
+				}
 			],
 			"waves": [
-				[{"title": "Bag Snatch", "hp": 46, "side": "R"}, {"title": "Repo Goon", "hp": 62, "side": "L"}],
-				[{"title": "Mohawk Bo", "hp": 80, "side": "R"}, {"title": "Bag Snatch", "hp": 46, "side": "R"}, {"title": "Repo Goon", "hp": 62, "side": "L"}],
-				[{"title": "Bailiff", "hp": 190, "side": "R", "armored": true, "name": "THE BUTCHER"}, {"title": "Mohawk Bo", "hp": 80, "side": "L"}]
+				[
+					{
+						"title": "Bag Snatch",
+						"hp": 46,
+						"side": "R"
+					},
+					{
+						"title": "Repo Goon",
+						"hp": 62,
+						"side": "L"
+					}
+				],
+				[
+					{
+						"title": "Mohawk Bo",
+						"hp": 80,
+						"side": "R"
+					},
+					{
+						"title": "Bag Snatch",
+						"hp": 46,
+						"side": "R"
+					},
+					{
+						"title": "Repo Goon",
+						"hp": 62,
+						"side": "L"
+					}
+				],
+				[
+					{
+						"title": "Bailiff",
+						"hp": 190,
+						"side": "R",
+						"armored": true,
+						"name": "THE BUTCHER"
+					},
+					{
+						"title": "Mohawk Bo",
+						"hp": 80,
+						"side": "L"
+					}
+				]
 			]
 		},
 		{
-			"id": "cold_storage", "title": "COLD STORAGE", "theme": "cold", "light": "rail_bridge",
-			"needs": ["fire_escapes", "group_circle"], "opens": "Opens after the PARKOUR roofs and the next SURVIVOR night.",
+			"id": "cold_storage",
+			"title": "COLD STORAGE",
+			"theme": "cold",
+			"light": "rail_bridge",
+			"needs": [
+				"sleet_hour"
+			],
+			"opens": "Opens after the SLEET HOUR survivor night.",
 			"blurb": "Minus twenty. Frozen bills on hooks. Bodies break easier when they are cold.",
-			"tint": [0.82, 0.9, 1.0],
+			"tint": [
+				0.82,
+				0.9,
+				1.0
+			],
 			"challenges": [
-				{"id": "juggle4", "kind": "juggle", "n": 4, "text": "KEEP ONE THUG IN THE AIR FOR 4 HITS"},
-				{"id": "fast", "kind": "time", "n": 150, "text": "CLEAR THE FREEZER IN UNDER 2:30"}
+				{
+					"id": "juggle4",
+					"kind": "juggle",
+					"n": 4,
+					"text": "KEEP ONE THUG IN THE AIR FOR 4 HITS"
+				},
+				{
+					"id": "fast",
+					"kind": "time",
+					"n": 150,
+					"text": "CLEAR THE FREEZER IN UNDER 2:30"
+				}
 			],
 			"waves": [
-				[{"title": "Frost Clerk", "hp": 60, "side": "R"}, {"title": "Plow Cop", "hp": 70, "side": "L"}],
-				[{"title": "Vest Ollie", "hp": 90, "side": "R", "armored": true}, {"title": "Frost Clerk", "hp": 60, "side": "L"}, {"title": "Plow Cop", "hp": 70, "side": "R"}],
-				[{"title": "Vault Guard", "hp": 230, "side": "R", "armored": true, "name": "THE ICEMAN"}, {"title": "Frost Clerk", "hp": 60, "side": "L"}, {"title": "Vest Ollie", "hp": 90, "side": "L", "armored": true}]
+				[
+					{
+						"title": "Frost Clerk",
+						"hp": 60,
+						"side": "R"
+					},
+					{
+						"title": "Plow Cop",
+						"hp": 70,
+						"side": "L"
+					}
+				],
+				[
+					{
+						"title": "Vest Ollie",
+						"hp": 90,
+						"side": "R",
+						"armored": true
+					},
+					{
+						"title": "Frost Clerk",
+						"hp": 60,
+						"side": "L"
+					},
+					{
+						"title": "Plow Cop",
+						"hp": 70,
+						"side": "R"
+					}
+				],
+				[
+					{
+						"title": "Vault Guard",
+						"hp": 230,
+						"side": "R",
+						"armored": true,
+						"name": "THE ICEMAN"
+					},
+					{
+						"title": "Frost Clerk",
+						"hp": 60,
+						"side": "L"
+					},
+					{
+						"title": "Vest Ollie",
+						"hp": 90,
+						"side": "L",
+						"armored": true
+					}
+				]
 			]
 		},
 		{
-			"id": "chapel_of_bills", "title": "CHAPEL OF BILLS", "theme": "chapel", "light": "city_hall",
-			"needs": ["waiting_room"], "opens": "Opens after the third SURVIVOR night (the Waiting Room).",
+			"id": "chapel_of_bills",
+			"title": "CHAPEL OF BILLS",
+			"theme": "chapel",
+			"light": "city_hall",
+			"needs": [
+				"ledger_dive"
+			],
+			"opens": "Opens after the LEDGER DIVE survivor night.",
 			"blurb": "The collectors pray here. Every pew is an unpaid invoice. Nobody leaves in one piece.",
-			"tint": [0.9, 0.84, 1.0],
+			"tint": [
+				0.9,
+				0.84,
+				1.0
+			],
 			"challenges": [
-				{"id": "kinds3", "kind": "kinds", "n": 3, "text": "USE 3 DIFFERENT BONE YARD MOVES"},
-				{"id": "parry3", "kind": "parry", "n": 3, "text": "PARRY 3 BLOWS"}
+				{
+					"id": "kinds3",
+					"kind": "kinds",
+					"n": 3,
+					"text": "USE 3 DIFFERENT BONE YARD MOVES"
+				},
+				{
+					"id": "parry3",
+					"kind": "parry",
+					"n": 3,
+					"text": "PARRY 3 BLOWS"
+				}
 			],
 			"waves": [
-				[{"title": "Chapel Usher", "hp": 70, "side": "R"}, {"title": "Hall Guard", "hp": 90, "side": "L", "armored": true}],
-				[{"title": "Agent Lin", "hp": 80, "side": "R"}, {"title": "Chapel Usher", "hp": 70, "side": "L"}, {"title": "Hall Guard", "hp": 90, "side": "R", "armored": true}, {"title": "Agent Lin", "hp": 80, "side": "L"}],
-				[{"title": "Cenote Elite", "hp": 280, "side": "R", "armored": true, "name": "THE DEACON"}, {"title": "Chapel Usher", "hp": 70, "side": "L"}, {"title": "Agent Lin", "hp": 80, "side": "R"}]
+				[
+					{
+						"title": "Chapel Usher",
+						"hp": 70,
+						"side": "R"
+					},
+					{
+						"title": "Hall Guard",
+						"hp": 90,
+						"side": "L",
+						"armored": true
+					}
+				],
+				[
+					{
+						"title": "Agent Lin",
+						"hp": 80,
+						"side": "R"
+					},
+					{
+						"title": "Chapel Usher",
+						"hp": 70,
+						"side": "L"
+					},
+					{
+						"title": "Hall Guard",
+						"hp": 90,
+						"side": "R",
+						"armored": true
+					},
+					{
+						"title": "Agent Lin",
+						"hp": 80,
+						"side": "L"
+					}
+				],
+				[
+					{
+						"title": "Cenote Elite",
+						"hp": 280,
+						"side": "R",
+						"armored": true,
+						"name": "THE DEACON"
+					},
+					{
+						"title": "Chapel Usher",
+						"hp": 70,
+						"side": "L"
+					},
+					{
+						"title": "Agent Lin",
+						"hp": 80,
+						"side": "R"
+					}
+				]
 			]
 		}
 	],

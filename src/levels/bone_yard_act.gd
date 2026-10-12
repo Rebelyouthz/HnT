@@ -13,12 +13,13 @@ var _m: Dictionary
 var _wave := -1
 var _wave_t := 2.4
 var _yard_done := false
+var _go_told := -1
 
 
 func _configure() -> void:
 	_m = BoneYard.map(yard_id)
 	map_id = yard_id
-	map_w = 1680.0
+	map_w = float(_m.get("w", 1680.0))
 	spawn_at = Vector2(260, 490)
 	goal_x = 99999.0
 	next_id = ""
@@ -80,12 +81,33 @@ func _process(delta: float) -> void:
 	if _wave_t > 0.0:
 		return
 	var waves: Array = _m.get("waves", [])
+	# Walking yards (Grimhollow, the Neon Maze): each wave waits further in,
+	# so the run goes from the first painted section to the last.
+	if bool(_m.get("walk", false)) and _wave >= 0 and _wave + 1 < waves.size():
+		var stop := _stop_x(_wave + 1, waves.size())
+		if _lead_x() < stop - 140.0:
+			if _go_told != _wave:
+				_go_told = _wave
+				Juice.shout("GO  >>")
+			return
 	_wave += 1
 	if _wave >= waves.size():
 		_yard_clear()
 		return
 	_spawn_wave(waves[_wave], _wave == waves.size() - 1)
 	_wave_t = 1.8
+
+
+func _stop_x(i: int, n: int) -> float:
+	return 260.0 + (map_w - 620.0) * float(i) / float(maxi(1, n - 1))
+
+
+func _lead_x() -> float:
+	var x := 0.0
+	for f in [_son, _dad]:
+		if f and is_instance_valid(f):
+			x = maxf(x, f.global_position.x)
+	return x
 
 
 func _spawn_wave(rows: Array, last: bool) -> void:

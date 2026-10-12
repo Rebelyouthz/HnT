@@ -1,13 +1,14 @@
 class_name BoneYard
 extends Object
 
-## The BONE YARD: a one-life roguelike run through three short arena maps
-## behind the dojo (data/boneyard.json). Each map pays FIGHT TOKENS for the
+## The BONE YARD: a one-life roguelike run through the yards behind the
+## dojo (data/boneyard.json): Grimhollow, the Neon Maze, Butcher Row, Cold
+## Storage and the Chapel of Bills. Each map pays FIGHT TOKENS for the
 ## BONE YARD tree: 1 for every clear, plus 1 per challenge the first time
 ## it is done. Clearing every open yard in one life once fills the yard
 ## (boneyard_full) and opens the big supers. Maps open with the story: the
 ## first after the first survivor night, the next after the parkour roofs
-## and the next survivor night, the last after the third survivor night.
+## and the next survivor night, then one per survivor night after that.
 
 const PATH := "res://data/boneyard.json"
 static var _data: Dictionary = {}
@@ -95,7 +96,7 @@ static func check_open(host: Node = null) -> void:
 	Juice.unlock_logo("THE BONE YARD IS OPEN", "One FIGHT TOKEN to start: spend it on the BONE YARD tree in the DOJO.", "DOJO  ·  NEW MODE")
 	if host != null:
 		Guide.play(host, "boneyard_open", [
-			{"who": "father", "voice": true, "text": "Benny says my old gym had a back room. They called it the BONE YARD. One life, three yards, and finishers that break bones."},
+			{"who": "father", "voice": true, "text": "Benny says my old gym had a back room. They called it the BONE YARD. One life, yard after yard, and finishers that break bones."},
 			{"who": "son", "voice": true, "text": "He left us a FIGHT TOKEN. The DOJO has the tree: hold a move to buy it, drill it 3 times on the dummy, then we go in."},
 		], 4.0)
 
@@ -177,7 +178,7 @@ static func on_clear(id: String, heroes: Array) -> Array:
 		fp.data["boneyard_full"] = true
 		var bonus := int(data().get("full_bonus", 2))
 		got += bonus
-		lines.append("ALL THREE YARDS IN ONE LIFE  +%d  ·  SUPERS OPEN" % bonus)
+		lines.append("EVERY YARD IN ONE LIFE  +%d  ·  SUPERS OPEN" % bonus)
 	BrutalBook.add_tokens(got, "%s cleared." % str(map(id).get("title", id)))
 	# The next yard starts its own clock and counters.
 	brutal_n = 0
@@ -206,7 +207,7 @@ static func dojo_panel(host: Control) -> Control:
 	var open := open_maps()
 	if open.is_empty():
 		var l := Label.new()
-		l.text = "LOCKED  ·  " + str(map("butcher_row").get("opens", ""))
+		l.text = "LOCKED  ·  " + str((maps()[0] as Dictionary).get("opens", "")) if not maps().is_empty() else ""
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		UiKit.apply_label(l, 13, Palette.MUTED)
 		box.add_child(l)
@@ -233,7 +234,7 @@ static func dojo_panel(host: Control) -> Control:
 		UiKit.pulse_ready(tree)
 	Guide.play(host, "boneyard_dojo", [
 		{"key": "bone_tree", "who": "father", "voice": true, "text": "The BONE YARD TREE. It grows from the bottom: the root first, then up. FIGHT TOKENS pay for it."},
-		{"key": "bone_go", "who": "son", "voice": true, "text": "Then in here. Three short yards, one life. Each yard pays a token, and its two challenges pay one more each, once."},
+		{"key": "bone_go", "who": "son", "voice": true, "text": "Then in here. One life, every open yard in a row. Each yard pays a token, and its two challenges pay one more each, once."},
 	], 0.6)
 	for m in maps():
 		var id := str(m["id"])

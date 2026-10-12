@@ -31,7 +31,7 @@ func _process(_d: float) -> bool:
 		if not by.open_maps().is_empty():
 			_fail.append("open before the survivor night")
 		fp.data["maps_filed"] = ["dock_street", "intake_lot"]
-		if by.open_maps() != ["butcher_row"]:
+		if by.open_maps() != ["grimhollow"]:
 			_fail.append("open maps %s" % [by.open_maps()])
 		by.check_open()
 		if bb.tokens() != 1:
@@ -63,27 +63,31 @@ func _process(_d: float) -> bool:
 	if _phase == 2 and _n > _t + 60:
 		var act := current_scene
 		if _n == _t + 61:
-			if root.get_node("App").get("current_map") != "butcher_row":
-				_fail.append("run did not start in butcher row")
+			if root.get_node("App").get("current_map") != "grimhollow":
+				_fail.append("run did not start in grimhollow")
 			var st: Node = get_first_node_in_group("run_state")
 			if st == null or int(st.get("lives")) != 1:
 				_fail.append("not one life")
 		var hero: Node = get_first_node_in_group("players")
+		# Grimhollow is a walking yard: the heroes push on to each wave.
+		for p in get_nodes_in_group("players"):
+			if act and act.get("map_w") != null:
+				p.global_position.x = minf(float(act.get("map_w")) - 200.0, p.global_position.x + 6.0)
 		for e in get_nodes_in_group("enemies"):
 			if is_instance_valid(e) and int(e.get("hp")) > 0 and hero:
 				e.set("hp", 1)
 				e.call("take_hit", "finish", hero)
-		if root.get_node("App").get("current_map") == "cold_storage":
+		if root.get_node("App").get("current_map") == "neon_maze":
 			if bb.tokens() < _tok0 + 1:
 				_fail.append("no tokens for the clear")
-			if not by.done("butcher_row"):
-				_fail.append("butcher row not marked")
+			if not by.done("grimhollow"):
+				_fail.append("grimhollow not marked")
 			if by.step != 1:
 				_fail.append("step %d" % by.step)
 			_phase = 3
 			_t = _n
-		elif _n > _t + 2400:
-			_fail.append("never reached cold storage (wave %s)" % [act.get("_wave")])
+		elif _n > _t + 4800:
+			_fail.append("never reached the neon maze (wave %s)" % [act.get("_wave")])
 			_phase = 3
 	if _phase == 3 and _n > _t + 30:
 		print("BONEYARD OK" if _fail.is_empty() else "BONEYARD FAIL %s" % [_fail])

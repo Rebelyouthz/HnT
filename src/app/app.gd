@@ -70,6 +70,8 @@ const SCENES := {
 	"parachute_fall": "res://scenes/levels/parachute_fall.tscn",
 	"skinwalker_film": "res://scenes/levels/skinwalker_film.tscn",
 	"dojo_practice": "res://scenes/levels/dojo_practice.tscn",
+	"grimhollow": "res://scenes/levels/grimhollow.tscn",
+	"neon_maze": "res://scenes/levels/neon_maze.tscn",
 	"butcher_row": "res://scenes/levels/butcher_row.tscn",
 	"cold_storage": "res://scenes/levels/cold_storage.tscn",
 	"chapel_of_bills": "res://scenes/levels/chapel_of_bills.tscn"
