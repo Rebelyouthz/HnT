@@ -10,8 +10,8 @@ uniform sampler2D screen_tex : hint_screen_texture, filter_linear_mipmap;
 uniform sampler2D wet_mask : filter_nearest, repeat_enable;
 uniform float mirror_y = 0.5;      // kerb line, screen uv
 uniform vec2 uv_block = vec2(0.003, 0.0055); // one art texel in screen uv
-uniform float sheen = 0.15;        // reflectivity of damp stone
-uniform float pool = 0.38;        // reflectivity of a puddle
+uniform float sheen = 0.22;        // reflectivity of damp stone
+uniform float pool = 0.52;        // reflectivity of a puddle
 uniform float rain = 1.0;
 uniform vec2 tex_size = vec2(331.0, 200.0);
 

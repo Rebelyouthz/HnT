@@ -32,6 +32,15 @@ uniform float cut_leg = 0.0;    // +1 / -1: the leg on that side gone below the 
 uniform vec3 gape = vec3(0.0, 0.0, 0.0); // see-through hole: x, y, radius
 uniform int only = 0;           // 1: draw only the head, 2: only the cut leg (flying pieces)
 
+// Light from the nearest lamp (ActorLight): the edge of the body that faces
+// it catches a warm rim, and the whole body is brighter under a lamp and
+// darker in the gaps between them. rim_dir is in texture space (toward the
+// light); lit multiplies the colour.
+uniform vec2 rim_dir = vec2(0.0, 0.0);
+uniform float rim_k = 0.0;
+uniform vec3 rim_col : source_color = vec3(1.0, 0.85, 0.6);
+uniform float lit = 1.0;
+
 varying vec2 lp;
 // The node's modulate only (COLOR in fragment already holds the texel).
 varying vec4 vcol;
@@ -260,5 +269,13 @@ void fragment() {
 			}
 		}
 	}
+	if (rim_k > 0.001 && base.a > 0.5) {
+		vec2 o = rim_dir * TEXTURE_PIXEL_SIZE;
+		float a1 = texture(TEXTURE, UV + o * 1.5).a;
+		float a2 = texture(TEXTURE, UV + o * 3.0).a;
+		float edge = clamp((1.0 - a1) * 0.8 + (1.0 - a2) * 0.45, 0.0, 1.0);
+		col += rim_col * rim_k * edge;
+	}
+	col *= lit;
 	COLOR = vec4(col, base.a) * vcol;
 }

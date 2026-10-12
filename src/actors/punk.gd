@@ -296,6 +296,8 @@ func _mount_sprite() -> void:
 	_anim = SpriteBook.make_anim(who)
 	SpriteBook.grow(_anim, SpriteBook.ENEMY_SCALE)
 	visual.add_child(_anim)
+	if not Fighter.FIELD:
+		ActorLight.attach(self, _anim)
 
 
 func _tick_sprite() -> void:
