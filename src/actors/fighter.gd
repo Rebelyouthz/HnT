@@ -1085,7 +1085,25 @@ func _process_street(delta: float) -> void:
 			visual.skew = lerpf(visual.skew, lean, 1.0 - exp(-10.0 * dt))
 		elif _street_grounded():
 			velocity.y = y * depth_speed * limp
+			# Up / down from neutral waits a few frames before the feet
+			# move, so UP + HEAVY (uppercut) and the other stick attacks
+			# come out on the spot instead of drifting up or down.
+			if absf(y) > 0.35 and absf(_y_last) <= 0.35:
+				_y_gate = Y_GATE
+			if _y_gate > 0.0:
+				_y_gate -= delta
+				velocity.y = 0.0
+			if _y_lock:
+				if absf(y) <= 0.35:
+					_y_lock = false
+				else:
+					velocity.y = 0.0
 		else:
+			velocity.y = 0.0
+		_y_last = y
+		# Winding up a heavy: the feet are planted.
+		if charge_frames > 0 and plane == "street" and not FIELD:
+			velocity.x *= 0.15
 			velocity.y = 0.0
 		_strike_motion()
 		if blocking and roll_t <= 0.0:
@@ -1381,6 +1399,8 @@ func _combat() -> void:
 		_special()
 	if _just("shoot"):
 		_shoot()
+	if _rs_flick():
+		return
 	var charge_need := 20
 	if FamilyProfile.has_cbt("heavy_wrist"):
 		charge_need = 16
@@ -1467,6 +1487,13 @@ func _tick_run(x: float) -> void:
 
 
 var _last_x_dir := 0
+## Up / down walk start delay (s): room to press an attack with the stick.
+const Y_GATE := 0.085
+var _y_gate := 0.0
+var _y_last := 0.0
+var _y_lock := false
+## Right-stick flick attacks (story streets): last frame's stick length.
+var _rs_last := 0.0
 
 
 func _dash() -> void:
@@ -1593,6 +1620,10 @@ func _special() -> void:
 
 
 func _attack(kind: String, charged: bool) -> void:
+	# An attack thrown with the stick up / down (uppercut, low, stomp ...)
+	# does not turn into a walk that way: the stick has to come back first.
+	if absf(_stick().y) > 0.35:
+		_y_lock = true
 	if attack_cd > 0 and kind == "heavy" and not charged:
 		# Released during recovery: keep it and throw it the moment the
 		# body is free, so a light-into-heavy press never gets eaten.
@@ -3112,6 +3143,41 @@ func _released(action: String) -> bool:
 	if net_driven:
 		return NetSession.released(action)
 	return Input.is_action_just_released(StringName(str(prefix) + action))
+
+
+## Right stick, story streets: a quick flick fires that direction's attack
+## on the spot (up = uppercut, toward = forward heavy, down = low, away =
+## turn and heavy). The survivor field keeps the right stick for aiming.
+func _rs_flick() -> bool:
+	if net_driven or FIELD or plane != "street":
+		return false
+	var rs := PadRouter.rstick(prefix)
+	var m := rs.length()
+	var flick := _rs_last < 0.35 and m > 0.75
+	_rs_last = m
+	if not flick or attack_cd > 0 or anim_atk != "" or downed:
+		return false
+	var airborne := hop < -16.0
+	if absf(rs.y) > absf(rs.x):
+		if rs.y < 0.0:
+			if airborne:
+				_attack("air-upper", false)
+			elif not FamilyProfile.dojo_learned("uppercut"):
+				Juice.shout("DOJO LOCK")
+			else:
+				_attack("uppercut", false)
+		elif airborne:
+			_dive()
+		elif not _try_stomp():
+			_attack("gut-punch", false)
+	else:
+		if signf(rs.x) != float(facing):
+			_face(rs.x)
+		elif not airborne:
+			_slot_hint = "F+H"
+		_attack("jump-kick" if airborne else "heavy", false)
+	charge_frames = 0
+	return true
 
 
 func _stick() -> Vector2:

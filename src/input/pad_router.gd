@@ -354,13 +354,13 @@ func mouse_live(prefix: StringName) -> bool:
 
 func p1_prompt() -> String:
 	if p1_device >= 0 and last_p1_kind == "pad":
-		return "PAD1  LS move  A jump  X light  Y heavy  B cape  RB batwing  RT dash  RS SNAP  LB+D-PAD belt"
+		return "PAD1  LS move  A jump  X light  Y heavy  B cape  RB batwing  RT dash  RS flick strikes  RS click SNAP  LB+D-PAD belt"
 	return "WASD move  SPACE jump  C duck  J / LEFT CLICK light  K / MIDDLE CLICK heavy  L special  O / RIGHT CLICK shoot  SHIFT dash  1-4 belt"
 
 
 func p2_prompt() -> String:
 	if p2_device >= 0:
-		return "PAD2  LS move  A jump  X light  Y heavy  B web  RB snare  RT dash  RS SNAP  LB+D-PAD belt"
+		return "PAD2  LS move  A jump  X light  Y heavy  B web  RB snare  RT dash  RS flick strikes  RS click SNAP  LB+D-PAD belt"
 	return "P2 JOIN  Start or keyboard P  ·  then arrows  CTRL jump  M duck  . light  / heavy  ; web  ' snare  ALT dash  N SNAP"
 
 
@@ -373,6 +373,7 @@ func map_lines() -> PackedStringArray:
 		"COUCH: one pad = The Father (keyboard is The Son)  ·  two pads = one each.",
 		"A jump   X light (SNAP confirm in the window)   Y heavy   B special",
 		"LB block   RB shoot   LT throw   RT dash/slide   RS click SNAP   Start pause",
+		"RS flick: up UPPERCUT · toward HEAVY · down LOW · away TURN + HEAVY (feet stay put)",
 		"D-pad or left stick moves; LB + d-pad uses the quick belt. Hold RT + down to slide. Hold A in the air to glide (BAT suit cape only).",
 		"Start on a pad (or keyboard P) drops the empty chair in. Enemies stay the count you booked."
 	])
