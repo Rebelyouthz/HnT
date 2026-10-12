@@ -33,6 +33,7 @@ const MOVES := {
 	"uppercut": {"startup_cap": 0.18, "lunge": 60.0, "plant": 0.2, "stop": 7, "shake": 6.0, "push": 30.0, "hit_cd": 10, "whiff_drift": 40.0, "whiff_cd": 22, "whiff_rate": 0.65, "stance": "rising", "weight": 0.75},
 	"front_kick": {"startup_cap": 0.18, "lunge": 80.0, "plant": 0.2, "stop": 5, "shake": 4.0, "push": 110.0, "hit_cd": 9, "whiff_drift": 60.0, "whiff_cd": 18, "whiff_rate": 0.7, "stance": "kick", "weight": 0.5},
 	"side_kick": {"startup_cap": 0.2, "lunge": 120.0, "plant": 0.15, "stop": 6, "shake": 5.0, "push": 130.0, "hit_cd": 10, "whiff_drift": 90.0, "whiff_cd": 20, "whiff_rate": 0.65, "stance": "kick", "weight": 0.65},
+	"turn_punch": {"startup_cap": 0.26, "lunge": 120.0, "plant": 0.1, "stop": 9, "shake": 8.0, "push": 110.0, "hit_cd": 12, "whiff_drift": 60.0, "whiff_cd": 24, "whiff_rate": 0.6, "stance": "rear_out", "weight": 0.95},
 	"roundhouse": {"startup_cap": 0.24, "lunge": 90.0, "plant": 0.1, "stop": 8, "shake": 7.0, "push": 70.0, "hit_cd": 12, "whiff_drift": 40.0, "whiff_cd": 26, "whiff_rate": 0.55, "stance": "spun", "weight": 0.85},
 	"air_mix": {"startup_cap": 0.16, "lunge": 140.0, "plant": 1.0, "stop": 6, "shake": 5.0, "push": 0.0, "hit_cd": 8, "whiff_drift": 0.0, "whiff_cd": 16, "whiff_rate": 0.8, "stance": "air", "weight": 0.6},
 	"snap": {"startup_cap": 0.22, "lunge": 60.0, "plant": 0.0, "stop": 10, "shake": 9.0, "push": 0.0, "hit_cd": 14, "whiff_drift": 30.0, "whiff_cd": 24, "whiff_rate": 0.7, "stance": "guard", "weight": 1.0},

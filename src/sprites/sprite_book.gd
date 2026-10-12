@@ -270,6 +270,33 @@ static func make_anim(who: String) -> AnimatedSprite2D:
 	return a
 
 
+## A soft cut between two clips (idle -> walk, walk -> idle): a ghost of
+## the frame on screen fades out over the new clip, so the body eases from
+## one pose into the next instead of snapping.
+static func crossfade(a: AnimatedSprite2D, secs := 0.14) -> void:
+	if a == null or a.sprite_frames == null or not a.is_inside_tree() or not a.sprite_frames.has_animation(a.animation):
+		return
+	var tex := a.sprite_frames.get_frame_texture(a.animation, a.frame)
+	if tex == null:
+		return
+	var g := Sprite2D.new()
+	g.texture = tex
+	g.centered = a.centered
+	g.offset = a.offset
+	g.flip_h = a.flip_h
+	g.position = a.position
+	g.scale = a.scale
+	g.texture_filter = a.texture_filter
+	g.material = a.material
+	g.z_index = a.z_index
+	g.show_behind_parent = false
+	a.get_parent().add_child(g)
+	a.get_parent().move_child(g, a.get_index() + 1)
+	var tw := g.create_tween()
+	tw.tween_property(g, "modulate:a", 0.0, secs).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tw.tween_callback(g.queue_free)
+
+
 ## How much bigger than the base scale each side is drawn, so bodies match
 ## the painted doors and the thugs loom over the family a little.
 ## ACTOR_K: measured against the painted streets (doors, kerb, bikes) the

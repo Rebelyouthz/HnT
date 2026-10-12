@@ -510,6 +510,8 @@ func _base_clip(kind: String) -> String:
 			return "air_spin_kick"
 		"heavy", "launcher":
 			return "heavy"
+		"turn_punch":
+			return "turn_punch"
 		"snap", "special":
 			return "snap"
 		"slide":
@@ -602,6 +604,11 @@ func _tick_sprite() -> void:
 			_place_gun()
 			_hip = false
 	if _anim.animation != clip:
+		# Standing <-> walking eases over (a short ghost of the old pose)
+		# instead of snapping straight into the stride.
+		const SOFT := ["idle", "walk", "walk_up", "walk_down", "walk_ur", "walk_dr", "parkour_run"]
+		if str(_anim.animation) in SOFT and clip in SOFT:
+			SpriteBook.crossfade(_anim, 0.12)
 		_anim.speed_scale = 1.0
 		_anim.play(clip)
 	elif not _anim.is_playing() and _anim.sprite_frames.get_animation_loop(clip):
@@ -1448,6 +1455,8 @@ func _combat() -> void:
 				_attack("roundhouse", false)
 			else:
 				_attack("heavy", charge_frames >= charge_need)
+		elif _turn_strike():
+			charge_frames = 0
 		else:
 			if absf(_stick().x) > 0.55 and signf(_stick().x) == float(facing):
 				_slot_hint = "F+H"
@@ -1468,7 +1477,7 @@ func _combat() -> void:
 			_attack("air-upper", false)
 		elif airborne:
 			_attack("jump-kick", false)
-		else:
+		elif not _turn_strike():
 			_attack("light", false)
 
 
@@ -1697,6 +1706,10 @@ func _attack(kind: String, charged: bool) -> void:
 		attack_cd = 18
 		string_n = 0
 		Juice.shout("ROUNDHOUSE")
+	elif kind == "turn_punch":
+		size = Vector2(72, 46)
+		attack_cd = 20
+		string_n = 0
 	elif kind == "air-mix":
 		size = Vector2(70, 56)
 		attack_cd = 16
@@ -1949,7 +1962,7 @@ func _cancel_strike() -> void:
 
 const IMPACT := {
 	"jab": "hit_jab", "cross": "hit_cross", "gut": "hit_gut", "body_hook": "hit_gut",
-	"heavy": "hit_heavy", "superman_punch": "hit_heavy", "hammer": "hit_heavy", "snap": "hit_heavy",
+	"heavy": "hit_heavy", "turn_punch": "hit_heavy", "superman_punch": "hit_heavy", "hammer": "hit_heavy", "snap": "hit_heavy",
 	"uppercut": "hit_uppercut", "getup_upper": "hit_uppercut",
 	"front_kick": "hit_front_kick", "boot_kick": "hit_front_kick",
 	"side_kick": "hit_side_kick", "dropkick": "hit_side_kick",
@@ -3123,8 +3136,11 @@ func _face(x: float) -> void:
 	if _combo != null and not _combo.hist.is_empty() and not _combo.cold(_clock):
 		return
 	if absf(x) > 0.1:
+		var was := facing
 		facing = 1 if x > 0.0 else -1
 		visual.scale.x = float(facing)
+		if facing != was:
+			_turned_at = _clock
 
 
 func _spend(n: float) -> bool:
@@ -3173,6 +3189,32 @@ func _released(action: String) -> bool:
 ## Right stick, story streets: a quick flick fires that direction's attack
 ## on the spot (up = uppercut, toward = forward heavy, down = low, away =
 ## turn and heavy). The survivor field keeps the right stick for aiming.
+## Facing one way, stick held the other way and a strike pressed: he whips
+## round with force and the blow lands the way you steer (turn_punch clip,
+## starting from the back view so the spin reads). A combo step that wants
+## BACK + button still wins, it is checked first.
+const TURN_WIN := 0.22
+var _turned_at := -9.0
+
+
+func _turn_strike() -> bool:
+	if FIELD or plane != "street" or not _street_grounded() or attack_cd > 0:
+		return false
+	var x := _stick().x
+	if absf(x) < 0.55:
+		return false
+	# Stick against the facing (turning was blocked mid-chain), or the body
+	# only just turned round to it: both read as "spin and hit back there".
+	if signf(x) == float(facing) and _clock - _turned_at > TURN_WIN:
+		return false
+	if _anim == null or not _anim.sprite_frames.has_animation("turn_punch"):
+		return false
+	facing = 1 if x > 0.0 else -1
+	visual.scale.x = float(facing)
+	_attack("turn_punch", false)
+	return true
+
+
 ## ATTACK, then UP: a light or heavy thrown on the ground opens a short
 ## window (UPC_WIN); pushing the stick up inside it cancels the blow into
 ## the uppercut on the spot. The stick must come up AFTER the press, so a

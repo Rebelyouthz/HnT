@@ -67,10 +67,13 @@ class CampWalker extends Node2D:
 		if anim == null:
 			return
 		anim.flip_h = facing < 0
-		var clip := "walk" if absf(vx) > 1.0 else "idle"
+		# At home they stand easy, not in a fighting guard.
+		var rest := "idle_casual" if anim.sprite_frames.has_animation("idle_casual") else "idle"
+		var clip := "walk" if absf(vx) > 1.0 else rest
 		if clip == "walk" and absf(vx) > 200.0 and anim.sprite_frames.has_animation("parkour_run"):
 			clip = "parkour_run"
 		if anim.animation != clip and anim.sprite_frames.has_animation(clip):
+			SpriteBook.crossfade(anim)
 			anim.play(clip)
 		if clip == "walk":
 			anim.speed_scale = clampf(absf(vx) / 80.0, 0.6, 1.6)
