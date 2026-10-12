@@ -124,7 +124,7 @@ func _tile(id: String) -> Control:
 	var rarity := Rarity.normalize(str(spec.get("rarity", "common")))
 	var col := Rarity.color(rarity)
 	var p := PanelContainer.new()
-	p.custom_minimum_size = Vector2(370, 176)
+	p.custom_minimum_size = Vector2(352, 176)
 	Bevel.dress(p, false, 0.7)
 	p.add_theme_stylebox_override("panel", UiKit.panel(Color(0.06, 0.07, 0.12), UiKit.GOLD if Arsenal.mastered(id) else (col if have else Palette.MUTED)))
 	var v := VBoxContainer.new()
@@ -164,7 +164,7 @@ func _tile(id: String) -> Control:
 			line += "\n" + str(spec["blurb"])
 	else:
 		line = "NOT FOUND  ·  " + str(WHERE.get(id, "Somewhere on the street."))
-	var info := UiKit.rich(line, 350, 12, Palette.TEXT)
+	var info := UiKit.rich(line, 332, 12, Palette.TEXT)
 	info.text = UiKit.stat_bbcode(line)
 	v.add_child(info)
 	var k := Arsenal.kills(id)
@@ -183,7 +183,7 @@ func _tile(id: String) -> Control:
 		var br := HBoxContainer.new()
 		br.add_theme_constant_override("separation", 6)
 		var lv := Arsenal.level(id)
-		var up := UiKit.button(("LV %d  ▲ %dG" % [lv, Arsenal.level_cost(id)]) if lv < Arsenal.MAX_LV else "LV MAX", Vector2(120, 30))
+		var up := UiKit.button(("LV %d  ▲ %dG" % [lv, Arsenal.level_cost(id)]) if lv < Arsenal.MAX_LV else "LV MAX", Vector2(104, 30))
 		up.set_meta("key", "lv_" + id)
 		up.disabled = lv >= Arsenal.MAX_LV or int(FamilyProfile.data.get("gold", 0)) < Arsenal.level_cost(id)
 		up.pressed.connect(func() -> void:
@@ -193,6 +193,7 @@ func _tile(id: String) -> Control:
 				_paint()
 				UiKit.fx_after(self, "lv_" + id, UiKit.GOLD, "%s LV %d" % [str(spec.get("title", id)).to_upper(), Arsenal.level(id)], Arsenal.level(id) >= Arsenal.MAX_LV)
 		)
+		up.add_theme_font_size_override("font_size", 13)
 		br.add_child(up)
 		var mod_names: Array[String] = []
 		var mb: Button
@@ -201,23 +202,25 @@ func _tile(id: String) -> Control:
 				var a := Attach.on(id, slot)
 				if a != "" and Attach.slot_open(id, slot):
 					mod_names.append(str(Attach.LIST[a]["title"]))
-			mb = UiKit.button("GUNSMITH %d/5" % mod_names.size(), Vector2(130, 30))
+			mb = UiKit.button("GUNSMITH %d/5" % mod_names.size(), Vector2(104, 30))
 			mb.pressed.connect(_gunsmith.bind(id))
 		else:
 			var on := Arsenal.mods_on(id)
 			for m in on:
 				if Arsenal.MODS.has(m):
 					mod_names.append(str(Arsenal.MODS[m]["title"]))
-			mb = UiKit.button("MODS %d/%d" % [on.size(), Arsenal.slots(id)], Vector2(110, 30))
+			mb = UiKit.button("MODS %d/%d" % [on.size(), Arsenal.slots(id)], Vector2(96, 30))
 			mb.pressed.connect(_mods_for.bind(id))
 		mb.set_meta("key", "mods_" + id)
+		mb.add_theme_font_size_override("font_size", 13)
 		mb.tooltip_text = ", ".join(mod_names) if not mod_names.is_empty() else "Nothing fitted."
 		br.add_child(mb)
 		# CARRY IN (needs META STARTER KIT): start every night with this one.
 		if Meta.rank("starter_kit") > 0:
 			var carrying := str(FamilyProfile.data.get("carry_weapon", "")) == id
-			var cb := UiKit.button("CARRIED" if carrying else "CARRY", Vector2(110, 30))
+			var cb := UiKit.button("CARRIED" if carrying else "CARRY", Vector2(96, 30))
 			cb.set_meta("key", "carry_" + id)
+			cb.add_theme_font_size_override("font_size", 13)
 			if carrying:
 				cb.add_theme_color_override("font_color", Palette.READY)
 			cb.pressed.connect(func() -> void:

@@ -158,7 +158,9 @@ static func corpse(host: Node, art: AnimatedSprite2D, feet: Vector2, zone: Strin
 		if m != null and m.shader == preload("res://src/shaders/wound.gdshader"):
 			m.set_shader_parameter("wound", 1.0)
 			m.set_shader_parameter("head", BloodSim.head_of_tex(sp.texture))
-			m.set_shader_parameter("splat", maxf(0.5, float(m.get_shader_parameter("splat"))))
+			# Unset on a fresh light/wound material (ActorLight): reads null.
+			var splat: Variant = m.get_shader_parameter("splat")
+			m.set_shader_parameter("splat", maxf(0.5, float(splat) if splat != null else 0.0))
 	# A drawn death fall (falls backward, lies still) beats a tweened still
 	# for the ordinary deaths; launches, blasts and crushes keep the tween.
 	var drawn := art.sprite_frames.has_animation("death") and zone in ["head", "gut", "low", "bullet", "blade"]
@@ -325,7 +327,9 @@ static func _fall(host: Node, art: AnimatedSprite2D, feet: Vector2, style: Strin
 		if m != null and m.shader == preload("res://src/shaders/wound.gdshader"):
 			m.set_shader_parameter("wound", 1.0)
 			m.set_shader_parameter("head", BloodSim.head_of_tex(sp.texture))
-			m.set_shader_parameter("splat", maxf(0.5, float(m.get_shader_parameter("splat"))))
+			# Unset on a fresh light/wound material (ActorLight): reads null.
+			var splat: Variant = m.get_shader_parameter("splat")
+			m.set_shader_parameter("splat", maxf(0.5, float(splat) if splat != null else 0.0))
 	var flip := Node2D.new()
 	flip.scale.x = float(facing)
 	flip.add_child(sp)

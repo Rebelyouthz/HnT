@@ -169,7 +169,7 @@ func _tile(a: String, open: bool) -> Button:
 	var hi := bg.duplicate() as StyleBoxFlat
 	hi.border_color = UiKit.GOLD
 	hi.shadow_color = Color(UiKit.GOLD.r, UiKit.GOLD.g, UiKit.GOLD.b, 0.6)
-	hi.shadow_size = 10
+	hi.shadow_size = 3
 	b.add_theme_stylebox_override("normal", bg)
 	b.add_theme_stylebox_override("hover", hi)
 	b.add_theme_stylebox_override("focus", hi)

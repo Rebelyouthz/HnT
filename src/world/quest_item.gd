@@ -48,6 +48,12 @@ func _process(delta: float) -> void:
 
 func _draw() -> void:
 	var y := -3.0 - 2.0 * absf(sin(_t * 3.0))
+	var tex := _tex()
+	if tex != null:
+		draw_texture_rect(tex, Rect2(Vector2(-8, y - 8), Vector2(16, 16)), false)
+		var a0 := 0.6 + 0.4 * sin(_t * 6.0)
+		draw_string(ThemeDB.fallback_font, Vector2(-4, y - 12), "!", HORIZONTAL_ALIGNMENT_CENTER, -1, 12, Color(1.0, 0.85, 0.2, a0))
+		return
 	match kind:
 		"collar":
 			draw_arc(Vector2(0, y), 5.0, 0, TAU, 16, Color(0.85, 0.15, 0.2), 2.0)
@@ -70,6 +76,15 @@ func _draw() -> void:
 			draw_rect(Rect2(Vector2(2, y - 3), Vector2(3, 2)), Color(0.4, 0.75, 1.0))
 	var a := 0.6 + 0.4 * sin(_t * 6.0)
 	draw_string(ThemeDB.fallback_font, Vector2(-4, y - 12), "!", HORIZONTAL_ALIGNMENT_CENTER, -1, 12, Color(1.0, 0.85, 0.2, a))
+
+
+## The item's pixel sprite (icons/quest_<kind>.png; a wallet otherwise).
+func _tex() -> Texture2D:
+	for n in ["quest_" + kind, "quest_wallet"]:
+		var p := "res://assets/sprites/icons/%s.png" % n
+		if ResourceLoader.exists(p):
+			return load(p)
+	return null
 
 
 func _take() -> void:

@@ -304,6 +304,10 @@ func _tree(trunk: String, list: Array, cx: float) -> void:
 		var x := cx
 		if d > 0:
 			x += -ARM if br == "left" else ARM
+			# Squeezed rows would make the round nodes overlap: every other
+			# row steps out sideways so neighbours sit on a diagonal instead.
+			if maxd > 3 and d % 2 == 0:
+				x += -40.0 if br == "left" else 40.0
 		pos[str(n["id"])] = Vector2(x, TOP + float(d) * step + (0.0 if d == 0 else 26.0))
 		if Trees.owned(mode, str(n["id"])):
 			owned_n += 1
@@ -373,7 +377,9 @@ func _node_button(node: Dictionary, at: Vector2) -> Control:
 	hover.shadow_size = 18
 	b.add_theme_stylebox_override("normal", ring)
 	b.add_theme_stylebox_override("hover", hover)
-	b.add_theme_stylebox_override("focus", hover)
+	var foc := hover.duplicate() as StyleBoxFlat
+	foc.shadow_size = 6
+	b.add_theme_stylebox_override("focus", foc)
 	b.add_theme_stylebox_override("pressed", hover)
 	var tex := _node_tex(node)
 	if tex != null:

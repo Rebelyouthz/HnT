@@ -128,6 +128,15 @@ func _draw() -> void:
 
 func _cabinet(base: Vector2, tilt: float, mod: Color) -> void:
 	var tr := Transform2D(sin(tilt) * 0.3, base)
+	var art := "res://assets/sprites/props/%s.png" % ("crate" if look == "crate" else "cabinet")
+	if ResourceLoader.exists(art):
+		draw_set_transform_matrix(tr)
+		var r := Rect2(-20, -36, 40, 36) if look == "crate" else Rect2(-14, -46, 28, 46)
+		draw_texture_rect(load(art), r, false, mod)
+		if look == "crate":
+			draw_line(Vector2(0, -36), Vector2(0, -60), Color(0.2, 0.2, 0.22) * mod, 1.0)
+		draw_set_transform_matrix(Transform2D.IDENTITY)
+		return
 	if look == "crate":
 		var box := PackedVector2Array([Vector2(-20, -36), Vector2(20, -36), Vector2(20, 0), Vector2(-20, 0)])
 		draw_colored_polygon(tr * box, Color(0.5, 0.34, 0.18) * mod)

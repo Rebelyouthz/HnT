@@ -179,19 +179,26 @@ func _draw() -> void:
 			draw_colored_polygon(PackedVector2Array([Vector2(x0 - 14.0, base - 18.0), Vector2(x0 + 10.0, base - 64.0), Vector2(x0 + 10.0, base - 12.0)]), col.darkened(0.2))
 			draw_colored_polygon(PackedVector2Array([Vector2(x0 - 10.0, base - 46.0), Vector2(x0 - 260.0, base - 70.0), Vector2(x0 - 260.0, base + 10.0)]), Color(1.0, 0.95, 0.7, 0.14))
 			draw_circle(Vector2(x0 - 4.0, base - 40.0), 5.0, Color(1.0, 0.96, 0.75))
-		draw_rect(body, col)
-		draw_rect(Rect2(body.position, Vector2(body.size.x, 4.0)), col.lightened(0.25))
-		draw_rect(Rect2(body.position.x, body.end.y - 5.0, body.size.x, 5.0), col.darkened(0.4))
-		if i > 0:
-			for k in 5:
-				draw_line(Vector2(body.position.x + 12.0 + float(k) * 22.0, body.position.y + 6.0), Vector2(body.position.x + 12.0 + float(k) * 22.0, body.end.y - 6.0), col.darkened(0.3), 1.0)
-			if i % 2 == 0:
-				draw_rect(Rect2(body.position.x + 30.0, body.position.y + 18.0, 50.0, 10.0), Color(0.85, 0.3, 0.6, 0.6))
+		var art := "res://assets/sprites/props/train_%s.png" % ("loco" if i == 0 else ["grey", "rust", "blue"][i % 3])
+		if ResourceLoader.exists(art):
+			draw_texture_rect(load(art), Rect2(x0, base - 66.0, CAR_W, 64.0), false)
+		else:
+			_plain_car(i, body, col)
 		for wx in [x0 + 22.0, x0 + 40.0, x0 + CAR_W - 40.0, x0 + CAR_W - 22.0]:
 			draw_circle(Vector2(wx, base - 8.0), 7.0, Color(0.08, 0.08, 0.09))
 			draw_circle(Vector2(wx, base - 8.0), 2.5, Color(0.5, 0.5, 0.52))
-		draw_rect(Rect2(x0 + CAR_W - 6.0, base - 30.0, 12.0, 4.0), Color(0.1, 0.1, 0.1))
 	# Sparks off the wheels.
 	for s in 6:
 		var sx := _train_x + randf() * float(CARS) * CAR_W
 		draw_line(Vector2(sx, base - 2.0), Vector2(sx + randf_range(8, 22), base - randf_range(2, 10)), Color(1.0, 0.8, 0.35, 0.8), 1.0)
+
+
+func _plain_car(i: int, body: Rect2, col: Color) -> void:
+	draw_rect(body, col)
+	draw_rect(Rect2(body.position, Vector2(body.size.x, 4.0)), col.lightened(0.25))
+	draw_rect(Rect2(body.position.x, body.end.y - 5.0, body.size.x, 5.0), col.darkened(0.4))
+	if i > 0:
+		for k in 5:
+			draw_line(Vector2(body.position.x + 12.0 + float(k) * 22.0, body.position.y + 6.0), Vector2(body.position.x + 12.0 + float(k) * 22.0, body.end.y - 6.0), col.darkened(0.3), 1.0)
+		if i % 2 == 0:
+			draw_rect(Rect2(body.position.x + 30.0, body.position.y + 18.0, 50.0, 10.0), Color(0.85, 0.3, 0.6, 0.6))

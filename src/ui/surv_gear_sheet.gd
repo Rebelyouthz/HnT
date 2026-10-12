@@ -317,7 +317,9 @@ func _inv_tile(i: int, p: Dictionary) -> Button:
 	hi.shadow_size = 12
 	b.add_theme_stylebox_override("normal", sb)
 	b.add_theme_stylebox_override("hover", hi)
-	b.add_theme_stylebox_override("focus", hi)
+	var foc := hi.duplicate() as StyleBoxFlat
+	foc.shadow_size = 3
+	b.add_theme_stylebox_override("focus", foc)
 	b.add_theme_stylebox_override("pressed", hi)
 	var ic := IconBook.rect(IconBook.for_gear(str(p["id"])), IconBook.SIZE_M)
 	ic.position = Vector2(30, 12)

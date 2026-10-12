@@ -99,7 +99,7 @@ static func card_style(lit: bool) -> StyleBoxFlat:
 	s.set_border_width_all(5)
 	s.set_corner_radius_all(7)
 	s.shadow_color = Color(UiKit.GOLD.r, UiKit.GOLD.g, UiKit.GOLD.b, 0.5) if lit else Color(0, 0, 0.02, 0.9)
-	s.shadow_size = 14 if lit else 1
+	s.shadow_size = 6 if lit else 1
 	s.shadow_offset = Vector2(0, 2) if lit else Vector2(0, 6)
 	s.anti_aliasing = true
 	s.content_margin_left = 10
