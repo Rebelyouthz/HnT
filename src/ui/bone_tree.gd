@@ -83,8 +83,8 @@ func _ready() -> void:
 	first.grab_focus()
 	first.set_meta("key", "bone_first")
 	Guide.play(self, "boneyard_tree", [
-		{"key": "bone_first", "who": "father", "text": "Hold A (or ENTER, or the mouse) on a lit node. It fills from the bottom, and when it is full the move is yours."},
-		{"who": "son", "text": "Then the mat: three clean reps on the dojo dummy and it works in the street. A red ! means not drilled yet."},
+		{"key": "bone_first", "who": "father", "voice": true, "text": "Hold A (or ENTER, or the mouse) on a lit node. It fills from the bottom, and when it is full the move is yours."},
+		{"who": "son", "voice": true, "text": "Then the mat: three clean reps on the dojo dummy and it works in the street. A red ! means not drilled yet."},
 	], 0.5)
 
 

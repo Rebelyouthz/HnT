@@ -95,8 +95,8 @@ static func check_open(host: Node = null) -> void:
 	Juice.unlock_logo("THE BONE YARD IS OPEN", "One FIGHT TOKEN to start: spend it on the BONE YARD tree in the DOJO.", "DOJO  ·  NEW MODE")
 	if host != null:
 		Guide.play(host, "boneyard_open", [
-			{"who": "father", "text": "Benny says my old gym had a back room. They called it the BONE YARD. One life, three yards, and finishers that break bones."},
-			{"who": "son", "text": "He left us a FIGHT TOKEN. The DOJO has the tree: hold a move to buy it, drill it 3 times on the dummy, then we go in."},
+			{"who": "father", "voice": true, "text": "Benny says my old gym had a back room. They called it the BONE YARD. One life, three yards, and finishers that break bones."},
+			{"who": "son", "voice": true, "text": "He left us a FIGHT TOKEN. The DOJO has the tree: hold a move to buy it, drill it 3 times on the dummy, then we go in."},
 		], 4.0)
 
 
@@ -232,8 +232,8 @@ static func dojo_panel(host: Control) -> Control:
 	if BrutalBook.tokens() > 0 and (_fp().data.get("brutal", []) as Array).is_empty():
 		UiKit.pulse_ready(tree)
 	Guide.play(host, "boneyard_dojo", [
-		{"key": "bone_tree", "who": "father", "text": "The BONE YARD TREE. It grows from the bottom: the root first, then up. FIGHT TOKENS pay for it."},
-		{"key": "bone_go", "who": "son", "text": "Then in here. Three short yards, one life. Each yard pays a token, and its two challenges pay one more each, once."},
+		{"key": "bone_tree", "who": "father", "voice": true, "text": "The BONE YARD TREE. It grows from the bottom: the root first, then up. FIGHT TOKENS pay for it."},
+		{"key": "bone_go", "who": "son", "voice": true, "text": "Then in here. Three short yards, one life. Each yard pays a token, and its two challenges pay one more each, once."},
 	], 0.6)
 	for m in maps():
 		var id := str(m["id"])

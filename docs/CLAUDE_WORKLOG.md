@@ -34,6 +34,51 @@ The rest is in English, like the code. Newest work first. Each block says
 
 ---
 
+## 0zz. Fight system: juggles, right stick, shoulder strikes, BONE YARD (latest)
+
+- **Juggles and reactions** (`src/actors/punk.gd`, `src/juice/hit_react.gd`,
+  `src/juice/face_drip.gd`): uppercuts launch street thugs, air hits pop them
+  less each time (gravity grows per hit, so no infinites), head hits snap the
+  head back/left/right or spin a big right; gut hits fold, low kicks trip.
+  FaceDrip runs blood from nose and mouth, sprays spit on hard hits and now
+  darkens a black eye.
+- **Right stick** (`Fighter.RS_MOVES`, `_rs_gesture`, `_rs_fire`): the path of
+  the stick is the punch (flick jab, quarter circle hook, half circle up
+  uppercut, pull back + push haymaker, hold back = mega punch). RT turns them
+  into kicks, LB into body shots. Bought moves fall back to plain ones until
+  drilled (`RS_LEARN`).
+- **Shoulder strikes** (`Fighter.SHOULDER`, `_shoulder_strike`): hold LB and
+  punch = body hook (heavy = liver shot), hold RT and punch = side hook (heavy =
+  overhand). Dojo lessons `sh_body` / `sh_hook`. Test: `tests/shoulder_test.gd`.
+- **Dojo rule**: a bought move is drilled 3 times on the dummy (TRAIN lesson)
+  before it works outside (`FamilyProfile.dojo_learned / dojo_rep`).
+- **FLAMINGO STRING** (son combo, `data/combos.json`): jab, heavy, forward +
+  jump, three kicks off one leg + spinning heel on clip `b_flamingo`.
+- **BONE YARD moves** (`data/brutal.json`, `BrutalBook`, `BrutalRun`): 12
+  finishers as timelines (hero clip, victim keys, cracks, blood, heart, decap).
+  GRAB (LIGHT + HEAVY) on a thug under 45% health picks the hero's move by
+  stick direction; FURY (from kills) + BLOCK + SHOOT (LB + RB) fires a super.
+  Owned moves sharing a grab: one active, the rest benched. Eight have their
+  own Sorceress clips (`b_grab_break`, `b_heart_punch`, `b_back_breaker`,
+  `b_skull_clap`, `b_eye_gouge`, `b_neck_twist`, `b_death_touch`,
+  `b_flamingo`); victims play `r_knee` / `r_blind` / `r_heart` when cut
+  (`tools/hf_react.py`, Wan 2.2 on ZeroGPU). Test: `tests/brutal_test.gd`.
+- **BONE YARD tree** (`src/ui/bone_tree.gd`): bottom-up 1-2-3-3-3, icons from
+  `tools/brutal_icons.py` (FLUX schnell space) in `assets/ui/brutal/`, hold to
+  fill and buy, banner, TRAIN ON MAT, bench toggle.
+- **BONE YARD mode** (`data/boneyard.json`, `BoneYard`, `BoneYardAct`, maps
+  `butcher_row` / `cold_storage` / `chapel_of_bills` with painted strips from
+  `tools/boneyard_backdrops.py`): one shared life, three waves, a named heavy;
+  the run walks yard to yard. Clear = 1 token, each challenge 1 more the first
+  time, all three in one life = `boneyard_full` (+2, supers open). Opens after
+  the first survivor night (free token + guides), then fire escapes + group
+  circle, then waiting room. Entry from the dojo sheet. Test:
+  `tests/boneyard_test.gd`.
+- **Install size**: new strips and the hero/boss sheets import lossy; the
+  installer is ~95 MB (GitHub limit 100 MB).
+
+---
+
 ## 0zf. Animation audit, HF passes 6-7, gentle local generator (latest)
 
 - **Audit** (per clip: frames, fps, duplicate frames, body-height jumps,
