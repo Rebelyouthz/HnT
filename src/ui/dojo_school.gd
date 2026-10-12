@@ -14,7 +14,7 @@ const LESSONS := [
 	{"id": "jump", "title": "JUMP", "pad": "A", "key": "SPACE", "line": "Jump. Hold it for a higher one.", "need": 2},
 	{"id": "light", "title": "LIGHT PUNCHES", "pad": "X  X  X", "key": "J  J  J", "line": "Three lights in a row: jab, cross, hook.", "need": 3},
 	{"id": "heavy", "title": "HEAVY", "pad": "Y", "key": "K", "line": "A heavy on the dummy. Hold it to charge.", "need": 2},
-	{"id": "upper", "title": "UPPERCUT", "pad": "UP + Y  or  RS UP", "key": "W + K", "line": "Up and heavy: the launcher (or flick the right stick up). The feet stay put.", "need": 1},
+	{"id": "upper", "title": "UPPERCUT", "pad": "Y, THEN UP  or  RS UP", "key": "J OR K, THEN W", "line": "Hit first, then push up straight after: the blow turns into the launcher on the spot (or flick the right stick up).", "need": 1},
 	{"id": "low", "title": "LOW SLIDE", "pad": "DOWN + RT", "key": "S + SHIFT", "line": "Down and dash: slide in under the guard.", "need": 1},
 	{"id": "air", "title": "JUMP KICK", "pad": "A, then X or Y", "key": "SPACE, then J or K", "line": "Jump and strike in the air.", "need": 1},
 	{"id": "throw", "title": "THROW", "pad": "LT", "key": "U", "line": "Up close: grab and throw.", "need": 1},

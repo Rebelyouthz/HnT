@@ -1090,6 +1090,12 @@ func _process_street(delta: float) -> void:
 			# come out on the spot instead of drifting up or down.
 			if absf(y) > 0.35 and absf(_y_last) <= 0.35:
 				_y_gate = Y_GATE
+				if y < 0.0:
+					_up_t = _clock
+			# ATTACK, then UP: the feet hold still while the window to turn
+			# the blow into an uppercut is open.
+			if _upc_t > 0.0:
+				velocity.y = 0.0
 			if _y_gate > 0.0:
 				_y_gate -= delta
 				velocity.y = 0.0
@@ -1401,12 +1407,16 @@ func _combat() -> void:
 		_shoot()
 	if _rs_flick():
 		return
+	if _upc_window():
+		return
 	var charge_need := 20
 	if FamilyProfile.has_cbt("heavy_wrist"):
 		charge_need = 16
 	var airborne := hop < -16.0 or (plane == "roof" and not is_on_floor())
 	if _pressed("heavy"):
 		charge_frames += 1
+		if charge_frames == 1:
+			_hv_t = _clock
 		if charge_frames >= charge_need + 25:
 			_attack("heavy", true)
 	elif charge_frames > 0:
@@ -1425,7 +1435,9 @@ func _combat() -> void:
 			_attack("jump-kick", false)
 		elif y > 0.4 and _try_stomp():
 			charge_frames = 0
-		elif y < -0.35:
+		elif y < -0.35 and _up_t >= _hv_t - Y_GATE:
+			# HEAVY pressed, then UP (or both together): the uppercut. Up
+			# held from a walk before the press throws the plain heavy.
 			if not FamilyProfile.dojo_learned("uppercut"):
 				Juice.shout("DOJO LOCK")
 				charge_frames = 0
@@ -1489,6 +1501,14 @@ func _tick_run(x: float) -> void:
 var _last_x_dir := 0
 ## Up / down walk start delay (s): room to press an attack with the stick.
 const Y_GATE := 0.085
+## Attack first, then UP within this window (s): the blow becomes an
+## uppercut. Up held from before (walking up) does not count, so walking
+## up and punching never drifts into a launcher by accident.
+const UPC_WIN := 0.16
+var _upc_t := 0.0
+var _upc_held := false
+var _up_t := -9.0
+var _hv_t := -9.0
 var _y_gate := 0.0
 var _y_last := 0.0
 var _y_lock := false
@@ -1624,6 +1644,11 @@ func _attack(kind: String, charged: bool) -> void:
 	# does not turn into a walk that way: the stick has to come back first.
 	if absf(_stick().y) > 0.35:
 		_y_lock = true
+	if kind == "uppercut" or kind == "air-upper":
+		_upc_t = 0.0
+	elif (kind == "light" or kind == "heavy") and plane == "street" and not FIELD and _street_grounded() and hop > -16.0:
+		_upc_t = UPC_WIN
+		_upc_held = _stick().y < -0.35
 	if attack_cd > 0 and kind == "heavy" and not charged:
 		# Released during recovery: keep it and throw it the moment the
 		# body is free, so a light-into-heavy press never gets eaten.
@@ -3148,6 +3173,35 @@ func _released(action: String) -> bool:
 ## Right stick, story streets: a quick flick fires that direction's attack
 ## on the spot (up = uppercut, toward = forward heavy, down = low, away =
 ## turn and heavy). The survivor field keeps the right stick for aiming.
+## ATTACK, then UP: a light or heavy thrown on the ground opens a short
+## window (UPC_WIN); pushing the stick up inside it cancels the blow into
+## the uppercut on the spot. The stick must come up AFTER the press, so a
+## walk up never leaks in. Returns true when it fired.
+func _upc_window() -> bool:
+	if _upc_t <= 0.0:
+		return false
+	_upc_t -= get_physics_process_delta_time()
+	if downed or plane != "street" or not _street_grounded():
+		_upc_t = 0.0
+		return false
+	var sy := _stick().y
+	if sy > -0.35:
+		_upc_held = false
+		return false
+	if sy > -0.5 or _upc_held:
+		return false
+	_upc_t = 0.0
+	if not FamilyProfile.dojo_learned("uppercut"):
+		Juice.shout("DOJO LOCK")
+		return true
+	charge_frames = 0
+	_heavy_buf = 0
+	_light_buf = 0
+	attack_cd = 0
+	_attack("uppercut", false)
+	return true
+
+
 func _rs_flick() -> bool:
 	if net_driven or FIELD or plane != "street":
 		return false

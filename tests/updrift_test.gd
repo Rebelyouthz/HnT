@@ -2,6 +2,8 @@ extends SceneTree
 
 ## UP + HEAVY is an uppercut on the spot: the hero does not walk up first,
 ## and a held heavy keeps the feet planted. Plain UP still walks.
+## ATTACK, then UP inside the short window turns the blow into the uppercut
+## (light or heavy), with no drift; walking up and punching stays a jab.
 ## Prints UPDRIFT OK.
 
 var _n := 0
@@ -48,6 +50,43 @@ func _process(_d: float) -> bool:
 	if _n == 160:
 		Input.action_release("p1_up")
 		_check(_hero.global_position.y < _y0 - 10.0, "plain up still walks (dy %.1f)" % (_hero.global_position.y - _y0))
+	# LIGHT, then UP 4 frames later: uppercut, feet still.
+	if _n == 200:
+		_y0 = _hero.global_position.y
+		Input.action_press("p1_light")
+	if _n == 202:
+		Input.action_release("p1_light")
+	if _n == 204:
+		Input.action_press("p1_up")
+	if _n == 207:
+		_check(str(_hero.get("_strike_clip")) == "uppercut", "light then up = uppercut (got %s)" % _hero.get("_strike_clip"))
+	if _n == 235:
+		Input.action_release("p1_up")
+		_check(absf(_hero.global_position.y - _y0) < 3.0, "light then up stays put (dy %.1f)" % (_hero.global_position.y - _y0))
+	# Walking up, then LIGHT: a jab, never an uppercut.
+	if _n == 280:
+		Input.action_press("p1_up")
+	if _n == 310:
+		Input.action_press("p1_light")
+	if _n == 312:
+		Input.action_release("p1_light")
+	if _n == 316:
+		_check(str(_hero.get("_strike_clip")) != "uppercut", "walk up + light is a jab (got %s)" % _hero.get("_strike_clip"))
+	if _n == 330:
+		Input.action_release("p1_up")
+	# HEAVY held, UP 6 frames later, release: uppercut, feet still.
+	if _n == 370:
+		_y0 = _hero.global_position.y
+		Input.action_press("p1_heavy")
+	if _n == 376:
+		Input.action_press("p1_up")
+	if _n == 380:
+		Input.action_release("p1_heavy")
+	if _n == 384:
+		_check(str(_hero.get("_strike_clip")) == "uppercut", "heavy then up = uppercut (got %s)" % _hero.get("_strike_clip"))
+	if _n == 410:
+		Input.action_release("p1_up")
+		_check(absf(_hero.global_position.y - _y0) < 3.0, "heavy then up stays put (dy %.1f)" % (_hero.global_position.y - _y0))
 		print("UPDRIFT OK" if ok else "UPDRIFT FAILED")
 		quit()
 	return false
