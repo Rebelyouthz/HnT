@@ -17,7 +17,9 @@ func _ready() -> void:
 	monitoring = true
 	var cs := CollisionShape2D.new()
 	var r := RectangleShape2D.new()
-	r.size = Vector2(28, 12)
+	# Generous in depth: the lane is wide, and taking it is a button press
+	# now, so standing roughly over it has to be enough.
+	r.size = Vector2(44, 44)
 	cs.shape = r
 	add_child(cs)
 	var p := Polygon2D.new()

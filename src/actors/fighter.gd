@@ -250,6 +250,8 @@ signal died
 signal hit_landed(kind: String, global_pos: Vector2)
 signal downed_changed
 signal combo_landed(id: String, perfect: bool)
+## A blow stopped by the guard (clean block or parry).
+signal guarded
 
 
 func _ready() -> void:
@@ -583,6 +585,9 @@ func _tick_sprite() -> void:
 			clip = "duck"
 		elif clip == "dive" and _anim.sprite_frames.has_animation("jump"):
 			clip = "jump"
+		elif clip == "snap" and _anim.sprite_frames.has_animation("heavy"):
+			# The father's old snap take had a second, smaller father in it.
+			clip = "heavy"
 		elif _anim.sprite_frames.has_animation("idle"):
 			clip = "idle"
 		else:
@@ -718,6 +723,17 @@ func _apply_locker() -> void:
 
 func _physics_process(delta: float) -> void:
 	_clock += delta
+	# Back from a pause (results, level-up, menus): the button that closed
+	# the sheet must not land as a jump, pick-up or swap in the street.
+	var pf := Engine.get_physics_frames()
+	if pf - _last_pf > 2:
+		_hush_until = _clock + 0.3
+	_last_pf = pf
+	# SNAP is only ever live while the director holds its window open.
+	if snap_ready:
+		var sd := get_tree().get_first_node_in_group("snap_director")
+		if sd == null or not bool(sd.get("open")) or sd.get("active") != self:
+			snap_ready = false
 	_pre_face = facing
 	_tick_meters(delta)
 	if van_seat != "":
@@ -2694,7 +2710,12 @@ func take_hit(kind: String, from: Node) -> void:
 		Juice.pulse_shake(7.0 if perfect else 5.0)
 		Juice.hitstop(7 if perfect else 5)
 		if perfect:
-			snap_ready = true
+			# A perfect parry opens the SNAP window on the attacker through
+			# the director, which also closes it again (a bare snap_ready
+			# here stuck forever: no strikes, the snap pose on loop).
+			var sd := get_tree().get_first_node_in_group("snap_director")
+			if sd and from is Punk and not sd.get("open"):
+				sd.call("_open", self, from)
 			Juice.named_slowmo()
 			FamilyProfile.mark_perfect_parry()
 		Mixer.play_sfx("res://assets/audio/sfx/parry_ring.ogg")
@@ -2702,12 +2723,14 @@ func take_hit(kind: String, from: Node) -> void:
 		_spawn_hit("heavy", Vector2(70, 48), 0.16, Vector2(40 * facing, -30))
 		if from is Punk:
 			(from as Punk).take_hit("heavy", self)
+		guarded.emit()
 		return
 	var wrong_guard := false
 	if blocking and kind != "throw" and kind != "snap":
 		var need := attack_height(kind, from)
 		if need == "any" or need == block_height:
 			_clean_block(kind, from)
+			guarded.emit()
 			if blocking:
 				return
 		else:
@@ -3168,19 +3191,29 @@ func gain_hit(kind: String) -> void:
 		chi = minf(Elements.CHI_MAX, chi + Elements.chi_for_hit(kind) * ItemRack.chi_k)
 
 
+var _last_pf := 0
+var _hush_until := 0.0
+
+
 func _pressed(action: String) -> bool:
+	if _clock < _hush_until:
+		return false
 	if net_driven:
 		return NetSession.held(action)
 	return Input.is_action_pressed(StringName(str(prefix) + action))
 
 
 func _just(action: String) -> bool:
+	if _clock < _hush_until:
+		return false
 	if net_driven:
 		return NetSession.tapped(action)
 	return Input.is_action_just_pressed(StringName(str(prefix) + action))
 
 
 func _released(action: String) -> bool:
+	if _clock < _hush_until:
+		return false
 	if net_driven:
 		return NetSession.released(action)
 	return Input.is_action_just_released(StringName(str(prefix) + action))

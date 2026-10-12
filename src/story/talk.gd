@@ -120,6 +120,9 @@ func _present(lines: Array) -> Array:
 	var have := {}
 	for n in get_tree().get_nodes_in_group("players"):
 		have[str(n.get("role"))] = true
+	# A stand-in on the set (the training coach) speaks for its hero too.
+	for n in get_tree().get_nodes_in_group("talkers"):
+		have[str(n.get_meta("who", ""))] = true
 	if have.is_empty():
 		return lines
 	var out: Array = []

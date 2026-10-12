@@ -35,20 +35,24 @@
     ],
     "film2": [
       {
-        "who": "",
-        "text": "HOMEWORK: COLLECT COPING EVIDENCE. FILE IT IN BLOOD."
-      },
-      {
         "who": "son",
-        "text": "If we file this, I keep the tutoring license. You keep the fridge."
+        "text": "Okay. I can punch. Kind of."
       },
       {
         "who": "father",
-        "text": "That's called a parenting win. Come on."
+        "text": "You punched a sandbag and two lookouts. That's a résumé."
       },
       {
         "who": "",
-        "text": "DOCK STREET IS STILL HIRING. THEY LIE ABOUT THAT."
+        "text": "DOCK STREET. GANT'S CREW KEEPS BENNY IN A CONTAINER AT THE END OF THE PIER."
+      },
+      {
+        "who": "son",
+        "text": "We bring Benny home, he finishes the hideout."
+      },
+      {
+        "who": "father",
+        "text": "And then we talk about the hug. Later. Much later."
       }
     ]
   },
@@ -378,24 +382,10 @@
   },
   "acts": {
     "tutorial_alley": {
-      "title": "TUTORIAL ALLEY",
-      "main": "Learn the three languages: jump, gun, punch. Then lie about growth.",
-      "side": "Hit the dummy like it billed you.",
-      "talk": [
-        {
-          "at": 0,
-          "lines": [
-            {
-              "who": "son",
-              "text": "Jump. Punch. Don't make it a personality."
-            },
-            {
-              "who": "father",
-              "text": "I have a personality. It's unemployed."
-            }
-          ]
-        }
-      ]
+      "title": "BACK ALLEY · TRAINING",
+      "main": "Learn to fight before the docks: punch, guard, pick up, throw. Then beat two lookouts.",
+      "side": "Finish every lesson.",
+      "talk": []
     },
     "dock_street": {
       "title": "DOCK STREET",
@@ -1385,19 +1375,59 @@
   "prologue": [
     {
       "who": "",
-      "text": "THREE NIGHTS AGO. UNDER THE BASEMENT CLINIC."
+      "text": "RAVEN WHARF. MAYOR RAVEN OWNS THE RENT, THE COPS AND THE CLINIC UPSTAIRS."
     },
     {
-      "who": "benny",
-      "text": "Hideout's done. Couch, fridge, punching bag. Rent is one hug a month."
+      "who": "",
+      "text": "THREE NIGHTS AGO. A BASEMENT UNDER THAT CLINIC. A FATHER AND HIS SON."
     },
     {
       "who": "son",
-      "text": "We are not hugging Benny."
+      "text": "Another court letter. Twelve family therapy sessions. Mandatory. We skipped all twelve."
+    },
+    {
+      "who": "father",
+      "text": "We don't need a therapist. We need a lock that works."
+    },
+    {
+      "who": "son",
+      "text": "If we don't go, the city takes me into care. It says so. In red."
+    },
+    {
+      "who": "father",
+      "text": "Then I'll talk more. Look. We're talking right now. Growth."
+    },
+    {
+      "who": "son",
+      "text": "You haven't hugged me since Mom left. That's not growth. That's a cold case."
+    },
+    {
+      "who": "father",
+      "text": "Hugs are for people who aren't on an eviction list."
+    },
+    {
+      "who": "",
+      "text": "BENNY AND RICO VALE. THE BROTHERS NEXT DOOR. DAD'S OLD BOXING CREW. THEY BUILD THINGS."
+    },
+    {
+      "who": "benny",
+      "text": "Hideout's done! Couch, fridge, punching bag. Raven never looks under her own clinic."
     },
     {
       "who": "rico",
-      "text": "He means it. He drew the hug into the blueprint."
+      "text": "We built it for free. Rent is one hug a month. Between you two."
+    },
+    {
+      "who": "benny",
+      "text": "The kid told us. Years without one. We're builders. We fix broken things."
+    },
+    {
+      "who": "son",
+      "text": "I told you that in confidence, Benny."
+    },
+    {
+      "who": "father",
+      "text": "I'll pay in cash. Like a normal person."
     },
     {
       "who": "",
@@ -1405,31 +1435,51 @@
     },
     {
       "who": "collector",
-      "text": "Collector's office. The Vale brothers co-signed your family therapy."
+      "text": "Collector Gant. Mayor Raven's office. Twelve therapy sessions. Skipped. Billed anyway."
     },
     {
       "who": "father",
-      "text": "We never went to family therapy."
+      "text": "You can't bill a session nobody went to."
     },
     {
       "who": "collector",
-      "text": "Twelve sessions. Unpaid. The co-signers come with us. Collateral."
+      "text": "Watch me. The Vale brothers co-signed your file. Co-signers are collateral."
     },
     {
       "who": "rico",
-      "text": "Benny, don't sign anything!"
+      "text": "We signed as character witnesses!"
+    },
+    {
+      "who": "collector",
+      "text": "Small print. Pay the invoice or the brothers pay it. In parts."
+    },
+    {
+      "who": "benny",
+      "text": "Don't sign anything! And finish the hug!"
     },
     {
       "who": "",
-      "text": "THEY TOOK BENNY TO THE DOCKS. RICO TO THE INTAKE LOT IMPOUND. THE HIDEOUT WENT DARK."
+      "text": "THEY TOOK BENNY TO THE DOCKS. RICO TO THE INTAKE LOT IMPOUND. THE LIGHTS WENT OUT."
     },
     {
       "who": "son",
-      "text": "They took our builders. Our only friends with a drill."
+      "text": "They took them because of us. Because of our file."
     },
     {
       "who": "father",
-      "text": "Then we get them back. And we pay this invoice in bruises."
+      "text": "Then we get them back. Every goon Raven has stands between here and the docks."
+    },
+    {
+      "who": "son",
+      "text": "I can't fight, Dad."
+    },
+    {
+      "who": "father",
+      "text": "You can by tonight. Out back. Ten minutes. Everything I know."
+    },
+    {
+      "who": "son",
+      "text": "So, eleven minutes. Tops."
     }
   ],
   "crew_talk": {

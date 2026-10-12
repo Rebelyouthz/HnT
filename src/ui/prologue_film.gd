@@ -1,9 +1,12 @@
 extends Node2D
 
-## Prologue: what happened before you play. Three nights ago in the hideout
-## the Vale brothers show off what they built; Collector Gant knocks, calls
-## the brothers collateral for the family's unpaid therapy and his goons drag
-## them off; the lights die. Then the alley film and the tutorial.
+## Prologue: what happened before you play. Three nights ago, in a basement
+## under Mayor Raven's clinic, Father and Son argue about the court letter
+## (twelve skipped family therapy sessions) and the hug they never give each
+## other. The Vale brothers, Dad's old boxing crew from next door, walk in
+## to hand over the hideout they built (rent: one hug a month, between the
+## two of them). Collector Gant knocks, calls the brothers collateral for the
+## unpaid file and his goon drags them off; the lights die. Then training.
 ## Staged on cue from data/story.json "prologue" via Talk.line.
 ## JUMP / ENTER next line, PAUSE skips to the alley.
 
@@ -76,13 +79,17 @@ func _build_set() -> void:
 	_mod = CanvasModulate.new()
 	_mod.color = Color(1, 0.97, 0.92)
 	add_child(_mod)
-	_actor("father", Vector2(_cx - 40.0, WALK_Y), 1)
-	_actor("son", Vector2(_cx - 18.0, WALK_Y + 1.0), 1)
-	_benny = _crew("benny", Vector2(_cx + 18.0, WALK_Y))
-	_rico = _crew("rico", Vector2(_cx + 42.0, WALK_Y + 1.0))
+	# The two of them alone first, facing each other; the brothers wait
+	# off to the left (their door, next door) until they are introduced.
+	_actor("father", Vector2(_cx - 30.0, WALK_Y), 1)
+	_actor("son", Vector2(_cx + 2.0, WALK_Y + 1.0), -1)
+	_benny = _crew("benny", Vector2(_cx - 230.0, WALK_Y))
+	_rico = _crew("rico", Vector2(_cx - 262.0, WALK_Y + 1.0))
+	_benny.face(1)
+	_rico.face(1)
 	_cam = Camera2D.new()
 	_cam.zoom = Vector2(ZOOM, ZOOM)
-	_cam.position = Vector2(_cx + 4.0, WALK_Y - _room_h * 0.5 + 6.0)
+	_cam.position = Vector2(_cx - 14.0, WALK_Y - _room_h * 0.5 + 6.0)
 	add_child(_cam)
 	_cam.make_current()
 
@@ -150,7 +157,9 @@ func _build_ui() -> void:
 
 func _on_line(_i: int, row: Dictionary) -> void:
 	var text := str(row.get("text", ""))
-	if text.begins_with("A KNOCK"):
+	if text.begins_with("BENNY AND RICO"):
+		_enter_brothers()
+	elif text.begins_with("A KNOCK"):
 		# Three hard knocks; everyone turns to the door on the right.
 		for k in 3:
 			get_tree().create_timer(0.25 * float(k)).timeout.connect(func() -> void:
@@ -163,6 +172,17 @@ func _on_line(_i: int, row: Dictionary) -> void:
 		_enter_collectors()
 	elif text.begins_with("THEY TOOK"):
 		_drag_off()
+
+
+## Benny and Rico walk in from their side with the keys to the hideout and
+## stop on the far side of the family; the camera opens up to fit all four.
+func _enter_brothers() -> void:
+	Juice.play("res://assets/audio/card.wav")
+	# Brisk: they arrive inside the next line, then turn to the family.
+	_benny.walk_to(_cx + 26.0, 95.0).tween_callback(func() -> void: _benny.face(-1))
+	_rico.walk_to(_cx + 50.0, 92.0).tween_callback(func() -> void: _rico.face(-1))
+	var tw := create_tween()
+	tw.tween_property(_cam, "position:x", _cx + 4.0, 1.4).set_trans(Tween.TRANS_SINE)
 
 
 func _enter_collectors() -> void:
@@ -254,4 +274,4 @@ func _finish() -> void:
 	_ui.add_child(fade)
 	var tw := fade.create_tween()
 	tw.tween_property(fade, "color:a", 1.0, 0.6)
-	tw.tween_callback(func() -> void: App.enter_map("intro_flow"))
+	tw.tween_callback(func() -> void: App.enter_map("tutorial_alley"))

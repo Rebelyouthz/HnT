@@ -1,6 +1,6 @@
 extends SceneTree
 
-## A brand-new family: PLAY goes prologue film -> intro film and comics ->
+## A brand-new family: PLAY goes prologue film -> back-alley training ->
 ## Dock Street, the intro is marked done, and a second PLAY skips straight
 ## to the street. Films get a while to play on their own, then are skipped
 ## the way their skip buttons do. Prints INTRO OK on success.
@@ -59,14 +59,14 @@ func _process(_d: float) -> bool:
 			"prologue":
 				if _wait == 60 * 25:
 					current_scene.call("_finish")
-			"intro_flow":
-				if _wait % (60 * 8) == 0:
-					current_scene.call("_advance_hard")
+			"tutorial_alley":
+				if _wait == 60 * 3:
+					current_scene.call("skip_training")
 			"dock_street":
 				if _wait == 120:
 					if not bool(fp.data.get("intro_done", false)):
 						_fail.append("intro not marked done")
-					for want in ["prologue", "intro_flow"]:
+					for want in ["prologue", "tutorial_alley"]:
 						if not _seen.has(want):
 							_fail.append("skipped " + want)
 					_phase = 1
