@@ -79,6 +79,12 @@ def queue():
     for hero in ("father", "son"):
         q += [(hero, t) for t in CAMP_HERO]
     q += CAMP_CREW
+    # Errand talk (src/ui/errand_guide.gd TOLD / QUEST_TOLD), shown by a
+    # guide and spoken; solo, the hero you play says both sides.
+    import re
+    eg = (ROOT / "src/ui/errand_guide.gd").read_text()
+    for line in re.findall(r'"who": "(?:father|son)", "text": "([^"]+)"', eg):
+        q += [("father", line), ("son", line)]
     for who, pool in s.get("crew_talk", {}).items():
         q += [(who, str(t)) for t in pool]
     for tid, tk in t["talks"].items():

@@ -71,6 +71,16 @@ static func errand_map() -> String:
 	return hop
 
 
+## The errand talk is the family speaking: it gets their voices.
+static func voiced(rows: Array) -> Array:
+	var out: Array = []
+	for r in rows:
+		var d := (r as Dictionary).duplicate()
+		d["voice"] = true
+		out.append(d)
+	return out
+
+
 ## Tonight's room in the camp plan, "" when none: the next unbuilt room
 ## (story rooms come through the story path) once its nights are met and
 ## fewer than two rooms went up since the last night out. The QUEST BOARD
@@ -128,7 +138,7 @@ static func ensure(host: Node) -> void:
 		if short > 0:
 			FamilyProfile.data["gold"] = int(FamilyProfile.data.get("gold", 0)) + short
 		FamilyProfile.save()
-		Guide.play(host, "errand_quest_board", QUEST_TOLD, 1.6)
+		Guide.play(host, "errand_quest_board", voiced(QUEST_TOLD), 1.6)
 	var g := ErrandGuide.new()
 	g._map = m
 	tree.root.add_child(g)
@@ -136,7 +146,7 @@ static func ensure(host: Node) -> void:
 	if TOLD.has(m) and not bool(FamilyProfile.data.get(told, false)):
 		FamilyProfile.data[told] = true
 		FamilyProfile.save()
-		Guide.play(host, "errand_" + m, TOLD[m], 1.6)
+		Guide.play(host, "errand_" + m, voiced(TOLD[m]), 1.6)
 
 
 func _ready() -> void:

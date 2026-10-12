@@ -158,6 +158,7 @@ func _finish() -> void:
 		d.append(id)
 	FamilyProfile.data["guides_done"] = d
 	FamilyProfile.save()
+	StoryVo.hush()
 	queue_free()
 
 
@@ -191,6 +192,11 @@ func _show(i: int) -> void:
 	var name_col := "#a0522d" if who == "father" else "#2a6fbf"
 	var nm := FamilyProfile.father_name() if who == "father" else FamilyProfile.son_name()
 	_text.text = "[color=%s]%s[/color]  %s" % [name_col, nm.to_upper(), str(s.get("text", ""))]
+	# Story talk shown through a guide (errands) is spoken; menu tutorial
+	# steps stay silent.
+	StoryVo.hush()
+	if bool(s.get("voice", false)):
+		StoryVo.say(who, str(s.get("text", "")))
 	_hint.text = ("A  NEXT   ·   B  SKIP   %d/%d" % [i + 1, steps.size()]) if i + 1 < steps.size() else "A  GOT IT"
 	_bubble.reset_size()
 	await get_tree().process_frame

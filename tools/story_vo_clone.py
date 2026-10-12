@@ -16,11 +16,16 @@ import eleven_vo as E
 
 SPACE = "ResembleAI/Chatterbox"
 REF_DIR = Path(tempfile.gettempdir()) / "story_vo_refs"
+BARKS = {"collector": "gant"}
 
 
 def reference(who: str, lines) -> Path | None:
     """~12 s of the speaker: their longest existing clips, joined."""
     have = [S.clip(w, t) for w, t in lines if w == who and S.clip(w, t).exists()]
+    # No story clips yet: the speaker's combat barks carry the same voice.
+    if not have:
+        bark = BARKS.get(who, who)
+        have = sorted((S.ROOT / "assets/audio/vo").glob(bark + "_*.ogg"))
     have.sort(key=lambda p: -p.stat().st_size)
     if not have:
         return None
