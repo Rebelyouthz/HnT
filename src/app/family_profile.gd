@@ -1069,6 +1069,13 @@ func try_dojo(id: String) -> bool:
 	var d: Dictionary = data.get("dojo", {})
 	d[id] = rank + 1
 	data["dojo"] = d
+	# A new fighting move is bought, not known: it works in the street only
+	# after landing it three times on the dojo dummy.
+	if rank == 0 and str(spec.get("kind", "")) == "combat":
+		var tr: Dictionary = data.get("dojo_train", {})
+		tr[id] = 0
+		data["dojo_train"] = tr
+		Juice.toast("challenge", "TRAIN IT", "%s: land it 3 times on the dummy on the dojo mat, then it works in the street." % str(spec.get("title", id)))
 	if int(d[id]) >= 3:
 		data["dojo_masters"] = int(data.get("dojo_masters", 0)) + 1
 		grant_cosmetic("badge", "badge_shaolin", true)
@@ -1084,8 +1091,42 @@ func try_dojo(id: String) -> bool:
 	return true
 
 
+const TRAIN_REPS := 3
+
+
 func dojo_learned(id: String) -> bool:
-	return dojo_rank(id) >= 1
+	if dojo_rank(id) < 1:
+		return false
+	# Bought but not yet drilled: usable on the dojo mat only.
+	return dojo_trained(id) or App.current_map == "dojo_practice"
+
+
+## Bought before the training rule (no entry) counts as trained.
+func dojo_trained(id: String) -> bool:
+	var tr: Dictionary = data.get("dojo_train", {})
+	return not tr.has(id) or int(tr[id]) >= TRAIN_REPS
+
+
+## Moves bought and waiting for their three reps on the dummy.
+func dojo_pending() -> Array:
+	var out: Array = []
+	var tr: Dictionary = data.get("dojo_train", {})
+	for k in tr.keys():
+		if int(tr[k]) < TRAIN_REPS and dojo_rank(str(k)) >= 1:
+			out.append(str(k))
+	return out
+
+
+## One clean rep of a pending move on the dummy. True when it just became
+## street-ready.
+func dojo_rep(id: String) -> bool:
+	var tr: Dictionary = data.get("dojo_train", {})
+	if not tr.has(id) or int(tr[id]) >= TRAIN_REPS:
+		return false
+	tr[id] = int(tr[id]) + 1
+	data["dojo_train"] = tr
+	save()
+	return int(tr[id]) >= TRAIN_REPS
 
 
 func _roll_patrol_day() -> void:

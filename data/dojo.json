@@ -9,7 +9,8 @@
    35,
    55
   ],
-  "kind": "combat"
+  "kind": "combat",
+  "input": "HEAVY then UP  ·  or R-STICK ▼ ▶ ▲"
  },
  {
   "id": "roundhouse",
@@ -21,7 +22,8 @@
    40,
    60
   ],
-  "kind": "combat"
+  "kind": "combat",
+  "input": "LIGHT, LIGHT, HEAVY  ·  or RT + R-STICK quarter circle"
  },
  {
   "id": "stomp_finish",
@@ -33,7 +35,8 @@
    50,
    80
   ],
-  "kind": "combat"
+  "kind": "combat",
+  "input": "over a downed thug: DOWN + HEAVY"
  },
  {
   "id": "speed_vault",
@@ -93,7 +96,8 @@
    40,
    64
   ],
-  "kind": "combat"
+  "kind": "combat",
+  "input": "next to a hurt thug: THROW"
  },
  {
   "id": "wall_bounce",
@@ -105,7 +109,8 @@
    50,
    78
   ],
-  "kind": "combat"
+  "kind": "combat",
+  "input": "THROW a thug into a wall"
  },
  {
   "id": "air_mix",
@@ -117,7 +122,8 @@
    44,
    68
   ],
-  "kind": "combat"
+  "kind": "combat",
+  "input": "in the air: SPECIAL"
  },
  {
   "id": "tic_tac",
@@ -310,5 +316,65 @@
    88
   ],
   "kind": "parkour"
+ },
+ {
+  "id": "haymaker",
+  "kind": "combat",
+  "gold": [
+   26,
+   42,
+   64
+  ],
+  "title": "HAYMAKER",
+  "line": "Right stick: pull back, then push forward. A wild swing that spins him round.",
+  "input": "R-STICK  ◀ hold  ▶"
+ },
+ {
+  "id": "power_punch",
+  "kind": "combat",
+  "gold": [
+   40,
+   64,
+   96
+  ],
+  "title": "MEGA PUNCH",
+  "line": "Hold the right stick back over a second (you glow), then push: a crouching two-hand blast.",
+  "input": "R-STICK  ◀ hold 1s  ▶"
+ },
+ {
+  "id": "spin_backfist",
+  "kind": "combat",
+  "gold": [
+   30,
+   48,
+   72
+  ],
+  "title": "SPIN BACKFIST",
+  "line": "Right stick: one full circle. Turns you round with the back of the fist.",
+  "input": "R-STICK  full circle"
+ },
+ {
+  "id": "high_kick",
+  "kind": "combat",
+  "gold": [
+   28,
+   46,
+   70
+  ],
+  "title": "HIGH KICK",
+  "line": "Hold RT, right stick half circle up: a kick to the head.",
+  "input": "RT + R-STICK  ▼ ▶ ▲"
+ },
+ {
+  "id": "low_kick",
+  "kind": "combat",
+  "gold": [
+   22,
+   36,
+   56
+  ],
+  "title": "LOW KICK",
+  "line": "Hold RT, right stick down: kicks the legs out, he stumbles or drops.",
+  "input": "RT + R-STICK  ▼"
  }
 ]

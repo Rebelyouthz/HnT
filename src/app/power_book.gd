@@ -194,6 +194,10 @@ static func path(map_id: String) -> Array:
 	var id := str(need.get("id", ""))
 	if _met(fp, kind, id):
 		return out
+	# Bought in the dojo but not drilled yet: the step is the mat.
+	if kind == "dojo" and int(fp.call("dojo_rank", id)) >= 1:
+		out.append({"what": "TRAIN", "id": id, "name": str(need.get("node", id.to_upper())), "gold": 0, "rep": 0, "parts": {}})
+		return out
 	var step := {"what": "LEARN", "id": id, "name": str(need.get("node", id.to_upper())), "gold": 0, "rep": 0, "parts": {}}
 	match kind:
 		"cbt":

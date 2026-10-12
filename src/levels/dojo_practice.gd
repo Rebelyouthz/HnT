@@ -78,7 +78,7 @@ func _ready() -> void:
 	)
 	# The lessons run until graduation, and again whenever the TUTORIAL
 	# button in the school sheet sent us here.
-	if bool(App.get_meta("dojo_school", false)) or not bool(FamilyProfile.data.get("school_graduated", false)):
+	if bool(App.get_meta("dojo_school", false)) or not bool(FamilyProfile.data.get("school_graduated", false)) or not FamilyProfile.dojo_pending().is_empty():
 		App.set_meta("dojo_school", false)
 		var school := DojoSchool.new()
 		add_child(school)

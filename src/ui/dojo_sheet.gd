@@ -153,6 +153,15 @@ func _row(info: Dictionary) -> Control:
 	elif rank < 3 and int(FamilyProfile.data.get("gems", 0)) < gem_cost:
 		go.disabled = true
 		go.text = "NEED %d GEM" % gem_cost
+	# Bought, not drilled: the button takes you to the mat to train it.
+	var tr: Dictionary = FamilyProfile.data.get("dojo_train", {})
+	if rank >= 1 and tr.has(id) and int(tr[id]) < FamilyProfile.TRAIN_REPS:
+		var drill := UiKit.button("TRAIN ON MAT  %d/%d" % [int(tr[id]), FamilyProfile.TRAIN_REPS], Vector2(170, 40))
+		drill.set_meta("key", "dojo_train_" + id)
+		drill.pressed.connect(func() -> void:
+			_practice(App.solo_role if App.solo_role in ["son", "father"] else "son")
+		)
+		row.add_child(drill)
 	go.pressed.connect(func() -> void:
 		if FamilyProfile.try_dojo(id):
 			FamilyProfile.mark_seen("dojo_%s" % id)

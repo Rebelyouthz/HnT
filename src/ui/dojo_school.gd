@@ -14,19 +14,25 @@ const LESSONS := [
 	{"id": "jump", "title": "JUMP", "pad": "A", "key": "SPACE", "line": "Jump. Hold it for a higher one.", "need": 2},
 	{"id": "light", "title": "LIGHT PUNCHES", "pad": "X  X  X", "key": "J  J  J", "line": "Three lights in a row: jab, cross, hook.", "need": 3},
 	{"id": "heavy", "title": "HEAVY", "pad": "Y", "key": "K", "line": "A heavy on the dummy. Hold it to charge.", "need": 2},
-	{"id": "upper", "title": "UPPERCUT", "pad": "Y, THEN UP  or  RS UP", "key": "J OR K, THEN W", "line": "Hit first, then push up straight after: the blow turns into the launcher on the spot (or flick the right stick up).", "need": 1},
+	{"id": "upper", "req": "uppercut", "title": "UPPERCUT", "pad": "Y, THEN UP  or  RS UP", "key": "J OR K, THEN W", "line": "Hit first, then push up straight after: the blow turns into the launcher on the spot (or flick the right stick up).", "need": 1},
 	{"id": "low", "title": "LOW SLIDE", "pad": "DOWN + RT", "key": "S + SHIFT", "line": "Down and dash: slide in under the guard.", "need": 1},
 	{"id": "air", "title": "JUMP KICK", "pad": "A, then X or Y", "key": "SPACE, then J or K", "line": "Jump and strike in the air.", "need": 1},
+	{"id": "rs_jab", "req": "pad", "title": "RIGHT STICK JAB", "pad": "R-STICK  flick ▶", "key": "-", "line": "Flick the right stick toward the dummy and let go: a jab. The stick's path is the punch.", "need": 2},
+	{"id": "rs_hook", "req": "pad", "title": "RIGHT STICK HOOK", "pad": "R-STICK  quarter circle ▲ ▶", "key": "-", "line": "Swing the right stick in a quarter circle that ends toward the dummy: a hook to the jaw.", "need": 2},
 	{"id": "throw", "title": "THROW", "pad": "LT", "key": "U", "line": "Up close: grab and throw.", "need": 1},
 	{"id": "block", "title": "BLOCK", "pad": "LB + STICK HEIGHT", "key": "I + W / S", "line": "The dummy swings now. Hold block and point the stick at the height over its head.", "need": 2, "spar": true},
-	{"id": "combo", "title": "COMBO", "pad": "SEE THE BOARD", "key": "SEE THE BOARD", "line": "Land any combo from the board. Press as the ring on your body closes.", "need": 1},
-	{"id": "art", "title": "ELEMENT ART", "pad": "X + Y", "key": "J + K", "line": "Both attack buttons together, away from the dummy. Your CHI ring is full for this lesson.", "need": 1, "chi": true},
-	{"id": "grab", "title": "GRAB", "pad": "X + Y  (CLOSE)", "key": "J + K  (CLOSE)", "line": "The same buttons right next to the dummy: a grab.", "need": 1},
-	{"id": "team", "title": "TEAM ATTACK", "pad": "HOLD Y, TAP B", "key": "HOLD K, TAP L", "line": "The gold TEAM ring is full: hold heavy and tap special. Your partner comes running.", "need": 1, "team": true},
+	{"id": "combo", "req": "later", "title": "COMBO", "pad": "SEE THE BOARD", "key": "SEE THE BOARD", "line": "Land any combo from the board. Press as the ring on your body closes.", "need": 1},
+	{"id": "art", "req": "later", "title": "ELEMENT ART", "pad": "X + Y", "key": "J + K", "line": "Both attack buttons together, away from the dummy. Your CHI ring is full for this lesson.", "need": 1, "chi": true},
+	{"id": "grab", "req": "later", "title": "GRAB", "pad": "X + Y  (CLOSE)", "key": "J + K  (CLOSE)", "line": "The same buttons right next to the dummy: a grab.", "need": 1},
+	{"id": "team", "req": "later", "title": "TEAM ATTACK", "pad": "HOLD Y, TAP B", "key": "HOLD K, TAP L", "line": "The gold TEAM ring is full: hold heavy and tap special. Your partner comes running.", "need": 1, "team": true},
 ]
 const GOLD_EACH := 40
 const GOLD_ALL := 300
 
+## The lessons for this visit: the basics you own, then one TRAIN lesson
+## for every move bought in the dojo and not yet drilled (3 clean reps on
+## the dummy and it works in the street).
+var _lessons: Array = []
 var hero: Fighter
 var dummy: TrainingDummy
 var _i := 0
@@ -51,7 +57,12 @@ func bind(h: Fighter, d: TrainingDummy) -> void:
 	if dummy:
 		dummy.struck.connect(_on_struck)
 	if hero:
-		hero.combo_landed.connect(func(_id: String, _p: bool) -> void: _tick("combo"))
+		hero.combo_landed.connect(func(id: String, _p: bool) -> void:
+			_tick("combo")
+			# A bought combo trains by landing the whole chain.
+			if _i < _lessons.size() and str(_lessons[_i].get("train", "")) == id:
+				_on_struck(id)
+		)
 
 
 func _ready() -> void:
@@ -85,12 +96,37 @@ func _ready() -> void:
 	_line.custom_minimum_size = Vector2(360, 0)
 	UiKit.apply_label(_line, 12, Palette.TEXT)
 	v.add_child(_line)
+	_lessons = []
+	for L in LESSONS:
+		if _have(str(L.get("req", ""))):
+			_lessons.append(L)
+	var table: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/dojo.json"))
+	for id in FamilyProfile.dojo_pending():
+		var row := {}
+		if table is Array:
+			for r in table:
+				if str(r.get("id", "")) == id:
+					row = r
+		var inp := str(row.get("input", "SEE THE MOVE CARD"))
+		_lessons.append({"id": "train_" + id, "train": id, "title": "TRAIN  ·  " + str(row.get("title", id.to_upper())), "pad": inp, "key": inp, "line": "%s  New move: land it 3 times on the dummy and it works in the street." % str(row.get("line", "")), "need": FamilyProfile.TRAIN_REPS})
 	var done: Array = FamilyProfile.data.get("school", [])
-	for k in LESSONS.size():
-		if not done.has(str(LESSONS[k]["id"])):
+	_i = _lessons.size() - 1
+	for k in _lessons.size():
+		if not done.has(str(_lessons[k]["id"])):
 			_i = k
 			break
 	_start()
+
+
+func _have(req: String) -> bool:
+	match req:
+		"":
+			return true
+		"pad":
+			return not Input.get_connected_joypads().is_empty()
+		"later":
+			return int(FamilyProfile.data.get("runs", 0)) >= 3
+	return FamilyProfile.dojo_learned(req)
 
 
 func _start() -> void:
@@ -99,7 +135,7 @@ func _start() -> void:
 	_done_t = 0.0
 	if hero:
 		_last_x = hero.global_position.x
-	var L: Dictionary = LESSONS[_i]
+	var L: Dictionary = _lessons[_i]
 	_base = {"arts": int(FamilyProfile.data.get("arts_used", 0)), "grabs": int(FamilyProfile.data.get("grabs_landed", 0)), "team": int(FamilyProfile.data.get("team_attacks", 0))}
 	if dummy:
 		dummy.mode = "spar" if L.get("spar", false) else "still"
@@ -127,22 +163,36 @@ func _fade_over_hero(delta: float) -> void:
 
 
 func _paint() -> void:
-	var L: Dictionary = LESSONS[_i]
-	_prog.text = "TUTORIAL  ·  LESSON %d / %d" % [_i + 1, LESSONS.size()]
+	var L: Dictionary = _lessons[_i]
+	_prog.text = "TUTORIAL  ·  LESSON %d / %d" % [_i + 1, _lessons.size()]
 	_title.text = str(L["title"])
 	_btns.text = str(L["pad"]) if PadRouter.last_kind == "pad" else str(L["key"])
 	_line.text = "%s   (%d / %d)" % [str(L["line"]), mini(_n, int(L["need"])), int(L["need"])]
 	for c in _pips.get_children():
 		c.queue_free()
 	var done: Array = FamilyProfile.data.get("school", [])
-	for k in LESSONS.size():
+	for k in _lessons.size():
 		var pip := ColorRect.new()
 		pip.custom_minimum_size = Vector2(12, 12)
-		pip.color = Palette.READY if done.has(str(LESSONS[k]["id"])) else (Palette.LEMON if k == _i else Color(0.2, 0.22, 0.3))
+		pip.color = Palette.READY if done.has(str(_lessons[k]["id"])) else (Palette.LEMON if k == _i else Color(0.2, 0.22, 0.3))
 		_pips.add_child(pip)
 
 
+## Dummy hit kinds -> dojo move ids.
+const KIND_TO_MOVE := {"air-mix": "air_mix", "stomp1": "stomp_finish", "stomp2": "stomp_finish", "stomp3": "stomp_finish", "throw": "grab_slam", "air-upper": "uppercut"}
+
+
 func _on_struck(kind: String) -> void:
+	if _i < _lessons.size() and _lessons[_i].has("train"):
+		var want := str(_lessons[_i]["train"])
+		if str(KIND_TO_MOVE.get(kind, kind)) == want:
+			var ready := FamilyProfile.dojo_rep(want)
+			_tick(str(_lessons[_i]["id"]))
+			if ready:
+				Juice.unlock_logo("%s  STREET READY" % str(_lessons[_i]["title"]).replace("TRAIN  ·  ", ""), "Drilled on the mat. It works out there now.", "MOVE  ·  LEARNED")
+		return
+	if hero and str(hero.get("_last_kind")) == "light" and kind in ["light", "jab", "cross"]:
+		_tick("rs_jab")
 	match kind:
 		"light", "jab", "cross", "gut-punch":
 			_tick("light")
@@ -158,21 +208,23 @@ func _on_struck(kind: String) -> void:
 			_tick("air")
 		"throw":
 			_tick("throw")
+		"hook":
+			_tick("rs_hook")
 
 
 func _tick(id: String) -> void:
-	if _done_t > 0.0 or str(LESSONS[_i]["id"]) != id:
+	if _done_t > 0.0 or str(_lessons[_i]["id"]) != id:
 		return
 	_n += 1
 	Mixer.play_sfx("res://assets/audio/ui_click.wav", 1.3, -6.0)
-	if _n >= int(LESSONS[_i]["need"]):
+	if _n >= int(_lessons[_i]["need"]):
 		_pass()
 	else:
 		_paint()
 
 
 func _pass() -> void:
-	var id := str(LESSONS[_i]["id"])
+	var id := str(_lessons[_i]["id"])
 	var done: Array = FamilyProfile.data.get("school", [])
 	if not done.has(id):
 		done.append(id)
@@ -184,7 +236,7 @@ func _pass() -> void:
 		paid.append(id)
 		FamilyProfile.data["school_paid"] = paid
 		FamilyProfile.add_gold(GOLD_EACH)
-	_n = int(LESSONS[_i]["need"])
+	_n = int(_lessons[_i]["need"])
 	_paint()
 	_done_t = 1.1
 	Mixer.play_sfx("res://assets/audio/sfx/perfect_sting.ogg", 1.0, -3.0)
@@ -199,13 +251,13 @@ func _process(delta: float) -> void:
 	if _done_t > 0.0:
 		_done_t -= delta
 		if _done_t <= 0.0:
-			if _i + 1 >= LESSONS.size():
+			if _i + 1 >= _lessons.size():
 				_graduate()
 				return
 			_i += 1
 			_start()
 		return
-	var id := str(LESSONS[_i]["id"])
+	var id := str(_lessons[_i]["id"])
 	match id:
 		"walk":
 			_walked += absf(hero.global_position.x - _last_x)
@@ -245,7 +297,7 @@ func _graduate() -> void:
 	if dummy:
 		dummy.mode = "still"
 	_title.text = "GRADUATED"
-	_btns.text = "+%dG" % GOLD_ALL if not paid else "ALL LESSONS DONE"
+	_btns.text = "+%dG" % GOLD_ALL if not paid else "ALL _lessons DONE"
 	_line.text = "Every move in the book. The board on the right still drills combos; leave with BACK."
 	Juice.shout("BLACK BELT. ALLEGEDLY.")
 	Mixer.play_sfx("res://assets/audio/level_up.wav", 1.0, -2.0)

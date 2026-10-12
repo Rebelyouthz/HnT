@@ -1338,6 +1338,8 @@ func _die(kind: String, from: Node) -> void:
 	# Weapon kills: the bat knocks them out of the park, the sledge
 	# flattens, the machete can take the head.
 	var held := str((from as Fighter).pickup) if from is Fighter else ""
+	if has_meta("brutal_zone"):
+		_last_zone = str(get_meta("brutal_zone"))
 	var kill_weapon := held if held != "" else (str((from as Round).weapon) if from is Round else ("flare_gun" if kind == "burn" else ""))
 	Arsenal.add_kill(kill_weapon)
 	if from is KitShot:
@@ -1355,6 +1357,8 @@ func _die(kind: String, from: Node) -> void:
 		Juice.land_puff(global_position)
 		Mixer.play_sfx("res://assets/audio/sfx/bone_crack.ogg", 0.8, -1.0)
 	elif held == "machete" and kind == "blade" and randf() < 0.45 and not gunned:
+		gunned = GunGore.decap(self, dir)
+	elif has_meta("brutal_decap") and not gunned:
 		gunned = GunGore.decap(self, dir)
 	elif kind == "burn":
 		_last_zone = "burn"

@@ -28,6 +28,8 @@ func _process(_d: float) -> bool:
 		fp.data["intro_done"] = true
 		var dj: Dictionary = fp.data.get("dojo", {})
 		dj["uppercut"] = 1
+		dj["haymaker"] = 1
+		dj["power_punch"] = 1
 		fp.data["dojo"] = dj
 		root.get_node("App").call("enter_map", "dojo_practice")
 	if _n == 40:

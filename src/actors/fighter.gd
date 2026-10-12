@@ -3379,6 +3379,9 @@ const RS_MOVES := {
 	"high_kick": {"clips": ["side_kick", "front_kick"], "size": Vector2(66, 56), "cd": 22, "shout": "HIGH KICK"},
 	"low_kick": {"clips": ["boot_kick", "front_kick", "side_kick"], "size": Vector2(62, 30), "cd": 18, "shout": ""},
 }
+## Dojo moves (bought, then drilled 3x on the dummy) and what comes out
+## instead before that.
+const RS_LEARN := {"haymaker": "heavy", "power_punch": "haymaker", "spin_backfist": "hook", "high_kick": "front_kick", "low_kick": "front_kick", "roundhouse": "hook"}
 var _rs_pts := PackedVector2Array()
 var _rs_on := false
 var _rs_back := 0.0
@@ -3465,6 +3468,13 @@ func _rs_fire(pts: PackedVector2Array, back_t: float) -> bool:
 		kind = "turn_punch" if _anim != null and _anim.sprite_frames.has_animation("turn_punch") else "heavy"
 	else:
 		kind = "front_kick" if kick else ("gut-punch" if body else "light")
+	# Bought-and-drilled moves only; until then the plain version comes out.
+	if RS_LEARN.has(kind) and not FamilyProfile.dojo_learned(kind):
+		kind = str(RS_LEARN[kind])
+		if RS_LEARN.has(kind) and not FamilyProfile.dojo_learned(kind):
+			kind = str(RS_LEARN[kind])
+		if kind == "roundhouse" and not FamilyProfile.dojo_learned("roundhouse"):
+			kind = "front_kick"
 	_last_kind = kind
 	_attack(kind, false)
 	return true

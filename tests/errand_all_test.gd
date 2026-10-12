@@ -70,6 +70,11 @@ func _start_gate() -> void:
 
 
 func _press(t: String) -> void:
+	# Drilling on the dojo mat is a scene of its own: count the three reps.
+	if t.begins_with("dojo_train_"):
+		for k in 3:
+			root.get_node("FamilyProfile").call("dojo_rep", t.substr(11))
+		return
 	if t.begins_with("station:"):
 		var id := t.substr(8)
 		if id == "command_board":

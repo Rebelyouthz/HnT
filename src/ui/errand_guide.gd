@@ -443,6 +443,12 @@ func _target_step(step: Dictionary) -> void:
 			_label = "LEARN %s IN THE SKILL TREE  ·  %d G" % [name, gold]
 			if not _chain(["node_buy_" + id, "node_" + id, "tab_build"], shop):
 				_chain(["button:◀  BACK"], "")
+		"dojo" when what == "TRAIN":
+			var tr: Dictionary = FamilyProfile.data.get("dojo_train", {})
+			_label = "DRILL %s ON THE DOJO MAT  ·  %d / %d" % [name, int(tr.get(id, 0)), FamilyProfile.TRAIN_REPS]
+			_sub = "BOUGHT  ·  LAND IT 3 TIMES ON THE DUMMY"
+			if not _chain(["dojo_train_" + id, "open_btn_" + shop, "card_" + shop], shop):
+				_chain(["tab_clinic"], "")
 		"dojo":
 			_label = "TRAIN %s AT THE DOJO  ·  %d G" % [name, gold]
 			if not _chain(["dojo_" + id, "open_btn_" + shop, "card_" + shop], shop):
