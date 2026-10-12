@@ -8,6 +8,9 @@ var _using_a := true
 var _pool: Array[AudioStreamPlayer] = []
 var _grunts: Array[AudioStreamPlayer] = []
 var _grunt_i := 0
+## When the last sound effect started (ms): a pressed button that played
+## nothing of its own gets the plain click (_on_node).
+var last_sfx_ms := -100000
 
 
 func _ready() -> void:
@@ -24,6 +27,22 @@ func _ready() -> void:
 	for i in 2:
 		_grunts.append(_make("vo"))
 	apply_volumes()
+	get_tree().node_added.connect(_on_node)
+
+
+func _on_node(n: Node) -> void:
+	if n is BaseButton and not n.has_meta("silent"):
+		(n as BaseButton).pressed.connect(_button_click.bind(n as BaseButton))
+
+
+## Every button answers with a click unless its own handler already made a
+## sound this frame (buy chimes, denies, page flips keep theirs).
+func _button_click(b: BaseButton) -> void:
+	var at := Time.get_ticks_msec()
+	await get_tree().process_frame
+	if last_sfx_ms >= at - 5 or not is_instance_valid(b):
+		return
+	play_sfx("res://assets/audio/ui_click.wav", 1.0, -14.0)
 
 
 func _make(bus: String) -> AudioStreamPlayer:
@@ -64,6 +83,7 @@ func play_sfx(path: String, pitch := 1.0, vol_db := 0.0) -> void:
 			quiet = -18.0
 		elif path.ends_with("foot.wav"):
 			quiet = -16.0
+	last_sfx_ms = Time.get_ticks_msec()
 	p.stream = load(path)
 	p.pitch_scale = clampf(pitch * randf_range(0.94, 1.06), 0.8, 1.25)
 	p.volume_db = quiet
