@@ -114,7 +114,7 @@ def main():
             tmp.flush()
             subprocess.run([E.ffmpeg(), "-y", "-loglevel", "error", "-i", tmp.name, "-af",
                             "silenceremove=start_periods=1:start_threshold=-45dB,areverse,silenceremove=start_periods=1:start_threshold=-45dB,areverse,loudnorm=I=-16:TP=-1.5",
-                            "-ac", "1", "-ar", "44100", "-c:a", "libvorbis", "-q:a", "4", str(clip(who, text))], check=True)
+                            "-ac", "1", "-ar", "32000", "-c:a", "libvorbis", "-q:a", "1", str(clip(who, text))], check=True)
         print("OK", who, clip(who, text).name, len(text), "left", budget, flush=True)
         time.sleep(0.25)
 
