@@ -239,7 +239,7 @@ func _card(o: Dictionary) -> Button:
 	var n2 := _lab(str(r.get("name", "?")), Vector2(20, 172), 280, 18, col.lerp(Color.WHITE, 0.2), HORIZONTAL_ALIGNMENT_CENTER, true)
 	body.add_child(n2)
 	body.add_child(_lab(lv_text, Vector2(20, 198), 280, 11, col, HORIZONTAL_ALIGNMENT_CENTER))
-	var bl := UiKit.rich(str(r.get("blurb", "")), 268, 12, Palette.TEXT)
+	var bl := UiKit.rich(str(r.get("how", r.get("blurb", ""))), 268, 12, Palette.TEXT)
 	bl.position = Vector2(26, 218)
 	if kind == "trait":
 		# Total now -> total with this stack, white then green.

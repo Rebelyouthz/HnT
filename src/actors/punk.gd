@@ -566,6 +566,7 @@ func _physics_process(delta: float) -> void:
 	WoundGait.pose(self, delta)
 	_lane()
 	_canal()
+	_face_travel(t)
 	_bob += delta * 4.8
 	if visual and _anim == null:
 		visual.position.y = 1.3 * sin(_bob)
@@ -630,6 +631,20 @@ func _field_chase(players: Array, delta: float) -> void:
 		_hurt_t -= delta
 	_mix_mod()
 	_tick_sprite()
+
+
+## Waiting thugs walk to their spot in the ring round the hero (behind
+## him, up the lane). Far off they turn and walk there like people do;
+## only a short step back near the hero stays a backpedal facing him.
+func _face_travel(t: Node2D) -> void:
+	if t == null or telegraph > 0.0 or recover > 0.0:
+		return
+	if absf(velocity.x) < 30.0 or signf(velocity.x) == float(facing):
+		return
+	if absf(t.global_position.x - global_position.x) < 150.0:
+		return
+	facing = 1 if velocity.x > 0.0 else -1
+	visual.scale.x = float(facing)
 
 
 func _lane() -> void:

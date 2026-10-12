@@ -78,8 +78,9 @@ func _ready() -> void:
 		for c in _table:
 			if bool(c.get("fixed", false)):
 				ids.append(c["id"])
+	_build_how()
 	var tools := HBoxContainer.new()
-	tools.position = Vector2(0, 640)
+	tools.position = Vector2(0, 664)
 	tools.size = Vector2(1280, 50)
 	tools.alignment = BoxContainer.ALIGNMENT_CENTER
 	tools.add_theme_constant_override("separation", 16)
@@ -95,6 +96,77 @@ func _ready() -> void:
 	_sync_reroll()
 	Juice.play("res://assets/audio/card.wav")
 	_deal()
+
+
+## What the focused card does, in plain words: a framed box under the
+## cards (rules, buttons, what each meter word means). The card itself
+## keeps its short flavour line.
+const TERMS := {
+	"STEAM": "STEAM: the blue bar under your hearts; dash, slide and heavies use it.",
+	"CHI": "CHI: the meter for element arts (LIGHT + HEAVY together).",
+	"SNAP": "SNAP: dash or slide into a thug from behind, time slows, press LIGHT to finish him.",
+	"BLEED": "BLEED: damage every second for a while.",
+	"WANTED": "WANTED: stars from hurting cops; more stars, more cops.",
+	"SCRAP": "SCRAP: the run's gold.",
+	"REVENGE": "REVENGE: one extra-hard hit after you were knocked down.",
+	"STUN": "STUN: the thug can't move or attack for a moment.",
+	"COMBO": "COMBO: hits in a row before the timer runs out.",
+}
+var _how_box: PanelContainer
+var _how_head: Label
+var _how_body: Label
+var _how_terms: Label
+
+
+func _build_how() -> void:
+	_how_box = PanelContainer.new()
+	_how_box.add_theme_stylebox_override("panel", UiKit.panel(Palette.PANEL, UiKit.GOLD))
+	_how_box.position = Vector2(140, 584)
+	_how_box.custom_minimum_size = Vector2(1000, 74)
+	_how_box.size = Vector2(1000, 74)
+	_how_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_how_box.visible = false
+	_ui.add_child(_how_box)
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 2)
+	_how_box.add_child(col)
+	_how_head = Label.new()
+	UiKit.apply_label(_how_head, 14, UiKit.GOLD)
+	col.add_child(_how_head)
+	_how_body = Label.new()
+	_how_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_how_body.custom_minimum_size = Vector2(980, 0)
+	UiKit.apply_label(_how_body, 15, Palette.TEXT)
+	col.add_child(_how_body)
+	_how_terms = Label.new()
+	_how_terms.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_how_terms.custom_minimum_size = Vector2(980, 0)
+	UiKit.apply_label(_how_terms, 12, Palette.MUTED)
+	col.add_child(_how_terms)
+
+
+func _paint_how(info: Dictionary) -> void:
+	if _how_box == null:
+		return
+	var how := str(info.get("how", info.get("blurb", "")))
+	var lv := int(info.get("level", 0))
+	var head := "WHAT IT DOES  ·  %s" % str(info.get("name", "")).to_upper()
+	if bool(info.get("upgrade", false)):
+		head += "  ·  UPGRADE TO LEVEL %d: %s" % [lv, str(info.get("blurb", ""))]
+	elif lv > 0:
+		head += "  ·  LEVEL 1 OF %d" % maxi(1, (info.get("lv", []) as Array).size())
+	_how_head.text = head
+	_how_body.text = how
+	var terms: PackedStringArray = []
+	var text := (how + " " + str(info.get("blurb", ""))).to_upper()
+	for k in TERMS.keys():
+		if text.contains(str(k)):
+			terms.append(str(TERMS[k]))
+	_how_terms.text = "   ".join(terms)
+	_how_terms.visible = not terms.is_empty()
+	_how_box.visible = true
+	_how_box.reset_size()
+	_how_box.position.y = 658.0 - _how_box.size.y
 
 
 func _info(id: String) -> Dictionary:
@@ -203,6 +275,7 @@ func _set_focus(i: int) -> void:
 		tw.tween_property(c, "position:y", SLOTS[k].y - (22.0 if on else 0.0), 0.16)
 		tw.parallel().tween_property(c, "scale", Vector2.ONE * (1.06 if on else 0.96), 0.16)
 		c.modulate = Color.WHITE if on else Color(0.72, 0.72, 0.78)
+	_paint_how(_cards[i].info)
 	Juice.play("res://assets/audio/ui_click.wav")
 
 
@@ -257,6 +330,8 @@ func _choose(idx: int) -> void:
 	if idx >= 0 and not _ready_to_pick:
 		return
 	_done = true
+	if _how_box:
+		_how_box.visible = false
 	var id := "skip" if idx < 0 or idx >= ids.size() else str(ids[idx])
 	for k in _cards.size():
 		if k == idx:
