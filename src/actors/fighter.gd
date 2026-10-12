@@ -608,6 +608,30 @@ func _tick_sprite() -> void:
 			_hip = true
 			_place_gun()
 			_hip = false
+	# Turning round on the street: a beat of the front or back view.
+	var loco := clip == "idle" or clip == "idle_casual" or clip == "parkour_run" or clip.begins_with("walk")
+	if not FIELD and loco and anim_atk == "" and _turn_pick != "" and _clock - _turned_at < TURN_SHOW and _anim.sprite_frames.has_animation(_turn_pick):
+		if _anim.animation != _turn_pick:
+			SpriteBook.crossfade(_anim, 0.08)
+			_anim.play(_turn_pick)
+		_anim.pause()
+		_anim.frame = _anim.sprite_frames.get_frame_count(_turn_pick) / 4
+		_anim.speed_scale = 1.0
+		_last_loco = clip
+		return
+	# Out of a run into a stand or a walk: a short braking dip on the feet.
+	if not FIELD and _last_loco == "parkour_run" and (clip == "idle" or clip == "walk") and _street_grounded() and _anim.sprite_frames.has_animation("land"):
+		_brake_t = BRAKE_SHOW
+	_last_loco = clip if loco else _last_loco
+	if _brake_t > 0.0 and loco and clip != "parkour_run" and anim_atk == "":
+		_brake_t -= get_physics_process_delta_time()
+		if _anim.animation != "land":
+			SpriteBook.crossfade(_anim, 0.08)
+			_anim.play("land")
+		_anim.pause()
+		_anim.frame = mini(3, _anim.sprite_frames.get_frame_count("land") - 1)
+		return
+	_brake_t = 0.0
 	if _anim.animation != clip:
 		# Standing <-> walking eases over (a short ghost of the old pose)
 		# instead of snapping straight into the stride.
@@ -3164,6 +3188,9 @@ func _face(x: float) -> void:
 		visual.scale.x = float(facing)
 		if facing != was:
 			_turned_at = _clock
+			# The turn shows the body coming round: chest to the camera or
+			# back to it, at random, so it never looks like a mirror flip.
+			_turn_pick = "walk_down" if randf() < 0.5 else "walk_up"
 
 
 func _spend(n: float) -> bool:
@@ -3228,6 +3255,12 @@ func _released(action: String) -> bool:
 ## BACK + button still wins, it is checked first.
 const TURN_WIN := 0.22
 var _turned_at := -9.0
+## Turn and brake beats (front / back view mid-turn, the dip out of a run).
+const TURN_SHOW := 0.13
+const BRAKE_SHOW := 0.16
+var _turn_pick := ""
+var _brake_t := 0.0
+var _last_loco := ""
 
 
 func _turn_strike() -> bool:
