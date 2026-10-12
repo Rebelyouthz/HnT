@@ -856,17 +856,54 @@ func _banner_next() -> void:
 	spin.set_ignore_time_scale(true)
 	spin.tween_callback(rays.queue_redraw).set_delay(0.03)
 	rays.modulate.a = 0.0
-	# The icon.
-	var icon := TextureRect.new()
-	icon.texture = tex if tex != null else IconBook.tex("cur_key")
-	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	icon.size = Vector2(112, 112)
+	# The icon, set in a gold medallion frame: a bare square picture (a room
+	# painting) looked like a pasted screenshot.
+	var icon := Panel.new()
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var plate := StyleBoxFlat.new()
+	plate.bg_color = Color(0.07, 0.06, 0.1, 0.96)
+	plate.border_color = Palette.LEMON
+	plate.set_border_width_all(5)
+	plate.set_corner_radius_all(18)
+	plate.shadow_color = Color(1.0, 0.8, 0.3, 0.45)
+	plate.shadow_size = 14
+	icon.add_theme_stylebox_override("panel", plate)
+	icon.size = Vector2(132, 132)
 	icon.pivot_offset = icon.size * 0.5
-	icon.position = Vector2(ix - 56.0, cy - 34.0 - 56.0)
+	icon.position = Vector2(ix - 66.0, cy - 34.0 - 66.0)
 	icon.scale = Vector2.ZERO
 	wrap.add_child(icon)
+	var inner := Panel.new()
+	inner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var rim := StyleBoxFlat.new()
+	rim.bg_color = Color(0.12, 0.1, 0.16)
+	rim.border_color = Color(0.55, 0.38, 0.12)
+	rim.set_border_width_all(2)
+	rim.set_corner_radius_all(12)
+	inner.add_theme_stylebox_override("panel", rim)
+	inner.position = Vector2(9, 9)
+	inner.size = Vector2(114, 114)
+	inner.clip_children = CanvasItem.CLIP_CHILDREN_AND_DRAW
+	icon.add_child(inner)
+	var pic := TextureRect.new()
+	pic.texture = tex if tex != null else IconBook.tex("cur_key")
+	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	var small := pic.texture != null and pic.texture.get_width() <= 64
+	# Little pixel icons sit centred with air round them; big pictures fill
+	# the frame (cropped to it).
+	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED if small else TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	pic.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST if small else CanvasItem.TEXTURE_FILTER_LINEAR
+	pic.position = Vector2(12, 12) if small else Vector2(2, 2)
+	pic.size = Vector2(90, 90) if small else Vector2(110, 110)
+	inner.add_child(pic)
+	# Four rivets on the frame.
+	for c in [Vector2(10, 10), Vector2(122, 10), Vector2(10, 122), Vector2(122, 122)]:
+		var rv := ColorRect.new()
+		rv.color = Color(1.0, 0.9, 0.55)
+		rv.size = Vector2(4, 4)
+		rv.position = c - Vector2(2, 2)
+		rv.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		icon.add_child(rv)
 	# Name from the left, UNLOCKED from the right.
 	var name_l := Label.new()
 	name_l.text = title
