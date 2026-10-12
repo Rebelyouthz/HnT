@@ -47,7 +47,12 @@ def call(tool: str, inp: dict) -> dict:
 def job(jid: str, every: float = 6.0, timeout: float = 1800.0) -> dict:
     t0 = time.time()
     while True:
-        j = req("GET", "/jobs/" + jid)
+        try:
+            j = req("GET", "/jobs/" + jid)
+        except OSError:
+            # A dropped connection while polling is not a failed job.
+            time.sleep(every)
+            continue
         st = (j.get("data") or j).get("status") if isinstance(j.get("data") or j, dict) else None
         if st in ("succeeded", "failed") or not j.get("ok", True) or time.time() - t0 > timeout:
             return j

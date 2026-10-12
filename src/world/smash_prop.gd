@@ -191,7 +191,8 @@ func _splinters(dir: float, n: int) -> void:
 func _material_sfx(final: bool) -> void:
 	var mat := "wood"
 	if kind in ["kiosk", "vending", "cop_car", "booth", "dumpster", "drum", "hydrant", "mail", "news", "barrier",
-			"yard_barricade", "yard_gurney", "yard_hook_cart", "yard_neon_vending", "yard_noodle_cart", "yard_holo_bin"]:
+			"yard_barricade", "yard_gurney", "yard_hook_cart", "yard_neon_vending", "yard_noodle_cart", "yard_holo_bin",
+			"yard_newsstand", "yard_drone_crate", "yard_neon_barrier", "yard_server_rack"]:
 		mat = "metal"
 	elif kind in ["window", "glass", "bottle"]:
 		mat = "glass"

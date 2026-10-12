@@ -1,1 +1,1 @@
-{"ground": 199, "texel": 1.0296, "parts": [1830], "sections": [[0, "grimhollow_0"], [351, "grimhollow_1"], [707, "grimhollow_2"], [1096, "grimhollow_3"], [1450, "grimhollow_4"]], "pixel": true}
+{"ground": 239, "texel": 0.858, "parts": [4096, 2336], "sections": [[0, "grimhollow_0"], [840, "grimhollow_1"], [1536, "grimhollow_2"], [2232, "grimhollow_3"], [2928, "grimhollow_4"], [3624, "grimhollow_5"], [4320, "grimhollow_6"], [5016, "grimhollow_7"], [5712, "grimhollow_8"]], "pixel": true}
