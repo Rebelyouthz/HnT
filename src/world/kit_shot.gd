@@ -9,6 +9,14 @@ var owner_role := "son"
 var caliber := ""
 var hollow := false
 var quiet := false
+## Suit gadgets: the batwing curves back to whoever threw it, and with the
+## full bat set it flies through every thug (pierce).
+var boomerang := false
+var pierce := 0
+var home: Node2D
+var _hit_list: Array[Node] = []
+var _dir0 := 0.0
+var _returning := false
 
 
 func _ready() -> void:
@@ -21,7 +29,30 @@ func _ready() -> void:
 	cs.shape = c
 	add_child(cs)
 	var blob := Polygon2D.new()
-	if kind == "shuriken":
+	if kind == "batwing":
+		blob.color = Color(0.08, 0.08, 0.11)
+		blob.polygon = PackedVector2Array([
+			Vector2(0, -2), Vector2(4, -6), Vector2(7, -3), Vector2(13, -7), Vector2(11, 0),
+			Vector2(6, 2), Vector2(0, 5), Vector2(-6, 2), Vector2(-11, 0), Vector2(-13, -7),
+			Vector2(-7, -3), Vector2(-4, -6)
+		])
+		var rim := Line2D.new()
+		rim.points = blob.polygon
+		rim.closed = true
+		rim.width = 1.0
+		rim.default_color = Color(0.55, 0.6, 0.85, 0.9)
+		add_child(rim)
+		# A faint trail so a spinning batwing reads at speed.
+		var tr := CPUParticles2D.new()
+		tr.amount = 14
+		tr.lifetime = 0.18
+		tr.local_coords = false
+		tr.gravity = Vector2.ZERO
+		tr.scale_amount_min = 1.5
+		tr.scale_amount_max = 2.5
+		tr.color = Color(0.4, 0.45, 0.7, 0.45)
+		add_child(tr)
+	elif kind == "shuriken":
 		blob.color = Palette.LEMON
 		blob.polygon = PackedVector2Array([
 			Vector2(0, -8), Vector2(6, 0), Vector2(0, 8), Vector2(-6, 0)
@@ -42,6 +73,19 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if boomerang:
+		if _dir0 == 0.0:
+			_dir0 = signf(vel.x)
+		vel.x -= _dir0 * 1300.0 * delta
+		if not _returning and signf(vel.x) != _dir0:
+			_returning = true
+			_hit_list.clear()
+		if _returning and home != null and is_instance_valid(home):
+			var to := home.global_position + Vector2(0, -46) - global_position
+			vel.y = lerpf(vel.y, to.y * 4.0, 0.2)
+			if to.length() < 22.0:
+				queue_free()
+				return
 	position += vel * delta
 	rotation += 14.0 * delta * signf(vel.x)
 	life -= delta
@@ -87,12 +131,21 @@ func _hit_punk(p: Punk) -> void:
 		hit = "heavy"
 	if hollow and kind != "snare":
 		hit = "heavy"
+	# The target bleeds and gets the hole (Punk._gore); no sparks off flesh.
+	if p in _hit_list:
+		return
+	_hit_list.append(p)
 	p.take_hit(hit, self)
-	Juice.sparks(p.global_position)
-	Juice.hole(p.global_position + Vector2(0, -28))
-	var blood := get_tree().get_first_node_in_group("blood_sim")
-	if blood and blood.has_method("spray"):
-		blood.spray(p.global_position, "blade" if hollow else hit, signf(vel.x))
-	if blood and blood.has_method("run_pool") and hit != "light":
-		blood.run_pool(p.global_position, signf(vel.x))
+	if kind == "batwing":
+		Juice.sparks(global_position)
+		if boomerang and not _returning and pierce <= 0:
+			# Bounce off him and fly home.
+			vel.x = -_dir0 * 420.0
+			_returning = true
+			return
+	if pierce > 0:
+		pierce -= 1
+		return
+	if boomerang and _returning:
+		return
 	queue_free()

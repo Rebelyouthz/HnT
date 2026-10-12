@@ -23,6 +23,7 @@ func _ready() -> void:
 	card.add_child(sc)
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 10)
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	sc.add_child(col)
 	var h := Label.new()
 	h.text = "RESEARCH CENTER"
@@ -69,6 +70,7 @@ func _row(info: Dictionary) -> Control:
 	row.add_child(v)
 	var owned := FamilyProfile.has_research(id)
 	var go := UiKit.button("INSTALLED" if owned else "%d GOLD" % int(info.get("gold", 0)), Vector2(140, 40))
+	go.set_meta("key", "research_" + id)
 	go.disabled = owned
 	go.pressed.connect(func() -> void:
 		if FamilyProfile.try_research(id):

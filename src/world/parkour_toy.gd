@@ -2,6 +2,9 @@ class_name ParkourToy
 extends Area2D
 
 ## Rooftops, slide hills, high jumps, wires, rope swing, escape-and-land.
+## Every bounce is a choice: JUMP while on it. Standing, walking or fighting
+## on a toy never throws you (it used to, and a brawl next to an awning
+## turned into endless bouncing). Rails and wires are caught from a jump.
 
 @export var kind := "hill"
 var _used := 0.0
@@ -158,7 +161,7 @@ func _ready() -> void:
 		s.centered = false
 		s.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
 		s.position = Vector2(-float(tex.get_width()) * 0.5 * SpriteBook.DRAW_SCALE, -float(tex.get_height()) * SpriteBook.DRAW_SCALE + 20.0)
-		s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		s.texture_filter = SpriteBook.world_filter()
 		add_child(s)
 
 
@@ -187,6 +190,9 @@ func _touch(f: Fighter) -> void:
 					Juice.shout("SLIDE HILL")
 					KitSfx.hit(f.role, "dash")
 		"wire":
+			# Only caught from a jump: walking under it never snaps you up.
+			if f.hop > -12.0:
+				return
 			f.hop = -40.0
 			f.hop_v = 0.0
 			f.velocity.y = 0.0
@@ -207,7 +213,7 @@ func _touch(f: Fighter) -> void:
 				if rs and rs.has_method("add_points"):
 					rs.add_points(f.role, 36, "swing")
 		"pad":
-			if _used <= 0.0 and (f._just("jump") or f._street_grounded()):
+			if _used <= 0.0 and f._just("jump"):
 				_used = 0.4
 				f.hop_v = -780.0
 				f.hop = -4.0
@@ -226,7 +232,7 @@ func _touch(f: Fighter) -> void:
 				f.hop_v = 380.0
 				Juice.shout("THE DROP")
 		"wallrun":
-			if _used <= 0.0:
+			if _used <= 0.0 and f._just("jump"):
 				_used = 0.45
 				f.wall_run = 0.55
 				f.hop = -52.0
@@ -244,7 +250,7 @@ func _touch(f: Fighter) -> void:
 					_spawn_named("Wall Kid", 34, "roof")
 					Juice.toast("challenge", "WALL KID", "You rented the brick. He kicks the invoice.")
 		"dumpster":
-			if _used <= 0.0 and (f._just("jump") or f._street_grounded()):
+			if _used <= 0.0 and f._just("jump"):
 				_used = 0.4
 				f.hop_v = -640.0
 				f.hop = -4.0
@@ -257,7 +263,7 @@ func _touch(f: Fighter) -> void:
 				KitSfx.hit(f.role, "jump")
 				FamilyProfile.mark_trick()
 		"billboard":
-			if _used <= 0.0 and (f._just("jump") or f._street_grounded() or f.hop < -8.0):
+			if _used <= 0.0 and f._just("jump"):
 				_used = 0.35
 				f.hop_v = -820.0
 				f.hop = -6.0
@@ -266,6 +272,8 @@ func _touch(f: Fighter) -> void:
 				KitSfx.hit(f.role, "jump")
 				FamilyProfile.mark_trick()
 		"grind":
+			if f.hop > -12.0:
+				return
 			f.hop = -28.0
 			f.hop_v = 0.0
 			f.velocity.x = float(f.facing) * 380.0
@@ -285,7 +293,7 @@ func _touch(f: Fighter) -> void:
 				Juice.trick_chain(3, "GRIND POP")
 				FamilyProfile.mark_trick()
 		"cart":
-			if _used <= 0.0 and f.cart_t <= 0.0 and f._street_grounded():
+			if _used <= 0.0 and f.cart_t <= 0.0 and f._street_grounded() and (f._just("jump") or f._just("dash")):
 				_used = 0.8
 				f.cart_t = 1.25
 				var rs := get_tree().get_first_node_in_group("run_state")
@@ -306,7 +314,7 @@ func _touch(f: Fighter) -> void:
 				Juice.shout("CART POP")
 				Juice.named_slowmo()
 		"awning":
-			if _used <= 0.0 and (f._just("jump") or f.hop < -8.0 or f._street_grounded()):
+			if _used <= 0.0 and f._just("jump"):
 				_used = 0.38
 				var lift := -820.0
 				var rs := get_tree().get_first_node_in_group("run_state")
@@ -329,6 +337,8 @@ func _touch(f: Fighter) -> void:
 					_acrobat = true
 					_spawn_acrobat()
 		"scaffold":
+			if f.hop > -12.0:
+				return
 			f.hop = -36.0
 			f.hop_v = 0.0
 			f.velocity.x = float(f.facing) * 280.0
@@ -349,7 +359,7 @@ func _touch(f: Fighter) -> void:
 				KitSfx.hit(f.role, "jump")
 				FamilyProfile.mark_trick()
 		"pole":
-			if _used <= 0.0 and (f._just("jump") or f._just("special") or f.hop < -8.0):
+			if _used <= 0.0 and (f._just("jump") or f._just("special")):
 				_used = 0.48
 				var lift := -680.0
 				var rs := get_tree().get_first_node_in_group("run_state")
@@ -376,7 +386,7 @@ func _touch(f: Fighter) -> void:
 					_spawn_named("Pole Clerk", 40, "street")
 					Juice.toast("challenge", "POLE CLERK", "You swung the lamp. He bills the orbit.")
 		"hood":
-			if _used <= 0.0 and (f._just("jump") or f.hop < -8.0 or f._street_grounded()):
+			if _used <= 0.0 and f._just("jump"):
 				_used = 0.4
 				var lift := -720.0
 				var rs := get_tree().get_first_node_in_group("run_state")
@@ -403,7 +413,7 @@ func _touch(f: Fighter) -> void:
 					_spawn_named("Hood Hopper", 38, "street")
 					Juice.toast("challenge", "HOOD HOPPER", "You rented the bumper. He wants a quote for the paint.")
 		"bench":
-			if _used <= 0.0 and (f._just("jump") or f._just("dash") or f._street_grounded()):
+			if _used <= 0.0 and f._just("jump"):
 				_used = 0.32
 				f.hop_v = -480.0
 				f.hop = -4.0
@@ -429,7 +439,7 @@ func _touch(f: Fighter) -> void:
 				if rs and rs.has_method("add_points"):
 					rs.add_points(f.role, 20, "flag")
 		"crate":
-			if _used <= 0.0 and (f._just("jump") or f._street_grounded()):
+			if _used <= 0.0 and f._just("jump"):
 				_used = 0.35
 				f.hop_v = -520.0
 				f.hop = -4.0

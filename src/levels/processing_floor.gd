@@ -24,10 +24,16 @@ func _configure() -> void:
 
 
 func build_world() -> void:
-	var sky := Blockout.poly(self, Rect2(0, 0, map_w, 720), Color(0.06, 0.05, 0.07), -8)
-	sky.z_index = -8
 	NightStreet.parallax(self, map_w, "processing")
-	NightStreet.wet_floor(self, map_w)
+	# Painted sections (backdrops/processing_strip) replace the blockout
+	# buildings; the painted wet street is the floor.
+	if NightStreet.has_backdrop("processing") and WetStreet.available():
+		# Indoors: a mopped floor, not cobbles.
+		WetStreet.lay(self, map_w, "concrete_floor" if WetStreet.available("concrete_floor") else "street")
+	else:
+		NightStreet.wet_floor(self, map_w)
+		NightStreet.tenement(self, Rect2(40, 80, 280, 320), Color(0.16, 0.12, 0.12))
+		NightStreet.tenement(self, Rect2(2360, 40, 360, 360), Color(0.14, 0.1, 0.12))
 	Blockout.solid(self, Rect2(0, 492, 780, 18), true)
 	Blockout.poly(self, Rect2(0, 492, 780, 18), Color(0.22, 0.2, 0.18), 2)
 	Blockout.solid(self, Rect2(920, 248, 280, 18), true)
@@ -38,8 +44,6 @@ func build_world() -> void:
 	Blockout.poly(self, Rect2(1680, 220, 240, 18), Color(0.26, 0.2, 0.14), 2)
 	fire_escape(940.0, 248.0)
 	fire_escape(1700.0, 220.0)
-	NightStreet.tenement(self, Rect2(40, 80, 280, 320), Color(0.16, 0.12, 0.12))
-	NightStreet.tenement(self, Rect2(2360, 40, 360, 360), Color(0.14, 0.1, 0.12))
 	var mart := BloodMart.new()
 	mart.global_position = Vector2(520, 490)
 	add_child(mart)

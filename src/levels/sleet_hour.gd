@@ -27,8 +27,6 @@ func _ready() -> void:
 
 
 func build_world() -> void:
-	var sky := Blockout.poly(self, Rect2(0, 0, map_w, 720), Color(0.12, 0.16, 0.22), -8)
-	sky.z_index = -8
 	NightStreet.parallax(self, map_w, "snow")
 	Blockout.poly(self, Rect2(0, 430, map_w, 290), Color(0.78, 0.84, 0.9, 0.55), 0)
 	Blockout.poly(self, Rect2(0, 520, map_w, 80), Color(0.55, 0.72, 0.82, 0.45), 1)
@@ -36,8 +34,11 @@ func build_world() -> void:
 	Blockout.poly(self, Rect2(280, 248, 300, 16), Color(0.72, 0.8, 0.88), 2)
 	Blockout.solid(self, Rect2(1180, 220, 340, 16), true)
 	Blockout.poly(self, Rect2(1180, 220, 340, 16), Color(0.7, 0.78, 0.86), 2)
-	NightStreet.tenement(self, Rect2(40, 40, 200, 200), Color(0.55, 0.62, 0.7))
-	NightStreet.tenement(self, Rect2(1760, 30, 240, 210), Color(0.5, 0.58, 0.68))
+	# Painted snow sections (backdrops/snow_strip) are the scenery;
+	# the flat blockout buildings only without them.
+	if not NightStreet.has_backdrop("snow"):
+		NightStreet.tenement(self, Rect2(40, 40, 200, 200), Color(0.55, 0.62, 0.7))
+		NightStreet.tenement(self, Rect2(1760, 30, 240, 210), Color(0.5, 0.58, 0.68))
 	fire_escape(320.0, 248.0)
 	fire_escape(1280.0, 220.0)
 	ParkourToy.place(self, Vector2(700, 500), "hill")

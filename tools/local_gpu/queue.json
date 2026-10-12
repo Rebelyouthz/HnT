@@ -1,0 +1,127 @@
+{
+ "moves": {
+  "roll": [
+   2.0,
+   "{d} dives forward to the right, tucks into one fast forward somersault on the ground, rolls over his shoulder and comes straight back up onto his feet facing right. Same black jacket, empty hands."
+  ],
+  "walk_back": [
+   3.0,
+   "Back view only: {d} has his back to the camera and walks forward into the distance with steady steps, arms swinging, we see only his back, shoulders and the back of his head, continuous walk cycle on a treadmill, never turning around. He walks at one steady, even, natural pace for the whole clip, at least four full steps (left, right, left, right), each leg swinging fully forward and back, the opposite arm swinging with it, never pausing, never speeding up or slowing down, never turning, never changing direction, same size in frame from the first frame to the last.",
+   "free"
+  ],
+  "walk_front": [
+   3.0,
+   "Front view: {d} faces the camera and walks toward the viewer on a treadmill with clear steps, arms swinging at his sides, continuous walk cycle, staying in place. He walks at one steady, even, natural pace for the whole clip, at least four full steps (left, right, left, right), each leg swinging fully forward and back, the opposite arm swinging with it, never pausing, never speeding up or slowing down, never turning, never changing direction, same size in frame from the first frame to the last.",
+   "free"
+  ],
+  "walk_ur": [
+   3.0,
+   "Three-quarter back view: {d} walks diagonally away from the camera toward the upper right on a treadmill, we see his back and right shoulder, clear steps, arms swinging, continuous walk cycle, never turning to face us. He walks at one steady, even, natural pace for the whole clip, at least four full steps (left, right, left, right), each leg swinging fully forward and back, the opposite arm swinging with it, never pausing, never speeding up or slowing down, never turning, never changing direction, same size in frame from the first frame to the last.",
+   "free"
+  ],
+  "walk_dr": [
+   3.0,
+   "Three-quarter front view: {d} walks diagonally toward the camera and to the right on a treadmill, we see his face and chest turned a little to the right, clear steps, arms swinging, continuous walk cycle. He walks at one steady, even, natural pace for the whole clip, at least four full steps (left, right, left, right), each leg swinging fully forward and back, the opposite arm swinging with it, never pausing, never speeding up or slowing down, never turning, never changing direction, same size in frame from the first frame to the last.",
+   "free"
+  ],
+  "kick_front": [
+   1.5,
+   "{d} lifts his right leg and snaps a fast, hard kick forward at knee height, the leg straight out to the right in front of him, holds it a moment, then plants the foot back down. Same clothes the whole time."
+  ],
+  "punch_free": [
+   1.5,
+   "{d} keeps the stolen bag tucked under his left arm and throws a fast hard punch with his free right fist at head height, the arm snapping fully out to the right, then pulls back."
+  ]
+ },
+ "who": {
+  "bailiff": {
+   "desc": "The armored bailiff in the black vest and helmet",
+   "moves": [
+    "walk_back",
+    "walk_ur",
+    "walk_dr"
+   ]
+  },
+  "lot_hydra": {
+   "desc": "The huge man with the golden claw arm",
+   "moves": [
+    "walk_back",
+    "walk_ur",
+    "walk_dr"
+   ]
+  },
+  "clipboard_flier": {
+   "desc": "The office clerk with the clipboard",
+   "moves": [
+    "walk_front",
+    "kick_front",
+    "walk_ur",
+    "walk_dr"
+   ]
+  },
+  "roof_runner": {
+   "desc": "The rooftop runner",
+   "moves": [
+    "kick_front",
+    "walk_ur",
+    "walk_dr"
+   ]
+  },
+  "bag_snatch": {
+   "desc": "The bag snatcher in the hoodie",
+   "moves": [
+    "punch_free",
+    "walk_ur",
+    "walk_dr"
+   ]
+  },
+  "son": {
+   "desc": "The teenage boy in the black jacket",
+   "moves": [
+    "roll"
+   ]
+  },
+  "punk": {
+   "desc": "The street punk",
+   "moves": [
+    "walk_ur",
+    "walk_dr"
+   ]
+  },
+  "cop": {
+   "desc": "The police officer",
+   "moves": [
+    "walk_ur",
+    "walk_dr"
+   ]
+  },
+  "mohawk": {
+   "desc": "The punk with the mohawk",
+   "moves": [
+    "walk_ur",
+    "walk_dr"
+   ]
+  },
+  "shift_lead": {
+   "desc": "The shift lead in the work vest",
+   "moves": [
+    "walk_ur",
+    "walk_dr"
+   ]
+  },
+  "valet": {
+   "desc": "The parking valet in a dark vest and cap",
+   "moves": [
+    "walk_ur",
+    "walk_dr"
+   ]
+  },
+  "clamp_king": {
+   "desc": "The burly man with the giant golden wheel clamp",
+   "moves": [
+    "walk_ur",
+    "walk_dr"
+   ]
+  }
+ }
+}

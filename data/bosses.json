@@ -1,0 +1,84 @@
+{
+  "_doc": "Boss attack patterns (src/actors/boss_brain.gd). stages[0..3] = the moves used at 100/75/50/25% hp (each list adds to the pool). Move ids: charge, slam, volley, rain, summon, lane_wave, grab, spin. 'names' rename a move in the call-out; 'add' is the thug they call in; 'shot' and 'drop' colour the projectiles and falling things.",
+  "default": {
+    "hp_mul": 1.9, "names": {}, "add": "Bag Snatch", "shot": "paper", "drop": "crate",
+    "stages": [["charge", "volley"], ["slam"], ["summon", "lane_wave"], ["rain", "spin"]]
+  },
+  "Shift Lead": {
+    "hp_mul": 1.5, "add": "Bag Snatch", "shot": "paper", "drop": "crate",
+    "names": {"charge": "OVERTIME RUSH", "volley": "WRITE-UPS", "slam": "MANDATORY MEETING", "summon": "CALL THE TEMPS"},
+    "stages": [["charge"], ["volley"], ["slam"], ["summon"]]
+  },
+  "Collector Gant": {
+    "hp_mul": 2.1, "add": "Repo Goon", "shot": "invoice", "drop": "safe",
+    "names": {"charge": "COLLECTION RUSH", "volley": "INVOICE STORM", "slam": "LATE FEE SLAM", "summon": "SEND THE REPO MEN", "rain": "FALLING ASSETS", "grab": "SHAKEDOWN", "lane_wave": "FINAL NOTICE"},
+    "stages": [["charge", "volley"], ["grab", "slam"], ["summon", "lane_wave"], ["rain"]]
+  },
+  "Clamp King": {
+    "hp_mul": 1.5, "add": "Bag Snatch", "shot": "ticket", "drop": "boot",
+    "names": {"charge": "TOW HOOK", "rain": "CLAMP DROP", "volley": "TICKET SPRAY", "spin": "HUBCAP SPIN"},
+    "stages": [["charge"], ["rain"], ["volley"], ["spin"]]
+  },
+  "Lot Hydra": {
+    "hp_mul": 2.2, "add": "Repo Goon", "shot": "ticket", "drop": "boot",
+    "names": {"rain": "THREE BOOTS", "charge": "TOW TRUCK", "lane_wave": "SPEED BUMP", "volley": "TICKET HAIL", "summon": "VALET SHIFT", "spin": "ROUNDABOUT", "slam": "PARKING BRAKE"},
+    "stages": [["rain", "charge"], ["volley", "lane_wave"], ["summon", "slam"], ["spin"]]
+  },
+  "Lease Hawk": {"names": {"slam": "DIVE BOMB", "volley": "LEASE PAPERS", "rain": "EVICTION NOTICES"}, "stages": [["slam", "volley"], ["rain"], ["charge"], ["spin"]]},
+  "The Facilitator": {"names": {"volley": "TALKING STICK", "summon": "SHARE CIRCLE", "spin": "ICEBREAKER"}, "stages": [["volley", "summon"], ["lane_wave"], ["spin"], ["rain"]]},
+  "Badge Broker": {
+    "hp_mul": 1.5, "add": "Agent Lin", "shot": "warrant", "drop": "crate",
+    "names": {"charge": "BADGE FLASH", "volley": "CITATIONS", "summon": "CALL IT IN", "grab": "PAT DOWN"},
+    "stages": [["charge"], ["volley"], ["grab"], ["summon"]]
+  },
+  "Deputy Raven": {
+    "hp_mul": 1.6, "add": "Hall Guard", "shot": "invoice", "drop": "safe",
+    "names": {"charge": "STAR DASH", "volley": "THROWING STARS", "grab": "ESCORTED OUT", "summon": "SECURITY"},
+    "stages": [["charge"], ["volley"], ["grab"], ["summon"]]
+  },
+  "Grid Kid": {
+    "hp_mul": 1.6, "add": "Bag Snatch", "shot": "ticket", "drop": "crate",
+    "names": {"charge": "GRID RUSH", "volley": "PARKING FINES", "spin": "DONUT", "summon": "RIDE ALONG"},
+    "stages": [["charge"], ["volley"], ["spin"], ["summon"]]
+  },
+  "Usher Prime": {
+    "hp_mul": 1.7, "add": "Chapel Usher", "shot": "invoice", "drop": "crate",
+    "names": {"charge": "AISLE RUSH", "volley": "HYMN SHEETS", "grab": "SEE YOU OUT", "summon": "COLLECTION PLATE"},
+    "stages": [["charge"], ["volley"], ["grab"], ["summon"]]
+  },
+  "Adjuster Prime": {
+    "hp_mul": 1.8, "add": "Invoice Clerk", "shot": "invoice", "drop": "safe",
+    "names": {"charge": "CLAIM DENIED", "volley": "FINE PRINT", "slam": "DEDUCTIBLE", "summon": "SECOND OPINION"},
+    "stages": [["charge"], ["volley"], ["slam"], ["summon"]]
+  },
+  "Agent Prime": {
+    "hp_mul": 2.2, "add": "Agent Lin", "shot": "warrant", "drop": "cuffs",
+    "names": {"volley": "BURST FIRE", "charge": "TACKLE", "grab": "CUFFS", "summon": "BACKUP", "lane_wave": "WARRANT LIGHT", "rain": "SEIZED ASSETS"},
+    "stages": [["volley", "charge"], ["grab"], ["summon"], ["lane_wave", "rain"]]
+  },
+  "Number 88": {"names": {"rain": "TICKETS CALLED", "lane_wave": "QUEUE JUMP"}, "stages": [["rain", "lane_wave"], ["charge"], ["summon"], ["spin"]]},
+  "Boxcar Brute": {
+    "hp_mul": 1.6, "add": "Toll Bot", "shot": "ticket", "drop": "crate",
+    "names": {"charge": "COUPLING RAM", "slam": "BUFFER STOP", "grab": "FREIGHT HUG", "summon": "SHUNT IN"},
+    "stages": [["charge"], ["slam"], ["grab"], ["summon"]]
+  },
+  "Conductor 9": {
+    "hp_mul": 2.2, "add": "Toll Bot", "shot": "ticket", "drop": "crate",
+    "names": {"charge": "EXPRESS", "lane_wave": "RAIL SHOCK", "volley": "PUNCHED TICKETS", "slam": "EMERGENCY BRAKE", "summon": "ALL ABOARD"},
+    "stages": [["charge", "lane_wave"], ["volley"], ["slam"], ["summon"]]
+  },
+  "Scarecrow Ken": {
+    "hp_mul": 1.6, "add": "Hay Pin", "shot": "paper", "drop": "crate",
+    "names": {"charge": "STRAW RUSH", "volley": "CROW CALL", "spin": "WINDMILL", "summon": "PITCHFORK FRIENDS"},
+    "stages": [["charge"], ["volley"], ["spin"], ["summon"]]
+  },
+  "Combine Brute": {
+    "hp_mul": 2.3, "add": "Tractor Kid", "shot": "ticket", "drop": "crate",
+    "names": {"charge": "HARVEST", "spin": "THRESHER", "rain": "HAY BALES", "slam": "BALER", "summon": "FARMHANDS"},
+    "stages": [["charge", "spin"], ["rain"], ["slam"], ["summon"]]
+  },
+  "Snowmobile": {"names": {"charge": "WHITEOUT RUN", "rain": "ICICLES", "lane_wave": "AVALANCHE"}, "stages": [["charge", "rain"], ["lane_wave"], ["volley"], ["spin"]]},
+  "Invoice Chopper": {"hp_mul": 2.2, "add": "Neon Scooter", "shot": "invoice", "drop": "safe", "names": {"rain": "PAPER RAIN", "volley": "ROTOR WASH", "lane_wave": "SEARCHLIGHT"}, "stages": [["rain", "volley"], ["lane_wave"], ["summon"], ["charge"]]},
+  "Cenote Elite": {"names": {"slam": "DEPTH CHARGE", "grab": "UNDERTOW"}, "stages": [["slam", "grab"], ["volley"], ["lane_wave"], ["rain"]]},
+  "Dr. Splint": {"hp_mul": 2.4, "add": "Invoice Clerk", "shot": "paper", "drop": "safe", "names": {"volley": "SYRINGES", "grab": "CHECK-UP", "summon": "ORDERLIES"}, "stages": [["volley", "grab"], ["summon"], ["slam"], ["rain", "spin"]]}
+}

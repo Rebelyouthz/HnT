@@ -21,6 +21,10 @@ static func place(host: Node, map: String) -> ViewpointTower:
 	t.global_position = Vector2(float(row.get("x", 1200.0)), float(row.get("y", 500.0)))
 	if map == "raven_grid" and t.global_position.x > 2200.0:
 		t.global_position.x = 1640.0
+	# Never at the door: the tower is a mid-map reward, a bit past halfway.
+	var w := float(host.get("map_w")) if host.get("map_w") != null else 0.0
+	if w > 0.0 and t.global_position.y > 400.0:
+		t.global_position.x = clampf(t.global_position.x, w * 0.56, w * 0.72)
 	host.add_child(t)
 	return t
 
@@ -36,6 +40,9 @@ func _ready() -> void:
 	cs.shape = sh
 	cs.position = Vector2(0, -40)
 	add_child(cs)
+	if TowerBook.map_row(map_id).has("film"):
+		_build_giant()
+		return
 	_mast = Polygon2D.new()
 	_mast.color = Color(0.28, 0.22, 0.18)
 	_mast.polygon = PackedVector2Array([
@@ -95,8 +102,10 @@ func _ready() -> void:
 	add_child(lamp)
 	_wind_mist()
 	_hint = Label.new()
+	# World text at half scale (see NightStreet.WORLD_TEXT).
+	_hint.scale = Vector2(NightStreet.WORLD_TEXT, NightStreet.WORLD_TEXT)
 	_hint.position = Vector2(-110, -80)
-	_hint.size = Vector2(220, 48)
+	_hint.size = Vector2(440, 48)
 	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	UiKit.apply_label(_hint, 13, Palette.EDGE)
@@ -104,6 +113,45 @@ func _ready() -> void:
 	add_child(_hint)
 	SpriteBook.attach_scaled(self, "tower", -200.0, Vector2(1.15, 3.2))
 	NightStreet.plaque(get_parent(), global_position + Vector2(-90, -470), "140M  ·  HELL IS BELOW", Palette.LEMON, 13)
+
+
+var _giant := false
+
+
+## The Harbour Clock in the street: the painted tower's base and shaft rising
+## out of frame behind the pavement (the rest is seen during the climb). A
+## secret: no marker, just a quiet plaque and a lit door.
+func _build_giant() -> void:
+	_giant = true
+	var base := load("res://assets/ui/tower/base.png") as Texture2D
+	var mid := load("res://assets/ui/tower/mid.png") as Texture2D
+	var k := 2.0 / 3.0
+	var y := 0.0
+	var holder := Node2D.new()
+	holder.z_index = -2
+	add_child(holder)
+	for tex in [base, mid, mid, mid, mid, mid, mid, mid, mid, mid]:
+		if tex == null:
+			continue
+		var sp := Sprite2D.new()
+		sp.texture = tex
+		sp.centered = false
+		sp.scale = Vector2(k, k)
+		var h := float(tex.get_height()) * k
+		sp.position = Vector2(-float(tex.get_width()) * k * 0.5, y - h)
+		sp.texture_filter = SpriteBook.world_filter()
+		holder.add_child(sp)
+		y -= h - 1.0
+	_hint = Label.new()
+	_hint.scale = Vector2(NightStreet.WORLD_TEXT, NightStreet.WORLD_TEXT)
+	_hint.position = Vector2(-120, -96)
+	_hint.size = Vector2(480, 40)
+	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	UiKit.apply_label(_hint, 13, Palette.LEMON)
+	_hint.text = "???"
+	add_child(_hint)
+	NearFade.on(_hint, 110.0, 240.0)
+	NearFade.on(NightStreet.plaque(self, Vector2(-38, -112), "%d M" % int(TowerBook.map_row(map_id).get("height_m", 132)), Palette.MUTED, 12), 110.0, 240.0)
 
 
 func _guy_wire(a: Vector2, b: Vector2) -> void:
@@ -136,6 +184,9 @@ func _wind_mist() -> void:
 
 func _process(delta: float) -> void:
 	_wind_t += delta
+	if _giant:
+		_process_giant()
+		return
 	_mast.rotation = 0.03 * sin(_wind_t * 1.7)
 	_beacon.modulate.a = 0.4 + 0.6 * (0.5 + 0.5 * sin(_wind_t * 7.0))
 	_creak_t -= delta
@@ -150,11 +201,53 @@ func _process(delta: float) -> void:
 			var f: Fighter = n
 			if f.downed or f.van_seat != "":
 				continue
-			_hint.modulate = Color(1.2, 1.15, 0.7)
+			_hint.self_modulate = Color(1.2, 1.15, 0.7)
 			if f._just("light") or f._just("jump"):
 				_start(f)
 			return
-	_hint.modulate = Color.WHITE
+	_hint.self_modulate = Color.WHITE
+
+
+func _process_giant() -> void:
+	if _busy:
+		return
+	for n in get_overlapping_bodies():
+		if n is Fighter:
+			var f: Fighter = n
+			if f.downed or f.van_seat != "":
+				continue
+			_hint.text = "%s  ·  UP / JUMP TO CLIMB" % str(TowerBook.map_row(map_id).get("label", "TOWER"))
+			_hint.self_modulate = Color(1.2, 1.15, 0.7)
+			if f._just("up") or f._just("jump"):
+				_start_film()
+			return
+	_hint.text = "???" if not FamilyProfile.data.get("tower_" + map_id, false) else str(TowerBook.map_row(map_id).get("label", "TOWER"))
+	_hint.self_modulate = Color.WHITE
+
+
+func _start_film() -> void:
+	_busy = true
+	if not bool(FamilyProfile.data.get("tower_" + map_id, false)):
+		Juice.toast("reward", "SECRET FOUND", "%s  ·  %d metres of bad decisions" % [str(TowerBook.map_row(map_id).get("label", "TOWER")), int(TowerBook.map_row(map_id).get("height_m", 132))])
+	get_tree().paused = true
+	var film := GiantTowerFilm.new()
+	film.map_id = map_id
+	get_tree().root.add_child(film)
+	var res: Dictionary = await film.finished
+	get_tree().paused = false
+	FamilyProfile.data["tower_" + map_id] = true
+	FamilyProfile.save()
+	for n in get_tree().get_nodes_in_group("players"):
+		if n is Fighter and is_instance_valid(n):
+			(n as Fighter).global_position = Vector2(global_position.x + 90.0 + (20.0 if (n as Fighter).role == "son" else 0.0), global_position.y)
+			(n as Fighter).velocity = Vector2.ZERO
+	var rs := get_tree().get_first_node_in_group("run_state")
+	var pts := 120 + int(res.get("score", 0)) + 40 * int(res.get("perfects", 0))
+	if rs and rs.has_method("add_points"):
+		rs.add_points("father", pts, "tower")
+	FamilyProfile.add_gold(25)
+	Juice.toast("reward", "VIEWPOINT SYNCED", "+%d points  ·  +25 gold  ·  %s" % [pts, str(res.get("descent", "")).to_upper()])
+	_busy = false
 
 
 func _nearest_x() -> float:

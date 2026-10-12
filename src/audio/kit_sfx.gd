@@ -10,6 +10,11 @@ static func hit(role: String, kind: String) -> void:
 	if ResourceLoader.exists(named):
 		Mixer.play_sfx(named, pitch)
 		return
+	if kind == "jump" or kind == "land":
+		var p := "res://assets/audio/sfx/%s.ogg" % kind
+		if ResourceLoader.exists(p):
+			Mixer.play_sfx(p, pitch * randf_range(0.95, 1.05), -6.0)
+			return
 	var generic := "res://assets/audio/%s.wav" % kind
 	if ResourceLoader.exists(generic):
 		Mixer.play_sfx(generic, pitch)
@@ -59,6 +64,10 @@ static func foot(role: String, speed_frac: float, stumble := false) -> void:
 		Mixer.play_sfx("res://assets/audio/stumble.wav" if ResourceLoader.exists("res://assets/audio/stumble.wav") else "res://assets/audio/hit_heavy.wav", 0.92 if role == "father" else 1.08)
 		return
 	var pitch := (1.08 if role == "son" else 0.84) * (0.92 + speed_frac * 0.25)
+	var step := "res://assets/audio/sfx/foot_%d.ogg" % (1 + randi() % 4)
+	if ResourceLoader.exists(step):
+		Mixer.play_sfx(step, pitch * randf_range(0.94, 1.06), -13.0 + 4.0 * clampf(speed_frac - 0.5, 0.0, 1.0))
+		return
 	if ResourceLoader.exists("res://assets/audio/foot.wav"):
 		Mixer.play_sfx("res://assets/audio/foot.wav", pitch, -16.0)
 	else:

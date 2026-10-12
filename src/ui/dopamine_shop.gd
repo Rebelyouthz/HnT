@@ -5,6 +5,8 @@ signal need_refresh
 
 
 func _ready() -> void:
+	Mixer.push_music("res://assets/audio/music/music_shop.ogg")
+	tree_exiting.connect(Mixer.pop_music)
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	var dim := ColorRect.new()
 	dim.color = Color(0, 0, 0, 0.76)

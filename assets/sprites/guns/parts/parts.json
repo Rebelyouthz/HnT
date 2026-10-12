@@ -1,0 +1,156 @@
+{
+ "suppressor": {
+  "mount": "muzzle",
+  "anchor": [
+   2,
+   6
+  ],
+  "size": [
+   34,
+   14
+  ]
+ },
+ "compensator": {
+  "mount": "muzzle",
+  "anchor": [
+   2,
+   6
+  ],
+  "size": [
+   20,
+   14
+  ]
+ },
+ "long_barrel": {
+  "mount": "muzzle",
+  "anchor": [
+   2,
+   6
+  ],
+  "size": [
+   26,
+   12
+  ]
+ },
+ "short_barrel": {
+  "mount": "muzzle",
+  "anchor": [
+   2,
+   8
+  ],
+  "size": [
+   14,
+   18
+  ]
+ },
+ "red_dot": {
+  "mount": "rail",
+  "anchor": [
+   8,
+   12
+  ],
+  "size": [
+   18,
+   16
+  ]
+ },
+ "scope": {
+  "mount": "rail",
+  "anchor": [
+   18,
+   16
+  ],
+  "size": [
+   38,
+   20
+  ]
+ },
+ "laser": {
+  "mount": "under",
+  "anchor": [
+   8,
+   2
+  ],
+  "size": [
+   20,
+   10
+  ]
+ },
+ "ext_mag": {
+  "mount": "mag",
+  "anchor": [
+   8,
+   2
+  ],
+  "size": [
+   18,
+   22
+  ]
+ },
+ "drum_mag": {
+  "mount": "mag",
+  "anchor": [
+   12,
+   2
+  ],
+  "size": [
+   26,
+   30
+  ]
+ },
+ "quick_loader": {
+  "mount": "mag",
+  "anchor": [
+   10,
+   2
+  ],
+  "size": [
+   22,
+   14
+  ]
+ },
+ "hollow": {
+  "mount": "window",
+  "anchor": [
+   8,
+   6
+  ],
+  "size": [
+   16,
+   12
+  ]
+ },
+ "incendiary": {
+  "mount": "window",
+  "anchor": [
+   8,
+   6
+  ],
+  "size": [
+   16,
+   12
+  ]
+ },
+ "ap_rounds": {
+  "mount": "window",
+  "anchor": [
+   8,
+   6
+  ],
+  "size": [
+   16,
+   12
+  ]
+ },
+ "rubber": {
+  "mount": "window",
+  "anchor": [
+   8,
+   6
+  ],
+  "size": [
+   16,
+   12
+  ]
+ }
+}

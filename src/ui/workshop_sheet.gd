@@ -23,6 +23,7 @@ func _ready() -> void:
 	card.add_child(sc)
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 10)
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	sc.add_child(col)
 	var head := HBoxContainer.new()
 	var mark := LogoMark.new()
@@ -93,6 +94,7 @@ func _row(info: Dictionary) -> Control:
 	v.add_child(b)
 	row.add_child(v)
 	var go := UiKit.button("CRAFT  %dG" % int(info.get("gold", 0)), Vector2(150, 40))
+	go.set_meta("key", "craft_" + id)
 	if FamilyProfile.has_craft(id):
 		go.text = "OWNED"
 		go.disabled = true

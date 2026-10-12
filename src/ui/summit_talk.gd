@@ -98,6 +98,7 @@ func _begin() -> void:
 
 
 func _paint_line() -> void:
+	StoryVo.hush()
 	_row.visible = false
 	if _i >= _lines.size():
 		_advance_phase()
@@ -113,10 +114,12 @@ func _paint_line() -> void:
 	_who.add_theme_color_override("font_color", Palette.BRICK if who == "father" else (Palette.LEMON if who == "son" else Palette.EDGE))
 	_body.text = str(d.get("text", ""))
 	_prompt.text = "LIGHT / JUMP  ·  NEXT"
-	if who == "father":
-		VoBank.summit_dad()
-	elif who == "son":
-		VoBank.summit_son()
+	# Recorded line first; the old one-word bark only where none exists.
+	if StoryVo.say(who, _body.text) <= 0.0:
+		if who == "father":
+			VoBank.summit_dad()
+		elif who == "son":
+			VoBank.summit_son()
 	Juice.play("res://assets/audio/ui_click.wav")
 
 
@@ -165,7 +168,8 @@ func _offer(prompt: String) -> void:
 func _choice_btn(label: String, id: String) -> void:
 	var b := UiKit.button(label, Vector2(180, 44))
 	if id == "yes":
-		b.add_theme_stylebox_override("normal", UiKit.panel(Palette.READY, Palette.LEMON))
+		UiKit.ready_style(b)
+		UiKit.dark_text(b)
 	elif id == "deflect":
 		b.add_theme_stylebox_override("normal", UiKit.panel(Palette.PANEL_2, Palette.MUTED))
 	b.pressed.connect(func() -> void:
@@ -348,6 +352,7 @@ func _advance_line() -> void:
 
 
 func _close() -> void:
+	StoryVo.hush()
 	Mixer.play_music("res://assets/audio/music_street.wav")
 	finished.emit()
 	queue_free()
