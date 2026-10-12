@@ -521,6 +521,8 @@ func _base_clip(kind: String) -> String:
 		"dive":
 			return "dive"
 		_:
+			if RS_MOVES.has(kind):
+				return _have_clip(RS_MOVES[kind]["clips"])
 			return "jab"
 
 
@@ -1452,7 +1454,7 @@ func _combat() -> void:
 		_special()
 	if _just("shoot"):
 		_shoot()
-	if _rs_flick():
+	if _rs_gesture():
 		return
 	if _upc_window():
 		return
@@ -1563,6 +1565,8 @@ var _y_last := 0.0
 var _y_lock := false
 ## Right-stick flick attacks (story streets): last frame's stick length.
 var _rs_last := 0.0
+## Extra power from a wound-up right-stick punch, spent on its hit.
+var move_mul_bonus := 1.0
 
 
 func _dash() -> void:
@@ -1750,6 +1754,16 @@ func _attack(kind: String, charged: bool) -> void:
 		size = Vector2(72, 46)
 		attack_cd = 20
 		string_n = 0
+	elif RS_MOVES.has(kind):
+		var rm: Dictionary = RS_MOVES[kind]
+		size = rm["size"]
+		attack_cd = int(rm["cd"])
+		string_n = 0
+		if str(rm.get("shout", "")) != "":
+			Juice.shout(str(rm["shout"]))
+		if kind == "power_punch" or kind == "haymaker":
+			# Wound up behind the hip, the whole body steps through the blow.
+			velocity.x = float(facing) * (260.0 if kind == "power_punch" else 160.0)
 	elif kind == "air-mix":
 		size = Vector2(70, 56)
 		attack_cd = 16
@@ -1797,7 +1811,8 @@ func _attack(kind: String, charged: bool) -> void:
 	anim_atk = _sprite_clip(kind)
 	# MASTERY: the more this move is thrown, the better it gets.
 	Mastery.use(role, anim_atk, global_position)
-	move_mul *= Mastery.power(role, anim_atk)
+	move_mul *= Mastery.power(role, anim_atk) * move_mul_bonus
+	move_mul_bonus = 1.0
 	attack_cd = maxi(6, int(round(float(attack_cd) * Mastery.recovery(role, anim_atk))))
 	_atk_t = 0.48 if kind == "light" or kind == "gut-punch" or kind == "jump-kick" else 0.72
 	var life := 0.12 if kind == "light" or kind == "jump-kick" or kind == "gut-punch" else 0.2
@@ -3339,6 +3354,119 @@ func _rs_flick() -> bool:
 			_slot_hint = "F+H"
 		_attack("jump-kick" if airborne else "heavy", false)
 	charge_frames = 0
+	return true
+
+
+## Right-stick fighting (Fight Night "total punch control", made for a
+## brawler): the stick's PATH is the punch, read when it springs back.
+##   flick forward ......... jab          (LB held: body jab)
+##   quarter circle ........ hook         (LB held: body hook)
+##   half circle up ........ uppercut (launches; air follow-ups juggle)
+##   full circle ........... spinning backfist
+##   down .................. gut punch / stomp a downed thug
+##   pull back, push ....... haymaker; held back over a second it charges
+##                           a crouching two-hand MEGA PUNCH
+##   back .................. turn round and strike
+## With RT (dash) held the same paths are kicks: front kick, roundhouse,
+## high kick, low kick that takes the legs.
+const RS_MOVES := {
+	"hook": {"clips": ["cross", "jab"], "size": Vector2(58, 42), "cd": 18, "shout": ""},
+	"body_hook": {"clips": ["body_hook", "gut"], "size": Vector2(52, 40), "cd": 18, "shout": ""},
+	"haymaker": {"clips": ["heavy", "cross"], "size": Vector2(74, 46), "cd": 28, "shout": "HAYMAKER"},
+	"power_punch": {"clips": ["heavy", "cross"], "size": Vector2(90, 52), "cd": 34, "shout": "MEGA PUNCH"},
+	"spin_backfist": {"clips": ["spin_backfist", "turn_punch", "heavy"], "size": Vector2(78, 46), "cd": 24, "shout": "SPIN BACKFIST"},
+	"front_kick": {"clips": ["front_kick", "boot_kick", "side_kick"], "size": Vector2(64, 40), "cd": 20, "shout": ""},
+	"high_kick": {"clips": ["side_kick", "front_kick"], "size": Vector2(66, 56), "cd": 22, "shout": "HIGH KICK"},
+	"low_kick": {"clips": ["boot_kick", "front_kick", "side_kick"], "size": Vector2(62, 30), "cd": 18, "shout": ""},
+}
+var _rs_pts := PackedVector2Array()
+var _rs_on := false
+var _rs_back := 0.0
+## The last right-stick move thrown (tests, the dojo board).
+var _last_kind := ""
+
+
+func _have_clip(names: Array) -> String:
+	for n in names:
+		if _anim != null and _anim.sprite_frames.has_animation(str(n)):
+			return str(n)
+	return str(names[0]) if not names.is_empty() else "jab"
+
+
+func _rs_gesture() -> bool:
+	if net_driven or FIELD or plane != "street":
+		return false
+	var rs := PadRouter.rstick(prefix)
+	# Stick space turned so +x is always toward the way he faces.
+	var loc := Vector2(rs.x * float(facing), rs.y)
+	if rs.length() > 0.42:
+		if not _rs_on:
+			_rs_on = true
+			_rs_pts = PackedVector2Array()
+			_rs_back = 0.0
+		_rs_pts.append(loc.normalized())
+		if loc.x < -0.6 and absf(loc.y) < 0.65:
+			_rs_back += get_physics_process_delta_time()
+			if _rs_back > 0.28 and _anim != null:
+				# Winding up: the fist goes back, the body glows hotter.
+				var k := clampf(_rs_back / 1.0, 0.0, 1.0)
+				_anim.modulate = Color(1.0 + 0.5 * k, 1.0 + 0.15 * k, 1.0 - 0.2 * k)
+		return false
+	if not _rs_on:
+		return false
+	_rs_on = false
+	if _anim != null:
+		_anim.modulate = Color.WHITE
+	if attack_cd > 0 or anim_atk != "" or downed or _rs_pts.size() < 1:
+		return false
+	return _rs_fire(_rs_pts, _rs_back)
+
+
+func _rs_fire(pts: PackedVector2Array, back_t: float) -> bool:
+	var first := pts[0]
+	var last := pts[pts.size() - 1]
+	var swept := 0.0
+	for i in range(1, pts.size()):
+		swept += pts[i - 1].angle_to(pts[i])
+	var kick := _pressed("dash")
+	var body := _pressed("block")
+	var airborne := hop < -16.0
+	charge_frames = 0
+	if airborne:
+		if last.y < -0.5:
+			_attack("air-upper", false)
+		elif last.y > 0.5:
+			_dive()
+		else:
+			_attack("jump-kick", false)
+		return true
+	var kind := ""
+	if back_t > 0.25 and last.x > 0.35:
+		kind = "roundhouse" if kick else ("power_punch" if back_t >= 1.0 else "haymaker")
+		move_mul_bonus = 1.0 + clampf(back_t, 0.0, 1.2) * 0.6
+	elif first.y > 0.45 and last.y < -0.45:
+		kind = "high_kick" if kick else "uppercut"
+		if kind == "uppercut" and not FamilyProfile.dojo_learned("uppercut"):
+			Juice.shout("DOJO LOCK")
+			return true
+	elif absf(swept) > 4.4:
+		kind = "roundhouse" if kick else "spin_backfist"
+	elif absf(swept) > 0.9 and last.x > 0.3:
+		kind = "roundhouse" if kick else ("body_hook" if body else "hook")
+	elif last.y > 0.6 and absf(last.x) < 0.7:
+		if kick:
+			kind = "low_kick"
+		elif _try_stomp():
+			return true
+		else:
+			kind = "gut-punch"
+	elif last.x < -0.6:
+		_face(-float(facing))
+		kind = "turn_punch" if _anim != null and _anim.sprite_frames.has_animation("turn_punch") else "heavy"
+	else:
+		kind = "front_kick" if kick else ("gut-punch" if body else "light")
+	_last_kind = kind
+	_attack(kind, false)
 	return true
 
 

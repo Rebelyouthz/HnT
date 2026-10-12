@@ -342,6 +342,8 @@ func _tick_sprite() -> void:
 		_anim.speed_scale = SpriteBook.stride_rate(_anim, clip, _moved.length() * 1.4)
 
 
+## Right-stick punches and kicks (Fighter.RS_MOVES).
+const RS_DMG := {"hook": 14, "body_hook": 13, "haymaker": 26, "power_punch": 38, "spin_backfist": 19, "front_kick": 14, "high_kick": 18, "low_kick": 10}
 var _bowled: Dictionary = {}
 ## Juggle: height above the street (negative = up) after a launcher or an
 ## uppercut. Each air hit pops him a little and turns him in the air; the
@@ -1064,6 +1066,8 @@ func take_hit(kind: String, from: Node) -> void:
 		dmg = 20 + FamilyProfile.dojo_rank("roundhouse") * 4
 	elif kind == "air-mix":
 		dmg = 16
+	elif RS_DMG.has(kind):
+		dmg = int(RS_DMG[kind])
 	elif kind == "slide" and Trees.has("p_slide_kick") and recover < 0.6:
 		recover = 0.9
 		dmg = 8

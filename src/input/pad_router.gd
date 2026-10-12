@@ -328,7 +328,13 @@ func device_of(prefix: StringName) -> int:
 
 
 ## The right stick of this player's pad (zero inside the dead zone).
+## Tests drive the right stick here (prefix -> Vector2).
+var fake_rs := {}
+
+
 func rstick(prefix: StringName) -> Vector2:
+	if fake_rs.has(str(prefix)):
+		return fake_rs[str(prefix)]
 	var dev := device_of(prefix)
 	if dev < 0:
 		return Vector2.ZERO
