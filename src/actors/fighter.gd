@@ -3806,6 +3806,13 @@ func _place_melee(delta: float) -> void:
 		_melee.texture = load(path)
 		_melee.set_meta("kind", pickup)
 		_melee.modulate = Color.WHITE
+		# Mods fitted at the bench ride on the weapon: nails, tape, coil ...
+		var dress := _melee.get_node_or_null("Dress") as MeleeDress
+		if dress == null:
+			dress = MeleeDress.new()
+			dress.name = "Dress"
+			_melee.add_child(dress)
+		dress.setup(pickup, Arsenal.mods_on(pickup))
 	var m := _held_meta(pickup)
 	var grip: Array = m.get("grip", [6, 6])
 	var tip: Array = m.get("tip", [40, 6])

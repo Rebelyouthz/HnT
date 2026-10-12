@@ -189,6 +189,7 @@ func _paint() -> void:
 	var who := str(d.get("who", ""))
 	var text := str(d.get("text", ""))
 	line.emit(_i, d)
+	var spoken := StoryVo.say(who, text)
 	var actor := _speaker(who)
 	if actor != null:
 		_bubble = SpeechBubble.make(_ui, actor, StoryBook.who_name(who), text, accent(who))
@@ -197,6 +198,9 @@ func _paint() -> void:
 		_show_dock(who, text)
 	else:
 		_show_caption(text)
+	# A voiced line holds until the voice is done, plus a breath.
+	if spoken > 0.0:
+		_wait = maxf(_wait, spoken + 0.35)
 
 
 func _show_dock(who: String, text: String) -> void:
@@ -289,6 +293,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _clear_line() -> void:
+	StoryVo.hush()
 	if _bubble != null and is_instance_valid(_bubble):
 		_bubble.pop_out()
 	_bubble = null

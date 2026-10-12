@@ -230,9 +230,15 @@ func _tile(id: String) -> Control:
 			br.add_child(cb)
 		v.add_child(br)
 		if not mod_names.is_empty():
-			var ml := Label.new()
-			ml.text = "  ".join(mod_names)
-			UiKit.apply_label(ml, 11, Color(0.6, 0.9, 1.0))
+			var ml := HBoxContainer.new()
+			ml.add_theme_constant_override("separation", 4)
+			if not Arsenal.is_gun(id):
+				for m in Arsenal.mods_on(id):
+					ml.add_child(IconBook.rect("mod_" + str(m), 20))
+			var mt := Label.new()
+			mt.text = "  ".join(mod_names)
+			UiKit.apply_label(mt, 11, Color(0.6, 0.9, 1.0))
+			ml.add_child(mt)
 			v.add_child(ml)
 	return p
 
@@ -253,70 +259,16 @@ func _gunsmith(id: String) -> void:
 	)
 
 
-## The mod bench for one melee weapon: every mod of its kind, fit / remove /
-## buy with gems.
+## The mod bench for one melee weapon (MOD BENCH sheet): fit / remove /
+## buy with gems, every mod drawn on the weapon.
 func _mods_for(id: String) -> void:
 	if _pop and is_instance_valid(_pop):
 		_pop.queue_free()
-	var kind := "gun" if Arsenal.is_gun(id) else "melee"
-	var dim := ColorRect.new()
-	dim.color = Color(0, 0, 0, 0.6)
-	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(dim)
-	_pop = dim
-	var card := PanelContainer.new()
-	card.add_theme_stylebox_override("panel", UiKit.frame(Color(0.6, 0.9, 1.0), 0.4))
-	card.set_anchors_preset(Control.PRESET_CENTER)
-	card.offset_left = -360
-	card.offset_right = 360
-	card.offset_top = -250
-	card.offset_bottom = 250
-	dim.add_child(card)
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 8)
-	card.add_child(col)
-	col.add_child(UiKit.title("MOD BENCH  ·  %s" % str(WeaponBook.spec(id).get("title", id)).to_upper(), 22, Color(0.6, 0.9, 1.0)))
-	var sub := Label.new()
-	sub.text = "Slots %d (2 from LV 3).  Gems %d." % [Arsenal.slots(id), int(FamilyProfile.data.get("gems", 0))]
-	UiKit.apply_label(sub, 13, Palette.MUTED)
-	col.add_child(sub)
-	var first: Button = null
-	for m: String in Arsenal.MODS:
-		var spec: Dictionary = Arsenal.MODS[m]
-		if str(spec["for"]) != kind:
-			continue
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 10)
-		var info := UiKit.rich("[color=#ffd75e]%s[/color]  %s" % [str(spec["title"]), str(spec["line"])], 460, 13, Palette.TEXT)
-		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_child(info)
-		var txt := ""
-		if not Arsenal.mod_owned(m):
-			txt = "BUY %d GEMS" % int(spec["gems"])
-		elif Arsenal.has_mod(id, m):
-			txt = "REMOVE"
-		else:
-			txt = "FIT"
-		var b := UiKit.button(txt, Vector2(170, 34))
-		b.pressed.connect(func() -> void:
-			if not Arsenal.mod_owned(m):
-				if Arsenal.buy_mod(m):
-					Juice.play("res://assets/audio/card.wav")
-			elif Arsenal.toggle_mod(id, m):
-				Juice.play("res://assets/audio/claim.wav")
-			else:
-				Juice.popup_number(Vector2(640, 360), "NO FREE SLOT", Palette.BRICK)
-			_mods_for(id)
-		)
-		row.add_child(b)
-		if first == null:
-			first = b
-		col.add_child(row)
-	var done := UiKit.button("DONE", Vector2(160, 40))
-	done.pressed.connect(func() -> void:
+	var sheet: Control = load("res://src/ui/mod_bench_sheet.gd").new()
+	sheet.set("weapon", id)
+	add_child(sheet)
+	_pop = sheet
+	sheet.connect("closed", func() -> void:
 		_focus_key = "mods_" + id
 		_paint()
 	)
-	col.add_child(done)
-	if first:
-		first.call_deferred("grab_focus")

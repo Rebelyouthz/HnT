@@ -119,6 +119,13 @@ func _on_vo_done() -> void:
 	_duck(false)
 
 
+## Cuts a spoken line short (the player skipped it).
+func stop_vo() -> void:
+	if _vo.playing:
+		_vo.stop()
+		_duck(false)
+
+
 func _duck(on: bool) -> void:
 	var idx := AudioServer.get_bus_index("music")
 	if idx < 0:
