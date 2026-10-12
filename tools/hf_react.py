@@ -16,8 +16,11 @@ MOVES = {
 	"r_blind": (3.0, "The man clutches both hands over his eyes and staggers backward blindly, bent over, swinging one arm at nothing, stumbling."),
 	"r_heart": (3.0, "The man suddenly stiffens, clutches his chest with both hands, takes two shaky steps, his knees give out and he collapses face down onto the ground and lies still."),
 }
-WHO = {"bag_snatch": "The thief in the beanie and leather jacket", "repo_goon": "The bald heavyset thug in the grey track jacket",
-       "mohawk": "The punk with the mohawk", "punk": "The street punk"}
+WHO = {"bag_snatch": "The thief in the red hoodie with the hood up, a white bandana mask over his nose and mouth, a brown satchel, baggy grey pants and red sneakers,",
+       "repo_goon": "The bald heavyset thug in the grey vest and grey cargo pants with a gold chain and brown boots,",
+       "mohawk": "The punk with the spiky black mohawk, black leather jacket, ripped blue jeans and black boots,",
+       "punk": "The street punk in the yellow beanie, black leather jacket, ripped blue jeans and black boots, holding a clipboard,"}
+KEEP = " He keeps exactly the same face, hair, headwear and outfit for the whole clip; nothing about his look changes."
 
 
 def start_image(who, out):
@@ -45,7 +48,7 @@ def main():
 			mp4 = os.path.join(work, "%s_%s.mp4" % (who, clip))
 			if not os.path.exists(mp4):
 				try:
-					v, _ = wan.predict(input_image=handle_file(st), prompt=p.replace("The man", WHO[who]) + TAIL, steps=6,
+					v, _ = wan.predict(input_image=handle_file(st), prompt=p.replace("The man", WHO[who]) + KEEP + TAIL, steps=6,
 						negative_prompt=NEG, duration_seconds=dur, guidance_scale=1, guidance_scale_2=1, seed=23,
 						randomize_seed=False, api_name="/generate_video")
 				except Exception as e:

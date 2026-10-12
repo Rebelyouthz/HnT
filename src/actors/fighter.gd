@@ -932,7 +932,9 @@ func _tick_meters(delta: float) -> void:
 			regen *= 1.15
 		steam = minf(STEAM_MAX, steam + regen * (1.0 + 0.3 * float(_cart("energy_drink"))) * (2.0 if suit_part("mask") == "shaolin" else 1.0) * Meta.steam_mul() * Heroes.steam_regen_mul(role) * delta)
 	# On the survivor field LB / LT are the two ACTIVE SKILLS (SurvActives).
-	blocking = _pressed("block") and steam > 2.0 and not downed and not trick_hold and not FIELD
+	blocking = _pressed("block") and steam > 2.0 and not downed and not trick_hold and not FIELD and _sh_t <= 0.0
+	if _sh_t > 0.0:
+		_sh_t -= delta
 	if tape_t > 0.0:
 		tape_t -= delta
 		if tape_t <= 0.0:
@@ -1498,6 +1500,8 @@ func _combat() -> void:
 				charge_frames = 0
 			else:
 				_attack("uppercut", false)
+		elif _shoulder_strike("H"):
+			charge_frames = 0
 		elif string_n >= 2:
 			if FamilyProfile.dojo_learned("roundhouse"):
 				_attack("roundhouse", false)
@@ -1525,6 +1529,8 @@ func _combat() -> void:
 			_attack("air-upper", false)
 		elif airborne:
 			_attack("jump-kick", false)
+		elif _shoulder_strike("L"):
+			return
 		elif not _turn_strike():
 			_attack("light", false)
 
@@ -3388,6 +3394,34 @@ const RS_MOVES := {
 }
 ## Dojo moves (bought, then drilled 3x on the dummy) and what comes out
 ## instead before that.
+## Shoulder strikes: hold a shoulder and hit a face button.
+##   LB (guard) + LIGHT = body hook     LB + HEAVY = liver shot (heavier body hook)
+##   RT (run)   + LIGHT = side hook     RT + HEAVY = overhand haymaker
+const SHOULDER := {"block:L": "body_hook", "block:H": "body_hook", "dash:L": "hook", "dash:H": "haymaker"}
+var _sh_t := 0.0
+
+
+func _shoulder_strike(btn: String) -> bool:
+	if FIELD or plane != "street" or hop < -4.0:
+		return false
+	var mod := "block" if _pressed("block") else ("dash" if _pressed("dash") else "")
+	if mod == "":
+		return false
+	var kind := str(SHOULDER.get(mod + ":" + btn, ""))
+	if kind == "":
+		return false
+	if RS_LEARN.has(kind) and not FamilyProfile.dojo_learned(kind):
+		kind = str(RS_LEARN[kind])
+	if mod == "block" and btn == "H":
+		move_mul_bonus = 1.45
+		Juice.popup_number(global_position + Vector2(0, -96), "LIVER SHOT", Color(1.0, 0.75, 0.3))
+	_sh_t = 0.35
+	blocking = false
+	_last_kind = kind
+	_attack(kind, false)
+	return true
+
+
 const RS_LEARN := {"haymaker": "heavy", "power_punch": "haymaker", "spin_backfist": "hook", "high_kick": "front_kick", "low_kick": "front_kick", "roundhouse": "hook"}
 var _rs_pts := PackedVector2Array()
 var _rs_on := false

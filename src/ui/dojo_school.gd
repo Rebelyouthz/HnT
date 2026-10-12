@@ -19,6 +19,8 @@ const LESSONS := [
 	{"id": "air", "title": "JUMP KICK", "pad": "A, then X or Y", "key": "SPACE, then J or K", "line": "Jump and strike in the air.", "need": 1},
 	{"id": "rs_jab", "req": "pad", "title": "RIGHT STICK JAB", "pad": "R-STICK  flick ▶", "key": "-", "line": "Flick the right stick toward the dummy and let go: a jab. The stick's path is the punch.", "need": 2},
 	{"id": "rs_hook", "req": "pad", "title": "RIGHT STICK HOOK", "pad": "R-STICK  quarter circle ▲ ▶", "key": "-", "line": "Swing the right stick in a quarter circle that ends toward the dummy: a hook to the jaw.", "need": 2},
+	{"id": "sh_body", "title": "BODY HOOK", "pad": "HOLD LB + X", "key": "HOLD I + J", "line": "Hold guard and punch: a hook into the ribs. Hold guard and press Y for the LIVER SHOT.", "need": 2},
+	{"id": "sh_hook", "title": "SIDE HOOK", "pad": "HOLD RT + X", "key": "HOLD SHIFT + J", "line": "Hold run and punch: a wide hook from the side. RT + Y is the overhand, once the dojo taught you the haymaker.", "need": 2},
 	{"id": "throw", "title": "THROW", "pad": "LT", "key": "U", "line": "Up close: grab and throw.", "need": 1},
 	{"id": "block", "title": "BLOCK", "pad": "LB + STICK HEIGHT", "key": "I + W / S", "line": "The dummy swings now. Hold block and point the stick at the height over its head.", "need": 2, "spar": true},
 	{"id": "combo", "req": "later", "title": "COMBO", "pad": "SEE THE BOARD", "key": "SEE THE BOARD", "line": "Land any combo from the board. Press as the ring on your body closes.", "need": 1},
@@ -211,7 +213,9 @@ func _on_struck(kind: String) -> void:
 		"throw":
 			_tick("throw")
 		"hook":
-			_tick("rs_hook")
+			_tick("sh_hook" if hero and float(hero.get("_sh_t")) > 0.0 else "rs_hook")
+		"body_hook":
+			_tick("sh_body")
 
 
 func _tick(id: String) -> void:

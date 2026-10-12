@@ -445,6 +445,32 @@
    ],
    "reach": 32,
    "vx": 40
+  },
+  {
+   "id": "flamingo_string",
+   "who": "son",
+   "title": "FLAMINGO STRING",
+   "rarity": "legendary",
+   "gold": [
+    60,
+    95,
+    150
+   ],
+   "blurb": "Jab, heavy, then forward + jump: the left knee comes up and stays up. Three kicks off the same leg without it touching the street (head, ribs, head), then a spinning heel finisher. Tekken taught him this; the street paid for it.",
+   "steps": [
+    "L",
+    "H",
+    "F+J"
+   ],
+   "clip": "b_flamingo",
+   "dmg": 44,
+   "fx": "fling",
+   "box": [
+    84,
+    70
+   ],
+   "reach": 34,
+   "vx": 40
   }
  ]
 }
