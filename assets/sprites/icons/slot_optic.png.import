@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/slot_optic.png-c5485c3ae414c9946e5e1c4d2f6f01
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.8
 compress/uastc_level=0

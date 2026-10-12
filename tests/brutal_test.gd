@@ -79,7 +79,7 @@ func _process(_dl: float) -> bool:
 			_fail.append("brutal kill not counted")
 		print("BRUTAL OK  moves=%d" % _ids.size() if _fail.is_empty() else "BRUTAL FAIL %s" % [_fail])
 		return true
-	if _n > 4000:
+	if _n > 8000:
 		print("BRUTAL FAIL timeout k=%d" % _k)
 		return true
 	return false

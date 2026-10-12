@@ -28,6 +28,8 @@ func _ready() -> void:
 	add_child(visual)
 	if SpriteBook.has_who("bystander"):
 		var a := SpriteBook.make_anim("bystander")
+		# People on the street stand as tall as everyone else.
+		SpriteBook.grow(a, SpriteBook.NPC_SCALE)
 		visual.add_child(a)
 	else:
 		var coat := Polygon2D.new()

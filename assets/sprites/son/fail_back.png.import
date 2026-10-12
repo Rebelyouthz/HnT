@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/fail_back.png-ac1c8a5e719ae91d93c5853d28ec1ed
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.8
 compress/uastc_level=0

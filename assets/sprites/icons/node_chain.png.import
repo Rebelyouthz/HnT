@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/node_chain.png-e7e3a62b2c3e48cba8574ebe8058f5
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.8
 compress/uastc_level=0

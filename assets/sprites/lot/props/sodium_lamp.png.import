@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/sodium_lamp.png-155b4a2ad69d900c754907b7a66a5
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.8
 compress/uastc_level=0

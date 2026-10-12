@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/lens.png-d79399d8118bb4e437223b694683a3a9.cte
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.8
 compress/uastc_level=0

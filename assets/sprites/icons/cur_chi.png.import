@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/cur_chi.png-a44367e06670a1e3647dc4a315f14591.
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.8
 compress/uastc_level=0

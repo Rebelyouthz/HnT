@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/roof_gums.png-4fc4dd48570fc058a1ca112423cd0aa
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.8
 compress/uastc_level=0

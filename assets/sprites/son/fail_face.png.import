@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/fail_face.png-40a1d2a7fd14ceb0c9b99fee140bea0
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.8
 compress/uastc_level=0

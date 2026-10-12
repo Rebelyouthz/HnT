@@ -117,17 +117,20 @@ static func for_grab(role: String, dir: String, pickup: String) -> String:
 		if bool(r.get("big", false)) or str(r.get("hero", "")) != role:
 			continue
 		var id := str(r["id"])
-		if id == "pipe_javelin" and pickup != "pipe":
+		var weapon: Array = r.get("weapon", [])
+		if not weapon.is_empty() and not weapon.has(pickup):
 			continue
 		if dir_of(r) != dir or not usable(id) or benched(id):
 			continue
-		if int(r.get("row", 0)) > best_row:
-			best_row = int(r.get("row", 0))
+		# A weapon in hand picks its own move first.
+		var score := int(r.get("row", 0)) + (100 if not weapon.is_empty() else 0)
+		if score > best_row:
+			best_row = score
 			best = id
 	return best
 
 
-## Owned moves of the same hero on the same grab (pipe aside): only one
+## Owned moves of the same hero on the same grab (weapon moves aside): only one
 ## can answer a grab, the rest sit on the bench until picked.
 static func rivals(id: String) -> Array:
 	var r := row(id)
@@ -138,7 +141,7 @@ static func rivals(id: String) -> Array:
 		var oid := str(o["id"])
 		if oid == id or bool(o.get("big", false)) or not owned(oid):
 			continue
-		if str(o["hero"]) == str(r["hero"]) and dir_of(o) == dir_of(r) and (oid == "pipe_javelin") == (id == "pipe_javelin"):
+		if str(o["hero"]) == str(r["hero"]) and dir_of(o) == dir_of(r) and o.has("weapon") == r.has("weapon"):
 			out.append(oid)
 	return out
 

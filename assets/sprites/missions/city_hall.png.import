@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/city_hall.png-34771f8cb003ec24a619a9d1285e2b3
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.8
 compress/uastc_level=0

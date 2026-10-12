@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/shard_son.png-3e98922edd4d98f30d4813b50ed09f1
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.8
 compress/uastc_level=0

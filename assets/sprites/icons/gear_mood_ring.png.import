@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/gear_mood_ring.png-5adb143fe3c1a0d47e535fb594
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.8
 compress/uastc_level=0

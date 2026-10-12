@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/radio_tower.png-f487d7421e7a65187bc01a7f53e7d
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.8
 compress/uastc_level=0

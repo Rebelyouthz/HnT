@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/chimney.png-4889d51709d6b4c2693d1a36de82d587.
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.8
 compress/uastc_level=0

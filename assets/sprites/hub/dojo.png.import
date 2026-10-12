@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/dojo.png-b5d7c5504b7fc735108cca86ba963453.cte
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.8
 compress/uastc_level=0

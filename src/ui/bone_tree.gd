@@ -1,27 +1,28 @@
 extends Control
 
-## The BONE YARD tree in the dojo: grows from the bottom up (1 root, 2, 3,
-## 3, then the 3 big supers on top). Each move has its own icon; HOLD the
-## button on a node to fill it from the bottom and pay the FIGHT TOKENS.
-## Bought moves are drilled 3 times on the dojo dummy before they work in
-## the street. When two owned moves answer the same grab, pick the active one.
+## The BONE YARD tree in the dojo, dressed like the BUILD trees (the dim
+## room, the gold frame, pixel title, vines and leaves, pixel-art node icons)
+## but growing the other way: the root at the bottom, three moves a row going
+## up, the three supers on top in bigger nodes. Nodes are rounded squares.
+## HOLD the button on a lit node to fill it from the bottom and pay the FIGHT
+## TOKENS; bought moves are drilled 3 times on the dojo dummy before they
+## work outside. When two owned moves answer the same grab, pick the active one.
 
 signal closed
 
-const ROW_Y := [604.0, 492.0, 380.0, 268.0, 156.0]
-const COL_X := [190.0, 380.0, 570.0]
-const SMALL := 84.0
-const BIG := 116.0
+const COL_X := [250.0, 450.0, 650.0]
+const ROW_Y := [626.0, 548.0, 470.0, 392.0, 314.0, 236.0, 140.0]
+const SMALL := 62.0
+const BIG := 86.0
 const HOLD_S := 1.1
-const BLOOD := Color(0.86, 0.14, 0.12)
+const BLOOD := Color(0.86, 0.16, 0.12)
 
 var _nodes := {}        # id -> Button
 var _focus_id := ""
 var _hold := 0.0
 var _holding := ""
-var _lines: Control
+var _vines: BoneVines
 var _tok: Label
-var _info: VBoxContainer
 var _i_icon: TextureRect
 var _i_title: Label
 var _i_who: Label
@@ -33,49 +34,86 @@ var _t := 0.0
 
 
 static func icon_of(id: String) -> Texture2D:
-	var p := "res://assets/ui/brutal/%s.png" % id
-	return load(p) if ResourceLoader.exists(p) else SpriteBook.icon("dojo")
+	var t := IconBook.tex("brutal_" + id)
+	return t if t != null else SpriteBook.icon("dojo")
 
 
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	size = Vector2(PixelStage.DESIGN)
 	var dim := ColorRect.new()
-	dim.color = Color(0.03, 0.01, 0.015, 0.96)
+	dim.color = Color(0.02, 0.02, 0.04, 0.97)
 	dim.position = Vector2(-40, -40)
 	dim.size = Vector2(PixelStage.DESIGN) + Vector2(80, 80)
 	add_child(dim)
-	var h := Label.new()
-	h.text = "BONE YARD"
-	UiKit.apply_label(h, 30, BLOOD)
-	h.position = Vector2(48, 22)
-	add_child(h)
+	if ResourceLoader.exists("res://assets/ui/clinic_room.png"):
+		var room := TextureRect.new()
+		room.texture = load("res://assets/ui/clinic_room.png")
+		room.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		room.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		room.texture_filter = SpriteBook.UI_FILTER
+		room.position = Vector2(-16, -8)
+		room.size = Vector2(1296, 736)
+		room.modulate = Color(0.34, 0.24, 0.26)
+		room.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(room)
+	var well := TextureRect.new()
+	well.texture = LightRig.radial_tex()
+	well.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	well.position = Vector2(60, 60)
+	well.size = Vector2(780, 660)
+	well.modulate = Color(0.0, 0.0, 0.02, 0.8)
+	well.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(well)
+	var frame := Panel.new()
+	var fs := StyleBoxFlat.new()
+	fs.bg_color = Color(0, 0, 0, 0)
+	fs.border_color = UiKit.RIM
+	fs.set_border_width_all(3)
+	frame.add_theme_stylebox_override("panel", fs)
+	frame.position = Vector2(8, 8)
+	frame.size = Vector2(1264, 704)
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(frame)
+	var title := UiKit.title("BONE YARD", 54, BLOOD)
+	title.position = Vector2(150, 14)
+	title.size = Vector2(600, 64)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	add_child(title)
+	for x in [214.0, 622.0]:
+		var orn := ColorRect.new()
+		orn.color = Color(UiKit.GOLD.r, UiKit.GOLD.g, UiKit.GOLD.b, 0.7)
+		orn.position = Vector2(x, 46)
+		orn.size = Vector2(64, 3)
+		orn.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(orn)
 	var sub := Label.new()
-	sub.text = "Extreme finishers. The tree grows upwards: buy a move, then drill it 3 times on the dummy."
-	UiKit.apply_label(sub, 13, Palette.MUTED)
-	sub.position = Vector2(50, 64)
+	sub.text = "GROWS UPWARD  ·  HOLD TO BUY  ·  DRILL 3x ON THE MAT"
+	sub.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(sub, 12, Palette.MUTED)
+	sub.position = Vector2(150, 78)
+	sub.size = Vector2(600, 18)
+	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(sub)
+	var dojo := UiKit.portrait(SpriteBook.icon("dojo"), Vector2(56, 56))
+	dojo.position = Vector2(24, 18)
+	add_child(dojo)
 	_tok = Label.new()
-	UiKit.apply_label(_tok, 20, UiKit.GOLD)
-	_tok.position = Vector2(930, 26)
+	_tok.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(_tok, 15, UiKit.GOLD)
+	_tok.position = Vector2(960, 34)
+	_tok.size = Vector2(290, 20)
+	_tok.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	add_child(_tok)
-	_lines = Control.new()
-	_lines.size = Vector2(PixelStage.DESIGN)
-	_lines.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_lines.draw.connect(_draw_lines)
-	add_child(_lines)
+	_vines = BoneVines.new()
+	_vines.size = Vector2(PixelStage.DESIGN)
+	_vines.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_vines)
 	for r in BrutalBook.all():
 		_add_node(r)
 	_build_info()
-	var how := Label.new()
-	how.text = "IN A FIGHT: beat a thug under half health, GRAB him (LIGHT + HEAVY). The stick picks the move: none, FORWARD or BACK.   SUPERS: fill FURY with kills, then BLOCK + SHOOT (LB + RB)."
-	how.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	how.size = Vector2(700, 40)
-	how.position = Vector2(48, 676)
-	UiKit.apply_label(how, 11, Palette.TEXT)
-	add_child(how)
-	var close := UiKit.button("CLOSE", Vector2(140, 44))
-	close.position = Vector2(1092, 650)
+	var close := UiKit.button("CLOSE", Vector2(150, 40))
+	close.position = Vector2(1100, 660)
 	close.pressed.connect(_close)
 	add_child(close)
 	_refresh()
@@ -95,43 +133,51 @@ func _first_open() -> String:
 	return "arm_breaker"
 
 
+func _pos(r: Dictionary) -> Vector2:
+	return Vector2(COL_X[int(r["col"])], ROW_Y[mini(int(r["row"]), ROW_Y.size() - 1)])
+
+
 func _add_node(r: Dictionary) -> void:
 	var id := str(r["id"])
 	var big := bool(r.get("big", false))
 	var s := BIG if big else SMALL
 	var b := Button.new()
-	b.flat = true
 	b.focus_mode = Control.FOCUS_ALL
 	b.custom_minimum_size = Vector2(s, s)
 	b.size = Vector2(s, s)
-	b.position = Vector2(COL_X[int(r["col"])], ROW_Y[int(r["row"])]) - Vector2(s, s) * 0.5
-	var clear := StyleBoxEmpty.new()
-	for st in ["normal", "hover", "pressed", "focus", "disabled", "hover_pressed"]:
-		b.add_theme_stylebox_override(st, clear)
-	var art := TextureRect.new()
-	art.name = "Art"
-	art.texture = icon_of(id)
-	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	art.set_anchors_preset(Control.PRESET_FULL_RECT)
-	art.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	b.add_child(art)
+	b.position = _pos(r) - Vector2(s, s) * 0.5
+	b.clip_contents = true
+	b.set_meta("key", "bone_" + id)
 	var fill := ColorRect.new()
 	fill.name = "Fill"
-	fill.color = Color(1.0, 0.82, 0.3, 0.5)
+	fill.color = Color(UiKit.GOLD.r, UiKit.GOLD.g, UiKit.GOLD.b, 0.55)
 	fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	fill.size = Vector2(s, 0)
 	fill.position = Vector2(0, s)
 	b.add_child(fill)
+	var pic := TextureRect.new()
+	pic.name = "Art"
+	pic.texture = icon_of(id)
+	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	# 32 texels at whole multiples: crisp pixel art like every other tree.
+	pic.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	var ps := IconBook.SIZE_M if big else IconBook.SIZE_S
+	pic.size = Vector2(ps, ps)
+	pic.position = Vector2(s, s) * 0.5 - pic.size * 0.5
+	pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.add_child(pic)
 	var cap := Label.new()
 	cap.name = "Cap"
 	cap.text = str(r["title"])
-	cap.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	cap.size = Vector2(170, 18)
-	cap.position = Vector2(s * 0.5 - 85, s + 2)
-	cap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	cap.add_theme_font_override("font", UiKit.pixel_font())
 	UiKit.apply_label(cap, 11, Palette.TEXT)
-	b.add_child(cap)
+	cap.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	cap.size = Vector2(190, 14)
+	cap.position = _pos(r) + Vector2(-95, s * 0.5 + 1)
+	cap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(cap)
+	b.set_meta("cap", cap)
 	b.draw.connect(_draw_node.bind(b, id))
 	b.focus_entered.connect(func() -> void:
 		_focus_id = id
@@ -144,94 +190,143 @@ func _add_node(r: Dictionary) -> void:
 	_nodes[id] = b
 
 
+## Rounded-square frames in the BUILD trees' colours, by state.
+func _dress(b: Button, id: String) -> void:
+	var st := _state(id)
+	var big := bool(BrutalBook.row(id).get("big", false))
+	var box := StyleBoxFlat.new()
+	box.set_corner_radius_all(18 if big else 14)
+	box.set_border_width_all(4)
+	box.bg_color = Color(0.05, 0.06, 0.1, 0.96)
+	box.anti_aliasing = false
+	match st:
+		"owned":
+			box.border_color = UiKit.GOLD
+			box.bg_color = Color(0.32, 0.12, 0.08)
+			box.shadow_color = Color(UiKit.GOLD.r, UiKit.GOLD.g, UiKit.GOLD.b, 0.5)
+			box.shadow_size = 8
+		"can":
+			box.border_color = UiKit.GOLD
+			box.shadow_color = Color(UiKit.GOLD.r, UiKit.GOLD.g, UiKit.GOLD.b, 0.75)
+			box.shadow_size = 16
+		"poor":
+			box.border_color = UiKit.RIM
+		_:
+			box.border_color = Color(0.3, 0.28, 0.3)
+	if big and st != "owned":
+		box.border_color = box.border_color.lerp(BLOOD, 0.5)
+	var hover := box.duplicate() as StyleBoxFlat
+	hover.border_color = Color.WHITE.lerp(UiKit.GOLD, 0.4)
+	hover.shadow_color = Color(UiKit.GOLD.r, UiKit.GOLD.g, UiKit.GOLD.b, 0.8)
+	hover.shadow_size = 18
+	var foc := hover.duplicate() as StyleBoxFlat
+	foc.shadow_size = 6
+	b.add_theme_stylebox_override("normal", box)
+	b.add_theme_stylebox_override("hover", hover)
+	b.add_theme_stylebox_override("focus", foc)
+	b.add_theme_stylebox_override("pressed", hover)
+	var pic: TextureRect = b.get_node("Art")
+	var cap: Label = b.get_meta("cap")
+	match st:
+		"owned":
+			pic.modulate = Color.WHITE
+			cap.add_theme_color_override("font_color", UiKit.GOLD)
+		"can":
+			pic.modulate = Color.WHITE
+			cap.add_theme_color_override("font_color", Palette.TEXT)
+		"poor":
+			pic.modulate = Color(0.75, 0.75, 0.8)
+			cap.add_theme_color_override("font_color", Palette.TEXT)
+		_:
+			pic.modulate = Color(0.35, 0.35, 0.4)
+			cap.add_theme_color_override("font_color", Palette.MUTED)
+
+
+## owned | can (buy now) | poor (unlocked, short of tokens) | locked
+func _state(id: String) -> String:
+	if BrutalBook.owned(id):
+		return "owned"
+	var why := BrutalBook.blocker(id)
+	if why == "":
+		return "can"
+	return "poor" if why.begins_with("NEED") else "locked"
+
+
 func _draw_node(b: Button, id: String) -> void:
 	var s := b.size
 	var c := s * 0.5
-	var own := BrutalBook.owned(id)
-	if b.has_focus():
-		var a := 0.55 + 0.35 * sin(_t * 6.0)
-		b.draw_rect(Rect2(Vector2(-5, -5), s + Vector2(10, 10)), Color(1, 0.85, 0.35, a), false, 3.0)
 	if _holding == id and _hold > 0.0:
-		b.draw_arc(c, s.x * 0.62, -PI * 0.5, -PI * 0.5 + TAU * _hold, 40, UiKit.GOLD, 4.0)
-	if own and not FamilyProfile.dojo_trained("b_" + id):
-		b.draw_circle(Vector2(s.x - 6, 6), 9, BLOOD)
-		b.draw_string(UiKit.pixel_font(), Vector2(s.x - 10, 11), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color.WHITE)
-	elif own and BrutalBook.benched(id):
-		b.draw_rect(Rect2(Vector2(0, s.y - 16), Vector2(s.x, 16)), Color(0, 0, 0, 0.7))
+		b.draw_arc(c, s.x * 0.45, -PI * 0.5, -PI * 0.5 + TAU * _hold, 32, Color.WHITE, 3.0)
+	if BrutalBook.owned(id) and not FamilyProfile.dojo_trained("b_" + id):
+		b.draw_rect(Rect2(Vector2(s.x - 16, 2), Vector2(14, 14)), BLOOD)
+		b.draw_string(UiKit.pixel_font(), Vector2(s.x - 12, 14), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color.WHITE)
+	elif BrutalBook.owned(id) and BrutalBook.benched(id):
+		b.draw_rect(Rect2(Vector2(0, s.y - 16), Vector2(s.x, 16)), Color(0, 0, 0, 0.75))
 		b.draw_string(UiKit.pixel_font(), Vector2(6, s.y - 4), "BENCH", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Palette.MUTED)
-	elif not own:
-		var why := BrutalBook.blocker(id)
-		if why != "" and not why.begins_with("NEED"):
-			# Padlock.
-			b.draw_rect(Rect2(c + Vector2(-9, -2), Vector2(18, 14)), Color(0.85, 0.85, 0.9))
-			b.draw_arc(c + Vector2(0, -2), 6, PI, TAU, 12, Color(0.85, 0.85, 0.9), 3.0)
-
-
-func _draw_lines() -> void:
-	for r in BrutalBook.all():
-		var id := str(r["id"])
-		var b: Button = _nodes[id]
-		var to := b.position + b.size * 0.5
-		for n in r.get("needs", []):
-			var pb: Button = _nodes.get(str(n))
-			if pb == null:
-				continue
-			var from := pb.position + pb.size * 0.5
-			var col := Color(0.25, 0.22, 0.26)
-			var w := 3.0
-			if BrutalBook.owned(id) and BrutalBook.owned(str(n)):
-				col = UiKit.GOLD
-				w = 5.0
-			elif BrutalBook.owned(str(n)):
-				col = Color(0.9, 0.86, 0.8, 0.55 + 0.25 * sin(_t * 4.0))
-			_lines.draw_line(from + Vector2(0, -pb.size.y * 0.5), to + Vector2(0, b.size.y * 0.5 + 20), col, w)
+	elif _state(id) == "locked":
+		# A small pixel padlock in the corner.
+		var p := Vector2(s.x - 16, 4)
+		b.draw_rect(Rect2(p + Vector2(0, 5), Vector2(12, 8)), Color(0.78, 0.78, 0.84))
+		b.draw_rect(Rect2(p + Vector2(2, 0), Vector2(2, 6)), Color(0.78, 0.78, 0.84))
+		b.draw_rect(Rect2(p + Vector2(8, 0), Vector2(2, 6)), Color(0.78, 0.78, 0.84))
+		b.draw_rect(Rect2(p + Vector2(2, 0), Vector2(8, 2)), Color(0.78, 0.78, 0.84))
+		b.draw_rect(Rect2(p + Vector2(5, 8), Vector2(2, 3)), Color(0.2, 0.2, 0.26))
 
 
 func _build_info() -> void:
 	var card := PanelContainer.new()
-	card.add_theme_stylebox_override("panel", UiKit.panel(Color(0.08, 0.03, 0.04, 0.96), BLOOD))
-	card.position = Vector2(760, 90)
-	card.custom_minimum_size = Vector2(470, 540)
+	card.add_theme_stylebox_override("panel", UiKit.panel(Color(0.07, 0.05, 0.08, 0.96), UiKit.RIM))
+	card.position = Vector2(860, 110)
+	card.custom_minimum_size = Vector2(390, 530)
 	add_child(card)
-	_info = VBoxContainer.new()
-	_info.add_theme_constant_override("separation", 10)
-	card.add_child(_info)
-	var top := HBoxContainer.new()
-	top.add_theme_constant_override("separation", 12)
+	var info := VBoxContainer.new()
+	info.add_theme_constant_override("separation", 10)
+	card.add_child(info)
 	_i_icon = TextureRect.new()
-	_i_icon.custom_minimum_size = Vector2(110, 110)
+	_i_icon.custom_minimum_size = Vector2(128, 128)
 	_i_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_i_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	top.add_child(_i_icon)
-	var tv := VBoxContainer.new()
+	_i_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_i_icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	info.add_child(_i_icon)
 	_i_title = Label.new()
-	_i_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_i_title.custom_minimum_size = Vector2(320, 0)
-	UiKit.apply_label(_i_title, 22, Palette.TEXT)
-	tv.add_child(_i_title)
+	_i_title.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(_i_title, 18, UiKit.GOLD)
+	_i_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	info.add_child(_i_title)
 	_i_who = Label.new()
-	UiKit.apply_label(_i_who, 13, UiKit.GOLD)
-	tv.add_child(_i_who)
-	top.add_child(tv)
-	_info.add_child(top)
+	_i_who.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(_i_who, 11, Palette.MUTED)
+	_i_who.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_i_who.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_i_who.custom_minimum_size = Vector2(370, 0)
+	info.add_child(_i_who)
 	_i_line = Label.new()
 	_i_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_i_line.custom_minimum_size = Vector2(440, 0)
-	UiKit.apply_label(_i_line, 14, Palette.TEXT)
-	_info.add_child(_i_line)
+	_i_line.custom_minimum_size = Vector2(370, 0)
+	UiKit.apply_label(_i_line, 13, Palette.TEXT)
+	info.add_child(_i_line)
 	_i_input = Label.new()
 	_i_input.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_i_input.custom_minimum_size = Vector2(440, 0)
-	UiKit.apply_label(_i_input, 13, Color(0.6, 0.85, 1.0))
-	_info.add_child(_i_input)
+	_i_input.custom_minimum_size = Vector2(370, 0)
+	_i_input.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(_i_input, 12, Color(0.6, 0.85, 1.0))
+	info.add_child(_i_input)
 	_i_state = Label.new()
 	_i_state.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_i_state.custom_minimum_size = Vector2(440, 0)
-	UiKit.apply_label(_i_state, 15, UiKit.GOLD)
-	_info.add_child(_i_state)
+	_i_state.custom_minimum_size = Vector2(370, 0)
+	_i_state.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(_i_state, 13, UiKit.GOLD)
+	info.add_child(_i_state)
 	_i_btns = HBoxContainer.new()
 	_i_btns.add_theme_constant_override("separation", 10)
-	_info.add_child(_i_btns)
+	info.add_child(_i_btns)
+	var how := Label.new()
+	how.text = "IN A FIGHT: beat a thug under half health and GRAB him (LIGHT + HEAVY); the stick picks the move. SUPERS: fill FURY, then BLOCK + SHOOT (LB + RB)."
+	how.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	how.custom_minimum_size = Vector2(370, 0)
+	UiKit.apply_label(how, 11, Palette.MUTED)
+	info.add_child(how)
 
 
 func _show(id: String) -> void:
@@ -239,19 +334,20 @@ func _show(id: String) -> void:
 	_i_icon.texture = icon_of(id)
 	_i_title.text = str(r.get("title", id))
 	var map := str(r.get("map", ""))
+	var map_t := str(BoneYard.map(map).get("title", map.replace("_", " ").to_upper()))
 	_i_who.text = "%s  ·  %s" % ["THE FATHER" if str(r.get("hero", "")) == "father" else "THE SON", "SUPER" if bool(r.get("big", false)) else "ROW %d" % (int(r.get("row", 0)) + 1)]
 	if map != "":
-		_i_who.text += "  ·  TOKENS FROM " + map.replace("_", " ").to_upper()
+		_i_who.text += "  ·  " + map_t
 	_i_line.text = str(r.get("line", ""))
-	_i_input.text = "HOW:  " + str(r.get("input", ""))
+	_i_input.text = "HOW: " + str(r.get("input", ""))
 	for c in _i_btns.get_children():
 		c.queue_free()
 	if BrutalBook.owned(id):
 		if not FamilyProfile.dojo_trained("b_" + id):
 			var tr: Dictionary = FamilyProfile.data.get("dojo_train", {})
-			_i_state.text = "BOUGHT  ·  DRILL IT ON THE DOJO DUMMY %d/%d" % [int(tr.get("b_" + id, 0)), FamilyProfile.TRAIN_REPS]
+			_i_state.text = "BOUGHT  ·  DRILL ON THE DOJO DUMMY %d/%d" % [int(tr.get("b_" + id, 0)), FamilyProfile.TRAIN_REPS]
 			_i_state.add_theme_color_override("font_color", BLOOD)
-			var go := UiKit.button("TRAIN ON MAT", Vector2(200, 40))
+			var go := UiKit.button("TRAIN ON MAT", Vector2(190, 36))
 			go.pressed.connect(_train.bind(str(r.get("hero", "father"))))
 			_i_btns.add_child(go)
 		else:
@@ -260,10 +356,10 @@ func _show(id: String) -> void:
 		if not BrutalBook.rivals(id).is_empty():
 			if BrutalBook.benched(id):
 				_i_state.text += "\nON THE BENCH: another move answers this grab."
-				var act := UiKit.button("MAKE ACTIVE", Vector2(200, 40))
+				var act := UiKit.button("MAKE ACTIVE", Vector2(190, 36))
 				act.pressed.connect(func() -> void:
 					BrutalBook.make_active(id)
-					Mixer.play_sfx("res://assets/audio/sfx/menu_confirm.ogg" if ResourceLoader.exists("res://assets/audio/sfx/menu_confirm.ogg") else "res://assets/audio/grab.wav", 1.2, -6.0)
+					Juice.play("res://assets/audio/ui_click.wav")
 					_refresh()
 					_show(id)
 				)
@@ -273,11 +369,11 @@ func _show(id: String) -> void:
 		return
 	var why := BrutalBook.blocker(id)
 	if why == "":
-		_i_state.text = "HOLD  A / ENTER  TO UNLOCK  ·  %d FIGHT TOKEN%s" % [int(r.get("cost", 1)), "" if int(r.get("cost", 1)) == 1 else "S"]
+		_i_state.text = "HOLD A / ENTER TO UNLOCK  ·  %d FIGHT TOKEN%s" % [int(r.get("cost", 1)), "" if int(r.get("cost", 1)) == 1 else "S"]
 		_i_state.add_theme_color_override("font_color", UiKit.GOLD)
 	else:
 		_i_state.text = why
-		_i_state.add_theme_color_override("font_color", Palette.MUTED)
+		_i_state.add_theme_color_override("font_color", Color(0.95, 0.25, 0.22) if why.begins_with("NEED") else Palette.MUTED)
 
 
 func _press(id: String) -> void:
@@ -288,8 +384,8 @@ func _press(id: String) -> void:
 			var x0 := b.position.x
 			var tw := b.create_tween()
 			for k in 3:
-				tw.tween_property(b, "position:x", x0 + 6.0, 0.03)
-				tw.tween_property(b, "position:x", x0 - 6.0, 0.03)
+				tw.tween_property(b, "position:x", x0 + 5.0, 0.03)
+				tw.tween_property(b, "position:x", x0 - 5.0, 0.03)
 			tw.tween_property(b, "position:x", x0, 0.03)
 			Mixer.play_sfx("res://assets/audio/sfx/whiff_punch.ogg", 0.7, -8.0)
 		return
@@ -308,18 +404,22 @@ func _process(delta: float) -> void:
 		var b: Button = _nodes[id]
 		var fill: ColorRect = b.get_node("Fill")
 		if id == _holding:
+			var before := _hold
 			_hold = minf(1.0, _hold + delta / HOLD_S)
-			if int(_hold * 10.0) != int((_hold - delta / HOLD_S) * 10.0):
+			if int(_hold * 8.0) != int(before * 8.0):
 				Mixer.play_sfx("res://assets/audio/hit_light.wav", 0.8 + _hold * 0.8, -12.0)
 			if _hold >= 1.0:
 				_buy(id)
 		elif _holding == "" and _hold > 0.0 and id == _focus_id:
 			_hold = maxf(0.0, _hold - delta * 3.0)
 		var lv := _hold if (id == _holding or (id == _focus_id and _holding == "")) else 0.0
-		fill.size = Vector2(b.size.x, b.size.y * lv)
-		fill.position = Vector2(0, b.size.y * (1.0 - lv))
+		# Filled in whole 4-px steps, like a pixel meter.
+		var h := floorf(b.size.y * lv / 4.0) * 4.0
+		fill.size = Vector2(b.size.x, h)
+		fill.position = Vector2(0, b.size.y - h)
 		b.queue_redraw()
-	_lines.queue_redraw()
+	_vines.t = _t
+	_vines.queue_redraw()
 
 
 func _buy(id: String) -> void:
@@ -344,20 +444,16 @@ func _train(who: String) -> void:
 
 
 func _refresh() -> void:
-	_tok.text = "FIGHT TOKENS  %d" % BrutalBook.tokens()
-	for id in _nodes:
-		var b: Button = _nodes[id]
-		var art: TextureRect = b.get_node("Art")
-		var cap: Label = b.get_node("Cap")
-		if BrutalBook.owned(id):
-			art.modulate = Color.WHITE
-			cap.add_theme_color_override("font_color", UiKit.GOLD)
-		elif BrutalBook.blocker(id) == "":
-			art.modulate = Color(0.85, 0.85, 0.85)
-			cap.add_theme_color_override("font_color", Palette.TEXT)
-		else:
-			art.modulate = Color(0.28, 0.26, 0.3)
-			cap.add_theme_color_override("font_color", Palette.MUTED)
+	_tok.text = "FIGHT TOKENS %d" % BrutalBook.tokens()
+	var links: Array = []
+	for r in BrutalBook.all():
+		var id := str(r["id"])
+		_dress(_nodes[id], id)
+		for n in r.get("needs", []):
+			if _nodes.has(str(n)):
+				links.append([_pos(BrutalBook.row(str(n))), _pos(r), BrutalBook.owned(id) and BrutalBook.owned(str(n)), BrutalBook.owned(str(n))])
+	_vines.links = links
+	_vines.root = _pos(BrutalBook.row("arm_breaker"))
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -369,3 +465,37 @@ func _unhandled_input(event: InputEvent) -> void:
 func _close() -> void:
 	closed.emit()
 	queue_free()
+
+
+## The BUILD trees' vines turned upside down: a trunk out of the floor into
+## the root, then a vine with leaves up from each move to the ones it opens.
+## Lit gold where both ends are owned; a red pulse where the next is buyable.
+class BoneVines extends Control:
+	var links: Array = []
+	var root := Vector2.ZERO
+	var t := 0.0
+
+	func _draw() -> void:
+		var bark := Color(0.33, 0.22, 0.12)
+		var bark_lit := Color(0.5, 0.36, 0.2)
+		var leaf := Color(0.42, 0.12, 0.1)
+		if root != Vector2.ZERO:
+			draw_line(root + Vector2(0, 30), Vector2(root.x, 708), bark, 12.0)
+			draw_line(root + Vector2(-3, 30), Vector2(root.x - 3, 708), bark_lit, 3.0)
+		for l: Array in links:
+			var a: Vector2 = l[0]
+			var b: Vector2 = l[1]
+			var lit: bool = l[2]
+			var open: bool = l[3]
+			var mid := Vector2(a.x, (a.y + b.y) * 0.5)
+			var pts := PackedVector2Array()
+			for i in 13:
+				var k := float(i) / 12.0
+				pts.append(a.lerp(mid, k).lerp(mid.lerp(b, k), k))
+			draw_polyline(pts, bark, 7.0)
+			var top := Color(0.9, 0.7, 0.3, 0.85) if lit else (Color(0.9, 0.25, 0.2, 0.45 + 0.35 * sin(t * 4.0)) if open else bark_lit)
+			draw_polyline(pts, top, 2.0)
+			for i in [3, 7, 10]:
+				var p: Vector2 = pts[i]
+				var side := 7.0 if i % 2 == 0 else -7.0
+				draw_colored_polygon(PackedVector2Array([p, p + Vector2(side, -4), p + Vector2(side * 1.6, 1), p + Vector2(side, 4)]), leaf)

@@ -364,6 +364,16 @@ func _walk(delta: float) -> void:
 	if step > 0.0:
 		var w := course.wall_ahead(position.x, feet, step + HALF_W + 2.0)
 		if not w.is_empty() and float(w["top"]) < feet - 14.0:
+			# Running into a wall you can get up is a climb, not a bump: no
+			# wall on the roofs should stop the run for want of a button.
+			if str(w["kind"]) == "vault":
+				vx = maxf(vx, 160.0)
+				if _try_vault():
+					return
+			elif feet - float(w["top"]) <= 150.0:
+				vx = maxf(vx, 160.0)
+				if _try_climb():
+					return
 			position.x = float(w["x"]) - HALF_W - 1.0
 			if vx > 120.0:
 				_stumble("BUMP", 0.4)

@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/slot_mag.png-93d52c135bdd6055ce60f958f3d6000e
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.8
 compress/uastc_level=0

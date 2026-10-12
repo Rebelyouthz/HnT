@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/pipe_bar.png-fc41986a2c700938e695d7b203ef1295
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.8
 compress/uastc_level=0

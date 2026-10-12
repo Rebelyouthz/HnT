@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/card_weapon_catch.png-11a1ff5ec0cdd46e3e103c9
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.8
 compress/uastc_level=0

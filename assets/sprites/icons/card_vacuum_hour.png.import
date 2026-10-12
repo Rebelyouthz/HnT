@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/card_vacuum_hour.png-6e605fa18ae0ca9f65fe5aef
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.8
 compress/uastc_level=0

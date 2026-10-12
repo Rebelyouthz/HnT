@@ -9,7 +9,7 @@
   "needs": [],
   "line": "Grab the wrist, drive the elbow the wrong way. A broken arm can't swing: he is out of the fight, or dead if he was already hurt.",
   "input": "GRAB (LIGHT + HEAVY close) on a BROKEN thug",
-  "map": "butcher_row",
+  "map": "grimhollow",
   "icon": "arm"
  },
  {
@@ -24,7 +24,7 @@
   ],
   "line": "A stamping front kick to the kneecap. The leg folds backwards and he drops onto the other knee.",
   "input": "GRAB + FORWARD on a BROKEN thug",
-  "map": "butcher_row",
+  "map": "grimhollow",
   "icon": "knee"
  },
  {
@@ -39,7 +39,7 @@
   ],
   "line": "Slip behind him, both hands on the jaw, one hard twist. He goes limp before he hits the street.",
   "input": "GRAB + BACK on a BROKEN thug",
-  "map": "butcher_row",
+  "map": "grimhollow",
   "icon": "neck"
  },
  {
@@ -54,7 +54,7 @@
   ],
   "line": "Five fingertip strikes to five points on the chest. He walks three more steps, then his heart stops.",
   "input": "GRAB on a BROKEN thug",
-  "map": "cold_storage",
+  "map": "neon_maze",
   "icon": "touch"
  },
  {
@@ -70,7 +70,7 @@
   ],
   "line": "Thumbs in both eyes. He reels blind and screaming, swinging at nothing, then drops.",
   "input": "GRAB + FORWARD on a BROKEN thug",
-  "map": "cold_storage",
+  "map": "neon_maze",
   "icon": "eye"
  },
  {
@@ -85,8 +85,11 @@
   ],
   "line": "WEAPON BRANCH. Holding a pipe: hurl it through him and pin him to the wall behind.",
   "input": "With a PIPE: GRAB + BACK on a BROKEN thug",
-  "map": "cold_storage",
-  "icon": "pipe"
+  "map": "neon_maze",
+  "icon": "pipe",
+  "weapon": [
+   "pipe"
+  ]
  },
  {
   "id": "heart_punch",
@@ -100,7 +103,7 @@
   ],
   "line": "One straight punch through the breastbone. The fist comes out of his back holding his heart.",
   "input": "GRAB on a BROKEN thug",
-  "map": "chapel_of_bills",
+  "map": "butcher_row",
   "icon": "heart"
  },
  {
@@ -115,7 +118,7 @@
   ],
   "line": "An uppercut that doesn't stop: the head comes off upwards with the spine still hanging from it.",
   "input": "GRAB + FORWARD on a BROKEN thug",
-  "map": "chapel_of_bills",
+  "map": "butcher_row",
   "icon": "spine"
  },
  {
@@ -130,18 +133,113 @@
   ],
   "line": "Lift him over your head and bring his back down across your knee. He folds the wrong way.",
   "input": "GRAB + BACK on a BROKEN thug",
-  "map": "chapel_of_bills",
+  "map": "butcher_row",
   "icon": "back"
+ },
+ {
+  "id": "throat_punch",
+  "title": "THROAT PUNCH",
+  "hero": "father",
+  "row": 4,
+  "col": 0,
+  "cost": 2,
+  "needs": [
+   "heart_punch"
+  ],
+  "map": "cold_storage",
+  "line": "Two knuckles into the windpipe. He folds over, clutching his throat, and the air never comes back.",
+  "input": "GRAB + FORWARD on a BROKEN thug"
+ },
+ {
+  "id": "temple_tap",
+  "title": "TEMPLE TAP",
+  "hero": "son",
+  "row": 4,
+  "col": 1,
+  "cost": 2,
+  "needs": [
+   "spine_rip",
+   "death_touch"
+  ],
+  "map": "cold_storage",
+  "line": "PRESSURE POINT. Two fingers to the temple, once. His eyes roll back and he tips over like a felled tree.",
+  "input": "GRAB on a BROKEN thug"
+ },
+ {
+  "id": "bat_homerun",
+  "title": "HOME RUN",
+  "hero": "father",
+  "row": 4,
+  "col": 2,
+  "cost": 2,
+  "needs": [
+   "back_breaker"
+  ],
+  "map": "cold_storage",
+  "weapon": [
+   "baseball_bat",
+   "pipe",
+   "crowbar",
+   "board",
+   "sledgehammer"
+  ],
+  "line": "WEAPON BRANCH. Holding anything blunt: a full swing to the head. He spins through the air and lands two cars down.",
+  "input": "With a BAT, PIPE, CROWBAR, BOARD or HAMMER: GRAB + FORWARD on a BROKEN thug"
+ },
+ {
+  "id": "rib_breaker",
+  "title": "RIB BREAKER",
+  "hero": "father",
+  "row": 5,
+  "col": 0,
+  "cost": 2,
+  "needs": [
+   "throat_punch"
+  ],
+  "map": "chapel_of_bills",
+  "line": "Five body hooks, left right left right left. Every one cracks a rib; the last one folds him in half.",
+  "input": "GRAB on a BROKEN thug"
+ },
+ {
+  "id": "jaw_breaker",
+  "title": "JAW BREAKER",
+  "hero": "son",
+  "row": 5,
+  "col": 1,
+  "cost": 2,
+  "needs": [
+   "temple_tap"
+  ],
+  "map": "chapel_of_bills",
+  "line": "An uppercut that pops the jaw out, then a spinning backfist that sends it the other way. Teeth everywhere.",
+  "input": "GRAB + BACK on a BROKEN thug"
+ },
+ {
+  "id": "chain_noose",
+  "title": "CHAIN NOOSE",
+  "hero": "son",
+  "row": 5,
+  "col": 2,
+  "cost": 2,
+  "needs": [
+   "bat_homerun"
+  ],
+  "map": "chapel_of_bills",
+  "weapon": [
+   "chain"
+  ],
+  "line": "WEAPON BRANCH. Holding a chain: whip it round his neck, yank him in, knee to the back. The chain does the rest.",
+  "input": "With a CHAIN: GRAB + BACK on a BROKEN thug"
  },
  {
   "id": "two_way",
   "title": "THE TWO-WAY",
   "hero": "son",
-  "row": 4,
+  "row": 6,
   "col": 0,
   "cost": 3,
   "needs": [
-   "spine_rip"
+   "jaw_breaker"
   ],
   "big": true,
   "line": "SUPER. Kick the leg so it bends backwards; he drops to one knee. A side kick snaps his head round, you hold his hand so he stays up, then the heel comes back the other way and takes the head clean off.",
@@ -153,12 +251,12 @@
   "id": "skull_crusher",
   "title": "SKULL CRUSHER",
   "hero": "father",
-  "row": 4,
+  "row": 6,
   "col": 1,
   "cost": 3,
   "needs": [
-   "heart_punch",
-   "back_breaker"
+   "rib_breaker",
+   "chain_noose"
   ],
   "big": true,
   "line": "SUPER. Both palms clap together on his temples. Once. That is all it takes.",
@@ -170,11 +268,12 @@
   "id": "flamingo_reaper",
   "title": "FLAMINGO REAPER",
   "hero": "son",
-  "row": 4,
+  "row": 6,
   "col": 2,
   "cost": 3,
   "needs": [
-   "spine_rip"
+   "jaw_breaker",
+   "temple_tap"
   ],
   "big": true,
   "line": "SUPER. Three kicks off the same leg without it touching down (head, ribs, head), then a spinning left kick finisher that sends the head into the next street.",

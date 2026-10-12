@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/baseball_bat.png-6ae42e69083c044e88a57342b170
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.8
 compress/uastc_level=0

@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/story_uncommon.png-2d6fdc3d40bb4a47e663ecf0ad
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.8
 compress/uastc_level=0

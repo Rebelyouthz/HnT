@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/node_roll.png-8c0115e2ae290657170a1727ee59dc4
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.8
 compress/uastc_level=0

@@ -15,9 +15,9 @@ dest_files=["res://.godot/imported/cyber_strip_0.png-e4a48d447e215cfb3cfeb6cf80b
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
-compress/lossy_quality=0.64
+compress/lossy_quality=0.72
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1

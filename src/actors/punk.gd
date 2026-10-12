@@ -294,7 +294,7 @@ func _mount_sprite() -> void:
 	if not SpriteBook.has_who(who):
 		who = "punk"
 	_anim = SpriteBook.make_anim(who)
-	SpriteBook.grow(_anim, SpriteBook.ENEMY_SCALE)
+	SpriteBook.grow(_anim, SpriteBook.ENEMY_SCALE * float(SpriteBook.ENEMY_K.get(who, 1.0)))
 	visual.add_child(_anim)
 	if not Fighter.FIELD:
 		ActorLight.attach(self, _anim)

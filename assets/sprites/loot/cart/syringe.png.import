@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/syringe.png-1dc0f79788661e22bb0c0511a6369fc2.
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.8
 compress/uastc_level=0

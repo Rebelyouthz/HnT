@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/node_gut.png-54d651bb41704095bd5fc7cce46fa2cc
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.8
 compress/uastc_level=0

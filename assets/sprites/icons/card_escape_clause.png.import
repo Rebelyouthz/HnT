@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/card_escape_clause.png-919b6673d5dfab2c3e90c3
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.8
 compress/uastc_level=0

@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/card_slide_tax.png-223741c2a1bb2c5f15c5bc2bc5
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.8
 compress/uastc_level=0

@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/slot_cap.png-984e85998076dab86ffdf5cbef50f701
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.8
 compress/uastc_level=0

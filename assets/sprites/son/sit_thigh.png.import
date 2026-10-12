@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/sit_thigh.png-bd6cef7e254acf4980fb1ea001c6d99
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.8
 compress/uastc_level=0

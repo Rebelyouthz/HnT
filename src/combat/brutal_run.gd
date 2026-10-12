@@ -47,6 +47,30 @@ const SEQ := {
 		"clips": [[0.0, "clinch_knee"], [0.3, "heavy"], [0.95, "clinch_knee"]],
 		"keys": [[0.0, 24, 0, 0.0, 0.0, 1.0], [0.4, 6, -70, 1.57, 0.0, 1.0], [0.8, 8, -74, 1.57, 0.0, 1.0], [0.95, 14, -22, 1.57, 0.0, 1.0], [1.0, 14, -18, 1.95, 0.0, 1.0], [1.4, 22, 0, 1.6, 0.0, 1.0]],
 		"events": [[0.97, "crack", "BACK"], [0.98, "blood", 0.7]]},
+	"throat_punch": {"len": 1.15, "kill": 0.95, "zone": "mouth",
+		"clips": [[0.0, "jab"], [0.25, "cross|heavy"]],
+		"keys": [[0.0, 26, 0, 0.0, 0.0, 1.0], [0.3, 24, 0, -0.25, 0.0, 1.0], [0.6, 24, 0, -0.35, 0.1, 0.92], [1.05, 27, 6, 0.9, 0.0, 1.0]],
+		"events": [[0.3, "crack", "THROAT"], [0.32, "blood", 0.4], [0.55, "say", "CAN'T BREATHE"]]},
+	"temple_tap": {"len": 1.25, "kill": 1.1, "zone": "head",
+		"clips": [[0.0, "jab"]],
+		"keys": [[0.0, 22, 0, 0.0, 0.0, 1.0], [0.3, 22, 0, 0.0, 0.25, 1.0], [0.9, 22, 0, 0.0, 0.3, 1.0], [1.2, 26, 4, 1.45, 0.2, 1.0]],
+		"events": [[0.28, "point", Vector2(4, -62)], [0.3, "slowmo", 0.6], [0.6, "say", "LIGHTS OUT"]]},
+	"bat_homerun": {"len": 1.0, "kill": 0.4, "zone": "crush",
+		"clips": [[0.0, "heavy"]],
+		"keys": [[0.0, 30, 0, 0.0, 0.0, 1.0], [0.35, 30, 0, -0.1, 0.0, 1.0], [0.6, 120, -40, 3.0, 0.0, 1.0], [0.95, 170, 0, 4.6, 0.0, 1.0]],
+		"events": [[0.36, "slowmo", 0.6], [0.37, "crack", "SKULL"], [0.38, "blood", 1.0], [0.4, "say", "HOME RUN"]]},
+	"rib_breaker": {"len": 1.5, "kill": 1.3, "zone": "gut",
+		"clips": [[0.0, "body_hook|heavy"], [0.25, "jab"], [0.5, "body_hook|cross"], [0.75, "jab"], [1.0, "body_hook|heavy"]],
+		"keys": [[0.0, 24, 0, 0.0, 0.0, 1.0], [0.3, 25, 0, -0.15, 0.1, 0.96], [0.55, 26, 0, -0.1, -0.1, 0.94], [0.8, 27, 0, -0.25, 0.1, 0.92], [1.05, 28, 0, -0.45, 0.0, 0.88], [1.45, 30, 6, 0.9, 0.0, 1.0]],
+		"events": [[0.3, "crack", "RIB"], [0.55, "crack", "RIB"], [0.8, "crack", "RIB"], [1.05, "crack", "RIBS"], [1.06, "blood", 0.8]]},
+	"jaw_breaker": {"len": 1.1, "kill": 0.95, "zone": "mouth",
+		"clips": [[0.0, "uppercut"], [0.45, "spin_backfist|cross"]],
+		"keys": [[0.0, 22, 0, 0.0, 0.0, 1.0], [0.3, 22, -6, 0.1, -0.4, 1.0], [0.55, 22, -4, 0.2, 0.7, 1.0], [1.05, 28, 2, 1.3, 0.3, 1.0]],
+		"events": [[0.3, "crack", "JAW"], [0.32, "teeth", ""], [0.55, "crack", "JAW"], [0.57, "teeth", ""], [0.58, "blood", 0.6]]},
+	"chain_noose": {"len": 1.6, "kill": 1.4, "zone": "mouth",
+		"clips": [[0.0, "heavy|cross"], [0.6, "clinch_knee|heavy"]],
+		"keys": [[0.0, 30, 0, 0.0, 0.0, 1.0], [0.4, 18, 0, -0.2, 0.0, 1.0], [0.6, 8, -10, -0.5, 0.4, 1.0], [1.2, 8, -14, -0.6, 0.5, 0.9], [1.55, 20, 0, 1.4, 0.0, 1.0]],
+		"events": [[0.45, "say", "CHOKE"], [0.62, "scream", ""], [1.2, "crack", "NECK"]]},
 	"two_way": {"len": 2.6, "kill": 1.75, "zone": "blade", "decap": true,
 		"clips": [[0.0, "sweep|side_kick"], [0.7, "side_kick"], [1.3, "jab"], [1.6, "roundhouse|side_kick"]],
 		"keys": [[0.0, 30, 0, 0.0, 0.0, 1.0], [0.25, 30, 10, -0.2, 0.3, 0.78], [0.7, 30, 10, -0.2, 0.3, 0.78], [0.8, 30, 10, 0.1, 0.8, 0.78], [1.7, 30, 10, 0.1, 0.8, 0.78]],
@@ -67,7 +91,8 @@ const OWN := {"arm_breaker": "b_grab_break", "heart_punch": "b_heart_punch", "ba
 	"skull_crusher": "b_skull_clap", "eye_gouge": "b_eye_gouge", "neck_crack": "b_neck_twist",
 	"death_touch": "b_death_touch", "flamingo_reaper": "b_flamingo"}
 ## Victim reaction clips (tools/hf_react.py) per move.
-const REACT := {"knee_snap": "r_knee", "two_way": "r_knee", "eye_gouge": "r_blind", "death_touch": "r_heart", "heart_punch": "r_heart"}
+const REACT := {"knee_snap": "r_knee", "two_way": "r_knee", "eye_gouge": "r_blind", "death_touch": "r_heart", "heart_punch": "r_heart",
+	"throat_punch": "r_heart", "temple_tap": "r_heart", "rib_breaker": "r_knee"}
 
 var f: Fighter
 var e: Punk
@@ -241,6 +266,9 @@ func _event(kind: String, arg: Variant) -> void:
 			if e != null and is_instance_valid(e):
 				e.add_child(_pipe)
 				_pipe.position = Vector2(0, -46)
+		"teeth":
+			if blood and blood.has_method("gore") and e != null and is_instance_valid(e):
+				blood.gore(e.global_position, float(_dir), "teeth")
 		"gore":
 			if blood and blood.has_method("gore"):
 				blood.gore(e.global_position if e != null and is_instance_valid(e) else at, float(_dir), "overkill")

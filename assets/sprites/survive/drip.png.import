@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/drip.png-6f06621be8491b930a49747a680be47d.cte
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.8
 compress/uastc_level=0

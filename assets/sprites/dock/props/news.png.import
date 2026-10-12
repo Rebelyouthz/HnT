@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/news.png-7b96c2e829af3aec8489a1f599879b59.cte
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.8
 compress/uastc_level=0

@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/front_kick.png-8a9ca9bbf32c22460ac589d6754acb
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.8
 compress/uastc_level=0

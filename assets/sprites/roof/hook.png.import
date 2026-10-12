@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/hook.png-aae424e4b2ea0b9fb6c41e48d0be26ff.cte
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.8
 compress/uastc_level=0

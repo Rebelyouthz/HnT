@@ -318,8 +318,11 @@ const SON_K := 1.08
 ## The hero's own size on top of the shared actor scale.
 static func hero_k(role: String) -> float:
 	return FATHER_K if role == "father" else SON_K
-const ENEMY_SCALE := 1.06 * ACTOR_K
-const NPC_SCALE := 0.98 * ACTOR_K
+## Thugs stand about as tall as the heroes (give or take per type, see
+## ENEMY_K); at 1.06 they read a head shorter than the son.
+const ENEMY_SCALE := 1.24 * ACTOR_K
+const ENEMY_K := {"repo_goon": 1.07, "bailiff": 1.05, "mohawk": 1.0, "punk": 1.0, "bag_snatch": 0.97, "roof_runner": 0.95, "cop": 1.02, "coping_imp": 0.9, "clipboard_flier": 0.96, "valet": 0.98}
+const NPC_SCALE := 1.2 * ACTOR_K
 const PROP_K := 0.9
 ## Cutscenes were composed at the old size (tower ledge, intro film).
 const FILM_SCALE := 1.12
