@@ -223,7 +223,7 @@ func _show_dock(who: String, text: String) -> void:
 
 
 func _show_caption(text: String) -> void:
-	_cap_who.text = "THE STREET"
+	_cap_who.text = "NARRATOR"
 	_cap_body.text = text
 	_cap.visible = true
 	_start_typing(_cap_body)

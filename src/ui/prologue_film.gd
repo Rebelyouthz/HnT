@@ -114,6 +114,9 @@ func _actor(who: String, at: Vector2, face: int) -> FilmActor:
 		a.anim.flip_h = face < 0
 		a.anim.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 		a.add_child(a.anim)
+		# At home nobody stands in a fight stance.
+		if who in ["father", "son"] and a.anim.sprite_frames.has_animation("idle_casual"):
+			a.anim.play("idle_casual")
 	return a
 
 
