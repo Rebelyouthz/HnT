@@ -552,6 +552,7 @@ func _arrive() -> void:
 	get_tree().create_timer(3.2).timeout.connect(func() -> void:
 		if is_inside_tree():
 			ErrandGuide.ensure(self)
+			BoneYard.check_open(self)
 	)
 
 

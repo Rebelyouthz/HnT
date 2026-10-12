@@ -49,6 +49,7 @@ func _ready() -> void:
 		)
 		tut_row.add_child(tb)
 	col.add_child(tut_row)
+	col.add_child(BoneYard.dojo_panel(self))
 	var table: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/dojo.json"))
 	for row in table:
 		col.add_child(_row(row))

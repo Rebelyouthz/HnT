@@ -676,6 +676,7 @@ func _juggle(kind: String, clip: String, dir: float, power: float) -> bool:
 		velocity.x = dir * 40.0
 	elif airborne():
 		juggle_n += 1
+		BoneYard.note_juggle(juggle_n)
 		lift_v = minf(lift_v, -maxf(110.0, 330.0 - 46.0 * float(juggle_n)))
 		_air_spin = dir * randf_range(1.5, 4.5) * (1.5 if power >= 0.8 else 1.0)
 		velocity.x = dir * 70.0 * power

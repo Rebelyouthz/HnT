@@ -61,8 +61,18 @@ const SEQ := {
 		"events": [[0.15, "crack", "HEAD"], [0.45, "crack", "RIBS"], [0.75, "crack", "HEAD"], [1.05, "slowmo", 0.45], [1.24, "blood", 1.0]]},
 }
 
+## The hero's own clip for the move (Sorceress, one take for the whole
+## timeline); without it the "clips" beats stitch it from stock moves.
+const OWN := {"arm_breaker": "b_grab_break", "heart_punch": "b_heart_punch", "back_breaker": "b_back_breaker",
+	"skull_crusher": "b_skull_clap", "eye_gouge": "b_eye_gouge", "neck_crack": "b_neck_twist",
+	"death_touch": "b_death_touch", "flamingo_reaper": "b_flamingo"}
+## Victim reaction clips (tools/hf_react.py) per move.
+const REACT := {"knee_snap": "r_knee", "two_way": "r_knee", "eye_gouge": "r_blind", "death_touch": "r_heart", "heart_punch": "r_heart"}
+
 var f: Fighter
 var e: Punk
+var _react := false
+var _own := false
 var id := ""
 var _seq: Dictionary
 var _t := 0.0
@@ -99,7 +109,14 @@ func _ready() -> void:
 	e.guarding = false
 	e.z_index = -1
 	_sy = e.visual.scale.y
-	if e._anim and e._anim.sprite_frames.has_animation("hurt"):
+	_own = OWN.has(id) and f._anim != null and f._anim.sprite_frames.has_animation(str(OWN[id]))
+	# The thug's own reaction clip when he has one (knee folding, blinded,
+	# heart stopping), else his hurt clip.
+	var react := str(REACT.get(id, "hurt"))
+	if e._anim and e._anim.sprite_frames.has_animation(react):
+		e._anim.play(react)
+		_react = react != "hurt"
+	elif e._anim and e._anim.sprite_frames.has_animation("hurt"):
 		e._anim.play("hurt")
 	var r := BrutalBook.row(id)
 	Juice.popup_number(f.global_position + Vector2(0, -112), str(r.get("title", id)), Color(1.0, 0.25, 0.2))
@@ -119,9 +136,13 @@ func _physics_process(delta: float) -> void:
 		queue_free()
 		return
 	_t += delta
-	for c: Array in _seq["clips"]:
-		if _beat(float(c[0]) + 0.0001):
-			_clip(str(c[1]))
+	if _own:
+		if _beat(0.0001):
+			_clip(str(OWN[id]))
+	else:
+		for c: Array in _seq["clips"]:
+			if _beat(float(c[0]) + 0.0001):
+				_clip(str(c[1]))
 	f._atk_t = 0.3
 	if not _killed and e != null and is_instance_valid(e):
 		_pose()
@@ -252,6 +273,7 @@ func _kill() -> void:
 	e.guarding = false
 	e.take_hit("finish", f)
 	FamilyProfile.data["brutal_kills"] = int(FamilyProfile.data.get("brutal_kills", 0)) + 1
+	BoneYard.note_brutal(id)
 	if not bool(BrutalBook.row(id).get("big", false)):
 		f.fury = minf(Fighter.FURY_MAX, f.fury + 10.0)
 	Juice.kill_cam(e.global_position if is_instance_valid(e) else f.global_position)

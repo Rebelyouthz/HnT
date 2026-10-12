@@ -82,6 +82,8 @@ static func unlock(id: String) -> bool:
 	var own: Array = fp.data.get("brutal", [])
 	own.append(id)
 	fp.data["brutal"] = own
+	if not rivals(id).is_empty():
+		make_active(id)
 	# Bought, not known: three clean reps on the dojo dummy first.
 	var tr: Dictionary = fp.data.get("dojo_train", {})
 	tr["b_" + id] = 0
@@ -117,12 +119,47 @@ static func for_grab(role: String, dir: String, pickup: String) -> String:
 		var id := str(r["id"])
 		if id == "pipe_javelin" and pickup != "pipe":
 			continue
-		if dir_of(r) != dir or not usable(id):
+		if dir_of(r) != dir or not usable(id) or benched(id):
 			continue
 		if int(r.get("row", 0)) > best_row:
 			best_row = int(r.get("row", 0))
 			best = id
 	return best
+
+
+## Owned moves of the same hero on the same grab (pipe aside): only one
+## can answer a grab, the rest sit on the bench until picked.
+static func rivals(id: String) -> Array:
+	var r := row(id)
+	var out: Array = []
+	if r.is_empty() or bool(r.get("big", false)):
+		return out
+	for o in all():
+		var oid := str(o["id"])
+		if oid == id or bool(o.get("big", false)) or not owned(oid):
+			continue
+		if str(o["hero"]) == str(r["hero"]) and dir_of(o) == dir_of(r) and (oid == "pipe_javelin") == (id == "pipe_javelin"):
+			out.append(oid)
+	return out
+
+
+static func benched(id: String) -> bool:
+	var fp := _fp()
+	return fp != null and (fp.data.get("brutal_off", []) as Array).has(id)
+
+
+## Make this the move that answers its grab; its rivals go to the bench.
+static func make_active(id: String) -> void:
+	var fp := _fp()
+	if fp == null:
+		return
+	var off: Array = fp.data.get("brutal_off", [])
+	off.erase(id)
+	for o in rivals(id):
+		if not off.has(o):
+			off.append(o)
+	fp.data["brutal_off"] = off
+	fp.save()
 
 
 static func super_for(role: String, dir: String) -> String:
