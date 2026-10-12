@@ -413,6 +413,23 @@ static func open_over(host: Control, sheet: Control) -> CanvasLayer:
 	return cl
 
 
+## Keep pad / key focus inside a small modal row (a confirm box): each
+## button's neighbours point only at the others or itself, so up / down
+## never wander to the menu behind it.
+static func trap_focus(row: Array) -> void:
+	var n := row.size()
+	for i in n:
+		var b: Control = row[i]
+		var left: Control = row[(i - 1 + n) % n]
+		var right: Control = row[(i + 1) % n]
+		b.focus_neighbor_left = b.get_path_to(left)
+		b.focus_neighbor_right = b.get_path_to(right)
+		b.focus_neighbor_top = b.get_path_to(b)
+		b.focus_neighbor_bottom = b.get_path_to(b)
+		b.focus_previous = b.get_path_to(left)
+		b.focus_next = b.get_path_to(right)
+
+
 static func pulse_ready(b: Control) -> void:
 	b.pivot_offset = b.custom_minimum_size * 0.5
 	var tw := b.create_tween().set_loops()

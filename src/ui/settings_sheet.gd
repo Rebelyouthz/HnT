@@ -420,6 +420,19 @@ func _confirm_reset() -> void:
 	row.add_child(no)
 	row.add_child(yes)
 	col.add_child(row)
+	UiKit.trap_focus([no, yes])
+	# The rows behind stop taking focus until the box goes.
+	var behind: Array[Control] = []
+	for c in _list.get_children() + [_back]:
+		if c is Control and (c as Control).focus_mode != Control.FOCUS_NONE:
+			behind.append(c)
+			(c as Control).focus_mode = Control.FOCUS_NONE
+	wrap.tree_exiting.connect(func() -> void:
+		for c in behind:
+			if is_instance_valid(c):
+				c.focus_mode = Control.FOCUS_ALL
+		_focus_first.call_deferred()
+	)
 	no.grab_focus()
 
 

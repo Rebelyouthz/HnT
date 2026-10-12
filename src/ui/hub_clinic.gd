@@ -81,7 +81,10 @@ func _ready() -> void:
 		play.disabled = true
 		play.text = PowerBook.line(enter_lock)
 	else:
-		UiKit.pulse_ready(play)
+		# Says what it does: out the door to the next street (it used to read
+		# "go talk to the landlord" and sway, which nobody could parse).
+		var where := str(StoryBook.act(hop).get("title", hop.replace("_", " "))).to_upper()
+		play.text = "▶  PLAY  ·  %s" % where if hop != "" else "▶  PLAY"
 		play.pressed.connect(func() -> void:
 			App.couch = false
 			App.start_run()

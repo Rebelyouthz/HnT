@@ -902,7 +902,7 @@ func _run_team() -> void:
 # --- meters under the feet ------------------------------------------------------
 
 func _draw() -> void:
-	if f == null:
+	if f == null or not Assist.hints():
 		return
 	# TOGETHER: a faint gold tether at the feet when Dad and Son stand close.
 	if f.role == "son":

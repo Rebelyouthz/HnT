@@ -1472,21 +1472,21 @@ func _combat() -> void:
 			_attack("light", false)
 
 
-## Walk or run on the story street. A run starts from a held DASH (after
-## the dash burst) or from two quick taps the same way, Double Dragon style,
-## and ends when the stick lets go, turns round, or you guard / duck.
+## Walk or run on the story street. Walking is the default; a run lasts
+## while DASH is held (after the dash burst) and ends when it is let go, the
+## stick lets go or turns round, or you guard / duck.
 func _tick_run(x: float) -> void:
 	var dir := int(signf(x)) if absf(x) > 0.35 else 0
 	var hard := absf(x) > 0.6
+	# Walking is the default; RUN is held (DASH / RT). The old double-tap run
+	# kicked in by accident while fighting back and forth.
 	if hard and dir != 0 and _last_x_dir == 0:
-		if dir == _tap_dir and _clock - _tap_t < 0.28:
-			running = true
 		_tap_dir = dir
 		_tap_t = _clock
 	_last_x_dir = dir if hard else 0
 	if _pressed("dash") and dir != 0 and not blocking:
 		running = true
-	if dir == 0 or blocking or ducking or (running and dir != int(facing) and anim_atk == ""):
+	if dir == 0 or blocking or ducking or not _pressed("dash") or (running and dir != int(facing) and anim_atk == ""):
 		running = false
 	if running and _street_grounded():
 		_run_puff -= get_physics_process_delta_time()
@@ -3272,6 +3272,12 @@ func _throw_held_weapon() -> bool:
 
 func _throw() -> void:
 	if _try_catch():
+		return
+	# Standing on a weapon: THROW picks it up (or swaps for the one in hand).
+	var wp := WeaponPickup.under(self)
+	if wp != null and attack_cd == 0:
+		wp.take(self)
+		attack_cd = 8
 		return
 	if attack_cd > 0:
 		return

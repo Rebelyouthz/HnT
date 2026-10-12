@@ -105,10 +105,28 @@ func _input(event: InputEvent) -> void:
 			_ring_t = 0.0
 			_ring_at = mb.position
 	var jb := event as InputEventJoypadButton
-	if jb != null and jb.button_index == JOY_BUTTON_A and _pad_t > 0.0 and _menu_time():
-		# The pad pointer is live: A clicks where it points.
+	if jb != null and jb.button_index == JOY_BUTTON_A and _pad_t > 0.0 and _menu_time() and _over_button():
+		# The pad pointer is live and sits on a button: A clicks it. Anywhere
+		# else A presses the focused button as usual.
 		_click(jb.pressed)
 		get_viewport().set_input_as_handled()
+	# A real mouse shows the pointer again; pad buttons hide it.
+	if event is InputEventMouseMotion and _pad_t <= 0.0 and DisplayServer.get_name() != "headless":
+		if Input.mouse_mode == Input.MOUSE_MODE_HIDDEN:
+			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	elif jb != null and jb.pressed and _pad_t <= 0.0 and DisplayServer.get_name() != "headless":
+		Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
+
+
+func _over_button() -> bool:
+	var h := get_viewport().gui_get_hovered_control()
+	while h != null:
+		if h is BaseButton and not (h as BaseButton).disabled:
+			return true
+		if h.mouse_filter != Control.MOUSE_FILTER_PASS:
+			return false
+		h = h.get_parent() as Control
+	return false
 
 
 func _menu_time() -> bool:
@@ -118,7 +136,11 @@ func _menu_time() -> bool:
 	var cs := tree.current_scene
 	if cs == null:
 		return false
-	return cs is Control or cs.scene_file_path.contains("/ui/") or cs.scene_file_path.ends_with("camp.tscn")
+	if cs is Control or cs.scene_file_path.contains("/ui/"):
+		return true
+	# The hideout floor is play (the stick walks, RS is free): only its open
+	# sheets count as menu.
+	return cs.has_method("overlay_open") and bool(cs.call("overlay_open"))
 
 
 func _process(delta: float) -> void:
@@ -131,8 +153,11 @@ func _process(delta: float) -> void:
 	# Right stick flies the pointer; the left stick and d-pad move menu focus
 	# (FocusGlide frames it), so the two never fight.
 	var v := Vector2(Input.get_joy_axis(0, JOY_AXIS_RIGHT_X), Input.get_joy_axis(0, JOY_AXIS_RIGHT_Y))
-	if v.length() < DEAD:
+	# In play the right stick strikes and tricks: never fly the pointer.
+	if v.length() < DEAD or not _menu_time():
 		return
+	if Input.mouse_mode == Input.MOUSE_MODE_HIDDEN and DisplayServer.get_name() != "headless":
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	# Curve: fine control near the centre, fast at the rim.
 	var amt := (v.length() - DEAD) / (1.0 - DEAD)
 	var step := v.normalized() * amt * amt * SPEED * delta

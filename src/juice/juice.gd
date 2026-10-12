@@ -1105,6 +1105,10 @@ class _Hole extends Node2D:
 
 
 func named_slowmo() -> void:
+	# Tricks used to dip the whole clock (your inputs too): read as a pause
+	# mid-fight. Only with OPTIONS > HIT STOP turned up.
+	if _stop_k() <= 0.0:
+		return
 	if get_tree().get_first_node_in_group("chase_crash"):
 		return
 	if get_tree().get_first_node_in_group("snap_director") and Engine.time_scale <= WORLD_SNAP:

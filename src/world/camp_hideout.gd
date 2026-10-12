@@ -745,9 +745,9 @@ func _add_back_button() -> void:
 	_overlay_layer.add_child(bar)
 	PixelStage.apply_control(bar)
 	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var b := UiKit.button("◀  BACK TO HIDEOUT", Vector2(200, 30))
+	var b := UiKit.button("◀  BACK TO HIDEOUT  ·  B", Vector2(230, 30))
 	b.add_theme_font_size_override("font_size", 13)
-	b.position = Vector2(1062, 68)
+	b.position = Vector2(1032, 68)
 	b.pressed.connect(_close_overlay)
 	bar.add_child(b)
 	bar.set_meta("back_bar", true)

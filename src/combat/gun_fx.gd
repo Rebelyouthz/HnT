@@ -223,7 +223,11 @@ func _draw() -> void:
 			var ks := _t / _life
 			var rng3 := RandomNumberGenerator.new()
 			rng3.seed = _seed
-			draw_arc(Vector2.ZERO, 2.0 + 9.0 * ks, 0, TAU, 18, Color(0.75, 0.85, 1.0, 0.5 * (1.0 - ks)), 0.8)
+			# A flat ripple on the street (squashed, faint): it read as a ring
+			# drawn round the feet.
+			draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, 0.3))
+			draw_arc(Vector2.ZERO, 2.0 + 5.0 * ks, 0, TAU, 18, Color(0.75, 0.85, 1.0, 0.22 * (1.0 - ks)), 0.8)
+			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 			for i in 7:
 				var vx := rng3.randf_range(-40.0, 40.0)
 				var vy := rng3.randf_range(-90.0, -50.0)

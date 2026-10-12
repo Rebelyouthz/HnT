@@ -184,9 +184,9 @@ const TOWER := "VIEWPOINT"
 const LUNCH_140 := "EAT AT 140M"
 const SHUTTLE := "WELLNESS SHUTTLE"
 const PARACHUTE := "PARACHUTE"
-const OPEN_HOUSE := "OPEN HOUSE  ·  ASSIST. Softer HP, longer telegraphs. Not a third campaign."
-const NIGHT_CLASS := "NIGHT CLASS  ·  The loop that matters. Fourteen acts. Come back richer."
-const FINALS := "FINALS  ·  Second loop. Wanted climbs faster. Gold pays the leftover tree."
+const OPEN_HOUSE := "EASY (OPEN HOUSE)  ·  Softer enemies, longer wind-ups, and learning marks: attack-height arrows, danger zones, the combo ring and chi meter at your feet."
+const NIGHT_CLASS := "NORMAL  ·  The real fight. No marks on the street: read the wind-up from the body. Fourteen acts."
+const FINALS := "HARD  ·  Second loop. Faster wind-ups, wanted climbs faster, no marks."
 const LUNCH_MISSION := "Pack lunch. Fridge, shop, or a tin. Sit at 140m even if you forget."
 
 

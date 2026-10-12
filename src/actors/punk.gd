@@ -300,9 +300,21 @@ func _mount_sprite() -> void:
 		ActorLight.attach(self, _anim)
 
 
+## Real travel speed (px/s), smoothed: what the feet should show.
+var _moved := Vector2.ZERO
+var _moved_from := Vector2.INF
+
+
 func _tick_sprite() -> void:
 	if _anim == null or _anim.sprite_frames == null:
 		return
+	var dt := maxf(get_physics_process_delta_time(), 0.001)
+	if _moved_from != Vector2.INF:
+		var v := (global_position - _moved_from) / dt
+		if v.length() > 2000.0:
+			v = Vector2.ZERO
+		_moved = _moved.lerp(v, 0.35)
+	_moved_from = global_position
 	var clip := "idle"
 	if telegraph <= 0.0 and recover <= 0.0:
 		_swing_clip = ""
@@ -312,9 +324,11 @@ func _tick_sprite() -> void:
 		clip = _swing_clip if _swing_clip != "" else "attack"
 	elif recover > 0.0:
 		clip = "idle"
-	elif absf(velocity.x) > 8.0 or absf(velocity.y) > 18.0:
-		# Side, three-quarter or straight up/down walk (eight ways on the field).
-		clip = SpriteBook.dir_clip(_anim.sprite_frames, velocity, Fighter.FIELD)
+	elif _moved.length() > 26.0:
+		# Walk only when the body really travels (measured from its position,
+		# not its velocity): a push into a wall or a tiny shuffle used to play
+		# walk on the spot, and a scripted slide used to glide on idle.
+		clip = SpriteBook.dir_clip(_anim.sprite_frames, _moved, Fighter.FIELD)
 	if not _anim.sprite_frames.has_animation(clip):
 		clip = "attack" if clip.begins_with("punch") or clip == "kick_low" else clip
 		if not _anim.sprite_frames.has_animation(clip):
@@ -323,9 +337,9 @@ func _tick_sprite() -> void:
 		_anim.play(clip)
 		_anim.speed_scale = _swing_rate if clip == _swing_clip else 1.0
 	if clip == "walk":
-		_anim.speed_scale = SpriteBook.stride_rate(_anim, "walk", maxf(absf(velocity.x), absf(velocity.y) * 1.4))
+		_anim.speed_scale = SpriteBook.stride_rate(_anim, "walk", maxf(absf(_moved.x), absf(_moved.y) * 1.4))
 	elif clip in ["walk_up", "walk_down", "walk_ur", "walk_dr"]:
-		_anim.speed_scale = SpriteBook.stride_rate(_anim, clip, velocity.length() * 1.4)
+		_anim.speed_scale = SpriteBook.stride_rate(_anim, clip, _moved.length() * 1.4)
 
 
 var _bowled: Dictionary = {}
@@ -743,7 +757,7 @@ func _pick_height(atk: String) -> String:
 
 
 func _show_height() -> void:
-	if atk_height == "":
+	if atk_height == "" or not Assist.hints():
 		return
 	if _height_mark == null:
 		_height_mark = Polygon2D.new()

@@ -72,7 +72,7 @@ func _ring_phase() -> float:
 
 
 func _draw() -> void:
-	if fighter == null:
+	if fighter == null or not Assist.hints():
 		return
 	# A flat ring on the ground round the feet (it used to sit on the chest
 	# and hide the punch): squashed so it reads as lying on the street.

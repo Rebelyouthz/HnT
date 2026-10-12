@@ -1,7 +1,8 @@
 extends SceneTree
 
 ## Walk vs run on a story street: hold RIGHT (brisk walk, walk clip), then
-## RIGHT + DASH (run, parkour_run clip, faster), then a double tap. Prints
+## RIGHT + DASH (run, parkour_run clip, faster), then a double tap (which
+## must NOT run: run is held, never tapped). Prints
 ## RUN OK when the run is clearly faster than the walk and uses the run clip.
 ##   godot --headless --fixed-fps 60 -s tests/run_test.gd
 
@@ -62,7 +63,7 @@ func _process(_d: float) -> bool:
 		Input.action_release("p1_right")
 	if _n == 460:
 		print("walk %.0f px/s (%s)  run %.0f px/s (%s)  double-tap run %s" % [_walk_v, _walk_clip, _run_v, _run_clip, str(_tap_run)])
-		var ok := _run_v > _walk_v * 1.3 and _walk_v > 100.0 and _run_clip == "parkour_run" and _walk_clip.begins_with("walk") and _tap_run
+		var ok := _run_v > _walk_v * 1.3 and _walk_v > 100.0 and _run_clip == "parkour_run" and _walk_clip.begins_with("walk") and not _tap_run
 		print("RUN OK" if ok else "RUN FAIL")
 		if FileAccess.file_exists("user://family.run_backup.json"):
 			DirAccess.copy_absolute("user://family.run_backup.json", "user://family.json")

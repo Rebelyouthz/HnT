@@ -43,9 +43,9 @@ func _ready() -> void:
 	right.size = Vector2(300, 330)
 	right.add_theme_constant_override("separation", 12)
 	stage.add_child(right)
-	for pair in [["night_class", "NIGHT CLASS"], ["open_house", "OPEN HOUSE"], ["finals", "FINALS"]]:
+	for pair in [["open_house", "EASY · OPEN HOUSE"], ["night_class", "NORMAL · NIGHT CLASS"], ["finals", "HARD · FINALS"]]:
 		var b := UiKit.button(pair[1], Vector2(300, 56))
-		b.add_theme_font_size_override("font_size", 20)
+		b.add_theme_font_size_override("font_size", 16)
 		if App.difficulty == pair[0]:
 			var on := UiKit.panel(UiKit.NAVY_HI, UiKit.GOLD)
 			on.shadow_color = Color(UiKit.GOLD.r, UiKit.GOLD.g, UiKit.GOLD.b, 0.5)

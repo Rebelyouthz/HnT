@@ -193,8 +193,9 @@ func _big_air(f: Fighter, delta: float) -> void:
 		if _air > 0.45 and absf(f.velocity.x) > 250.0 and _big_cd <= 0.0:
 			_big_cd = 6.0
 			Juice.shout("BIG AIR")
-			Juice.slowmo(0.5)
-			get_tree().create_timer(0.35, true, false, true).timeout.connect(Juice.restore_time)
+			if float(FamilyProfile.data.get("hitstop_k2", 0.0)) > 0.0:
+				Juice.slowmo(0.5)
+				get_tree().create_timer(0.35, true, false, true).timeout.connect(Juice.restore_time)
 			CouchCamera.punch(get_tree(), 0.06, 0.5, f.global_position)
 			for b in _bars:
 				var tw := b.create_tween().set_ignore_time_scale(true)

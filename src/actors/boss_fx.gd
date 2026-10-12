@@ -160,6 +160,9 @@ func _touch(rx: float, ry: float) -> void:
 func _draw() -> void:
 	var k := clampf(_t / maxf(0.01, fill_t), 0.0, 1.0)
 	var flash := 0.5 + 0.5 * sin(_t * 26.0)
+	var aid := Assist.hints()
+	if not aid and (kind == "band" or kind == "circle") and not _struck:
+		return
 	match kind:
 		"band":
 			var r := Rect2(rect.position - global_position, rect.size).abs()
@@ -203,7 +206,8 @@ func _draw() -> void:
 		"drop":
 			if not _struck:
 				_ellipse(radius * (0.4 + 0.6 * k), Color(0, 0, 0, 0.45), true)
-				_ellipse(radius, Color(1.0, 0.25, 0.1, 0.8 * flash), false)
+				if aid:
+					_ellipse(radius, Color(1.0, 0.25, 0.1, 0.8 * flash), false)
 				var y := -320.0 * (1.0 - k * k)
 				_thing(Vector2(0, y))
 			else:
