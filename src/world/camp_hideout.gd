@@ -105,6 +105,14 @@ var _purse := {}
 ## Rico runs these: they open only once he is back from the Intake Lot.
 const RICO_SHOP := ["pawn_shop", "invoice_wheel", "tip_jar", "lost_found"]
 const CREW_SPOT := {"benny": 0.045, "rico": 0.775, "dot": 0.262}
+## The forge yard: one more room past the last one (assets/backdrops/
+## camp_yard.png). Ember works it; the portal stands in its brick arch.
+## Spots are fractions of the yard's own width.
+const YARD_SPOT := {"ember": 0.255}
+const FORGE_ROOM := ["forge", "salvage_bench"]
+var _yard_x := 0.0
+var _yard_w := 0.0
+var _yard_meta := {}
 
 
 func _ready() -> void:
@@ -153,6 +161,9 @@ func _build_room() -> void:
 	add_child(s)
 	_w = float(tex.get_width()) * texel
 	_room_h = ground * texel
+	if _build_yard(texel, ground, s.position.y):
+		_lamps()
+		return
 	# The painting ends at _w but the portal and the camera reach past it:
 	# carry the room on with its own right edge, mirrored and shaded, so the
 	# portal stands in a dim back corner instead of a black void.
@@ -177,7 +188,11 @@ func _build_room() -> void:
 	shade.vertex_colors = PackedColorArray([Color(0, 0, 0, 0.0), Color(0, 0, 0, 0.75), Color(0, 0, 0, 0.75), Color(0, 0, 0, 0.0)])
 	shade.z_index = -4
 	add_child(shade)
-	# Warm lamp pools that breathe a little.
+	_lamps()
+
+
+## Warm lamp pools that breathe a little.
+func _lamps() -> void:
 	for i in 6:
 		var glow := PointLight2D.new()
 		var g := Gradient.new()
@@ -199,12 +214,101 @@ func _build_room() -> void:
 		add_child(glow)
 
 
+## The forge yard to the right of the painted rooms, same floor line and
+## height. False when the art is missing (the old mirrored corner then).
+func _build_yard(camp_texel: float, camp_ground: float, top_y: float) -> bool:
+	var path := "res://assets/backdrops/camp_yard.png"
+	if not ResourceLoader.exists(path):
+		return false
+	var tex := load(path) as Texture2D
+	var meta: Dictionary = {}
+	var mp := "res://assets/backdrops/camp_yard.json"
+	if FileAccess.file_exists(mp):
+		var v: Variant = JSON.parse_string(FileAccess.get_file_as_string(mp))
+		if v is Dictionary:
+			meta = v
+	_yard_meta = meta
+	var ground := float(meta.get("ground", float(tex.get_height()) * 0.934))
+	# Same height on screen as the room it joins.
+	var texel := float(meta.get("texel", camp_texel * camp_ground / ground))
+	var spr := Sprite2D.new()
+	spr.texture = tex
+	spr.centered = false
+	spr.scale = Vector2(texel, texel)
+	spr.position = Vector2(_w, WALK_Y - ground * texel)
+	spr.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	spr.z_index = -5
+	add_child(spr)
+	_yard_x = _w
+	_yard_w = float(tex.get_width()) * texel
+	# A soft dark seam where the two paintings meet: reads as a doorway.
+	var seam := Polygon2D.new()
+	var y0 := minf(top_y, spr.position.y)
+	var y1 := WALK_Y + 200.0
+	var clear := Color(0, 0, 0, 0.0)
+	var dark := Color(0, 0, 0, 0.55)
+	seam.polygon = PackedVector2Array([Vector2(_w - 10, y0), Vector2(_w, y0), Vector2(_w + 10, y0), Vector2(_w + 10, y1), Vector2(_w, y1), Vector2(_w - 10, y1)])
+	seam.vertex_colors = PackedColorArray([clear, dark, clear, clear, dark, clear])
+	seam.z_index = -4
+	add_child(seam)
+	# The furnace breathes: an orange pool that flickers, embers rising.
+	var fx := _yard_x + _yard_w * 0.14
+	var fire := PointLight2D.new()
+	var g := Gradient.new()
+	g.set_color(0, Color(1.0, 0.55, 0.2, 0.8))
+	g.set_color(1, Color(1.0, 0.45, 0.1, 0.0))
+	var gt := GradientTexture2D.new()
+	gt.gradient = g
+	gt.fill = GradientTexture2D.FILL_RADIAL
+	gt.fill_from = Vector2(0.5, 0.5)
+	gt.fill_to = Vector2(0.5, 0.0)
+	gt.width = 128
+	gt.height = 128
+	fire.texture = gt
+	fire.texture_scale = 1.8
+	fire.energy = 0.7
+	fire.position = Vector2(fx, WALK_Y - 34.0)
+	fire.name = "ForgeFire"
+	add_child(fire)
+	var embers := CPUParticles2D.new()
+	embers.amount = 18
+	embers.lifetime = 1.6
+	embers.position = Vector2(fx, WALK_Y - 40.0)
+	embers.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	embers.emission_rect_extents = Vector2(9, 3)
+	embers.direction = Vector2(0, -1)
+	embers.spread = 25.0
+	embers.gravity = Vector2(0, -14)
+	embers.initial_velocity_min = 6.0
+	embers.initial_velocity_max = 16.0
+	embers.scale_amount_min = 0.6
+	embers.scale_amount_max = 1.2
+	embers.color = Color(1.0, 0.6, 0.2, 0.9)
+	embers.z_index = -3
+	add_child(embers)
+	return true
+
+
+func has_yard() -> bool:
+	return _yard_w > 0.0
+
+
+## Far right of the walkable floor.
+func _right_edge() -> float:
+	return _yard_x + _yard_w - 14.0 if has_yard() else _w + 40.0
+
+
+func _yard_at(frac: float) -> float:
+	return _yard_x + _yard_w * frac
+
+
 func _build_actors() -> void:
 	var me := App.solo_role if App.solo_role in ["son", "father"] else "son"
 	var other := "father" if me == "son" else "son"
 	_walker = CampWalker.new()
 	_walker.setup(me)
-	_walker.position = Vector2(_w - 40.0, WALK_Y)
+	# Home through the portal: you step out of its arch.
+	_walker.position = Vector2(_yard_at(float((_yard_meta.get("stations", {}) as Dictionary).get("portal", 0.927))) - 30.0 if has_yard() else _w - 40.0, WALK_Y)
 	_walker.facing = -1
 	add_child(_walker)
 	# Couch nights: the other hero tags along a step behind. Solo: only the
@@ -217,14 +321,22 @@ func _build_actors() -> void:
 		add_child(_buddy)
 		_buddy.set_motion(0.0)
 	var knock_at := 0.6
+	var spots := {}
 	for who in CREW_SPOT:
+		spots[who] = _w * float(CREW_SPOT[who])
+	if has_yard():
+		for who in YARD_SPOT:
+			spots[who] = _yard_at(float(YARD_SPOT[who]))
+	for who in spots:
 		if StoryBook.has_crew(who):
 			var npc := CrewNPC.new()
 			npc.setup(who)
-			var spot := Vector2(_w * float(CREW_SPOT[who]), WALK_Y - 1.0)
+			var spot := Vector2(float(spots[who]), WALK_Y - 1.0)
 			npc.position = spot
 			npc.set_meta("spot", spot.x)
 			npc.face(1)
+			# Ember keeps the anvil busy between customers.
+			npc.hammering = who == "ember"
 			add_child(npc)
 			_crew[who] = npc
 			# First night home after the rescue: a knock at the door, then
@@ -233,7 +345,7 @@ func _build_actors() -> void:
 			if not bool(FamilyProfile.data.get(key, false)):
 				FamilyProfile.data[key] = true
 				FamilyProfile.save()
-				npc.position = Vector2(_w - 10.0, WALK_Y - 1.0)
+				npc.position = Vector2(_right_edge() if has_yard() else _w - 10.0, WALK_Y - 1.0)
 				npc.visible = false
 				var at := knock_at
 				knock_at += 1.4
@@ -248,7 +360,7 @@ func _build_actors() -> void:
 	_cam = Camera2D.new()
 	_cam.zoom = Vector2(ZOOM, ZOOM)
 	_cam.limit_left = -20
-	_cam.limit_right = int(_w + 70.0)
+	_cam.limit_right = int(_yard_x + _yard_w) if has_yard() else int(_w + 70.0)
 	_cam.limit_bottom = int(WALK_Y + 60.0)
 	_cam.position_smoothing_enabled = true
 	_cam.position_smoothing_speed = 6.0
@@ -295,7 +407,7 @@ func _layout() -> Array:
 # --- stations ---------------------------------------------------------------
 
 func _names() -> Dictionary:
-	var out := {"command_board": "COMMAND BOARD"}
+	var out := {"command_board": "COMMAND BOARD", "forge": "THE FORGE", "salvage_bench": "SALVAGE BENCH"}
 	var list: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/buildings.json"))
 	if list is Array:
 		for b: Variant in list:
@@ -312,6 +424,10 @@ func _build_stations() -> void:
 		var d := row as Dictionary
 		var id := str(d.get("id", ""))
 		var x := float(d.get("x", 0.5)) * _w
+		if str(d.get("room", "")) == "yard":
+			if not has_yard():
+				continue
+			x = _yard_at(float(d.get("x", 0.5)))
 		var st := {"id": id, "x": x, "name": str(names.get(id, id.capitalize())).to_upper(), "painted": bool(d.get("painted", true))}
 		var node := Node2D.new()
 		node.position = Vector2(x, WALK_Y)
@@ -365,6 +481,8 @@ func _builds(id: String) -> bool:
 
 
 func _locked(id: String) -> bool:
+	if id in FORGE_ROOM:
+		return not ForgeBook.is_open()
 	if _builds(id):
 		return FamilyProfile.building_level(id) <= 0
 	return false
@@ -401,11 +519,16 @@ func _tarp() -> Node2D:
 func _build_portal() -> void:
 	_portal = Node2D.new()
 	_portal.position = Vector2(_w + 34.0, WALK_Y - 27.0)
+	if has_yard():
+		# The rift is painted in the yard's brick arch; light it, no pipe ring.
+		_portal.position = Vector2(_yard_at(float((_yard_meta.get("stations", {}) as Dictionary).get("portal", 0.927))), WALK_Y - 27.0)
 	add_child(_portal)
 	# Benny's welded pipe ring on a pallet, the rift swirling inside
 	# (assets/sprites/portal, tools/portal_art.py). Drawn rings without it.
 	var sheet_path := "res://assets/sprites/portal/portal_sheet.png"
-	if ResourceLoader.exists(sheet_path):
+	if has_yard():
+		pass
+	elif ResourceLoader.exists(sheet_path):
 		var sheet: Texture2D = load(sheet_path)
 		var fw := 144
 		var sf := SpriteFrames.new()
@@ -543,6 +666,9 @@ func _arrive() -> void:
 	var steps := PowerBook.path(hop)
 	if not steps.is_empty():
 		lines[1] = {"who": _mate(), "text": "Before we go back out, we build something. Follow the arrow."}
+	# Ember's first night: the forge is lit and the arrow walks you to it.
+	if not ErrandGuide.forge_step().is_empty():
+		lines.append({"who": "ember", "text": "Furnace is lit. Come hit some metal before you run off. Yard's past the last room."})
 	_talk.play(lines)
 	var tab := App.camp_open_tab
 	App.camp_open_tab = ""
@@ -597,7 +723,7 @@ func _process(delta: float) -> void:
 	x = clampf(x, -1.0, 1.0)
 	var fast := Input.is_action_pressed("p1_dash") or Input.is_action_pressed("p2_dash")
 	var vx := x * SPEED * (1.6 if fast else 1.0)
-	_walker.position.x = clampf(_walker.position.x + vx * delta, 8.0, _w + 40.0)
+	_walker.position.x = clampf(_walker.position.x + vx * delta, 8.0, _right_edge())
 	_walker.set_motion(vx)
 	_cam.position = Vector2(_walker.position.x, _cam_y())
 	_pick_near()
@@ -653,6 +779,11 @@ func _prompt_for(st: Dictionary) -> String:
 	var id := str(st["id"])
 	if id.begins_with("crew_"):
 		return "▲  TALK TO  %s" % st["name"]
+	if id in FORGE_ROOM:
+		if bool(st.get("locked", false)):
+			return "%s  ·  EMBER RUNS THIS  ·  FREE HER AT THE INTAKE LOT" % st["name"]
+		if id == "salvage_bench":
+			return "▲  SEARCH THE SALVAGE BENCH" if ForgeBook.salvage_ready() else "SALVAGE BENCH  ·  PICKED CLEAN  ·  NEW SCRAP AFTER A RUN"
 	if bool(st.get("locked", false)):
 		var cost := FamilyProfile.build_cost(id)
 		var blk := FamilyProfile.build_blocker(id)
@@ -687,6 +818,18 @@ func _use(st: Dictionary) -> void:
 		return
 	if id == "command_board":
 		_open_hub("clinic")
+		return
+	if id in FORGE_ROOM:
+		if not ForgeBook.is_open():
+			_talk.play([{"who": _mate(), "text": "Cold forge. Somebody has to know how to light it. The Intake Lot had a welder in chains."}], true)
+		elif id == "forge":
+			var em: CrewNPC = _crew.get("ember")
+			if em:
+				em.face(1)
+				em.strike()
+			_open_sheet("res://src/ui/forge_sheet.gd")
+		else:
+			_salvage(st)
 		return
 	if bool(st.get("locked", false)):
 		var blk2 := FamilyProfile.build_blocker(id)
@@ -789,6 +932,25 @@ func _close_overlay() -> void:
 			_construct(st, true)
 			return
 	_refresh_locks()
+
+
+## The salvage bench: once a night a pile of scrap, sorted into Ember's bins.
+func _salvage(st: Dictionary) -> void:
+	if not ForgeBook.salvage_ready():
+		_talk.play([{"who": "ember", "text": "Picked clean. Go break something out there and I'll have more by morning."}], true)
+		return
+	var got := ForgeBook.salvage()
+	Juice.play("res://assets/audio/claim.wav")
+	var node: Node2D = st["node"]
+	for k in 3:
+		_dust(node.global_position + Vector2(randf_range(-14, 14), -randf_range(6, 26)))
+	var bits: PackedStringArray = []
+	for k in got.keys():
+		bits.append("+%d %s" % [int(got[k]), str(ForgeBook.MAT_NAME.get(k, k))])
+	var icon := "part_" + str(got.keys()[0]) if not got.is_empty() else "forge_smelt"
+	if Juice.rewards != null:
+		Juice.rewards.reveal(icon, "SALVAGE", Color(1.0, 0.55, 0.2), "  ·  ".join(bits), 1.6)
+	_talk.play([{"who": "ember", "text": "Good haul. That's a jacket, if you squint."}], true)
 
 
 func _crew_talk(who: String) -> void:

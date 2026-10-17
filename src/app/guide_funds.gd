@@ -70,3 +70,23 @@ static func for_guide(gid: String) -> void:
 			top_up("gems", cheap)
 		"sgear":
 			top_up("tokens", SurvGear.BOX_PRICE)
+		"moves":
+			# The cheapest strike still to learn for the hero on screen.
+			var cheap := 0
+			for r in Moves.for_role(App.solo_role if App.solo_role in ["son", "father"] else "son"):
+				var g := int((r as Dictionary).get("gold", 0))
+				if g > 0 and not Moves.learned(App.solo_role if App.solo_role in ["son", "father"] else "son", str((r as Dictionary).get("id", ""))) and (cheap == 0 or g < cheap):
+					cheap = g
+			top_up("gold", cheap)
+		"armory":
+			var cheapest := 0
+			for id in FamilyProfile.data.get("weapons_found", []):
+				if Arsenal.level(str(id)) < Arsenal.MAX_LV:
+					var c := Arsenal.level_cost(str(id))
+					if c > 0 and (cheapest == 0 or c < cheapest):
+						cheapest = c
+			top_up("gold", cheapest)
+		"forge":
+			# The guide's first forging (the steel cap) is always in reach.
+			var rc := ForgeBook.recipe(ErrandGuide.FORGE_FIRST)
+			cover_step({"gold": int(rc.get("gold", 0)), "parts": rc.get("mats", {})})

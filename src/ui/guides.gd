@@ -48,6 +48,12 @@ const STEPS := {
 		{"key": "part_suppressor", "text": "Pick a part. A ghost of it shows on the gun, and the bars say what changes: grey now, green better, red worse."},
 		{"who": "son", "text": "Press to buy it with gems, then it slides on and clicks home. Press it again to take it off. Parts fit every gun."},
 	],
+	"forge": [
+		{"who": "father", "text": "Ember's forge. Gold and materials go in, gear with real stats comes out. Weapons too: forging one finds it and levels it."},
+		{"key": "forge_steel_cap", "text": "Press FORGE, then hit the anvil when the marker is in the white-hot zone. Three strikes: two good ones make it a rarity higher."},
+		{"key": "forge_tab_smelt", "who": "son", "text": "SMELT melts spare copies of gear into iron, leather and cloth. The one you own is never offered, only the extras."},
+		{"who": "father", "text": "Materials also fall out of things we smash out there, and the SALVAGE BENCH hands out scrap once a night."},
+	],
 	"sgear": [
 		{"text": "Survivor gear. The Kid wears it into every coping hour: cap, jacket, shoes, charm, necklace and ring."},
 		{"key": "box", "text": "A GEAR BOX costs S-COINS and gives a random piece. Bosses and elite chests drop them too."},

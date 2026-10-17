@@ -64,6 +64,9 @@ func _start_gate() -> void:
 		fp.data["crew_benny"] = true
 	if order.find(gate) > order.find("intake_lot"):
 		fp.data["crew_rico"] = true
+		# Ember came home with Rico: her first forging leads the night.
+		fp.data["crew_ember"] = gate == "fire_escapes"
+		fp.data["crew_home_ember"] = true
 	root.get_node("App").set("camp_next", "")
 	_t0 = _n
 	change_scene_to_file("res://scenes/levels/camp.tscn")
@@ -88,6 +91,12 @@ func _press(t: String) -> void:
 	var c := _ctrl(t)
 	if c is BaseButton:
 		(c as BaseButton).pressed.emit()
+	# The forge's anvil: three clean strikes.
+	if t.begins_with("forge_") and not t.begins_with("forge_tab_"):
+		for a in root.find_children("*", "Control", true, false):
+			if a.get_script() != null and str(a.get_script().resource_path).ends_with("forge_anvil.gd"):
+				a.emit_signal("done", 3)
+				a.queue_free()
 
 
 func _process(_d: float) -> bool:

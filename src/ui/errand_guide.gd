@@ -112,10 +112,29 @@ static func room_name(id: String) -> String:
 static func steps(map_id: String) -> Array:
 	var out: Array = []
 	var r := night_room()
-	if r != "" and int(FamilyProfile.data.get("gold", 0)) >= FamilyProfile.build_cost(r):
+	# Ember's first night home: the first forging is tonight's thing (it
+	# takes the room build's place, so it is still two things, then a run).
+	var fs := forge_step()
+	if not fs.is_empty():
+		out.append(fs)
+	elif r != "" and int(FamilyProfile.data.get("gold", 0)) >= FamilyProfile.build_cost(r):
 		out.append({"what": "BUILD", "id": r, "name": room_name(r), "gold": FamilyProfile.build_cost(r), "rep": 0, "parts": {}, "night": true})
 	out.append_array(PowerBook.path(map_id))
 	return out
+
+
+## Ember is home and nothing was forged yet: walk to the anvil and make the
+## cheapest piece (its gold and materials are covered on the way).
+const FORGE_FIRST := "steel_cap"
+
+
+static func forge_step() -> Dictionary:
+	if not PowerBook.enforced() or not ForgeBook.is_open() or int(FamilyProfile.data.get("forged", 0)) > 0:
+		return {}
+	var rc := ForgeBook.recipe(FORGE_FIRST)
+	if rc.is_empty():
+		return {}
+	return {"what": "FORGE", "id": FORGE_FIRST, "name": ForgeBook.title_of(rc), "gold": int(rc.get("gold", 0)), "rep": 0, "parts": rc.get("mats", {})}
 
 
 ## Put one guide in the tree when an errand is open (the hideout calls it).
@@ -428,6 +447,12 @@ func _target_step(step: Dictionary) -> void:
 	var what := str(step.get("what", ""))
 	var gold := int(step.get("gold", 0))
 	_sub = "STORY  ·  BEFORE %s" % _map.replace("_", " ").to_upper()
+	if what == "FORGE":
+		_label = "FORGE A %s WITH EMBER  ·  %d G" % [str(step.get("name", "")).to_upper(), gold]
+		_sub = "EMBER'S FIRST NIGHT  ·  THE FORGE IN THE YARD"
+		if not _chain(["forge_" + str(step.get("id", "")), "forge_tab_forge"], "forge"):
+			_chain(["button:◀  BACK"], "")
+		return
 	if bool(step.get("night", false)):
 		_sub = "TONIGHT'S BUILD  ·  THEN THE PORTAL"
 		shop = str(step.get("id", shop))
@@ -438,7 +463,8 @@ func _target_step(step: Dictionary) -> void:
 		# Benny raises rooms on the floor; while he is held, the board does it.
 		var floor := shop if StoryBook.has_crew("benny") else "command_board"
 		if not _chain(["build_btn_" + shop, "card_" + shop], floor):
-			_chain(["tab_clinic"], "")
+			# From inside a room's sheet (the forge): back out to the floor.
+			_chain(["tab_clinic", "button:◀  BACK"], "")
 		return
 	var id := str(need.get("id", ""))
 	var name := str(step.get("name", id)).to_upper()

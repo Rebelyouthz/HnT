@@ -52,6 +52,12 @@ func _prepare() -> void:
 		(fp.data as Dictionary)["crew_benny"] = true
 		(fp.data as Dictionary)["crew_rico"] = true
 		(fp.data as Dictionary)["gold"] = 500
+		# camp:yard / camp:forge - Ember is home with a bin of materials.
+		if _tab in ["camp_yard", "camp_forge"]:
+			(fp.data as Dictionary)["crew_ember"] = true
+			(fp.data as Dictionary)["crew_home_ember"] = true
+			for m in ["iron_scrap", "leather_strip", "cloth_roll", "ember_core"]:
+				fp.call("add_parts", m, 6)
 	# Menu shots: open the gated tabs so BUILD / LOCKER / AWARDS render.
 	if _tab in ["build", "locker", "awards"] and fp != null:
 		var b: Dictionary = (fp.data as Dictionary).get("buildings", {})
@@ -448,6 +454,12 @@ func _process(_delta: float) -> bool:
 		var what := _tab.substr(5)
 		if what == "hub":
 			current_scene.call("_open_hub", "clinic")
+		elif what == "forge":
+			current_scene.call("_open_sheet", "res://src/ui/forge_sheet.gd")
+		elif what == "yard":
+			current_scene.set("_busy", true)
+			current_scene.set("_focus_x", float(current_scene.call("_yard_at", 0.5)))
+			current_scene.get("_walker").position.x = float(current_scene.call("_yard_at", 0.55))
 		elif what.begins_with("build_"):
 			for st: Dictionary in current_scene.get("_stations"):
 				if str(st["id"]) == what.substr(6):

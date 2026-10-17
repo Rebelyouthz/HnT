@@ -1,5 +1,5 @@
 {
- "note": "Hideout stations: id + x as a fraction of the painted camp backdrop width (assets/backdrops/camp.png). painted=false draws the building icon instead.",
+ "note": "Hideout stations: id + x as a fraction of the painted camp backdrop width (assets/backdrops/camp.png). painted=false draws the building icon instead. room=yard: x is a fraction of the forge yard (assets/backdrops/camp_yard.png) to the right.",
  "stations": [
   {
    "id": "workshop",
@@ -144,6 +144,18 @@
   {
    "id": "patrol_desk",
    "x": 0.95,
+   "painted": true
+  },
+  {
+   "id": "forge",
+   "x": 0.36,
+   "room": "yard",
+   "painted": true
+  },
+  {
+   "id": "salvage_bench",
+   "x": 0.72,
+   "room": "yard",
    "painted": true
   }
  ]

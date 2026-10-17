@@ -273,9 +273,12 @@ func _on_guarded() -> void:
 
 
 func _spawn_lookouts() -> void:
-	for x in [END_X - 260.0, END_X - 140.0]:
+	# One of Gant's bag snatchers and the clipboard punk: the guy in the
+	# beanie is a real lookout who fights, not a stand-in on the mat.
+	for row in [[END_X - 260.0, "Bag Snatch"], [END_X - 140.0, "Clipboard Punk"]]:
+		var x: float = row[0]
 		var p := Party.spawn_row(self, {
-			"title": "Bag Snatch", "x": x, "y": 495, "home": "street", "hp": 30, "pmin": BAG2_X + 140.0, "pmax": END_X
+			"title": row[1], "x": x, "y": 495, "home": "street", "hp": 30, "pmin": BAG2_X + 140.0, "pmax": END_X
 		}, 1.0)
 		if p:
 			_lookouts.append(p)

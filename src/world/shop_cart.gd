@@ -6,8 +6,25 @@ extends Area2D
 ## gun upgrades, boosters, health. Gold only, prices climb with the stage, so
 ## on Dock Street you can look but not afford (on purpose).
 
+## Old Sal, who runs the cart (assets/sprites/vendor, tools/hf_npc.py).
+class Keeper extends Node2D:
+	var head := 50.0
+
+	func bubble_head() -> float:
+		return head
+
+
+const SAL_LINES := [
+	"Gold only. I don't take IOUs, kid. I write them.",
+	"Prices go up the further you get. That's not greed, that's geography.",
+	"Back again? The good stuff's in the middle. Like a sandwich.",
+	"Fresh off a truck. Don't ask whose truck.",
+]
+
 var _sp: Sprite2D
 var _hint: Label
+var _sal: Keeper
+var _greeted := false
 var _t := 0.0
 var _busy := false
 var stage_idx := 0
@@ -46,6 +63,20 @@ func _ready() -> void:
 	l.energy = 1.1
 	l.position = Vector2(12, -52)
 	add_child(l)
+	if SpriteBook.has_who("vendor"):
+		StoryBook.npc_names["vendor"] = "OLD SAL"
+		_sal = Keeper.new()
+		# Behind the cart's right end, turned toward whoever walks up.
+		_sal.position = Vector2(44, 0)
+		_sal.z_index = -1
+		_sal.add_to_group("talkers")
+		_sal.set_meta("who", "vendor")
+		var a := SpriteBook.make_anim("vendor")
+		SpriteBook.grow(a, SpriteBook.NPC_SCALE)
+		a.flip_h = true
+		_sal.add_child(a)
+		_sal.head = 44.0 * SpriteBook.NPC_SCALE + 6.0
+		add_child(_sal)
 	_hint = Label.new()
 	_hint.text = "UPGRADES  ·  UP / LIGHT"
 	_hint.position = Vector2(-70, -94)
@@ -69,6 +100,12 @@ func _process(delta: float) -> void:
 			if f.downed:
 				continue
 			var hot := _enemy_near()
+			if not hot and not _greeted and _sal != null:
+				_greeted = true
+				var act := get_tree().get_first_node_in_group("run_act")
+				var talk: Variant = act.get("_talk") if act != null else null
+				if talk is Talk and not (talk as Talk).busy():
+					(talk as Talk).play([{"who": "vendor", "text": SAL_LINES[randi() % SAL_LINES.size()]}], true)
 			_hint.text = "CLOSED WHILE YOU BLEED" if hot else "UPGRADES  ·  UP / LIGHT"
 			_hint.modulate = Color(1.2, 1.15, 0.7)
 			if not hot and _wants(f):

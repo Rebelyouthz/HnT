@@ -1,17 +1,37 @@
 {
-  "scrap_coil": {
-    "title": "SCRAP COIL",
-    "blurb": "Wire with opinions. Crafting's copper feeling.",
-    "rarity": "common"
-  },
-  "clinic_thread": {
-    "title": "CLINIC THREAD",
-    "blurb": "Suture that used to be hope.",
-    "rarity": "uncommon"
-  },
-  "invoice_ink": {
-    "title": "INVOICE INK",
-    "blurb": "Past due, bottled. Research drinks this.",
-    "rarity": "rare"
-  }
+ "scrap_coil": {
+  "title": "SCRAP COIL",
+  "blurb": "Wire with opinions. Crafting's copper feeling.",
+  "rarity": "common"
+ },
+ "clinic_thread": {
+  "title": "CLINIC THREAD",
+  "blurb": "Suture that used to be hope.",
+  "rarity": "uncommon"
+ },
+ "invoice_ink": {
+  "title": "INVOICE INK",
+  "blurb": "Past due, bottled. Research drinks this.",
+  "rarity": "rare"
+ },
+ "iron_scrap": {
+  "title": "IRON SCRAP",
+  "blurb": "Bent metal with a past. Ember calls it potential.",
+  "rarity": "common"
+ },
+ "leather_strip": {
+  "title": "LEATHER STRIP",
+  "blurb": "Cut from a jacket that lost an argument.",
+  "rarity": "common"
+ },
+ "cloth_roll": {
+  "title": "CLOTH ROLL",
+  "blurb": "Thread that remembers being a hoodie.",
+  "rarity": "common"
+ },
+ "ember_core": {
+  "title": "EMBER CORE",
+  "blurb": "A coal that never quite goes out. Rare, warm, a little smug.",
+  "rarity": "epic"
+ }
 }

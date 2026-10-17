@@ -243,6 +243,15 @@ func _pop(from: Node) -> void:
 		FamilyProfile.add_parts("scrap_coil", 1)
 	elif kind in ["mail", "news", "booth"]:
 		FamilyProfile.add_parts("clinic_thread", 1)
+	# Once Ember runs the forge, wrecks shed her materials too.
+	if ForgeBook.is_open():
+		var mat := "leather_strip"
+		if kind in ["dumpster", "kiosk", "barrel", "cop_car", "car", "bike"]:
+			mat = "iron_scrap"
+		elif kind in ["mail", "news", "booth", "billboard"]:
+			mat = "cloth_roll"
+		if randf() < 0.6:
+			FamilyProfile.add_parts(mat, 1)
 	Juice.smash_burst(global_position, kind)
 	Juice.shout(kind.to_upper() + " POP")
 	var rs := get_tree().get_first_node_in_group("run_state")

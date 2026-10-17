@@ -266,6 +266,17 @@ func _make_top() -> Control:
 	_armory_dot = UiKit.new_dot()
 	_armory_dot.position = Vector2(84, -4)
 	armory.add_child(_armory_dot)
+	# Ember's forge, once she is home: an anvil button next to the armory.
+	if ForgeBook.is_open():
+		var fg := UiKit.button("", Vector2(52, 38))
+		fg.set_meta("key", "forge_btn")
+		fg.tooltip_text = "THE FORGE"
+		fg.pressed.connect(_open_forge)
+		var fg_ic := IconBook.rect("forge_anvil", 32)
+		fg_ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		fg_ic.position = Vector2(10, 3)
+		fg.add_child(fg_ic)
+		row.add_child(fg)
 	var codex := UiKit.button("CODEX", Vector2(96, 38))
 	codex.pressed.connect(_open_codex)
 	row.add_child(codex)
@@ -713,6 +724,16 @@ func _open_armory() -> void:
 	_modal = sheet
 	sheet.closed.connect(_clear_modal)
 	sheet.closed.connect(_refresh_pills)
+
+
+func _open_forge() -> void:
+	_clear_modal()
+	var sheet: Control = load("res://src/ui/forge_sheet.gd").new()
+	sheet.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(sheet)
+	_modal = sheet
+	sheet.closed.connect(_clear_modal)
+	sheet.need_refresh.connect(_refresh_pills)
 
 
 func _open_stats() -> void:

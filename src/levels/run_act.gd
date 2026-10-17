@@ -314,18 +314,21 @@ func boss_filed() -> bool:
 ## A crew member waiting in an impound cage on this map (data/story.json
 ## acts.<map>.rescue), until the family breaks them out once.
 func _place_rescue() -> void:
-	var r := StoryBook.rescue(map_id)
-	if r.is_empty():
-		return
-	var who := str(r.get("who", ""))
-	if who == "" or StoryBook.has_crew(who):
-		return
-	var cage := RescueCage.new()
-	cage.who = who
-	var v: Variant = r.get("lines", [])
-	cage.lines = v if v is Array else []
-	cage.position = Vector2(float(r.get("x", spawn_at.x + 600.0)), 498.0)
-	add_child(cage)
+	# A map can hold a second captive (the Intake Lot: Rico and Ember).
+	for key in ["rescue", "rescue2"]:
+		var rv: Variant = StoryBook.act(map_id).get(key, {})
+		var r: Dictionary = rv if rv is Dictionary else {}
+		if r.is_empty():
+			continue
+		var who := str(r.get("who", ""))
+		if who == "" or StoryBook.has_crew(who):
+			continue
+		var cage := RescueCage.new()
+		cage.who = who
+		var v: Variant = r.get("lines", [])
+		cage.lines = v if v is Array else []
+		cage.position = Vector2(float(r.get("x", spawn_at.x + 600.0)), 498.0)
+		add_child(cage)
 
 
 func _ready() -> void:

@@ -13,6 +13,10 @@ var role := "benny"
 var hop := 0.0
 var facing := 1
 var _spr: Sprite2D
+## Crew with filmed clips (assets/sprites/<who>/idle + hammer, tools/hf_npc.py)
+## play those instead of the one painted still.
+var _anim: AnimatedSprite2D
+var _body_k := 1.0
 var _hammer: Node2D
 var _t := 0.0
 var _swing := 0.0
@@ -48,6 +52,9 @@ func setup(who: String) -> void:
 	sh.color = Color(0, 0, 0, 0.42)
 	sh.position = Vector2(0, 2)
 	add_child(sh)
+	if SpriteBook.has_who(who):
+		_setup_anim(who)
+		return
 	var tex := texture_of(who)
 	_spr = Sprite2D.new()
 	_spr.texture = tex
@@ -77,8 +84,39 @@ func setup(who: String) -> void:
 		add_child(_hammer)
 
 
+func _setup_anim(who: String) -> void:
+	_anim = AnimatedSprite2D.new()
+	_anim.sprite_frames = SpriteBook.frames(who)
+	_anim.centered = true
+	_anim.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	# Size by the tallest idle body so she stands as tall as the painted crew.
+	var tall := 1.0
+	for fr: Dictionary in SpriteBook.clip_meta(who, "idle").get("frames", []):
+		tall = maxf(tall, float(fr["h"]))
+	var tree := Engine.get_main_loop() as SceneTree
+	var on_street := tree != null and tree.get_first_node_in_group("run_act") != null
+	var in_camp := tree != null and tree.current_scene != null and tree.current_scene.get_script() != null and str(tree.current_scene.get_script().resource_path).ends_with("camp_hideout.gd")
+	_body_k = BODY_H * 1.1 * (SpriteBook.NPC_SCALE if on_street else (1.3 if in_camp else 1.0)) / tall
+	_anim.scale = Vector2(_body_k, _body_k)
+	var cell := _anim.sprite_frames.get_frame_texture("idle", 0)
+	_anim.position = Vector2(0, -float(cell.get_height()) * _body_k * 0.5 + 1.0)
+	_anim.play("idle")
+	_anim.animation_finished.connect(func() -> void: _anim.play("idle"))
+	add_child(_anim)
+
+
+## One filmed swing when she has one (the forge's hammer strike).
+func strike() -> void:
+	if _anim != null and _anim.sprite_frames.has_animation("hammer"):
+		_anim.play("hammer")
+
+
 ## Top of the hair above the feet, in this node's units (SpeechBubble).
 func bubble_head() -> float:
+	if _anim != null:
+		var t := _anim.sprite_frames.get_frame_texture("idle", 0)
+		var top := (t as AtlasTexture).margin.position.y if t is AtlasTexture else 0.0
+		return float(t.get_height() - top) * _body_k + 6.0
 	if _spr == null or _spr.texture == null:
 		return BODY_H + 6.0
 	return float(_spr.texture.get_height()) * _spr.scale.y + 6.0
@@ -100,6 +138,17 @@ func walk_to(x: float, speed := 70.0) -> Tween:
 
 func _process(delta: float) -> void:
 	_t += delta
+	if _anim != null:
+		_anim.flip_h = facing < 0
+		if _walk > 0.0:
+			_anim.position.x = 0.0
+			_anim.rotation = sin(_t * 11.0) * 0.03
+		else:
+			_anim.rotation = 0.0
+		# A forge hand never stands still for long: a swing every few seconds.
+		if hammering and _anim.animation == "idle" and fmod(_t, 3.2) < delta:
+			strike()
+		return
 	if _spr == null:
 		return
 	_spr.flip_h = facing < 0
