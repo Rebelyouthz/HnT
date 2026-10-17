@@ -1069,6 +1069,8 @@ func take_hit(kind: String, from: Node) -> void:
 		dmg = 16
 	elif RS_DMG.has(kind):
 		dmg = int(RS_DMG[kind])
+	elif StickBook.dmg(kind) > 0:
+		dmg = StickBook.dmg(kind)
 	elif kind == "slide" and Trees.has("p_slide_kick") and recover < 0.6:
 		recover = 0.9
 		dmg = 8

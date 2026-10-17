@@ -16,6 +16,10 @@ func _process(_d: float) -> bool:
 	paused = false
 	if _n == 2:
 		root.get_node("FamilyProfile").data["intro_done"] = true
+		# The haymaker is a dojo move: undrilled, RT + HEAVY throws the plain heavy.
+		var dj: Dictionary = root.get_node("FamilyProfile").data.get("dojo", {})
+		dj.erase("haymaker")
+		(root.get_node("FamilyProfile").data.get("dojo_train", {}) as Dictionary).erase("haymaker")
 		root.get_node("App").call("enter_map", "dojo_practice")
 	if _n == 40:
 		_f = get_first_node_in_group("players")

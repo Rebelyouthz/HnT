@@ -31,6 +31,8 @@ func _process(_d: float) -> bool:
 		dj["haymaker"] = 1
 		dj["power_punch"] = 1
 		fp.data["dojo"] = dj
+		# A fresh stick loadout: the drilled moves sit on their home paths.
+		fp.data.erase("stick_loadout")
 		root.get_node("App").call("enter_map", "dojo_practice")
 	if _n == 40:
 		_f = get_first_node_in_group("players")

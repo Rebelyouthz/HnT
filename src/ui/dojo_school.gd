@@ -194,6 +194,10 @@ func _on_struck(kind: String) -> void:
 			_tick(str(_lessons[_i]["id"]))
 			if ready:
 				Juice.unlock_logo("%s  STREET READY" % str(_lessons[_i]["title"]).replace("TRAIN  ·  ", ""), "Drilled on the mat. It works out there now.", "MOVE  ·  LEARNED")
+				# A stick strike asks where it goes once the banner has had its moment.
+				if StickBook.FROM_DOJO.has(want):
+					var who := str(hero.get("role")) if hero else "son"
+					get_tree().create_timer(1.8).timeout.connect(func() -> void: EquipPrompt.ask(who, str(StickBook.FROM_DOJO[want])))
 		return
 	if hero and str(hero.get("_last_kind")) == "light" and kind in ["light", "jab", "cross"]:
 		_tick("rs_jab")

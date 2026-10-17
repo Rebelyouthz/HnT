@@ -525,8 +525,9 @@ func _base_clip(kind: String) -> String:
 		"dive":
 			return "dive"
 		_:
-			if RS_MOVES.has(kind):
-				return _have_clip(RS_MOVES[kind]["clips"])
+			var rm := _rs_spec(kind)
+			if not rm.is_empty():
+				return _have_clip(rm["clips"])
 			return "jab"
 
 
@@ -1766,9 +1767,11 @@ func _attack(kind: String, charged: bool) -> void:
 		size = Vector2(72, 46)
 		attack_cd = 20
 		string_n = 0
-	elif RS_MOVES.has(kind):
-		var rm: Dictionary = RS_MOVES[kind]
+	elif not _rs_spec(kind).is_empty():
+		var rm := _rs_spec(kind)
 		size = rm["size"]
+		if bool(rm.get("low", false)):
+			_hit_y = -10.0
 		attack_cd = int(rm["cd"])
 		string_n = 0
 		if str(rm.get("shout", "")) != "":
@@ -2114,13 +2117,14 @@ func _combo_air_ok() -> bool:
 
 ## Feed a press to the chain reader. True when it finished a combo (the
 ## caller skips the normal move).
-func _combo_press(btn: String) -> bool:
+func _combo_press(btn: String, stick_tok := "") -> bool:
 	if _combo == null:
 		return false
 	var pool := ComboBook.learned(role)
 	if pool.is_empty():
 		return false
-	var tok := _combo_tok(btn)
+	# A right-stick path brings its own token (StickBook.TOK).
+	var tok := stick_tok if stick_tok != "" else _combo_tok(btn)
 	var c := _combo.feed(tok, _clock, pool)
 	if OS.has_environment("HNT_COMBO_DEBUG"):
 		print("stick=%s combo tok=%s t=%.2f beat=%.2f hist=%s grades=%s -> %s" % [str(_stick()), tok, _clock, _combo.beat_t, str(_combo.hist.map(func(h: Dictionary) -> String: return str(h["tok"]))), str(_combo.grades), str(c.get("id", ""))])
@@ -3386,7 +3390,7 @@ const RS_MOVES := {
 	"hook": {"clips": ["cross", "jab"], "size": Vector2(58, 42), "cd": 18, "shout": ""},
 	"body_hook": {"clips": ["body_hook", "gut"], "size": Vector2(52, 40), "cd": 18, "shout": ""},
 	"haymaker": {"clips": ["heavy", "cross"], "size": Vector2(74, 46), "cd": 28, "shout": "HAYMAKER"},
-	"power_punch": {"clips": ["heavy", "cross"], "size": Vector2(90, 52), "cd": 34, "shout": "MEGA PUNCH"},
+	"power_punch": {"clips": ["mega_punch", "heavy", "cross"], "size": Vector2(90, 52), "cd": 34, "shout": "MEGA PUNCH"},
 	"spin_backfist": {"clips": ["spin_backfist", "turn_punch", "heavy"], "size": Vector2(78, 46), "cd": 24, "shout": "SPIN BACKFIST"},
 	"front_kick": {"clips": ["front_kick", "boot_kick", "side_kick"], "size": Vector2(64, 40), "cd": 20, "shout": ""},
 	"high_kick": {"clips": ["side_kick", "front_kick"], "size": Vector2(66, 56), "cd": 22, "shout": "HIGH KICK"},
@@ -3422,12 +3426,46 @@ func _shoulder_strike(btn: String) -> bool:
 	return true
 
 
+## Hand-made stick moves first, then the generic ones from StickBook.
+func _rs_spec(kind: String) -> Dictionary:
+	if RS_MOVES.has(kind):
+		return RS_MOVES[kind]
+	return StickBook.spec(kind)
+
+
 const RS_LEARN := {"haymaker": "heavy", "power_punch": "haymaker", "spin_backfist": "hook", "high_kick": "front_kick", "low_kick": "front_kick", "roundhouse": "hook"}
 var _rs_pts := PackedVector2Array()
 var _rs_on := false
 var _rs_back := 0.0
 ## The last right-stick move thrown (tests, the dojo board).
 var _last_kind := ""
+var _last_slot := ""
+
+
+## Which stick path a released gesture was (StickBook slots), "" if none.
+## Paths are read in the facing direction: +x is toward the way he faces.
+func _rs_slot(first: Vector2, last: Vector2, swept: float, back_t: float, kick: bool) -> String:
+	var p := "k_" if kick else ""
+	if back_t > 0.25 and last.x > 0.35:
+		return "k_windup" if kick else ("charge" if back_t >= 1.0 else "windup")
+	if first.y > 0.45 and last.y < -0.45:
+		return p + "upper"
+	if absf(swept) > 4.4:
+		return p + "spin"
+	if absf(swept) > 0.9 and last.x > 0.3:
+		return p + "circle"
+	var ang := rad_to_deg(atan2(last.y, last.x))
+	if last.x < -0.6 and absf(last.y) < 0.65:
+		return "back" if not kick else "k_flick"
+	if ang > 65.0 and ang < 115.0:
+		return p + "down"
+	if ang >= 22.0 and ang <= 65.0:
+		return "k_down" if kick else "diag_down"
+	if ang <= -22.0 and ang >= -65.0:
+		return p + "diag_up"
+	if ang < -65.0 and ang > -115.0:
+		return p + "upper"
+	return p + "flick"
 
 
 func _have_clip(names: Array) -> String:
@@ -3484,38 +3522,31 @@ func _rs_fire(pts: PackedVector2Array, back_t: float) -> bool:
 		else:
 			_attack("jump-kick", false)
 		return true
-	var kind := ""
-	if back_t > 0.25 and last.x > 0.35:
-		kind = "roundhouse" if kick else ("power_punch" if back_t >= 1.0 else "haymaker")
-		move_mul_bonus = 1.0 + clampf(back_t, 0.0, 1.2) * 0.6
-	elif first.y > 0.45 and last.y < -0.45:
-		kind = "high_kick" if kick else "uppercut"
-		if kind == "uppercut" and not FamilyProfile.dojo_learned("uppercut"):
-			Juice.shout("DOJO LOCK")
-			return true
-	elif absf(swept) > 4.4:
-		kind = "roundhouse" if kick else "spin_backfist"
-	elif absf(swept) > 0.9 and last.x > 0.3:
-		kind = "roundhouse" if kick else ("body_hook" if body else "hook")
-	elif last.y > 0.6 and absf(last.x) < 0.7:
-		if kick:
-			kind = "low_kick"
-		elif _try_stomp():
-			return true
-		else:
-			kind = "gut-punch"
-	elif last.x < -0.6:
+	var slot := _rs_slot(first, last, swept, back_t, kick)
+	if slot == "":
+		return false
+	# Every stick throw is a combo input too: a finished chain fires its
+	# finisher instead of the path's move.
+	if _combo_press(StickBook.TOK[slot].get_slice("+", 1) if StickBook.TOK[slot].contains("+") else StickBook.TOK[slot], StickBook.TOK[slot]):
+		_last_kind = "combo"
+		return true
+	if slot == "back" or slot == "k_back":
 		_face(-float(facing))
-		kind = "turn_punch" if _anim != null and _anim.sprite_frames.has_animation("turn_punch") else "heavy"
-	else:
-		kind = "front_kick" if kick else ("gut-punch" if body else "light")
-	# Bought-and-drilled moves only; until then the plain version comes out.
-	if RS_LEARN.has(kind) and not FamilyProfile.dojo_learned(kind):
-		kind = str(RS_LEARN[kind])
-		if RS_LEARN.has(kind) and not FamilyProfile.dojo_learned(kind):
-			kind = str(RS_LEARN[kind])
-		if kind == "roundhouse" and not FamilyProfile.dojo_learned("roundhouse"):
-			kind = "front_kick"
+	var id := StickBook.move_at(role, slot)
+	# Guard (LB) held turns the flick and the hook to the body.
+	if body and slot == "flick":
+		id = "gut"
+	elif body and slot == "circle":
+		id = "body_hook"
+	var kind := StickBook.kind_of(id)
+	if kind == "gut-punch" and _try_stomp():
+		return true
+	if kind == "uppercut" and not FamilyProfile.dojo_learned("uppercut"):
+		Juice.shout("DOJO LOCK")
+		return true
+	if slot == "windup" or slot == "charge" or slot == "k_windup":
+		move_mul_bonus = 1.0 + clampf(back_t, 0.0, 1.2) * 0.6
+	_last_slot = slot
 	_last_kind = kind
 	_attack(kind, false)
 	return true

@@ -11,7 +11,7 @@ signal closed
 signal need_refresh
 
 var role := "son"
-var _page := "loadout"
+var _page := "stick"
 var _steps: Array = []
 var _fin := 0
 var _fx := 0
@@ -62,8 +62,8 @@ func _paint() -> void:
 	var gap := Control.new()
 	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(gap)
-	for pair in [["loadout", "LOADOUT"], ["library", "LIBRARY"], ["lab", "COMBO LAB"], ["styles", "STYLES"], ["elements", "ELEMENTS"]]:
-		var b := _btn(pair[1], Vector2(130, 36), "page_" + pair[0], pair[0] == _page)
+	for pair in [["stick", "STICK"], ["loadout", "BUTTONS"], ["library", "LIBRARY"], ["lab", "COMBO LAB"], ["styles", "STYLES"], ["elements", "ELEMENTS"]]:
+		var b := _btn(pair[1], Vector2(112, 36), "page_" + pair[0], pair[0] == _page)
 		b.pressed.connect(func() -> void:
 			_page = pair[0]
 			_focus_key = "page_" + pair[0]
@@ -88,6 +88,9 @@ func _paint() -> void:
 	body.add_theme_constant_override("separation", 8)
 	sc.add_child(body)
 	match _page:
+		"stick":
+			sub.text = "RIGHT STICK: every punch and kick that fits a stick path. The path is the move: flick, circle, pull back... Hold RT for the kick paths, LB turns the flick and the hook to the body. Empty paths throw a plain jab or front kick. Learn something new and it asks EQUIP NOW?"
+			_stick_page(body)
 		"loadout":
 			sub.text = "Put any learned strike in any slot it fits. Heavier moves hit harder but come out slower and leave you open longer. GOLD %d" % int(FamilyProfile.data.get("gold", 0))
 			_loadout(body)
@@ -198,6 +201,54 @@ func _loadout(body: VBoxContainer) -> void:
 		grid.add_child(p)
 
 
+func _stick_page(body: VBoxContainer) -> void:
+	var lo := StickBook.loadout(role)
+	for type in ["punch", "kick"]:
+		var hl := Label.new()
+		hl.text = "PUNCHES  ·  STICK PATHS" if type == "punch" else "KICKS  ·  HOLD RT + PATH"
+		hl.add_theme_font_override("font", UiKit.title_font())
+		UiKit.apply_label(hl, 16, Palette.LEMON)
+		body.add_child(hl)
+		var grid := GridContainer.new()
+		grid.columns = 2
+		grid.add_theme_constant_override("h_separation", 12)
+		grid.add_theme_constant_override("v_separation", 8)
+		body.add_child(grid)
+		for slot: String in StickBook.slots_of(type):
+			var id := str(lo[slot])
+			var pr := _row_panel(Palette.BRICK if id != "" else Palette.MUTED)
+			var p: PanelContainer = pr[0]
+			var h: HBoxContainer = pr[1]
+			p.custom_minimum_size = Vector2(570, 78)
+			h.add_child(_icon(StickBook.clip_of(id if id != "" else str(StickBook.PLAIN[type])), Vector2(56, 56)))
+			var v := VBoxContainer.new()
+			v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			var sl := Label.new()
+			sl.text = str(StickBook.NAME[slot])
+			UiKit.apply_label(sl, 11, Palette.MUTED)
+			v.add_child(sl)
+			var nm := Label.new()
+			nm.text = StickBook.title(id) if id != "" else "EMPTY  ·  plain %s" % ("jab" if type == "punch" else "front kick")
+			nm.add_theme_font_override("font", UiKit.title_font())
+			UiKit.apply_label(nm, 17, Palette.TEXT if id != "" else Palette.MUTED)
+			v.add_child(nm)
+			var tk := Label.new()
+			tk.text = "COMBO INPUT  %s" % ComboBook.step_label(str(StickBook.TOK[slot]), true)
+			UiKit.apply_label(tk, 11, Palette.MUTED)
+			v.add_child(tk)
+			h.add_child(v)
+			for step in [-1, 1]:
+				var b := _btn("◀" if step < 0 else "▶", Vector2(44, 44), "stick_%s_%d" % [slot, step], false)
+				b.pressed.connect(func() -> void:
+					StickBook.cycle(role, slot, step)
+					Juice.play("res://assets/audio/ui_click.wav")
+					_focus_key = "stick_%s_%d" % [slot, step]
+					_paint()
+				)
+				h.add_child(b)
+			grid.add_child(p)
+
+
 ## MOVE PREVIEW: the hero performs whatever move is highlighted.
 var _pv_anim: AnimatedSprite2D
 var _pv_name: Label
@@ -298,6 +349,13 @@ func _library(body: VBoxContainer) -> void:
 					_focus_key = "learn_" + id
 					_paint()
 					UiKit.fx_after(self, "learn_" + id, Palette.EDGE, "LEARNED  ·  " + str(r["title"]), true)
+					# EQUIP NOW? on the stick or a button, then the page shows it.
+					var ep := EquipPrompt.ask(role, id)
+					if ep != null:
+						ep.finished.connect(func(_s: String) -> void:
+							if is_inside_tree():
+								_paint()
+						)
 			)
 			v.add_child(b)
 		h.add_child(v)
