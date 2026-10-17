@@ -195,9 +195,10 @@ func _place_weapons() -> void:
 
 func _place_life() -> void:
 	NightStreet.wind(self, map_w * 0.5)
-	var crowd: Array = [
-		Vector2(480, 500), Vector2(1560, 500), Vector2(2140, 500)
-	]
+	# Witnesses only where a map asks for them: a default crowd put the same
+	# clipboard punk standing still at the same three spots on every map,
+	# where he read as a stuck enemy.
+	var crowd: Array = []
 	match map_id:
 		"fire_escapes":
 			crowd = [Vector2(480, 248), Vector2(1680, 500)]

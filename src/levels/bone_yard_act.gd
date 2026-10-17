@@ -71,6 +71,11 @@ func build_world() -> void:
 	add_child(pipe)
 
 
+## The yards are arenas: no witnesses standing around, only the waves.
+func _place_life() -> void:
+	NightStreet.wind(self, map_w * 0.5)
+
+
 ## No story resume points in the yard.
 func _save_resume(_at: Vector2, _announce: bool) -> void:
 	pass
@@ -130,7 +135,7 @@ func _spawn_wave(rows: Array, last: bool) -> void:
 		var x := clampf(lead + side * (340.0 + 40.0 * float(k)), 60.0, map_w - 60.0)
 		if absf(x - lead) < 160.0:
 			x = clampf(lead - side * 340.0, 60.0, map_w - 60.0)
-		var row := {"title": r["title"], "hp": r["hp"], "home": "street", "pmin": 40.0, "pmax": map_w - 40.0, "armored": bool(r.get("armored", false))}
+		var row := {"title": r["title"], "hp": r["hp"], "home": "street", "pmin": 40.0, "pmax": map_w - 40.0, "armored": bool(r.get("armored", false)), "cop": bool(r.get("cop", false))}
 		var pk := Party.spawn_row(self, row, hp_mul)
 		if pk:
 			pk.global_position = Vector2(x, 470.0 + 14.0 * float(k % 4))

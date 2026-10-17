@@ -42,6 +42,11 @@
 						"title": "Bag Snatch",
 						"hp": 44,
 						"side": "R"
+					},
+					{
+						"title": "Clipboard Punk",
+						"hp": 44,
+						"side": "R"
 					}
 				],
 				[
@@ -77,12 +82,14 @@
 					{
 						"title": "Beat Cop",
 						"hp": 64,
-						"side": "R"
+						"side": "R",
+						"cop": true
 					},
 					{
 						"title": "Beat Cop",
 						"hp": 64,
-						"side": "L"
+						"side": "L",
+						"cop": true
 					}
 				],
 				[
@@ -100,13 +107,19 @@
 						"title": "Repo Goon",
 						"hp": 60,
 						"side": "L"
+					},
+					{
+						"title": "Clipboard Punk",
+						"hp": 44,
+						"side": "L"
 					}
 				],
 				[
 					{
 						"title": "Beat Cop",
 						"hp": 64,
-						"side": "R"
+						"side": "R",
+						"cop": true
 					},
 					{
 						"title": "Roof Runner",
@@ -138,7 +151,7 @@
 				],
 				[
 					{
-						"title": "Vest Ollie",
+						"title": "Bailiff",
 						"hp": 90,
 						"side": "R",
 						"armored": true
@@ -146,7 +159,8 @@
 					{
 						"title": "Beat Cop",
 						"hp": 64,
-						"side": "L"
+						"side": "L",
+						"cop": true
 					},
 					{
 						"title": "Roof Runner",
@@ -156,7 +170,7 @@
 				],
 				[
 					{
-						"title": "Vest Ollie",
+						"title": "Bailiff",
 						"hp": 220,
 						"side": "R",
 						"armored": true,
@@ -263,6 +277,11 @@
 						"title": "Repo Goon",
 						"hp": 62,
 						"side": "L"
+					},
+					{
+						"title": "Clipboard Punk",
+						"hp": 46,
+						"side": "R"
 					}
 				],
 				[
@@ -380,7 +399,8 @@
 					{
 						"title": "Beat Cop",
 						"hp": 64,
-						"side": "R"
+						"side": "R",
+						"cop": true
 					}
 				],
 				[
@@ -409,12 +429,13 @@
 					{
 						"title": "Beat Cop",
 						"hp": 64,
-						"side": "R"
+						"side": "R",
+						"cop": true
 					}
 				],
 				[
 					{
-						"title": "Hall Guard",
+						"title": "Repo Goon",
 						"hp": 90,
 						"side": "R",
 						"armored": true
@@ -427,7 +448,7 @@
 				],
 				[
 					{
-						"title": "Hall Guard",
+						"title": "Repo Goon",
 						"hp": 90,
 						"side": "R",
 						"armored": true
@@ -445,7 +466,7 @@
 				],
 				[
 					{
-						"title": "Cenote Elite",
+						"title": "Shift Lead",
 						"hp": 260,
 						"side": "R",
 						"armored": true,
