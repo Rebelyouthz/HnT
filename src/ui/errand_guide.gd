@@ -204,6 +204,10 @@ func _process(delta: float) -> void:
 		_done_t += delta
 		_target_done()
 	else:
+		# Whatever this buy still needs is handed over (big on screen) the
+		# moment the arrow reaches it, so a build the arrow showed first can
+		# never leave the story buy short.
+		GuideFunds.cover_step(steps[0])
 		_target_step(steps[0])
 	# Hide while a first-use Guide is talking: one voice at a time.
 	var talking := get_tree().get_first_node_in_group("guide") != null

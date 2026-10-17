@@ -35,6 +35,7 @@ PROPS = {
 	"yard_hook_cart": (74, "a steel rolling rack with two hanging meat carcasses on hooks"),
 	"yard_neon_vending": (90, "a cyberpunk vending machine glowing pink and cyan with a cracked screen"),
 	"yard_noodle_cart": (72, "a cyberpunk street noodle cart with a steaming pot, glowing lanterns and a small neon sign"),
+	"heavy_bag": (128, "a worn red leather freestanding punching bag on a round black weighted base, duct tape patches, side view"),
 	"yard_holo_bin": (54, "a futuristic metal trash bin with a small glowing cyan hologram above it and cables"),
 }
 

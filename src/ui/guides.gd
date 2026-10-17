@@ -89,4 +89,7 @@ const STEPS := {
 
 static func show(from: Node, gid: String, delay := 0.4) -> void:
 	if STEPS.has(gid):
+		# A guide that says "buy this" the first time can always be followed.
+		if not Guide.done(gid):
+			GuideFunds.for_guide(gid)
 		Guide.play(from, gid, STEPS[gid], delay)

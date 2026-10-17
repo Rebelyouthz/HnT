@@ -16,6 +16,10 @@ var _spar_t := 1.4
 var _cycle := ["high", "mid", "low", "mid", "high", "low"]
 var _ci := 0
 var _home_x := 0.0
+## A heavy bag, not a thug: the old clipboard-punk body read as an enemy
+## that never fought. The punk clips stay underneath (hidden) so every
+## reaction and finisher path still has its animations.
+var _bag: Sprite2D
 
 
 func _ready() -> void:
@@ -25,6 +29,29 @@ func _ready() -> void:
 	max_hp = 9999
 	kit = {"attack": "light", "block": 0.0}
 	_home_x = global_position.x
+	var tex := load("res://assets/sprites/yard/props/heavy_bag.png") as Texture2D
+	if tex != null:
+		if _anim:
+			_anim.visible = false
+		_bag = Sprite2D.new()
+		_bag.texture = tex
+		_bag.centered = false
+		# Pivot on the weighted base so it rocks like a real stand-up bag.
+		_bag.offset = Vector2(-float(tex.get_width()) * 0.5, -float(tex.get_height()))
+		_bag.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
+		_bag.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		visual.add_child(_bag)
+
+
+## The bag rocks away from a blow (or toward you when it "swings back").
+func _rock(amount: float) -> void:
+	if _bag == null:
+		return
+	var tw := _bag.create_tween()
+	tw.tween_property(_bag, "rotation", amount, 0.07).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(_bag, "rotation", -amount * 0.45, 0.22).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(_bag, "rotation", amount * 0.15, 0.2).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(_bag, "rotation", 0.0, 0.25).set_trans(Tween.TRANS_SINE)
 
 
 func _physics_process(delta: float) -> void:
@@ -50,6 +77,7 @@ func _physics_process(delta: float) -> void:
 			facing = 1 if p.global_position.x > global_position.x else -1
 			visual.scale.x = float(facing)
 			_start_telegraph()
+			_rock(-0.22 * float(facing) * visual.scale.x)
 			# Slow and fixed for drilling, whatever the difficulty.
 			telegraph = 0.55
 			atk_height = str(_cycle[_ci % _cycle.size()])
@@ -77,6 +105,11 @@ func take_hit(kind: String, from: Node) -> void:
 	last_dmg = maxi(0, before - hp)
 	hits += 1
 	struck.emit(kind)
+	var heavy := kind in ["heavy", "finish", "throw", "uppercut"]
+	var side := 1.0
+	if from is Node2D:
+		side = 1.0 if (from as Node2D).global_position.x < global_position.x else -1.0
+	_rock((0.32 if heavy else 0.16) * side * visual.scale.x)
 	if last_dmg > 0:
 		Juice.popup_number(global_position + Vector2(randf_range(-8.0, 8.0), -84.0), str(last_dmg), Color(1.0, 0.92, 0.7))
 

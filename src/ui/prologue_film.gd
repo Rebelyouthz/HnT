@@ -79,14 +79,17 @@ func _build_set() -> void:
 	_mod = CanvasModulate.new()
 	_mod.color = Color(1, 0.97, 0.92)
 	add_child(_mod)
-	# The two of them alone first, facing each other; the brothers wait
-	# off to the left (their door, next door) until they are introduced.
+	# The two of them alone first, facing each other. The brothers are
+	# painted stills with no walk clip, so they never slide across the
+	# room: they stand on their marks, unseen until they are introduced.
 	_actor("father", Vector2(_cx - 30.0, WALK_Y), 1)
 	_actor("son", Vector2(_cx + 2.0, WALK_Y + 1.0), -1)
-	_benny = _crew("benny", Vector2(_cx - 230.0, WALK_Y))
-	_rico = _crew("rico", Vector2(_cx - 262.0, WALK_Y + 1.0))
-	_benny.face(1)
-	_rico.face(1)
+	_benny = _crew("benny", Vector2(_cx + 26.0, WALK_Y))
+	_rico = _crew("rico", Vector2(_cx + 50.0, WALK_Y + 1.0))
+	_benny.face(-1)
+	_rico.face(-1)
+	_benny.modulate.a = 0.0
+	_rico.modulate.a = 0.0
 	_cam = Camera2D.new()
 	_cam.zoom = Vector2(ZOOM, ZOOM)
 	_cam.position = Vector2(_cx - 14.0, WALK_Y - _room_h * 0.5 + 6.0)
@@ -185,9 +188,12 @@ func _enter_brothers() -> void:
 		get_tree().create_timer(0.16 * float(k) + (0.12 if k == 2 else 0.0)).timeout.connect(func() -> void:
 			Mixer.play_sfx("res://assets/audio/smash.wav", 1.7, -9.0)
 		)
-	# Brisk: they arrive inside the next line, then turn to the family.
-	_benny.walk_to(_cx + 26.0, 95.0).tween_callback(func() -> void: _benny.face(-1))
-	_rico.walk_to(_cx + 50.0, 92.0).tween_callback(func() -> void: _rico.face(-1))
+	# They step in out of the dark on their marks and stand still.
+	for k in 2:
+		var bro: CrewNPC = [_benny, _rico][k]
+		var ft := create_tween()
+		ft.tween_interval(0.35 + 0.2 * float(k))
+		ft.tween_property(bro, "modulate:a", 1.0, 0.45)
 	var tw := create_tween()
 	tw.tween_property(_cam, "position:x", _cx + 4.0, 1.4).set_trans(Tween.TRANS_SINE)
 
@@ -202,60 +208,27 @@ func _enter_collectors() -> void:
 	var g := _actor("punk", Vector2(door_x + 28.0, WALK_Y + 1.0), -1)
 	g.remove_from_group("players")
 	_goons.append(g)
-	_tween_walk(_gant, _cx + 74.0, 0.9)
-	_tween_walk(_goons[0], _cx + 100.0, 1.0)
+	# They are in the doorway when the light finds them: standing, idle.
+	for a: FilmActor in [_gant, _goons[0]]:
+		a.position.x = (_cx + 74.0) if a == _gant else (_cx + 100.0)
+		if a.anim and a.anim.sprite_frames.has_animation("idle"):
+			a.anim.play("idle")
+		a.modulate.a = 0.0
+		create_tween().tween_property(a, "modulate:a", 1.0, 0.4)
 	var tw := create_tween()
 	tw.tween_property(_cam, "position:x", _cx + 30.0, 1.0).set_trans(Tween.TRANS_SINE)
 
 
-## Walk there with the walk clip playing (at the pace its feet step, so
-## nobody skates), then stand in idle.
-func _tween_walk(a: FilmActor, x: float, _dur: float = 0.0) -> void:
-	if a.anim and a.anim.sprite_frames.has_animation("walk"):
-		a.anim.play("walk")
-		a.anim.speed_scale = 1.0
-	var tw := create_tween()
-	tw.tween_property(a, "position:x", x, absf(x - a.position.x) / _pace(a))
-	tw.tween_callback(func() -> void:
-		if a.anim and a.anim.sprite_frames.has_animation("idle"):
-			a.anim.play("idle")
-	)
-
-
-## World px per second the walk clip covers at speed 1 (SpriteBook stride).
-func _pace(a: FilmActor) -> float:
-	if a.anim == null or not a.anim.sprite_frames.has_animation("walk"):
-		return 52.0
-	var sf := a.anim.sprite_frames
-	var cycle := float(sf.get_frame_count("walk")) / maxf(1.0, sf.get_animation_speed("walk"))
-	var stride := 200.0 * absf(a.anim.scale.y) * float(SpriteBook.STRIDE.get("walk", 1.25))
-	return clampf(stride / maxf(cycle, 0.05), 30.0, 120.0)
-
-
 func _drag_off() -> void:
-	# The goon takes Benny, Gant takes Rico: each turns round from standing,
-	# walks out the door (walk clip, never a glide), the brother marched
-	# ahead of him; lights die.
-	var exit_x := _cx + 260.0
+	# The goon takes Benny, Gant takes Rico. Nobody slides out of frame:
+	# the lights die and when they come back the four of them are gone.
 	_benny.remove_from_group("players")
 	_rico.remove_from_group("players")
-	var pairs := [[_goons[0], _benny, 0.3], [_gant, _rico, 0.9]]
-	for pair in pairs:
-		var who: FilmActor = pair[0]
-		var bro: CrewNPC = pair[1]
-		var delay: float = pair[2]
-		get_tree().create_timer(delay).timeout.connect(func() -> void:
-			if who.anim:
-				who.anim.flip_h = false
-				if who.anim.sprite_frames.has_animation("walk"):
-					who.anim.play("walk")
-					who.anim.speed_scale = 1.0
-			var pace := _pace(who)
-			bro.walk_to(exit_x + 18.0, pace)
-			var tw := create_tween()
-			tw.tween_property(who, "position:x", exit_x, (exit_x - who.position.x) / pace)
-			tw.tween_callback(func() -> void: who.visible = false)
-		)
+	for who: Node2D in [_goons[0], _benny, _gant, _rico]:
+		var gone := create_tween()
+		gone.tween_interval(1.75)
+		gone.tween_property(who, "modulate:a", 0.0, 0.12)
+		gone.tween_callback(func() -> void: who.visible = false)
 	var dim := create_tween()
 	dim.tween_interval(1.6)
 	for k in 3:
