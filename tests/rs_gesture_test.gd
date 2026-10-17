@@ -1,6 +1,6 @@
 extends SceneTree
 
-## Right-stick punch paths: forward flick = jab, quarter circle = hook,
+## Right-stick punch paths: forward flick = cross, quarter circle = hook,
 ## half circle up = uppercut, pull back then forward = haymaker, held back
 ## a second = MEGA PUNCH, RT + forward = front kick. Prints RS OK.
 
@@ -38,7 +38,7 @@ func _process(_d: float) -> bool:
 		_f = get_first_node_in_group("players")
 		_pr = root.get_node("PadRouter")
 		_f.set("facing", 1)
-		_path([Vector2(1, 0)], 2, "light")
+		_path([Vector2(1, 0)], 2, "cross_rs")
 		_path([Vector2(0, -1), Vector2(0.7, -0.7), Vector2(1, 0)], 2, "hook")
 		_path([Vector2(0, 1), Vector2(0.7, 0.7), Vector2(1, 0), Vector2(0.7, -0.7), Vector2(0, -1)], 2, "uppercut")
 		_path([Vector2(-1, 0), Vector2(-1, 0), Vector2(1, 0)], 12, "haymaker")
@@ -47,7 +47,7 @@ func _process(_d: float) -> bool:
 	if _n > 40 and _f != null:
 		if _cur.is_empty() or _cur[0] <= 0:
 			if _q.is_empty():
-				var want := ["light", "hook", "uppercut", "haymaker", "power_punch", "front_kick"]
+				var want := ["cross_rs", "hook", "uppercut", "haymaker", "power_punch", "front_kick"]
 				for w in want:
 					if not _seen.has(w):
 						_fail.append("missed " + w)

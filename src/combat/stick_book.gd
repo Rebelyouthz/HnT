@@ -29,7 +29,7 @@ const NAME := {
 ## What a fresh hero has on the stick. Slots whose move is not learned yet
 ## stand EMPTY (the plain strike comes out) until something is equipped.
 const DEFAULT := {
-	"flick": "jab", "diag_up": "overhand", "diag_down": "body_hook", "down": "gut", "circle": "hook",
+	"flick": "cross", "diag_up": "overhand", "diag_down": "body_hook", "down": "gut", "circle": "hook",
 	"upper": "uppercut", "spin": "spin_backfist", "back": "turn_punch", "windup": "haymaker", "charge": "mega_punch",
 	"k_flick": "front_kick", "k_diag_up": "high_kick", "k_down": "low_kick", "k_circle": "roundhouse",
 	"k_upper": "high_kick", "k_spin": "spin_high_kick", "k_windup": "spin_low_kick",

@@ -343,7 +343,7 @@ func _tick_sprite() -> void:
 
 
 ## Right-stick punches and kicks (Fighter.RS_MOVES).
-const RS_DMG := {"hook": 14, "body_hook": 13, "haymaker": 26, "power_punch": 38, "spin_backfist": 19, "front_kick": 14, "high_kick": 18, "low_kick": 10}
+const RS_DMG := {"punch_r": 9, "hook_r": 12, "body_r": 13, "upper_r": 15, "punch_l": 8, "hook_l": 12, "body_l": 15, "upper_l": 15, "hook": 14, "body_hook": 13, "haymaker": 26, "power_punch": 38, "spin_backfist": 19, "front_kick": 14, "high_kick": 18, "low_kick": 10}
 var _bowled: Dictionary = {}
 ## Juggle: height above the street (negative = up) after a launcher or an
 ## uppercut. Each air hit pops him a little and turns him in the air; the

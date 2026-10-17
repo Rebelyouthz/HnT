@@ -107,6 +107,10 @@ func _separate(bodies: Array[Node2D]) -> void:
 			var b := bodies[j]
 			if _air(b):
 				continue
+			# A heavy bag stands on its own base: you walk past it, you never
+			# shove it down the alley.
+			if a is TrainingDummy or b is TrainingDummy:
+				continue
 			var dy := absf(a.global_position.y - b.global_position.y)
 			# Two thugs nearly on top of each other in depth: ease them apart
 			# up and down the lane so a group reads as a crowd, not a pile.

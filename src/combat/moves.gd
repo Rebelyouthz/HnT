@@ -16,8 +16,10 @@ extends RefCounted
 
 const SLOTS := ["L1", "L2", "L3", "H", "F+H", "U+H", "STR", "AIR_L", "AIR_H"]
 const SLOT_KIND := {"L1": "light", "L2": "light", "L3": "light", "H": "heavy", "F+H": "heavy", "U+H": "heavy", "STR": "heavy", "AIR_L": "air", "AIR_H": "air"}
-const SLOT_NAME := {"L1": "LIGHT 1", "L2": "LIGHT 2", "L3": "LIGHT 3", "H": "HEAVY", "F+H": "FWD + HEAVY", "U+H": "UP + HEAVY", "STR": "STRING ENDER", "AIR_L": "AIR LIGHT", "AIR_H": "AIR HEAVY"}
-const DEFAULT := {"L1": "jab", "L2": "cross", "L3": "gut", "H": "heavy", "F+H": "heavy", "U+H": "uppercut", "STR": "roundhouse", "AIR_L": "front_kick", "AIR_H": "air_spin_kick"}
+## X is the right hand, Y the left (a Y tap runs the left string: jab,
+## hook, uppercut; hold Y for the power punch).
+const SLOT_NAME := {"L1": "X 1  ·  RIGHT HAND", "L2": "X 2  ·  RIGHT HAND", "L3": "X 3  ·  RIGHT HAND", "H": "HOLD Y  ·  POWER", "F+H": "FWD + Y  ·  LEFT", "U+H": "UP + Y", "STR": "X X THEN Y", "AIR_L": "AIR X", "AIR_H": "AIR Y"}
+const DEFAULT := {"L1": "punch_r", "L2": "hook_r", "L3": "body_r", "H": "heavy", "F+H": "hook_l", "U+H": "uppercut", "STR": "roundhouse", "AIR_L": "front_kick", "AIR_H": "air_spin_kick"}
 const TOKENS := ["L", "H", "F+L", "F+H", "B+H", "U+H", "U+L", "Dn+L", "D", "J"]
 const MAX_CUSTOM := 6
 const FX := ["launch", "fling", "knockdown", "stun", "crush"]

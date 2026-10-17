@@ -227,6 +227,8 @@ func _show_dock(who: String, text: String) -> void:
 
 
 func _show_caption(text: String) -> void:
+	_cap.position = Vector2(200, 588)
+	_cap.size = Vector2(880, 96)
 	_cap_who.text = "NARRATOR"
 	_cap_body.text = text
 	_cap.visible = true
@@ -262,6 +264,7 @@ func _finish_typing() -> void:
 func _process(delta: float) -> void:
 	if not _open:
 		return
+	_keep_on_screen()
 	if _typing and _type_label != null:
 		_chars += delta * SpeechBubble.CPS
 		var n := int(_chars)
@@ -273,6 +276,22 @@ func _process(delta: float) -> void:
 		_wait -= delta
 		if _wait <= 0.0:
 			_next()
+
+
+## Wrapped text only knows its height after layout: keep the docked box and
+## the caption standing on the bottom edge (never hanging off it), and inside
+## a film's letterbox when one is up.
+func _keep_on_screen() -> void:
+	var floor_y := 700.0
+	if get_tree().current_scene != null and str(get_tree().current_scene.get_script().resource_path if get_tree().current_scene.get_script() else "").ends_with("prologue_film.gd"):
+		floor_y = 640.0
+	for p: Control in [_dock, _cap]:
+		if p == null or not p.visible:
+			continue
+		var h := maxf(p.size.y, p.get_combined_minimum_size().y)
+		if p.position.y + h > floor_y:
+			p.position.y = floor_y - h
+		p.position.x = clampf(p.position.x, 16.0, maxf(16.0, 1264.0 - maxf(p.size.x, p.get_combined_minimum_size().x)))
 
 
 func _next() -> void:

@@ -32,9 +32,9 @@ var _key_lab: Label
 var _lessons := [
 	["WALK TO THE BAG", "LEFT STICK  ·  HOLD RT TO RUN", "A / D / W / S  ·  HOLD SHIFT TO RUN",
 		[["father", "Basement's too small. Out back. Walk to the bag."]], BAG_X - 90.0],
-	["JAB THE BAG  ×3", "X", "J  /  LEFT MOUSE",
+	["RIGHT HAND  ×3", "X  ·  RIGHT HAND", "J  /  LEFT MOUSE",
 		[["father", "Jab. Fast and small. Three of them."]], BAG_X + 60.0],
-	["HEAVY  ×2", "Y", "K  /  MIDDLE MOUSE",
+	["LEFT HAND  ×2", "Y  ·  LEFT HAND  ·  HOLD FOR POWER", "K  /  MIDDLE MOUSE",
 		[["son", "Can I just hit it really hard?"], ["father", "That's a heavy. Plant your feet. Two."]], BAG_X + 60.0],
 	["GUARD  ×2", "HOLD LB  ·  STICK UP / DOWN PICKS THE HEIGHT", "HOLD Q  ·  W / S PICKS THE HEIGHT",
 		[["father", "Now it swings back. Guard up and read the height."]], BAG_X + 60.0],
@@ -249,12 +249,12 @@ func _on_struck(kind: String, bag: TrainingDummy) -> void:
 	var f := _hero()
 	match _step:
 		1:
-			if bag == _bag and (kind == "light" or kind == "gut-punch"):
+			if bag == _bag and kind in ["light", "gut-punch", "body_r"]:
 				_count += 1
 				if _count >= 3:
 					_done_step()
 		2:
-			if bag == _bag and kind in ["heavy", "launcher", "uppercut", "turn_punch"]:
+			if bag == _bag and kind in ["heavy", "launcher", "uppercut", "turn_punch", "punch_l", "hook_l", "upper_l", "body_l"]:
 				_count += 1
 				if _count >= 2:
 					_done_step()

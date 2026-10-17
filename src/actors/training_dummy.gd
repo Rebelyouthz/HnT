@@ -16,6 +16,7 @@ var _spar_t := 1.4
 var _cycle := ["high", "mid", "low", "mid", "high", "low"]
 var _ci := 0
 var _home_x := 0.0
+var _home_y := 0.0
 ## A heavy bag, not a thug: the old clipboard-punk body read as an enemy
 ## that never fought. The punk clips stay underneath (hidden) so every
 ## reaction and finisher path still has its animations.
@@ -29,6 +30,7 @@ func _ready() -> void:
 	max_hp = 9999
 	kit = {"attack": "light", "block": 0.0}
 	_home_x = global_position.x
+	_home_y = global_position.y
 	var tex := load("res://assets/sprites/yard/props/heavy_bag.png") as Texture2D
 	if tex != null:
 		if _anim:
@@ -58,11 +60,20 @@ func _physics_process(delta: float) -> void:
 	if hp < max_hp:
 		hp = max_hp
 		crush = false
-	if flung:
+	# A bag on a weighted stand: it rocks, it never flies off or slides away.
+	# Still mode keeps recover up, so the old drift back to the mark never
+	# ran and a hard blow sent the bag down the alley for good.
+	if mode == "still":
+		flung = false
+		var home := Vector2(_home_x, _home_y)
+		if global_position.distance_to(home) > 30.0:
+			global_position = home + (global_position - home).normalized() * 30.0
+		if global_position.distance_to(home) > 1.0:
+			global_position = global_position.move_toward(home, 220.0 * delta)
+	elif flung:
 		_fling(delta)
 		return
-	# Drift back to its mark after being knocked around.
-	if absf(global_position.x - _home_x) > 4.0 and recover <= 0.0 and telegraph <= 0.0:
+	elif absf(global_position.x - _home_x) > 4.0 and recover <= 0.0 and telegraph <= 0.0:
 		global_position.x = move_toward(global_position.x, _home_x, 90.0 * delta)
 	if mode == "still":
 		telegraph = 0.0
@@ -102,6 +113,9 @@ func _nearest() -> Fighter:
 func take_hit(kind: String, from: Node) -> void:
 	var before := hp
 	super.take_hit(kind, from)
+	flung = false
+	flung_t = 0.0
+	velocity = Vector2.ZERO
 	last_dmg = maxi(0, before - hp)
 	hits += 1
 	struck.emit(kind)

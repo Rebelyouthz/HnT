@@ -208,15 +208,37 @@ func _enter_collectors() -> void:
 	var g := _actor("punk", Vector2(door_x + 28.0, WALK_Y + 1.0), -1)
 	g.remove_from_group("players")
 	_goons.append(g)
-	# They are in the doorway when the light finds them: standing, idle.
+	# They walk in from the door on the right (a real walk, feet matching
+	# the floor), stop on their marks and stand there, idle, while Gant talks.
 	for a: FilmActor in [_gant, _goons[0]]:
-		a.position.x = (_cx + 74.0) if a == _gant else (_cx + 100.0)
-		if a.anim and a.anim.sprite_frames.has_animation("idle"):
-			a.anim.play("idle")
-		a.modulate.a = 0.0
-		create_tween().tween_property(a, "modulate:a", 1.0, 0.4)
+		var mark := (_cx + 74.0) if a == _gant else (_cx + 100.0)
+		a.position.x = mark + 120.0
+		_walk_actor(a, mark, 0.15 if a == _gant else 0.45)
 	var tw := create_tween()
-	tw.tween_property(_cam, "position:x", _cx + 30.0, 1.0).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(_cam, "position:x", _cx + 30.0, 1.4).set_trans(Tween.TRANS_SINE)
+
+
+## Walk a film actor to x on its walk clip at stride speed, then idle there.
+func _walk_actor(a: FilmActor, to_x: float, delay := 0.0, then_hide := false) -> void:
+	const SPEED := 46.0
+	if a.anim:
+		a.anim.flip_h = to_x < a.position.x
+	var tw := create_tween()
+	tw.tween_interval(delay)
+	tw.tween_callback(func() -> void:
+		if a.anim and a.anim.sprite_frames.has_animation("walk"):
+			a.anim.play("walk")
+			a.anim.speed_scale = SpriteBook.stride_rate(a.anim, "walk", SPEED)
+	)
+	tw.tween_property(a, "position:x", to_x, absf(to_x - a.position.x) / SPEED)
+	tw.tween_callback(func() -> void:
+		if then_hide:
+			a.visible = false
+		elif a.anim and a.anim.sprite_frames.has_animation("idle"):
+			SpriteBook.crossfade(a.anim, 0.12)
+			a.anim.speed_scale = 1.0
+			a.anim.play("idle")
+	)
 
 
 func _drag_off() -> void:
@@ -224,11 +246,15 @@ func _drag_off() -> void:
 	# the lights die and when they come back the four of them are gone.
 	_benny.remove_from_group("players")
 	_rico.remove_from_group("players")
-	for who: Node2D in [_goons[0], _benny, _gant, _rico]:
+	# The brothers go in the blackout; Gant and his goon walk out through
+	# the door they came in by, in the flicker.
+	for who: Node2D in [_benny, _rico]:
 		var gone := create_tween()
 		gone.tween_interval(1.75)
 		gone.tween_property(who, "modulate:a", 0.0, 0.12)
 		gone.tween_callback(func() -> void: who.visible = false)
+	_walk_actor(_goons[0], _cx + 260.0, 0.3, true)
+	_walk_actor(_gant, _cx + 250.0, 0.6, true)
 	var dim := create_tween()
 	dim.tween_interval(1.6)
 	for k in 3:

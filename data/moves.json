@@ -2,6 +2,140 @@
  "_doc": "Every strike a hero can put in a loadout slot (Moves / MOVES sheet). slots: light (L1-L3 string), heavy (H, F+H, U+H, STR = heavy after two lights), air (AIR_L, AIR_H). weight 0..1 scales damage and feel (heavier = harder but slower). gold: price to learn in the dojo; starter: known from the start; lesson: a dojo lesson also teaches it.",
  "moves": [
   {
+   "id": "body_l",
+   "title": "LEFT LIVER SHOT",
+   "type": "punch",
+   "slots": [
+    "light",
+    "heavy"
+   ],
+   "weight": 0.55,
+   "gold": 0,
+   "starter": true,
+   "lesson": "",
+   "who": [
+    "son",
+    "father"
+   ]
+  },
+  {
+   "id": "upper_r",
+   "title": "RIGHT UPPERCUT",
+   "type": "punch",
+   "slots": [
+    "heavy",
+    "light"
+   ],
+   "weight": 0.7,
+   "gold": 0,
+   "starter": true,
+   "lesson": "",
+   "who": [
+    "son",
+    "father"
+   ]
+  },
+  {
+   "id": "upper_l",
+   "title": "LEFT UPPERCUT",
+   "type": "punch",
+   "slots": [
+    "heavy",
+    "light"
+   ],
+   "weight": 0.7,
+   "gold": 0,
+   "starter": true,
+   "lesson": "",
+   "who": [
+    "son",
+    "father"
+   ]
+  },
+  {
+   "id": "hook_l",
+   "title": "LEFT HOOK",
+   "type": "punch",
+   "slots": [
+    "light",
+    "heavy"
+   ],
+   "weight": 0.5,
+   "gold": 0,
+   "starter": true,
+   "lesson": "",
+   "who": [
+    "son",
+    "father"
+   ]
+  },
+  {
+   "id": "punch_l",
+   "title": "LEFT JAB",
+   "type": "punch",
+   "slots": [
+    "light"
+   ],
+   "weight": 0.15,
+   "gold": 0,
+   "starter": true,
+   "lesson": "",
+   "who": [
+    "son",
+    "father"
+   ]
+  },
+  {
+   "id": "body_r",
+   "title": "RIGHT TO THE BODY",
+   "type": "punch",
+   "slots": [
+    "light",
+    "heavy"
+   ],
+   "weight": 0.5,
+   "gold": 0,
+   "starter": true,
+   "lesson": "",
+   "who": [
+    "son",
+    "father"
+   ]
+  },
+  {
+   "id": "hook_r",
+   "title": "RIGHT HOOK",
+   "type": "punch",
+   "slots": [
+    "light",
+    "heavy"
+   ],
+   "weight": 0.45,
+   "gold": 0,
+   "starter": true,
+   "lesson": "",
+   "who": [
+    "son",
+    "father"
+   ]
+  },
+  {
+   "id": "punch_r",
+   "title": "RIGHT STRAIGHT",
+   "type": "punch",
+   "slots": [
+    "light"
+   ],
+   "weight": 0.3,
+   "gold": 0,
+   "starter": true,
+   "lesson": "",
+   "who": [
+    "son",
+    "father"
+   ]
+  },
+  {
    "id": "jab",
    "title": "JAB",
    "type": "punch",

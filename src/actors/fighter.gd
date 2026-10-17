@@ -496,26 +496,34 @@ func _live_stance() -> String:
 
 func _base_clip(kind: String) -> String:
 	match kind:
+		# X is the right hand: straight, hook, body shot.
 		"light":
 			if string_n <= 1:
-				return "jab"
+				return _have_clip(["punch_r", "jab"])
 			if string_n == 2:
-				return "cross"
-			return "gut"
+				return _have_clip(["hook_r", "cross"])
+			return _have_clip(["body_r", "gut"])
 		"gut-punch":
-			return "gut"
+			return _have_clip(["body_r", "gut"])
 		"jump-kick":
 			return "side_kick" if absf(_stick().x) > 0.55 else "front_kick"
 		"roundhouse":
 			return "roundhouse"
-		"uppercut", "air-upper":
+		"uppercut":
+			# The hand of the button that threw it (X right, Y left).
+			return _have_clip(["upper_l" if _last_hand == "L" else "upper_r", "uppercut"])
+		"air-upper":
 			return "uppercut"
 		"air-mix":
 			return "air_mix"
 		"air-spin":
 			return "air_spin_kick"
 		"heavy", "launcher":
-			return "heavy"
+			# Y is the left hand: a held Y is the two-hand power punch, a
+			# forward Y the big left hook (no more bent-over lunge).
+			if _heavy_charged:
+				return _have_clip(["mega_punch", "heavy"])
+			return _have_clip(["hook_l", "heavy"])
 		"turn_punch":
 			return "turn_punch"
 		"snap", "special":
@@ -645,6 +653,10 @@ func _tick_sprite() -> void:
 		const SOFT := ["idle", "walk", "walk_up", "walk_down", "walk_ur", "walk_dr", "parkour_run"]
 		if str(_anim.animation) in SOFT and clip in SOFT:
 			SpriteBook.crossfade(_anim, 0.12)
+		elif clip != "jump" and clip != "knockdown":
+			# Out of a strike, a block, a hurt...: the same short blend, so
+			# nothing pops from one pose to the next.
+			SpriteBook.crossfade(_anim, 0.08)
 		_anim.speed_scale = 1.0
 		_anim.play(clip)
 	elif not _anim.is_playing() and _anim.sprite_frames.get_animation_loop(clip):
@@ -972,6 +984,8 @@ func _tick_meters(delta: float) -> void:
 		string_ttl -= delta
 		if string_ttl <= 0.0:
 			string_n = 0
+	if _y_ttl > 0.0:
+		_y_ttl -= delta
 	_update_guard()
 	armored = charge_frames >= 18 or tape_t > 0.0
 	_update_web_line()
@@ -1493,6 +1507,10 @@ func _combat() -> void:
 			_attack("jump-kick", false)
 		elif y > 0.4 and _try_stomp():
 			charge_frames = 0
+		elif y > 0.4 and charge_frames < charge_need:
+			# Down + Y: the left hand to the body.
+			_last_hand = "L"
+			_attack("body_l", false)
 		elif y < -0.35 and _up_t >= _hv_t - Y_GATE:
 			# HEAVY pressed, then UP (or both together): the uppercut. Up
 			# held from a walk before the press throws the plain heavy.
@@ -1500,6 +1518,7 @@ func _combat() -> void:
 				Juice.shout("DOJO LOCK")
 				charge_frames = 0
 			else:
+				_last_hand = "L"
 				_attack("uppercut", false)
 		elif _shoulder_strike("H"):
 			charge_frames = 0
@@ -1511,9 +1530,16 @@ func _combat() -> void:
 		elif _turn_strike():
 			charge_frames = 0
 		else:
-			if absf(_stick().x) > 0.55 and signf(_stick().x) == float(facing):
+			_last_hand = "L"
+			if charge_frames >= charge_need:
+				# Held Y: the charged power punch.
+				_attack("heavy", true)
+			elif absf(_stick().x) > 0.55 and signf(_stick().x) == float(facing):
+				# Forward + Y: the big left hook (slot F+H).
 				_slot_hint = "F+H"
-			_attack("heavy", charge_frames >= charge_need)
+				_attack("heavy", false)
+			else:
+				_left_string()
 	elif attack_cd == 0 and _heavy_buf > 0 and not airborne:
 		_heavy_buf = 0
 		if string_n >= 2 and FamilyProfile.dojo_learned("roundhouse"):
@@ -1532,7 +1558,14 @@ func _combat() -> void:
 			_attack("jump-kick", false)
 		elif _shoulder_strike("L"):
 			return
+		elif y > 0.4 and not _try_stomp():
+			# Down + X: the right hand to the body.
+			_last_hand = "R"
+			_attack("body_r", false)
+		elif y > 0.4:
+			return
 		elif not _turn_strike():
+			_last_hand = "R"
 			_attack("light", false)
 
 
@@ -1819,6 +1852,7 @@ func _attack(kind: String, charged: bool) -> void:
 		# A gun in hand: light pulls the trigger instead of punching.
 		_fire_gun()
 		return
+	_heavy_charged = charged and kind == "heavy"
 	if charged and kind == "heavy":
 		size = Vector2(78, 50)
 	if kind != "light":
@@ -1857,6 +1891,10 @@ func _begin_strike(kind: String, size: Vector2, life: float, reach: float) -> vo
 		var rate := natural / maxf(startup, 0.001)
 		_atk_t = startup + float(count - hit_f) / fps + 0.02
 		if _anim != null and _anim.sprite_frames.has_animation(clip):
+			# Ease out of whatever pose he was in (a short ghost of it) so the
+			# blow never snaps in from a different body shape.
+			if _anim.animation != clip:
+				SpriteBook.crossfade(_anim, 0.07)
 			_anim.play(clip)
 			_anim.frame = start_f
 			_anim.speed_scale = rate
@@ -3387,6 +3425,15 @@ func _rs_flick() -> bool:
 ## With RT (dash) held the same paths are kicks: front kick, roundhouse,
 ## high kick, low kick that takes the legs.
 const RS_MOVES := {
+	# The hand-by-hand button strikes (X right, Y left).
+	"punch_r": {"clips": ["punch_r", "cross"], "size": Vector2(50, 40), "cd": 13, "shout": ""},
+	"hook_r": {"clips": ["hook_r", "cross"], "size": Vector2(56, 42), "cd": 16, "shout": ""},
+	"body_r": {"clips": ["body_r", "body_hook", "gut"], "size": Vector2(52, 38), "cd": 22, "shout": ""},
+	"upper_r": {"clips": ["upper_r", "uppercut"], "size": Vector2(48, 66), "cd": 18, "shout": ""},
+	"punch_l": {"clips": ["punch_l", "jab"], "size": Vector2(48, 40), "cd": 13, "shout": ""},
+	"hook_l": {"clips": ["hook_l", "jab"], "size": Vector2(56, 42), "cd": 17, "shout": ""},
+	"body_l": {"clips": ["body_l", "body_hook", "gut"], "size": Vector2(52, 38), "cd": 26, "shout": "LIVER SHOT"},
+	"upper_l": {"clips": ["upper_l", "uppercut"], "size": Vector2(48, 66), "cd": 19, "shout": ""},
 	"hook": {"clips": ["cross", "jab"], "size": Vector2(58, 42), "cd": 18, "shout": ""},
 	"body_hook": {"clips": ["body_hook", "gut"], "size": Vector2(52, 40), "cd": 18, "shout": ""},
 	"haymaker": {"clips": ["heavy", "cross"], "size": Vector2(74, 46), "cd": 28, "shout": "HAYMAKER"},
@@ -3401,7 +3448,7 @@ const RS_MOVES := {
 ## Shoulder strikes: hold a shoulder and hit a face button.
 ##   LB (guard) + LIGHT = body hook     LB + HEAVY = liver shot (heavier body hook)
 ##   RT (run)   + LIGHT = side hook     RT + HEAVY = overhand haymaker
-const SHOULDER := {"block:L": "body_hook", "block:H": "body_hook", "dash:L": "hook", "dash:H": "haymaker"}
+const SHOULDER := {"block:L": "body_r", "block:H": "body_l", "dash:L": "hook_r", "dash:H": "haymaker"}
 var _sh_t := 0.0
 
 
@@ -3418,7 +3465,7 @@ func _shoulder_strike(btn: String) -> bool:
 		kind = str(RS_LEARN[kind])
 	if mod == "block" and btn == "H":
 		move_mul_bonus = 1.45
-		Juice.popup_number(global_position + Vector2(0, -96), "LIVER SHOT", Color(1.0, 0.75, 0.3))
+	_last_hand = "L" if btn == "H" else "R"
 	_sh_t = 0.35
 	blocking = false
 	_last_kind = kind
@@ -3439,6 +3486,23 @@ var _rs_on := false
 var _rs_back := 0.0
 ## The last right-stick move thrown (tests, the dojo board).
 var _last_kind := ""
+## X = right hand, Y = left hand: which hand threw last (uppercut art).
+var _last_hand := "R"
+## The Y (left hand) string: jab, hook, uppercut.
+var _y_n := 0
+var _y_ttl := 0.0
+var _heavy_charged := false
+const LEFT_STRING := ["punch_l", "hook_l", "upper_l"]
+
+
+## A tap of Y on the ground: the next blow of the left-hand string.
+func _left_string() -> void:
+	if _y_ttl <= 0.0:
+		_y_n = 0
+	_y_n = _y_n % LEFT_STRING.size() + 1
+	_y_ttl = 0.5
+	_last_kind = LEFT_STRING[_y_n - 1]
+	_attack(_last_kind, false)
 var _last_slot := ""
 
 

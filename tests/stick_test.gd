@@ -50,7 +50,7 @@ func _process(_d: float) -> bool:
 		fp.data["intro_done"] = true
 		fp.data["gold"] = 2000
 		var lo: Dictionary = load("res://src/combat/stick_book.gd").loadout("son")
-		_check(str(lo["flick"]) == "jab", "flick holds the jab string")
+		_check(str(lo["flick"]) == "cross", "flick holds the cross (the jab string lives on X)")
 		_check(str(lo["circle"]) == "hook", "circle holds the hook")
 		_check(str(lo["upper"]) == "", "half circle empty before the uppercut is drilled")
 		_check(str(lo["k_spin"]) == "", "spin kick path empty before it is learned")
@@ -58,7 +58,7 @@ func _process(_d: float) -> bool:
 	if _n == 60:
 		_f = get_first_node_in_group("players")
 		_f.set("facing", 1)
-		_check(_fire([Vector2(1, 0)]) == "light", "flick = jab string")
+		_check(_fire([Vector2(1, 0)]) == "cross_rs", "flick = cross")
 		_check(_fire([Vector2(1, -1)]) == "overhand", "flick up-forward = overhand")
 		_check(_fire([Vector2(1, 1)]) == "body_hook", "flick down-forward = body hook")
 		_check(_fire([Vector2(1, 0)], true) == "front_kick", "RT + flick = front kick")

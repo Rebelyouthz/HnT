@@ -12,6 +12,22 @@ TAIL = (" Strict side view, locked static camera that never moves or zooms, full
         "flat solid green background that never changes, no other people, realistic martial arts motion with weight, "
         "keep the exact same pixel art style, face, hair and outfit for the whole clip.")
 NEG = "camera movement, zoom, pan, cut, scene change, background change, extra people, text, watermark, blurry, morphing, deformed limbs, extra limbs, cropped body, walking away, turning to the camera"
+NEAR = "his RIGHT arm, the arm nearest to the camera"
+FAR = "his LEFT arm, the arm farthest from the camera"
+GUARD = "The young man faces right in a boxing guard, fists up by his chin, feet planted. "
+## label -> (who, start clip, prompt). Old entries start from the Kid's idle.
+EXTRA = {
+	"son_idle_casual": ("son", "idle_casual", "The young man stands completely still in one place, relaxed, hands hanging loose at his sides, feet planted and not moving, he breathes slowly, shifts his weight a tiny bit and glances around. He does not walk or step."),
+	"gant_idle": ("gant", "idle", "The big man stands still in one place holding the paper, feet planted and not moving, breathing heavily, shoulders rising and falling, he glares and taps the paper once. He does not walk or step."),
+	"son_punch_r": ("son", "idle", GUARD + "He throws one fast straight punch with " + NEAR + ", fist straight out at face height, then snaps it back to his guard. Only the near arm punches."),
+	"son_punch_l": ("son", "idle", GUARD + "He throws one fast straight jab with " + FAR + ", fist straight out at face height, then snaps it back to his guard. Only the far arm punches."),
+	"son_hook_r": ("son", "idle", GUARD + "He throws one hook punch with " + NEAR + ", elbow up level, fist swinging round in a horizontal arc at jaw height, then back to his guard. Only the near arm punches."),
+	"son_hook_l": ("son", "idle", GUARD + "He throws one hook punch with " + FAR + ", elbow up level, fist swinging round in a horizontal arc at jaw height, then back to his guard. Only the far arm punches."),
+	"son_upper_r": ("son", "idle", GUARD + "He dips his knees and drives one rising uppercut with " + NEAR + ", fist travelling straight up to chin height, then back to his guard. Only the near arm punches."),
+	"son_upper_l": ("son", "idle", GUARD + "He dips his knees and drives one rising uppercut with " + FAR + ", fist travelling straight up to chin height, then back to his guard. Only the far arm punches."),
+	"son_body_r": ("son", "idle", GUARD + "He bends his knees a little and throws one punch to the body with " + NEAR + ", fist driving in at stomach height, then stands back into his guard. Only the near arm punches."),
+	"son_body_l": ("son", "idle", GUARD + "He bends his knees a little and throws one punch to the body with " + FAR + ", fist driving in at stomach height, then stands back into his guard. Only the far arm punches."),
+}
 CLIPS = {
 	"son_mega_punch": "The young man faces right. He sinks into a low wide crouch and pulls both fists far back behind his hip, charging up and trembling with power, then explodes forward driving both fists together straight ahead in a huge two-handed punch, arms fully extended, then returns to his fighting stance.",
 	"son_spin_high": "The young man faces right. He pivots on one foot and spins his whole body one full turn, his back to the camera for a moment, his straight leg whipping round in a high spinning hook kick at head height, then he lands back in his fighting stance facing right.",
@@ -19,10 +35,10 @@ CLIPS = {
 }
 
 
-def start_image(out):
-	m = json.load(open(os.path.join(ROOT, "assets/sprites/son/idle.json")))
+def start_image(out, who="son", clip="idle"):
+	m = json.load(open(os.path.join(ROOT, "assets/sprites/%s/%s.json" % (who, clip))))
 	fr = m["frames"][0]
-	sheet = Image.open(os.path.join(ROOT, "assets/sprites/son/idle.png")).convert("RGBA")
+	sheet = Image.open(os.path.join(ROOT, "assets/sprites/%s/%s.png" % (who, clip))).convert("RGBA")
 	im = sheet.crop((fr["x"], fr["y"], fr["x"] + fr["w"], fr["y"] + fr["h"]))
 	k = 520.0 / im.height
 	im = im.resize((int(im.width * k), 520), Image.LANCZOS)
@@ -35,16 +51,17 @@ def main():
 	work = sys.argv[1]
 	labels = sys.argv[2:] or list(CLIPS)
 	os.makedirs(work, exist_ok=True)
-	st = os.path.join(work, "start_son.png")
-	if not os.path.exists(st):
-		start_image(st)
 	wan = Client("zerogpu-aoti/wan2-2-fp8da-aoti-faster")
 	for lab in labels:
 		mp4 = os.path.join(work, lab + ".mp4")
 		if os.path.exists(mp4):
 			continue
+		who, src, prompt = EXTRA[lab] if lab in EXTRA else ("son", "idle", CLIPS[lab])
+		st = os.path.join(work, "start_%s_%s.png" % (who, src))
+		if not os.path.exists(st):
+			start_image(st, who, src)
 		try:
-			v, _ = wan.predict(input_image=handle_file(st), prompt=CLIPS[lab] + TAIL, steps=6, negative_prompt=NEG,
+			v, _ = wan.predict(input_image=handle_file(st), prompt=prompt + TAIL, steps=6, negative_prompt=NEG,
 				duration_seconds=3.0, guidance_scale=1, guidance_scale_2=1, seed=7, randomize_seed=False,
 				api_name="/generate_video")
 		except Exception as e:

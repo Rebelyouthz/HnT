@@ -8,7 +8,7 @@ var _n := 0
 var _f: Node2D
 var _got: Array = []
 var _fail: Array[String] = []
-const STEPS := [["p1_block", "p1_light", "body_hook"], ["p1_block", "p1_heavy", "body_hook"], ["p1_dash", "p1_light", "hook"], ["p1_dash", "p1_heavy", "heavy"]]
+const STEPS := [["p1_block", "p1_light", "body_r"], ["p1_block", "p1_heavy", "body_l"], ["p1_dash", "p1_light", "hook_r"], ["p1_dash", "p1_heavy", "heavy"]]
 
 
 func _process(_d: float) -> bool:

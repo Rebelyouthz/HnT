@@ -12,14 +12,14 @@ signal finished
 const LESSONS := [
 	{"id": "walk", "title": "WALK", "pad": "LEFT STICK", "key": "A / D", "line": "Walk back and forth on the mat.", "need": 1},
 	{"id": "jump", "title": "JUMP", "pad": "A", "key": "SPACE", "line": "Jump. Hold it for a higher one.", "need": 2},
-	{"id": "light", "title": "LIGHT PUNCHES", "pad": "X  X  X", "key": "J  J  J", "line": "Three lights in a row: jab, cross, hook.", "need": 3},
-	{"id": "heavy", "title": "HEAVY", "pad": "Y", "key": "K", "line": "A heavy on the dummy. Hold it to charge.", "need": 2},
+	{"id": "light", "title": "RIGHT HAND", "pad": "X  X  X", "key": "J  J  J", "line": "X is the right hand: straight, hook, body shot. Down + X goes to the body.", "need": 3},
+	{"id": "heavy", "title": "LEFT HAND", "pad": "Y  Y  Y", "key": "K  K  K", "line": "Y is the left hand: jab, hook, uppercut. Forward + Y is the big hook, hold Y for the power punch.", "need": 2},
 	{"id": "upper", "req": "uppercut", "title": "UPPERCUT", "pad": "Y, THEN UP  or  RS UP", "key": "J OR K, THEN W", "line": "Hit first, then push up straight after: the blow turns into the launcher on the spot (or flick the right stick up).", "need": 1},
 	{"id": "low", "title": "LOW SLIDE", "pad": "DOWN + RT", "key": "S + SHIFT", "line": "Down and dash: slide in under the guard.", "need": 1},
 	{"id": "air", "title": "JUMP KICK", "pad": "A, then X or Y", "key": "SPACE, then J or K", "line": "Jump and strike in the air.", "need": 1},
-	{"id": "rs_jab", "req": "pad", "title": "RIGHT STICK JAB", "pad": "R-STICK  flick ▶", "key": "-", "line": "Flick the right stick toward the dummy and let go: a jab. The stick's path is the punch.", "need": 2},
+	{"id": "rs_jab", "req": "pad", "title": "RIGHT STICK CROSS", "pad": "R-STICK  flick ▶", "key": "-", "line": "Flick the right stick toward the dummy and let go: a cross. The stick's path is the punch, and the stick has its own moves (MOVES > STICK).", "need": 2},
 	{"id": "rs_hook", "req": "pad", "title": "RIGHT STICK HOOK", "pad": "R-STICK  quarter circle ▲ ▶", "key": "-", "line": "Swing the right stick in a quarter circle that ends toward the dummy: a hook to the jaw.", "need": 2},
-	{"id": "sh_body", "title": "BODY HOOK", "pad": "HOLD LB + X", "key": "HOLD I + J", "line": "Hold guard and punch: a hook into the ribs. Hold guard and press Y for the LIVER SHOT.", "need": 2},
+	{"id": "sh_body", "title": "BODY HOOK", "pad": "HOLD LB + X", "key": "HOLD I + J", "line": "Hold guard and press X: a right hook into the ribs. Hold guard and press Y: the slower left LIVER SHOT.", "need": 2},
 	{"id": "sh_hook", "title": "SIDE HOOK", "pad": "HOLD RT + X", "key": "HOLD SHIFT + J", "line": "Hold run and punch: a wide hook from the side. RT + Y is the overhand, once the dojo taught you the haymaker.", "need": 2},
 	{"id": "throw", "title": "THROW", "pad": "LT", "key": "U", "line": "Up close: grab and throw.", "need": 1},
 	{"id": "block", "title": "BLOCK", "pad": "LB + STICK HEIGHT", "key": "I + W / S", "line": "The dummy swings now. Hold block and point the stick at the height over its head.", "need": 2, "spar": true},
@@ -199,12 +199,12 @@ func _on_struck(kind: String) -> void:
 					var who := str(hero.get("role")) if hero else "son"
 					get_tree().create_timer(1.8).timeout.connect(func() -> void: EquipPrompt.ask(who, str(StickBook.FROM_DOJO[want])))
 		return
-	if hero and str(hero.get("_last_kind")) == "light" and kind in ["light", "jab", "cross"]:
+	if hero and str(hero.get("_last_kind")) in ["light", "cross_rs"] and kind in ["light", "jab", "cross", "cross_rs"]:
 		_tick("rs_jab")
 	match kind:
-		"light", "jab", "cross", "gut-punch":
+		"light", "jab", "cross", "gut-punch", "body_r":
 			_tick("light")
-		"heavy", "roundhouse", "launcher":
+		"heavy", "roundhouse", "launcher", "punch_l", "hook_l", "upper_l", "body_l":
 			_tick("heavy")
 		"uppercut", "air-upper":
 			_tick("upper")
@@ -216,9 +216,9 @@ func _on_struck(kind: String) -> void:
 			_tick("air")
 		"throw":
 			_tick("throw")
-		"hook":
+		"hook", "hook_r":
 			_tick("sh_hook" if hero and float(hero.get("_sh_t")) > 0.0 else "rs_hook")
-		"body_hook":
+		"body_hook", "body_r", "body_l":
 			_tick("sh_body")
 
 
