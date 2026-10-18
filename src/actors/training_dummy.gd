@@ -13,6 +13,7 @@ var mode := "still"
 var hits := 0
 var last_dmg := 0
 var _spar_t := 1.4
+const SPAR_REACH := 130.0
 var _cycle := ["high", "mid", "low", "mid", "high", "low"]
 var _ci := 0
 var _home_x := 0.0
@@ -71,9 +72,11 @@ func _physics_process(delta: float) -> void:
 		return
 	_spar_t -= delta
 	if _spar_t <= 0.0 and telegraph <= 0.0 and recover <= 0.0:
-		_spar_t = 1.7
+		_spar_t = 1.3
 		var p := _nearest()
-		if p != null and absf(p.global_position.x - global_position.x) < 70.0:
+		# Generous reach: a block shoves you back a step, and the bag must
+		# still swing at you from there (it stalled out of range at 1 / 2).
+		if p != null and absf(p.global_position.x - global_position.x) < SPAR_REACH:
 			facing = 1 if p.global_position.x > global_position.x else -1
 			visual.scale.x = float(facing)
 			_start_telegraph()
@@ -86,6 +89,19 @@ func _physics_process(delta: float) -> void:
 			_pick_swing()
 	super._physics_process(delta)
 	_pin()
+
+
+## The swing reaches as far as the bag calls it from (a thug's reach is
+## shorter, and a guard that shoved you back a step left the bag swinging at
+## air: the lesson stuck at GUARD 1 / 2).
+func _swing() -> void:
+	recover = 0.42
+	for n in get_tree().get_nodes_in_group("players"):
+		if n is Fighter and not (n as Fighter).downed:
+			var f: Fighter = n
+			if absf(f.global_position.x - global_position.x) < SPAR_REACH + 10.0 and absf(f.global_position.y - global_position.y) < 70.0:
+				f.take_hit("light", self)
+	atk_height = ""
 
 
 func _pin() -> void:

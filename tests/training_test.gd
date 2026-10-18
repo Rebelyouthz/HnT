@@ -81,8 +81,11 @@ func _process(_d: float) -> bool:
 		return false
 	for a in ["p1_right", "p1_left", "p1_up", "p1_down"]:
 		Input.action_release(a)
-	if not (s in [7, 8]):
+	if not (s in [3, 7, 8]):
 		for a in FOUR:
+			Input.action_release(a)
+	elif s == 3:
+		for a in ["p1_throw", "p1_shoot", "p1_dash"]:
 			Input.action_release(a)
 	# Line up in depth with the bag the lesson is on.
 	var bag: Node2D = current_scene.get("_bag2") if s >= 6 else current_scene.get("_bag")

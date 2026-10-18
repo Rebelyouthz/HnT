@@ -2829,7 +2829,9 @@ func take_hit(kind: String, from: Node) -> void:
 	var wrong_guard := false
 	if blocking and kind != "throw" and kind != "snap":
 		var need := attack_height(kind, from)
-		if need == "any" or need == block_height:
+		# The heavy bag's swing is soft: any guard takes it (the height call
+		# over the bag is a hint to read, not a wall in the lesson).
+		if need == "any" or need == block_height or from is TrainingDummy:
 			_clean_block(kind, from)
 			guarded.emit()
 			if blocking:
