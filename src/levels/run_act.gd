@@ -30,6 +30,8 @@ var _end: Node
 var _cam: CouchCamera
 var _join_grace := 0
 var _draw_pending := false
+## Level-ups and card draws on this map (the training alley has none).
+var levels := true
 var _wanted_cop := false
 var _heli: Node2D
 var _phone_ghost := false
@@ -470,7 +472,7 @@ func _ready() -> void:
 		StageCard.show_for(self, map_id)
 	# The STARTING DRAW (level-up style cards) waits for the first thug
 	# down: nobody levels up just for walking in.
-	if _draw_pending:
+	if _draw_pending and levels:
 		if _state.kills > 0:
 			_queue_starting_draw()
 		else:
@@ -537,7 +539,7 @@ func _process(_delta: float) -> void:
 
 
 func _cards() -> void:
-	if get_node_or_null("CardPick") or get_node_or_null("LevelUpFx"):
+	if not levels or get_node_or_null("CardPick") or get_node_or_null("LevelUpFx"):
 		return
 	# Glow, LEVEL UP over the heads and the force wave first; then the cards.
 	var fighters: Array = []

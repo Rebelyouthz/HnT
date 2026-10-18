@@ -1,14 +1,13 @@
 extends SceneTree
 
-## Shoulder strikes: LB + LIGHT body hook, LB + HEAVY liver shot, RT +
-## LIGHT side hook, RT + HEAVY haymaker (plain heavy until drilled). Prints
-## SHOULDER OK.
+## Shoulder strikes (the Kid): L1 + X superman punch, L1 + Y flying knee,
+## R2 + X turning punch, R2 + Y roundhouse. Prints SHOULDER OK.
 
 var _n := 0
 var _f: Node2D
 var _got: Array = []
 var _fail: Array[String] = []
-const STEPS := [["p1_block", "p1_light", "body_r"], ["p1_block", "p1_heavy", "body_l"], ["p1_dash", "p1_light", "hook_r"], ["p1_dash", "p1_heavy", "heavy"]]
+const STEPS := [["p1_block", "p1_light", "superman_punch"], ["p1_block", "p1_heavy", "flying_knee"], ["p1_dash", "p1_light", "turn_punch"], ["p1_dash", "p1_heavy", "roundhouse"]]
 
 
 func _process(_d: float) -> bool:

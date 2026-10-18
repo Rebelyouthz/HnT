@@ -65,6 +65,8 @@ var _shot: Dictionary = {}
 var _swing_rate := 1.0
 signal died
 signal finish_ready
+## A prop body (the heavy bag): no blood, teeth or gore from its hits.
+var bloodless := false
 
 
 func _ready() -> void:
@@ -1298,6 +1300,8 @@ func _hit_noise(kind: String, from: Node) -> void:
 		dir = signf(global_position.x - (from as Node2D).global_position.x)
 	var big := kind in ["heavy", "combo", "uppercut", "air-upper", "roundhouse", "air-spin", "launcher", "dive", "finish", "web-slam"]
 	var blood := get_tree().get_first_node_in_group("blood_sim")
+	if bloodless:
+		blood = null
 	# A second, recorded body/face smack under the base hit, a different
 	# take each time, so a long chain never sounds like one sample looping.
 	var smack := "imp_heavy" if big else "imp_light"
@@ -1600,7 +1604,7 @@ func _gore(kind: String, from: Node, dir: float) -> void:
 		power = maxf(power, 0.8)
 	_last_zone = zone
 	var hurt := 1.0 - float(hp) / float(maxi(max_hp, 1))
-	var blood := get_tree().get_first_node_in_group("blood_sim")
+	var blood := get_tree().get_first_node_in_group("blood_sim") if not bloodless else null
 	if blood and blood.has_method("hit"):
 		blood.hit(self, zone, dir, power, hurt)
 		if kind == "bam" or kind == "gut-punch" or kind == "stomp3":
@@ -1608,7 +1612,7 @@ func _gore(kind: String, from: Node, dir: float) -> void:
 		# Big blows splash the camera glass on the side the blood flies.
 		if power >= 0.85 and randf() < 0.35:
 			blood.screen(dir, power)
-	if _anim != null:
+	if _anim != null and not bloodless:
 		_splat = minf(1.0, _splat + power * 0.22)
 		var face := hurt * 1.15 if zone != "low" else hurt * 0.6
 		BloodSim.wound(_anim, face, _splat, -dir * float(facing))
@@ -1618,7 +1622,7 @@ func _gore(kind: String, from: Node, dir: float) -> void:
 	if hp > 0 and not flung and _juggle(kind, clip, dir, power):
 		return
 	if hp > 0 and not flung:
-		if zone == "head" and from is Fighter:
+		if zone == "head" and from is Fighter and not bloodless:
 			FaceDrip.bleed(self, _anim, dir, power)
 		var busy := HitReact.react(visual, facing, zone, dir, power)
 		if busy > 0.3:

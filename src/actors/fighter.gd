@@ -58,6 +58,8 @@ var snap_ready := false
 var downed := false
 var armored := false
 var charge_frames := 0
+## A full charge fires on its own; the release after it does nothing.
+var _charge_fired := false
 var dash_frames := 0
 var slide_frames := 0
 var wall_run := 0.0
@@ -971,13 +973,18 @@ func _tick_meters(delta: float) -> void:
 	var bst := _stick()
 	block_height = "high" if bst.y < -0.4 else ("low" if bst.y > 0.4 else "mid")
 	block_low = blocking and block_height == "low"
+	_paint_guard()
 	if counter_t > 0.0:
 		counter_t -= delta
 	if _block_flinch > 0.0:
 		_block_flinch -= delta
 	if blocking:
-		steam = maxf(0.0, steam - 8.0 * delta)
-		steam_lock = 0.15
+		# A held guard tires the arms (not on the training mat: the lesson
+		# is to read the swing, and a guard that quietly ran dry read as
+		# "block doesn't work").
+		if not _on_mat():
+			steam = maxf(0.0, steam - 6.0 * delta)
+			steam_lock = 0.15
 	if buff_t > 0.0:
 		buff_t -= delta
 	if string_ttl > 0.0:
@@ -1489,13 +1496,27 @@ func _combat() -> void:
 	if FamilyProfile.has_cbt("heavy_wrist"):
 		charge_need = 16
 	var airborne := hop < -16.0 or (plane == "roof" and not is_on_floor())
-	if _pressed("heavy"):
+	if _pressed("heavy") and _charge_fired:
+		# The full-charge punch already went off: wait for the release.
+		pass
+	elif _pressed("heavy"):
 		charge_frames += 1
 		if charge_frames == 1:
 			_hv_t = _clock
+		if charge_frames > charge_need and not airborne and attack_cd == 0:
+			_charge_pose(float(charge_frames - charge_need) / 25.0)
 		if charge_frames >= charge_need + 25:
+			_charge_fired = true
+			charge_frames = 0
+			_last_hand = "L"
 			_attack("heavy", true)
+	elif _charge_fired:
+		_charge_fired = false
+		charge_frames = 0
 	elif charge_frames > 0:
+		if not airborne and _shoulder_strike("H"):
+			charge_frames = 0
+			return
 		if not airborne or _combo_air_ok():
 			if _combo_press("H"):
 				charge_frames = 0
@@ -1519,8 +1540,10 @@ func _combat() -> void:
 			# HEAVY pressed, then UP (or both together): the uppercut. Up
 			# held from a walk before the press throws the plain heavy.
 			if not FamilyProfile.dojo_learned("uppercut"):
-				Juice.shout("DOJO LOCK")
-				charge_frames = 0
+				# Not bought yet: the left hand still goes, never a dead press.
+				Juice.popup_number(global_position + Vector2(0, -100), "UPPERCUT · DOJO", Palette.MUTED)
+				_last_hand = "L"
+				_left_string()
 			else:
 				_last_hand = "L"
 				_attack("uppercut", false)
@@ -1554,14 +1577,14 @@ func _combat() -> void:
 		_light_buf = 9
 	elif attack_cd == 0 and (_just("light") or _light_buf > 0):
 		_light_buf = 0
+		if not airborne and _shoulder_strike("L"):
+			return
 		if (not airborne or _combo_air_ok()) and _combo_press("L"):
 			return
 		if airborne and y < -0.35:
 			_attack("air-upper", false)
 		elif airborne:
 			_attack("jump-kick", false)
-		elif _shoulder_strike("L"):
-			return
 		elif y > 0.4 and not _try_stomp():
 			# Down + X: the right hand to the body.
 			_last_hand = "R"
@@ -1743,6 +1766,8 @@ func _special() -> void:
 
 
 func _attack(kind: String, charged: bool) -> void:
+	if _anim != null:
+		_anim.self_modulate = Color.WHITE
 	# An attack thrown with the stick up / down (uppercut, low, stomp ...)
 	# does not turn into a walk that way: the stick has to come back first.
 	if absf(_stick().y) > 0.35:
@@ -1864,8 +1889,13 @@ func _attack(kind: String, charged: bool) -> void:
 	anim_atk = _sprite_clip(kind)
 	# A pipe (or anything held like one) in the hand: a real weapon swing,
 	# not a punch with a pipe stuck to the fist.
-	if pickup in SWING_HELD and _anim != null and _anim.sprite_frames.has_animation("swing") and kind in SWING_KINDS:
-		anim_atk = "swing"
+	if pickup in SWING_HELD and _anim != null and kind in SWING_KINDS:
+		# A drawn weapon swing when there is one, else the overhead hammer
+		# blow (both hands up, slam down): the pipe rides the hand through it.
+		for sc in ["swing", "hammer"]:
+			if _anim.sprite_frames.has_animation(sc):
+				anim_atk = sc
+				break
 	# MASTERY: the more this move is thrown, the better it gets.
 	Mastery.use(role, anim_atk, global_position)
 	move_mul *= Mastery.power(role, anim_atk) * move_mul_bonus
@@ -2953,6 +2983,63 @@ static func attack_height(kind: String, from: Node) -> String:
 ## Right height, guard up: nothing gets through. The hit rings off the
 ## forearms, both bodies jolt, the attacker bounces off (an opening) and a
 ## counter window opens: your next blow hits as a heavy.
+var _mat := -1
+
+
+func _on_mat() -> bool:
+	if _mat < 0:
+		var sc := get_tree().current_scene
+		_mat = 1 if sc != null and str(sc.get("map_id")) in ["tutorial_alley"] else 0
+	return _mat == 1
+
+
+var _guard_fx: Line2D
+var _guard_lab: Label
+
+
+## While the guard is up a bright shield bracket sits in front of the body
+## at the height it covers (HIGH face, MID body, LOW legs), so a held guard
+## always reads, and which height it is.
+func _paint_guard() -> void:
+	if not blocking or FIELD:
+		if _guard_fx:
+			_guard_fx.visible = false
+			_guard_lab.visible = false
+		return
+	if _guard_fx == null:
+		_guard_fx = Line2D.new()
+		_guard_fx.width = 3.0
+		_guard_fx.z_index = 6
+		_guard_fx.begin_cap_mode = Line2D.LINE_CAP_ROUND
+		_guard_fx.end_cap_mode = Line2D.LINE_CAP_ROUND
+		var pts := PackedVector2Array()
+		for i in 9:
+			var a := lerpf(-0.9, 0.9, float(i) / 8.0)
+			pts.append(Vector2(cos(a) * 9.0, sin(a) * 14.0))
+		_guard_fx.points = pts
+		add_child(_guard_fx)
+		_guard_lab = Label.new()
+		_guard_lab.add_theme_font_override("font", UiKit.pixel_font())
+		_guard_lab.add_theme_font_size_override("font_size", 8)
+		_guard_lab.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
+		_guard_lab.add_theme_constant_override("outline_size", 3)
+		_guard_lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_guard_lab.size = Vector2(40, 10)
+		_guard_lab.z_index = 6
+		add_child(_guard_lab)
+	var y := -58.0 if block_height == "high" else (-12.0 if block_height == "low" else -36.0)
+	var col := {"high": Color(1.0, 0.85, 0.35), "mid": Color(0.55, 0.85, 1.0), "low": Color(0.6, 1.0, 0.6)}[block_height] as Color
+	col.a = 0.65 + 0.3 * sin(_clock * 10.0)
+	_guard_fx.default_color = col
+	_guard_fx.position = Vector2(float(facing) * 20.0, y)
+	_guard_fx.scale.x = float(facing)
+	_guard_fx.visible = true
+	_guard_lab.text = str(block_height).to_upper()
+	_guard_lab.add_theme_color_override("font_color", col)
+	_guard_lab.position = Vector2(float(facing) * 20.0 - 20.0, y - 24.0)
+	_guard_lab.visible = true
+
+
 func _clean_block(kind: String, from: Node) -> void:
 	var heavy := kind in ["heavy", "roundhouse", "jump-kick", "blade"]
 	steam = maxf(0.0, steam - (14.0 if heavy else 7.0))
@@ -2965,7 +3052,11 @@ func _clean_block(kind: String, from: Node) -> void:
 	Juice.pulse_shake(3.0 if heavy else 1.4)
 	Mixer.play_sfx("res://assets/audio/sfx/block_hit.ogg" if ResourceLoader.exists("res://assets/audio/sfx/block_hit.ogg") else "res://assets/audio/block.wav")
 	VoBank.line(role, "block", 0.08)
-	Juice.popup_number(at + Vector2(0, -20), "BLOCK", Color(0.62, 0.86, 1.0))
+	Juice.popup_number(at + Vector2(0, -20), "BLOCKED!", Color(0.62, 0.86, 1.0))
+	if _guard_fx:
+		var gt := _guard_fx.create_tween()
+		_guard_fx.width = 7.0
+		gt.tween_property(_guard_fx, "width", 3.0, 0.25)
 	global_position.x -= float(facing) * (12.0 if heavy else 6.0)
 	if from is Punk:
 		var p := from as Punk
@@ -3465,7 +3556,9 @@ const RS_MOVES := {
 ##   L1 (guard) + LIGHT = body hook     L1 + HEAVY = liver shot (heavier body hook)
 ##   R2 (run)   + LIGHT = side hook     R2 + HEAVY = overhand haymaker
 ##   L2 (kick)  + LIGHT = front kick    L2 + HEAVY = high kick
-const SHOULDER := {"block:L": "body_r", "block:H": "body_l", "dash:L": "hook_r", "dash:H": "haymaker", "throw:L": "front_kick", "throw:H": "high_kick"}
+const SHOULDER := {"block:L": "elbow", "block:H": "headbutt", "dash:L": "spin_backfist", "dash:H": "roundhouse", "throw:L": "front_kick", "throw:H": "high_kick"}
+## The son has no elbow / headbutt art: his guard strikes.
+const SHOULDER_SON := {"block:L": "superman_punch", "block:H": "flying_knee", "dash:L": "turn_punch"}
 var _sh_t := 0.0
 
 
@@ -3476,10 +3569,10 @@ func _shoulder_strike(btn: String) -> bool:
 	if mod == "":
 		return false
 	var kind := str(SHOULDER.get(mod + ":" + btn, ""))
+	if role == "son" and SHOULDER_SON.has(mod + ":" + btn):
+		kind = str(SHOULDER_SON[mod + ":" + btn])
 	if kind == "":
 		return false
-	if RS_LEARN.has(kind) and not FamilyProfile.dojo_learned(kind):
-		kind = str(RS_LEARN[kind])
 	if mod == "block" and btn == "H":
 		move_mul_bonus = 1.45
 	if mod != "throw":
@@ -3514,6 +3607,25 @@ const LEFT_STRING := ["punch_l", "hook_l", "upper_l"]
 
 
 ## A tap of Y on the ground: the next blow of the left-hand string.
+## Y held past a tap: he draws back for the power punch, the wind-up frames
+## of the mega punch creeping on with the charge (0 -> 1), body glowing.
+func _charge_pose(k: float) -> void:
+	if _anim == null:
+		return
+	var clip := _have_clip(["mega_punch", "heavy"])
+	if not _anim.sprite_frames.has_animation(clip):
+		return
+	var info: Dictionary = SpriteBook.clip_info(role, clip)
+	var hit_f := maxi(1, int(info.get("hit", 4)))
+	anim_atk = clip
+	_atk_t = 0.08
+	if _anim.animation != clip:
+		_anim.play(clip)
+	_anim.pause()
+	_anim.frame = clampi(int(float(hit_f - 1) * clampf(k, 0.0, 1.0)), 0, hit_f - 1)
+	_anim.self_modulate = Color(1.0, 1.0, 1.0).lerp(Color(1.6, 1.35, 0.9), clampf(k, 0.0, 1.0))
+
+
 func _left_string() -> void:
 	if _y_ttl <= 0.0:
 		_y_n = 0
@@ -3732,7 +3844,7 @@ func pick_up(wp: WeaponPickup) -> void:
 func _throw_clip() -> void:
 	if _anim == null:
 		return
-	for c in ["throw_item", "gun_throw", "jab"]:
+	for c in ["throw_item", "gun_throw", "cross", "jab"]:
 		if _anim.sprite_frames.has_animation(c):
 			anim_atk = c
 			_atk_t = 0.3
@@ -4248,7 +4360,7 @@ var _melee_ang := -1.9
 static var _held_cache: Dictionary = {}
 static var _front_cache: Dictionary = {}
 ## Held weapons that swing with the drawn SWING clip (a pipe-shaped thing).
-const SWING_HELD := ["pipe", "crowbar", "baseball_bat"]
+const SWING_HELD := ["pipe", "crowbar", "baseball_bat", "board", "sledgehammer", "chain"]
 const SWING_KINDS := ["light", "heavy", "gut-punch", "punch_r", "hook_r", "body_r", "punch_l", "hook_l", "upper_l", "body_l"]
 const LIGHT_MELEE := ["knife", "stapler", "clipboard", "machete"]
 
@@ -4312,7 +4424,7 @@ func _front_hand() -> Vector2:
 func _place_melee(delta: float) -> void:
 	var path := "res://assets/sprites/held/%s.png" % pickup
 	# The swing and pickup clips draw the weapon in the hand themselves.
-	var drawn := anim_atk == "pickup" or (anim_atk == "swing" and _anim != null and _anim.animation == "swing")
+	var drawn := anim_atk == "pickup" or (anim_atk == "duck" and art_lock > 0.0) or (anim_atk == "swing" and _anim != null and _anim.animation == "swing")
 	var want := pickup != "" and not (pickup in GUNS) and _anim != null and not downed and ResourceLoader.exists(path) and not drawn
 	if not want:
 		if _melee:

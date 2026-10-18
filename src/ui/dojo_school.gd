@@ -19,8 +19,8 @@ const LESSONS := [
 	{"id": "air", "title": "JUMP KICK", "pad": "A, then X or Y", "key": "SPACE, then J or K", "line": "Jump and strike in the air.", "need": 1},
 	{"id": "rs_jab", "req": "pad", "title": "RIGHT STICK CROSS", "pad": "R-STICK  flick ▶", "key": "-", "line": "Flick the right stick toward the dummy and let go: a cross. The stick's path is the punch, and the stick has its own moves (MOVES > STICK).", "need": 2},
 	{"id": "rs_hook", "req": "pad", "title": "RIGHT STICK HOOK", "pad": "R-STICK  quarter circle ▲ ▶", "key": "-", "line": "Swing the right stick in a quarter circle that ends toward the dummy: a hook to the jaw.", "need": 2},
-	{"id": "sh_body", "title": "BODY HOOK", "pad": "HOLD L1 + X", "key": "HOLD I + J", "line": "Hold guard and press X: a right hook into the ribs. Hold guard and press Y: the slower left LIVER SHOT.", "need": 2},
-	{"id": "sh_hook", "title": "SIDE HOOK", "pad": "HOLD R2 + X", "key": "HOLD SHIFT + J", "line": "Hold run and punch: a wide hook from the side. R2 + Y is the overhand, once the dojo taught you the haymaker.", "need": 2},
+	{"id": "sh_body", "title": "GUARD STRIKES", "pad": "HOLD L1 + X  /  L1 + Y", "key": "HOLD I + J  /  I + K", "line": "Hold guard and press X: a short elbow (the Kid: a superman punch). Hold guard and press Y: a headbutt (the Kid: a flying knee).", "need": 2},
+	{"id": "sh_hook", "title": "RUNNING STRIKES", "pad": "HOLD R2 + X  /  R2 + Y", "key": "HOLD SHIFT + J  /  SHIFT + K", "line": "Hold run and press X: a spinning backfist. Hold run and press Y: a roundhouse kick.", "need": 2},
 	{"id": "kick", "title": "KICKS", "pad": "HOLD L2 + X  /  L2 + Y", "key": "HOLD U + J  /  U + K", "line": "L2 is the kick trigger. Hold it and press X: a front kick. Hold it and press Y: a high kick.", "need": 2},
 	{"id": "throw", "title": "THROW", "pad": "X + Y TOGETHER", "key": "J + K TOGETHER", "line": "Up close, both hands at once: grab and throw.", "need": 1},
 	{"id": "block", "title": "BLOCK", "pad": "L1 + STICK HEIGHT", "key": "I + W / S", "line": "The dummy swings now. Hold block and point the stick at the height over its head.", "need": 2, "spar": true},
@@ -206,7 +206,10 @@ func _on_struck(kind: String) -> void:
 		"light", "jab", "cross", "gut-punch", "body_r":
 			_tick("light")
 		"heavy", "roundhouse", "launcher", "punch_l", "hook_l", "upper_l", "body_l":
-			_tick("heavy")
+			if kind == "roundhouse" and hero and float(hero.get("_sh_t")) > 0.0:
+				_tick("sh_hook")
+			else:
+				_tick("heavy")
 		"uppercut", "air-upper":
 			_tick("upper")
 			if kind == "air-upper":
@@ -220,8 +223,11 @@ func _on_struck(kind: String) -> void:
 		"front_kick", "high_kick", "low_kick":
 			_tick("kick")
 		"hook", "hook_r":
-			_tick("sh_hook" if hero and float(hero.get("_sh_t")) > 0.0 else "rs_hook")
-		"body_hook", "body_r", "body_l":
+			_tick("rs_hook")
+		"spin_backfist", "turn_punch":
+			if hero and float(hero.get("_sh_t")) > 0.0:
+				_tick("sh_hook")
+		"elbow", "headbutt", "superman_punch", "flying_knee":
 			_tick("sh_body")
 
 

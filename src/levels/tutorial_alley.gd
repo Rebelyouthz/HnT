@@ -36,7 +36,7 @@ var _lessons := [
 		[["father", "Jab. Fast and small. Three of them."]], BAG_X + 60.0],
 	["LEFT HAND  ×2", "Y  ·  LEFT HAND  ·  HOLD FOR POWER", "K  /  MIDDLE MOUSE",
 		[["son", "Can I just hit it really hard?"], ["father", "That's a heavy. Plant your feet. Two."]], BAG_X + 60.0],
-	["GUARD  ×2", "HOLD L1  ·  STICK UP / DOWN PICKS THE HEIGHT", "HOLD Q  ·  W / S PICKS THE HEIGHT",
+	["GUARD  ×2", "HOLD L1 (TOP LEFT) WHEN THE BAG SWINGS  ·  STICK UP = HIGH, DOWN = LOW", "HOLD Q WHEN THE BAG SWINGS  ·  W = HIGH, S = LOW",
 		[["father", "Now it swings back. Guard up and read the height."]], BAG_X + 60.0],
 	["JUMP", "A", "SPACE",
 		[["father", "Feet off the ground. Hop."]], BAG_X + 60.0],
@@ -62,6 +62,8 @@ func _configure() -> void:
 	toast_title = "BACK ALLEY · TRAINING"
 	toast_body = "The night they took Benny and Rico. Ten minutes to learn to fight."
 	win_mode = "boss"
+	# A lesson, not a run: no level-ups or card draws in the alley.
+	levels = false
 	music = "res://assets/audio/music_street.wav"
 
 

@@ -26,6 +26,7 @@ var _bag: Sprite2D
 
 func _ready() -> void:
 	title = "Training Dummy"
+	bloodless = true
 	hp = 9999
 	super._ready()
 	max_hp = 9999
