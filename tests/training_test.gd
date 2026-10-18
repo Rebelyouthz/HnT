@@ -19,7 +19,7 @@ func _initialize() -> void:
 
 
 func _end() -> bool:
-	for a in ["p1_right", "p1_left", "p1_light", "p1_heavy", "p1_block", "p1_jump", "p1_throw", "p1_up", "p1_down"]:
+	for a in ["p1_right", "p1_left", "p1_light", "p1_heavy", "p1_block", "p1_jump", "p1_throw", "p1_shoot", "p1_dash", "p1_up", "p1_down"]:
 		Input.action_release(a)
 	if _fail.is_empty() and _seen.size() >= 10:
 		print("TRAINING OK  ", _seen)
@@ -29,6 +29,17 @@ func _end() -> bool:
 		DirAccess.copy_absolute("user://family.train_backup.json", "user://family.json")
 		DirAccess.remove_absolute("user://family.train_backup.json")
 	return true
+
+
+const FOUR := ["p1_block", "p1_throw", "p1_shoot", "p1_dash"]
+
+
+func _tap_all(acts: Array) -> void:
+	for a in acts:
+		if _n % 20 == 0:
+			Input.action_press(a)
+		elif _n % 20 == 6:
+			Input.action_release(a)
 
 
 func _tap(a: String) -> void:
@@ -53,16 +64,26 @@ func _process(_d: float) -> bool:
 		return _end()
 	if id != "tutorial_alley":
 		return false
+	# First-use guides (the level-up cards one) wait for a press: close them.
+	for g in get_nodes_in_group("guide"):
+		g.queue_free()
+	var cp: Node = current_scene.get_node_or_null("CardPick") if current_scene else null
+	if cp and _n % 30 == 0:
+		cp.call("_choose", 0)
 	var s: int = current_scene.get("_step")
 	if s >= 0 and not _seen.has(s):
 		_seen.append(s)
+		print("lesson ", s, " at frame ", _n)
 	var f: Node2D = null
 	for p in get_nodes_in_group("players"):
 		f = p
 	if f == null:
 		return false
-	for a in ["p1_right", "p1_left", "p1_block", "p1_up", "p1_down"]:
+	for a in ["p1_right", "p1_left", "p1_up", "p1_down"]:
 		Input.action_release(a)
+	if not (s in [7, 8]):
+		for a in FOUR:
+			Input.action_release(a)
 	# Line up in depth with the bag the lesson is on.
 	var bag: Node2D = current_scene.get("_bag2") if s >= 6 else current_scene.get("_bag")
 	if s in [1, 2, 6] and bag:
@@ -85,10 +106,14 @@ func _process(_d: float) -> bool:
 		4:
 			_tap("p1_jump")
 		5:
-			if f.global_position.x < 1112.0:
+			# X + Y together on the pipe by the first bag.
+			var px: float = 640.0 - 110.0
+			if f.global_position.x < px - 10.0:
 				Input.action_press("p1_right")
+			elif f.global_position.x > px + 10.0:
+				Input.action_press("p1_left")
 			else:
-				_tap("p1_throw")
+				_tap_all(["p1_light", "p1_heavy"])
 		6:
 			if f.global_position.x < 1318.0:
 				Input.action_press("p1_right")
@@ -96,16 +121,9 @@ func _process(_d: float) -> bool:
 				_tap("p1_light")
 				if false:
 					print("s6 pl=", f.get("parkour_lock"), " roll=", f.get("roll_t"), " ct=", f.get("_combo_t"), " blk=", f.get("blocking"), " plane=", f.get("plane"), " snap=", f.get("snap_ready"), " hush=", f.get("_hush_until"), " clk=", f.get("_clock"), " cd=", f.get("attack_cd"), " face=", f.get("facing"), " bag hp=", bag.get("hp"), " dummy mode=", bag.get("mode"))
-		7:
-			if f.global_position.x > 1250.0:
-				Input.action_press("p1_left")
-			else:
-				_tap("p1_throw")
-		8:
-			if f.global_position.x > 1220.0:
-				Input.action_press("p1_left")
-			else:
-				_tap("p1_throw")
+		7, 8:
+			# L1 + L2 + R1 + R2 held together throws.
+			_tap_all(FOUR)
 		10:
 			Input.action_press("p1_right")
 		9:

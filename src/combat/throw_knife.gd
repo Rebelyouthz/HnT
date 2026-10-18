@@ -34,8 +34,14 @@ static func drop(host: Node, at: Vector2) -> ThrowKnife:
 	return k
 
 
+var _tex: Texture2D
+
+
 func _ready() -> void:
 	z_index = 4
+	texture_filter = SpriteBook.world_filter()
+	if ResourceLoader.exists("res://assets/sprites/held/knife.png"):
+		_tex = load("res://assets/sprites/held/knife.png")
 
 
 func _physics_process(delta: float) -> void:
@@ -78,11 +84,26 @@ func _physics_process(delta: float) -> void:
 func _draw() -> void:
 	var h := -34.0 if not on_ground else -2.0
 	var ang := _spin if not on_ground else 0.3
-	draw_set_transform(Vector2(0, h), ang, Vector2.ONE)
-	draw_rect(Rect2(-1.5, -9.0, 3.0, 10.0), Color(0.82, 0.85, 0.9))
-	draw_rect(Rect2(-0.5, -9.0, 1.0, 10.0), Color(1, 1, 1))
-	draw_rect(Rect2(-2.5, 1.0, 5.0, 1.5), Color(0.3, 0.3, 0.32))
-	draw_rect(Rect2(-1.5, 2.5, 3.0, 5.0), Color(0.25, 0.15, 0.1))
+	# Shadow on the street, a white streak behind it in flight.
+	var sh := PackedVector2Array()
+	for i in 12:
+		var a0 := TAU * float(i) / 12.0
+		sh.append(Vector2(cos(a0) * 9.0, sin(a0) * 2.2))
+	draw_colored_polygon(sh, Color(0, 0, 0, 0.32))
+	if not on_ground:
+		for i in 3:
+			var x0 := -float(dir) * (10.0 + float(i) * 12.0)
+			draw_line(Vector2(x0, h), Vector2(x0 - float(dir) * 10.0, h), Color(1, 1, 1, 0.35 - 0.1 * float(i)), 2.0)
+	if _tex:
+		var k := SpriteBook.DRAW_SCALE * 1.2
+		draw_set_transform(Vector2(0, h), ang, Vector2(k, k))
+		draw_texture(_tex, -_tex.get_size() * 0.5)
+	else:
+		draw_set_transform(Vector2(0, h), ang, Vector2.ONE)
+		draw_rect(Rect2(-1.5, -9.0, 3.0, 10.0), Color(0.82, 0.85, 0.9))
+		draw_rect(Rect2(-0.5, -9.0, 1.0, 10.0), Color(1, 1, 1))
+		draw_rect(Rect2(-2.5, 1.0, 5.0, 1.5), Color(0.3, 0.3, 0.32))
+		draw_rect(Rect2(-1.5, 2.5, 3.0, 5.0), Color(0.25, 0.15, 0.1))
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	if on_ground:
 		var a := 0.4 + 0.3 * sin(_t * 6.0)

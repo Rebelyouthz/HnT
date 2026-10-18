@@ -60,25 +60,14 @@ func _physics_process(delta: float) -> void:
 	if hp < max_hp:
 		hp = max_hp
 		crush = false
-	# A bag on a weighted stand: it rocks, it never flies off or slides away.
-	# Still mode keeps recover up, so the old drift back to the mark never
-	# ran and a hard blow sent the bag down the alley for good.
-	if mode == "still":
-		flung = false
-		var home := Vector2(_home_x, _home_y)
-		if global_position.distance_to(home) > 30.0:
-			global_position = home + (global_position - home).normalized() * 30.0
-		if global_position.distance_to(home) > 1.0:
-			global_position = global_position.move_toward(home, 220.0 * delta)
-	elif flung:
-		_fling(delta)
-		return
-	elif absf(global_position.x - _home_x) > 4.0 and recover <= 0.0 and telegraph <= 0.0:
-		global_position.x = move_toward(global_position.x, _home_x, 90.0 * delta)
+	# A bag on a weighted stand: it rocks on its spring, it never flies off,
+	# slides away or gets knocked down the alley. Pinned to its mark.
+	flung = false
 	if mode == "still":
 		telegraph = 0.0
 		recover = maxf(recover, 0.2)
 		super._physics_process(delta)
+		_pin()
 		return
 	_spar_t -= delta
 	if _spar_t <= 0.0 and telegraph <= 0.0 and recover <= 0.0:
@@ -96,6 +85,13 @@ func _physics_process(delta: float) -> void:
 			_show_height()
 			_pick_swing()
 	super._physics_process(delta)
+	_pin()
+
+
+func _pin() -> void:
+	flung = false
+	velocity = Vector2.ZERO
+	global_position = Vector2(_home_x, _home_y)
 
 
 func _nearest() -> Fighter:

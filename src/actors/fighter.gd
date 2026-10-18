@@ -205,7 +205,7 @@ var knives_max := 6
 var knives := 2
 var team := 0.0
 ## BONE YARD supers: FURY fills from kills (a brutal kill fills more) and
-## goes off with BLOCK + SHOOT (LB + RB) on a broken thug.
+## goes off with BLOCK + SHOOT (L1 + R1) on a broken thug.
 const FURY_MAX := 100.0
 var fury := 0.0
 var art_lock := 0.0
@@ -944,8 +944,8 @@ func _tick_meters(delta: float) -> void:
 		if FamilyProfile.has_cbt("second_lungs"):
 			regen *= 1.15
 		steam = minf(STEAM_MAX, steam + regen * (1.0 + 0.3 * float(_cart("energy_drink"))) * (2.0 if suit_part("mask") == "shaolin" else 1.0) * Meta.steam_mul() * Heroes.steam_regen_mul(role) * delta)
-	# On the survivor field LB / LT are the two ACTIVE SKILLS (SurvActives).
-	blocking = _pressed("block") and steam > 2.0 and not downed and not trick_hold and not FIELD and _sh_t <= 0.0
+	# On the survivor field L1 / L2 are the two ACTIVE SKILLS (SurvActives).
+	blocking = _pressed("block") and steam > 2.0 and not downed and not trick_hold and not FIELD and _sh_t <= 0.0 and not _all_four()
 	if _sh_t > 0.0:
 		_sh_t -= delta
 	if tape_t > 0.0:
@@ -1449,7 +1449,7 @@ func _combat() -> void:
 		_duck_tap = _clock
 	if _just("jump"):
 		_combo_press("J")
-	if attack_cd == 0 and _just("dash") and not dashing:
+	if attack_cd == 0 and _just("dash") and not dashing and not _all_four():
 		if y > 0.45 and plane == "street":
 			_slide()
 		else:
@@ -1457,8 +1457,12 @@ func _combat() -> void:
 			_dash()
 	if _street_grounded() or (plane == "roof" and is_on_floor()):
 		_try_vault()
+	if not FIELD and _all_four() and (_just("block") or _just("throw") or _just("shoot") or _just("dash")):
+		# L1 + L2 + R1 + R2 all held: throw what is in your hands (or a knife).
+		_toss()
+		return
 	if _just("throw") and not FIELD:
-		_throw()
+		_l2_tap()
 	if _just("special"):
 		if string_n >= 2:
 			_attack("gut-punch", false)
@@ -1473,7 +1477,7 @@ func _combat() -> void:
 			_attack("air-mix", false)
 			return
 		_special()
-	if _just("shoot"):
+	if _just("shoot") and not _all_four():
 		if _pressed("block") and arts and arts.try_super():
 			return
 		_shoot()
@@ -1575,7 +1579,7 @@ func _combat() -> void:
 func _tick_run(x: float) -> void:
 	var dir := int(signf(x)) if absf(x) > 0.35 else 0
 	var hard := absf(x) > 0.6
-	# Walking is the default; RUN is held (DASH / RT). The old double-tap run
+	# Walking is the default; RUN is held (DASH / R2). The old double-tap run
 	# kicked in by accident while fighting back and forth.
 	if hard and dir != 0 and _last_x_dir == 0:
 		_tap_dir = dir
@@ -1858,6 +1862,10 @@ func _attack(kind: String, charged: bool) -> void:
 	if kind != "light":
 		_strike_grade = ""
 	anim_atk = _sprite_clip(kind)
+	# A pipe (or anything held like one) in the hand: a real weapon swing,
+	# not a punch with a pipe stuck to the fist.
+	if pickup in SWING_HELD and _anim != null and _anim.sprite_frames.has_animation("swing") and kind in SWING_KINDS:
+		anim_atk = "swing"
 	# MASTERY: the more this move is thrown, the better it gets.
 	Mastery.use(role, anim_atk, global_position)
 	move_mul *= Mastery.power(role, anim_atk) * move_mul_bonus
@@ -2833,6 +2841,12 @@ func take_hit(kind: String, from: Node) -> void:
 	if armored and kind == "light":
 		Juice.flash_red(visual, 1)
 		return
+	# The heavy bag swings back on its spring: a shove you read, never damage.
+	if from is TrainingDummy:
+		Juice.flash_red(visual, 1)
+		Juice.popup_number(global_position + Vector2(0, -92), "GUARD UP", Color(1.0, 0.75, 0.35))
+		velocity.x = -float(facing) * 120.0
+		return
 	if _sense_dodge(kind):
 		return
 	if web_anchor:
@@ -3414,15 +3428,15 @@ func _rs_flick() -> bool:
 
 ## Right-stick fighting (Fight Night "total punch control", made for a
 ## brawler): the stick's PATH is the punch, read when it springs back.
-##   flick forward ......... jab          (LB held: body jab)
-##   quarter circle ........ hook         (LB held: body hook)
+##   flick forward ......... jab          (L1 held: body jab)
+##   quarter circle ........ hook         (L1 held: body hook)
 ##   half circle up ........ uppercut (launches; air follow-ups juggle)
 ##   full circle ........... spinning backfist
 ##   down .................. gut punch / stomp a downed thug
 ##   pull back, push ....... haymaker; held back over a second it charges
 ##                           a crouching two-hand MEGA PUNCH
 ##   back .................. turn round and strike
-## With RT (dash) held the same paths are kicks: front kick, roundhouse,
+## With R2 (dash) held the same paths are kicks: front kick, roundhouse,
 ## high kick, low kick that takes the legs.
 const RS_MOVES := {
 	# The hand-by-hand button strikes (X right, Y left).
@@ -3446,16 +3460,17 @@ const RS_MOVES := {
 ## Dojo moves (bought, then drilled 3x on the dummy) and what comes out
 ## instead before that.
 ## Shoulder strikes: hold a shoulder and hit a face button.
-##   LB (guard) + LIGHT = body hook     LB + HEAVY = liver shot (heavier body hook)
-##   RT (run)   + LIGHT = side hook     RT + HEAVY = overhand haymaker
-const SHOULDER := {"block:L": "body_r", "block:H": "body_l", "dash:L": "hook_r", "dash:H": "haymaker"}
+##   L1 (guard) + LIGHT = body hook     L1 + HEAVY = liver shot (heavier body hook)
+##   R2 (run)   + LIGHT = side hook     R2 + HEAVY = overhand haymaker
+##   L2 (kick)  + LIGHT = front kick    L2 + HEAVY = high kick
+const SHOULDER := {"block:L": "body_r", "block:H": "body_l", "dash:L": "hook_r", "dash:H": "haymaker", "throw:L": "front_kick", "throw:H": "high_kick"}
 var _sh_t := 0.0
 
 
 func _shoulder_strike(btn: String) -> bool:
 	if FIELD or plane != "street" or hop < -4.0:
 		return false
-	var mod := "block" if _pressed("block") else ("dash" if _pressed("dash") else "")
+	var mod := "throw" if _pressed("throw") else ("block" if _pressed("block") else ("dash" if _pressed("dash") else ""))
 	if mod == "":
 		return false
 	var kind := str(SHOULDER.get(mod + ":" + btn, ""))
@@ -3465,7 +3480,8 @@ func _shoulder_strike(btn: String) -> bool:
 		kind = str(RS_LEARN[kind])
 	if mod == "block" and btn == "H":
 		move_mul_bonus = 1.45
-	_last_hand = "L" if btn == "H" else "R"
+	if mod != "throw":
+		_last_hand = "L" if btn == "H" else "R"
 	_sh_t = 0.35
 	blocking = false
 	_last_kind = kind
@@ -3597,7 +3613,7 @@ func _rs_fire(pts: PackedVector2Array, back_t: float) -> bool:
 	if slot == "back" or slot == "k_back":
 		_face(-float(facing))
 	var id := StickBook.move_at(role, slot)
-	# Guard (LB) held turns the flick and the hook to the body.
+	# Guard (L1) held turns the flick and the hook to the body.
 	if body and slot == "flick":
 		id = "gut"
 	elif body and slot == "circle":
@@ -3652,18 +3668,88 @@ func _throw_held_weapon() -> bool:
 	return true
 
 
+## The four shoulder buttons held together (L1 + L2 + R1 + R2).
+func _all_four() -> bool:
+	return _pressed("block") and _pressed("throw") and _pressed("shoot") and _pressed("dash")
+
+
+var _l2_t := -9.0
+
+
+## L2 on its own: catch something thrown at you; tapped twice quickly, the
+## suit gadget (batwing, shuriken, web). Held, it is the kick button (L2 + X
+## front kick, L2 + Y high kick); grabs and pickups are X + Y together.
+func _l2_tap() -> void:
+	if _try_catch():
+		return
+	if _clock - _l2_t < 0.32:
+		_l2_t = -9.0
+		_suit_gadget()
+		return
+	_l2_t = _clock
+
+
+## L1 + L2 + R1 + R2: throw the weapon in your hands, else a belt knife.
+func _toss() -> void:
+	if attack_cd > 0 or downed:
+		return
+	blocking = false
+	if _throw_held_weapon():
+		_throw_clip()
+		return
+	if knives > 0 and not vs_mode:
+		knives -= 1
+		attack_cd = 14
+		ThrowKnife.throw_from(self)
+		_throw_clip()
+		return
+	Juice.popup_number(global_position + Vector2(0, -96), "NOTHING TO THROW", Palette.MUTED)
+
+
+## X + Y standing on a weapon: crouch, take it (swap what you held).
+func pick_up(wp: WeaponPickup) -> void:
+	if wp == null or not is_instance_valid(wp):
+		return
+	_cancel_strike()
+	wp.take(self)
+	attack_cd = 14
+	charge_frames = 0
+	art_lock = 0.32
+	art_vx = 0.0
+	if _anim == null:
+		return
+	for c in ["pickup", "duck", "crouch"]:
+		if _anim.sprite_frames.has_animation(c):
+			anim_atk = c
+			_atk_t = 0.34
+			_anim.stop()
+			_anim.play(c, 1.0 if c == "pickup" else 1.6)
+			return
+
+
+func _throw_clip() -> void:
+	if _anim == null:
+		return
+	for c in ["throw_item", "gun_throw", "jab"]:
+		if _anim.sprite_frames.has_animation(c):
+			anim_atk = c
+			_atk_t = 0.3
+			_anim.stop()
+			_anim.play(c, 1.3)
+			break
+	Mixer.play_sfx("res://assets/audio/sfx/whoosh_spin.ogg", 1.4, -6.0)
+
+
+## X + Y basic throw (no grab art for this stick direction): shove the
+## thug in reach away and down.
 func _throw() -> void:
 	if _try_catch():
 		return
-	# Standing on a weapon: THROW picks it up (or swaps for the one in hand).
 	var wp := WeaponPickup.under(self)
 	if wp != null and attack_cd == 0:
-		wp.take(self)
-		attack_cd = 8
+		pick_up(wp)
 		return
 	if attack_cd > 0:
-		return
-	if _throw_held_weapon():
 		return
 	attack_cd = 18
 	Juice.play("res://assets/audio/throw.wav")
@@ -3705,13 +3791,7 @@ func _throw() -> void:
 		Juice.shout("DISARMED")
 		_grab_clip()
 		return
-	if knives > 0 and not vs_mode:
-		knives -= 1
-		attack_cd = 14
-		ThrowKnife.throw_from(self)
-		_restart_clip_throw()
-		return
-	_suit_gadget()
+	attack_cd = 6
 
 
 ## The hands-on part of a throw: reach, grab, wrench and shove (the
@@ -3726,15 +3806,6 @@ func _grab_clip() -> void:
 			_anim.stop()
 			_anim.play(c, 1.8 if c == "b_grab_break" else 1.0)
 			return
-
-
-func _restart_clip_throw() -> void:
-	if _anim and _anim.sprite_frames.has_animation("jab"):
-		anim_atk = "jab"
-		_atk_t = 0.22
-		_anim.stop()
-		_anim.play("jab")
-	Mixer.play_sfx("res://assets/audio/sfx/whoosh_spin.ogg", 1.4, -6.0)
 
 
 func equip_pickup(kind: String) -> void:
@@ -4174,6 +4245,9 @@ var _melee_trail: Line2D
 var _melee_ang := -1.9
 static var _held_cache: Dictionary = {}
 static var _front_cache: Dictionary = {}
+## Held weapons that swing with the drawn SWING clip (a pipe-shaped thing).
+const SWING_HELD := ["pipe", "crowbar", "baseball_bat"]
+const SWING_KINDS := ["light", "heavy", "gut-punch", "punch_r", "hook_r", "body_r", "punch_l", "hook_l", "upper_l", "body_l"]
 const LIGHT_MELEE := ["knife", "stapler", "clipboard", "machete"]
 
 
@@ -4235,7 +4309,9 @@ func _front_hand() -> Vector2:
 ## the wind-up, whipped through on contact (with a trail), settling after.
 func _place_melee(delta: float) -> void:
 	var path := "res://assets/sprites/held/%s.png" % pickup
-	var want := pickup != "" and not (pickup in GUNS) and _anim != null and not downed and ResourceLoader.exists(path)
+	# The swing and pickup clips draw the weapon in the hand themselves.
+	var drawn := anim_atk == "pickup" or (anim_atk == "swing" and _anim != null and _anim.animation == "swing")
+	var want := pickup != "" and not (pickup in GUNS) and _anim != null and not downed and ResourceLoader.exists(path) and not drawn
 	if not want:
 		if _melee:
 			_melee.visible = false

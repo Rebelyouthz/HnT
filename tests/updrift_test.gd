@@ -6,6 +6,9 @@ extends SceneTree
 ## (light or heavy), with no drift; walking up and punching stays a jab.
 ## Prints UPDRIFT OK.
 
+## The uppercut art: the old clip or the right / left hand ones.
+const UPPERS := ["uppercut", "upper_r", "upper_l"]
+
 var _n := 0
 var ok := true
 var _hero: Node2D
@@ -59,7 +62,7 @@ func _process(_d: float) -> bool:
 	if _n == 204:
 		Input.action_press("p1_up")
 	if _n == 207:
-		_check(str(_hero.get("_strike_clip")) == "uppercut", "light then up = uppercut (got %s)" % _hero.get("_strike_clip"))
+		_check(str(_hero.get("_strike_clip")) in UPPERS, "light then up = uppercut (got %s)" % _hero.get("_strike_clip"))
 	if _n == 235:
 		Input.action_release("p1_up")
 		_check(absf(_hero.global_position.y - _y0) < 3.0, "light then up stays put (dy %.1f)" % (_hero.global_position.y - _y0))
@@ -71,7 +74,7 @@ func _process(_d: float) -> bool:
 	if _n == 312:
 		Input.action_release("p1_light")
 	if _n == 316:
-		_check(str(_hero.get("_strike_clip")) != "uppercut", "walk up + light is a jab (got %s)" % _hero.get("_strike_clip"))
+		_check(not (str(_hero.get("_strike_clip")) in UPPERS), "walk up + light is a jab (got %s)" % _hero.get("_strike_clip"))
 	if _n == 330:
 		Input.action_release("p1_up")
 	# HEAVY held, UP 6 frames later, release: uppercut, feet still.
@@ -83,7 +86,7 @@ func _process(_d: float) -> bool:
 	if _n == 380:
 		Input.action_release("p1_heavy")
 	if _n == 384:
-		_check(str(_hero.get("_strike_clip")) == "uppercut", "heavy then up = uppercut (got %s)" % _hero.get("_strike_clip"))
+		_check(str(_hero.get("_strike_clip")) in UPPERS, "heavy then up = uppercut (got %s)" % _hero.get("_strike_clip"))
 	if _n == 410:
 		Input.action_release("p1_up")
 		_check(absf(_hero.global_position.y - _y0) < 3.0, "heavy then up stays put (dy %.1f)" % (_hero.global_position.y - _y0))

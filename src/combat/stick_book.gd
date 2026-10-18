@@ -5,7 +5,7 @@ extends RefCounted
 ## a stick path lives here; the face buttons keep the rest (Moves slots:
 ## air strikes, jumping kicks, the string ender ...).
 ##   Each stick PATH is a slot holding one move. Punch paths take punches,
-##   RT + path takes kicks. Learning a strike asks EQUIP NOW? (EquipPrompt):
+##   R2 + path takes kicks. Learning a strike asks EQUIP NOW? (EquipPrompt):
 ##   it goes in a free path, or you pick which one it replaces.
 ## Paths, read when the stick springs back (in the facing direction):
 ##   flick ............ flick forward          diag_up ..... flick up-forward
@@ -22,9 +22,9 @@ const NAME := {
 	"flick": "FLICK  ▶", "diag_up": "FLICK  ◥", "diag_down": "FLICK  ◢", "down": "FLICK  ▼",
 	"circle": "QUARTER CIRCLE", "upper": "HALF CIRCLE UP", "spin": "FULL CIRCLE", "back": "FLICK  ◀",
 	"windup": "PULL BACK + PUSH", "charge": "HOLD BACK 1s + PUSH",
-	"k_flick": "RT + FLICK  ▶", "k_diag_up": "RT + FLICK  ◥", "k_down": "RT + FLICK  ▼",
-	"k_circle": "RT + QUARTER CIRCLE", "k_upper": "RT + HALF CIRCLE UP", "k_spin": "RT + FULL CIRCLE",
-	"k_windup": "RT + PULL BACK + PUSH",
+	"k_flick": "R2 + FLICK  ▶", "k_diag_up": "R2 + FLICK  ◥", "k_down": "R2 + FLICK  ▼",
+	"k_circle": "R2 + QUARTER CIRCLE", "k_upper": "R2 + HALF CIRCLE UP", "k_spin": "R2 + FULL CIRCLE",
+	"k_windup": "R2 + PULL BACK + PUSH",
 }
 ## What a fresh hero has on the stick. Slots whose move is not learned yet
 ## stand EMPTY (the plain strike comes out) until something is equipped.

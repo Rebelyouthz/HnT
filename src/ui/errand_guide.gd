@@ -35,7 +35,7 @@ const TOLD := {
 
 const QUEST_TOLD := [
 	{"who": "father", "text": "Benny left plans on the wall. A QUEST BOARD: street jobs, side money."},
-	{"who": "son", "text": "Board first, then the couch. Two builds, then we go back out."},
+	{"who": "son", "text": "Board tonight. The couch and the skill tree after we've been back out."},
 ]
 
 var _map := ""
@@ -118,9 +118,20 @@ static func steps(map_id: String) -> Array:
 	if not fs.is_empty():
 		out.append(fs)
 	elif r != "" and int(FamilyProfile.data.get("gold", 0)) >= FamilyProfile.build_cost(r):
+		# Tonight's room is tonight's thing.
 		out.append({"what": "BUILD", "id": r, "name": room_name(r), "gold": FamilyProfile.build_cost(r), "rep": 0, "parts": {}, "night": true})
+		if _story_waits(map_id):
+			return out
+	# The room went up tonight: a boss gate's buy (the map can still be
+	# played, only its boss is barred) waits until after the next run.
+	if _story_waits(map_id) and int(FamilyProfile.data.get("night_room_run", -9)) == int(FamilyProfile.data.get("runs", 0)):
+		return out
 	out.append_array(PowerBook.path(map_id))
 	return out
+
+
+static func _story_waits(map_id: String) -> bool:
+	return str(PowerBook.spec(map_id).get("when", "enter")) == "boss"
 
 
 ## Ember is home and nothing was forged yet: walk to the anvil and make the
@@ -151,6 +162,7 @@ static func ensure(host: Node) -> void:
 	PowerBook.fund(m)
 	# The QUEST BOARD is the first room of the plan: Benny's lumber money
 	# covers what is short, once.
+	var quest_now := false
 	if night_room() == "bounty_board" and not bool(FamilyProfile.data.get("quest_fund", false)):
 		FamilyProfile.data["quest_fund"] = true
 		var short := FamilyProfile.build_cost("bounty_board") - int(FamilyProfile.data.get("gold", 0))
@@ -158,13 +170,17 @@ static func ensure(host: Node) -> void:
 			FamilyProfile.data["gold"] = int(FamilyProfile.data.get("gold", 0)) + short
 		FamilyProfile.save()
 		Guide.play(host, "errand_quest_board", voiced(QUEST_TOLD), 1.6)
+		quest_now = true
 	var g := ErrandGuide.new()
 	g._map = m
 	tree.root.add_child(g)
-	var told := "errand_told_" + m
-	if TOLD.has(m) and not bool(FamilyProfile.data.get(told, false)):
-		FamilyProfile.data[told] = true
-		FamilyProfile.save()
+	# Dad and the Kid say what the gate needs the night its buys are on the
+	# list (not the quest board night), and until the talk has really played.
+	var on_list := false
+	for st in steps(m):
+		if not bool((st as Dictionary).get("night", false)) and str((st as Dictionary).get("what", "")) != "FORGE":
+			on_list = true
+	if TOLD.has(m) and on_list and not quest_now and not Guide.done("errand_" + m):
 		Guide.play(host, "errand_" + m, voiced(TOLD[m]), 1.6)
 
 

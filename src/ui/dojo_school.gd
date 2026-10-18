@@ -15,14 +15,15 @@ const LESSONS := [
 	{"id": "light", "title": "RIGHT HAND", "pad": "X  X  X", "key": "J  J  J", "line": "X is the right hand: straight, hook, body shot. Down + X goes to the body.", "need": 3},
 	{"id": "heavy", "title": "LEFT HAND", "pad": "Y  Y  Y", "key": "K  K  K", "line": "Y is the left hand: jab, hook, uppercut. Forward + Y is the big hook, hold Y for the power punch.", "need": 2},
 	{"id": "upper", "req": "uppercut", "title": "UPPERCUT", "pad": "Y, THEN UP  or  RS UP", "key": "J OR K, THEN W", "line": "Hit first, then push up straight after: the blow turns into the launcher on the spot (or flick the right stick up).", "need": 1},
-	{"id": "low", "title": "LOW SLIDE", "pad": "DOWN + RT", "key": "S + SHIFT", "line": "Down and dash: slide in under the guard.", "need": 1},
+	{"id": "low", "title": "LOW SLIDE", "pad": "DOWN + R2", "key": "S + SHIFT", "line": "Down and dash: slide in under the guard.", "need": 1},
 	{"id": "air", "title": "JUMP KICK", "pad": "A, then X or Y", "key": "SPACE, then J or K", "line": "Jump and strike in the air.", "need": 1},
 	{"id": "rs_jab", "req": "pad", "title": "RIGHT STICK CROSS", "pad": "R-STICK  flick ▶", "key": "-", "line": "Flick the right stick toward the dummy and let go: a cross. The stick's path is the punch, and the stick has its own moves (MOVES > STICK).", "need": 2},
 	{"id": "rs_hook", "req": "pad", "title": "RIGHT STICK HOOK", "pad": "R-STICK  quarter circle ▲ ▶", "key": "-", "line": "Swing the right stick in a quarter circle that ends toward the dummy: a hook to the jaw.", "need": 2},
-	{"id": "sh_body", "title": "BODY HOOK", "pad": "HOLD LB + X", "key": "HOLD I + J", "line": "Hold guard and press X: a right hook into the ribs. Hold guard and press Y: the slower left LIVER SHOT.", "need": 2},
-	{"id": "sh_hook", "title": "SIDE HOOK", "pad": "HOLD RT + X", "key": "HOLD SHIFT + J", "line": "Hold run and punch: a wide hook from the side. RT + Y is the overhand, once the dojo taught you the haymaker.", "need": 2},
-	{"id": "throw", "title": "THROW", "pad": "LT", "key": "U", "line": "Up close: grab and throw.", "need": 1},
-	{"id": "block", "title": "BLOCK", "pad": "LB + STICK HEIGHT", "key": "I + W / S", "line": "The dummy swings now. Hold block and point the stick at the height over its head.", "need": 2, "spar": true},
+	{"id": "sh_body", "title": "BODY HOOK", "pad": "HOLD L1 + X", "key": "HOLD I + J", "line": "Hold guard and press X: a right hook into the ribs. Hold guard and press Y: the slower left LIVER SHOT.", "need": 2},
+	{"id": "sh_hook", "title": "SIDE HOOK", "pad": "HOLD R2 + X", "key": "HOLD SHIFT + J", "line": "Hold run and punch: a wide hook from the side. R2 + Y is the overhand, once the dojo taught you the haymaker.", "need": 2},
+	{"id": "kick", "title": "KICKS", "pad": "HOLD L2 + X  /  L2 + Y", "key": "HOLD U + J  /  U + K", "line": "L2 is the kick trigger. Hold it and press X: a front kick. Hold it and press Y: a high kick.", "need": 2},
+	{"id": "throw", "title": "THROW", "pad": "X + Y TOGETHER", "key": "J + K TOGETHER", "line": "Up close, both hands at once: grab and throw.", "need": 1},
+	{"id": "block", "title": "BLOCK", "pad": "L1 + STICK HEIGHT", "key": "I + W / S", "line": "The dummy swings now. Hold block and point the stick at the height over its head.", "need": 2, "spar": true},
 	{"id": "combo", "req": "later", "title": "COMBO", "pad": "SEE THE BOARD", "key": "SEE THE BOARD", "line": "Land any combo from the board. Press as the ring on your body closes.", "need": 1},
 	{"id": "art", "req": "later", "title": "ELEMENT ART", "pad": "X + Y", "key": "J + K", "line": "Both attack buttons together, away from the dummy. Your CHI ring is full for this lesson.", "need": 1, "chi": true},
 	{"id": "grab", "req": "later", "title": "GRAB", "pad": "X + Y  (CLOSE)", "key": "J + K  (CLOSE)", "line": "The same buttons right next to the dummy: a grab.", "need": 1},
@@ -216,6 +217,8 @@ func _on_struck(kind: String) -> void:
 			_tick("air")
 		"throw":
 			_tick("throw")
+		"front_kick", "high_kick", "low_kick":
+			_tick("kick")
 		"hook", "hook_r":
 			_tick("sh_hook" if hero and float(hero.get("_sh_t")) > 0.0 else "rs_hook")
 		"body_hook", "body_r", "body_l":
@@ -289,9 +292,9 @@ func _process(delta: float) -> void:
 				_tick("art")
 			elif hero.chi < 20.0 and hero.art_lock <= 0.0:
 				hero.chi = Elements.CHI_MAX
-		"grab":
+		"grab", "throw":
 			if int(FamilyProfile.data.get("grabs_landed", 0)) > int(_base["grabs"]):
-				_tick("grab")
+				_tick(id)
 		"team":
 			if int(FamilyProfile.data.get("team_attacks", 0)) > int(_base["team"]):
 				_tick("team")

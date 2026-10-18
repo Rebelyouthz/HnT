@@ -3,6 +3,7 @@ extends Node2D
 
 ## Element arts, Tekken-style grabs and Dad + Son team attacks for one
 ## fighter (a child of the Fighter; runs just before it each physics frame).
+##   LIGHT + HEAVY together on a weapon            -> PICK IT UP
 ##   LIGHT + HEAVY together, a thug in arm's reach -> GRAB (neutral / fwd / back)
 ##   LIGHT + HEAVY together otherwise            -> ELEMENT ART (stick: N F U D)
 ##   hold HEAVY, tap SPECIAL with TEAM full      -> TEAM ATTACK (stick: N F U/D)
@@ -134,7 +135,7 @@ func _physics_process(delta: float) -> void:
 		_start_lh()
 
 
-## LB + RB: the hero's BONE YARD super on a broken thug in reach. True
+## L1 + R1: the hero's BONE YARD super on a broken thug in reach. True
 ## when the press was used (even to say the meter isn't full yet).
 func try_super() -> bool:
 	if _seq != "" or not _can_start():
@@ -304,6 +305,11 @@ func perform(kind: String, id: String) -> void:
 
 func _start_lh() -> void:
 	var d := _stick_dir()
+	# Standing on a weapon: X + Y picks it up (swaps what you hold).
+	var wp := WeaponPickup.under(f)
+	if wp != null:
+		f.pick_up(wp)
+		return
 	var near := _nearest(GRAB_REACH, GRAB_DEPTH)
 	if near != null and d != "U" and d != "D" and not (near is ActBoss) and near.vehicle == "":
 		if BrutalBook.broken(near):
@@ -564,6 +570,9 @@ const GRAB_SHAPES := {
 func _start_grab(e: Punk, d: String) -> void:
 	var g := Elements.grab_for(f.role, d)
 	if g.is_empty() or not GRAB_SHAPES.has(str(g["id"])):
+		f._cancel_strike()
+		f.attack_cd = 0
+		f._throw()
 		return
 	_row = g
 	_id = str(g["id"])

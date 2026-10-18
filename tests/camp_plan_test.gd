@@ -1,8 +1,8 @@
 extends SceneTree
 
 ## The hideout plan after the first night out: the QUEST BOARD is tonight's
-## build (the arrow's first step), then the THERAPY COUCH (skill tree) from
-## the story gate; two rooms a night, then a run resets the count.
+## only build; the THERAPY COUCH (skill tree) from the story gate comes after
+## the next run, never the same night.
 ## Prints CAMP PLAN OK.
 
 var _n := 0
@@ -34,16 +34,19 @@ func _process(_d: float) -> bool:
 	if not fp.call("try_build", "bounty_board"):
 		fail.append("quest board would not build")
 	steps = guide.call("steps", "dock_street")
-	if steps.is_empty() or str(steps[0].get("id", "")) != "therapy_couch":
-		fail.append("second step not the couch: %s" % [steps])
-	fp.call("try_build", "therapy_couch")
-	if int(d.get("night_builds", 0)) != 2:
-		fail.append("night_builds %d after two rooms" % int(d.get("night_builds", 0)))
-	if str(guide.call("night_room")) != "":
-		fail.append("a third room offered the same night")
+	if not steps.is_empty():
+		fail.append("the skill tree came the same night as the board: %s" % [steps])
+	# A night out, then home: now the couch (skill tree) and THICK SKIN.
 	fp.call("mark_run_finished", false)
 	if int(d.get("night_builds", 0)) != 0:
 		fail.append("a night out did not reset the count")
+	steps = guide.call("steps", "dock_street")
+	var ids: Array = steps.map(func(x: Dictionary) -> String: return str(x.get("id", "")))
+	if not ids.has("therapy_couch"):
+		fail.append("couch not on the list after the run: %s" % [ids])
+	fp.call("try_build", "therapy_couch")
+	if not fp.call("is_built", "therapy_couch"):
+		fail.append("couch would not build")
 	app.set("difficulty", keep)
 	fp.call("reset_progress")
 	if FileAccess.file_exists("user://family.plan_backup.json"):

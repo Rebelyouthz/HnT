@@ -69,7 +69,7 @@ func _physics_process(_delta: float) -> void:
 		for i in 4:
 			var act := StringName("%sslot%d" % [str(f.prefix), i + 1])
 			if InputMap.has_action(act) and Input.is_action_just_pressed(act):
-				# On a pad the d-pad also moves: the belt wants LB held with it
+				# On a pad the d-pad also moves: the belt wants L1 held with it
 				# (keys 1-4 work alone).
 				if _from_pad(act) and not Input.is_action_pressed(StringName(str(f.prefix) + "block")):
 					continue

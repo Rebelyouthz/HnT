@@ -407,6 +407,10 @@ func try_build(id: String) -> bool:
 	data["gold"] = int(data["gold"]) - cost
 	if building_level(id) == 0:
 		data["night_builds"] = int(data.get("night_builds", 0)) + 1
+		# Tonight's room (not a story shop): the story buy waits for the
+		# next night out (ErrandGuide.steps), one errand a night.
+		if not PowerBook.story_shops().has(id):
+			data["night_room_run"] = int(data.get("runs", 0))
 	data["buildings"][id] = building_level(id) + 1
 	data["buildings_tapped"] = int(data["buildings_tapped"]) + 1
 	_bump_daily("build")

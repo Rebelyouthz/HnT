@@ -322,7 +322,7 @@ func _build_info() -> void:
 	_i_btns.add_theme_constant_override("separation", 10)
 	info.add_child(_i_btns)
 	var how := Label.new()
-	how.text = "IN A FIGHT: beat a thug under half health and GRAB him (LIGHT + HEAVY); the stick picks the move. SUPERS: fill FURY, then BLOCK + SHOOT (LB + RB)."
+	how.text = "IN A FIGHT: beat a thug under half health and GRAB him (LIGHT + HEAVY); the stick picks the move. SUPERS: fill FURY, then BLOCK + SHOOT (L1 + R1)."
 	how.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	how.custom_minimum_size = Vector2(370, 0)
 	UiKit.apply_label(how, 11, Palette.MUTED)

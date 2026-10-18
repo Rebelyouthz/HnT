@@ -5,7 +5,7 @@ extends Object
 ## reverse tree in the dojo (data/brutal.json), then drilled 3 times on the
 ## dummy before they work in the street. Done with a GRAB on a BROKEN thug
 ## (under 45% health): neutral, forward or back picks the move; supers
-## need the FURY meter full and go off with LB + RB.
+## need the FURY meter full and go off with L1 + R1.
 
 const PATH := "res://data/brutal.json"
 const BROKEN := 0.45

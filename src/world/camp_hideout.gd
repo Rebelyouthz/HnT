@@ -1039,7 +1039,9 @@ func _construct(st: Dictionary, paid := false) -> void:
 		for b: Variant in list:
 			if b is Dictionary and str((b as Dictionary)["id"]) == id:
 				info = b
-	Juice.carpenter(str(info.get("name", st["name"])), str(info.get("unlocks", "CAMP")), str(st["id"]))
+	# Bought from the menu: its UNLOCKED banner already played there.
+	if not paid:
+		Juice.carpenter(str(info.get("name", st["name"])), str(info.get("unlocks", "CAMP")), str(st["id"]))
 	_talk.play([{"who": "benny", "text": "%s. Built to code. Our code." % str(st["name"]).capitalize()}], true)
 	await get_tree().create_timer(1.2).timeout
 	for p in planks:

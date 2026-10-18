@@ -2,7 +2,7 @@ class_name WeaponPickup
 extends Area2D
 
 ## A weapon lying on the street. Walking over it shows PICK UP (or SWAP when
-## the hands are full); the THROW button (LT / U) takes it, dropping what you
+## the hands are full); X + Y together (J + K) takes it, dropping what you
 ## held in its place. Nothing is picked up by just walking past.
 
 var kind := "pipe"
@@ -111,7 +111,7 @@ func _process(_delta: float) -> void:
 	var f := _standing()
 	_prompt.visible = f != null
 	if f != null:
-		var key := "LT" if not Input.get_connected_joypads().is_empty() else "U"
+		var key := "X+Y" if not Input.get_connected_joypads().is_empty() else "J+K"
 		_prompt.text = "%s  %s %s" % [key, "SWAP" if f.pickup != "" else "PICK UP", kind.to_upper().replace("_", " ")]
 
 
@@ -123,7 +123,7 @@ func _standing() -> Fighter:
 	return null
 
 
-## The weapon this hero stands on, for the THROW button.
+## The weapon this hero stands on (X + Y picks it up).
 static func under(f: Fighter) -> WeaponPickup:
 	for n in f.get_tree().get_nodes_in_group("weapon_pickups"):
 		var w := n as WeaponPickup

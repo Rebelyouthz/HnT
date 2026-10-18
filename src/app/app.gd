@@ -99,6 +99,11 @@ func start_run() -> void:
 		current_map = "dock_street"
 		enter_map("dock_street")
 		return
+	# The prologue and the alley lesson play once: never again after a night
+	# out (WATCH INTRO / the RUN tab button still replay them on purpose).
+	if not force_intro and int(FamilyProfile.data.get("runs", 0)) > 0 and not bool(FamilyProfile.data.get("intro_done", false)):
+		FamilyProfile.data["intro_done"] = true
+		FamilyProfile.save()
 	if force_intro or not bool(FamilyProfile.data.get("intro_done", false)):
 		force_intro = false
 		current_map = "dock_street"

@@ -11,7 +11,7 @@ extends RunAct
 
 const BAG_X := 640.0
 const BAG2_X := 1360.0
-const PIPE_X := 1120.0
+const PIPE_X := BAG_X - 110.0
 const END_X := 2200.0
 
 var _film2 := false
@@ -30,24 +30,24 @@ var _key_lab: Label
 
 ## [title, pad keys, keyboard keys, coach lines, gate x while it runs]
 var _lessons := [
-	["WALK TO THE BAG", "LEFT STICK  ·  HOLD RT TO RUN", "A / D / W / S  ·  HOLD SHIFT TO RUN",
+	["WALK TO THE BAG", "LEFT STICK  ·  HOLD R2 TO RUN", "A / D / W / S  ·  HOLD SHIFT TO RUN",
 		[["father", "Basement's too small. Out back. Walk to the bag."]], BAG_X - 90.0],
 	["RIGHT HAND  ×3", "X  ·  RIGHT HAND", "J  /  LEFT MOUSE",
 		[["father", "Jab. Fast and small. Three of them."]], BAG_X + 60.0],
 	["LEFT HAND  ×2", "Y  ·  LEFT HAND  ·  HOLD FOR POWER", "K  /  MIDDLE MOUSE",
 		[["son", "Can I just hit it really hard?"], ["father", "That's a heavy. Plant your feet. Two."]], BAG_X + 60.0],
-	["GUARD  ×2", "HOLD LB  ·  STICK UP / DOWN PICKS THE HEIGHT", "HOLD Q  ·  W / S PICKS THE HEIGHT",
+	["GUARD  ×2", "HOLD L1  ·  STICK UP / DOWN PICKS THE HEIGHT", "HOLD Q  ·  W / S PICKS THE HEIGHT",
 		[["father", "Now it swings back. Guard up and read the height."]], BAG_X + 60.0],
 	["JUMP", "A", "SPACE",
 		[["father", "Feet off the ground. Hop."]], BAG_X + 60.0],
-	["PICK UP THE PIPE", "STAND ON IT  ·  LT", "STAND ON IT  ·  U",
-		[["son", "There's a pipe."], ["father", "Stand on it and pick it up. Don't lick it."]], PIPE_X + 80.0],
+	["PICK UP THE PIPE", "STAND ON IT  ·  X + Y TOGETHER", "STAND ON IT  ·  J + K TOGETHER",
+		[["son", "There's a pipe."], ["father", "Stand on it, both hands. Pick it up. Don't lick it."]], BAG_X + 60.0],
 	["HIT THE BAG WITH IT  ×2", "X", "J",
 		[["father", "Second bag. Swing it. Twice."]], BAG2_X + 60.0],
-	["THROW THE PIPE", "LT", "U",
+	["THROW THE PIPE", "HOLD ALL FOUR  ·  L1 + L2 + R1 + R2", "HOLD I + U + O + SHIFT",
 		[["father", "Now throw it. A thrown pipe is a short conversation."]], BAG2_X + 60.0],
-	["THROW A KNIFE", "STEP BACK FROM THE BAG  ·  LT", "STEP BACK FROM THE BAG  ·  U",
-		[["father", "Knives on your belt. Step back and throw one. Nothing underfoot."]], BAG2_X + 60.0],
+	["THROW A KNIFE", "HANDS EMPTY  ·  HOLD L1 + L2 + R1 + R2", "HANDS EMPTY  ·  HOLD I + U + O + SHIFT",
+		[["father", "Knives on your belt. Same grip, all four. Throw one."]], BAG2_X + 60.0],
 	["BEAT THE LOOKOUTS", "EVERYTHING YOU JUST LEARNED", "EVERYTHING YOU JUST LEARNED",
 		[["", "TWO OF GANT'S LOOKOUTS. THEY HEARD THE NOISE."], ["father", "Real ones. Everything you just learned. Go."]], END_X],
 ]
@@ -75,10 +75,6 @@ func build_world() -> void:
 		AmbientProp.lamp(self, Vector2(x, 500.0), 3)
 	_bag = _make_bag(BAG_X)
 	_bag2 = _make_bag(BAG2_X)
-	var pipe := WeaponPickup.new()
-	pipe.kind = "pipe"
-	pipe.global_position = Vector2(PIPE_X, 500)
-	add_child(pipe)
 	_build_panel()
 
 
@@ -200,6 +196,8 @@ func _begin(i: int) -> void:
 	if _talk:
 		_talk.play(lines, true)
 	match i:
+		5:
+			_drop_pipe()
 		3:
 			_bag.mode = "spar"
 		4:
@@ -214,6 +212,33 @@ func _begin(i: int) -> void:
 		9:
 			_spawn_lookouts()
 			_coach_to(BAG2_X + 80.0)
+
+
+## The pipe lies right by the first bag when its lesson starts, a bobbing
+## arrow over it until it is in your hands.
+func _drop_pipe() -> void:
+	var pipe := WeaponPickup.new()
+	pipe.kind = "pipe"
+	var f := _hero()
+	var y := 500.0 if f == null else clampf(f.global_position.y + 4.0, 470.0, 530.0)
+	pipe.global_position = Vector2(PIPE_X, y)
+	add_child(pipe)
+	var arrow := Node2D.new()
+	arrow.z_index = 30
+	arrow.position = Vector2(0, -34)
+	pipe.add_child(arrow)
+	var tri := Polygon2D.new()
+	tri.polygon = PackedVector2Array([Vector2(-9, -7), Vector2(9, -7), Vector2(0, 6)])
+	tri.color = Palette.LEMON
+	arrow.add_child(tri)
+	var rim := Line2D.new()
+	rim.points = PackedVector2Array([Vector2(-9, -7), Vector2(9, -7), Vector2(0, 6), Vector2(-9, -7)])
+	rim.width = 2.0
+	rim.default_color = Color(0, 0, 0, 0.85)
+	arrow.add_child(rim)
+	var tw := arrow.create_tween().set_loops()
+	tw.tween_property(arrow, "position:y", -44.0, 0.4).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(arrow, "position:y", -34.0, 0.4).set_trans(Tween.TRANS_SINE)
 
 
 func _done_step() -> void:

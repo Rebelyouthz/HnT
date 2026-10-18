@@ -213,6 +213,11 @@ static func _add_clip(sf: SpriteFrames, root: String, clip: String, big := Vecto
 	sf.set_animation_speed(clip, float(info["fps"]))
 	for t in texs:
 		sf.add_frame(clip, t)
+	# Standing-easy idles cut from video never meet end to start exactly:
+	# play them forward then back, so the loop has no seam to hitch on.
+	if bool(info["loop"]) and bool(clip_meta(who, clip).get("pingpong", false)):
+		for i in range(texs.size() - 2, 0, -1):
+			sf.add_frame(clip, texs[i])
 
 
 ## Head-and-shoulders crop of the first idle cel (no empty cell margin),

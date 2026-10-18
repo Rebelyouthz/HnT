@@ -80,7 +80,7 @@ func _ready() -> void:
 	foot.add_theme_constant_override("separation", 14)
 	col.add_child(foot)
 	_hint = Label.new()
-	_hint.text = "UP/DOWN  pick    LEFT/RIGHT  change    LB / RB  or  Q / E  tabs    B / ESC  back"
+	_hint.text = "UP/DOWN  pick    LEFT/RIGHT  change    L1 / R1  or  Q / E  tabs    B / ESC  back"
 	_hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_hint.add_theme_font_override("font", UiKit.pixel_font())
 	UiKit.apply_label(_hint, 13, Palette.MUTED)

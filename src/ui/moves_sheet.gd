@@ -89,7 +89,7 @@ func _paint() -> void:
 	sc.add_child(body)
 	match _page:
 		"stick":
-			sub.text = "RIGHT STICK: every punch and kick that fits a stick path. The path is the move: flick, circle, pull back... Hold RT for the kick paths, LB turns the flick and the hook to the body. Empty paths throw a plain jab or front kick. Learn something new and it asks EQUIP NOW?"
+			sub.text = "RIGHT STICK: every punch and kick that fits a stick path. The path is the move: flick, circle, pull back... Hold R2 for the kick paths, L1 turns the flick and the hook to the body. Empty paths throw a plain jab or front kick. Learn something new and it asks EQUIP NOW?"
 			_stick_page(body)
 		"loadout":
 			sub.text = "Put any learned strike in any slot it fits. Heavier moves hit harder but come out slower and leave you open longer. GOLD %d" % int(FamilyProfile.data.get("gold", 0))
@@ -205,7 +205,7 @@ func _stick_page(body: VBoxContainer) -> void:
 	var lo := StickBook.loadout(role)
 	for type in ["punch", "kick"]:
 		var hl := Label.new()
-		hl.text = "PUNCHES  ·  STICK PATHS" if type == "punch" else "KICKS  ·  HOLD RT + PATH"
+		hl.text = "PUNCHES  ·  STICK PATHS" if type == "punch" else "KICKS  ·  HOLD R2 + PATH"
 		hl.add_theme_font_override("font", UiKit.title_font())
 		UiKit.apply_label(hl, 16, Palette.LEMON)
 		body.add_child(hl)

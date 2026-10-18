@@ -23,7 +23,7 @@
    60
   ],
   "kind": "combat",
-  "input": "LIGHT, LIGHT, HEAVY  ·  or RT + R-STICK quarter circle"
+  "input": "LIGHT, LIGHT, HEAVY  ·  or R2 + R-STICK quarter circle"
  },
  {
   "id": "stomp_finish",
@@ -362,8 +362,8 @@
    70
   ],
   "title": "HIGH KICK",
-  "line": "Hold RT, right stick half circle up: a kick to the head.",
-  "input": "RT + R-STICK  ▼ ▶ ▲"
+  "line": "Hold R2, right stick half circle up: a kick to the head.",
+  "input": "R2 + R-STICK  ▼ ▶ ▲"
  },
  {
   "id": "low_kick",
@@ -374,7 +374,7 @@
    56
   ],
   "title": "LOW KICK",
-  "line": "Hold RT, right stick down: kicks the legs out, he stumbles or drops.",
-  "input": "RT + R-STICK  ▼"
+  "line": "Hold R2, right stick down: kicks the legs out, he stumbles or drops.",
+  "input": "R2 + R-STICK  ▼"
  }
 ]

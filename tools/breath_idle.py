@@ -67,6 +67,7 @@ def main():
     ap.add_argument("--fps", type=float, default=16.0)
     ap.add_argument("--amp", type=float, default=2.6, help="shoulder rise in sheet px")
     ap.add_argument("--sway", type=float, default=0.6)
+    ap.add_argument("--out", default="idle", help="clip name to write")
     a = ap.parse_args()
     src_meta = json.loads((ROOT / a.who / f"{a.src}.json").read_text())
     sheet = Image.open(ROOT / a.who / f"{a.src}.png").convert("RGBA")
@@ -85,15 +86,17 @@ def main():
         out.paste(crop, (x, 0))
         fr.append({"x": x, "y": 0, "w": crop.width, "h": crop.height, "ox": b[0], "oy": b[1]})
         x += crop.width + 2
-    dst = json.loads((ROOT / a.who / "idle.json").read_text()) if (ROOT / a.who / "idle.json").exists() else {}
+    dst_json = ROOT / a.who / f"{a.out}.json"
+    dst = json.loads(dst_json.read_text()) if dst_json.exists() else {}
     dst.update({"cell": [cw, ch], "frames": fr, "fps": a.fps, "loop": True})
     for k in ("scale", "src_area"):
         if k in src_meta and k not in dst:
             dst[k] = src_meta[k]
     dst["breath_from"] = f"{a.src}:{a.frame}"
-    out.save(ROOT / a.who / "idle.png")
-    (ROOT / a.who / "idle.json").write_text(json.dumps(dst, indent=1))
-    print("idle:", len(fr), "frames @", a.fps, "fps from", a.src, a.frame, "sheet", out.size)
+    dst["frames"] = fr
+    out.save(ROOT / a.who / f"{a.out}.png")
+    dst_json.write_text(json.dumps(dst, indent=1))
+    print(a.out + ":", len(fr), "frames @", a.fps, "fps from", a.src, a.frame, "sheet", out.size)
 
 
 if __name__ == "__main__":

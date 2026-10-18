@@ -1,7 +1,7 @@
 extends Control
 
-## ACTIVE SKILLS (survivor lobby). The two slots up top (SKILL 1 = LB / Q,
-## SKILL 2 = LT / E) and every active below as a tile. Focus a tile to see
+## ACTIVE SKILLS (survivor lobby). The two slots up top (SKILL 1 = L1 / Q,
+## SKILL 2 = L2 / E) and every active below as a tile. Focus a tile to see
 ## it big with its cooldown and power; UNLOCK / LEVEL UP with S-COINS and
 ## put it in slot 1 or 2. Everything else in a run is a level-up card (see
 ## SURVIVOR CARDS).
@@ -111,7 +111,7 @@ func _slot(i: int, id: String) -> Control:
 	row.add_theme_constant_override("separation", 12)
 	box.add_child(row)
 	var key := Label.new()
-	key.text = "SKILL %d\n%s" % [i + 1, "LB  ·  Q" if i == 0 else "LT  ·  E"]
+	key.text = "SKILL %d\n%s" % [i + 1, "L1  ·  Q" if i == 0 else "L2  ·  E"]
 	UiKit.apply_label(key, 14, Palette.LEMON)
 	key.custom_minimum_size = Vector2(90, 0)
 	row.add_child(key)
