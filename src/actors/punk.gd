@@ -35,6 +35,8 @@ var _block_show := 0.0
 ## frame), then back up by playing the fall in reverse.
 var floored := 0.0
 var _getup_t := 0.0
+## Ground slams taken in this trip to the floor (two, then he rolls up).
+var ground_hits := 0
 const GETUP := 0.55
 var _alert := Color.WHITE
 var _bob := 0.0
@@ -472,6 +474,7 @@ func _physics_process(delta: float) -> void:
 			if cam and absf(global_position.x - cam.get_screen_center_position().x) < 280.0:
 				_codex_done = true
 				Discover.see("boss" if title in Discover.BOSSES else "enemy", title, title.to_upper())
+	_tick_floor(delta)
 	if flung:
 		_fling(delta)
 		return
@@ -508,17 +511,6 @@ func _physics_process(delta: float) -> void:
 		move_and_slide()
 		_mix_mod()
 		return
-	if _block_show > 0.0:
-		_block_show -= delta
-	if floored > 0.0:
-		floored -= delta
-		guarding = false
-		telegraph = 0.0
-		if floored <= 0.0:
-			_getup_t = GETUP
-			recover = maxf(recover, GETUP + 0.15)
-	elif _getup_t > 0.0:
-		_getup_t -= delta
 	if recover > 0.0:
 		recover -= delta
 		velocity.x = move_toward(velocity.x, 0.0, 200.0 * delta)
@@ -795,16 +787,54 @@ func _canal() -> void:
 		velocity.x = absf(speed)
 
 
+## The floor timers run whatever else the body is doing (flung, lifted,
+## snared), so a thug never stays down past his time.
+func _tick_floor(delta: float) -> void:
+	if _block_show > 0.0:
+		_block_show -= delta
+	if floored > 0.0:
+		floored -= delta
+		guarding = false
+		telegraph = 0.0
+		if floored <= 0.0:
+			_getup_t = GETUP
+			recover = maxf(recover, GETUP + 0.15)
+	elif _getup_t > 0.0:
+		_getup_t -= delta
+
+
 ## Down on the street for t seconds. from = death-clip frame to start on
 ## (4 = already falling, later = nearly flat).
 func floor_for(t: float, from: int = 4) -> void:
+	if not can_floor():
+		# Bosses (and anything without a fall) take a hard stagger instead:
+		# their death clip on the street reads as a kill.
+		recover = maxf(recover, 1.2)
+		return
 	floored = t
 	_getup_t = 0.0
+	ground_hits = 0
 	recover = maxf(recover, t + GETUP + 0.15)
 	guarding = false
 	set_meta("floor_from", from)
 	if _anim:
 		_anim.animation = "idle"
+
+
+## Only street thugs with a death clip go down; bosses and their kin never.
+func can_floor() -> bool:
+	if tier == "boss" or self is ActBoss or self is MayorRaven or self is FamilyPlan:
+		return false
+	return _anim != null and _anim.sprite_frames != null and _anim.sprite_frames.has_animation("death")
+
+
+## Already down and hit again: stays down a little longer (capped, so a
+## thug can always get back up), and the brain waits with the body.
+func keep_down(t: float) -> void:
+	if floored <= 0.0:
+		return
+	floored = minf(maxf(floored, t), 1.4)
+	recover = maxf(recover, floored + GETUP + 0.15)
 
 
 func _maybe_guard(f: Fighter) -> bool:
@@ -1060,9 +1090,8 @@ func ignite(secs: float, by: String) -> void:
 func take_hit(kind: String, from: Node) -> void:
 	blocked_last = false
 	_hurt_t = 0.28
-	if floored > 0.0:
-		# Hit on the floor: stays down a little longer.
-		floored = maxf(floored, 0.45)
+	# Hit on the floor: stays down a little longer.
+	keep_down(0.45)
 	if telegraph > 0.0 and from is Fighter and (kind == "heavy" or kind == "roundhouse" or kind == "blade" or kind == "special"):
 		if get_tree().get_first_node_in_group("chase_crash") == null:
 			_clash(from as Fighter)

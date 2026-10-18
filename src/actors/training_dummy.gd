@@ -43,7 +43,7 @@ func _ready() -> void:
 		# Pivot on the weighted base so it rocks like a real stand-up bag.
 		_bag.offset = Vector2(-float(tex.get_width()) * 0.5, -float(tex.get_height()))
 		_bag.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE)
-		_bag.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		_bag.texture_filter = SpriteBook.world_filter()
 		visual.add_child(_bag)
 
 
@@ -100,7 +100,11 @@ func _swing() -> void:
 	for n in get_tree().get_nodes_in_group("players"):
 		if n is Fighter and not (n as Fighter).downed:
 			var f: Fighter = n
-			if absf(f.global_position.x - global_position.x) < SPAR_REACH + 10.0 and absf(f.global_position.y - global_position.y) < 70.0:
+			var dx := f.global_position.x - global_position.x
+			# Only the side it swings to: nobody behind the bag gets hit.
+			if signf(dx) != float(facing) and absf(dx) > 8.0:
+				continue
+			if absf(dx) < SPAR_REACH + 10.0 and absf(f.global_position.y - global_position.y) < 70.0:
 				f.take_hit("light", self)
 	atk_height = ""
 
@@ -123,7 +127,12 @@ func _nearest() -> Fighter:
 	return best
 
 
+## Who landed the last blow (the alley scores it against his buttons).
+var last_from: Node
+
+
 func take_hit(kind: String, from: Node) -> void:
+	last_from = from
 	var before := hp
 	super.take_hit(kind, from)
 	flung = false

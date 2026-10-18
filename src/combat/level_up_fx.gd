@@ -130,6 +130,9 @@ func _wave() -> void:
 		if not (n is Punk) or not is_instance_valid(n):
 			continue
 		var e := n as Punk
+		# Bosses (and the already dead) are not swept by a level-up.
+		if e.hp <= 0 or e.tier == "boss" or e is ActBoss or e is MayorRaven or e is FamilyPlan:
+			continue
 		var src: Node2D = null
 		var best := RADIUS * (1.4 if Charms.has("dog_tag") else 1.0)
 		for p in _players:

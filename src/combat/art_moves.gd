@@ -312,7 +312,13 @@ func _start_lh() -> void:
 	if wp != null:
 		f.pick_up(wp)
 		return
-	var near := _nearest(THROW_REACH, GRAB_DEPTH)
+	# Versus: the other player is a Fighter, not a Punk - the old throw.
+	if f.vs_mode:
+		f._throw()
+		return
+	# Stick up / down is the element art, never a grab (a thug in reach
+	# must not swallow a bought art).
+	var near := _nearest(THROW_REACH, GRAB_DEPTH) if d != "U" and d != "D" else null
 	if near != null and not (near is ActBoss) and near.vehicle == "":
 		if BrutalBook.broken(near):
 			var bid := BrutalBook.for_grab(f.role, d, f.pickup)
@@ -323,7 +329,12 @@ func _start_lh() -> void:
 			# A heavy bag is not a body to throw: reach, grab air, let go.
 			_start_throw(null)
 			return
-		if f._anim != null and f._anim.sprite_frames.has_animation("grab_reach"):
+		# Neutral: the pull-in throw. Forward / back: the dojo grabs
+		# (suplex, DDT, headlock ...), each on its own direction.
+		var g := Elements.grab_for(f.role, d) if d == "F" or d == "B" else {}
+		if not g.is_empty() and str(g.get("dir", "")) == d:
+			_start_grab(near, d)
+		elif f._anim != null and f._anim.sprite_frames.has_animation("grab_reach"):
 			_start_throw(near)
 		else:
 			_start_grab(near, d)
@@ -600,7 +611,7 @@ func _start_throw(e: Punk) -> void:
 	if f._anim == null or not f._anim.sprite_frames.has_animation(clip):
 		clip = "heavy"
 	var body := _clip_len(clip)
-	_row = {"reach": reach, "clip": clip, "body": body, "slam": reach + body * float(fin[1]), "whiff": e == null, "broke": false}
+	_row = {"reach": reach, "clip": clip, "body": body, "slam": reach + body * float(fin[1]), "whiff": e == null, "broke": false, "e": e}
 	if e != null:
 		if e.global_position.x != f.global_position.x:
 			f.facing = 1 if e.global_position.x > f.global_position.x else -1
@@ -634,7 +645,9 @@ func _hold_pose(e: Punk) -> void:
 
 func _run_throw() -> void:
 	f._atk_t = 0.3
-	var e := _victim
+	# The body stays in the row: _victim is let go at the break or the
+	# slam, but the rest of the shove / the hammer clip still has to play.
+	var e: Punk = _row.get("e")
 	var reach := float(_row["reach"])
 	# The son hooks the legs from closer in than his father's lift.
 	var hold_x := f.global_position.x + (26.0 if f.role == "father" else 16.0) * float(_dir)
@@ -653,7 +666,10 @@ func _run_throw() -> void:
 			_restart(f._anim, "idle")
 		return
 	if e == null or not is_instance_valid(e):
-		_end()
+		# Gone mid-hold (killed by a friend): stop. Gone after the slam: let
+		# the clip finish.
+		if _victim != null or _t < float(_row["slam"]):
+			_end()
 		return
 	if bool(_row["broke"]):
 		if _beat(reach):
@@ -835,6 +851,9 @@ func _release_victim() -> void:
 		return
 	e.set_physics_process(true)
 	e.z_index = 0
+	var a: AnimatedSprite2D = e.get("_anim")
+	if a != null and not a.is_playing():
+		a.play()
 	if e.visual:
 		e.visual.visible = true
 		e.visual.position.y = 0.0

@@ -236,6 +236,7 @@ var _getup_done := false
 ## moment the body is free, so chains don't eat presses.
 var _light_buf := 0
 var _heavy_buf := 0
+var _heavy_buf_y := 0.0
 var _run_breath := 0
 ## The hero suit worn this run (its perk is read in play).
 ## Suit parts worn (mask / top / bottom -> suit id or ""), and the full set.
@@ -781,6 +782,7 @@ func _physics_process(delta: float) -> void:
 			snap_ready = false
 	_pre_face = facing
 	_tick_meters(delta)
+	_tick_charge_glow()
 	if van_seat != "":
 		return
 	if crawling > 0.0:
@@ -1457,7 +1459,7 @@ func _combat() -> void:
 		_duck_tap = _clock
 	if _just("jump"):
 		_combo_press("J")
-	if attack_cd == 0 and _just("dash") and not dashing and not _all_four():
+	if attack_cd == 0 and _just("dash") and not dashing and not _all_four() and _shoulders_down() < 3:
 		if y > 0.45 and plane == "street":
 			_slide()
 		else:
@@ -1485,7 +1487,9 @@ func _combat() -> void:
 			_attack("air-mix", false)
 			return
 		_special()
-	if _just("shoot") and not _all_four():
+	# R1 pressed with two other shoulders already down is the four-shoulder
+	# throw on its way, not a shot.
+	if _just("shoot") and not _all_four() and _shoulders_down() < 3:
 		if _pressed("block") and arts and arts.try_super():
 			return
 		_shoot()
@@ -1517,84 +1521,30 @@ func _combat() -> void:
 		_charge_fired = false
 		charge_frames = 0
 	elif charge_frames > 0 and attack_cd > 0 and not airborne and charge_frames < charge_need:
-		# Y tapped while the last blow is still out: queue it (it used to
-		# cut the blow off before it landed, so mashed Y never hit).
+		# Y let go while the last blow is still out. A learned combo reads
+		# the press now (its beat is timed off the blow); anything else is
+		# queued until the recovery ends, stick and all - it used to cut the
+		# blow off before it landed, so mashed Y never hit.
 		charge_frames = 0
-		_heavy_buf = 9
-	elif charge_frames > 0:
-		if not airborne and _shoulder_strike("H"):
-			charge_frames = 0
+		if _combo_press("H"):
 			return
-		if not airborne or _combo_air_ok():
-			if _combo_press("H"):
-				charge_frames = 0
-				return
-		if airborne and y > 0.35:
-			_dive()
-		elif airborne and y < -0.35:
-			_attack("air-upper", false)
-		elif airborne and _anim != null and _anim.sprite_frames.has_animation("air_spin_kick"):
-			# Jump + heavy: the spinning heel in the air.
-			_attack("air-spin", false)
-		elif airborne:
-			_attack("jump-kick", false)
-		elif y > 0.4 and _try_ground_slam():
-			charge_frames = 0
-		elif y > 0.4 and _try_stomp():
-			charge_frames = 0
-		elif y > 0.4 and charge_frames < charge_need:
-			# Down + Y: the left hand to the body.
-			_last_hand = "L"
-			_attack("body_l", false)
-		elif y < -0.35 and _up_t >= _hv_t - Y_GATE:
-			# HEAVY pressed, then UP (or both together): the uppercut. Up
-			# held from a walk before the press throws the plain heavy.
-			if not FamilyProfile.dojo_learned("uppercut"):
-				# Not bought yet: the left hand still goes, never a dead press.
-				Juice.popup_number(global_position + Vector2(0, -100), "UPPERCUT · DOJO", Palette.MUTED)
-				_last_hand = "L"
-				_left_string()
-			else:
-				_last_hand = "L"
-				_attack("uppercut", false)
-		elif _shoulder_strike("H"):
-			charge_frames = 0
-		elif string_n >= 2:
-			if FamilyProfile.dojo_learned("roundhouse"):
-				_attack("roundhouse", false)
-			else:
-				_attack("heavy", charge_frames >= charge_need)
-		elif _turn_strike():
-			charge_frames = 0
-		else:
-			_last_hand = "L"
-			if charge_frames >= charge_need:
-				# Held Y: the charged power punch.
-				last_btn = "HOLD Y"
-				last_btn_t = _clock
-				_attack("heavy", true)
-			elif absf(_stick().x) > 0.55 and signf(_stick().x) == float(facing):
-				# Forward + Y: the big left hook (slot F+H).
-				_slot_hint = "F+H"
-				_attack("heavy", false)
-			else:
-				_left_string()
+		_heavy_buf = attack_cd + 6
+		_heavy_buf_y = y
+	elif charge_frames > 0:
+		_heavy_release(charge_frames, charge_need, airborne, y, true)
+		charge_frames = 0
 	elif attack_cd == 0 and _heavy_buf > 0 and not airborne:
 		_heavy_buf = 0
-		if _shoulder_strike("H"):
-			pass
-		elif string_n >= 2 and FamilyProfile.dojo_learned("roundhouse"):
-			_attack("roundhouse", false)
-		else:
-			_last_hand = "L"
-			_left_string()
+		_heavy_release(1, charge_need, false, _heavy_buf_y, false)
 	elif _just("light") and attack_cd > 0:
 		_light_buf = 9
 	elif attack_cd == 0 and (_just("light") or _light_buf > 0):
 		_light_buf = 0
-		if not airborne and _shoulder_strike("L"):
-			return
+		# The combo reads the press first, so a chain begun with a dash (R2
+		# still down) is not eaten by the R2 shoulder strike.
 		if (not airborne or _combo_air_ok()) and _combo_press("L"):
+			return
+		if not airborne and _shoulder_strike("L"):
 			return
 		if airborne and y < -0.35:
 			_attack("air-upper", false)
@@ -1609,6 +1559,74 @@ func _combat() -> void:
 		elif not _turn_strike():
 			_last_hand = "R"
 			_attack("light", false)
+
+
+## Y let go (or a queued Y once the recovery ends): the left hand, read off
+## the stick, the shoulder held and the learned combos. held = frames Y was
+## down; feed_combo is false for a replayed press the combos already saw.
+func _heavy_release(held: int, need: int, airborne: bool, y: float, feed_combo: bool) -> void:
+	# Y goes off on the release, so the button is read here too: the
+	# shoulder held now is the one the blow uses.
+	if held >= need:
+		last_btn = "HOLD Y"
+	elif not (last_btn == "X+Y" and _clock - last_btn_t < 0.2):
+		last_btn = _shoulder_tag() + "Y"
+	last_btn_t = _clock
+	if feed_combo and (not airborne or _combo_air_ok()) and _combo_press("H"):
+		return
+	if not airborne and _shoulder_strike("H"):
+		return
+	if airborne and y > 0.35:
+		_dive()
+	elif airborne and y < -0.35:
+		_attack("air-upper", false)
+	elif airborne and _anim != null and _anim.sprite_frames.has_animation("air_spin_kick"):
+		# Jump + heavy: the spinning heel in the air.
+		_attack("air-spin", false)
+	elif airborne:
+		_attack("jump-kick", false)
+	elif y > 0.4 and _try_ground_slam():
+		pass
+	elif y > 0.4 and _try_stomp():
+		pass
+	elif y > 0.4 and held < need:
+		# Down + Y: the left hand to the body.
+		_last_hand = "L"
+		_attack("body_l", false)
+	elif y < -0.35 and _up_t >= _hv_t - Y_GATE:
+		# HEAVY pressed, then UP (or both together): the uppercut. Up
+		# held from a walk before the press throws the plain heavy.
+		if not FamilyProfile.dojo_learned("uppercut"):
+			# Not bought yet: the left hand still goes, never a dead press.
+			Juice.popup_number(global_position + Vector2(0, -100), "UPPERCUT · DOJO", Palette.MUTED)
+			_last_hand = "L"
+			_left_string()
+		else:
+			_last_hand = "L"
+			_attack("uppercut", false)
+	elif _shoulder_strike("H"):
+		pass
+	elif string_n >= 2:
+		# A held weapon keeps its own X X Y (the crush), never the kick.
+		if FamilyProfile.dojo_learned("roundhouse") and not (pickup in SWING_HELD):
+			_attack("roundhouse", false)
+		else:
+			_attack("heavy", held >= need)
+	elif _turn_strike():
+		pass
+	else:
+		_last_hand = "L"
+		if held >= need:
+			# Held Y: the charged power punch.
+			last_btn = "HOLD Y"
+			last_btn_t = _clock
+			_attack("heavy", true)
+		elif absf(_stick().x) > 0.55 and signf(_stick().x) == float(facing):
+			# Forward + Y: the big left hook (slot F+H).
+			_slot_hint = "F+H"
+			_attack("heavy", false)
+		else:
+			_left_string()
 
 
 ## Walk or run on the story street. Walking is the default; a run lasts
@@ -1781,6 +1799,8 @@ func _special() -> void:
 
 
 func _attack(kind: String, charged: bool) -> void:
+	# Which button it came from, before a slow weapon turns X into a heavy.
+	var wpn_y_in := kind in WPN_Y_KINDS
 	if _anim != null:
 		_anim.self_modulate = Color.WHITE
 	# An attack thrown with the stick up / down (uppercut, low, stomp ...)
@@ -1796,7 +1816,8 @@ func _attack(kind: String, charged: bool) -> void:
 		# Released during recovery: keep it and throw it the moment the
 		# body is free, so a light-into-heavy press never gets eaten.
 		charge_frames = 0
-		_heavy_buf = 9
+		_heavy_buf = attack_cd + 6
+		_heavy_buf_y = _stick().y
 		return
 	if kind == "heavy":
 		_heavy_buf = 0
@@ -1907,7 +1928,7 @@ func _attack(kind: String, charged: bool) -> void:
 	if pickup in SWING_HELD and _anim != null and kind in SWING_KINDS:
 		# X swings it side-on, Y brings it down overhead. X, X, Y (or a
 		# held Y) is the finisher: the crush that puts him on the street.
-		var y_side := kind in WPN_Y_KINDS
+		var y_side := wpn_y_in
 		var chain := _clock - _wpn_t < 1.2
 		var finish := y_side and ((chain and _wpn_x >= 2) or charged)
 		if y_side:
@@ -1915,11 +1936,7 @@ func _attack(kind: String, charged: bool) -> void:
 		else:
 			_wpn_x = (_wpn_x + 1) if chain else 1
 		_wpn_t = _clock
-		var want: Array = WPN_CLIPS.get(role, WPN_CLIPS["father"])[1 if y_side else 0]
-		for sc in want:
-			if _anim.sprite_frames.has_animation(sc):
-				anim_atk = sc
-				break
+		anim_atk = _have_clip(WPN_CLIPS.get(role, WPN_CLIPS["father"])[1 if y_side else 0])
 		if finish:
 			kind = "combo"
 			combo_dmg = 34 if role == "father" else 28
@@ -2333,7 +2350,7 @@ func _afterimage() -> void:
 	g.flip_h = _anim.flip_h
 	g.modulate = Color(0.55, 0.8, 1.0, 0.45)
 	g.z_index = z_index - 1
-	g.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	g.texture_filter = SpriteBook.world_filter()
 	get_parent().add_child(g)
 	var tw := g.create_tween()
 	tw.tween_property(g, "modulate:a", 0.0, 0.22)
@@ -2909,7 +2926,9 @@ func take_hit(kind: String, from: Node) -> void:
 	if from is TrainingDummy:
 		Juice.flash_red(visual, 1)
 		Juice.popup_number(global_position + Vector2(0, -92), "GUARD UP", Color(1.0, 0.75, 0.35))
-		velocity.x = -float(facing) * 120.0
+		# Shoved away from the bag, whichever way he faces.
+		var away := signf(global_position.x - (from as Node2D).global_position.x)
+		velocity.x = (away if away != 0.0 else -float(facing)) * 120.0
 		return
 	if _sense_dodge(kind):
 		return
@@ -3021,7 +3040,7 @@ var _mat := -1
 func _on_mat() -> bool:
 	if _mat < 0:
 		var sc := get_tree().current_scene
-		_mat = 1 if sc != null and str(sc.get("map_id")) in ["tutorial_alley"] else 0
+		_mat = 1 if sc != null and str(sc.get("map_id")) in ["tutorial_alley", "dojo_practice"] else 0
 	return _mat == 1
 
 
@@ -3060,21 +3079,32 @@ func _paint_guard() -> void:
 		_guard_lab.z_index = 6
 		add_child(_guard_lab)
 	var y := -58.0 if block_height == "high" else (-12.0 if block_height == "low" else -36.0)
-	var col := {"high": Color(1.0, 0.85, 0.35), "mid": Color(0.55, 0.85, 1.0), "low": Color(0.6, 1.0, 0.6)}[block_height] as Color
-	col.a = 0.65 + 0.3 * sin(_clock * 10.0)
-	_guard_fx.default_color = col
+	# Colour and text change only with the height; the pulse is alpha.
+	if _guard_painted != block_height:
+		_guard_painted = block_height
+		var col: Color = GUARD_COL.get(block_height, GUARD_COL["mid"])
+		_guard_fx.default_color = col
+		_guard_lab.text = str(block_height).to_upper()
+		_guard_lab.add_theme_color_override("font_color", col)
+	var a := 0.65 + 0.3 * sin(_clock * 10.0)
+	_guard_fx.modulate.a = a
+	_guard_lab.modulate.a = a
 	_guard_fx.position = Vector2(float(facing) * 20.0, y)
 	_guard_fx.scale.x = float(facing)
 	_guard_fx.visible = true
-	_guard_lab.text = str(block_height).to_upper()
-	_guard_lab.add_theme_color_override("font_color", col)
 	_guard_lab.position = Vector2(float(facing) * 20.0 - 20.0, y - 24.0)
 	_guard_lab.visible = true
 
 
+const GUARD_COL := {"high": Color(1.0, 0.85, 0.35), "mid": Color(0.55, 0.85, 1.0), "low": Color(0.6, 1.0, 0.6)}
+var _guard_painted := ""
+
+
 func _clean_block(kind: String, from: Node) -> void:
 	var heavy := kind in ["heavy", "roundhouse", "jump-kick", "blade"]
-	steam = maxf(0.0, steam - (14.0 if heavy else 7.0))
+	# A practice bag never wears the guard down (no guard break mid-lesson).
+	if not (from is TrainingDummy) and not _on_mat():
+		steam = maxf(0.0, steam - (14.0 if heavy else 7.0))
 	_block_flinch = 0.2
 	counter_t = 0.5
 	var y := -58.0 if block_height == "high" else (-12.0 if block_height == "low" else -36.0)
@@ -3344,13 +3374,16 @@ func _footsteps(delta: float, spd: float) -> void:
 func _try_ground_slam() -> bool:
 	if attack_cd > 0 or _anim == null:
 		return false
+	var stomp_ok := FamilyProfile.dojo_learned("stomp_finish")
 	var best: Punk = null
 	var best_d := 76.0
 	for n in get_tree().get_nodes_in_group("enemies"):
 		if not (n is Punk):
 			continue
 		var p: Punk = n
-		if p.floored <= 0.0 or p.hp <= 0:
+		# Two slams per trip to the floor, then he gets up; a crushed thug
+		# is the stomp's (the brain finisher), not the slam's.
+		if p.floored <= 0.0 or p.hp <= 0 or p.ground_hits >= 2 or (p.crush and stomp_ok):
 			continue
 		var d := absf(p.global_position.x - global_position.x)
 		if d < best_d and absf(p.global_position.y - global_position.y) < 28.0:
@@ -3361,12 +3394,10 @@ func _try_ground_slam() -> bool:
 	if best.global_position.x != global_position.x:
 		facing = 1 if best.global_position.x > global_position.x else -1
 		visual.scale.x = float(facing)
-	best.floored = maxf(best.floored, 0.7)
-	var clip := "heavy"
-	for c in ["hammer", "wpn_slam"]:
-		if _anim.sprite_frames.has_animation(c):
-			clip = c
-			break
+	best.ground_hits += 1
+	# Long enough for the wind-up to land; keep_down is capped.
+	best.keep_down(0.55)
+	var clip := _have_clip(["hammer", "wpn_slam", "heavy"])
 	combo_dmg = 22 + (12 if pickup in SWING_HELD else 0)
 	combo_fx = ""
 	combo_id = "ground_slam"
@@ -3624,9 +3655,8 @@ const RS_MOVES := {
 	"high_kick": {"clips": ["side_kick", "front_kick"], "size": Vector2(66, 56), "cd": 22, "shout": "HIGH KICK"},
 	"low_kick": {"clips": ["boot_kick", "front_kick", "side_kick"], "size": Vector2(62, 30), "cd": 18, "shout": ""},
 }
-## Dojo moves (bought, then drilled 3x on the dummy) and what comes out
-## instead before that.
-## Shoulder strikes: hold a shoulder and hit a face button.
+## Shoulder strikes (basic moves, taught in the alley, never dojo-locked so
+## every shoulder + button is its own blow from the first night): hold a shoulder and hit a face button.
 ##   L1 (guard) + LIGHT = body hook     L1 + HEAVY = liver shot (heavier body hook)
 ##   R2 (run)   + LIGHT = side hook     R2 + HEAVY = overhand haymaker
 ##   L2 (kick)  + LIGHT = front kick    L2 + HEAVY = high kick
@@ -3665,7 +3695,6 @@ func _rs_spec(kind: String) -> Dictionary:
 	return StickBook.spec(kind)
 
 
-const RS_LEARN := {"haymaker": "heavy", "power_punch": "haymaker", "spin_backfist": "hook", "high_kick": "front_kick", "low_kick": "front_kick", "roundhouse": "hook"}
 var _rs_pts := PackedVector2Array()
 var _rs_on := false
 var _rs_back := 0.0
@@ -3683,9 +3712,28 @@ const LEFT_STRING := ["punch_l", "hook_l", "upper_l"]
 ## A tap of Y on the ground: the next blow of the left-hand string.
 ## Y held past a tap: he draws back for the power punch, the wind-up frames
 ## of the mega punch creeping on with the charge (0 -> 1), body glowing.
+## A charge that ends any way but a thrown blow (released into a combo or
+## a slam, knocked down, grabbed) must not leave him glowing, nor keep the
+## next Y press waiting for a release that already happened.
+func _tick_charge_glow() -> void:
+	var held := _pressed("heavy")
+	if not held:
+		_charge_fired = false
+	if not _charge_tint:
+		return
+	if not held or downed or knock_t > 0.0 or art_lock > 0.0 or charge_frames == 0:
+		_charge_tint = false
+		if _anim != null:
+			_anim.self_modulate = Color.WHITE
+
+
+var _charge_tint := false
+
+
 func _charge_pose(k: float) -> void:
 	if _anim == null:
 		return
+	_charge_tint = true
 	var clip := _have_clip(["mega_punch", "heavy"])
 	if not _anim.sprite_frames.has_animation(clip):
 		return
@@ -3871,19 +3919,35 @@ func _note_press() -> void:
 	var b := "X" if lx else "Y"
 	if (lx and _pressed("heavy")) or (hy and _pressed("light") and _clock - last_btn_t < 0.12):
 		b = "X+Y"
-	elif _pressed("throw"):
-		b = "L2+" + b
-	elif _pressed("block"):
-		b = "L1+" + b
-	elif _pressed("dash"):
-		b = "R2+" + b
+	else:
+		b = _shoulder_tag() + b
 	last_btn = b
 	last_btn_t = _clock
+
+
+## The shoulder held as a modifier, in the order _shoulder_strike reads them.
+func _shoulder_tag() -> String:
+	if _pressed("throw"):
+		return "L2+"
+	if _pressed("block"):
+		return "L1+"
+	if _pressed("dash"):
+		return "R2+"
+	return ""
 
 
 ## The four shoulder buttons held together (L1 + L2 + R1 + R2).
 func _all_four() -> bool:
 	return _pressed("block") and _pressed("throw") and _pressed("shoot") and _pressed("dash")
+
+
+## How many of L1 / L2 / R1 / R2 are held right now.
+func _shoulders_down() -> int:
+	var n := 0
+	for a in ["block", "throw", "shoot", "dash"]:
+		if _pressed(a):
+			n += 1
+	return n
 
 
 var _l2_t := -9.0
@@ -3895,7 +3959,8 @@ var _l2_t := -9.0
 func _l2_tap() -> void:
 	if _try_catch():
 		return
-	if _clock - _l2_t < 0.32:
+	# A real double tap only: L2 + X, then L2 + Y (kicks) is not a gadget.
+	if _clock - _l2_t < 0.32 and last_btn_t < _l2_t:
 		_l2_t = -9.0
 		_suit_gadget()
 		return
@@ -3904,8 +3969,13 @@ func _l2_tap() -> void:
 
 ## L1 + L2 + R1 + R2: throw the weapon in your hands, else a belt knife.
 func _toss() -> void:
-	if attack_cd > 0 or downed:
+	if downed:
 		return
+	# The four-shoulder chord is a deliberate press: it cuts off whatever an
+	# early shoulder of it started (a shot, a dash) instead of being eaten.
+	if attack_cd > 0:
+		_cancel_strike()
+		attack_cd = 0
 	blocking = false
 	if _throw_held_weapon():
 		_throw_clip()
@@ -4527,8 +4597,8 @@ func _front_hand() -> Vector2:
 ## the wind-up, whipped through on contact (with a trail), settling after.
 func _place_melee(delta: float) -> void:
 	var path := "res://assets/sprites/held/%s.png" % pickup
-	# The swing and pickup clips draw the weapon in the hand themselves.
-	var drawn := anim_atk == "pickup" or (anim_atk == "duck" and art_lock > 0.0) or (anim_atk == "swing" and _anim != null and _anim.animation == "swing")
+	# The pickup clip draws the weapon in the hand itself.
+	var drawn := anim_atk == "pickup" or (anim_atk == "duck" and art_lock > 0.0)
 	var want := pickup != "" and not (pickup in GUNS) and _anim != null and not downed and ResourceLoader.exists(path) and not drawn
 	if not want:
 		if _melee:

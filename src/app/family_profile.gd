@@ -434,11 +434,15 @@ func rewards_open() -> bool:
 
 
 func add_gems(n: int) -> void:
+	if n > 0 and not rewards_open():
+		return
 	data["gems"] = int(data["gems"]) + n
 	save()
 
 
 func grant(gold: int, gems: int, line: String) -> void:
+	if not rewards_open():
+		return
 	if gold:
 		data["gold"] = int(data["gold"]) + gold
 		claimed.emit("gold", gold, line)
@@ -1672,6 +1676,8 @@ func grant_prize(id: String) -> void:
 		Juice.unlock_logo(id.replace("_", " ").to_upper(), "Caliber with opinions.", "WEAPON")
 		return
 	if id == "envelope":
+		if not rewards_open():
+			return
 		add_gold(18)
 		data["gems"] = int(data.get("gems", 0)) + 1
 		save()

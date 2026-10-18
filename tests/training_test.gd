@@ -52,7 +52,10 @@ func _toward(f: Node2D, x: float, y := -1.0) -> bool:
 	if f.global_position.x < x - 8.0:
 		Input.action_press("p1_right")
 		return false
-	if f.global_position.x > x + 8.0:
+	# Facing the bag already: a little more slack on the near side, so
+	# turning round to face it can't bounce him out of the window.
+	if f.global_position.x > x + (22.0 if y > 0.0 and int(f.get("facing")) == 1 else 8.0):
+		Input.action_release("p1_right")
 		Input.action_press("p1_left")
 		return false
 	if y > 0.0 and f.global_position.y < y - 5.0:
@@ -60,6 +63,11 @@ func _toward(f: Node2D, x: float, y := -1.0) -> bool:
 		return false
 	if y > 0.0 and f.global_position.y > y + 5.0:
 		Input.action_press("p1_up")
+		return false
+	# At a bag (y given): face it before swinging, like a player would.
+	if y > 0.0 and int(f.get("facing")) != 1:
+		Input.action_release("p1_left")
+		Input.action_press("p1_right")
 		return false
 	return true
 

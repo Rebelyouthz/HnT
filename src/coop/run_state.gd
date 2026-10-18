@@ -239,6 +239,7 @@ func pack() -> Dictionary:
 		"xp": xp,
 		"wanted": wanted,
 		"cards": cards.duplicate(),
+		"card_lv": card_lv.duplicate(),
 		"level_ups": level_ups,
 		"shops_used": shops_used,
 		"rerolls": rerolls,
@@ -257,6 +258,7 @@ func unpack(d: Dictionary) -> void:
 	xp = int(d.get("xp", xp))
 	wanted = int(d.get("wanted", wanted))
 	cards = (d.get("cards", []) as Array).duplicate()
+	card_lv = (d.get("card_lv", {}) as Dictionary).duplicate()
 	level_ups = int(d.get("level_ups", level_ups))
 	shops_used = int(d.get("shops_used", shops_used))
 	rerolls = int(d.get("rerolls", rerolls))

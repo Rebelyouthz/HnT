@@ -18,7 +18,9 @@ var _film2 := false
 var _step := -1
 var _gate := 0.0
 var _count := 0
-var _knives0 := 0
+## Per player, what the lesson started from (knives on the belt, the
+## weapon in hand), so either player can finish it in co-op.
+var _base: Dictionary = {}
 var _counted_strike := -1
 var _wrong_t := 0.0
 var _bag: TrainingDummy
@@ -31,11 +33,12 @@ var _step_lab: Label
 var _key_lab: Label
 var _tick_lab: Label
 
-## One lesson each: the button it teaches ("btn": what the player presses,
+## One lesson each ("gate": how far right you may walk before it is done,
+## BAG_X + 60 when not given): the button it teaches ("btn": what the player presses,
 ## read from Fighter.last_btn when the blow lands, so a mashed or comboed
 ## press still counts), how many it needs, the coach's lines and which bag.
 const LESSONS := [
-	{"id": "walk", "title": "WALK TO THE BAG", "pad": "LEFT STICK  ·  HOLD R2 TO RUN", "key": "A / D / W / S  ·  HOLD SHIFT TO RUN", "need": 1,
+	{"id": "walk", "gate": BAG_X - 90.0, "title": "WALK TO THE BAG", "pad": "LEFT STICK  ·  HOLD R2 TO RUN", "key": "A / D / W / S  ·  HOLD SHIFT TO RUN", "need": 1,
 		"lines": [["father", "Basement's too small. Out back. Walk to the bag."]]},
 	{"id": "right", "title": "RIGHT HAND", "pad": "PRESS X  ·  ON THE BAG", "key": "PRESS J  ·  ON THE BAG", "btn": ["X"], "need": 3,
 		"lines": [["father", "Right hand first. X. Three on the bag."]]},
@@ -51,13 +54,13 @@ const LESSONS := [
 		"lines": [["father", "Feet off the ground. Hop."]]},
 	{"id": "pickup", "title": "PICK UP THE PIPE", "pad": "STAND ON IT  ·  X + Y TOGETHER", "key": "STAND ON IT  ·  J + K TOGETHER", "need": 1,
 		"lines": [["son", "There's a pipe."], ["father", "Stand on it, both hands. Pick it up. Don't lick it."]]},
-	{"id": "pipe", "title": "HIT WITH THE PIPE", "pad": "X SWING  ·  Y SLAM  ·  X X Y = CRUSH", "key": "J SWING  ·  K SLAM  ·  J J K = CRUSH", "btn": ["X", "Y"], "need": 3,
+	{"id": "pipe", "gate": BAG2_X + 60.0, "title": "HIT WITH THE PIPE", "pad": "X SWING  ·  Y SLAM  ·  X X Y = CRUSH", "key": "J SWING  ·  K SLAM  ·  J J K = CRUSH", "btn": ["X", "Y"], "need": 3,
 		"lines": [["father", "Second bag. X swings it, Y brings it down. X, X, Y and it's a crush. Three."]]},
-	{"id": "toss", "title": "THROW THE PIPE", "pad": "HOLD L1 + L2 + R1 + R2", "key": "HOLD I + U + O + SHIFT", "need": 1,
+	{"id": "toss", "gate": BAG2_X + 60.0, "title": "THROW THE PIPE", "pad": "HOLD L1 + L2 + R1 + R2", "key": "HOLD I + U + O + SHIFT", "need": 1,
 		"lines": [["father", "Now throw it. All four shoulders. A thrown pipe is a short conversation."]]},
-	{"id": "knife", "title": "THROW A KNIFE", "pad": "HANDS EMPTY  ·  HOLD L1 + L2 + R1 + R2", "key": "HANDS EMPTY  ·  HOLD I + U + O + SHIFT", "need": 1,
+	{"id": "knife", "gate": BAG2_X + 60.0, "title": "THROW A KNIFE", "pad": "HANDS EMPTY  ·  HOLD L1 + L2 + R1 + R2", "key": "HANDS EMPTY  ·  HOLD I + U + O + SHIFT", "need": 1,
 		"lines": [["father", "Knives on your belt. Same grip, all four. Throw one."]]},
-	{"id": "lookouts", "title": "BEAT THE LOOKOUTS", "pad": "X + Y UP CLOSE THROWS  ·  DOWN + Y ON A MAN DOWN", "key": "J + K UP CLOSE THROWS  ·  S + K ON A MAN DOWN", "need": 2,
+	{"id": "lookouts", "gate": END_X, "title": "BEAT THE LOOKOUTS", "pad": "X + Y UP CLOSE THROWS  ·  DOWN + Y ON A MAN DOWN", "key": "J + K UP CLOSE THROWS  ·  S + K ON A MAN DOWN", "need": 2,
 		"lines": [["", "TWO OF GANT'S LOOKOUTS. THEY HEARD THE NOISE."], ["father", "Real ones. X and Y together up close: grab him, put him down. Down and Y while he's on the floor. Go."]]},
 ]
 
@@ -223,7 +226,7 @@ func _begin(i: int) -> void:
 	var mh := get_tree().get_first_node_in_group("mission_hud")
 	if mh is CanvasLayer:
 		(mh as CanvasLayer).visible = false
-	_gate = BAG_X - 90.0 if id == "walk" else (END_X if id == "lookouts" else (BAG2_X + 60.0 if id in ["pipe", "toss", "knife"] else BAG_X + 60.0))
+	_gate = float(l.get("gate", BAG_X + 60.0))
 	_paint_panel()
 	Juice.play("res://assets/audio/card.wav")
 	var lines: Array = []
@@ -238,10 +241,14 @@ func _begin(i: int) -> void:
 		"pipe":
 			_coach_to(BAG2_X - 170.0)
 		"knife":
-			var f := _hero()
-			if f:
+			_base.clear()
+			for f in _fighters():
 				f.knives = maxi(f.knives, 2)
-				_knives0 = f.knives
+				_base[f.get_instance_id()] = f.knives
+		"toss":
+			_base.clear()
+			for f in _fighters():
+				_base[f.get_instance_id()] = f.pickup
 		"lookouts":
 			_spawn_lookouts()
 			_coach_to(BAG2_X + 80.0)
@@ -318,6 +325,26 @@ func _done_step() -> void:
 	get_tree().create_timer(0.9).timeout.connect(func() -> void: _begin(next))
 
 
+## The pipe broke (or was thrown) before its lesson was done: drop another
+## by the first bag so the lesson can always be finished.
+func _spare_pipe(team: Array[Fighter]) -> void:
+	for f in team:
+		if f.pickup in Fighter.SWING_HELD:
+			return
+	if not get_tree().get_nodes_in_group("weapon_pickups").is_empty():
+		return
+	_drop_pipe()
+	Juice.popup_number(Vector2(PIPE_X, 420.0), "ANOTHER PIPE", Palette.LEMON)
+
+
+func _fighters() -> Array[Fighter]:
+	var out: Array[Fighter] = []
+	for n in get_tree().get_nodes_in_group("players"):
+		if n is Fighter:
+			out.append(n as Fighter)
+	return out
+
+
 func _hero() -> Fighter:
 	for n in get_tree().get_nodes_in_group("players"):
 		if n is Fighter:
@@ -343,7 +370,8 @@ func _on_struck(_kind: String, bag: TrainingDummy) -> void:
 	var l := lesson()
 	if l.is_empty() or not l.has("btn"):
 		return
-	var f := _hero()
+	# Whoever actually hit the bag (co-op: player 2's blows are his own).
+	var f: Fighter = bag.last_from as Fighter if bag.last_from is Fighter else _hero()
 	if f == null:
 		return
 	var want_bag := _bag2 if str(l["id"]) == "pipe" else _bag
@@ -388,31 +416,49 @@ func _process(delta: float) -> void:
 	for n in get_tree().get_nodes_in_group("players"):
 		if n is Node2D and (n as Node2D).global_position.x > _gate:
 			(n as Node2D).global_position.x = _gate
-	var f := _hero()
-	if f == null:
+	var team := _fighters()
+	if team.is_empty():
 		return
+	# A player who dropped in after the alley opened still counts his guards.
+	for f in team:
+		if not f.guarded.is_connected(_on_guarded):
+			f.guarded.connect(_on_guarded)
 	match lesson_id():
 		"walk":
-			if f.global_position.x >= BAG_X - 140.0:
-				_tick()
+			for f in team:
+				if f.global_position.x >= BAG_X - 140.0:
+					_tick()
 		"jump":
-			if f.hop < -24.0:
-				_tick()
+			for f in team:
+				if f.hop < -24.0:
+					_tick()
 		"pickup":
-			if f.pickup != "":
-				_tick()
+			for f in team:
+				if f.pickup != "":
+					_tick()
+		"pipe":
+			_spare_pipe(team)
 		"toss":
-			if f.pickup == "":
-				_tick()
+			# Anyone who has held a weapon this lesson and now has empty hands
+			# threw it; a pipe that broke on the way gets a spare.
+			_spare_pipe(team)
+			for f in team:
+				var id := f.get_instance_id()
+				if f.pickup != "":
+					_base[id] = f.pickup
+				elif str(_base.get(id, "")) != "":
+					_tick()
 		"knife":
-			if f.knives < _knives0:
-				_tick()
+			for f in team:
+				if f.knives < int(_base.get(f.get_instance_id(), 0)):
+					_tick()
 		"lookouts":
 			var down := 0
 			for p in _lookouts:
 				if not is_instance_valid(p) or p.is_queued_for_deletion() or p.hp <= 0:
 					down += 1
-			while _count < down:
+			# One tick a frame, never a loop: a third body can't hang it.
+			if _count < down:
 				_tick()
 		_:
 			if _step >= LESSONS.size() and Party.all_past(END_X - 120.0):
