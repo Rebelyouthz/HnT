@@ -60,6 +60,7 @@ func _start_gate() -> void:
 		if id == gate:
 			break
 		fp.call("mark_map_filed", id)
+		_meet(fp, str(id))
 	if order.find(gate) > order.find("dock_street"):
 		fp.data["crew_benny"] = true
 	if order.find(gate) > order.find("intake_lot"):
@@ -70,6 +71,40 @@ func _start_gate() -> void:
 	root.get_node("App").set("camp_next", "")
 	_t0 = _n
 	change_scene_to_file("res://scenes/levels/camp.tscn")
+
+
+## A map the family already cleared had its gate met (the game never files
+## one past a closed gate): build its room and grant what it asked for, so
+## each gate is walked on its own (catch-up is errand_test's business).
+func _meet(fp: Node, map_id: String) -> void:
+	var need: Variant = load("res://src/app/power_book.gd").spec(map_id).get("need", {})
+	if typeof(need) != TYPE_DICTIONARY:
+		return
+	var nd := need as Dictionary
+	var shop := str(nd.get("shop", ""))
+	if shop != "":
+		(fp.data["buildings"] as Dictionary)[shop] = maxi(1, int((fp.data["buildings"] as Dictionary).get(shop, 0)))
+	var id := str(nd.get("id", ""))
+	match str(nd.get("kind", "")):
+		"cbt":
+			if not (fp.data["cbt"] as Array).has(id):
+				(fp.data["cbt"] as Array).append(id)
+		"dojo":
+			var d: Dictionary = fp.data.get("dojo", {})
+			d[id] = maxi(1, int(d.get(id, 0)))
+			fp.data["dojo"] = d
+		"gear":
+			load("res://src/app/gear_inv.gd").add(id)
+		"research", "weapon":
+			var r: Array = fp.data.get("research", [])
+			if not r.has(id):
+				r.append(id)
+			fp.data["research"] = r
+		"craft":
+			var c: Array = fp.data.get("crafts", [])
+			if not c.has(id):
+				c.append(id)
+			fp.data["crafts"] = c
 
 
 func _press(t: String) -> void:

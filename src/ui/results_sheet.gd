@@ -318,9 +318,12 @@ func _winner(son_s: int, dad_s: int, son_n: String, dad_n: String) -> String:
 
 
 func _grant_xp(total: int) -> Dictionary:
-	var n := maxi(8, int(total / 20.0) + (90 if win else 18))
+	# Profile level pacing: early on a clear is about one level and two
+	# nights that end on the floor are about one (account_need grows after).
+	# The score only tops it up a little, so a long night is not three dings.
+	var n := (125 + mini(35, int(total / 120.0))) if win else (62 + mini(18, int(total / 240.0)))
 	if gate:
-		n = maxi(8, int(total / 28.0) + 40)
+		n = 50 + mini(15, int(total / 240.0))
 	return FamilyProfile.grant_account_xp(n)
 
 

@@ -285,6 +285,10 @@ func next_run_map() -> String:
 	return "dock_street"
 
 
+func is_filed(id: String) -> bool:
+	return (data.get("maps_filed", []) as Array).has(id)
+
+
 func mark_map_filed(id: String) -> void:
 	if id == "" or id == "tutorial_alley" or id == "intro_flow":
 		return
@@ -751,7 +755,8 @@ func _wear(role: String, slot: String, id: String) -> void:
 
 
 func account_need() -> int:
-	return 100 + int(data.get("account_level", 1)) * 50
+	var k := int(data.get("account_level", 1)) - 1
+	return 140 + k * 45 + k * k * 5
 
 
 func grant_account_xp(n: int) -> Dictionary:

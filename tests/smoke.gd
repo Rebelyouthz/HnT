@@ -579,9 +579,14 @@ func _initialize() -> void:
 	var fp2 := get_root().get_node("FamilyProfile")
 	var app2 := get_root().get_node("App")
 	app2.difficulty = "open_house"
-	if not PowerBook.lock("dock_street", "boss").is_empty():
-		push_error("open house must skip power lock")
+	if PowerBook.lock("dock_street", "boss").is_empty() and not bool(fp2.has_cbt("thick_skin")):
+		push_error("easy must keep the story gate (the guided path runs on every difficulty)")
 		failed += 1
+	app2.gates_off = true
+	if not PowerBook.lock("dock_street", "boss").is_empty():
+		push_error("gates_off must open the power lock")
+		failed += 1
+	app2.gates_off = false
 	app2.difficulty = "night_class"
 	if not bool(fp2.has_cbt("thick_skin")):
 		var boss_lock: Dictionary = PowerBook.lock("dock_street", "boss")

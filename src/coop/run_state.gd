@@ -103,9 +103,25 @@ func buff(id: String) -> int:
 var kills: int = 0
 
 
+## Kills that open the level-up cards. Counted in thugs, not XP: the
+## pinball multipliers made XP climb so fast the cards came every third
+## kill. After the table it keeps going, each step a little longer.
+const LEVEL_KILLS := [4, 8, 15, 21, 27, 35, 42]
+
+
+static func kills_for_level(n: int) -> int:
+	if n < LEVEL_KILLS.size():
+		return int(LEVEL_KILLS[n])
+	var extra := n - LEVEL_KILLS.size() + 1
+	return int(LEVEL_KILLS[-1]) + extra * 8 + (extra * (extra - 1)) / 2
+
+
 func note_kill() -> void:
 	kills += 1
 	enemy_killed.emit()
+	if FamilyProfile.rewards_open() and kills >= kills_for_level(level_ups):
+		level_ups += 1
+		need_cards.emit()
 
 
 func add_xp(n: int) -> void:
@@ -116,18 +132,6 @@ func add_xp(n: int) -> void:
 		n = int(ceil(float(n) * (1.0 + 0.25 * buff("insight_lens"))))
 	xp += n
 	xp_changed.emit()
-	if level_ups == 0 and xp >= 70:
-		level_ups = 1
-		need_cards.emit()
-	elif level_ups == 1 and xp >= 160:
-		level_ups = 2
-		need_cards.emit()
-	elif level_ups == 2 and xp >= 260:
-		level_ups = 3
-		need_cards.emit()
-	elif level_ups == 3 and xp >= 380:
-		level_ups = 4
-		need_cards.emit()
 
 
 func add_wanted(n: int) -> void:

@@ -66,6 +66,14 @@ static func errand_map() -> String:
 	if not PowerBook.enforced():
 		return ""
 	var hop := App.camp_next if App.camp_next != "" else FamilyProfile.next_run_map()
+	# Catch-up first: a map already cleared whose gate was never met (Easy
+	# used to skip gates) walks its buys before the next one - the couch and
+	# the skill tree are never missed.
+	for id in App.ORDER:
+		if str(id) == hop:
+			break
+		if FamilyProfile.is_filed(str(id)) and not PowerBook.path(str(id)).is_empty():
+			return str(id)
 	if hop == "" or steps(hop).is_empty():
 		return ""
 	return hop
@@ -158,7 +166,8 @@ static func ensure(host: Node) -> void:
 	var m := errand_map()
 	if m == "":
 		return
-	# The clinic covers what is short the first night the gate turns us back.
+	# The clinic covers what is short the first night the gate turns us back
+	# (and a gate behind us that was skipped, walked as catch-up first).
 	PowerBook.fund(m)
 	# The QUEST BOARD is the first room of the plan: Benny's lumber money
 	# covers what is short, once.
@@ -232,6 +241,12 @@ func _process(delta: float) -> void:
 		return
 	var steps := ErrandGuide.steps(_map)
 	if steps.is_empty():
+		# A catch-up errand done: carry straight on to the next map's gate.
+		var nm := ErrandGuide.errand_map()
+		if nm != "" and nm != _map:
+			_map = nm
+			PowerBook.fund(nm)
+			return
 		if _done_t < 0.0:
 			_done_t = 0.0
 			Juice.toast("reward", "READY", "%s is open. Take the portal." % _map.replace("_", " ").to_upper())

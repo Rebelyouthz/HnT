@@ -323,7 +323,7 @@ func _on_peer_in(id: int) -> void:
 	_busy = false
 	connected.emit()
 	_set_status("DAD CONNECTED")
-	broadcast_begin("dock_street")
+	App.start_run()
 
 
 func _on_peer_out(_id: int) -> void:
@@ -340,6 +340,7 @@ func broadcast_begin(map_id: String, extra: Dictionary = {}) -> void:
 		_pipe_send({"t": "begin", "map": map_id, "extra": extra})
 	if is_host():
 		App.apply_begin_extra(extra)
+		App.net_follow = true
 		App.enter_map(map_id)
 
 
@@ -348,6 +349,7 @@ func net_begin(map_id: String, extra: Dictionary = {}) -> void:
 	App.remote_coop = true
 	App.density_coop = true
 	App.apply_begin_extra(extra)
+	App.net_follow = true
 	App.enter_map(map_id)
 
 
@@ -673,7 +675,7 @@ func _on_relay_peer() -> void:
 	_busy = false
 	connected.emit()
 	_set_status("DAD CONNECTED")
-	broadcast_begin("dock_street")
+	App.start_run()
 
 
 func _start_beacon() -> void:

@@ -95,15 +95,18 @@ func start_run() -> void:
 	film_next = ""
 	film_kind = ""
 	last_run_ok = false
-	if remote_coop:
-		current_map = "dock_street"
-		enter_map("dock_street")
-		return
 	# The prologue and the alley lesson play once: never again after a night
 	# out (WATCH INTRO / the RUN tab button still replay them on purpose).
 	if not force_intro and int(FamilyProfile.data.get("runs", 0)) > 0 and not bool(FamilyProfile.data.get("intro_done", false)):
 		FamilyProfile.data["intro_done"] = true
 		FamilyProfile.save()
+	# The first night online plays the story from the top for both chairs
+	# (prologue -> alley training -> Dock Street), even when this machine
+	# already watched it solo: the other player never has.
+	if remote_coop and not bool(FamilyProfile.data.get("online_intro_done", false)):
+		FamilyProfile.data["online_intro_done"] = true
+		FamilyProfile.save()
+		force_intro = true
 	if force_intro or not bool(FamilyProfile.data.get("intro_done", false)):
 		force_intro = false
 		current_map = "dock_street"
@@ -160,7 +163,22 @@ func play_intro() -> void:
 	start_run()
 
 
+## Online co-op: the host's game drives every scene change and the other
+## machine follows its "begin" message (NetSession.net_begin). Films and
+## levels that call enter_map on their own (prologue, alley, act films) go
+## through here, so both sit in the same scene; the guest never hops alone.
+var net_follow := false
+## Test harness only: walk the story with every power gate open.
+var gates_off := false
+
+
 func enter_map(map_id: String) -> void:
+	var online := has_node("/root/NetSession") and NetSession.active() and remote_coop
+	if online and not net_follow:
+		if NetSession.is_host():
+			NetSession.broadcast_begin(map_id, begin_extra())
+		return
+	net_follow = false
 	# The weekly hour is one map: going on from it goes home.
 	if weekly and map_id != WeeklyBook.MAP:
 		weekly = false
@@ -284,9 +302,6 @@ func _advance_core(next_id: String) -> void:
 
 
 func _hop(map_id: String) -> void:
-	if has_node("/root/NetSession") and NetSession.active() and NetSession.is_host():
-		NetSession.broadcast_begin(map_id, begin_extra())
-		return
 	enter_map(map_id)
 
 

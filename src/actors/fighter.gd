@@ -840,7 +840,9 @@ func _physics_process(delta: float) -> void:
 		global_position.y = clampf(global_position.y, STREET_MIN, STREET_MAX)
 		_tick_sprite()
 		return
-	if _pressed("jump"):
+	# A fresh press only: holding the button must not re-arm the buffer, or
+	# every landing springs him straight back up (the "bouncing" bug).
+	if _just("jump"):
 		jump_buf = BUFFER
 	ladder = _find_ladder()
 	if plane == "climb":
@@ -1192,9 +1194,13 @@ func _process_street(delta: float) -> void:
 			velocity.y = 0.0
 		_strike_motion()
 		if blocking and roll_t <= 0.0:
-			# Feet set under the guard: you can shuffle, not walk.
+			# Feet set under the guard: you can shuffle sideways, never up or
+			# down the street (up / down pick the guard height instead). After
+			# letting go the stick must come back to centre before the lane
+			# changes, so a low guard does not turn into a walk down.
 			velocity.x *= 0.25
-			velocity.y *= 0.4
+			velocity.y = 0.0
+			_y_lock = true
 	if _spin_cd > 0.0:
 		_spin_cd -= delta
 	if _spin_t > 0.0:

@@ -57,7 +57,7 @@ func _process(_d: float) -> bool:
 		fp.data["intro_done"] = true
 		fp.data["skip_films"] = false
 		# Gates are their own test (errand_all_test): walk the story open.
-		root.get_node("App").set("difficulty", "open_house")
+		root.get_node("App").set("gates_off", true)
 		var order: Array = root.get_node("App").get("ORDER")
 		for k in order.size() - 1:
 			_pairs.append([order[k], order[k + 1]])

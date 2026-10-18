@@ -17,11 +17,12 @@ static func _boot(node_name: String) -> Node:
 	return tree.root.get_node_or_null(node_name)
 
 
+## The story path (gates, errands, the guided first buys) runs on every
+## difficulty: EASY only softens the fights. Skipping it on Open House left
+## a family that cleared Dock Street with no skill tree, couch or guide.
 static func enforced() -> bool:
 	var app := _boot("App")
-	if app == null:
-		return true
-	return str(app.get("difficulty")) != "open_house"
+	return app == null or not bool(app.get("gates_off"))
 
 
 static func table() -> Dictionary:
@@ -151,7 +152,14 @@ static func story_shops() -> PackedStringArray:
 	var i := order.find(str(fp.call("next_run_map")))
 	if i < 0:
 		return out
-	for k in range(i, mini(i + 2, order.size())):
+	# Catch-up: a map already filed whose gate was never met (its room
+	# still unbuilt) jumps the queue too, so its errand can be walked.
+	var ks: Array = []
+	for k in range(0, i):
+		if bool(fp.call("is_filed", str(order[k]))) and not path(str(order[k])).is_empty():
+			ks.append(k)
+	ks.append_array(range(i, mini(i + 2, order.size())))
+	for k in ks:
 		var need: Variant = spec(str(order[k])).get("need", {})
 		if typeof(need) != TYPE_DICTIONARY:
 			continue

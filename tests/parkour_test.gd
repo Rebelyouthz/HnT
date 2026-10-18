@@ -64,7 +64,7 @@ func _process(_d: float) -> bool:
 			fp.data["skip_films"] = false
 			fp.call("mark_map_filed", "dock_street")
 			fp.call("mark_map_filed", "intake_lot")
-			root.get_node("App").set("difficulty", "open_house")
+			root.get_node("App").set("gates_off", true)
 			change_scene_to_file("res://scenes/levels/fire_escapes.tscn")
 			_phase = "run"
 			_t0 = _n
