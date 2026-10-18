@@ -17,6 +17,8 @@ class FilmActor extends Node2D:
 
 const WALK_Y := 500.0
 const ZOOM := 2.5
+## How far in from the painted floor's front edge the cast stands (world u).
+const FLOOR_IN := 10.0
 
 var _talk: Talk
 var _ui: Control
@@ -68,7 +70,10 @@ func _build_set() -> void:
 		s.texture = tex
 		s.centered = false
 		s.scale = Vector2(texel, texel)
-		s.position = Vector2(0, WALK_Y - ground * texel)
+		# Everyone stands a step back from the painted floor's front edge, so
+		# feet and shadows sit on the boards above the subtitle bar instead of
+		# on the cut-off edge (they read as floating there).
+		s.position = Vector2(0, WALK_Y - ground * texel + FLOOR_IN)
 		s.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR if linear else CanvasItem.TEXTURE_FILTER_NEAREST
 		s.z_index = -5
 		add_child(s)
@@ -92,7 +97,7 @@ func _build_set() -> void:
 	_rico.modulate.a = 0.0
 	_cam = Camera2D.new()
 	_cam.zoom = Vector2(ZOOM, ZOOM)
-	_cam.position = Vector2(_cx - 14.0, WALK_Y - _room_h * 0.5 + 6.0)
+	_cam.position = Vector2(_cx - 14.0, WALK_Y - _room_h * 0.5 + 6.0 + FLOOR_IN)
 	add_child(_cam)
 	_cam.make_current()
 
@@ -250,17 +255,23 @@ func _drag_off() -> void:
 	# the door they came in by, in the flicker.
 	for who: Node2D in [_benny, _rico]:
 		var gone := create_tween()
-		gone.tween_interval(1.75)
+		gone.tween_interval(2.05)
 		gone.tween_property(who, "modulate:a", 0.0, 0.12)
 		gone.tween_callback(func() -> void: who.visible = false)
 	_walk_actor(_goons[0], _cx + 260.0, 0.3, true)
 	_walk_actor(_gant, _cx + 250.0, 0.6, true)
+	# The bulbs flicker, then die completely: pitch black (the painted bulbs
+	# go out with the room), a beat of nothing, and the light crawls back
+	# to an emptier basement.
 	var dim := create_tween()
-	dim.tween_interval(1.6)
+	dim.tween_interval(1.25)
 	for k in 3:
-		dim.tween_property(_mod, "color", Color(0.25, 0.27, 0.38), 0.08)
-		dim.tween_property(_mod, "color", Color(0.85, 0.82, 0.78), 0.1)
-	dim.tween_property(_mod, "color", Color(0.3, 0.32, 0.45), 0.4)
+		dim.tween_property(_mod, "color", Color(0.18, 0.19, 0.27), 0.07)
+		dim.tween_property(_mod, "color", Color(0.85, 0.82, 0.78), 0.09)
+	dim.tween_callback(func() -> void: Juice.play("res://assets/audio/sfx/metal_bang.ogg"))
+	dim.tween_property(_mod, "color", Color(0.012, 0.012, 0.02), 0.12)
+	dim.tween_interval(1.5)
+	dim.tween_property(_mod, "color", Color(0.62, 0.6, 0.66), 1.1).set_trans(Tween.TRANS_SINE)
 	var back := create_tween()
 	back.tween_property(_cam, "position:x", _cx - 20.0, 2.0).set_delay(1.6).set_trans(Tween.TRANS_SINE)
 

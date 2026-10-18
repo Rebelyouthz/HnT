@@ -4582,7 +4582,9 @@ func _front_hand() -> Vector2:
 		if top >= 0:
 			var body := float(bot - top)
 			var best := Vector2(-1, -1)
-			for y in range(int(top + body * 0.24), int(top + body * 0.52), 2):
+			# Hands hang at the hip in walks and idles and come up to the
+			# chin in a guard: search shoulder to hip.
+			for y in range(int(top + body * 0.26), int(top + body * 0.62), 2):
 				for x in range(w - 1, -1, -1):
 					if img.get_pixel(x, y).a > 0.5:
 						if x > best.x:
@@ -4644,12 +4646,14 @@ func _place_melee(delta: float) -> void:
 	var grip: Array = m.get("grip", [6, 6])
 	var tip: Array = m.get("tip", [40, 6])
 	var light := pickup in LIGHT_MELEE
-	var rest := -0.35 if light else -1.95
+	# At rest it is held in the front hand at the hip, tip up and forward
+	# (not floating over the shoulder behind the body).
+	var rest := -0.35 if light else -0.6
 	var target := rest
 	var rate := 12.0
 	match _strike_phase:
 		1:
-			target = -1.2 if light else -2.7
+			target = -1.2 if light else -2.45
 			rate = 22.0
 		2:
 			target = 0.15 if light else 0.45

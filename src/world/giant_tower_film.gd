@@ -114,7 +114,7 @@ func _build_sky() -> void:
 	_vista.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	_vista.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_vista.size = Vector2(1280, 720)
-	_vista.modulate.a = 0.0
+	_vista.modulate.a = 0.35
 	root.add_child(_vista)
 
 
@@ -301,6 +301,11 @@ func _cam_to(p: Vector2, dur: float, zoom := -1.0) -> void:
 
 func _set_height(y: float) -> void:
 	var m := int(round(-y / U_PER_M))
+	# The city comes up under them as they climb (it is always there, it
+	# only gets bigger and brighter the higher they are).
+	if _vista:
+		var k := clampf(-y / _height, 0.0, 1.0)
+		_vista.create_tween().tween_property(_vista, "modulate:a", lerpf(0.35, 1.0, k), 0.5)
 	_hud_m.text = "%d M" % maxi(0, m)
 	_hud_bar.value = clampf(-y / _height, 0.0, 1.0)
 
@@ -414,8 +419,6 @@ func _summit() -> void:
 			_result["choice_%d" % _result.size()] = str(pick.get("label", ""))
 			_talker.play(pick.get("lines", []), true)
 			await _talker.closed
-	vt = create_tween()
-	vt.tween_property(_vista, "modulate:a", 0.0, 0.6)
 
 
 var _sway := false

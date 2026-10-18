@@ -216,13 +216,31 @@ func _process_giant() -> void:
 			var f: Fighter = n
 			if f.downed or f.van_seat != "":
 				continue
-			_hint.text = "%s  ·  UP / JUMP TO CLIMB" % str(TowerBook.map_row(map_id).get("label", "TOWER"))
+			var seen := bool(FamilyProfile.data.get("tower_" + map_id, false))
+			_hint.text = "%s  ·  PUSH UP TO CLIMB" % str(TowerBook.map_row(map_id).get("label", "TOWER")) if seen else "THE TOWER  ·  CLIMB IT"
 			_hint.self_modulate = Color(1.2, 1.15, 0.7)
-			if f._just("up") or f._just("jump"):
+			if not seen:
+				# The first time is the story: the climb starts as soon as
+				# the family reaches the foot of it (guided, no way round).
 				_start_film()
+			elif f._just("up"):
+				_ask_climb()
 			return
 	_hint.text = "???" if not FamilyProfile.data.get("tower_" + map_id, false) else str(TowerBook.map_row(map_id).get("label", "TOWER"))
 	_hint.self_modulate = Color.WHITE
+
+
+## After the first climb it is a choice: a card asks, B walks away.
+func _ask_climb() -> void:
+	_busy = true
+	get_tree().paused = true
+	var row := TowerBook.map_row(map_id)
+	var ask := AskBox.open(self, "CLIMB AGAIN?", "%s  ·  %d metres. Points, gold and the view." % [str(row.get("label", "TOWER")), int(row.get("height_m", 132))], "CLIMB", "NOT NOW")
+	var yes: bool = await ask.answered
+	get_tree().paused = false
+	_busy = false
+	if yes:
+		_start_film()
 
 
 func _start_film() -> void:

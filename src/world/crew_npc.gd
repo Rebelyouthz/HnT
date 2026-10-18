@@ -140,11 +140,15 @@ func _process(delta: float) -> void:
 	_t += delta
 	if _anim != null:
 		_anim.flip_h = facing < 0
-		if _walk > 0.0:
-			_anim.position.x = 0.0
+		_anim.rotation = 0.0
+		# Filmed walk when there is one (no sliding idle across the room).
+		var want := "walk" if _walk > 0.0 and _anim.sprite_frames.has_animation("walk") else ""
+		if want != "" and _anim.animation != want:
+			_anim.play(want)
+		elif want == "" and _anim.animation == "walk":
+			_anim.play("idle")
+		elif _walk > 0.0 and want == "":
 			_anim.rotation = sin(_t * 11.0) * 0.03
-		else:
-			_anim.rotation = 0.0
 		# A forge hand never stands still for long: a swing every few seconds.
 		if hammering and _anim.animation == "idle" and fmod(_t, 3.2) < delta:
 			strike()

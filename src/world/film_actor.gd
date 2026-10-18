@@ -93,6 +93,24 @@ func sit_at(p: Vector2, face: int = 1) -> void:
 	position = p
 	rotation = 0.0
 	_shadow(false)
+	# Filmed sitting loop (tools/hf_still_clips.py): sat on the edge, legs
+	# hanging over and swinging. Rendered facing right; the seat (about a
+	# third of the body up from the feet) goes on the edge point p.
+	if anim != null and anim.sprite_frames.has_animation("sit_loop"):
+		if _sit:
+			_sit.queue_free()
+			_sit = null
+		_knees.clear()
+		anim.visible = true
+		anim.rotation = 0.0
+		anim.speed_scale = 1.0 if role == "son" else 0.8
+		anim.play("sit_loop")
+		anim.flip_h = face < 0
+		var cell := anim.sprite_frames.get_frame_texture("sit_loop", 0)
+		var body_h := float((SpriteBook.clip_meta(role, "sit_loop").get("frames", [{}])[0] as Dictionary).get("h", cell.get_height()))
+		var k := anim.scale.y
+		anim.position = Vector2(-6.0 * float(face), -float(cell.get_height()) * k * 0.5 + body_h * 0.33 * k)
+		return
 	var meta_path := "res://assets/sprites/%s/sit.json" % role
 	if not FileAccess.file_exists(meta_path):
 		if anim:
