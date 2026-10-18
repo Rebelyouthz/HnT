@@ -420,8 +420,17 @@ func try_build(id: String) -> bool:
 
 
 func add_gold(n: int) -> void:
+	# The training alley pays nothing: rewards come after the lesson.
+	if n > 0 and not rewards_open():
+		return
 	data["gold"] = int(data["gold"]) + n
 	save()
+
+
+## False while a scene that pays no rewards (the training alley) is up.
+func rewards_open() -> bool:
+	var sc := get_tree().current_scene if is_inside_tree() else null
+	return sc == null or sc.get("levels") != false
 
 
 func add_gems(n: int) -> void:

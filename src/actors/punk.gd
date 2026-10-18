@@ -29,6 +29,13 @@ var staples := 0
 var staple_cd := 0.0
 var guarding := false
 var guard_low := false
+## Guard pose held a beat after a block lands, so the block reads.
+var _block_show := 0.0
+## Thrown or slammed: flat on the street (death clip held on its last
+## frame), then back up by playing the fall in reverse.
+var floored := 0.0
+var _getup_t := 0.0
+const GETUP := 0.55
 var _alert := Color.WHITE
 var _bob := 0.0
 var _hurt_t := 0.0
@@ -317,9 +324,28 @@ func _tick_sprite() -> void:
 			v = Vector2.ZERO
 		_moved = _moved.lerp(v, 0.35)
 	_moved_from = global_position
+	if (floored > 0.0 or _getup_t > 0.0) and _anim.sprite_frames.has_animation("death"):
+		var last := _anim.sprite_frames.get_frame_count("death") - 1
+		if _anim.animation != "death":
+			_anim.play("death")
+			_anim.frame = mini(last, int(get_meta("floor_from", 4)))
+		if floored > 0.0:
+			if _anim.frame >= last:
+				_anim.pause()
+				_anim.frame = last
+		else:
+			# Back up: the fall run backwards, down to the standing frames.
+			_anim.pause()
+			_anim.frame = int(round(lerpf(3.0, float(last), clampf(_getup_t / GETUP, 0.0, 1.0))))
+		return
 	var clip := "idle"
 	if telegraph <= 0.0 and recover <= 0.0:
 		_swing_clip = ""
+	if (guarding or _block_show > 0.0) and _anim.sprite_frames.has_animation("block"):
+		if _anim.animation != "block":
+			_anim.play("block")
+			_anim.speed_scale = 1.0
+		return
 	if _hurt_t > 0.0:
 		clip = "hurt"
 	elif telegraph > 0.0 or (recover > 0.0 and _swing_clip != ""):
@@ -482,12 +508,27 @@ func _physics_process(delta: float) -> void:
 		move_and_slide()
 		_mix_mod()
 		return
+	if _block_show > 0.0:
+		_block_show -= delta
+	if floored > 0.0:
+		floored -= delta
+		guarding = false
+		telegraph = 0.0
+		if floored <= 0.0:
+			_getup_t = GETUP
+			recover = maxf(recover, GETUP + 0.15)
+	elif _getup_t > 0.0:
+		_getup_t -= delta
 	if recover > 0.0:
 		recover -= delta
 		velocity.x = move_toward(velocity.x, 0.0, 200.0 * delta)
 		move_and_slide()
 		_lane()
 		_mix_mod()
+		# Lying, getting up or behind a guard: those poses play through
+		# the recovery (a plain stagger keeps whatever clip it was on).
+		if floored > 0.0 or _getup_t > 0.0 or guarding or _block_show > 0.0:
+			_tick_sprite()
 		return
 	if telegraph > 0.0:
 		telegraph -= delta
@@ -754,8 +795,20 @@ func _canal() -> void:
 		velocity.x = absf(speed)
 
 
+## Down on the street for t seconds. from = death-clip frame to start on
+## (4 = already falling, later = nearly flat).
+func floor_for(t: float, from: int = 4) -> void:
+	floored = t
+	_getup_t = 0.0
+	recover = maxf(recover, t + GETUP + 0.15)
+	guarding = false
+	set_meta("floor_from", from)
+	if _anim:
+		_anim.animation = "idle"
+
+
 func _maybe_guard(f: Fighter) -> bool:
-	if telegraph > 0.0 or recover > 0.0:
+	if telegraph > 0.0 or recover > 0.0 or floored > 0.0:
 		return false
 	var chance := float(kit.get("block", 0.2))
 	match App.difficulty:
@@ -1007,6 +1060,9 @@ func ignite(secs: float, by: String) -> void:
 func take_hit(kind: String, from: Node) -> void:
 	blocked_last = false
 	_hurt_t = 0.28
+	if floored > 0.0:
+		# Hit on the floor: stays down a little longer.
+		floored = maxf(floored, 0.45)
 	if telegraph > 0.0 and from is Fighter and (kind == "heavy" or kind == "roundhouse" or kind == "blade" or kind == "special"):
 		if get_tree().get_first_node_in_group("chase_crash") == null:
 			_clash(from as Fighter)
@@ -1019,6 +1075,11 @@ func take_hit(kind: String, from: Node) -> void:
 			Juice.play("res://assets/audio/block.wav")
 			guarding = false
 			blocked_last = true
+			_hurt_t = 0.0
+			_block_show = 0.32
+			Juice.popup_number(global_position + Vector2(0, -92), "BLOCKED", Color(0.7, 0.8, 1.0))
+			if from is Node2D:
+				velocity.x = signf(global_position.x - (from as Node2D).global_position.x) * 90.0
 			return
 		guarding = false
 	if plates > 0 and (kind == "light" or kind == "jump-kick" or kind == "slide"):
@@ -1286,7 +1347,7 @@ func _combo_fx(fx: String, from: Fighter) -> void:
 			flung_t = 0.34
 			flung_ground = false
 		"knockdown", "crush":
-			recover = maxf(recover, 1.2)
+			floor_for(1.1, 5)
 		"stun":
 			recover = maxf(recover, 0.95)
 			Juice.shout("STUNNED")

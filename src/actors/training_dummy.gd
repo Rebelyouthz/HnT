@@ -141,5 +141,10 @@ func take_hit(kind: String, from: Node) -> void:
 		Juice.popup_number(global_position + Vector2(randf_range(-8.0, 8.0), -84.0), str(last_dmg), Color(1.0, 0.92, 0.7))
 
 
+## A bag on a chain never goes down.
+func floor_for(_t: float, _from: int = 4) -> void:
+	pass
+
+
 func _die(_kind: String, _from: Node) -> void:
 	hp = max_hp

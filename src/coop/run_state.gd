@@ -109,6 +109,8 @@ func note_kill() -> void:
 
 
 func add_xp(n: int) -> void:
+	if not FamilyProfile.rewards_open():
+		return
 	n = int(ceil(float(n) * (1.0 + VaultCards.stat("xp"))))
 	if buff("insight_lens") > 0:
 		n = int(ceil(float(n) * (1.0 + 0.25 * buff("insight_lens"))))

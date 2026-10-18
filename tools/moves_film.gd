@@ -28,10 +28,13 @@ var MOVES := [
 	["pickup", [[0, "p", "p1_light"], [1, "p", "p1_heavy"], [5, "r", "p1_light"], [5, "r", "p1_heavy"]], 40],
 	["pipe_X", [[0, "p", "p1_light"], [3, "r", "p1_light"]], 50],
 	["pipe_Y", [[0, "p", "p1_heavy"], [3, "r", "p1_heavy"]], 56],
+	["pipe_XXY", [[0, "p", "p1_light"], [3, "r", "p1_light"], [22, "p", "p1_light"], [25, "r", "p1_light"], [46, "p", "p1_heavy"], [49, "r", "p1_heavy"]], 100],
 	["four_throw", [[0, "p", "p1_block"], [0, "p", "p1_throw"], [0, "p", "p1_shoot"], [0, "p", "p1_dash"], [6, "r", "p1_block"], [6, "r", "p1_throw"], [6, "r", "p1_shoot"], [6, "r", "p1_dash"]], 40],
+	["throw", [[0, "p", "p1_light"], [1, "p", "p1_heavy"], [5, "r", "p1_light"], [5, "r", "p1_heavy"]], 96],
+	["throw_slam", [[0, "p", "p1_light"], [1, "p", "p1_heavy"], [5, "r", "p1_light"], [5, "r", "p1_heavy"], [74, "p", "p1_down"], [76, "p", "p1_heavy"], [79, "r", "p1_heavy"], [82, "r", "p1_down"]], 130],
 	["four_knife", [[0, "p", "p1_block"], [0, "p", "p1_throw"], [0, "p", "p1_shoot"], [0, "p", "p1_dash"], [6, "r", "p1_block"], [6, "r", "p1_throw"], [6, "r", "p1_shoot"], [6, "r", "p1_dash"]], 40],
 ]
-const SHOTS := 8
+var SHOTS := int(OS.get_environment("SHOTS")) if OS.get_environment("SHOTS") != "" else 8
 
 var _n := 0
 var _f: Node2D
@@ -68,6 +71,10 @@ func _process(_d: float) -> bool:
 	if _n < 200 or current_scene == null:
 		return false
 	if _n == 200:
+		var only := OS.get_environment("ONLY")
+		if only != "":
+			var keep := only.split(",")
+			MOVES = MOVES.filter(func(m): return str(m[0]) in keep)
 		current_scene.call("_begin", 10)
 		for f in get_nodes_in_group("players"):
 			_f = f
@@ -112,6 +119,12 @@ func _next() -> void:
 		wp.set("kind", "pipe")
 		wp.global_position = _f.global_position
 		current_scene.add_child(wp)
+	if name == "throw" or name == "throw_slam":
+		_f.global_position = Vector2(1000.0, 492.0)
+		var p: Node = load("res://src/coop/party.gd").call("spawn_row", current_scene, {"title": "Bag Snatch", "x": 1044.0, "y": 492, "home": "street", "hp": 200, "pmin": 900.0, "pmax": 1200.0}, 1.0)
+		if p:
+			p.set("recover", 2.0)
+			p.set("kit", {"attack": "light", "block": 0.0})
 	if name == "four_knife":
 		_f.set("pickup", "")
 		_f.set("knives", 3)

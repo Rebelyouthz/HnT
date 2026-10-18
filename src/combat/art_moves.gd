@@ -111,6 +111,8 @@ func _physics_process(delta: float) -> void:
 				_run_art()
 			"grab":
 				_run_grab()
+			"throw":
+				_run_throw()
 			"team":
 				_run_team()
 		if _seq != "" and (_t >= _len or f.downed):
@@ -310,14 +312,21 @@ func _start_lh() -> void:
 	if wp != null:
 		f.pick_up(wp)
 		return
-	var near := _nearest(GRAB_REACH, GRAB_DEPTH)
-	if near != null and d != "U" and d != "D" and not (near is ActBoss) and near.vehicle == "":
+	var near := _nearest(THROW_REACH, GRAB_DEPTH)
+	if near != null and not (near is ActBoss) and near.vehicle == "":
 		if BrutalBook.broken(near):
 			var bid := BrutalBook.for_grab(f.role, d, f.pickup)
 			if bid != "":
 				BrutalRun.start(f, near, bid)
 				return
-		_start_grab(near, d)
+		if near is TrainingDummy:
+			# A heavy bag is not a body to throw: reach, grab air, let go.
+			_start_throw(null)
+			return
+		if f._anim != null and f._anim.sprite_frames.has_animation("grab_reach"):
+			_start_throw(near)
+		else:
+			_start_grab(near, d)
 		return
 	var r := Elements.art_for(f.role, "N" if d == "B" else d)
 	if r.is_empty():
@@ -567,6 +576,149 @@ const GRAB_SHAPES := {
 }
 
 
+## TEKKEN THROW (X + Y up close): he reaches (grab_reach), the thug is
+## hauled in to his hands, then the throw: the father hoists him overhead
+## and slams him down in front (his hammer blow), the Kid hooks his legs out
+## with a sweep. Always the real thug's own body, never a stand-in. A thug
+## who is guarding (or gets lucky) twists free on contact and shoves him off.
+const THROW_REACH := 62.0
+## Throw clip per hero: the body clip after the reach, and where in it the
+## thug hits the ground (share of the clip).
+const THROW_FINISH := {"father": ["hammer", 0.55], "son": ["sweep", 0.5]}
+
+
+func _clip_len(clip: String) -> float:
+	if f._anim == null or not f._anim.sprite_frames.has_animation(clip):
+		return 0.5
+	return float(f._anim.sprite_frames.get_frame_count(clip)) / maxf(1.0, f._anim.sprite_frames.get_animation_speed(clip))
+
+
+func _start_throw(e: Punk) -> void:
+	var reach := _clip_len("grab_reach") if f._anim != null and f._anim.sprite_frames.has_animation("grab_reach") else 0.25
+	var fin: Array = THROW_FINISH.get(f.role, ["heavy", 0.5])
+	var clip := str(fin[0])
+	if f._anim == null or not f._anim.sprite_frames.has_animation(clip):
+		clip = "heavy"
+	var body := _clip_len(clip)
+	_row = {"reach": reach, "clip": clip, "body": body, "slam": reach + body * float(fin[1]), "whiff": e == null, "broke": false}
+	if e != null:
+		if e.global_position.x != f.global_position.x:
+			f.facing = 1 if e.global_position.x > f.global_position.x else -1
+			f.visual.scale.x = float(f.facing)
+		# Guarding thugs break it; a fresh one sometimes twists free.
+		_row["broke"] = e.guarding or (e.recover <= 0.0 and randf() < (0.25 if App.difficulty == "finals" else 0.12))
+	var short := e == null or bool(_row["broke"])
+	_begin("throw", (reach + 0.34) if short else (reach + body + 0.06))
+	_id = "throw"
+	_victim = e
+	if e != null:
+		_vstart = e.global_position
+		e.set_physics_process(false)
+		e.velocity = Vector2.ZERO
+		e.telegraph = 0.0
+	_restart(f._anim, "grab_reach")
+	f.anim_atk = f._anim.animation if f._anim else ""
+	f._atk_t = 0.3
+	Mixer.play_sfx("res://assets/audio/sfx/whoosh_spin.ogg", 0.8, -6.0)
+
+
+## The thug held: his hurt pose, frozen, so he reads as caught.
+func _hold_pose(e: Punk) -> void:
+	var a: AnimatedSprite2D = e.get("_anim")
+	if a != null and a.sprite_frames != null and a.sprite_frames.has_animation("hurt"):
+		if a.animation != "hurt":
+			a.play("hurt")
+		a.pause()
+		a.frame = mini(1, a.sprite_frames.get_frame_count("hurt") - 1)
+
+
+func _run_throw() -> void:
+	f._atk_t = 0.3
+	var e := _victim
+	var reach := float(_row["reach"])
+	# The son hooks the legs from closer in than his father's lift.
+	var hold_x := f.global_position.x + (26.0 if f.role == "father" else 16.0) * float(_dir)
+	if _t < reach:
+		if e != null and is_instance_valid(e):
+			# Hauled in: the body slides into his hands.
+			var u := clampf(_t / reach, 0.0, 1.0)
+			u = u * u
+			e.global_position.x = lerpf(_vstart.x, hold_x, u)
+			e.global_position.y = lerpf(_vstart.y, f.global_position.y + 1.0, u)
+			_hold_pose(e)
+		return
+	if bool(_row["whiff"]):
+		if _beat(reach):
+			Juice.popup_number(f.global_position + Vector2(0, -96), "GRABS WORK ON THUGS", Palette.MUTED)
+			_restart(f._anim, "idle")
+		return
+	if e == null or not is_instance_valid(e):
+		_end()
+		return
+	if bool(_row["broke"]):
+		if _beat(reach):
+			_release_victim()
+			_victim = null
+			Juice.popup_number(e.global_position + Vector2(0, -90), "BROKE FREE", Color(1.0, 0.6, 0.3))
+			Mixer.play_sfx("res://assets/audio/block.wav", 1.1, -2.0)
+			e.global_position.x = f.global_position.x + 46.0 * float(_dir)
+			e.recover = 0.0
+			f.art_vx = -140.0 * float(_dir)
+			HitReact.react(f.visual, f.facing, "head", -float(f.facing), 0.4)
+			_restart(f._anim, "hurt")
+		return
+	var clip := str(_row["clip"])
+	if _beat(reach):
+		_restart(f._anim, clip)
+		f.anim_atk = clip
+		Juice.hitstop(3)
+		Mixer.play_sfx("res://assets/audio/sfx/hit_knee.ogg", 0.8, -4.0)
+		VoBank.effort(f.role, 1.0, "throw")
+	var slam := float(_row["slam"])
+	if _t < slam:
+		_hold_pose(e)
+		var u := clampf((_t - reach) / maxf(0.01, slam - reach), 0.0, 1.0)
+		if f.role == "father":
+			# Hoisted overhead, body flat, then down it comes.
+			var up := sin(u * PI * 0.5) if u < 0.75 else lerpf(1.0, 0.6, (u - 0.75) / 0.25)
+			e.global_position = Vector2(f.global_position.x + lerpf(26.0, 8.0, u) * float(_dir), f.global_position.y + 1.0)
+			if e.visual:
+				e.visual.position.y = -78.0 * up
+				e.visual.rotation = -float(_dir) * lerpf(0.0, PI * 0.5, minf(1.0, u * 1.4))
+				e.z_index = 1
+		else:
+			# Legs hooked: he tips backward as the sweep goes through.
+			e.global_position = Vector2(hold_x, f.global_position.y + 1.0)
+			if e.visual:
+				e.visual.rotation = float(_dir) * lerpf(0.0, 0.35, u * u)
+		return
+	if _beat(slam):
+		e.global_position.x = f.global_position.x + (38.0 if f.role == "father" else 24.0) * float(_dir)
+		_release_victim()
+		var at := e.global_position
+		var host := f.get_parent()
+		ArtFx.spawn(host, at, "ring", Color(0.9, 0.85, 0.75), 70.0, 0.35)
+		ArtFx.spawn(host, at, "cracks", Color(0.6, 0.5, 0.4), 34.0, 1.0)
+		Juice.land_puff(at)
+		Juice.pulse_shake(9.0 if f.role == "father" else 6.0)
+		Juice.hitstop(6)
+		Mixer.play_sfx("res://assets/audio/sfx/body_fall.ogg", 0.9, 0.0)
+		Mixer.play_sfx("res://assets/audio/sfx/bone_crack.ogg", 1.0, -4.0)
+		strike(f, e, 32 if f.role == "father" else 26, "knockdown", "")
+		if not is_instance_valid(e) or e.hp <= 0:
+			Juice.kill_cam(at)
+		else:
+			# Flat on his back: slammed lands him already down, the sweep
+			# drops him from the knees.
+			e.facing = -_dir
+			if e.visual:
+				e.visual.scale.x = float(e.facing)
+			e.floor_for(1.5 if f.role == "father" else 1.25, 8 if f.role == "father" else 4)
+		FamilyProfile.data["grabs_landed"] = int(FamilyProfile.data.get("grabs_landed", 0)) + 1
+		Juice.shout("BODY SLAM" if f.role == "father" else "TAKEDOWN")
+		_victim = null
+
+
 func _start_grab(e: Punk, d: String) -> void:
 	var g := Elements.grab_for(f.role, d)
 	if g.is_empty() or not GRAB_SHAPES.has(str(g["id"])):
@@ -684,6 +836,7 @@ func _release_victim() -> void:
 	e.set_physics_process(true)
 	e.z_index = 0
 	if e.visual:
+		e.visual.visible = true
 		e.visual.position.y = 0.0
 		e.visual.rotation = 0.0
 

@@ -19,6 +19,8 @@ var _step := -1
 var _gate := 0.0
 var _count := 0
 var _knives0 := 0
+var _counted_strike := -1
+var _wrong_t := 0.0
 var _bag: TrainingDummy
 var _bag2: TrainingDummy
 var _coach: Node2D
@@ -27,29 +29,36 @@ var _lookouts: Array[Punk] = []
 var _panel: PanelContainer
 var _step_lab: Label
 var _key_lab: Label
+var _tick_lab: Label
 
-## [title, pad keys, keyboard keys, coach lines, gate x while it runs]
-var _lessons := [
-	["WALK TO THE BAG", "LEFT STICK  ·  HOLD R2 TO RUN", "A / D / W / S  ·  HOLD SHIFT TO RUN",
-		[["father", "Basement's too small. Out back. Walk to the bag."]], BAG_X - 90.0],
-	["RIGHT HAND  ×3", "X  ·  RIGHT HAND", "J  /  LEFT MOUSE",
-		[["father", "Jab. Fast and small. Three of them."]], BAG_X + 60.0],
-	["LEFT HAND  ×2", "Y  ·  LEFT HAND  ·  HOLD FOR POWER", "K  /  MIDDLE MOUSE",
-		[["son", "Can I just hit it really hard?"], ["father", "That's a heavy. Plant your feet. Two."]], BAG_X + 60.0],
-	["GUARD  ×2", "HOLD L1 (TOP LEFT) WHEN THE BAG SWINGS  ·  STICK UP = HIGH, DOWN = LOW", "HOLD Q WHEN THE BAG SWINGS  ·  W = HIGH, S = LOW",
-		[["father", "Now it swings back. Guard up and read the height."]], BAG_X + 60.0],
-	["JUMP", "A", "SPACE",
-		[["father", "Feet off the ground. Hop."]], BAG_X + 60.0],
-	["PICK UP THE PIPE", "STAND ON IT  ·  X + Y TOGETHER", "STAND ON IT  ·  J + K TOGETHER",
-		[["son", "There's a pipe."], ["father", "Stand on it, both hands. Pick it up. Don't lick it."]], BAG_X + 60.0],
-	["HIT THE BAG WITH IT  ×2", "X", "J",
-		[["father", "Second bag. Swing it. Twice."]], BAG2_X + 60.0],
-	["THROW THE PIPE", "HOLD ALL FOUR  ·  L1 + L2 + R1 + R2", "HOLD I + U + O + SHIFT",
-		[["father", "Now throw it. A thrown pipe is a short conversation."]], BAG2_X + 60.0],
-	["THROW A KNIFE", "HANDS EMPTY  ·  HOLD L1 + L2 + R1 + R2", "HANDS EMPTY  ·  HOLD I + U + O + SHIFT",
-		[["father", "Knives on your belt. Same grip, all four. Throw one."]], BAG2_X + 60.0],
-	["BEAT THE LOOKOUTS", "EVERYTHING YOU JUST LEARNED", "EVERYTHING YOU JUST LEARNED",
-		[["", "TWO OF GANT'S LOOKOUTS. THEY HEARD THE NOISE."], ["father", "Real ones. Everything you just learned. Go."]], END_X],
+## One lesson each: the button it teaches ("btn": what the player presses,
+## read from Fighter.last_btn when the blow lands, so a mashed or comboed
+## press still counts), how many it needs, the coach's lines and which bag.
+const LESSONS := [
+	{"id": "walk", "title": "WALK TO THE BAG", "pad": "LEFT STICK  ·  HOLD R2 TO RUN", "key": "A / D / W / S  ·  HOLD SHIFT TO RUN", "need": 1,
+		"lines": [["father", "Basement's too small. Out back. Walk to the bag."]]},
+	{"id": "right", "title": "RIGHT HAND", "pad": "PRESS X  ·  ON THE BAG", "key": "PRESS J  ·  ON THE BAG", "btn": ["X"], "need": 3,
+		"lines": [["father", "Right hand first. X. Three on the bag."]]},
+	{"id": "left", "title": "LEFT HAND", "pad": "PRESS Y  ·  ON THE BAG", "key": "PRESS K  ·  ON THE BAG", "btn": ["Y"], "need": 3,
+		"lines": [["father", "Now the left. Y. Three."]]},
+	{"id": "power", "title": "POWER PUNCH", "pad": "HOLD Y UNTIL YOU GLOW, LET GO", "key": "HOLD K UNTIL YOU GLOW, LET GO", "btn": ["HOLD Y"], "need": 1,
+		"lines": [["son", "Can I just hit it really hard?"], ["father", "Hold Y. Wait for it. Let go."]]},
+	{"id": "kick", "title": "KICKS", "pad": "HOLD L2 (BIG LEFT TRIGGER) + X OR Y", "key": "HOLD U + J OR K", "btn": ["L2+X", "L2+Y"], "need": 2,
+		"lines": [["father", "Legs are longer than arms. Hold L2 and press X or Y."]]},
+	{"id": "guard", "title": "GUARD", "pad": "HOLD L1 (TOP LEFT) WHEN THE BAG SWINGS", "key": "HOLD Q WHEN THE BAG SWINGS", "need": 2,
+		"lines": [["father", "Now it swings back. Hold your guard up when it comes."]]},
+	{"id": "jump", "title": "JUMP", "pad": "A", "key": "SPACE", "need": 1,
+		"lines": [["father", "Feet off the ground. Hop."]]},
+	{"id": "pickup", "title": "PICK UP THE PIPE", "pad": "STAND ON IT  ·  X + Y TOGETHER", "key": "STAND ON IT  ·  J + K TOGETHER", "need": 1,
+		"lines": [["son", "There's a pipe."], ["father", "Stand on it, both hands. Pick it up. Don't lick it."]]},
+	{"id": "pipe", "title": "HIT WITH THE PIPE", "pad": "X SWING  ·  Y SLAM  ·  X X Y = CRUSH", "key": "J SWING  ·  K SLAM  ·  J J K = CRUSH", "btn": ["X", "Y"], "need": 3,
+		"lines": [["father", "Second bag. X swings it, Y brings it down. X, X, Y and it's a crush. Three."]]},
+	{"id": "toss", "title": "THROW THE PIPE", "pad": "HOLD L1 + L2 + R1 + R2", "key": "HOLD I + U + O + SHIFT", "need": 1,
+		"lines": [["father", "Now throw it. All four shoulders. A thrown pipe is a short conversation."]]},
+	{"id": "knife", "title": "THROW A KNIFE", "pad": "HANDS EMPTY  ·  HOLD L1 + L2 + R1 + R2", "key": "HANDS EMPTY  ·  HOLD I + U + O + SHIFT", "need": 1,
+		"lines": [["father", "Knives on your belt. Same grip, all four. Throw one."]]},
+	{"id": "lookouts", "title": "BEAT THE LOOKOUTS", "pad": "X + Y UP CLOSE THROWS  ·  DOWN + Y ON A MAN DOWN", "key": "J + K UP CLOSE THROWS  ·  S + K ON A MAN DOWN", "need": 2,
+		"lines": [["", "TWO OF GANT'S LOOKOUTS. THEY HEARD THE NOISE."], ["father", "Real ones. X and Y together up close: grab him, put him down. Down and Y while he's on the floor. Go."]]},
 ]
 
 
@@ -152,8 +161,8 @@ func _build_panel() -> void:
 	ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_panel = PanelContainer.new()
 	_panel.add_theme_stylebox_override("panel", UiKit.panel(Palette.PANEL, Palette.LEMON))
-	_panel.position = Vector2(390, 196)
-	_panel.custom_minimum_size = Vector2(500, 0)
+	_panel.position = Vector2(370, 74)
+	_panel.custom_minimum_size = Vector2(540, 0)
 	_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	ui.add_child(_panel)
 	var col := VBoxContainer.new()
@@ -167,53 +176,112 @@ func _build_panel() -> void:
 	_key_lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	UiKit.apply_label(_key_lab, 15, Palette.TEXT)
 	col.add_child(_key_lab)
+	_tick_lab = Label.new()
+	_tick_lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	UiKit.apply_label(_tick_lab, 18, Color(0.5, 1.0, 0.55))
+	col.add_child(_tick_lab)
 	_panel.visible = false
 
 
+## The lesson running now ({} between lessons and after the last).
+func lesson() -> Dictionary:
+	return LESSONS[_step] if _step >= 0 and _step < LESSONS.size() else {}
+
+
+func lesson_id() -> String:
+	return str(lesson().get("id", ""))
+
+
 func _paint_panel() -> void:
-	if _step < 0 or _step >= _lessons.size():
+	var l := lesson()
+	if l.is_empty():
 		_panel.visible = false
 		return
-	var l: Array = _lessons[_step]
 	_panel.visible = true
-	_step_lab.text = "LESSON %d / %d  ·  %s" % [_step + 1, _lessons.size(), str(l[0])]
+	_step_lab.text = "LESSON %d / %d  ·  %s" % [_step + 1, LESSONS.size(), str(l["title"])]
 	var pad := not Input.get_connected_joypads().is_empty()
-	_key_lab.text = str(l[1] if pad else l[2])
+	_key_lab.text = str(l["pad"] if pad else l["key"])
+	var need := int(l.get("need", 1))
+	var dots := ""
+	for i in need:
+		dots += ("●" if i < _count else "○") + " "
+	_tick_lab.text = "%s  %d / %d%s" % [dots.strip_edges(), _count, need, "  ✅" if _count >= need else ""]
 
 
 func _begin(i: int) -> void:
 	_step = i
 	_count = 0
-	if i >= _lessons.size():
+	_counted_strike = -1
+	if i >= LESSONS.size():
 		_panel.visible = false
 		_gate = map_w
 		return
-	var l: Array = _lessons[i]
-	_gate = float(l[4])
+	var l: Dictionary = LESSONS[i]
+	var id := str(l["id"])
+	# The lesson card IS the objective here: the objectives card would sit
+	# right behind it, so it stays folded away for the whole alley.
+	var mh := get_tree().get_first_node_in_group("mission_hud")
+	if mh is CanvasLayer:
+		(mh as CanvasLayer).visible = false
+	_gate = BAG_X - 90.0 if id == "walk" else (END_X if id == "lookouts" else (BAG2_X + 60.0 if id in ["pipe", "toss", "knife"] else BAG_X + 60.0))
 	_paint_panel()
 	Juice.play("res://assets/audio/card.wav")
 	var lines: Array = []
-	for row in l[3]:
+	for row in l["lines"]:
 		lines.append({"who": str(row[0]), "text": str(row[1])})
 	if _talk:
 		_talk.play(lines, true)
-	match i:
-		5:
+	_bag.mode = "spar" if id == "guard" else "still"
+	match id:
+		"pickup":
 			_drop_pipe()
-		3:
-			_bag.mode = "spar"
-		4:
-			_bag.mode = "still"
-		6:
+		"pipe":
 			_coach_to(BAG2_X - 170.0)
-		8:
+		"knife":
 			var f := _hero()
 			if f:
 				f.knives = maxi(f.knives, 2)
 				_knives0 = f.knives
-		9:
+		"lookouts":
 			_spawn_lookouts()
 			_coach_to(BAG2_X + 80.0)
+
+
+## One more of what the lesson asks: 1/3, 2/3, 3/3 ✅ over the hero and in
+## the panel, a rising tick; the last one finishes the lesson.
+func _tick() -> void:
+	var l := lesson()
+	if l.is_empty():
+		return
+	var need := int(l.get("need", 1))
+	if _count >= need:
+		return
+	_count += 1
+	_paint_panel()
+	var f := _hero()
+	var at := (f.global_position if f else Vector2(BAG_X, 480)) + Vector2(0, -110)
+	var done := _count >= need
+	Juice.popup_number(at, "%d / %d%s" % [_count, need, "  ✅" if done else ""], Color(0.45, 1.0, 0.5) if done else Color(0.85, 1.0, 0.75))
+	Mixer.play_sfx("res://assets/audio/sfx/parry_ring.ogg", 0.9 + 0.12 * float(_count), -8.0)
+	if done:
+		_done_step()
+
+
+## The blow landed but with another button: say which one the lesson wants.
+func _wrong(btn: String) -> void:
+	if _clock_t() - _wrong_t < 1.2:
+		return
+	_wrong_t = _clock_t()
+	var l := lesson()
+	var pad := not Input.get_connected_joypads().is_empty()
+	var want := str(l["pad"] if pad else l["key"]).split("  ·  ")[0]
+	var f := _hero()
+	var at := (f.global_position if f else Vector2(BAG_X, 480)) + Vector2(0, -130)
+	Juice.popup_number(at, "THAT WAS %s  ·  %s" % [btn, want], Color(1.0, 0.65, 0.3))
+
+
+func _clock_t() -> float:
+	return float(Time.get_ticks_msec()) / 1000.0
 
 
 ## The pipe lies right by the first bag when its lesson starts, a bobbing
@@ -245,10 +313,9 @@ func _drop_pipe() -> void:
 
 func _done_step() -> void:
 	Juice.shout("GOOD")
-	Mixer.play_sfx("res://assets/audio/sfx/parry_ring.ogg", 1.2, -6.0)
 	var next := _step + 1
 	_step = -2
-	get_tree().create_timer(0.6).timeout.connect(func() -> void: _begin(next))
+	get_tree().create_timer(0.9).timeout.connect(func() -> void: _begin(next))
 
 
 func _hero() -> Fighter:
@@ -272,31 +339,33 @@ func _ready() -> void:
 	)
 
 
-func _on_struck(kind: String, bag: TrainingDummy) -> void:
+func _on_struck(_kind: String, bag: TrainingDummy) -> void:
+	var l := lesson()
+	if l.is_empty() or not l.has("btn"):
+		return
 	var f := _hero()
-	match _step:
-		1:
-			if bag == _bag and kind in ["light", "gut-punch", "body_r"]:
-				_count += 1
-				if _count >= 3:
-					_done_step()
-		2:
-			if bag == _bag and kind in ["heavy", "launcher", "uppercut", "turn_punch", "punch_l", "hook_l", "upper_l", "body_l"]:
-				_count += 1
-				if _count >= 2:
-					_done_step()
-		6:
-			if bag == _bag2 and f and f.pickup != "":
-				_count += 1
-				if _count >= 2:
-					_done_step()
+	if f == null:
+		return
+	var want_bag := _bag2 if str(l["id"]) == "pipe" else _bag
+	if bag != want_bag:
+		return
+	# One count per blow, whatever it hit along the way.
+	var sid := int(f.get("_strike_id"))
+	if sid == _counted_strike:
+		return
+	var btn := str(f.last_btn)
+	if str(l["id"]) == "pipe" and f.pickup == "":
+		return
+	if btn in (l["btn"] as Array):
+		_counted_strike = sid
+		_tick()
+	else:
+		_wrong(btn)
 
 
 func _on_guarded() -> void:
-	if _step == 3:
-		_count += 1
-		if _count >= 2:
-			_done_step()
+	if lesson_id() == "guard":
+		_tick()
 
 
 func _spawn_lookouts() -> void:
@@ -322,37 +391,37 @@ func _process(delta: float) -> void:
 	var f := _hero()
 	if f == null:
 		return
-	match _step:
-		0:
+	match lesson_id():
+		"walk":
 			if f.global_position.x >= BAG_X - 140.0:
-				_done_step()
-		4:
+				_tick()
+		"jump":
 			if f.hop < -24.0:
-				_done_step()
-		5:
+				_tick()
+		"pickup":
 			if f.pickup != "":
-				_done_step()
-		7:
+				_tick()
+		"toss":
 			if f.pickup == "":
-				_done_step()
-		8:
+				_tick()
+		"knife":
 			if f.knives < _knives0:
-				_done_step()
-		9:
-			var alive := 0
+				_tick()
+		"lookouts":
+			var down := 0
 			for p in _lookouts:
-				if is_instance_valid(p) and not p.is_queued_for_deletion() and p.hp > 0:
-					alive += 1
-			if alive == 0:
-				_begin(_lessons.size())
+				if not is_instance_valid(p) or p.is_queued_for_deletion() or p.hp <= 0:
+					down += 1
+			while _count < down:
+				_tick()
 		_:
-			if _step >= _lessons.size() and Party.all_past(END_X - 120.0):
+			if _step >= LESSONS.size() and Party.all_past(END_X - 120.0):
 				_start_film2()
 
 
 ## Tests and replays: every lesson ticked off at once.
 func skip_training() -> void:
-	_begin(_lessons.size())
+	_begin(LESSONS.size())
 	_start_film2()
 
 

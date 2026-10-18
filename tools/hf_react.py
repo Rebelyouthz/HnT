@@ -1,7 +1,8 @@
 """BONE YARD victim reactions for the street thugs: Wan 2.2 image-to-video
 (HF ZeroGPU) from a frame of the thug's own idle sheet, sliced at the same
 body scale as his hurt clip.  python3 tools/hf_react.py <workdir> [who ...]
-Writes assets/sprites/<who>/r_knee|r_blind|r_heart.png/.json."""
+Writes assets/sprites/<who>/r_knee|r_blind|r_heart|block.png/.json
+(HF_MOVES=block for just the guard)."""
 import json, os, re, shutil, subprocess, sys, time
 from gradio_client import Client, handle_file
 from PIL import Image
@@ -15,7 +16,11 @@ MOVES = {
 	"r_knee": (3.0, "The man screams as his front knee suddenly buckles the wrong way; he collapses down onto his other knee, clutching his leg with both hands, rocking in pain."),
 	"r_blind": (3.0, "The man clutches both hands over his eyes and staggers backward blindly, bent over, swinging one arm at nothing, stumbling."),
 	"r_heart": (3.0, "The man suddenly stiffens, clutches his chest with both hands, takes two shaky steps, his knees give out and he collapses face down onto the ground and lies still."),
+	"block": (2.0, "The man snaps both forearms up in front of his face in a tight boxing guard, flinches half a step backward as a hard punch lands on his arms, then holds the guard up, eyes over his fists."),
 }
+# HF_MOVES=block,r_knee picks which reactions to make (default: all).
+if os.environ.get("HF_MOVES"):
+	MOVES = {k: v for k, v in MOVES.items() if k in os.environ["HF_MOVES"].split(",")}
 WHO = {"bag_snatch": "The thief in the red hoodie with the hood up, a white bandana mask over his nose and mouth, a brown satchel, baggy grey pants and red sneakers,",
        "repo_goon": "The bald heavyset thug in the grey vest and grey cargo pants with a gold chain and brown boots,",
        "mohawk": "The punk with the spiky black mohawk, black leather jacket, ripped blue jeans and black boots,",

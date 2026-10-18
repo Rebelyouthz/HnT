@@ -1,16 +1,22 @@
 extends SceneTree
 
-## Back-alley training plays through on simulated buttons: every lesson
-## opens only after the one before (walk, jab x3, heavy x2, guard x2, jump,
-## pick up, hit with the pipe, throw it, knife, lookouts), then the closing
-## talk and Dock Street. Prints TRAINING OK.
+## Back-alley training plays through on simulated buttons, like a player:
+## every lesson opens only after the one before and counts the button the
+## panel names (mashed presses too). Walk, right hand, left hand, power
+## punch, kicks, guard, jump, pick up the pipe, hit with it, throw it,
+## knife, lookouts; then the closing talk and Dock Street. No level-ups and
+## no gold in the alley. Prints TRAINING OK.
 ##   godot --headless --fixed-fps 60 -s tests/training_test.gd
+
+const FOUR := ["p1_block", "p1_throw", "p1_shoot", "p1_dash"]
+const ALL := ["p1_right", "p1_left", "p1_light", "p1_heavy", "p1_block", "p1_jump", "p1_throw", "p1_shoot", "p1_dash", "p1_up", "p1_down"]
 
 var _n := 0
 var _seen: Array = []
 var _fail: Array[String] = []
-var _act := ""
-var _hold := 0
+var _gold0 := -1
+var _last_id := ""
+var _t0 := 0
 
 
 func _initialize() -> void:
@@ -19,9 +25,11 @@ func _initialize() -> void:
 
 
 func _end() -> bool:
-	for a in ["p1_right", "p1_left", "p1_light", "p1_heavy", "p1_block", "p1_jump", "p1_throw", "p1_shoot", "p1_dash", "p1_up", "p1_down"]:
+	for a in ALL:
 		Input.action_release(a)
-	if _fail.is_empty() and _seen.size() >= 10:
+	if _seen.size() < 12:
+		_fail.append("only saw %s" % str(_seen))
+	if _fail.is_empty():
 		print("TRAINING OK  ", _seen)
 	else:
 		print("TRAINING FAIL ", _fail, "  lessons ", _seen)
@@ -31,22 +39,29 @@ func _end() -> bool:
 	return true
 
 
-const FOUR := ["p1_block", "p1_throw", "p1_shoot", "p1_dash"]
-
-
-func _tap_all(acts: Array) -> void:
+## Press a set of actions for 4 frames every `every` frames.
+func _tap(acts: Array, every := 14) -> void:
 	for a in acts:
-		if _n % 20 == 0:
+		if _n % every == 0:
 			Input.action_press(a)
-		elif _n % 20 == 6:
+		elif _n % every == 4:
 			Input.action_release(a)
 
 
-func _tap(a: String) -> void:
-	if _n % 14 == 0:
-		Input.action_press(a)
-	elif _n % 14 == 3:
-		Input.action_release(a)
+func _toward(f: Node2D, x: float, y := -1.0) -> bool:
+	if f.global_position.x < x - 8.0:
+		Input.action_press("p1_right")
+		return false
+	if f.global_position.x > x + 8.0:
+		Input.action_press("p1_left")
+		return false
+	if y > 0.0 and f.global_position.y < y - 5.0:
+		Input.action_press("p1_down")
+		return false
+	if y > 0.0 and f.global_position.y > y + 5.0:
+		Input.action_press("p1_up")
+		return false
+	return true
 
 
 func _process(_d: float) -> bool:
@@ -54,26 +69,33 @@ func _process(_d: float) -> bool:
 	paused = false
 	if _n == 2:
 		root.get_node("FamilyProfile").call("reset_progress")
-		root.get_node("App").set("solo_role", "son")
+		root.get_node("App").set("solo_role", "father")
 		root.get_node("App").call("enter_map", "tutorial_alley")
 		return false
 	if _n < 10 or current_scene == null:
 		return false
-	var id := current_scene.scene_file_path.get_file().get_basename()
-	if id == "dock_street":
+	var scene_id := current_scene.scene_file_path.get_file().get_basename()
+	if scene_id == "dock_street":
 		return _end()
-	if id != "tutorial_alley":
+	if scene_id != "tutorial_alley":
 		return false
-	# First-use guides (the level-up cards one) wait for a press: close them.
 	for g in get_nodes_in_group("guide"):
 		g.queue_free()
-	var cp: Node = current_scene.get_node_or_null("CardPick") if current_scene else null
-	if cp and _n % 30 == 0:
-		cp.call("_choose", 0)
-	var s: int = current_scene.get("_step")
-	if s >= 0 and not _seen.has(s):
-		_seen.append(s)
-		print("lesson ", s, " at frame ", _n)
+	if current_scene.get_node_or_null("CardPick") or current_scene.get_node_or_null("LevelUpFx"):
+		_fail.append("a level-up showed in the training alley")
+		return _end()
+	var fp := root.get_node("FamilyProfile")
+	if _gold0 < 0:
+		_gold0 = int(fp.data.get("gold", 0))
+	var id: String = current_scene.call("lesson_id")
+	if id != "" and id != _last_id:
+		_last_id = id
+		_t0 = _n
+		if not _seen.has(id):
+			_seen.append(id)
+		for a in ALL:
+			Input.action_release(a)
+		print("lesson ", id, " at frame ", _n)
 	var f: Node2D = null
 	for p in get_nodes_in_group("players"):
 		f = p
@@ -81,59 +103,54 @@ func _process(_d: float) -> bool:
 		return false
 	for a in ["p1_right", "p1_left", "p1_up", "p1_down"]:
 		Input.action_release(a)
-	if not (s in [3, 7, 8]):
+	if id != "guard" and not (id in ["toss", "knife"]):
 		for a in FOUR:
 			Input.action_release(a)
-	elif s == 3:
-		for a in ["p1_throw", "p1_shoot", "p1_dash"]:
-			Input.action_release(a)
-	# Line up in depth with the bag the lesson is on.
-	var bag: Node2D = current_scene.get("_bag2") if s >= 6 else current_scene.get("_bag")
-	if s in [1, 2, 6] and bag:
-		if f.global_position.y < bag.global_position.y - 5.0:
-			Input.action_press("p1_down")
-		elif f.global_position.y > bag.global_position.y + 5.0:
-			Input.action_press("p1_up")
-	match s:
-		0:
+	var bag: Node2D = current_scene.get("_bag")
+	var bag2: Node2D = current_scene.get("_bag2")
+	match id:
+		"walk":
 			Input.action_press("p1_right")
-		1, 2:
-			if f.global_position.x < 560.0:
-				Input.action_press("p1_right")
-			else:
-				_tap("p1_light" if s == 1 else "p1_heavy")
-		3:
+		"right":
+			if _toward(f, bag.global_position.x - 50.0, bag.global_position.y):
+				_tap(["p1_light"], 8)
+		"left":
+			if _toward(f, bag.global_position.x - 50.0, bag.global_position.y):
+				_tap(["p1_heavy"], 10)
+		"power":
+			if _toward(f, bag.global_position.x - 50.0, bag.global_position.y):
+				# Hold Y for a second, let go.
+				if (_n - _t0) % 90 == 5:
+					Input.action_press("p1_heavy")
+				elif (_n - _t0) % 90 == 70:
+					Input.action_release("p1_heavy")
+		"kick":
+			if _toward(f, bag.global_position.x - 55.0, bag.global_position.y):
+				Input.action_press("p1_throw")
+				_tap(["p1_light"], 16)
+		"guard":
 			Input.action_press("p1_block")
-			if f.global_position.x < 560.0:
-				Input.action_press("p1_right")
-		4:
-			_tap("p1_jump")
-		5:
-			# X + Y together on the pipe by the first bag.
-			var px: float = 640.0 - 110.0
-			if f.global_position.x < px - 10.0:
-				Input.action_press("p1_right")
-			elif f.global_position.x > px + 10.0:
-				Input.action_press("p1_left")
-			else:
-				_tap_all(["p1_light", "p1_heavy"])
-		6:
-			if f.global_position.x < 1318.0:
-				Input.action_press("p1_right")
-			else:
-				_tap("p1_light")
-				if false:
-					print("s6 pl=", f.get("parkour_lock"), " roll=", f.get("roll_t"), " ct=", f.get("_combo_t"), " blk=", f.get("blocking"), " plane=", f.get("plane"), " snap=", f.get("snap_ready"), " hush=", f.get("_hush_until"), " clk=", f.get("_clock"), " cd=", f.get("attack_cd"), " face=", f.get("facing"), " bag hp=", bag.get("hp"), " dummy mode=", bag.get("mode"))
-		7, 8:
-			# L1 + L2 + R1 + R2 held together throws.
-			_tap_all(FOUR)
-		10:
-			Input.action_press("p1_right")
-		9:
+			_toward(f, bag.global_position.x - 50.0, bag.global_position.y)
+		"jump":
+			_tap(["p1_jump"])
+		"pickup":
+			var px: float = current_scene.get("PIPE_X")
+			if _toward(f, px):
+				_tap(["p1_light", "p1_heavy"], 20)
+		"pipe":
+			if _toward(f, bag2.global_position.x - 55.0, bag2.global_position.y):
+				_tap(["p1_light"], 22)
+		"toss", "knife":
+			_tap(FOUR, 20)
+		"lookouts":
 			for e in get_nodes_in_group("enemies"):
 				if e.has_method("take_hit") and not e.has_signal("struck") and int(e.get("hp")) > 0:
 					e.call("take_hit", "finish", f)
-	if _n > 60 * 150:
-		_fail.append("stuck at lesson %d x=%d y=%d pickup=%s bag2=%s %s cnt=%s" % [s, f.global_position.x, f.global_position.y, f.get("pickup"), current_scene.get("_bag2").hits, current_scene.get("_bag2").global_position, current_scene.get("_count")])
+		"":
+			Input.action_press("p1_right")
+	if _n > 60 * 180:
+		_fail.append("stuck at lesson %s (count %s) x=%d" % [id, current_scene.get("_count"), f.global_position.x])
 		return _end()
+	if int(fp.data.get("gold", 0)) > _gold0 + 0 and id != "" and false:
+		_fail.append("gold handed out mid-training")
 	return false

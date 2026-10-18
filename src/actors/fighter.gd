@@ -1435,6 +1435,7 @@ func _process_downed(delta: float) -> void:
 
 
 func _combat() -> void:
+	_note_press()
 	if parkour_lock > 0.0:
 		return
 	var y := _stick().y
@@ -1509,10 +1510,17 @@ func _combat() -> void:
 			_charge_fired = true
 			charge_frames = 0
 			_last_hand = "L"
+			last_btn = "HOLD Y"
+			last_btn_t = _clock
 			_attack("heavy", true)
 	elif _charge_fired:
 		_charge_fired = false
 		charge_frames = 0
+	elif charge_frames > 0 and attack_cd > 0 and not airborne and charge_frames < charge_need:
+		# Y tapped while the last blow is still out: queue it (it used to
+		# cut the blow off before it landed, so mashed Y never hit).
+		charge_frames = 0
+		_heavy_buf = 9
 	elif charge_frames > 0:
 		if not airborne and _shoulder_strike("H"):
 			charge_frames = 0
@@ -1530,6 +1538,8 @@ func _combat() -> void:
 			_attack("air-spin", false)
 		elif airborne:
 			_attack("jump-kick", false)
+		elif y > 0.4 and _try_ground_slam():
+			charge_frames = 0
 		elif y > 0.4 and _try_stomp():
 			charge_frames = 0
 		elif y > 0.4 and charge_frames < charge_need:
@@ -1560,6 +1570,8 @@ func _combat() -> void:
 			_last_hand = "L"
 			if charge_frames >= charge_need:
 				# Held Y: the charged power punch.
+				last_btn = "HOLD Y"
+				last_btn_t = _clock
 				_attack("heavy", true)
 			elif absf(_stick().x) > 0.55 and signf(_stick().x) == float(facing):
 				# Forward + Y: the big left hook (slot F+H).
@@ -1569,10 +1581,13 @@ func _combat() -> void:
 				_left_string()
 	elif attack_cd == 0 and _heavy_buf > 0 and not airborne:
 		_heavy_buf = 0
-		if string_n >= 2 and FamilyProfile.dojo_learned("roundhouse"):
+		if _shoulder_strike("H"):
+			pass
+		elif string_n >= 2 and FamilyProfile.dojo_learned("roundhouse"):
 			_attack("roundhouse", false)
 		else:
-			_attack("heavy", false)
+			_last_hand = "L"
+			_left_string()
 	elif _just("light") and attack_cd > 0:
 		_light_buf = 9
 	elif attack_cd == 0 and (_just("light") or _light_buf > 0):
@@ -1890,12 +1905,29 @@ func _attack(kind: String, charged: bool) -> void:
 	# A pipe (or anything held like one) in the hand: a real weapon swing,
 	# not a punch with a pipe stuck to the fist.
 	if pickup in SWING_HELD and _anim != null and kind in SWING_KINDS:
-		# A drawn weapon swing when there is one, else the overhead hammer
-		# blow (both hands up, slam down): the pipe rides the hand through it.
-		for sc in ["swing", "hammer"]:
+		# X swings it side-on, Y brings it down overhead. X, X, Y (or a
+		# held Y) is the finisher: the crush that puts him on the street.
+		var y_side := kind in WPN_Y_KINDS
+		var chain := _clock - _wpn_t < 1.2
+		var finish := y_side and ((chain and _wpn_x >= 2) or charged)
+		if y_side:
+			_wpn_x = 0
+		else:
+			_wpn_x = (_wpn_x + 1) if chain else 1
+		_wpn_t = _clock
+		var want: Array = WPN_CLIPS.get(role, WPN_CLIPS["father"])[1 if y_side else 0]
+		for sc in want:
 			if _anim.sprite_frames.has_animation(sc):
 				anim_atk = sc
 				break
+		if finish:
+			kind = "combo"
+			combo_dmg = 34 if role == "father" else 28
+			combo_fx = "knockdown"
+			combo_id = "weapon_crush"
+			size += Vector2(10, 8)
+			attack_cd = maxi(attack_cd, 24)
+			Juice.shout(pickup.replace("_", " ").to_upper() + " CRUSH")
 	# MASTERY: the more this move is thrown, the better it gets.
 	Mastery.use(role, anim_atk, global_position)
 	move_mul *= Mastery.power(role, anim_atk) * move_mul_bonus
@@ -3307,6 +3339,44 @@ func _footsteps(delta: float, spd: float) -> void:
 		_run_breath = 0
 
 
+## Down + Y over a thug lying on the street: both hands (or the pipe)
+## brought down on him. Keeps him down.
+func _try_ground_slam() -> bool:
+	if attack_cd > 0 or _anim == null:
+		return false
+	var best: Punk = null
+	var best_d := 76.0
+	for n in get_tree().get_nodes_in_group("enemies"):
+		if not (n is Punk):
+			continue
+		var p: Punk = n
+		if p.floored <= 0.0 or p.hp <= 0:
+			continue
+		var d := absf(p.global_position.x - global_position.x)
+		if d < best_d and absf(p.global_position.y - global_position.y) < 28.0:
+			best_d = d
+			best = p
+	if best == null:
+		return false
+	if best.global_position.x != global_position.x:
+		facing = 1 if best.global_position.x > global_position.x else -1
+		visual.scale.x = float(facing)
+	best.floored = maxf(best.floored, 0.7)
+	var clip := "hammer" if _anim.sprite_frames.has_animation("hammer") else "heavy"
+	combo_dmg = 22 + (12 if pickup in SWING_HELD else 0)
+	combo_fx = ""
+	combo_id = "ground_slam"
+	anim_atk = clip
+	attack_cd = 28
+	_atk_t = 0.75
+	last_btn = "DOWN+Y"
+	last_btn_t = _clock
+	_hit_y = -10.0
+	_begin_strike("combo", Vector2(70, 40), 0.2, 30.0)
+	Juice.shout("GROUND SLAM")
+	return true
+
+
 func _try_stomp() -> bool:
 	if not FamilyProfile.dojo_learned("stomp_finish"):
 		Juice.shout("DOJO LOCK")
@@ -3780,6 +3850,31 @@ func _throw_held_weapon() -> bool:
 	Juice.shout(Copy.THROW)
 	KitSfx.hit(role, "dash")
 	return true
+
+
+## The last attack button pressed, with the shoulder held under it
+## ("X", "Y", "L1+X", "L2+Y", "R2+X", "X+Y", "HOLD Y"), and when. Lessons
+## count what the player pressed, not what the move is called inside.
+var last_btn := ""
+var last_btn_t := -9.0
+
+
+func _note_press() -> void:
+	var lx := _just("light")
+	var hy := _just("heavy")
+	if not lx and not hy:
+		return
+	var b := "X" if lx else "Y"
+	if (lx and _pressed("heavy")) or (hy and _pressed("light") and _clock - last_btn_t < 0.12):
+		b = "X+Y"
+	elif _pressed("throw"):
+		b = "L2+" + b
+	elif _pressed("block"):
+		b = "L1+" + b
+	elif _pressed("dash"):
+		b = "R2+" + b
+	last_btn = b
+	last_btn_t = _clock
 
 
 ## The four shoulder buttons held together (L1 + L2 + R1 + R2).
@@ -4361,6 +4456,11 @@ static var _held_cache: Dictionary = {}
 static var _front_cache: Dictionary = {}
 ## Held weapons that swing with the drawn SWING clip (a pipe-shaped thing).
 const SWING_HELD := ["pipe", "crowbar", "baseball_bat", "board", "sledgehammer", "chain"]
+const WPN_Y_KINDS := ["heavy", "punch_l", "hook_l", "upper_l", "body_l"]
+## Held-weapon clips per hero: [X side swing, Y overhead], first one drawn wins.
+const WPN_CLIPS := {"father": [["hook_r", "swing"], ["hammer", "heavy"]], "son": [["hook_r", "cross"], ["heavy", "cross"]]}
+var _wpn_x := 0
+var _wpn_t := -9.0
 const SWING_KINDS := ["light", "heavy", "gut-punch", "punch_r", "hook_r", "body_r", "punch_l", "hook_l", "upper_l", "body_l"]
 const LIGHT_MELEE := ["knife", "stapler", "clipboard", "machete"]
 

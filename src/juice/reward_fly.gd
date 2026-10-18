@@ -85,8 +85,12 @@ func _center() -> Vector2:
 # --- rewards ---------------------------------------------------------------
 
 func give(key: String, amount: int, from := Vector2(-1, -1), banner := true) -> void:
-	if amount <= 0 or not ICON.has(key):
+	if amount <= 0 or not ICON.has(key) or not FamilyProfile.rewards_open():
 		return
+	# In a fight the coins just fly to the corner counter; the big centre
+	# showcase is for the hideout and the menus, never mid-street.
+	if get_tree().get_first_node_in_group("run_state") != null:
+		banner = false
 	if from.x < 0.0:
 		from = _center()
 	_pending[key] = pending(key) + amount
