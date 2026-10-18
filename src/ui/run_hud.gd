@@ -34,6 +34,7 @@ var _dad_banner := false
 
 
 func _ready() -> void:
+	add_to_group("run_hud")
 	layer = 20
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_stage = PixelStage.attach_canvas(self)
@@ -167,13 +168,16 @@ func _ready() -> void:
 	_put(_combo_fill)
 
 	_call = Label.new()
-	_call.position = Vector2(280, 250)
+	# The move call-out (HOOK, UPPERCUT ...): small and low, under the
+	# fight, not a headline across the middle of the street.
+	_call.position = Vector2(280, 596)
 	_call.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_call.size = Vector2(720, 30)
-	_call.pivot_offset = Vector2(360, 15)
+	_call.size = Vector2(720, 24)
+	_call.pivot_offset = Vector2(360, 12)
 	_call.add_theme_font_override("font", UiKit.title_font())
-	UiKit.apply_label(_call, 22, Palette.LEMON)
-	_call.add_theme_constant_override("outline_size", 7)
+	UiKit.apply_label(_call, 15, Palette.LEMON)
+	_call.modulate.a = 0.9
+	_call.add_theme_constant_override("outline_size", 5)
 	_call.add_theme_color_override("font_outline_color", UiKit.INK)
 	_put(_call)
 
@@ -579,10 +583,10 @@ func _process(delta: float) -> void:
 	if _call.text != Juice.callout:
 		_call.text = Juice.callout
 		# Survivor has its clock and kill count where the call-out sits.
-		_call.position.y = (190.0 if Fighter.FIELD else 262.0) if SurviveRun.get_run(get_tree()) != null else 250.0
+		_call.position.y = (190.0 if Fighter.FIELD else 262.0) if SurviveRun.get_run(get_tree()) != null else 596.0
 		if Juice.callout != "":
-			# Every call-out lands: pops big and settles.
-			_call.scale = Vector2(1.5, 1.5)
+			# Every call-out lands with a small pop and settles.
+			_call.scale = Vector2(1.15, 1.15)
 			var ctw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 			ctw.set_ignore_time_scale(true)
 			ctw.tween_property(_call, "scale", Vector2.ONE, 0.2)

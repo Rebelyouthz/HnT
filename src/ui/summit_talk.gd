@@ -239,8 +239,8 @@ func _draw_bubble(at: Vector2, a: Color, b: Color, tag: String) -> void:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 28)
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_child(_body_fig(a, 12, 28, 3))
-	row.add_child(_body_fig(b, 22, 72, 26))
+	row.add_child(_body_fig(a, 12, 28, 3, "son"))
+	row.add_child(_body_fig(b, 22, 72, 26, "father"))
 	col.add_child(row)
 	var ages := Label.new()
 	ages.text = "THREE  ·  TWENTY-SIX"
@@ -249,9 +249,33 @@ func _draw_bubble(at: Vector2, a: Color, b: Color, tag: String) -> void:
 	col.add_child(ages)
 
 
-func _body_fig(col: Color, w: float, h: float, age: int) -> Control:
+func _body_fig(col: Color, w: float, h: float, age: int, who: String = "") -> Control:
 	var wrap := Control.new()
 	wrap.custom_minimum_size = Vector2(maxf(w + 16.0, 40.0), h + 18.0)
+	# The real character, small and in old-photo sepia (a memory), standing
+	# on the age tag; the block figure is only a fallback.
+	var pic: Texture2D = null
+	if who != "" and SpriteBook.has_who(who):
+		var sf := SpriteBook.frames(who)
+		var clip := "idle_casual" if sf.has_animation("idle_casual") else "idle"
+		if sf.has_animation(clip):
+			pic = sf.get_frame_texture(clip, 0)
+	if pic != null:
+		var tr := TextureRect.new()
+		tr.texture = pic
+		tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		tr.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+		tr.size = Vector2(h * 0.75, h * 1.15)
+		tr.position = Vector2(maxf(w + 16.0, 40.0) * 0.5 - h * 0.375, h + 10.0 - h * 1.15)
+		tr.modulate = Color(1.0, 0.9, 0.74).lerp(col, 0.18)
+		wrap.add_child(tr)
+		var tag := Label.new()
+		tag.text = str(age)
+		tag.position = Vector2(8, h + 2)
+		UiKit.apply_label(tag, 10, Palette.MUTED)
+		wrap.add_child(tag)
+		return wrap
 	var torso := ColorRect.new()
 	torso.color = col
 	torso.size = Vector2(w, h)

@@ -90,7 +90,9 @@ func kick(dir: Vector2, px: float) -> void:
 
 func shake_offset() -> Vector2:
 	# Options: SCREEN SHAKE scales every shake (0 turns it off).
-	var shake := trauma * trauma * float(Gfx.get_v("shake")) * 1.25
+	# Calmer by default: big moments still land, the constant small hits
+	# no longer keep the whole screen trembling.
+	var shake := trauma * trauma * float(Gfx.get_v("shake")) * 0.85
 	if shake <= 0.002:
 		return _kick
 	return _kick + Vector2(
@@ -100,7 +102,7 @@ func shake_offset() -> Vector2:
 
 
 func pulse_shake(px: float) -> void:
-	add_trauma(clampf(px / 12.0, 0.08, 1.0))
+	add_trauma(clampf(px / 16.0, 0.05, 1.0))
 
 
 func set_world_scale(s: float) -> void:
@@ -156,14 +158,37 @@ func freeze_frames(frames: int) -> void:
 		Engine.time_scale = _base_scale
 
 
+## Hit flashes nest: the colour to come back to is taken from the first
+## flash only (a second blow inside the first flash used to save the red as
+## "original" and leave the body stuck fully red for the rest of the fight).
+func _flash_begin(node: CanvasItem) -> void:
+	var n := int(node.get_meta("_flash_n", 0))
+	if n == 0:
+		node.set_meta("_flash_base", node.modulate)
+	node.set_meta("_flash_n", n + 1)
+
+
+func _flash_end(node: Object) -> void:
+	if not is_instance_valid(node) or not (node is CanvasItem):
+		return
+	var n := maxi(0, int(node.get_meta("_flash_n", 1)) - 1)
+	node.set_meta("_flash_n", n)
+	if n == 0:
+		var base: Color = node.get_meta("_flash_base", Color.WHITE)
+		# Never come back to a hit colour, whatever was saved.
+		if base.g < 0.5 and base.r > 0.8:
+			base = Color(1, 1, 1, base.a)
+		node.modulate = base
+
+
 func flash_red(node: CanvasItem, frames: int = 2) -> void:
 	if node == null:
 		return
-	var original := node.modulate
-	node.modulate = Color(1.0, 0.22, 0.18, 1.0)
+	_flash_begin(node)
+	node.modulate = Color(1.0, 0.22, 0.18, node.modulate.a)
 	await get_tree().create_timer(frames / 60.0, true, false, true).timeout
 	if is_instance_valid(node):
-		node.modulate = original
+		_flash_end(node)
 
 
 func flash_white_red(node: CanvasItem) -> void:
@@ -172,14 +197,14 @@ func flash_white_red(node: CanvasItem) -> void:
 	if reduce_flash():
 		flash_red(node, 2)
 		return
-	var original := node.modulate
-	node.modulate = Color(1.0, 1.0, 1.0, 1.0)
+	_flash_begin(node)
+	node.modulate = Color(1.0, 1.0, 1.0, node.modulate.a)
 	await get_tree().create_timer(1.0 / 60.0, true, false, true).timeout
 	if is_instance_valid(node):
-		node.modulate = Color(1.0, 0.28, 0.2, 1.0)
+		node.modulate = Color(1.0, 0.28, 0.2, node.modulate.a)
 	await get_tree().create_timer(3.0 / 60.0, true, false, true).timeout
 	if is_instance_valid(node):
-		node.modulate = original
+		_flash_end(node)
 
 
 func squash(node: Node2D, facing: int) -> void:
@@ -291,7 +316,7 @@ func _jackpot(n: int) -> void:
 
 func shout(line: String) -> void:
 	callout = line
-	_callout_t = 1.35
+	_callout_t = 0.95
 
 
 func snap_bang(global_pos: Vector2) -> void:
@@ -344,8 +369,8 @@ func popup_number(global_pos: Vector2, text: String, color: Color) -> void:
 	var lab := Label.new()
 	lab.text = text
 	lab.modulate = color
-	lab.position = screen + Vector2(-22, -40)
-	lab.add_theme_font_size_override("font_size", 22)
+	lab.position = screen + Vector2(-18, -36)
+	lab.add_theme_font_size_override("font_size", 16)
 	lab.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
 	lab.add_theme_constant_override("outline_size", 6)
 	_overlay.add_child(lab)
@@ -354,6 +379,47 @@ func popup_number(global_pos: Vector2, text: String, color: Color) -> void:
 	tw.tween_property(lab, "position:y", lab.position.y - 42.0, 0.45)
 	tw.parallel().tween_property(lab, "modulate:a", 0.0, 0.55).set_delay(0.25)
 	tw.finished.connect(lab.queue_free)
+
+
+## A pickup told with its picture: the item's icon pops up over the spot
+## with a small count beside it ("+12"), rises and fades. No sentence.
+func pickup_icon(global_pos: Vector2, icon: Texture2D, count: String = "", color: Color = Color.WHITE) -> void:
+	if icon == null:
+		if count != "":
+			popup_number(global_pos, count, color)
+		return
+	var cam := get_viewport().get_camera_2d()
+	var screen := global_pos
+	if cam:
+		screen = cam.get_screen_transform() * global_pos
+	var box := Control.new()
+	box.position = screen + Vector2(-14, -46)
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var tr := TextureRect.new()
+	tr.texture = icon
+	tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	tr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	tr.size = Vector2(26, 26)
+	box.add_child(tr)
+	if count != "":
+		var lab := Label.new()
+		lab.text = count
+		lab.position = Vector2(28, 3)
+		lab.modulate = color
+		lab.add_theme_font_size_override("font_size", 15)
+		lab.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
+		lab.add_theme_constant_override("outline_size", 5)
+		box.add_child(lab)
+	box.pivot_offset = Vector2(13, 13)
+	box.scale = Vector2(0.4, 0.4)
+	_overlay.add_child(box)
+	var tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.set_ignore_time_scale(true)
+	tw.tween_property(box, "scale", Vector2.ONE, 0.18)
+	tw.parallel().tween_property(box, "position:y", box.position.y - 30.0, 0.5)
+	tw.tween_property(box, "modulate:a", 0.0, 0.3).set_delay(0.15)
+	tw.finished.connect(box.queue_free)
 
 
 func claim_burst(from: Vector2, line: String, gold: int, gems: int) -> void:

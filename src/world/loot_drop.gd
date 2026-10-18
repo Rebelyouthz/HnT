@@ -192,7 +192,7 @@ func _take(f: Fighter) -> void:
 			if Trees.has("f_gold") and SurviveRun.get_run(get_tree()) != null:
 				g = int(ceil(float(g) * 1.5))
 			FamilyProfile.add_gold(g)
-			Juice.popup_number(global_position + Vector2(0, -24), "+%d" % g, UiKit.GOLD)
+			Juice.pickup_icon(global_position + Vector2(0, -24), SpriteBook.icon("cur_gold_s"), "+%d" % g, UiKit.GOLD)
 			Juice.rewards.give("gold", g, get_global_transform_with_canvas().origin, false)
 			Juice.play("res://assets/audio/cash.wav" if ResourceLoader.exists("res://assets/audio/cash.wav") else "res://assets/audio/cling.wav")
 		"flask", "energy", "smoke":
@@ -231,7 +231,7 @@ func _take(f: Fighter) -> void:
 func _to_belt(f: Fighter, id: String) -> void:
 	if QuickBelt.add(f.role, id):
 		var slot := QuickBelt.ORDER.find(id) + 1
-		Juice.popup_number(global_position + Vector2(0, -26), "+%s  ·  SLOT %d" % [str(QuickBelt.ITEMS[id]["name"]), slot], Palette.READY)
+		Juice.pickup_icon(global_position + Vector2(0, -26), load(str(QuickBelt.ITEMS[id]["icon"])) as Texture2D if ResourceLoader.exists(str(QuickBelt.ITEMS[id]["icon"])) else null, "+1", Palette.READY)
 		Juice.play("res://assets/audio/cling.wav")
 	else:
 		QuickBelt.apply(f, id)

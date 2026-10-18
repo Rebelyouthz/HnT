@@ -146,7 +146,9 @@ func take(f: Fighter) -> void:
 	f.equip_pickup(kind)
 	var rarity := Rarity.of_pickup(kind)
 	Juice.play("res://assets/audio/shop.wav")
-	Juice.popup_number(global_position, "%s  %s" % [kind.to_upper(), Rarity.label(rarity)], Rarity.color(rarity))
+	# The weapon's own picture pops over the spot, in its rarity colour.
+	var wtex: Texture2D = load("res://assets/sprites/held/%s.png" % kind) if ResourceLoader.exists("res://assets/sprites/held/%s.png" % kind) else null
+	Juice.pickup_icon(global_position, wtex, Rarity.label(rarity) if Rarity.normalize(rarity) != "common" else "", Rarity.color(rarity))
 	Rarity.juice(rarity, kind.to_upper())
 	var rs := get_tree().get_first_node_in_group("run_state")
 	if rs and rs.has_method("add_points"):

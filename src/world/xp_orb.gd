@@ -99,6 +99,6 @@ func _take() -> void:
 		srun.add_xp(amount)
 	elif rs and rs.has_method("add_xp"):
 		rs.add_xp(amount)
-	Juice.popup_number(global_position, "+%d XP" % amount, Color(0.5, 1.0, 0.6))
+	Juice.pickup_icon(global_position, SpriteBook.icon("cur_xp_s"), "+%d" % amount, Color(0.5, 1.0, 0.6))
 	Mixer.play_sfx("res://assets/audio/ui_click.wav", randf_range(1.6, 2.0), -12.0)
 	queue_free()

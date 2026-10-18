@@ -55,7 +55,8 @@ func _ready() -> void:
 	StoryBook.npc_names[who] = str(quest.get("giver", "STRANGER"))
 	var cs := CollisionShape2D.new()
 	var r := RectangleShape2D.new()
-	r.size = Vector2(70, 60)
+	# A generous talk zone: stand anywhere near them, not on one pixel.
+	r.size = Vector2(150, 90)
 	cs.shape = r
 	add_child(cs)
 	var own := str(quest.get("sprite", ""))
@@ -110,14 +111,41 @@ func _process(delta: float) -> void:
 		_mark.scale = Vector2.ONE * (1.0 + 0.12 * sin(_t * 8.0))
 	if _busy or state == "paid":
 		return
+	var near := false
 	for n in get_overlapping_bodies():
 		if n is Fighter and not (n as Fighter).downed:
 			var f := n as Fighter
+			near = true
 			if _anim:
 				_anim.flip_h = f.global_position.x < global_position.x
 			if _wants(f):
 				_talk_to()
-			return
+			break
+	_show_prompt(near)
+
+
+var _prompt: RichTextLabel
+
+
+## "X TALK" over their head while someone stands in the talk zone.
+func _show_prompt(on: bool) -> void:
+	if on and _prompt == null:
+		_prompt = RichTextLabel.new()
+		_prompt.bbcode_enabled = true
+		_prompt.fit_content = true
+		_prompt.scroll_active = false
+		_prompt.autowrap_mode = TextServer.AUTOWRAP_OFF
+		_prompt.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_prompt.custom_minimum_size = Vector2(150, 0)
+		_prompt.add_theme_font_size_override("normal_font_size", 13)
+		_prompt.add_theme_color_override("font_outline_color", Color(0, 0, 0))
+		_prompt.add_theme_constant_override("outline_size", 4)
+		_prompt.text = "[center]%s  TALK[/center]" % PadText.chip("X")
+		_prompt.scale = Vector2(NightStreet.WORLD_TEXT, NightStreet.WORLD_TEXT)
+		_prompt.position = Vector2(-75.0 * NightStreet.WORLD_TEXT, -112)
+		add_child(_prompt)
+	if _prompt:
+		_prompt.visible = on
 
 
 const VOICE := {"lost_dog": "npc_woman", "bin_rage": "npc_sal", "repo_revenge": "npc_old"}
@@ -260,6 +288,7 @@ static func note(tree: SceneTree, kind: String, arg: String = "") -> void:
 ## Talk / shop only on a deliberate press: standing still (UP while walking
 ## past just walks you up the street).
 func _wants(f: Fighter) -> bool:
-	if absf(f.velocity.x) > 30.0 or absf(f._stick().x) > 0.35:
+	# X or UP talks; only a real run past is ignored (a slow step still counts).
+	if absf(f.velocity.x) > 120.0:
 		return false
 	return f._just("up") or f._just("light")

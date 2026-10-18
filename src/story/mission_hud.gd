@@ -12,7 +12,7 @@ var _wrap: Control
 var _fold: Tween
 var _col: VBoxContainer
 var _quests: Dictionary = {}
-var _line_w := 356.0
+var _line_w := 312.0
 var _has_job := true
 
 
@@ -61,9 +61,10 @@ func _ready() -> void:
 	st.content_margin_top = 6
 	st.content_margin_bottom = 8
 	wrap.add_theme_stylebox_override("panel", st)
-	# Centre, under the enemy / boss bar: clear of both player plates.
-	wrap.position = Vector2(450, 78)
-	wrap.custom_minimum_size = Vector2(380, 0)
+	# The right-hand corner under the second player's plate: always in
+	# view to keep track, never over the fight in the middle of the street.
+	wrap.position = Vector2(1280 - 336 - 14, 150)
+	wrap.custom_minimum_size = Vector2(336, 0)
 	wrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	PixelStage.attach_canvas(self).add_child(wrap)
 	var col := VBoxContainer.new()
@@ -86,6 +87,7 @@ func _ready() -> void:
 	# tucks under the radar on the right, narrower and smaller.
 	if Fighter.FIELD:
 		wrap.position = Vector2(1030, 280)
+		_home = wrap.position
 		wrap.custom_minimum_size = Vector2(236, 0)
 		head.add_theme_font_size_override("font_size", 13)
 		_line_w = 212.0
@@ -121,7 +123,7 @@ func _paint() -> void:
 	# No job on this map (the dojo, practice): no empty card.
 	_has_job = main != ""
 	if _wrap:
-		_wrap.visible = _has_job and not get_tree().paused
+		_wrap.visible = _has_job and (not get_tree().paused or _pause_open())
 	_main.text = ("☑  " if _main_done else "☐  ") + main
 	_side.text = ("☑  " if _side_done else "☐  ") + side
 	_main.add_theme_color_override("font_color", Palette.READY if _main_done else Palette.TEXT)
@@ -131,10 +133,35 @@ func _paint() -> void:
 		_lunch.add_theme_color_override("font_color", Palette.READY if _lunch_done else Palette.EDGE)
 
 
+var _was_pause := false
+var _home := Vector2(1280 - 336 - 14, 150)
+
+
+## The pause card is up: show the objectives in full beside it.
+func _pause_open() -> bool:
+	var hud := get_tree().get_first_node_in_group("run_hud")
+	return hud != null and hud.get("_pause") != null and is_instance_valid(hud.get("_pause"))
+
+
 func _process(_delta: float) -> void:
-	# Pause, level-up picks and sheets: the objective card steps aside.
+	# Level-up picks and sheets: the card steps aside. Pause: it opens up in
+	# full beside the pause card (where are we, what is left).
+	var paused_menu := get_tree().paused and _pause_open()
 	if _wrap:
-		_wrap.visible = _has_job and not get_tree().paused
+		_wrap.visible = _has_job and (not get_tree().paused or paused_menu)
+		layer = 120 if paused_menu else 19
+	if paused_menu != _was_pause:
+		_was_pause = paused_menu
+		if paused_menu:
+			if _fold and _fold.is_valid():
+				_fold.kill()
+			_set_folded(false)
+			_wrap.modulate.a = 1.0
+			# Under the pause card, centred, not over its numbers.
+			_wrap.position = Vector2((1280.0 - _wrap.size.x) * 0.5, 506)
+		else:
+			_wrap.position = _home
+			_peek(3.0)
 	if get_tree().paused:
 		return
 	if _lunch_done:

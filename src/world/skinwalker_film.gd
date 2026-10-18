@@ -83,6 +83,7 @@ func _build_room() -> void:
 		back.position = Vector2(168.0 + i * 180.0, 456)
 		back.size = Vector2(54, 22)
 		add_child(back)
+	_paint_room()
 	var plaque := Label.new()
 	plaque.position = Vector2(80, 176)
 	plaque.text = "DON'T SIT. SITTING IS HOW THEY WIN."
@@ -202,6 +203,84 @@ func _build_cast() -> void:
 	_son.size = Vector2(18, 44)
 	_son.position = Vector2(252, 478)
 	add_child(_son)
+	# Room scale (the painted room is the Waiting Room map's): the cast at
+	# about twice their blocking size so a man is a man next to the counter.
+	_dress(_dad, "father", "idle", 104.0, Vector2(11, 52))
+	_dress(_son, "son", "idle", 88.0, Vector2(9, 44))
+	_dress(_patient, "npc_old_man", "idle", 118.0, Vector2(0, 4), true)
+	_dress(_dog, "skinwalker", "dog", 50.0, Vector2(4, 6))
+	_dress(_true, "skinwalker", "gape", 220.0, Vector2(0, 8), true)
+
+
+## The cast as real sprites over their blocking shapes (the shapes stay as
+## invisible stand-ins, so every beat that moves them still works). Feet
+## land on `feet_y` in the node's own space, the body `tall` units high.
+func _dress(node: CanvasItem, who: String, clip: String, tall: float, feet: Vector2, flip := false) -> void:
+	if not SpriteBook.has_who(who) and not FileAccess.file_exists("res://assets/sprites/%s/%s.json" % [who, clip]):
+		return
+	var frames := SpriteBook.frames(who)
+	if frames == null or not frames.has_animation(clip):
+		return
+	if node is ColorRect:
+		(node as ColorRect).color = Color(0, 0, 0, 0)
+	for c in node.get_children():
+		if c is ColorRect:
+			(c as ColorRect).color.a = 0.0
+		elif c is Polygon2D:
+			(c as Polygon2D).color.a = 0.0
+	var a := AnimatedSprite2D.new()
+	a.sprite_frames = frames
+	a.centered = true
+	a.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	var cell := frames.get_frame_texture(clip, 0)
+	var body_h := 1.0
+	for fr: Dictionary in SpriteBook.clip_meta(who, clip).get("frames", []):
+		body_h = maxf(body_h, float(fr.get("h", 1)))
+	var k := tall / body_h
+	a.scale = Vector2(k, k)
+	a.flip_h = flip
+	a.position = feet + Vector2(0, -float(cell.get_height()) * k * 0.5)
+	a.play(clip)
+	node.add_child(a)
+
+
+## The painted clinic waiting room (the same art as the Waiting Room map:
+## reception, TAKE A NUMBER, the red chairs) over the block layout, its
+## floor on the line the cast stands on. The ceiling tubes keep flickering:
+## their light now dims the whole painted room.
+var _room: Sprite2D
+
+
+func _paint_room() -> void:
+	var path := "res://assets/backdrops/waiting_strip_0.png"
+	if not ResourceLoader.exists(path):
+		return
+	var tex := load(path) as Texture2D
+	var ground := 791.0
+	var k := 522.0 / ground
+	_room = Sprite2D.new()
+	_room.texture = tex
+	_room.centered = false
+	_room.region_enabled = true
+	_room.region_rect = Rect2(0, 0, minf(float(tex.get_width()), 1280.0 / k), float(tex.get_height()))
+	_room.scale = Vector2(k, k)
+	# Its painted floor runs on past the cast's feet (they stand on the
+	# tiles, not on the front edge of the picture).
+	_room.position = Vector2(0, 522.0 - ground * k + 44.0)
+	_room.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	add_child(_room)
+	# The block room under it goes quiet; the tubes stay as light sources.
+	for c in get_children():
+		if c is ColorRect and c != _sky and not (c in _tubes):
+			(c as ColorRect).visible = false
+	for t in _tubes:
+		t.color.a = 0.0
+	# Below the painted floor: the same tiles, darker, to the bottom edge.
+	var under := ColorRect.new()
+	under.color = Color(0.1, 0.12, 0.11)
+	under.position = Vector2(0, 566)
+	under.size = Vector2(1280, 200)
+	add_child(under)
 
 
 func _build_hud() -> void:
@@ -331,6 +410,11 @@ func _flicker() -> void:
 	if _beat == Beat.SLIP or _beat == Beat.TEAR:
 		pulse = 0.35 + 0.65 * randf()
 	_sky.color = Color(0.14 * pulse, 0.145 * pulse, 0.13 * pulse)
+	if _room:
+		# The painted tubes dim and flare with the same pulse.
+		var l := 0.55 + 0.45 * pulse
+		_room.modulate = Color(l, l * 1.02, l * 0.98)
+		return
 	for tube in _tubes:
 		tube.color.a = 0.25 + 0.55 * pulse
 	if _beat >= Beat.WRONG:
