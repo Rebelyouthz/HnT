@@ -568,6 +568,9 @@ func _tick_sprite() -> void:
 		clip = "snap"
 	elif _hurt_t > 0.0:
 		clip = "hurt"
+	elif plane == "climb" and _anim.sprite_frames.has_animation("climb"):
+		# Hand over hand up (or down) the ladder, back to the camera.
+		clip = "climb"
 	elif ducking:
 		clip = "duck"
 	elif _land_t > 0.0 and _anim.sprite_frames.has_animation("land"):
@@ -672,6 +675,9 @@ func _tick_sprite() -> void:
 ## by vertical velocity so take-off, tuck, apex and drop line up with the arc.
 func _drive_clip(clip: String) -> void:
 	match clip:
+		"climb":
+			# Going down the ladder plays the hands backwards.
+			_anim.speed_scale = -1.0 if _stick().y > 0.15 else 1.0
 		"walk":
 			_anim.speed_scale = SpriteBook.stride_rate(_anim, "walk", maxf(absf(velocity.x), absf(velocity.y) * 1.4))
 			if not FIELD:
@@ -848,6 +854,7 @@ func _physics_process(delta: float) -> void:
 	if plane == "climb":
 		_process_climb(delta)
 		_combat()
+		_tick_sprite()
 		return
 	if web_anchor != null:
 		_process_web(delta)

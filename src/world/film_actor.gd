@@ -50,13 +50,22 @@ func reach(on: bool) -> void:
 	_mode = "climb"
 	_shadow(false)
 	_reach = on
-	_frame("jump", 0.12)
+	if anim and anim.sprite_frames.has_animation("climb"):
+		# Hanging on, waiting for the next hold: the climb clip held on a
+		# reaching frame.
+		_frame("climb", 0.3)
+	else:
+		_frame("jump", 0.12)
 
 
 func climb_to(p: Vector2, dur: float) -> void:
 	_mode = "climb"
 	_shadow(false)
-	_frame("jump", 0.12)
+	if anim and anim.sprite_frames.has_animation("climb"):
+		anim.play("climb")
+		anim.speed_scale = 1.4
+	else:
+		_frame("jump", 0.12)
 	_stop()
 	_move = create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	_move.tween_property(self, "position", p, dur)
@@ -220,7 +229,8 @@ func _process(delta: float) -> void:
 		return
 	match _mode:
 		"climb":
-			# Alternate arm reach: flip the sprite every half second.
-			anim.flip_h = fmod(_t, 0.9) < 0.45
+			# Old fallback without a climb clip: alternate the arm reach.
+			if anim.animation != "climb":
+				anim.flip_h = fmod(_t, 0.9) < 0.45
 		"hang":
 			anim.rotation = 0.08 * sin(_t * 6.0)
