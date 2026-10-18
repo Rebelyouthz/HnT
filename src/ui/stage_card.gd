@@ -55,14 +55,14 @@ static func title_of(id: String) -> String:
 const TIPS := [
 	"X + Y with the stick up or down fires an element art.",
 	"X + Y next to a thug pulls him in and THROWS him. Forward or back: a dojo grab.",
-	"Hold R2 to RUN. R2 + X or Y out of a run: a running strike.",
+	"Hold RT to RUN. RT + X or Y out of a run: a running strike.",
 	"DOWN + Y on a thug lying on the street: GROUND SLAM.",
 	"Hit a thug during his wind-up to INTERRUPT him.",
 	"From behind it is a BACKSTAB: a quarter more.",
 	"Roll just as the swing lands: PERFECT DODGE.",
 	"Double-tap DUCK to taunt. Risky. Pays CHI.",
 	"Hold HEAVY and tap SPECIAL when the gold ring is full.",
-	"Hold L1 + L2 + R1 + R2 to throw what you hold, or a knife. Pick it back up.",
+	"Hold LB + LT + RB + RT to throw what you hold, or a knife. Pick it back up.",
 	"Ammo is short. Empty guns go in the bin.",
 	"Fling a thug into a lamp post for a PROP SLAM.",
 	"The tutorial in the dojo pays gold once per lesson.",
@@ -138,7 +138,7 @@ func _ready() -> void:
 	UiKit.apply_label(tip, 12, UiKit.GOLD)
 	_root.add_child(tip)
 	var skip := Label.new()
-	skip.text = "JUMP / ENTER TO SKIP"
+	skip.text = "A TO SKIP"
 	skip.position = Vector2(0, 600)
 	skip.size = Vector2(1200, 24)
 	skip.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT

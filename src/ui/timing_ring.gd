@@ -24,6 +24,8 @@ const OK := 0.17
 const ACTIONS := ["jump", "light", "up", "special", "dash", "heavy"]
 const NAMES := {"jump": "JUMP", "light": "PUNCH", "up": "UP", "special": "SPECIAL", "dash": "DASH", "heavy": "KICK"}
 const KEYS := {"jump": "SPACE", "light": "J", "up": "W", "special": "L", "dash": "SHIFT", "heavy": "K"}
+## Xbox buttons for the same actions (what the badge shows).
+const PAD := {"jump": "A", "light": "X", "up": "↑", "special": "B", "dash": "RT", "heavy": "Y"}
 
 var action := "jump"
 var lead := 0.85
@@ -60,7 +62,7 @@ func _ready() -> void:
 	_ui.add_child(_ring)
 	_ring.draw.connect(_draw_ring)
 	_badge = Label.new()
-	_badge.text = str(KEYS.get(action, action.to_upper()))
+	_badge.text = str((PAD if PadRouter.pad_prompts() else KEYS).get(action, action.to_upper()))
 	_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_badge.size = Vector2(260, 260)

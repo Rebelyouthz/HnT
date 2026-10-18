@@ -41,6 +41,10 @@ func build_world() -> void:
 	_dummy.home = "street"
 	_dummy.global_position = Vector2(820, 492)
 	add_child(_dummy)
+	# The speed bag on its stand, left of the heavy bag: quick hands.
+	var sb := SpeedBag.new()
+	sb.position = Vector2(560, 486)
+	add_child(sb)
 
 
 ## No props, thugs, toys or bounties on the mat.

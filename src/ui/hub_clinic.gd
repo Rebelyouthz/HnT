@@ -193,11 +193,11 @@ func _on_built(id: String) -> void:
 		return
 	match id:
 		"therapy_couch":
-			Juice.unlock_logo("SKILL TREE", "The couch is furniture. The tree is a lifestyle.", "TAB  ·  BUILD", SpriteBook.icon(id))
+			Juice.unlock_logo("SKILL TREE", "The couch is furniture. The tree is a lifestyle.", "BUILD TAB", SpriteBook.icon(id))
 		"wardrobe_cage":
-			Juice.unlock_logo("LOCKER", "Costumes do not change the web. That is the point.", "TAB  ·  LOCKER", SpriteBook.icon(id))
+			Juice.unlock_logo("LOCKER", "Costumes do not change the web. That is the point.", "LOCKER TAB", SpriteBook.icon(id))
 		"trophy_cabinet":
-			Juice.unlock_logo("AWARDS", "Claim or it did not happen.", "TAB  ·  AWARDS", SpriteBook.icon(id))
+			Juice.unlock_logo("AWARDS", "Claim or it did not happen.", "AWARDS TAB", SpriteBook.icon(id))
 		"pawn_shop":
 			Juice.unlock_logo("DOPAMINE SHOP", "Chests, wheel, slots. Upgrade the stall and the stock gets meaner.", "SHOP  ·  DOPAMINE", SpriteBook.icon(id))
 		"patrol_desk":

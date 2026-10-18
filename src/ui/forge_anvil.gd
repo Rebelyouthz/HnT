@@ -123,4 +123,4 @@ func _draw() -> void:
 			var a := TAU * float(s) / 14.0 + _t
 			var r := 30.0 + 90.0 * (1.0 - _flash)
 			draw_circle(Vector2(mx, bar.position.y) + Vector2(cos(a), sin(a) * 0.6) * r, 2.0, Color(1.0, 0.7, 0.2, _flash))
-	draw_string(UiKit.pixel_font(), mid + Vector2(-300, 170), "LIGHT / A / SPACE / CLICK", HORIZONTAL_ALIGNMENT_CENTER, 600, 12, Palette.MUTED)
+	draw_string(UiKit.pixel_font(), mid + Vector2(-300, 170), "PRESS A", HORIZONTAL_ALIGNMENT_CENTER, 600, 12, Palette.MUTED)

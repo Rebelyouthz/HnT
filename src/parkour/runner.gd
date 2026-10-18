@@ -8,8 +8,8 @@ extends Node2D
 ## LEFT STICK   right runs (left brakes), UP jumps, DOWN slides.
 ## Near a low box UP is a vault, near a hut / wall it is a wall-run up and
 ## a mantle - the move is read from what is in front of you.
-## TRICKS       hold the RIGHT STICK in a direction plus any of R1 / R2 /
-##              L1 / L2 while you run (the trick shows over your head).
+## TRICKS       hold the RIGHT STICK in a direction plus any of RB / RT /
+##              LB / LT while you run (the trick shows over your head).
 ##              Let go and push LEFT STICK UP together: you jump and do it.
 ##              Let go close to the edge / obstacle = PERFECT.
 ## LANDING      a big drop wants a ROLL: both sticks down-forward as you
@@ -17,7 +17,7 @@ extends Node2D
 ##              it in the last moment before the feet touch = PERFECT
 ##              (speed boost); miss it and you stumble.
 ## (Keyboard: WASD = left stick, numpad / arrows = right stick, O / SHIFT /
-##  I / U = R1 / R2 / L1 / L2, SPACE also jumps.)
+##  I / U = RB / RT / LB / LT, SPACE also jumps.)
 
 signal event(kind: String, text: String, color: Color, pts: int)
 
@@ -36,20 +36,20 @@ const RELEASE_WIN := 0.22
 ## spin: forward flips (+) / back flips (-) in turns; twist: a body twist.
 const TRICKS := [
 	{"id": "tuck", "lv": 1, "name": "TUCK JUMP", "dir": "U", "btn": [], "spin": 0.0, "twist": 0, "clip": "jump", "pts": 4},
-	{"id": "kong", "lv": 1, "name": "KONG SPIN", "dir": "F", "btn": ["R1"], "spin": 1.0, "twist": 0, "clip": "dive", "pts": 10},
-	{"id": "backflip", "lv": 1, "name": "BACKFLIP", "dir": "U", "btn": ["L1"], "spin": -1.0, "twist": 0, "clip": "jump", "pts": 10},
-	{"id": "webster", "lv": 2, "name": "WEBSTER", "dir": "U", "btn": ["R1"], "spin": 1.0, "twist": 0, "clip": "jump", "pts": 11},
-	{"id": "dive", "lv": 3, "name": "FRONT DIVE", "dir": "D", "btn": ["R2"], "spin": 1.0, "twist": 0, "clip": "dive", "pts": 12},
-	{"id": "aerial", "lv": 4, "name": "AERIAL", "dir": "F", "btn": ["L1"], "spin": 1.0, "twist": 0, "clip": "cartwheel_kick", "pts": 12},
-	{"id": "cat", "lv": 5, "name": "CAT TWIST", "dir": "B", "btn": ["L2"], "spin": 0.0, "twist": 1, "clip": "air_mix", "pts": 12},
-	{"id": "gainer", "lv": 6, "name": "GAINER", "dir": "B", "btn": ["R2"], "spin": -1.0, "twist": 0, "clip": "jump", "pts": 14},
-	{"id": "palm", "lv": 7, "name": "PALM SPIN", "dir": "D", "btn": ["L1"], "spin": 1.0, "twist": 1, "clip": "air_mix", "pts": 14},
-	{"id": "cork", "lv": 8, "name": "CORKSCREW", "dir": "UF", "btn": ["R1", "R2"], "spin": 1.0, "twist": 1, "clip": "air_spin_kick", "pts": 18},
-	{"id": "superman", "lv": 9, "name": "SUPERMAN", "dir": "F", "btn": ["L2", "R2"], "spin": 0.0, "twist": 0, "clip": "superman_punch", "pts": 20, "lay": true},
-	{"id": "tornado", "lv": 11, "name": "TORNADO", "dir": "UB", "btn": ["L1", "R1"], "spin": -2.0, "twist": 0, "clip": "jump_roundhouse", "pts": 24},
-	{"id": "dbl_cork", "lv": 13, "name": "DOUBLE CORK", "dir": "DF", "btn": ["L1", "R1", "R2"], "spin": 2.0, "twist": 2, "clip": "air_spin_kick", "pts": 32},
+	{"id": "kong", "lv": 1, "name": "KONG SPIN", "dir": "F", "btn": ["RB"], "spin": 1.0, "twist": 0, "clip": "dive", "pts": 10},
+	{"id": "backflip", "lv": 1, "name": "BACKFLIP", "dir": "U", "btn": ["LB"], "spin": -1.0, "twist": 0, "clip": "jump", "pts": 10},
+	{"id": "webster", "lv": 2, "name": "WEBSTER", "dir": "U", "btn": ["RB"], "spin": 1.0, "twist": 0, "clip": "jump", "pts": 11},
+	{"id": "dive", "lv": 3, "name": "FRONT DIVE", "dir": "D", "btn": ["RT"], "spin": 1.0, "twist": 0, "clip": "dive", "pts": 12},
+	{"id": "aerial", "lv": 4, "name": "AERIAL", "dir": "F", "btn": ["LB"], "spin": 1.0, "twist": 0, "clip": "cartwheel_kick", "pts": 12},
+	{"id": "cat", "lv": 5, "name": "CAT TWIST", "dir": "B", "btn": ["LT"], "spin": 0.0, "twist": 1, "clip": "air_mix", "pts": 12},
+	{"id": "gainer", "lv": 6, "name": "GAINER", "dir": "B", "btn": ["RT"], "spin": -1.0, "twist": 0, "clip": "jump", "pts": 14},
+	{"id": "palm", "lv": 7, "name": "PALM SPIN", "dir": "D", "btn": ["LB"], "spin": 1.0, "twist": 1, "clip": "air_mix", "pts": 14},
+	{"id": "cork", "lv": 8, "name": "CORKSCREW", "dir": "UF", "btn": ["RB", "RT"], "spin": 1.0, "twist": 1, "clip": "air_spin_kick", "pts": 18},
+	{"id": "superman", "lv": 9, "name": "SUPERMAN", "dir": "F", "btn": ["LT", "RT"], "spin": 0.0, "twist": 0, "clip": "superman_punch", "pts": 20, "lay": true},
+	{"id": "tornado", "lv": 11, "name": "TORNADO", "dir": "UB", "btn": ["LB", "RB"], "spin": -2.0, "twist": 0, "clip": "jump_roundhouse", "pts": 24},
+	{"id": "dbl_cork", "lv": 13, "name": "DOUBLE CORK", "dir": "DF", "btn": ["LB", "RB", "RT"], "spin": 2.0, "twist": 2, "clip": "air_spin_kick", "pts": 32},
 ]
-const BTN_ACT := {"R1": "shoot", "L1": "block", "R2": "dash", "L2": "throw"}
+const BTN_ACT := {"RB": "shoot", "LB": "block", "RT": "dash", "LT": "throw"}
 
 ## Tricks a ROOFTOPS level opens up (for the level-up toast and lists).
 static func tricks_at(lv: int) -> Array:
@@ -198,7 +198,7 @@ func _btns() -> Array:
 	if autopilot:
 		return _ap.get("btn", [])
 	var out: Array = []
-	for b in ["R1", "R2", "L1", "L2"]:
+	for b in ["RB", "RT", "LB", "LT"]:
 		if Input.is_action_pressed(StringName(prefix + str(BTN_ACT[b]))):
 			out.append(b)
 	return out

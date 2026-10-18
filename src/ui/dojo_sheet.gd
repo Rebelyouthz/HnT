@@ -71,7 +71,7 @@ func _ready() -> void:
 		for c: Dictionary in ComboBook.all_for(who):
 			var info := c.duplicate()
 			info["kind"] = "combo"
-			info["blurb"] = ComboBook.steps_label(c, PadRouter.last_kind == "pad") + "   ·   " + str(c.get("blurb", ""))
+			info["blurb"] = ComboBook.steps_label(c, PadRouter.pad_prompts()) + "   ·   " + str(c.get("blurb", ""))
 			if bool(c.get("starter", false)):
 				info["blurb"] = "KNOWN FROM THE START   ·   " + str(info["blurb"])
 			col.add_child(_row(info))

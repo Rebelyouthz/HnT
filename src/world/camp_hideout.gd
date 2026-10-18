@@ -615,7 +615,7 @@ func _build_ui() -> void:
 	title.position = Vector2(40, 24)
 	_ui.add_child(title)
 	var sub := Label.new()
-	sub.text = "WALK  ·  ◀ ▶      OPEN  ·  ▲ / ENTER      COMMAND BOARD  ·  ALL MENUS      PORTAL  ·  GO ON"
+	sub.text = "WALK  ·  LEFT STICK      OPEN  ·  A      COMMAND BOARD  ·  ALL MENUS      PORTAL  ·  GO ON"
 	sub.position = Vector2(42, 66)
 	UiKit.apply_label(sub, 13, Palette.MUTED)
 	_ui.add_child(sub)

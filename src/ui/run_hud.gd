@@ -992,7 +992,7 @@ func _paint_face(f: Fighter) -> void:
 ## Pause > MOVES & COMBOS: what each button does right now (the hero's own
 ## loadout) and every combo they know, with the buttons to press.
 func _move_list(layer: Control, back_to: Control) -> void:
-	var pad := not Input.get_connected_joypads().is_empty()
+	var pad := PadRouter.pad_prompts()
 	var sheet := Control.new()
 	sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
 	sheet.process_mode = Node.PROCESS_MODE_ALWAYS

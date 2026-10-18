@@ -141,6 +141,9 @@ func _process(_d: float) -> bool:
 			_toward(f, bag.global_position.x - 50.0, bag.global_position.y)
 		"jump":
 			_tap(["p1_jump"])
+		"throw":
+			if _toward(f, bag.global_position.x - 40.0, bag.global_position.y):
+				_tap(["p1_light", "p1_heavy"], 40)
 		"pickup":
 			var px: float = current_scene.get("PIPE_X")
 			if _toward(f, px):

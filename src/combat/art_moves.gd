@@ -137,7 +137,7 @@ func _physics_process(delta: float) -> void:
 		_start_lh()
 
 
-## L1 + R1: the hero's BONE YARD super on a broken thug in reach. True
+## LB + RB: the hero's BONE YARD super on a broken thug in reach. True
 ## when the press was used (even to say the meter isn't full yet).
 func try_super() -> bool:
 	if _seq != "" or not _can_start():
@@ -326,8 +326,13 @@ func _start_lh() -> void:
 				BrutalRun.start(f, near, bid)
 				return
 		if near is TrainingDummy:
-			# A heavy bag is not a body to throw: reach, grab air, let go.
+			# The heavy bag: hug it, haul it round and heave - it rocks
+			# hard on its spring and the throw counts like any other.
 			_start_throw(null)
+			var bag := near as TrainingDummy
+			get_tree().create_timer(maxf(0.12, float(_row.get("reach", 0.25)) * 0.8)).timeout.connect(func() -> void:
+				if is_instance_valid(bag) and is_instance_valid(f):
+					bag.thrown_by(f))
 			return
 		# Neutral: the pull-in throw. Forward / back: the dojo grabs
 		# (suplex, DDT, headlock ...), each on its own direction.

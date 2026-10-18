@@ -2,7 +2,7 @@ class_name TrickCall
 extends Node2D
 
 ## ROOF TRICKS. Running at a roof edge calls a trick over the hero's head:
-## a right-stick direction plus shoulder buttons (R1 / R2 / L1 / L2; on
+## a right-stick direction plus shoulder buttons (RB / RT / LB / LT; on
 ## keyboard the numpad or arrows plus O / SHIFT / I / U).
 ##   HOLD     the combo while you run at the edge (the badge turns green)
 ##   RELEASE  it right as you leave the roof: the gap between takeoff and
@@ -22,14 +22,14 @@ const LATE := 0.32
 
 ## dir: right stick relative to facing (F forward, B back, U up, D down).
 const TRICKS := [
-	{"id": "kong", "name": "KONG SPIN", "dir": "F", "btn": ["R1"], "land": "roll", "lv": 1, "spin": "spin", "pts": 10},
-	{"id": "backflip", "name": "BACKFLIP", "dir": "U", "btn": ["L1"], "land": "knee", "lv": 1, "spin": "back", "pts": 10},
-	{"id": "dive", "name": "FRONT DIVE", "dir": "D", "btn": ["R2"], "land": "roll", "lv": 2, "spin": "front", "pts": 12},
-	{"id": "cat", "name": "CAT TWIST", "dir": "B", "btn": ["L2"], "land": "stick", "lv": 3, "spin": "twist", "pts": 12},
-	{"id": "cork", "name": "CORKSCREW", "dir": "UF", "btn": ["R1", "R2"], "land": "roll", "lv": 4, "spin": "cork", "pts": 16},
-	{"id": "tornado", "name": "TORNADO", "dir": "UB", "btn": ["L1", "R1"], "land": "knee", "lv": 6, "spin": "double", "pts": 20},
-	{"id": "superman", "name": "SUPERMAN", "dir": "F", "btn": ["L2", "R2"], "land": "slide", "lv": 8, "spin": "super", "pts": 22},
-	{"id": "dbl_cork", "name": "DOUBLE CORK", "dir": "DF", "btn": ["L1", "R1", "R2"], "land": "roll", "lv": 11, "spin": "dcork", "pts": 30},
+	{"id": "kong", "name": "KONG SPIN", "dir": "F", "btn": ["RB"], "land": "roll", "lv": 1, "spin": "spin", "pts": 10},
+	{"id": "backflip", "name": "BACKFLIP", "dir": "U", "btn": ["LB"], "land": "knee", "lv": 1, "spin": "back", "pts": 10},
+	{"id": "dive", "name": "FRONT DIVE", "dir": "D", "btn": ["RT"], "land": "roll", "lv": 2, "spin": "front", "pts": 12},
+	{"id": "cat", "name": "CAT TWIST", "dir": "B", "btn": ["LT"], "land": "stick", "lv": 3, "spin": "twist", "pts": 12},
+	{"id": "cork", "name": "CORKSCREW", "dir": "UF", "btn": ["RB", "RT"], "land": "roll", "lv": 4, "spin": "cork", "pts": 16},
+	{"id": "tornado", "name": "TORNADO", "dir": "UB", "btn": ["LB", "RB"], "land": "knee", "lv": 6, "spin": "double", "pts": 20},
+	{"id": "superman", "name": "SUPERMAN", "dir": "F", "btn": ["LT", "RT"], "land": "slide", "lv": 8, "spin": "super", "pts": 22},
+	{"id": "dbl_cork", "name": "DOUBLE CORK", "dir": "DF", "btn": ["LB", "RB", "RT"], "land": "roll", "lv": 11, "spin": "dcork", "pts": 30},
 ]
 ## l / r: left and right stick at touchdown ("" = let go).
 const LANDS := {
@@ -39,8 +39,8 @@ const LANDS := {
 	"slide": {"name": "SLIDE OUT", "l": "DF", "r": "F"},
 }
 const DIR_NAME := {"F": "FWD", "B": "BACK", "U": "UP", "D": "DOWN", "UF": "UP-FWD", "DF": "DOWN-FWD", "UB": "UP-BACK", "DB": "DOWN-BACK"}
-const ACT := {"R1": "shoot", "L1": "block", "R2": "dash", "L2": "throw"}
-const KEY := {"R1": "O", "L1": "I", "R2": "SHIFT", "L2": "U"}
+const ACT := {"RB": "shoot", "LB": "block", "RT": "dash", "LT": "throw"}
+const KEY := {"RB": "O", "LB": "I", "RT": "SHIFT", "LT": "U"}
 
 ## A trick was graded (perfect / good / ok / miss) - gates wait on this.
 signal graded(f: Fighter, grade: String)
@@ -58,7 +58,7 @@ static func find(tree: SceneTree) -> TrickCall:
 ## fixed per trick id, more buttons the higher its tier.
 static func combo_for(id: String, tier: int) -> Dictionary:
 	var dirs := ["F", "U", "D", "UF", "DF", "B", "UB"]
-	var btns := ["R1", "L1", "R2", "L2"]
+	var btns := ["RB", "LB", "RT", "LT"]
 	var h := absi(hash(id))
 	var n := 1 if tier <= 1 else (2 if tier <= 3 else 3)
 	var b: Array = []
@@ -492,7 +492,7 @@ func _draw_hud() -> void:
 		var tr: Dictionary = r["trick"]
 		if tr.is_empty() or s == "idle":
 			continue
-		var kb := PadRouter.device_of(f.prefix) < 0
+		var kb := not PadRouter.pad_prompts()
 		var two := get_tree().get_nodes_in_group("players").size() > 1
 		var cx := vs.x * (0.5 if not two else (0.32 if str(f.prefix) == "p1_" else 0.68))
 		var at := Vector2(cx, vs.y - 122.0)

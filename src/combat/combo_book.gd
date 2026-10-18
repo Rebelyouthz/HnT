@@ -93,7 +93,7 @@ static func step_label(tok: String, pad: bool) -> String:
 		"J":
 			b = "A" if pad else "SPACE"
 		"D":
-			b = "R2" if pad else "SHIFT"
+			b = "RT" if pad else "SHIFT"
 	var d := ""
 	match dir:
 		"F":

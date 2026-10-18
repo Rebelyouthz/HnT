@@ -15,15 +15,15 @@ const LESSONS := [
 	{"id": "light", "title": "RIGHT HAND", "pad": "X  X  X", "key": "J  J  J", "line": "X is the right hand: straight, hook, body shot. Down + X goes to the body.", "need": 3},
 	{"id": "heavy", "title": "LEFT HAND", "pad": "Y  Y  Y", "key": "K  K  K", "line": "Y is the left hand: jab, hook, uppercut. Forward + Y is the big hook, hold Y for the power punch.", "need": 2},
 	{"id": "upper", "req": "uppercut", "title": "UPPERCUT", "pad": "Y, THEN UP  or  RS UP", "key": "J OR K, THEN W", "line": "Hit first, then push up straight after: the blow turns into the launcher on the spot (or flick the right stick up).", "need": 1},
-	{"id": "low", "title": "LOW SLIDE", "pad": "DOWN + R2", "key": "S + SHIFT", "line": "Down and dash: slide in under the guard.", "need": 1},
+	{"id": "low", "title": "LOW SLIDE", "pad": "DOWN + RT", "key": "S + SHIFT", "line": "Down and dash: slide in under the guard.", "need": 1},
 	{"id": "air", "title": "JUMP KICK", "pad": "A, then X or Y", "key": "SPACE, then J or K", "line": "Jump and strike in the air.", "need": 1},
 	{"id": "rs_jab", "req": "pad", "title": "RIGHT STICK CROSS", "pad": "R-STICK  flick ▶", "key": "-", "line": "Flick the right stick toward the dummy and let go: a cross. The stick's path is the punch, and the stick has its own moves (MOVES > STICK).", "need": 2},
 	{"id": "rs_hook", "req": "pad", "title": "RIGHT STICK HOOK", "pad": "R-STICK  quarter circle ▲ ▶", "key": "-", "line": "Swing the right stick in a quarter circle that ends toward the dummy: a hook to the jaw.", "need": 2},
-	{"id": "sh_body", "title": "GUARD STRIKES", "pad": "HOLD L1 + X  /  L1 + Y", "key": "HOLD I + J  /  I + K", "line": "Hold guard and press X: a short elbow (the Kid: a superman punch). Hold guard and press Y: a headbutt (the Kid: a flying knee).", "need": 2},
-	{"id": "sh_hook", "title": "RUNNING STRIKES", "pad": "HOLD R2 + X  /  R2 + Y", "key": "HOLD SHIFT + J  /  SHIFT + K", "line": "Hold run and press X: a spinning backfist. Hold run and press Y: a roundhouse kick.", "need": 2},
-	{"id": "kick", "title": "KICKS", "pad": "HOLD L2 + X  /  L2 + Y", "key": "HOLD U + J  /  U + K", "line": "L2 is the kick trigger. Hold it and press X: a front kick. Hold it and press Y: a high kick.", "need": 2},
+	{"id": "sh_body", "title": "GUARD STRIKES", "pad": "HOLD LB + X  /  LB + Y", "key": "HOLD I + J  /  I + K", "line": "Hold guard and press X: a short elbow (the Kid: a superman punch). Hold guard and press Y: a headbutt (the Kid: a flying knee).", "need": 2},
+	{"id": "sh_hook", "title": "RUNNING STRIKES", "pad": "HOLD RT + X  /  RT + Y", "key": "HOLD SHIFT + J  /  SHIFT + K", "line": "Hold run and press X: a spinning backfist. Hold run and press Y: a roundhouse kick.", "need": 2},
+	{"id": "kick", "title": "KICKS", "pad": "HOLD LT + X  /  LT + Y", "key": "HOLD U + J  /  U + K", "line": "LT is the kick trigger. Hold it and press X: a front kick. Hold it and press Y: a high kick.", "need": 2},
 	{"id": "throw", "title": "THROW", "pad": "X + Y TOGETHER", "key": "J + K TOGETHER", "line": "Up close, both hands at once: grab and throw.", "need": 1},
-	{"id": "block", "title": "BLOCK", "pad": "L1 + STICK HEIGHT", "key": "I + W / S", "line": "The dummy swings now. Hold block and point the stick at the height over its head.", "need": 2, "spar": true},
+	{"id": "block", "title": "BLOCK", "pad": "LB + STICK HEIGHT", "key": "I + W / S", "line": "The dummy swings now. Hold block and point the stick at the height over its head.", "need": 2, "spar": true},
 	{"id": "combo", "req": "later", "title": "COMBO", "pad": "SEE THE BOARD", "key": "SEE THE BOARD", "line": "Land any combo from the board. Press as the ring on your body closes.", "need": 1},
 	{"id": "art", "req": "later", "title": "ELEMENT ART", "pad": "X + Y", "key": "J + K", "line": "Both attack buttons together, away from the dummy. Your CHI ring is full for this lesson.", "need": 1, "chi": true},
 	{"id": "grab", "req": "later", "title": "GRAB", "pad": "X + Y  (CLOSE)", "key": "J + K  (CLOSE)", "line": "The same buttons right next to the dummy: a grab.", "need": 1},
@@ -128,7 +128,7 @@ func _have(req: String) -> bool:
 		"":
 			return true
 		"pad":
-			return not Input.get_connected_joypads().is_empty()
+			return PadRouter.pad_prompts()
 		"later":
 			return int(FamilyProfile.data.get("runs", 0)) >= 3
 	return FamilyProfile.dojo_learned(req)
@@ -171,7 +171,7 @@ func _paint() -> void:
 	var L: Dictionary = _lessons[_i]
 	_prog.text = "TUTORIAL  ·  LESSON %d / %d" % [_i + 1, _lessons.size()]
 	_title.text = str(L["title"])
-	_btns.text = str(L["pad"]) if PadRouter.last_kind == "pad" else str(L["key"])
+	_btns.text = str(L["pad"]) if PadRouter.pad_prompts() else str(L["key"])
 	_line.text = "%s   (%d / %d)" % [str(L["line"]), mini(_n, int(L["need"])), int(L["need"])]
 	for c in _pips.get_children():
 		c.queue_free()

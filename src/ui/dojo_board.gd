@@ -129,7 +129,7 @@ func _row(c: Dictionary) -> Control:
 
 
 func _refresh_labels() -> void:
-	_pad = PadRouter.last_kind == "pad"
+	_pad = PadRouter.pad_prompts()
 	for id: String in _rows:
 		var r: Dictionary = _rows[id]
 		var c: Dictionary = r["combo"]
@@ -150,7 +150,7 @@ func _refresh_labels() -> void:
 			_:
 				mark.text = "" if learned else "🔒"
 	if _pad:
-		_guide.text = "BLOCK: hold L1  ·  stick ↑ HIGH  ·  neutral MID  ·  ↓ LOW      ROLL: L1 + R2      GET-UP: X / Y on the floor      AIR: A then Y = spinning heel      L3: spar"
+		_guide.text = "BLOCK: hold LB  ·  stick ↑ HIGH  ·  neutral MID  ·  ↓ LOW      ROLL: LB + RT      GET-UP: X / Y on the floor      AIR: A then Y = spinning heel      L3: spar"
 	else:
 		_guide.text = "BLOCK: hold I  ·  W HIGH  ·  neutral MID  ·  S LOW      ROLL: I + SHIFT      GET-UP: J / K on the floor      AIR: SPACE then K = spinning heel      TAB: spar"
 
@@ -179,7 +179,7 @@ func _process(delta: float) -> void:
 	_fade_card(delta)
 	if _guide == null:
 		return
-	if (PadRouter.last_kind == "pad") != _pad:
+	if (PadRouter.pad_prompts()) != _pad:
 		_refresh_labels()
 	if _dummy != null and is_instance_valid(_dummy):
 		_dmg.text = "LAST HIT  %d\nHITS  %d" % [_dummy.last_dmg, _dummy.hits]

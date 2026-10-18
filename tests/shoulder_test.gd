@@ -1,7 +1,7 @@
 extends SceneTree
 
-## Shoulder strikes (the Kid): L1 + X superman punch, L1 + Y flying knee,
-## R2 + X turning punch, R2 + Y roundhouse. Prints SHOULDER OK.
+## Shoulder strikes (the Kid): LB + X superman punch, LB + Y flying knee,
+## RT + X turning punch, RT + Y roundhouse. Prints SHOULDER OK.
 
 var _n := 0
 var _f: Node2D

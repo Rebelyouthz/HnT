@@ -301,7 +301,7 @@
   "stats": {
    "catch": "boomerang"
   },
-  "how": "A melee weapon you throw (hold L1 + L2 + R1 + R2 while holding it) comes back to you once, like a boomerang."
+  "how": "A melee weapon you throw (hold LB + LT + RB + RT while holding it) comes back to you once, like a boomerang."
  },
  {
   "id": "clash_policy",
@@ -622,7 +622,7 @@
    "Stun 2 s, cooldown 10 s, knocks them down."
   ],
   "blurb": "SHOOT with empty hands: everyone close is stunned 1.2 s. Cooldown 14 s.",
-  "how": "Press SHOOT (R1 / O) with no gun in hand: every thug near you is stunned. Then it needs to recharge."
+  "how": "Press SHOOT (RB / O) with no gun in hand: every thug near you is stunned. Then it needs to recharge."
  },
  {
   "id": "smoke_bomb",
@@ -637,7 +637,7 @@
    "Cooldown 12 s, you heal a little in the smoke."
   ],
   "blurb": "SHOOT with empty hands: smoke, 2.5 s untouchable, thugs lose you. Cooldown 18 s.",
-  "how": "Press SHOOT (R1 / O) with no gun in hand: smoke, nothing can hurt you for 2.5 s and thugs lose track of you."
+  "how": "Press SHOOT (RB / O) with no gun in hand: smoke, nothing can hurt you for 2.5 s and thugs lose track of you."
  },
  {
   "id": "knife_belt",
@@ -652,7 +652,7 @@
    "+3 more, knives go through everyone."
   ],
   "blurb": "+3 throwing knives now, carry 3 more.",
-  "how": "+3 throwing knives now and you can carry 3 more. Throw one by holding L1 + L2 + R1 + R2 with empty hands."
+  "how": "+3 throwing knives now and you can carry 3 more. Throw one by holding LB + LT + RB + RT with empty hands."
  },
  {
   "id": "slingshot",
@@ -667,7 +667,7 @@
    "Faster and harder: marbles now."
   ],
   "blurb": "SHOOT with empty hands fires a pebble. No ammo, ever.",
-  "how": "Press SHOOT (R1 / O) with no gun in hand to fire a pebble. Never runs out."
+  "how": "Press SHOOT (RB / O) with no gun in hand to fire a pebble. Never runs out."
  },
  {
   "id": "brass_knuckles",
@@ -742,6 +742,6 @@
    "+4 GRENADES now. The bag clinks."
   ],
   "blurb": "+3 MOLOTOVS now (SHOOT + up).",
-  "how": "Gives you throwables: aim up and press SHOOT (R1 / O) to throw them (molotovs, then flashbangs, then grenades)."
+  "how": "Gives you throwables: aim up and press SHOOT (RB / O) to throw them (molotovs, then flashbangs, then grenades)."
  }
 ]

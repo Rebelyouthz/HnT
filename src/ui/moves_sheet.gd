@@ -89,7 +89,7 @@ func _paint() -> void:
 	sc.add_child(body)
 	match _page:
 		"stick":
-			sub.text = "RIGHT STICK: every punch and kick that fits a stick path. The path is the move: flick, circle, pull back... Hold R2 for the kick paths, L1 turns the flick and the hook to the body. Empty paths throw a plain jab or front kick. Learn something new and it asks EQUIP NOW?"
+			sub.text = "RIGHT STICK: every punch and kick that fits a stick path. The path is the move: flick, circle, pull back... Hold RT for the kick paths, LB turns the flick and the hook to the body. Empty paths throw a plain jab or front kick. Learn something new and it asks EQUIP NOW?"
 			_stick_page(body)
 		"loadout":
 			sub.text = "Put any learned strike in any slot it fits. Heavier moves hit harder but come out slower and leave you open longer. GOLD %d" % int(FamilyProfile.data.get("gold", 0))
@@ -205,7 +205,7 @@ func _stick_page(body: VBoxContainer) -> void:
 	var lo := StickBook.loadout(role)
 	for type in ["punch", "kick"]:
 		var hl := Label.new()
-		hl.text = "PUNCHES  ·  STICK PATHS" if type == "punch" else "KICKS  ·  HOLD R2 + PATH"
+		hl.text = "PUNCHES  ·  STICK PATHS" if type == "punch" else "KICKS  ·  HOLD RT + PATH"
 		hl.add_theme_font_override("font", UiKit.title_font())
 		UiKit.apply_label(hl, 16, Palette.LEMON)
 		body.add_child(hl)
@@ -362,7 +362,7 @@ func _library(body: VBoxContainer) -> void:
 		grid.add_child(p)
 
 
-const DIR_NAME := {"N": "L + H", "F": "FWD + L + H", "U": "UP + L + H", "D": "DOWN + L + H", "B": "BACK + L + H"}
+const DIR_NAME := {"N": "X + Y", "F": "FWD + X + Y", "U": "UP + X + Y", "D": "DOWN + X + Y", "B": "BACK + X + Y"}
 const ART_CLIP := {"fireball": "cross", "lightning_dash": "superman_punch", "wind_kick": "air_spin_kick", "ice_slide": "slide",
 	"fire_palm": "heavy", "thunder_clap": "hammer", "magma_uppercut": "uppercut", "quake_stomp": "boot_kick"}
 
@@ -438,7 +438,7 @@ func _elements(body: VBoxContainer) -> void:
 			b.pressed.connect(act)
 		h.add_child(b)
 		grid.add_child(p)
-	_section(body, "GRABS  ·  L + H NEXT TO A THUG", Palette.EDGE)
+	_section(body, "GRABS  ·  X + Y NEXT TO A THUG", Palette.EDGE)
 	var gg := GridContainer.new()
 	gg.columns = 3
 	gg.add_theme_constant_override("h_separation", 10)
@@ -503,7 +503,7 @@ func _lab(body: VBoxContainer) -> void:
 	UiKit.apply_label(lab, 14, Palette.TEXT)
 	top.add_child(lab)
 	for tok: String in Moves.TOKENS:
-		var b := _btn(ComboBook.step_label(tok, false), Vector2(84, 36), "tok_" + tok, false)
+		var b := _btn(ComboBook.step_label(tok, PadRouter.pad_prompts()), Vector2(84, 36), "tok_" + tok, false)
 		b.disabled = _steps.size() >= 4
 		b.pressed.connect(func() -> void:
 			_steps.append(tok)
@@ -515,7 +515,7 @@ func _lab(body: VBoxContainer) -> void:
 	var line := HBoxContainer.new()
 	line.add_theme_constant_override("separation", 10)
 	var seq := Label.new()
-	seq.text = "LINE:  " + ("  ›  ".join(PackedStringArray(_steps.map(func(x): return ComboBook.step_label(str(x), false)))) if not _steps.is_empty() else "(tap inputs)")
+	seq.text = "LINE:  " + ("  ›  ".join(PackedStringArray(_steps.map(func(x): return ComboBook.step_label(str(x), PadRouter.pad_prompts())))) if not _steps.is_empty() else "(tap inputs)")
 	seq.add_theme_font_override("font", UiKit.title_font())
 	UiKit.apply_label(seq, 20, Palette.LEMON)
 	seq.custom_minimum_size = Vector2(520, 0)
@@ -577,7 +577,7 @@ func _lab(body: VBoxContainer) -> void:
 		var pr := _row_panel(Palette.LEMON)
 		var h: HBoxContainer = pr[1]
 		h.add_child(_icon(str(c["clip"]), Vector2(48, 48)))
-		var l := UiKit.rich("[color=#ffd75e]%s[/color]  %s  ›  %s  ·  DMG %d  ·  %s" % [str(c["title"]), ComboBook.steps_label(c, false), str(Moves.row(str(c["clip"])).get("title", "")), int(c["dmg"]), str(c["fx"]).to_upper()], 860, 13, Palette.TEXT)
+		var l := UiKit.rich("[color=#ffd75e]%s[/color]  %s  ›  %s  ·  DMG %d  ·  %s" % [str(c["title"]), ComboBook.steps_label(c, PadRouter.pad_prompts()), str(Moves.row(str(c["clip"])).get("title", "")), int(c["dmg"]), str(c["fx"]).to_upper()], 860, 13, Palette.TEXT)
 		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		h.add_child(l)
 		var del := _btn("DELETE", Vector2(110, 32), "del_" + str(c["id"]), false)

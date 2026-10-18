@@ -30,7 +30,7 @@ var _coach_anim: AnimatedSprite2D
 var _lookouts: Array[Punk] = []
 var _panel: PanelContainer
 var _step_lab: Label
-var _key_lab: Label
+var _key_lab: RichTextLabel
 var _tick_lab: Label
 
 ## One lesson each ("gate": how far right you may walk before it is done,
@@ -38,7 +38,7 @@ var _tick_lab: Label
 ## read from Fighter.last_btn when the blow lands, so a mashed or comboed
 ## press still counts), how many it needs, the coach's lines and which bag.
 const LESSONS := [
-	{"id": "walk", "gate": BAG_X - 90.0, "title": "WALK TO THE BAG", "pad": "LEFT STICK  ·  HOLD R2 TO RUN", "key": "A / D / W / S  ·  HOLD SHIFT TO RUN", "need": 1,
+	{"id": "walk", "gate": BAG_X - 90.0, "title": "WALK TO THE BAG", "pad": "LEFT STICK  ·  HOLD RT TO RUN", "key": "A / D / W / S  ·  HOLD SHIFT TO RUN", "need": 1,
 		"lines": [["father", "Basement's too small. Out back. Walk to the bag."]]},
 	{"id": "right", "title": "RIGHT HAND", "pad": "PRESS X  ·  ON THE BAG", "key": "PRESS J  ·  ON THE BAG", "btn": ["X"], "need": 3,
 		"lines": [["father", "Right hand first. X. Three on the bag."]]},
@@ -46,21 +46,23 @@ const LESSONS := [
 		"lines": [["father", "Now the left. Y. Three."]]},
 	{"id": "power", "title": "POWER PUNCH", "pad": "HOLD Y UNTIL YOU GLOW, LET GO", "key": "HOLD K UNTIL YOU GLOW, LET GO", "btn": ["HOLD Y"], "need": 1,
 		"lines": [["son", "Can I just hit it really hard?"], ["father", "Hold Y. Wait for it. Let go."]]},
-	{"id": "kick", "title": "KICKS", "pad": "HOLD L2 (BIG LEFT TRIGGER) + X OR Y", "key": "HOLD U + J OR K", "btn": ["L2+X", "L2+Y"], "need": 2,
-		"lines": [["father", "Legs are longer than arms. Hold L2 and press X or Y."]]},
-	{"id": "guard", "title": "GUARD", "pad": "HOLD L1 (TOP LEFT) WHEN THE BAG SWINGS", "key": "HOLD Q WHEN THE BAG SWINGS", "need": 2,
+	{"id": "kick", "title": "KICKS", "pad": "HOLD LT (BIG LEFT TRIGGER) + X OR Y", "key": "HOLD U + J OR K", "btn": ["LT+X", "LT+Y"], "need": 2,
+		"lines": [["father", "Legs are longer than arms. Hold LT and press X or Y."]]},
+	{"id": "guard", "title": "GUARD", "pad": "HOLD LB (TOP LEFT) WHEN THE BAG SWINGS", "key": "HOLD Q WHEN THE BAG SWINGS", "need": 2,
 		"lines": [["father", "Now it swings back. Hold your guard up when it comes."]]},
 	{"id": "jump", "title": "JUMP", "pad": "A", "key": "SPACE", "need": 1,
 		"lines": [["father", "Feet off the ground. Hop."]]},
+	{"id": "throw", "title": "THROW", "pad": "NEXT TO THE BAG  ·  PRESS X + Y TOGETHER", "key": "NEXT TO THE BAG  ·  PRESS J + K TOGETHER", "btn": ["X+Y"], "need": 2,
+		"lines": [["father", "Close up, both hands at once. X and Y together. Grab it and throw it. Twice."], ["son", "It's a bag, Dad. It won't learn anything."]]},
 	{"id": "pickup", "title": "PICK UP THE PIPE", "pad": "STAND ON IT  ·  X + Y TOGETHER", "key": "STAND ON IT  ·  J + K TOGETHER", "need": 1,
 		"lines": [["son", "There's a pipe."], ["father", "Stand on it, both hands. Pick it up. Don't lick it."]]},
-	{"id": "pipe", "gate": BAG2_X + 60.0, "title": "HIT WITH THE PIPE", "pad": "X SWING  ·  Y SLAM  ·  X X Y = CRUSH", "key": "J SWING  ·  K SLAM  ·  J J K = CRUSH", "btn": ["X", "Y"], "need": 3,
-		"lines": [["father", "Second bag. X swings it, Y brings it down. X, X, Y and it's a crush. Three."]]},
-	{"id": "toss", "gate": BAG2_X + 60.0, "title": "THROW THE PIPE", "pad": "HOLD L1 + L2 + R1 + R2", "key": "HOLD I + U + O + SHIFT", "need": 1,
+	{"id": "pipe", "gate": BAG2_X + 60.0, "title": "HIT WITH THE PIPE", "pad": "PIPE IN HAND:  X = SIDE SWING   ·   Y = OVERHEAD SLAM   ·   X X Y = CRUSH", "key": "J SWING  ·  K SLAM  ·  J J K = CRUSH", "btn": ["X", "Y"], "need": 3,
+		"lines": [["father", "Second bag. Pipe in your hands now: X swings it from the side, Y brings it down on top. X, X, Y is a crush. Three."]]},
+	{"id": "toss", "gate": BAG2_X + 60.0, "title": "THROW THE PIPE", "pad": "HOLD LB + LT + RB + RT", "key": "HOLD I + U + O + SHIFT", "need": 1,
 		"lines": [["father", "Now throw it. All four shoulders. A thrown pipe is a short conversation."]]},
-	{"id": "knife", "gate": BAG2_X + 60.0, "title": "THROW A KNIFE", "pad": "HANDS EMPTY  ·  HOLD L1 + L2 + R1 + R2", "key": "HANDS EMPTY  ·  HOLD I + U + O + SHIFT", "need": 1,
+	{"id": "knife", "gate": BAG2_X + 60.0, "title": "THROW A KNIFE", "pad": "HANDS EMPTY  ·  HOLD LB + LT + RB + RT", "key": "HANDS EMPTY  ·  HOLD I + U + O + SHIFT", "need": 1,
 		"lines": [["father", "Knives on your belt. Same grip, all four. Throw one."]]},
-	{"id": "lookouts", "gate": END_X, "title": "BEAT THE LOOKOUTS", "pad": "X + Y UP CLOSE THROWS  ·  DOWN + Y ON A MAN DOWN", "key": "J + K UP CLOSE THROWS  ·  S + K ON A MAN DOWN", "need": 2,
+	{"id": "lookouts", "gate": END_X, "title": "BEAT THE LOOKOUTS", "pad": "X + Y UP CLOSE THROWS  ·  DOWN + Y ON THE MAN ON THE FLOOR", "key": "J + K UP CLOSE THROWS  ·  S + K ON A MAN DOWN", "need": 2,
 		"lines": [["", "TWO OF GANT'S LOOKOUTS. THEY HEARD THE NOISE."], ["father", "Real ones. X and Y together up close: grab him, put him down. Down and Y while he's on the floor. Go."]]},
 ]
 
@@ -175,9 +177,7 @@ func _build_panel() -> void:
 	_step_lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	UiKit.apply_label(_step_lab, 20, Palette.LEMON)
 	col.add_child(_step_lab)
-	_key_lab = Label.new()
-	_key_lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	UiKit.apply_label(_key_lab, 15, Palette.TEXT)
+	_key_lab = PadText.label("", 520, 15)
 	col.add_child(_key_lab)
 	_tick_lab = Label.new()
 	_tick_lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -202,8 +202,11 @@ func _paint_panel() -> void:
 		return
 	_panel.visible = true
 	_step_lab.text = "LESSON %d / %d  ·  %s" % [_step + 1, LESSONS.size(), str(l["title"])]
-	var pad := not Input.get_connected_joypads().is_empty()
-	_key_lab.text = str(l["pad"] if pad else l["key"])
+	var pad := PadRouter.pad_prompts()
+	if pad:
+		PadText.set_text(_key_lab, str(l["pad"]))
+	else:
+		_key_lab.text = "[center]%s[/center]" % str(l["key"])
 	var need := int(l.get("need", 1))
 	var dots := ""
 	for i in need:
@@ -280,7 +283,7 @@ func _wrong(btn: String) -> void:
 		return
 	_wrong_t = _clock_t()
 	var l := lesson()
-	var pad := not Input.get_connected_joypads().is_empty()
+	var pad := PadRouter.pad_prompts()
 	var want := str(l["pad"] if pad else l["key"]).split("  ·  ")[0]
 	var f := _hero()
 	var at := (f.global_position if f else Vector2(BAG_X, 480)) + Vector2(0, -130)
@@ -366,6 +369,9 @@ func _ready() -> void:
 	)
 
 
+var _throw_t := -9.0
+
+
 func _on_struck(_kind: String, bag: TrainingDummy) -> void:
 	var l := lesson()
 	if l.is_empty() or not l.has("btn"):
@@ -376,6 +382,14 @@ func _on_struck(_kind: String, bag: TrainingDummy) -> void:
 		return
 	var want_bag := _bag2 if str(l["id"]) == "pipe" else _bag
 	if bag != want_bag:
+		return
+	# The throw lesson counts the heave itself (no strike id on a throw).
+	if str(l["id"]) == "throw":
+		if _kind == "throw" and _clock_t() - _throw_t > 0.5:
+			_throw_t = _clock_t()
+			_tick()
+		elif _kind != "throw":
+			_wrong(str(f.last_btn))
 		return
 	# One count per blow, whatever it hit along the way.
 	var sid := int(f.get("_strike_id"))

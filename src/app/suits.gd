@@ -16,7 +16,7 @@ const LIST := {
 		"blurb": "Cowl, cape, belt. Found in Gant's office. Nobody asks.",
 		"set": "DARK KNIGHT: +20% damage, batwings fly through every thug.",
 		"parts": {
-			"mask": {"title": "BAT COWL", "perk": "Double-tap L2: a BATWING boomerang.", "how": "Beat Collector Gant.", "stats": {"dmg": 1}},
+			"mask": {"title": "BAT COWL", "perk": "Double-tap LT: a BATWING boomerang.", "how": "Beat Collector Gant.", "stats": {"dmg": 1}},
 			"top": {"title": "BAT CAPE", "perk": "The cape flaps; glide (hold jump) and DOUBLE JUMP.", "how": "Climb the giant tower on Dock Street.", "stats": {"hp": 2}},
 			"bottom": {"title": "BAT BOOTS", "perk": "SPECIAL: BAT DIVE - leap and slam a shockwave.", "how": "Claim three WANTED bounties.", "stats": {"dmg": 1, "hp": 1}},
 		}},
@@ -25,7 +25,7 @@ const LIST := {
 		"set": "MAX SENSE: dodge 40% of hits on instinct.",
 		"parts": {
 			"mask": {"title": "SPIDER MASK", "perk": "SPIDER SENSE: 20% of hits dodged on instinct.", "how": "Beat Collector Gant.", "stats": {"speed": 4}},
-			"top": {"title": "SPIDER TOP", "perk": "Double-tap L2: a WEB SHOT that snares.", "how": "Survive the Intake Lot hour.", "stats": {"dmg": 1}},
+			"top": {"title": "SPIDER TOP", "perk": "Double-tap LT: a WEB SHOT that snares.", "how": "Survive the Intake Lot hour.", "stats": {"dmg": 1}},
 			"bottom": {"title": "SPIDER LEGS", "perk": "Jump 12% higher. SPECIAL: WEB SLAM launches the crowd.", "how": "Wall-kick twenty times.", "stats": {"speed": 8}},
 		}},
 	"shaolin": {"title": "SHAOLIN", "code": 3, "rarity": "epic",
@@ -40,7 +40,7 @@ const LIST := {
 		"blurb": "Black, quiet, one red sash. The street never saw you.",
 		"set": "SMOKE BOMB: every dash leaves smoke that stuns thugs nearby.",
 		"parts": {
-			"mask": {"title": "NINJA HOOD", "perk": "Double-tap L2: three SHURIKEN.", "how": "Find one secret stash.", "stats": {"dmg": 1}},
+			"mask": {"title": "NINJA HOOD", "perk": "Double-tap LT: three SHURIKEN.", "how": "Find one secret stash.", "stats": {"dmg": 1}},
 			"top": {"title": "NINJA GI", "perk": "The dash is a vanish: double i-frames, smoke.", "how": "Find three secret stashes.", "stats": {"speed": 8}},
 			"bottom": {"title": "TABI & SASH", "perk": "SPECIAL: SHADOW STEP - appear behind a thug and strike.", "how": "Finish five side jobs.", "stats": {"speed": 6, "dmg": 1}},
 		}},

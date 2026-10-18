@@ -45,7 +45,7 @@ func _process(delta: float) -> void:
 	_next_text = ""
 	if show_next and fighter != null and fighter._combo != null:
 		var lv: Array = fighter._combo.live(ComboBook.learned(fighter.role))
-		var pad := PadRouter.last_kind == "pad"
+		var pad := PadRouter.pad_prompts()
 		var bits: PackedStringArray = []
 		for row: Dictionary in lv:
 			var c: Dictionary = row["combo"]

@@ -111,7 +111,7 @@ func _process(_delta: float) -> void:
 	var f := _standing()
 	_prompt.visible = f != null
 	if f != null:
-		var key := "X+Y" if not Input.get_connected_joypads().is_empty() else "J+K"
+		var key := "X+Y" if PadRouter.pad_prompts() else "J+K"
 		_prompt.text = "%s  %s %s" % [key, "SWAP" if f.pickup != "" else "PICK UP", kind.to_upper().replace("_", " ")]
 
 

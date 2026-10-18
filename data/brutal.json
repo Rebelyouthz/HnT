@@ -243,7 +243,7 @@
   ],
   "big": true,
   "line": "SUPER. Kick the leg so it bends backwards; he drops to one knee. A side kick snaps his head round, you hold his hand so he stays up, then the heel comes back the other way and takes the head clean off.",
-  "input": "FURY full: L1 + R1 on a BROKEN thug",
+  "input": "FURY full: LB + RB on a BROKEN thug",
   "map": "",
   "icon": "twoway"
  },
@@ -260,7 +260,7 @@
   ],
   "big": true,
   "line": "SUPER. Both palms clap together on his temples. Once. That is all it takes.",
-  "input": "FURY full: L1 + R1 on a BROKEN thug",
+  "input": "FURY full: LB + RB on a BROKEN thug",
   "map": "",
   "icon": "skull"
  },
@@ -277,7 +277,7 @@
   ],
   "big": true,
   "line": "SUPER. Three kicks off the same leg without it touching down (head, ribs, head), then a spinning left kick finisher that sends the head into the next street.",
-  "input": "FURY full: L1 + R1 on a BROKEN thug",
+  "input": "FURY full: LB + RB on a BROKEN thug",
   "map": "",
   "icon": "flamingo"
  }

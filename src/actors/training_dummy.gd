@@ -150,6 +150,19 @@ func take_hit(kind: String, from: Node) -> void:
 		Juice.popup_number(global_position + Vector2(randf_range(-8.0, 8.0), -84.0), str(last_dmg), Color(1.0, 0.92, 0.7))
 
 
+## Grabbed and heaved (X + Y next to it): a big swing away and back on the
+## spring, dust off the base, and it scores as a THROW.
+func thrown_by(f: Node) -> void:
+	take_hit("throw", f)
+	var side := 1.0
+	if f is Node2D:
+		side = 1.0 if (f as Node2D).global_position.x < global_position.x else -1.0
+	_rock(0.55 * side * visual.scale.x)
+	Juice.land_puff(global_position + Vector2(0, -2))
+	Juice.popup_number(global_position + Vector2(0, -150), "THROW!", Color(1.0, 0.85, 0.35))
+	Mixer.play_sfx("res://assets/audio/sfx/hit_gut.ogg", 0.7, -3.0)
+
+
 ## A bag on a chain never goes down.
 func floor_for(_t: float, _from: int = 4) -> void:
 	pass

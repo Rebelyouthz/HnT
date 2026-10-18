@@ -408,7 +408,7 @@ func _tab_title(id: String) -> String:
 			return Copy.TAB_AWARDS
 
 
-## Pad / keyboard: L1 / R1 (or Q / E) step through the tabs.
+## Pad / keyboard: LB / RB (or Q / E) step through the tabs.
 func _unhandled_input(event: InputEvent) -> void:
 	var step := 0
 	if event is InputEventJoypadButton and event.pressed:

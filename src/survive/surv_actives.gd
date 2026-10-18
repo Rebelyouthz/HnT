@@ -3,8 +3,8 @@ extends Node
 
 ## ACTIVE SKILLS for the survivor hours. Two slots, picked in the lobby's
 ## ACTIVE SKILLS menu (everything else in a run comes from level-up cards):
-##   SKILL 1  L1  /  I or Q
-##   SKILL 2  L2  /  U or E
+##   SKILL 1  LB  /  I or Q
+##   SKILL 2  LT  /  U or E
 ## Each skill has a cooldown; levels (bought with S-COINS) cut the cooldown
 ## 8% and add 15% power per level. One node per hero during a run: it reads
 ## the buttons, runs the skill and draws the two buttons with their
@@ -345,7 +345,7 @@ func _draw_over() -> void:
 	var vp := _hud.get_viewport_rect().size
 	var sl := slots()
 	var font := ThemeDB.fallback_font
-	var keys := ["L1", "L2"] if PadRouter.last_p1_kind == "pad" else ["Q", "E"]
+	var keys := ["LB", "LT"] if PadRouter.pad_prompts() else ["Q", "E"]
 	for i in 2:
 		if i >= sl.size() or str(sl[i]) == "":
 			continue

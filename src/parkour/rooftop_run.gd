@@ -573,7 +573,7 @@ func _paint_hud() -> void:
 		c.draw_rect(r, Color(1.0, 0.62, 0.35, 0.8 * a2), false, 2.0)
 		var lines := [
 			"LEFT STICK  RIGHT = RUN   ·   UP = JUMP / VAULT / CLIMB   ·   DOWN = SLIDE",
-			"HOLD RIGHT STICK + R1 R2 L1 L2 = LOAD A TRICK   ·   LET GO + LEFT UP = JUMP IT",
+			"HOLD RIGHT STICK + RB RT LB LT = LOAD A TRICK   ·   LET GO + LEFT UP = JUMP IT",
 			"LET GO RIGHT AT THE EDGE = PERFECT   ·   BIG DROP: BOTH STICKS DOWN-RIGHT = ROLL",
 			"SMALL JUMP: BOTH STICKS RIGHT   ·   PERFECT LANDINGS BOOST YOU   ·   HE RUNS YOUR LINE",
 		]

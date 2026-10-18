@@ -67,7 +67,7 @@ const STEPS := {
 	],
 	"moves": [
 		{"text": "MOVES. Learn new strikes with gold. Every punch and kick that fits goes on the RIGHT STICK, the rest on your buttons."},
-		{"key": "page_stick", "text": "STICK: each stick path holds one move. Flick, circle, pull back and push, hold R2 for kicks. Swap them with the arrows. Learn a new one and it asks EQUIP NOW?"},
+		{"key": "page_stick", "text": "STICK: each stick path holds one move. Flick, circle, pull back and push, hold RT for kicks. Swap them with the arrows. Learn a new one and it asks EQUIP NOW?"},
 		{"who": "son", "text": "ELEMENTS are special arts: press LIGHT + HEAVY together with a direction. They level up and EVOLVE with gems."},
 	],
 	"awards": [
