@@ -2140,7 +2140,7 @@ func _cancel_strike() -> void:
 
 const IMPACT := {
 	"jab": "hit_jab", "cross": "hit_cross", "gut": "hit_gut", "body_hook": "hit_gut",
-	"heavy": "hit_heavy", "turn_punch": "hit_heavy", "superman_punch": "hit_heavy", "hammer": "hit_heavy", "snap": "hit_heavy",
+	"heavy": "hit_heavy", "turn_punch": "hit_heavy", "superman_punch": "hit_heavy", "hammer": "hit_heavy", "wpn_slam": "hit_heavy", "wpn_swing": "hit_heavy", "snap": "hit_heavy",
 	"uppercut": "hit_uppercut", "getup_upper": "hit_uppercut",
 	"front_kick": "hit_front_kick", "boot_kick": "hit_front_kick",
 	"side_kick": "hit_side_kick", "dropkick": "hit_side_kick",
@@ -3362,7 +3362,11 @@ func _try_ground_slam() -> bool:
 		facing = 1 if best.global_position.x > global_position.x else -1
 		visual.scale.x = float(facing)
 	best.floored = maxf(best.floored, 0.7)
-	var clip := "hammer" if _anim.sprite_frames.has_animation("hammer") else "heavy"
+	var clip := "heavy"
+	for c in ["hammer", "wpn_slam"]:
+		if _anim.sprite_frames.has_animation(c):
+			clip = c
+			break
 	combo_dmg = 22 + (12 if pickup in SWING_HELD else 0)
 	combo_fx = ""
 	combo_id = "ground_slam"
@@ -4458,7 +4462,7 @@ static var _front_cache: Dictionary = {}
 const SWING_HELD := ["pipe", "crowbar", "baseball_bat", "board", "sledgehammer", "chain"]
 const WPN_Y_KINDS := ["heavy", "punch_l", "hook_l", "upper_l", "body_l"]
 ## Held-weapon clips per hero: [X side swing, Y overhead], first one drawn wins.
-const WPN_CLIPS := {"father": [["hook_r", "swing"], ["hammer", "heavy"]], "son": [["hook_r", "cross"], ["heavy", "cross"]]}
+const WPN_CLIPS := {"father": [["wpn_swing", "hook_r"], ["hammer", "heavy"]], "son": [["wpn_swing", "hook_r"], ["wpn_slam", "heavy"]]}
 var _wpn_x := 0
 var _wpn_t := -9.0
 const SWING_KINDS := ["light", "heavy", "gut-punch", "punch_r", "hook_r", "body_r", "punch_l", "hook_l", "upper_l", "body_l"]

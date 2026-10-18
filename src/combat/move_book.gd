@@ -51,6 +51,10 @@ const MOVES := {
 	"superman_punch": {"startup_cap": 0.3, "lunge": 0.0, "plant": 1.0, "stop": 8, "shake": 7.0, "push": 40.0, "hit_cd": 12, "whiff_drift": 0.0, "whiff_cd": 22, "whiff_rate": 0.85, "stance": "rear_out", "weight": 0.75},
 	"elbow": {"startup_cap": 0.24, "lunge": 80.0, "plant": 0.2, "stop": 8, "shake": 7.0, "push": 50.0, "hit_cd": 12, "whiff_drift": 60.0, "whiff_cd": 22, "whiff_rate": 0.7, "stance": "spun", "weight": 0.8},
 	"hammer": {"startup_cap": 0.4, "lunge": 30.0, "plant": 0.1, "stop": 12, "shake": 11.0, "push": 0.0, "hit_cd": 16, "whiff_drift": 20.0, "whiff_cd": 28, "whiff_rate": 0.65, "stance": "low", "weight": 1.0},
+	# Held weapon, both hands: the flat swing and the overhead slam (also the
+	# son's ground slam).
+	"wpn_swing": {"startup_cap": 0.3, "lunge": 40.0, "plant": 0.2, "stop": 9, "shake": 8.0, "push": 60.0, "hit_cd": 13, "whiff_drift": 30.0, "whiff_cd": 22, "whiff_rate": 0.7, "stance": "spun", "weight": 0.85},
+	"wpn_slam": {"startup_cap": 0.4, "lunge": 30.0, "plant": 0.1, "stop": 12, "shake": 11.0, "push": 0.0, "hit_cd": 16, "whiff_drift": 20.0, "whiff_cd": 28, "whiff_rate": 0.65, "stance": "low", "weight": 1.0},
 	"jump_spin_kick": {"startup_cap": 0.5, "lunge": 0.0, "plant": 1.0, "stop": 11, "shake": 9.0, "push": 30.0, "hit_cd": 15, "whiff_drift": 0.0, "whiff_cd": 26, "whiff_rate": 0.85, "stance": "spun", "weight": 0.95},
 	"jump_high_kick": {"startup_cap": 0.4, "lunge": 0.0, "plant": 1.0, "stop": 9, "shake": 8.0, "push": 40.0, "hit_cd": 13, "whiff_drift": 0.0, "whiff_cd": 22, "whiff_rate": 0.85, "stance": "kick", "weight": 0.8},
 	"air_spin_kick": {"startup_cap": 0.22, "lunge": 0.0, "plant": 1.0, "stop": 9, "shake": 8.0, "push": 0.0, "hit_cd": 12, "whiff_drift": 0.0, "whiff_cd": 18, "whiff_rate": 0.9, "stance": "air", "weight": 0.85},

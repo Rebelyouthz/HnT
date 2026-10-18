@@ -24,7 +24,12 @@ if os.environ.get("HF_MOVES"):
 WHO = {"bag_snatch": "The thief in the red hoodie with the hood up, a white bandana mask over his nose and mouth, a brown satchel, baggy grey pants and red sneakers,",
        "repo_goon": "The bald heavyset thug in the grey vest and grey cargo pants with a gold chain and brown boots,",
        "mohawk": "The punk with the spiky black mohawk, black leather jacket, ripped blue jeans and black boots,",
-       "punk": "The street punk in the yellow beanie, black leather jacket, ripped blue jeans and black boots, holding a clipboard,"}
+       "punk": "The street punk in the yellow beanie, black leather jacket, ripped blue jeans and black boots, holding a clipboard,",
+       "bailiff": "The big riot bailiff in black body armour with BAILIFF on the chest, a black helmet, knee pads and black boots,",
+       "cop": "The police officer in the dark blue uniform shirt, black trousers, black cap with a gold badge and black shoes,",
+       "roof_runner": "The lean runner with the yellow headband, black sleeveless top, black cargo pants and black sneakers,",
+       "valet": "The bearded valet in the red-brown waistcoat over a dark shirt, a brown cap, dark trousers and brown boots,",
+       "coping_imp": "The young man in the green hoodie, an orange beanie, ripped dark jeans and black sneakers,"}
 KEEP = " He keeps exactly the same face, hair, headwear and outfit for the whole clip; nothing about his look changes."
 
 

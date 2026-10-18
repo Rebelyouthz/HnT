@@ -11,6 +11,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TAIL = (" Strict side view, locked static camera that never moves or zooms, full body always in frame, he stays on the same spot, "
         "flat solid green background that never changes, no other people, realistic martial arts motion with weight, "
         "keep the exact same pixel art style, face, hair and outfit for the whole clip.")
+NEG_HANDS = ", stick, bat, pipe, club, sword, weapon, any object in the hands"
 NEG = "camera movement, zoom, pan, cut, scene change, background change, extra people, text, watermark, blurry, morphing, deformed limbs, extra limbs, cropped body, walking away, turning to the camera"
 NEAR = "his RIGHT arm, the arm nearest to the camera"
 FAR = "his LEFT arm, the arm farthest from the camera"
@@ -26,6 +27,9 @@ EXTRA = {
 	"son_upper_r": ("son", "idle", GUARD + "He dips his knees and drives one rising uppercut with " + NEAR + ", fist travelling straight up to chin height, then back to his guard. Only the near arm punches."),
 	"son_upper_l": ("son", "idle", GUARD + "He dips his knees and drives one rising uppercut with " + FAR + ", fist travelling straight up to chin height, then back to his guard. Only the far arm punches."),
 	"son_body_r": ("son", "idle", GUARD + "He bends his knees a little and throws one punch to the body with " + NEAR + ", fist driving in at stomach height, then stands back into his guard. Only the near arm punches."),
+	"son_wpn_swing": ("son", "idle", "The young man faces right with both clenched fists held together by his back hip. He turns his hips and shoulders hard and swings both straight arms together around in one wide flat horizontal arc in front of his chest, from his back hip all the way across to the front, like a discus thrower, follows through, then returns to his stance. His fists are clenched and hold nothing at all."),
+	"son_wpn_slam": ("son", "idle", "The young man faces right. He lifts both empty fists clasped together high above his head, then brings them crashing straight down in front of him, bending forward at the waist and dropping onto one knee as if smashing something lying on the ground, then stands back up into his fighting stance. His hands are empty."),
+	"father_wpn_swing": ("father", "idle", "The bearded man in the grey hoodie faces right with both clenched fists held together by his back hip. He turns his hips and shoulders hard and swings both straight arms together around in one wide flat horizontal arc in front of his chest, from his back hip all the way across to the front, like a discus thrower, follows through, then returns to his stance. His fists are clenched and hold nothing at all."),
 	"son_body_l": ("son", "idle", GUARD + "He bends his knees a little and throws one punch to the body with " + FAR + ", fist driving in at stomach height, then stands back into his guard. Only the far arm punches."),
 }
 CLIPS = {
@@ -61,8 +65,8 @@ def main():
 		if not os.path.exists(st):
 			start_image(st, who, src)
 		try:
-			v, _ = wan.predict(input_image=handle_file(st), prompt=prompt + TAIL, steps=6, negative_prompt=NEG,
-				duration_seconds=3.0, guidance_scale=1, guidance_scale_2=1, seed=7, randomize_seed=False,
+			v, _ = wan.predict(input_image=handle_file(st), prompt=prompt + TAIL, steps=6, negative_prompt=NEG + (NEG_HANDS if "_wpn_" in lab else ""),
+				duration_seconds=3.0, guidance_scale=1, guidance_scale_2=1, seed=int(os.environ.get("SEED", "7")), randomize_seed=False,
 				api_name="/generate_video")
 		except Exception as e:
 			if "quota" in str(e).lower():
