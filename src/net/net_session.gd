@@ -10,6 +10,9 @@ signal cancelled
 
 const GAME_PORT := 24567
 const RELAY_PORT := 8789
+## The Son's game shouts "I'm here" on the home network every second, so
+## the Father's FIND MY SON needs no numbers on the same wifi.
+const BEACON_PORT := 24569
 const ROOM_FILE := "user://open_room.json"
 const ALPHA := "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"
 const ACTIONS := [
@@ -40,6 +43,12 @@ var _busy := false
 var _rooms_booted := false
 var _handshake_done := false
 var _relay_started := false
+var _beacon: PacketPeerUDP
+var _beacon_t := 0.0
+var _ip_http: HTTPRequest
+## The address the internet sees (for Dad in another house), found by
+## asking a public echo service; empty until it answers.
+var public_ip := ""
 
 
 func _ready() -> void:
@@ -47,6 +56,10 @@ func _ready() -> void:
 	_http = HTTPRequest.new()
 	_http.timeout = 2.5
 	add_child(_http)
+	_ip_http = HTTPRequest.new()
+	_ip_http.timeout = 5.0
+	add_child(_ip_http)
+	_ip_http.request_completed.connect(_on_public_ip)
 	multiplayer.peer_connected.connect(_on_peer_in)
 	multiplayer.peer_disconnected.connect(_on_peer_out)
 	multiplayer.connected_to_server.connect(_on_enet_ok)
@@ -106,6 +119,9 @@ func shutdown() -> void:
 		_tcp.disconnect_from_host()
 		_tcp = null
 	_tcp_buf.clear()
+	if _beacon:
+		_beacon.close()
+		_beacon = null
 	if FileAccess.file_exists(ROOM_FILE):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(ROOM_FILE))
 
@@ -147,6 +163,8 @@ func host() -> void:
 		_fail("Could not bind UDP %d" % GAME_PORT)
 		return
 	multiplayer.multiplayer_peer = _peer
+	_start_beacon()
+	_fetch_public_ip()
 	_write_room_file()
 	_busy = true
 	ensure_rooms()
@@ -168,7 +186,8 @@ func _upnp_task() -> void:
 
 
 func _upnp_done(wan: String, ok: bool) -> void:
-	wan_ip = wan
+	# No router answer keeps the number the echo service gave.
+	wan_ip = wan if wan != "" else public_ip
 	upnp_ok = ok
 	if wan != "":
 		backup_ip = "%s:%d" % [wan if wan != "" else lan_ip, GAME_PORT]
@@ -230,7 +249,7 @@ func _join_flow(ip_backup: String) -> void:
 		connected.emit()
 		status_changed.emit()
 		return
-	_fail("Could not reach the host. Check the code, or paste the IP backup.")
+	_fail("Could not reach your son. Check the numbers with him. In another house, his router may need port 24567 (UDP) opened.")
 
 
 func _try_enet(ip: String, wait_s: float) -> bool:
@@ -283,13 +302,13 @@ func _on_peer_in(id: int) -> void:
 	App.density_coop = true
 	_busy = false
 	connected.emit()
-	_set_status("FATHER CONNECTED")
+	_set_status("DAD CONNECTED")
 	broadcast_begin("dock_street")
 
 
 func _on_peer_out(_id: int) -> void:
 	if is_host() and active():
-		Juice.toast("challenge", "FATHER DROPPED", "The other chair went dark.")
+		Juice.toast("challenge", "DAD DROPPED", "The other chair went dark.")
 
 
 func broadcast_begin(map_id: String, extra: Dictionary = {}) -> void:
@@ -353,6 +372,11 @@ func _process(_delta: float) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if _beacon and is_host() and not App.remote_coop:
+		_beacon_t -= delta
+		if _beacon_t <= 0.0:
+			_beacon_t = 1.0
+			_beacon.put_packet(("HNT1|%s|%s" % [room_code, lan_ip]).to_utf8_buffer())
 	if is_client() and _dad and is_instance_valid(_dad) and _dad.net_report:
 		_input_acc += delta
 		if _input_acc >= 1.0 / 60.0:
@@ -614,8 +638,68 @@ func _on_relay_peer() -> void:
 	App.density_coop = true
 	_busy = false
 	connected.emit()
-	_set_status("FATHER CONNECTED")
+	_set_status("DAD CONNECTED")
 	broadcast_begin("dock_street")
+
+
+func _start_beacon() -> void:
+	_beacon = PacketPeerUDP.new()
+	_beacon.set_broadcast_enabled(true)
+	if _beacon.set_dest_address("255.255.255.255", BEACON_PORT) != OK:
+		_beacon = null
+	_beacon_t = 0.0
+
+
+func _fetch_public_ip() -> void:
+	if public_ip != "":
+		if wan_ip == "":
+			wan_ip = public_ip
+		return
+	_ip_http.cancel_request()
+	_ip_http.request("https://api.ipify.org")
+
+
+func _on_public_ip(result: int, code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
+	if result != HTTPRequest.RESULT_SUCCESS or code != 200:
+		return
+	var ip := body.get_string_from_utf8().strip_edges()
+	if ip.count(".") != 3 or ip.length() > 15:
+		return
+	public_ip = ip
+	if wan_ip == "":
+		wan_ip = ip
+	status_changed.emit()
+
+
+## FIND MY SON: listen for the Son's beacon on the home network. Returns
+## his address, or "" after `seconds` with nothing heard.
+func find_host(seconds := 5.0) -> String:
+	var u := PacketPeerUDP.new()
+	if u.bind(BEACON_PORT) != OK:
+		return ""
+	var left := seconds
+	while left > 0.0:
+		while u.get_available_packet_count() > 0:
+			var pkt := u.get_packet().get_string_from_utf8()
+			var ip := u.get_packet_ip()
+			if pkt.begins_with("HNT1|"):
+				var said := pkt.get_slice("|", 2)
+				u.close()
+				return said if said.count(".") == 3 and said != "127.0.0.1" else ip
+		await get_tree().create_timer(0.1).timeout
+		left -= 0.1
+	u.close()
+	return ""
+
+
+## Dad types whatever the Son read out: an address (85.228.10.4, with or
+## without :24567) or the six-letter code.
+func join_text(text: String) -> void:
+	var t := text.strip_edges().replace(",", ".").replace(" ", "")
+	if t.count(".") >= 3:
+		join("", t)
+	else:
+		join(t, "")
 
 
 func _fail(reason: String) -> void:

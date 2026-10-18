@@ -169,6 +169,9 @@ func _build_menu() -> void:
 	add_child(_menu)
 	var has_save := bool(FamilyProfile.data.get("intro_done", false))
 	_add_item("PLAY GAME", _play)
+	_add_item("PLAY ONLINE", func() -> void:
+		get_tree().root.add_child(preload("res://src/ui/online_family.gd").new())
+	)
 	if has_save:
 		_add_item("CONTINUE", _continue)
 		_add_item("WATCH INTRO", _start_game)
@@ -187,7 +190,7 @@ func _build_menu() -> void:
 		last.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		UiKit.apply_label(last, 11, Palette.MUTED)
 		_menu.add_child(last)
-		_menu.move_child(last, 2)
+		_menu.move_child(last, 3)
 	var first := _menu.get_child(0) as Button
 	if first:
 		first.call_deferred("grab_focus")

@@ -158,12 +158,12 @@ func _build_modes() -> void:
 	_net_row.position = Vector2(150, 452)
 	_net_row.add_theme_constant_override("separation", 10)
 	add_child(_net_row)
-	var host := UiKit.button("HOST A ROOM", Vector2(220, 40))
+	var host := UiKit.button(Copy.HOST, Vector2(250, 40))
 	host.pressed.connect(func() -> void:
 		_apply()
 		get_tree().root.add_child(preload("res://src/ui/host_wait.gd").new())
 	)
-	var join := UiKit.button("JOIN WITH A CODE", Vector2(240, 40))
+	var join := UiKit.button(Copy.JOIN, Vector2(250, 40))
 	join.pressed.connect(func() -> void:
 		_apply()
 		get_tree().root.add_child(preload("res://src/ui/join_sheet.gd").new())
@@ -171,7 +171,7 @@ func _build_modes() -> void:
 	_net_row.add_child(host)
 	_net_row.add_child(join)
 	var tip := Label.new()
-	tip.text = "The host plays the Son, the guest the Father."
+	tip.text = "Son presses his button, Dad presses his."
 	UiKit.apply_label(tip, 12, Palette.MUTED)
 	_net_row.add_child(tip)
 
@@ -308,19 +308,18 @@ func _open_guide() -> void:
 	_guide.add_child(col)
 	col.add_child(UiKit.title("PLAYING ONLINE FROM TWO CITIES", 26, Palette.LEMON))
 	var steps := [
-		"1.  Both of you start the game and press PLAY GAME, then ONLINE 2P.",
-		"2.  The Son presses HOST A ROOM. A big room code shows up (plus an IP as a backup).",
-		"3.  Text the code to the Father (SMS, Discord, anything).",
-		"4.  The Father presses JOIN WITH A CODE, types the code and presses CONNECT.",
-		"5.  When the Son's screen says FATHER CONNECTED, the stage starts for both of you.",
+		"1.  The SON starts the game and presses PLAY ONLINE, then SON · PLAY WITH DAD. That's all he does.",
+		"2.  His screen shows a big number. He reads it out to Dad (phone, Discord, across the room).",
+		"3.  DAD presses PLAY ONLINE, then DAD · FIND MY SON.",
+		"4.  Same wifi: press FIND MY SON - it finds the son by itself. Another house: type the number and press CONNECT.",
+		"5.  When it connects, the stage starts for both of you. The son plays the Son, Dad plays the Father.",
 		"",
-		"If the code will not connect:",
-		"  -  Check both games are the same version (title screen footer).",
-		"  -  Try the IP backup: the Son reads his IP off the host screen, the Father pastes it instead of the code.",
-		"  -  On a home router the IP route needs port 24567 (UDP) forwarded to the Son's PC. The room code does not.",
-		"  -  A phone hotspot or school wifi can block it; try another network.",
-		"",
-		"Enemies do not multiply online. The Son's game is the boss of the night; the Father's mirrors it.",
+		"If it will not connect:",
+		"  -  Both games must be the same version (BUILD on the title screen).",
+		"  -  If Windows asked about the firewall, it must say ALLOW (the installer sets this up).",
+		"  -  Another house: the son reads the ANOTHER HOUSE number. Most routers open the door by themselves (UPnP);",
+		"     if not, open port 24567 (UDP) on the son's router to his PC.",
+		"  -  The FATHER & SON - MY IP shortcut (Start menu) shows both numbers without starting the game.",
 	]
 	for s in steps:
 		var l := Label.new()
