@@ -32,8 +32,8 @@ func _ready() -> void:
 	who.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	UiKit.apply_label(who, 20, Palette.TEXT)
 	col.add_child(who)
-	var son := _big(col, SON, "Press this. That's it - you'll get a number to read to Dad.")
-	var dad := _big(col, DAD, "Press this after your son. It finds him, or you type his number.")
+	var son := _big(col, SON, "Press this. That's it - you'll get a code to read to Dad.")
+	var dad := _big(col, DAD, "Press this after your son, then type the code he reads to you.")
 	son.pressed.connect(func() -> void: _pick("son"))
 	dad.pressed.connect(func() -> void: _pick("father"))
 	var back := UiKit.button("BACK", Vector2(200, 44))

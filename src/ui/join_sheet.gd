@@ -1,8 +1,8 @@
 extends CanvasLayer
 
 ## Dad's side of online play, guided: 1) the son presses PLAY WITH DAD,
-## 2) FIND MY SON finds him on the same wifi by itself, 3) or type the
-## number he reads out (another house) and CONNECT.
+## 2) type the 6-digit code he reads out and CONNECT (any city, through the
+## online relay), 3) same wifi: FIND MY SON needs no code at all.
 
 var _ip: LineEdit
 var _status: Label
@@ -31,32 +31,33 @@ func _ready() -> void:
 	col.add_theme_constant_override("separation", 10)
 	card.add_child(col)
 	col.add_child(UiKit.title("PLAY WITH MY SON", 30, Palette.LEMON))
-	_step(col, "1", "Your son starts the game and presses SON · PLAY WITH DAD. A big number shows on his screen.")
-	_step(col, "2", "Same wifi? Press FIND MY SON - no numbers needed.")
+	_step(col, "1", "Your son starts the game and presses SON · PLAY WITH DAD. A big 6-digit code shows on his screen.")
+	_step(col, "2", "Type the code he reads to you and press CONNECT. Works from any city.")
 	_find = UiKit.button("FIND MY SON", Vector2(360, 60))
 	_find.add_theme_font_override("font", UiKit.title_font())
 	_find.add_theme_font_size_override("font_size", 24)
 	_find.add_theme_stylebox_override("normal", UiKit.panel(Palette.BRICK, Palette.LEMON))
 	UiKit.pulse_ready(_find)
 	_find.pressed.connect(_search)
-	_center(col, _find)
-	_step(col, "3", "Another house? Type the number he reads to you, then CONNECT.")
+	_find.custom_minimum_size = Vector2(300, 48)
 	var row := HBoxContainer.new()
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	row.add_theme_constant_override("separation", 10)
 	_ip = LineEdit.new()
-	_ip.placeholder_text = "85.228.10.4"
+	_ip.placeholder_text = "482 917"
 	_ip.custom_minimum_size = Vector2(380, 56)
 	_ip.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_ip.add_theme_font_size_override("font_size", 28)
 	_ip.add_theme_color_override("font_color", Palette.LEMON)
-	_ip.text = str(FamilyProfile.data.get("son_ip", ""))
+	_ip.text = ""
 	_ip.text_submitted.connect(func(_t: String) -> void: _go())
 	row.add_child(_ip)
 	_connect = UiKit.button(Copy.CONNECT, Vector2(200, 56))
 	_connect.pressed.connect(_go)
 	row.add_child(_connect)
 	col.add_child(row)
+	_step(col, "3", "Same wifi, same house? FIND MY SON finds him with no code at all.")
+	_center(col, _find)
 	_status = Label.new()
 	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -80,7 +81,7 @@ func _ready() -> void:
 		_find.disabled = false
 		_connect.disabled = false
 	)
-	_find.grab_focus()
+	_ip.grab_focus()
 
 
 func _step(col: VBoxContainer, n: String, text: String) -> void:
@@ -110,7 +111,7 @@ func _search() -> void:
 		_busy = false
 		_find.disabled = false
 		_connect.disabled = false
-		_status.text = "Not found on this wifi. Is his screen showing PLAY WITH DAD? In another house, type his number (step 3)."
+		_status.text = "Not found on this wifi. Type the code from his screen instead (step 2)."
 		return
 	_ip.text = ip
 	_status.text = "Found him at %s - connecting…" % ip
@@ -122,7 +123,7 @@ func _go() -> void:
 		return
 	var t := _ip.text.strip_edges()
 	if t == "":
-		_status.text = "Type the number your son reads out, like 85.228.10.4"
+		_status.text = "Type the 6-digit code your son reads out, like 482 917"
 		_ip.grab_focus()
 		return
 	_busy = true
@@ -132,9 +133,6 @@ func _go() -> void:
 
 
 func _connect_to(t: String) -> void:
-	# Remembered for next time: same son, same number, one press.
-	FamilyProfile.data["son_ip"] = t
-	FamilyProfile.save()
 	_status.text = Copy.CONNECTING
 	NetSession.join_text(t)
 

@@ -42,7 +42,7 @@ func _initialize() -> void:
 	if Copy.GO_SOLO != "GO ALONE" or Copy.FIRE_CLEAR != "FIRE ESCAPES COMPLETED":
 		push_error("missing solo/fire copy")
 		failed += 1
-	if Copy.WAITING != "WAITING FOR FATHER" or Copy.CONNECT != "CONNECT":
+	if Copy.WAITING != "WAITING FOR DAD" or Copy.CONNECT != "CONNECT":
 		push_error("missing host/join copy")
 		failed += 1
 	if Copy.HALL_CLEAR != "CITY HALL COMPLETED":
@@ -254,7 +254,7 @@ func _initialize() -> void:
 	failed += _contains("res://src/ui/hub_run.gd", "host_wait.gd")
 	failed += _contains("res://src/ui/hub_clinic.gd", "App.couch = false")
 	failed += _contains("res://src/net/net_session.gd", "GAME_PORT := 24567")
-	failed += _contains("res://src/ui/copy.gd", "WAITING FOR FATHER")
+	failed += _contains("res://src/ui/copy.gd", "WAITING FOR DAD")
 	failed += _contains("res://src/actors/mayor_raven.gd", "PHASE 3")
 	failed += _contains("res://data/story.json", "dock_street->intake_lot")
 	failed += _contains("res://src/world/chase_crash.gd", "NOOOO")

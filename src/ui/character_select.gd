@@ -309,17 +309,16 @@ func _open_guide() -> void:
 	col.add_child(UiKit.title("PLAYING ONLINE FROM TWO CITIES", 26, Palette.LEMON))
 	var steps := [
 		"1.  The SON starts the game and presses PLAY ONLINE, then SON · PLAY WITH DAD. That's all he does.",
-		"2.  His screen shows a big number. He reads it out to Dad (phone, Discord, across the room).",
-		"3.  DAD presses PLAY ONLINE, then DAD · FIND MY SON.",
-		"4.  Same wifi: press FIND MY SON - it finds the son by itself. Another house: type the number and press CONNECT.",
+		"2.  His screen shows a big 6-digit code. He reads it out to Dad (phone, Discord, text).",
+		"3.  DAD presses PLAY ONLINE, then DAD · FIND MY SON, types the code and presses CONNECT.",
+		"4.  It goes through the online relay: any two cities, no router setup. Same wifi: FIND MY SON needs no code.",
 		"5.  When it connects, the stage starts for both of you. The son plays the Son, Dad plays the Father.",
 		"",
 		"If it will not connect:",
 		"  -  Both games must be the same version (BUILD on the title screen).",
 		"  -  If Windows asked about the firewall, it must say ALLOW (the installer sets this up).",
-		"  -  Another house: the son reads the ANOTHER HOUSE number. Most routers open the door by themselves (UPnP);",
-		"     if not, open port 24567 (UDP) on the son's router to his PC.",
-		"  -  The FATHER & SON - MY IP shortcut (Start menu) shows both numbers without starting the game.",
+		"  -  The first call of the day can take up to a minute while the online server wakes up.",
+		"  -  The code changes every time the son presses PLAY WITH DAD: read the one on his screen now.",
 	]
 	for s in steps:
 		var l := Label.new()

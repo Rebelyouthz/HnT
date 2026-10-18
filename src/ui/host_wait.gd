@@ -33,7 +33,7 @@ func _ready() -> void:
 	card.add_child(col)
 	col.add_child(UiKit.title("PLAY WITH DAD", 30, Palette.LEMON))
 	_step(col, "1", "You are the SON. Your game is ready - you don't press anything else.", Palette.READY)
-	_step(col, "2", "Read this number out to Dad:", Palette.TEXT)
+	_step(col, "2", "Read this code out to Dad:", Palette.TEXT)
 	_lan = Label.new()
 	_lan.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	UiKit.apply_label(_lan, 46, Palette.LEMON)
@@ -46,7 +46,7 @@ func _ready() -> void:
 	_wan.custom_minimum_size = Vector2(740, 0)
 	UiKit.apply_label(_wan, 17, Palette.EDGE)
 	col.add_child(_wan)
-	_step(col, "3", "Dad presses DAD · FIND MY SON. Same wifi: it finds you by itself. Other house: he types the number.", Palette.TEXT)
+	_step(col, "3", "Dad presses DAD · FIND MY SON and types the code. It works from any city - no router setup.", Palette.TEXT)
 	_status = Label.new()
 	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -100,14 +100,18 @@ func _process(delta: float) -> void:
 
 
 func _paint() -> void:
-	_lan.text = NetSession.lan_ip if NetSession.lan_ip != "" else "…"
+	var c := NetSession.room_code
+	# Read out in two halves: "four eight two - nine one seven".
+	_lan.text = "%s %s" % [c.substr(0, 3), c.substr(3)] if c.length() == 6 else c
 	_lan.pivot_offset = Vector2(370, 28)
-	if NetSession.wan_ip != "" and NetSession.wan_ip != NetSession.lan_ip:
-		_wan.text = "Dad in ANOTHER HOUSE? Read him this one instead:  %s" % NetSession.wan_ip
-	else:
-		_wan.text = "Dad in another house? Looking up your internet number…"
+	_wan.text = "Same wifi? Dad can just press FIND MY SON - no code needed."
 	_status.text = NetSession.status_line if NetSession.status_line != "" else Copy.WAITING
-	_code.text = "room code %s%s" % [NetSession.room_code, "  ·  router opened (UPnP)" if NetSession.upnp_ok else ""]
+	var ips: PackedStringArray = []
+	if NetSession.lan_ip != "":
+		ips.append("home %s" % NetSession.lan_ip)
+	if NetSession.wan_ip != "" and NetSession.wan_ip != NetSession.lan_ip:
+		ips.append("internet %s" % NetSession.wan_ip)
+	_code.text = "  ·  ".join(ips)
 
 
 func _go() -> void:
