@@ -3258,10 +3258,13 @@ func _start_climb() -> void:
 	hop_v = 0.0
 	web_anchor = null
 	collision_mask = 0
+	# On the rungs, not behind them: the ladder's iron draws at z 1.
+	z_index = 3
 
 
 func _enter_roof() -> void:
 	plane = "roof"
+	z_index = 0
 	collision_mask = 1
 	motion_mode = MOTION_MODE_GROUNDED
 	hop = 0.0
@@ -3272,6 +3275,7 @@ func _enter_roof() -> void:
 
 
 func _enter_street() -> void:
+	z_index = 0
 	plane = "street"
 	collision_mask = 1
 	motion_mode = MOTION_MODE_FLOATING
