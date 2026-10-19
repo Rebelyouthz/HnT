@@ -48,6 +48,13 @@ func _ready() -> void:
 	_toast_box.add_theme_constant_override("separation", 4)
 	_toast_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	toast_root.add_child(_toast_box)
+	# Move banners (a lesson done, a move learned, a mastery rank) roll down
+	# from the top centre, away from the toasts in the right corner.
+	_mv_root = Control.new()
+	_mv_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_mv_root.position = Vector2.ZERO
+	_mv_root.size = Vector2(1280, 160)
+	toast_root.add_child(_mv_root)
 	_sfx = AudioStreamPlayer.new()
 	_sfx.bus = "sfx"
 	add_child(_sfx)
@@ -715,6 +722,89 @@ func _toast_show(kind: String, title: String, body: String, icon: String) -> voi
 		play("res://assets/audio/cling.wav")
 	elif kind == "codex":
 		RewardFly.snd("gem_land", 1.3, -6.0)
+
+
+var _mv_root: Control
+var _mv_q: Array = []
+var _mv_on := false
+
+
+## A move finished: a gold-edged plate rolls down from the top centre with
+## a medallion, a small header (MOVE COMPLETE, LEARNED ...) and the move,
+## holds, and rolls back up. One at a time; the rest wait their turn.
+func move_banner(head: String, title: String, icon := "star") -> void:
+	if _mv_root == null:
+		return
+	if _mv_on:
+		if _mv_q.size() < 3:
+			_mv_q.append([head, title, icon])
+		return
+	_mv_on = true
+	var plate := PanelContainer.new()
+	plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	plate.process_mode = Node.PROCESS_MODE_ALWAYS
+	var st := UiKit.panel(Color(0.06, 0.07, 0.13, 0.95), UiKit.GOLD)
+	st.set_border_width_all(3)
+	st.shadow_color = Color(0, 0, 0.02, 0.85)
+	st.shadow_size = 1
+	st.shadow_offset = Vector2(0, 5)
+	st.content_margin_left = 10
+	st.content_margin_right = 18
+	st.content_margin_top = 3
+	st.content_margin_bottom = 3
+	plate.add_theme_stylebox_override("panel", st)
+	_mv_root.add_child(plate)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	plate.add_child(row)
+	var medal := PanelContainer.new()
+	var ms := StyleBoxFlat.new()
+	ms.bg_color = Color(0.3, 0.24, 0.06)
+	ms.border_color = UiKit.GOLD
+	ms.set_border_width_all(2)
+	ms.set_corner_radius_all(22)
+	ms.content_margin_left = 4
+	ms.content_margin_right = 4
+	ms.content_margin_top = 4
+	ms.content_margin_bottom = 4
+	medal.add_theme_stylebox_override("panel", ms)
+	medal.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(medal)
+	var ic := PixelIcon.new()
+	ic.kind = icon
+	ic.custom_minimum_size = Vector2(32, 32)
+	ic.pivot_offset = Vector2(16, 16)
+	medal.add_child(ic)
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 0)
+	row.add_child(col)
+	var hd := Label.new()
+	hd.text = head
+	hd.add_theme_font_override("font", UiKit.pixel_font())
+	UiKit.apply_label(hd, 10, Color(1.0, 0.85, 0.35))
+	col.add_child(hd)
+	var t := Label.new()
+	t.text = title
+	t.add_theme_font_override("font", UiKit.title_font())
+	UiKit.apply_label(t, 20, Palette.TEXT)
+	col.add_child(t)
+	# Centred once it knows its size; starts above the screen edge.
+	plate.reset_size()
+	var w := maxf(plate.get_combined_minimum_size().x, 300.0)
+	plate.position = Vector2(640.0 - w * 0.5, -90.0)
+	var tw := create_tween().set_ignore_time_scale(true)
+	tw.tween_property(plate, "position:y", 4.0, 0.32).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(ic, "scale", Vector2(1.35, 1.35), 0.16).set_delay(0.2)
+	tw.tween_property(ic, "scale", Vector2.ONE, 0.12)
+	tw.tween_interval(1.5)
+	tw.tween_property(plate, "position:y", -90.0, 0.26).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tw.finished.connect(func() -> void:
+		plate.queue_free()
+		_mv_on = false
+		if not _mv_q.is_empty():
+			var n: Array = _mv_q.pop_front()
+			move_banner.call_deferred(str(n[0]), str(n[1]), str(n[2])))
+	play("res://assets/audio/cling.wav")
 
 
 func unlock_logo(title: String, sub: String, reward: String = "", icon: Texture2D = null) -> void:

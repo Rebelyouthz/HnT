@@ -66,5 +66,5 @@ static func use(role: String, clip: String, at: Vector2) -> void:
 	var after := level(role, clip)
 	if after > before:
 		var nm := clip.replace("_", " ").to_upper()
-		Juice.popup_number(at + Vector2(0, -110), "%s MASTERY %d" % [nm, after], Color(1.0, 0.85, 0.3))
+		Juice.move_banner("MOVE MASTERY  ·  RANK %d" % after, nm, "cur_xp")
 		Juice.toast("achievement", "%s  ·  MASTERY %d" % [nm, after], "+%d%% power, quicker wind-up, shorter recovery." % int(round(DMG * 100.0 * float(after))), "cur_xp")

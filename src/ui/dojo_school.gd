@@ -194,7 +194,7 @@ func _on_struck(kind: String) -> void:
 			var ready := FamilyProfile.dojo_rep(want)
 			_tick(str(_lessons[_i]["id"]))
 			if ready:
-				Juice.unlock_logo("%s  STREET READY" % str(_lessons[_i]["title"]).replace("TRAIN  ·  ", ""), "Drilled on the mat. It works out there now.", "MOVE  ·  LEARNED")
+				Juice.move_banner("MOVE LEARNED  ·  STREET READY", str(_lessons[_i]["title"]).replace("TRAIN  ·  ", ""), "fist")
 				# A stick strike asks where it goes once the banner has had its moment.
 				if StickBook.FROM_DOJO.has(want):
 					var who := str(hero.get("role")) if hero else "son"

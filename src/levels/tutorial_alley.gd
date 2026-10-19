@@ -323,6 +323,9 @@ func _drop_pipe() -> void:
 
 func _done_step() -> void:
 	Juice.shout("GOOD")
+	var l := lesson()
+	if not l.is_empty():
+		Juice.move_banner("LESSON COMPLETE", str(l["title"]), "ach_trophy")
 	var next := _step + 1
 	_step = -2
 	get_tree().create_timer(0.9).timeout.connect(func() -> void: _begin(next))
