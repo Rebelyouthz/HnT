@@ -32,6 +32,18 @@ var _t := 0.0
 var _landed := false
 var _taken := false
 var _glow: PointLight2D
+## The coin-flip look: spin about the upright axis (x scale = cos), two
+## bounces, then it lies tipped over on its side; every ~2 s it hops up,
+## flips once, bounces once and falls over again.
+var _spin := 0.0
+var _spin_v := 0.0
+var _bounces := 0
+var _tilt := 0.0
+var _hop_t := 0.0
+var _hop_y := 0.0
+var _hop_v := 0.0
+var _hop_bounced := false
+var _base_sx := 1.0
 
 
 static func spawn(host: Node, at: Vector2, what: String, n: int = 0, toss: float = 1.0) -> LootDrop:
@@ -72,6 +84,9 @@ func _ready() -> void:
 	_sp.offset = Vector2(0, -float(_sp.texture.get_height()) * 0.5)
 	_sp.texture_filter = SpriteBook.world_filter()
 	add_child(_sp)
+	_base_sx = _sp.scale.x
+	_spin_v = randf_range(14.0, 20.0) * (1.0 if randf() < 0.5 else -1.0)
+	_hop_t = randf_range(1.6, 2.4)
 	if kind == "syringe" or kind == "flask" or kind == "energy" or kind == "smoke" or kind.begins_with("shard") or kind == "gear" or kind == "card_token":
 		_glow = PointLight2D.new()
 		_glow.texture = LightRig.radial_tex()
@@ -148,22 +163,27 @@ func _process(delta: float) -> void:
 		_v.y += 900.0 * delta
 		position += _v * delta
 		_sp.rotation += _v.x * delta * 0.03
+		_spin += _spin_v * delta
+		_sp.scale.x = _base_sx * _edge(cos(_spin))
 		if position.y >= floor_y and _v.y > 0.0:
 			position.y = floor_y
-			if _v.y > 120.0:
-				_v.y *= -0.38
+			# Two bounces, each lower and slower, then it tips over.
+			if _bounces < 2:
+				_bounces += 1
+				_v.y = -maxf(absf(_v.y) * (0.45 if _bounces == 1 else 0.32), 90.0 if _bounces == 1 else 60.0)
 				_v.x *= 0.6
+				_spin_v *= 0.6
 				Juice.play("res://assets/audio/cling.wav")
 			else:
 				_landed = true
-				_sp.rotation = 0.0
+				_fall_over(1.0 if _spin_v >= 0.0 else -1.0)
 		_shadow.position.y = floor_y - position.y
 		_shadow.scale = Vector2.ONE * clampf(1.0 - (floor_y - position.y) / 80.0, 0.3, 1.0)
 		return
 	if kind == "gear" and _glow:
 		_glow.color = Rarity.color(Rarity.ORDER[clampi(item_tier, 0, 4)])
-	# Bob and glint while waiting.
-	_sp.position.y = -2.0 - 2.0 * sin(_t * 3.2)
+	# Lies on its side; now and then hops, flips and falls over again.
+	_idle_hop(delta)
 	_sp.modulate = Color(1, 1, 1).lerp(Color(1.6, 1.5, 1.2), maxf(0.0, sin(_t * 2.4)) ** 8.0)
 	if _glow:
 		_glow.energy = 0.7 + 0.3 * sin(_t * 4.0)
@@ -179,6 +199,50 @@ func _process(delta: float) -> void:
 			return
 		if absf(d.x) < 48.0 and absf(d.y) < 26.0 and (kind in ["cash", "coin"] or kind.begins_with("shard")):
 			position += d.normalized() * 140.0 * delta
+
+
+## |cos| kept off zero so a coin seen edge-on is a sliver, never gone.
+func _edge(c: float) -> float:
+	return signf(c) * maxf(0.12, absf(c)) if c != 0.0 else 0.12
+
+
+## Tip over onto its side (a quick tween to lying at ~70 degrees).
+func _fall_over(side: float) -> void:
+	_sp.scale.x = _base_sx
+	_tilt = side * randf_range(1.15, 1.35)
+	var tw := create_tween()
+	tw.tween_property(_sp, "rotation", _tilt, 0.16).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.tween_property(_sp, "rotation", _tilt * 0.92, 0.06)
+	tw.tween_property(_sp, "rotation", _tilt, 0.06)
+
+
+func _idle_hop(delta: float) -> void:
+	if _hop_v == 0.0 and _hop_y == 0.0:
+		_hop_t -= delta
+		if _hop_t > 0.0:
+			return
+		_hop_t = randf_range(1.8, 2.3)
+		_hop_v = -150.0
+		_hop_bounced = false
+		_spin = 0.0
+		_spin_v = TAU / 0.42 * (1.0 if randf() < 0.5 else -1.0)
+		var tw := create_tween()
+		tw.tween_property(_sp, "rotation", 0.0, 0.12)
+	_hop_v += 900.0 * delta
+	_hop_y += _hop_v * delta
+	_spin += _spin_v * delta
+	_sp.scale.x = _base_sx * _edge(cos(_spin))
+	if _hop_y >= 0.0 and _hop_v > 0.0:
+		_hop_y = 0.0
+		if not _hop_bounced:
+			_hop_bounced = true
+			_hop_v = -60.0
+			_spin_v *= 0.5
+		else:
+			_hop_v = 0.0
+			_fall_over(-signf(_tilt) if _tilt != 0.0 else 1.0)
+	_sp.position.y = _hop_y
+	_shadow.scale = Vector2.ONE * clampf(1.0 + _hop_y / 60.0, 0.5, 1.0)
 
 
 func _take(f: Fighter) -> void:
