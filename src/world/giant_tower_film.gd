@@ -218,7 +218,16 @@ func _actor(who: String, at: Vector2) -> Node2D:
 	_world.add_child(a)
 	a.z_index = 4
 	a.call("build")
+	# The heroes read a size smaller than the windows at the plain sprite
+	# scale; the owner wants them bigger everywhere (sit and climb clips
+	# play on this same sprite, so they grow with it).
+	var an: AnimatedSprite2D = a.get("anim")
+	if an:
+		SpriteBook.grow(an, TOWER_PEOPLE_K)
 	return a
+
+
+const TOWER_PEOPLE_K := 1.3
 
 
 func _build_ui() -> void:
