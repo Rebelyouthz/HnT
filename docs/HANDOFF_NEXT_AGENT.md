@@ -1,185 +1,181 @@
-# Handoff to the next agent — Father & Son
+# Handoff to the next agent: Father & Son (repo `Rebelyouthz/HnT`)
 
-## A message from the player / owner
+## A message from the owner first
 
-> Thank you so much for all the help. I am grateful for everything, and I hope
-> you want to help me finish this. Please do it at the highest possible quality
-> and standard: this is meant to be an **AAA+ pixel art game**.
+The owner is a parent building this game with their son. They write in
+Swedish and want answers in Swedish. They said:
 
-The owner writes in Swedish and wants answers in Swedish. They play on a
-ROG Ally (Windows, gamepad) and test the Windows installer.
+> "Tack ska du ha för all hjälp." (Thank you for all the help.)
 
-## What they asked for next (in their words, translated)
+They are very happy with the work so far, and their son loved the feel when
+he played it. **Read this whole file, and the code it points to, before you
+change anything.** Check every detail yourself; do not trust a summary,
+this one included, without looking. Then do the best and most careful job
+you can. Small things matter to them: a sprite a few pixels off, a prompt
+that names the wrong button, a lesson that will not count. They test on a
+**ROG Ally (Windows, gamepad)** through the Windows installer.
 
-1. **Logos / icons as real sprite assets everywhere** instead of hard-coded,
-   code-drawn shapes (PixelIcon glyphs, Polygon2D/`_draw` icons). Every
-   button, node, card, item, ability, pickup and badge should have a proper
-   pixel-art sprite.
-2. **Level-up cards made from sprites**: real pixel-art cards with a frame,
-   a holder/socket for the logo or picture, and stat text in colour. Animate
-   them: the highlighted card rises up and the frame glows in its **rarity
-   colour**.
-3. **Survivor mode**: lots of auto weapons and manual weapons, and level-up
-   cards that are sprites too but **look different from the story mode
-   cards**. Survivor has to be at least as deep as the rest of the game
-   (they say it is almost more important).
-4. Everything else: free hands, but make it as good as possible.
-5. Still open from earlier: **#95 super polish of everything + 2 careful
-   visual rounds** (camera moments on cool moves, particles, blood, effects,
-   "AAA+"), then rebuild the installer and send screenshots.
+Older wishes and history are in `docs/HANDOFF_EARLIER.md` and
+`docs/CLAUDE_WORKLOG.md`.
 
-### Latest wishes (last message before handoff, translated)
+## The goal right now
 
-> "Thank you for everything, good job." The owner asked that all of this is
-> passed on to you:
+**The intro film, the guided tutorial and the first map must work
+completely** before anything else:
 
-6. **Paperdoll for equipment**: a character figure that shows every worn
-   piece on the body (survivor gear: cap, jacket, shoes, charm; story gear
-   too). Swapping a piece updates the doll right away.
-7. **Pictures of the weapons being modified (GUNSMITH)**: a large picture
-   of the gun, and every attached part must be **visible** on it. Attaching
-   a part plays an **animation**, e.g. the bare muzzle → a suppressor
-   slides on and clicks into place (sound + flash). Do this for every part
-   in every slot on every gun/item (`src/app/attachments.gd` already has
-   `dress()`; it needs real sprite parts and attach/detach tweens).
-8. **Skill tree icons polished** so they clearly read as **pixel art**:
-   crisp, nearest-filtered, outlined and shaded, not blurry downscales
-   (`src/ui/hub_build.gd`, `NODE_ICON` / `_node_tex`).
-9. **Survivor gear screen and item cards / gunsmith screen**: pictures and
-   logos on **everything**, never just plain menu text
-   (`src/ui/surv_gear_sheet.gd`, `armory_sheet.gd` `_gunsmith`,
-   `ui:items`).
-10. **META upgrades get a picture/logo too** (all tree nodes, shop rows,
-    meta screens).
-11. **JUICE on every upgrade, across all menus in the whole game**: it has
-    to *feel*, *show* and *sound* good, with a "reward grow" feeling
-    (scale punch, glow, particles, rising sound, number pop).
-12. **Rewards must be visible**: when gold, gems, S-COINS or other
-    currency is given, show it on screen, **count it up**, then animate the
-    coins/gems **flying to their counter in the top corner**, and only then
-    tick that counter up (with a small bump on arrival). Same everywhere
-    rewards are given: results, chests, wheel, quests, shops, level-ups.
+1. Prologue film, then the tutorial alley (13 lessons), then Dock Street
+   (map 1).
+2. You must be able to **finish map 1** *and* **die on it**, and everything
+   must unlock in order along the way (strict guided unlocks, task #196).
+3. Balance level-ups and make it **harder**. This session set 2 lives (see
+   below). Check that it is fair when played by hand.
 
-### Round 2 (owner's next message, translated, condensed)
+## Environment
 
-More angles for Dad, the Kid and enemies (up, diagonal up/down); punchier
-punch/kick animations, varied hit/kill reactions, blood and wounds; many
-combos, finishers, throws, specials; survivor more like Jotunnslayer (unique
-enemies and bosses, missions, side quests, challenges, start weapons you can
-mod, level and merge to raise rarity); achievements; a codex of everything
-with rewards and first-meeting entries; red dots on everything new; reward
-feel on claim/upgrade/buy/equip with stat gains shown (white base, green up,
-red down); 5+ new things for each mode and 5 for the menus; boss loot chests
-and secrets with new weapons, moves, parts, suit parts, throwables and cards;
-shoes, necklace and ring in the paperdoll; camp/dojo unlocks in a planned
-order with guided first use and speech bubbles; then polish twice.
+- Godot **4.7.2** (GDScript). Binary: `G=/root/tools/Godot_v4.7.2-stable_linux.x86_64`.
+- Design canvas 640x360 (`PixelStage.DESIGN`, a `Vector2i`; wrap it in
+  `Vector2(...)` before doing float math). UI is authored in 1280x720
+  coordinates.
+- Repo in the cloud container: `/home/user/hnt`. Branch
+  `claude/gallant-galileo-5ctrmf`; push with
+  `git push -u origin claude/gallant-galileo-5ctrmf`. No PR unless asked.
+- After adding a new `class_name` script, reimport first:
+  `timeout 600 $G --headless --path . --import --quit`.
+- The disk allowance is small. Delete scratch frames and GIFs after use.
 
-### Latest (see worklog 0r)
+### Tests (run all of them before every push)
 
-Owner: more angles, walk every menu and add art/features (researched),
-deepen the game, two polish rounds. Done: menus pass (NIGHT LOG, profile
-fix, contracts bonus, WEEKLY GAUNTLET, hero COLOURS, OPTIONS realism
-settings, header icons), polish A+B (bugs, shadows, wet steps, breath,
-blood vs cars). Open: enemy angles for clamp_king (garbled), gant, mohawk,
-repo_goon, roof_runner, shift_lead, valet, coping_imp - HF quota.
+`cd /home/user/hnt && timeout 400 $G --headless --fixed-fps 60 --path . -s tests/<name>.gd`
 
-### Before that (see worklog 0q)
-
-Owner said "continue with everything on the to-do list": bodies vs lamps /
-cars / walls / crates / standing thugs, tripping and dragging, wall marks,
-last-kill cam, hurt gaits (limp/clutch/dazed/scoot) and the missing walk
-angles (father up, punk + cop up/down) are in. Next ideas: angles for the
-other enemy types (repo_goon, bailiff, mohawk...), diagonal clips.
-
-### Before that (see worklog 0p)
-
-Owner asked for every suit drawn in a parkour film (done:
-`tools/suit_show.gd`, screens/round2/dräkter_parkour.*), varied deaths by
-blow/weapon/round with real gravity and no overlapping bodies (DeathFall),
-bullets that go through or stay in with exit wounds, the same for the
-heroes, and a calmer right side of the map. All first-passed in 0p.
-
-### Done since (round 2, see worklog 0o)
-
-All of round 2 has a first pass: codex, guides, build order, stat colours,
-survivor starters/missions/challenges/shrines/pacts/rampage, boss chests,
-rewards desk + daily crate + clinic road + titles + power, loot chests and
-loot stashes, five throwables, five new cards, finishers and impact frames,
-parkour pursuer/rings/style, per-move hit reactions, walk_up/walk_down for
-the Kid and walk_down for Dad. Open: `father/walk_up` and enemy angles (HF
-ZeroGPU quota / Sorceress credits ran out - same pipeline, retry), more
-in-game polish, rebuild the installer.
-
-### Done before (see worklog 0n)
-
-Items 1-3 and 6-12 above have a first full pass: sprite icons everywhere
-(IconBook), sprite level-up cards with rise + rarity glow (story and a
-different survivor badge card), six new survivor weapons incl. two manual,
-equipment paperdoll, gunsmith bench with every part visible and attach
-animations, pixel-art skill tree icons, pictures on gear / gunsmith / META,
-upgrade juice in the menus, rewards that count up and fly to the corner.
-Good next steps: more polish on the icons the owner points at, sprite parts
-for melee weapon mods too, story equipment (locker) with the same paperdoll
-treatment, more survivor weapons and evolutions for the new ones.
-
-Older open items in the task list: audit entities without sprites, in-run
-HUD overlaps, parallax backgrounds, map 1 → film → map 2 flow polish.
-
-## Where things are (repo `/home/user/hnt`, branch `claude/gallant-galileo-5ctrmf`)
-
-Read `docs/CLAUDE_WORKLOG.md` first: sections **0o** and **0n** lists everything done in
-the latest sessions with file names. Highlights:
-
-| System | Files |
+| test | what it proves |
 |---|---|
-| Element arts, Tekken grabs, Dad+Son team attacks | `src/combat/elements.gd`, `art_moves.gd`, `element_shot.gd`, `art_fx.gd`, `data/elements.json` |
-| Dojo tutorial (13 lessons) | `src/ui/dojo_school.gd`, `src/levels/dojo_practice.gd` |
-| Gun attachments (GUNSMITH), throwing knives | `src/app/attachments.gd`, `src/combat/throw_knife.gd`, `src/ui/armory_sheet.gd` |
-| Level-up card kinds/levels + 14 items | `src/ui/pixel_card.gd` (KINDS), `src/combat/item_rack.gd`, `data/cards.json` |
-| Brawl extras (backstab, interrupt, juggle, taunt...) | `src/extras/brawl_plus.gd` |
-| Parkour extras (ghost, medals, tags, race clock...) | `src/extras/parkour_plus.gd` |
-| Body separation + footsteps/parkour sounds | `src/extras/body_sense.gd` |
-| Survivor depth: S-COINS, gear, events, wheel | `src/survive/surv_gear.gd`, `surv_coin.gd`, `surv_events.gd`, `src/ui/surv_gear_sheet.gd`, `src/ui/lucky_wheel.gd`, `src/extras/wheel_token.gd` |
-| Menus: ticker/next goal, hold-confirm, history | `src/ui/hub.gd`, `ui_kit.gd`, `stats_sheet.gd`, `title_screen.gd`, `stage_card.gd` |
-| Skill tree node icons | `src/ui/hub_build.gd` (`NODE_ICON`, `_node_tex`) |
+| script_load_test | every script compiles |
+| smoke | data files and encounters load |
+| intro_test | prologue -> alley -> Dock Street, and a second PLAY |
+| training_test | all 13 alley lessons complete on simulated buttons |
+| **throw_probe** (new) | the alley throw lesson counts realistic X+Y presses (gaps, either order, off-line, far side) |
+| **ladder_test** (new) | Dock Street fire escape: the climb clip plays and he reaches the roof |
+| **death_test** (new) | 2 lives -> 1 -> 0 -> THERAPY'S OVER -> TRY AGAIN -> back on Dock Street with 2 lives |
+| night_flow_test | prologue -> alley -> Dock Street -> camp -> Dock Street -> camp |
+| story_flow_test | all film and card hand-offs |
+| run_test, brutal_test, dojo_train_test, camp_walk_test, stick_test, shoulder_test, rs_gesture_test | combat and hub flows |
+| parkour_test | needs `PARKOUR_AUTO=1` |
 
-Current card art: `PixelCard` draws the frame in code. Item icons use
-`PixelIcon` glyphs; survivor icons live in `assets/sprites/survive/*.png`
-(generated by `tools/survive_icons.py`). These are the first candidates for
-the sprite overhaul the owner wants.
+Parallel test runs can race on the save file (a harmless "Parse JSON
+failed" line). Run them one at a time when in doubt.
 
-## How to work here
+Inside an `extends SceneTree` test, do not name class_names (`Fighter`,
+`ResultsSheet` ...): they compile before the autoloads exist and the test
+fails to load. Use `has_method` / `get()` (see `tests/death_test.gd`).
 
-- Godot 4.7.2: `/root/tools/Godot_v4.7.2-stable_linux.x86_64`.
-- After adding a `class_name`: `--headless --path . --import --quit`.
-- Tests: `--headless --path . --script res://tests/smoke.gd` (also
-  `focus_test.gd`, `reset_test.gd`). **Smoke does not load every script**:
-  run `--check-only --script res://<file>` on each file you edited.
-- Screenshots: `xvfb-run -a -s "-screen 0 1920x1080x24" $G --path .
-  --rendering-driver opengl3 --resolution 1920x1080 --windowed --script
-  res://tools/capture.gd -- <target> <out.png> <frames> [walk]`. Targets:
-  map ids, `hub:<tab>` (clinic, heroes, build, build_surv, build_park,
-  moves, moves_lib, moves_el, armory_gun, sgear...), `ui:fight`, `ui:surv`,
-  `ui:items`, `ui:items_live`, `ui:gun_<gun>`, `art:<art|grab|team>:<id>[:father]`,
-  `camp:x`, `title`. `PROBE=x,y` env lists canvas items at a viewport point.
-- The viewport is **640×360** (×3 to 1080p); UI built in 1280×720 design
-  coordinates must sit under `PixelStage.attach_canvas(layer)` (DesignRoot).
-- AI art: FLUX via HF (`black-forest-labs/FLUX.1-Krea-dev`, token in
-  `~/.cache/huggingface/token`, never commit it); see `tools/hf_batch.py`,
-  `tools/street_strip.py`, `tools/backdrop.py`.
-- Windows installer: `GODOT=... MAKENSIS=/usr/bin/makensis
-  NSISDIR=/usr/share/nsis bash tools/windows/pack_windows.sh`, zip
-  (stored) `FatherAndSonSetup.exe` + `INSTALLERA.txt`, `split -b 81788928 -d
-  -a 1` into `FnS.part*` in the `windows-installer` worktree, regenerate
-  `JOIN.bat`, amend and `push --force-with-lease` to `windows-installer`.
-  Rebuilt and pushed at the end of this session.
-- Commit trailer and no PRs unless asked (see worklog).
+### Screenshots
 
-## Gotchas found this session
+`xvfb-run -a -s "-screen 0 1280x720x24" $G --path . --fixed-fps 60 --rendering-driver opengl3 --resolution 1280x720 --windowed --script res://tools/capture.gd -- <map|prologue|skinwalker_film|tower:dock_street> out.png <frames> [walk]`
 
-- `CouchCamera._ready` used to overwrite `limit_right` (fixed): levels set it
-  before `add_child`.
-- Feet `LightOccluder2D`s must stay on light mask 2 or street lamps throw a
-  black wedge over the road.
-- Thug `take_hit` runs `BrawlPlus.on_blow`; arts deal damage through
-  `ArtMoves.strike` (kind `"combo"` with `combo_dmg`).
+Pass `--fixed-fps 60` whenever timing matters. Dock Street shows "GET
+READY" for its first ~400 frames and the hero is not drawn yet.
+
+## Done this session (all pushed)
+
+- **Bigger people** (the owner asked twice): `SpriteBook.ACTOR_K` 1.25 -> 1.4
+  (hitboxes follow), `FATHER_K` 1.14, `SON_K` 1.16. Prologue cast
+  `PEOPLE_K` 1.24 (`src/ui/prologue_film.gd`). Waiting-room film cast at true
+  room scale (`src/world/skinwalker_film.gd`, `_dress`).
+- **Throw lesson fixed** (`src/combat/art_moves.gd`): grab reach and depth
+  grow with ACTOR_K; the training bag has its own generous reach
+  (`BAG_REACH`, `BAG_DEPTH`) and turns the hero to face it. An empty X+Y in
+  the alley says "STEP IN CLOSER" instead of a dojo message. The first hand
+  of the chord landing on the bag is no longer called a wrong button
+  (`src/levels/tutorial_alley.gd`).
+- **Ladder**: the climber draws in front of the rungs (`z_index` 3 on the
+  climb plane, back to 0 on the roof or street). The climb clip was
+  already wired; `ladder_test` proves it.
+- **Difficulty**: `RunState.BASE_LIVES = 2` (META "SPARE LIFE" still adds
+  more). The fail sheet now leads with **TRY AGAIN** (same street, fresh
+  lives).
+- **Move banners** (`Juice.move_banner(head, title, icon)`) roll down from
+  the top centre for lesson complete, move learned (dojo) and mastery
+  ranks. Toasts stay in the right corner.
+- **Pickup hint**: a small speech bubble with the weapon's picture and a
+  down arrow fades in when a hero is near (`src/world/weapon_pickup.gd`).
+- **Loot pop** (`src/world/loot_drop.gd`): coin-flip spin, two bounces, then
+  it lies tipped on its side; every ~2 s it hops, flips, bounces once and
+  falls over again.
+- **Street declutter**: world hint plaques fade in only near a player
+  (`src/world/prox_fade.gd`, `ProxFade.attach(node)`).
+- **Skinwalker GIF** of all four clips (walk, crawl, dog, gape) was sent to
+  the owner.
+- **Installer clean-up and uninstaller** (`tools/windows/Cleanup.ps1`,
+  `FatherAndSon.nsi`). The new Setup.exe removes every old install, old
+  Setup.exe, zip and loose game folder. It never removes the Setup.exe that
+  is running, and never touches a folder with `project.godot`, `.git` or
+  `.cursor` at or above it (the owner's Cursor/Claude dev copy must stay).
+  Uninstall removes everything and asks before deleting the save. The Start
+  menu has "Avinstallera Father & Son".
+  Build: `GODOT=$G MAKENSIS=/usr/bin/makensis NSISDIR=/usr/share/nsis bash tools/windows/pack_windows.sh`.
+  **Not yet tested on a real Windows machine.** Ask the owner to try it, or
+  test the PowerShell in a Windows VM if you have one.
+
+## Todo (priority order; check each one in the running game, not just in code)
+
+1. **Map 1 end to end with hand-like input.** Play the alley and Dock Street
+   with simulated pad input, not teleports. Check that every lesson
+   completes, that every prompt matches its button, and that the miniboss
+   (Shift Lead at x 1380) and the boss (Collector Gant at x 2780) can be
+   beaten with the moves the alley taught. Check that the shop cart and the
+   crates work and that the clear screen leads on correctly. Then die on
+   purpose and confirm the whole death flow again.
+2. **Balance pass with 2 lives.** Simulate a fair run (`tools/balance_sim.py`
+   exists). Tune enemy damage, boss HP (`data/bosses.json` `hp_mul`),
+   level-up pacing (4-8-15-21-27-35-42) and card strength so that a kid who
+   learned the alley can clear Dock Street in 1-3 tries.
+3. **Strict guided unlocks audit (#196).** Nothing in the hub shows before
+   its story moment, and every new feature gets its guided first use.
+4. **Scale check on every map** after the ACTOR_K change: props, doors,
+   ladders, tower ledge seats, films (`FilmActor` sits at
+   `DRAW_SCALE * FILM_SCALE`; standing film actors use plain `make_anim`),
+   and the camp (`CAMP_K`). Fix anything that now looks wrong.
+5. **Windows installer.** Verify on Windows that `Cleanup.ps1` deletes what
+   it should and never the dev copy. Then publish the rebuilt
+   `build/windows/FatherAndSonSetup.exe` the way the owner gets it (a
+   release zip with `INSTALLERA.txt`, tasks #15 and #201).
+6. Transitions (#194): idle/walk in and out, turn, walk/run start and stop.
+7. Hideout unfurnished until built, a modern armory, the pet rescue story
+   (#235).
+8. Finish the declutter (#237): remaining map clutter, realistic blood.
+9. Online across cities: a room-code relay on an HF Space (#227).
+10. The batch 2 fix list from the playtest (#188).
+
+## Skills and connectors (the owner asked)
+
+The owner wants unused skills and connectors turned off, keeping what the
+game needs. From inside a session you can only advise. Tell them, in
+Swedish:
+
+- **Skills**: keep the Godot skills, `game-*`, `beat-em-up-feel`,
+  `pixel-art-sprites`, `parallax-backdrops`, `superpolish` and `lean-budget`
+  (all in `.claude/skills/`), plus the game-character-sprites skill. They
+  can turn the rest off with `/skills` in Claude Code or under claude.ai
+  Settings -> Capabilities.
+- **Connectors**: keep GitHub, Hugging Face (sprite clips) and Context7
+  (Godot docs). Epidemic Sound (SFX and music) is used rarely but is worth
+  keeping. These were never used for this game and are safe to turn off in
+  claude.ai Settings -> Connectors: Canva, Gamma, Adobe for creativity,
+  Mobbin, Replit, Nimble, Jam, Mem, Microsoft Learn, HyperFrames, YES2SDK,
+  Three.js viewer, Google Drive, Claude Docs and AI Video Prompt Generator.
+
+## Gotchas learned the hard way
+
+- Lesson repeat guards use the wall clock (`Time.get_ticks_msec`). Headless
+  tests run faster than real time, so a probe has to reset `_throw_t` for
+  each case.
+- `pkill -f <name>` kills your own shell if the name is in the command line.
+- Light-string slots in saves are `L1`/`L2`/`L3`, not shoulder buttons.
+  Never rename them.
+- HF clip pipeline: `tools/hf_still_clips.py` + `tools/install_hero_clips.py`.
+  Delete `*_preview.gif` afterwards, except the tracked
+  `father/hook_r_preview.gif` and `father/punch_r_preview.gif`.
+- `Juice` already has a `_banner_q` for unlock banners; the move banner uses
+  `_mv_*`.
+
+Thank you for taking care of this. It means a lot to them.

@@ -28,8 +28,17 @@ BrandingText "FnS"
 !insertmacro MUI_LANGUAGE "Swedish"
 
 Section "Install"
+  ; First clear out every other copy: old installs, old Setup.exe files,
+  ; zips and loose game folders (never this running Setup.exe, never a
+  ; developer working copy with project.godot / .git). The save stays.
+  InitPluginsDir
+  File "/oname=$PLUGINSDIR\Cleanup.ps1" "Cleanup.ps1"
+  DetailPrint "Tar bort gamla versioner och gamla setup-filer..."
+  nsExec::ExecToLog 'powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "$PLUGINSDIR\Cleanup.ps1" -Mode install -Keep "$EXEPATH"'
+  Pop $0
   SetOutPath "$INSTDIR"
   File "..\..\build\windows\FatherAndSon.exe"
+  File "Cleanup.ps1"
   File "..\..\assets\icon\fns.ico"
   File "MyIP.ps1"
   File "MyIP.cmd"
@@ -43,11 +52,12 @@ Section "Install"
   CreateShortCut "$DESKTOP\Father & Son.lnk" "$INSTDIR\FatherAndSon.exe" "" "$INSTDIR\fns.ico" 0
   CreateShortCut "$SMPROGRAMS\Father & Son\Father & Son - Min IP (online).lnk" "$INSTDIR\MyIP.cmd" "" "$INSTDIR\fns.ico" 0
   WriteUninstaller "$INSTDIR\Uninstall.exe"
+  CreateShortCut "$SMPROGRAMS\Father & Son\Avinstallera Father & Son.lnk" "$INSTDIR\Uninstall.exe" "" "$INSTDIR\fns.ico" 0
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\FatherAndSon" "DisplayName" "Father & Son"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\FatherAndSon" "UninstallString" "$INSTDIR\Uninstall.exe"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\FatherAndSon" "DisplayIcon" "$INSTDIR\fns.ico"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\FatherAndSon" "Publisher" "FnS"
-  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\FatherAndSon" "DisplayVersion" "0.3.0"
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\FatherAndSon" "DisplayVersion" "0.4.0"
   WriteRegDWORD HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\FatherAndSon" "NoModify" 1
   WriteRegDWORD HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\FatherAndSon" "NoRepair" 1
 SectionEnd
@@ -57,6 +67,16 @@ Function ShowMyIP
 FunctionEnd
 
 Section "Uninstall"
+  ; Everything: this install, every other installed copy, old Setup.exe
+  ; files and zips, shortcuts, the firewall rule. A developer working copy
+  ; (project.godot / .git) is never touched. The save goes only on "Ja".
+  InitPluginsDir
+  CopyFiles /SILENT "$INSTDIR\Cleanup.ps1" "$PLUGINSDIR\Cleanup.ps1"
+  StrCpy $1 ""
+  MessageBox MB_YESNO|MB_ICONQUESTION|MB_DEFBUTTON2 "Ta bort sparfilen också (all progress i spelet)?$\n$\nNej = sparfilen ligger kvar om du installerar igen." IDNO +2
+  StrCpy $1 "-Saves"
+  nsExec::ExecToLog 'powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "$PLUGINSDIR\Cleanup.ps1" -Mode uninstall $1'
+  Pop $0
   Delete "$DESKTOP\Father & Son.lnk"
   Delete "$SMPROGRAMS\Father & Son\Father & Son.lnk"
   RMDir "$SMPROGRAMS\Father & Son"
@@ -67,6 +87,9 @@ Section "Uninstall"
   Delete "$INSTDIR\MyIP.cmd"
   Delete "$INSTDIR\OpenFirewall.cmd"
   Delete "$SMPROGRAMS\Father & Son\Father & Son - Min IP (online).lnk"
-  RMDir "$INSTDIR"
+  Delete "$SMPROGRAMS\Father & Son\Avinstallera Father & Son.lnk"
+  RMDir "$SMPROGRAMS\Father & Son"
+  Delete "$INSTDIR\Cleanup.ps1"
+  RMDir /r "$INSTDIR"
   DeleteRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\FatherAndSon"
 SectionEnd
