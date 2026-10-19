@@ -105,11 +105,65 @@ func _ready() -> void:
 	_prompt.z_index = 20
 	_prompt.visible = false
 	add_child(_prompt)
+	_make_bubble()
 
 
-func _process(_delta: float) -> void:
+## A small speech bubble over the weapon when a hero comes close: its
+## picture and a little down arrow, bobbing. Says "this can be picked up"
+## without a word; the X+Y line appears only when standing on it.
+var _bubble: Node2D
+
+
+func _make_bubble() -> void:
+	_bubble = Node2D.new()
+	_bubble.z_index = 19
+	_bubble.position = Vector2(0, -34)
+	_bubble.modulate.a = 0.0
+	add_child(_bubble)
+	var bg := Polygon2D.new()
+	var pts := PackedVector2Array()
+	# Rounded box 26 x 18 with a tail at the bottom centre.
+	for i in 24:
+		var ang := TAU * float(i) / 24.0
+		var c := Vector2(cos(ang), sin(ang))
+		pts.append(Vector2(clampf(c.x * 1.6, -1.0, 1.0) * 13.0, clampf(c.y * 1.6, -1.0, 1.0) * 9.0) + c * 1.5)
+	bg.polygon = pts
+	bg.color = Color(0.97, 0.95, 0.88, 0.94)
+	_bubble.add_child(bg)
+	var tail := Polygon2D.new()
+	tail.polygon = PackedVector2Array([Vector2(-3, 9), Vector2(3, 9), Vector2(0, 14)])
+	tail.color = bg.color
+	_bubble.add_child(tail)
+	var path := "res://assets/sprites/held/%s.png" % kind
+	if not ResourceLoader.exists(path):
+		path = "res://assets/sprites/guns/%s.png" % kind
+	if ResourceLoader.exists(path):
+		var ic := Sprite2D.new()
+		ic.texture = load(path)
+		var tex_w := float(ic.texture.get_width())
+		var k := minf(20.0 / maxf(1.0, tex_w), 12.0 / maxf(1.0, float(ic.texture.get_height())))
+		ic.scale = Vector2(k, k)
+		ic.position = Vector2(-2, -1)
+		ic.rotation = -0.3
+		ic.texture_filter = SpriteBook.world_filter()
+		_bubble.add_child(ic)
+	var arrow := Polygon2D.new()
+	arrow.polygon = PackedVector2Array([Vector2(7, 1), Vector2(13, 1), Vector2(10, 6)])
+	arrow.color = UiKit.GOLD.darkened(0.25)
+	_bubble.add_child(arrow)
+
+
+func _process(delta: float) -> void:
 	var f := _standing()
 	_prompt.visible = f != null
+	if _bubble:
+		var near := 9999.0
+		for n in get_tree().get_nodes_in_group("players"):
+			if n is Fighter and not (n as Fighter).downed:
+				near = minf(near, (n as Node2D).global_position.distance_to(global_position))
+		var want := 1.0 if near < 120.0 and f == null else 0.0
+		_bubble.modulate.a = move_toward(_bubble.modulate.a, want, delta * 4.0)
+		_bubble.position.y = -34.0 + sin(float(Time.get_ticks_msec()) / 260.0) * 1.5
 	if f != null:
 		var key := "X+Y" if PadRouter.pad_prompts() else "J+K"
 		_prompt.text = "%s  %s %s" % [key, "SWAP" if f.pickup != "" else "PICK UP", kind.to_upper().replace("_", " ")]
