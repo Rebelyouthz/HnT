@@ -1,7 +1,10 @@
 class_name RunState
 extends Node
 
-var lives: int = maxi(1, 3 + Meta.rank("extra_life") - (1 if Artifacts.has("one_life") else 0))
+## Two lives a night (playtest: three made the street a stroll); SPARE
+## LIFE in META buys more.
+const BASE_LIVES := 2
+var lives: int = maxi(1, BASE_LIVES + Meta.rank("extra_life") - (1 if Artifacts.has("one_life") else 0))
 var checkpoint := Vector2(220, 490)
 var failed: bool = false
 var cleared: bool = false

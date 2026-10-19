@@ -223,11 +223,20 @@ func _ready() -> void:
 			nxt.pressed.connect(_go_next)
 			row.add_child(nxt)
 			nxt.call_deferred("grab_focus")
+	# Fell: straight back in on the same street is the first choice.
+	if not win and not gate and not App.weekly and not App.remote_coop:
+		var again := UiKit.button("TRY AGAIN", Vector2(260, 60))
+		again.add_theme_font_override("font", UiKit.title_font())
+		again.add_theme_font_size_override("font_size", 22)
+		again.process_mode = Node.PROCESS_MODE_ALWAYS
+		again.pressed.connect(_try_again)
+		row.add_child(again)
+		again.call_deferred("grab_focus")
 	var b := UiKit.button("GO BUILD IT AT CAMP" if lock_line != "" else "BACK TO THE HIDEOUT", Vector2(300, 60))
 	b.process_mode = Node.PROCESS_MODE_ALWAYS
 	b.pressed.connect(_go_hub)
 	row.add_child(b)
-	if not gate or lock_line != "":
+	if (gate and lock_line != "") or (not gate and (win or App.weekly or App.remote_coop)):
 		b.call_deferred("grab_focus")
 	UiKit.pop_in(card)
 	Juice.pulse_shake(8.0 if win else 5.0)
@@ -348,6 +357,12 @@ func _go_next() -> void:
 	get_tree().paused = false
 	if state:
 		App.advance(next_id, state)
+
+
+## The same street again from its start, a fresh set of lives.
+func _try_again() -> void:
+	get_tree().paused = false
+	App.enter_map(App.current_map)
 
 
 func _go_hub() -> void:
