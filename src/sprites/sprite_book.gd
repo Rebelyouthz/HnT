@@ -307,17 +307,19 @@ static func crossfade(a: AnimatedSprite2D, secs := 0.14) -> void:
 ## ACTOR_K: measured against the painted streets (doors, kerb, bikes) the
 ## people were ~20% too small; everything that fights is scaled by it, and
 ## hitboxes/reach follow (Fighter._spawn_hit, Punk hurtbox and swing range).
-const ACTOR_K := 1.25
+## Raised again (1.25 -> 1.4) after a playtest: on every map the people
+## still read small against the painted doors and shopfronts.
+const ACTOR_K := 1.4
 ## Re-measured (tests/size_probe.gd) so everyone is about a painted door
 ## tall: the heroes the biggest people on the street (son ~72, father ~70
 ## in his crouched guard, ~80 walking upright), thugs ~57 (brutes more),
 ## townsfolk ~55; props a touch smaller.
 const FIGHTER_SCALE := 1.22 * ACTOR_K
-const FATHER_K := 1.06
+const FATHER_K := 1.14
 ## The Son's clips stand upright, the Father's idle is a low guard: at 1.0
 ## the boy read a head shorter than his walking dad (84%). A teenager near
 ## his dad's height: ~90%.
-const SON_K := 1.08
+const SON_K := 1.16
 
 
 ## The hero's own size on top of the shared actor scale.

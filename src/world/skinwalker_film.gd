@@ -85,12 +85,12 @@ func _build_room() -> void:
 		add_child(back)
 	_paint_room()
 	var plaque := Label.new()
-	plaque.position = Vector2(80, 176)
+	plaque.position = Vector2(80, 228)
 	plaque.text = "DON'T SIT. SITTING IS HOW THEY WIN."
 	UiKit.apply_label(plaque, 14, Palette.MUTED)
 	add_child(plaque)
 	_number = Label.new()
-	_number.position = Vector2(80, 140)
+	_number.position = Vector2(80, 192)
 	_number.text = "NOW SERVING  ·  88"
 	UiKit.apply_label(_number, 22, Palette.EDGE)
 	add_child(_number)
@@ -106,8 +106,10 @@ func _build_room() -> void:
 	UiKit.apply_label(mag_l, 10, Palette.TEXT)
 	mag.add_child(mag_l)
 	_invoice = ColorRect.new()
-	_invoice.color = Color(0.86, 0.82, 0.7, 0.0)
-	_invoice.position = Vector2(820, 120)
+	_invoice.color = Color(0.86, 0.82, 0.7, 0.92)
+	# The whole card (paper and words) fades in on its beat.
+	_invoice.modulate.a = 0.0
+	_invoice.position = Vector2(840, 176)
 	_invoice.size = Vector2(360, 220)
 	add_child(_invoice)
 	var inv_l := Label.new()
@@ -196,20 +198,21 @@ func _build_cast() -> void:
 	_dad = ColorRect.new()
 	_dad.color = Palette.BRICK
 	_dad.size = Vector2(22, 52)
-	_dad.position = Vector2(220, 470)
+	_dad.position = Vector2(150, 470)
 	add_child(_dad)
 	_son = ColorRect.new()
 	_son.color = Palette.LEMON
 	_son.size = Vector2(18, 44)
-	_son.position = Vector2(252, 478)
+	_son.position = Vector2(215, 478)
 	add_child(_son)
-	# Room scale (the painted room is the Waiting Room map's): the cast at
-	# about twice their blocking size so a man is a man next to the counter.
-	_dress(_dad, "father", "idle", 104.0, Vector2(11, 52))
-	_dress(_son, "son", "idle", 88.0, Vector2(9, 44))
-	_dress(_patient, "npc_old_man", "idle", 118.0, Vector2(0, 4), true)
-	_dress(_dog, "skinwalker", "dog", 50.0, Vector2(4, 6))
-	_dress(_true, "skinwalker", "gape", 220.0, Vector2(0, 8), true)
+	# Room scale (the painted room is the Waiting Room map's, its counter
+	# ~100 units high): a grown man stands about twice the counter, the
+	# boy a head shorter, and the true shape towers over both.
+	_dress(_dad, "father", "idle", 212.0, Vector2(11, 52))
+	_dress(_son, "son", "idle", 188.0, Vector2(9, 44))
+	_dress(_patient, "npc_old_man", "idle", 200.0, Vector2(0, 60), true)
+	_dress(_dog, "skinwalker", "dog", 96.0, Vector2(4, 14))
+	_dress(_true, "skinwalker", "gape", 330.0, Vector2(0, 8), true)
 
 
 ## The cast as real sprites over their blocking shapes (the shapes stay as
@@ -360,7 +363,7 @@ func _process(delta: float) -> void:
 			if _t > 4.2:
 				_go(Beat.TEAR)
 		Beat.TEAR:
-			_invoice.color.a = minf(0.92, _invoice.color.a + delta * 0.7)
+			_invoice.modulate.a = minf(1.0, _invoice.modulate.a + delta * 0.76)
 			_ghost.color.a = 0.18 + 0.18 * sin(_t * 8.0)
 			_ghost.position.x = 560.0 + sin(_t * 11.0) * 40.0
 			var g2 := get_node_or_null("GhostTwo")
@@ -376,9 +379,9 @@ func _process(delta: float) -> void:
 			if _t > 3.8:
 				_go(Beat.HURT)
 		Beat.HURT:
-			_true.position.x = lerpf(_true.position.x, 420.0, 0.06)
-			_dad.position.x = lerpf(_dad.position.x, 300.0, 0.08)
-			_son.position.x = lerpf(_son.position.x, 332.0, 0.08)
+			_true.position.x = lerpf(_true.position.x, 480.0, 0.06)
+			_dad.position.x = lerpf(_dad.position.x, 200.0, 0.08)
+			_son.position.x = lerpf(_son.position.x, 268.0, 0.08)
 			if _t > 2.6:
 				_leave()
 		_:

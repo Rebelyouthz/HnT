@@ -19,6 +19,9 @@ const WALK_Y := 500.0
 const ZOOM := 2.5
 ## How far in from the painted floor's front edge the cast stands (world u).
 const FLOOR_IN := 10.0
+## People against the painted room: at the plain sprite scale the father
+## stood a head under the fridge. A grown man is about fridge height.
+const PEOPLE_K := 1.24
 
 var _talk: Talk
 var _ui: Control
@@ -87,10 +90,10 @@ func _build_set() -> void:
 	# The two of them alone first, facing each other. The brothers are
 	# painted stills with no walk clip, so they never slide across the
 	# room: they stand on their marks, unseen until they are introduced.
-	_actor("father", Vector2(_cx - 30.0, WALK_Y), 1)
-	_actor("son", Vector2(_cx + 2.0, WALK_Y + 1.0), -1)
-	_benny = _crew("benny", Vector2(_cx + 26.0, WALK_Y))
-	_rico = _crew("rico", Vector2(_cx + 50.0, WALK_Y + 1.0))
+	_actor("father", Vector2(_cx - 36.0, WALK_Y), 1)
+	_actor("son", Vector2(_cx + 4.0, WALK_Y + 1.0), -1)
+	_benny = _crew("benny", Vector2(_cx + 34.0, WALK_Y))
+	_rico = _crew("rico", Vector2(_cx + 62.0, WALK_Y + 1.0))
 	_benny.face(-1)
 	_rico.face(-1)
 	_benny.modulate.a = 0.0
@@ -121,6 +124,7 @@ func _actor(who: String, at: Vector2, face: int) -> FilmActor:
 		a.anim = SpriteBook.make_anim(who)
 		a.anim.flip_h = face < 0
 		a.anim.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+		SpriteBook.grow(a.anim, PEOPLE_K)
 		a.add_child(a.anim)
 		# At home nobody stands in a fight stance.
 		if who in ["father", "son"] and a.anim.sprite_frames.has_animation("idle_casual"):
@@ -132,6 +136,7 @@ func _crew(who: String, at: Vector2) -> CrewNPC:
 	var c := CrewNPC.new()
 	c.setup(who)
 	c.position = at
+	c.scale = Vector2(PEOPLE_K, PEOPLE_K)
 	c.face(-1)
 	add_child(c)
 	return c
