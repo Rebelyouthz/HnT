@@ -11,6 +11,8 @@ var life := 1.35
 var arm := 0.16
 var caught := false
 var _poly: Polygon2D
+var _shadow: Polygon2D
+var _trail: Line2D
 
 
 func _ready() -> void:
@@ -57,6 +59,42 @@ func _ready() -> void:
 			_poly.color = Color(0.45, 0.32, 0.2)
 			_poly.polygon = PackedVector2Array([Vector2(-20, -4), Vector2(20, -4), Vector2(20, 4), Vector2(-20, 4)])
 	add_child(_poly)
+	if ResourceLoader.exists("res://assets/sprites/held/%s.png" % kind):
+		var art := Sprite2D.new()
+		art.texture = load("res://assets/sprites/held/%s.png" % kind)
+		art.scale = Vector2(SpriteBook.DRAW_SCALE, SpriteBook.DRAW_SCALE) * 1.25
+		art.texture_filter = SpriteBook.world_filter()
+		_poly.add_child(art)
+		_poly.color.a = 0.0
+	# A dark outline so it reads against the wet street.
+	var rim := Line2D.new()
+	var pts := _poly.polygon.duplicate()
+	if pts.size() > 0:
+		pts.append(pts[0])
+	rim.points = pts
+	rim.width = 1.5
+	rim.default_color = Color(0, 0, 0, 0.0 if _poly.color.a == 0.0 else 0.7)
+	_poly.add_child(rim)
+	# Speed streak behind it and its shadow on the street below.
+	_trail = Line2D.new()
+	_trail.top_level = true
+	_trail.width = 5.0
+	_trail.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	_trail.end_cap_mode = Line2D.LINE_CAP_ROUND
+	var g := Gradient.new()
+	g.set_color(0, Color(1, 1, 1, 0.0))
+	g.set_color(1, Color(1.0, 0.95, 0.8, 0.45))
+	_trail.gradient = g
+	add_child(_trail)
+	_shadow = Polygon2D.new()
+	var sh := PackedVector2Array()
+	for i in 14:
+		var ang := TAU * float(i) / 14.0
+		sh.append(Vector2(cos(ang) * 16.0, sin(ang) * 3.5))
+	_shadow.polygon = sh
+	_shadow.color = Color(0, 0, 0, 0.35)
+	_shadow.z_index = -1
+	add_child(_shadow)
 	body_entered.connect(_on_body)
 	area_entered.connect(_on_area)
 	Juice.play("res://assets/audio/throw.wav")
@@ -70,7 +108,19 @@ func _physics_process(delta: float) -> void:
 	vel.y += 920.0 * delta
 	global_position += vel * delta
 	if _poly:
-		_poly.rotation = vel.angle()
+		if kind in ["knife", "invoice_star"]:
+			_poly.rotation = vel.angle() if kind == "knife" else _poly.rotation + 20.0 * delta
+		else:
+			# Blunt things tumble end over end.
+			_poly.rotation += signf(vel.x) * 17.0 * delta
+	if _shadow:
+		var h := maxf(0.0, 508.0 - global_position.y)
+		_shadow.position = Vector2(0, h)
+		_shadow.scale = Vector2.ONE * clampf(1.0 - h / 220.0, 0.45, 1.0)
+	if _trail:
+		_trail.add_point(global_position)
+		while _trail.get_point_count() > 7:
+			_trail.remove_point(0)
 	if global_position.y > 508.0:
 		global_position.y = 508.0
 		_land()
@@ -167,5 +217,5 @@ func _land() -> void:
 		var wp := WeaponPickup.new()
 		wp.kind = kind
 		wp.global_position = global_position
-		host.add_child(wp)
+		host.add_child.call_deferred(wp)
 	queue_free()

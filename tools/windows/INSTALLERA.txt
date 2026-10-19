@@ -1,0 +1,19 @@
+FATHER & SON - installera
+
+1. Packa upp zip-filen (högerklicka -> Extrahera alla).
+2. Dubbelklicka FatherAndSonSetup.exe.
+   Windows kan visa "Windows skyddade datorn" (spelet är inte signerat):
+   klicka "Mer information" -> "Kör ändå".
+3. Välj mapp (standard är bra) -> Installera.
+4. Starta från skrivbordsikonen "Father & Son" eller startmenyn.
+
+Uppdatera: kör bara nya FatherAndSonSetup.exe - den tar själv bort gamla versioner
+och gamla setup-filer (din egen utvecklingsmapp med project.godot rörs aldrig).
+
+Avinstallera: Startmenyn -> Father & Son -> "Avinstallera Father & Son"
+(eller Inställningar -> Appar -> Father & Son -> Avinstallera). Den tar bort alla
+versioner, gamla setup-filer och genvägar, och frågar om sparfilen ska bort också.
+Sparfilen ligger kvar i %APPDATA%\Godot\app_userdata så du tappar inget vid uppdatering.
+
+Kontroller: tangentbord eller handkontroll (ROG Ally fungerar direkt).
+Spela online från två städer: PLAY GAME -> ONLINE 2P -> HOW TO PLAY ONLINE.

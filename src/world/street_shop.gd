@@ -48,6 +48,7 @@ func _ready() -> void:
 	UiKit.apply_label(_hint, 13, Palette.EDGE)
 	_hint.text = idle
 	add_child(_hint)
+	ProxFade.attach(_hint)
 	var table: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/shop.json"))
 	var cats: Dictionary = table.get("catalogs", {})
 	_items = cats.get(catalog, [])
@@ -144,5 +145,5 @@ func _buy(rs: Node, f: Fighter, item: String) -> void:
 				rs.add_lunch()
 	Juice.shout(str(info["line"]))
 	Juice.play("res://assets/audio/shop.wav")
-	Juice.claim_burst(Vector2(640, 180), str(info["line"]), 0, 0)
+	Juice.claim_burst(Vector2(320, 90), str(info["line"]), 0, 0)
 	Rarity.buy(title, info)

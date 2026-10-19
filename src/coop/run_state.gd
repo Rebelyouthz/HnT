@@ -1,7 +1,10 @@
 class_name RunState
 extends Node
 
-var lives: int = 3
+## Two lives a night (playtest: three made the street a stroll); SPARE
+## LIFE in META buys more.
+const BASE_LIVES := 2
+var lives: int = maxi(1, BASE_LIVES + Meta.rank("extra_life") - (1 if Artifacts.has("one_life") else 0))
 var checkpoint := Vector2(220, 490)
 var failed: bool = false
 var cleared: bool = false
@@ -10,6 +13,8 @@ var scrap: int = 0
 var xp: int = 0
 var wanted: int = 0
 var cards: Array = []
+## Item cards level up when picked again (data/cards.json "max_lv").
+var card_lv: Dictionary = {}
 var level_ups: int = 0
 var shops_used: int = 0
 var card_reroll: bool = false
@@ -19,6 +24,8 @@ var score_dad: int = 0
 var score_total: int = 0
 var heat: int = 0
 var lunch: int = 0
+## Cart buys for the night: id -> stacks (see data/cart.json).
+var buffs: Dictionary = {}
 
 signal lives_changed
 signal points_changed
@@ -29,6 +36,7 @@ signal scrap_changed
 signal xp_changed
 signal wanted_changed
 signal need_cards
+signal enemy_killed
 
 
 func mark_checkpoint(pos: Vector2) -> void:
@@ -57,10 +65,17 @@ func clear_run() -> void:
 	if failed or cleared:
 		return
 	cleared = true
-	var gold := 12 + int(scrap / 5.0)
+	# Clearing pays more the deeper into the city (hero levels, gear copies
+	# and META all want gold now).
+	var gold := 30 + 10 * Heroes.map_tier() + int(scrap / 4.0)
 	if App.difficulty == "finals":
 		gold += 6
+	gold = int(round(float(gold) * Artifacts.gold() * (1.0 + VaultCards.stat("gold"))))
 	FamilyProfile.add_gold(gold)
+	if Artifacts.has("one_life"):
+		FamilyProfile.add_gems(1)
+		var who: String = App.solo_role if App.solo_role in ["son", "father"] else "son"
+		Heroes.add_shards(who, 6)
 	run_cleared.emit()
 
 
@@ -82,21 +97,44 @@ func add_scrap(n: int) -> void:
 	add_points(Juice.last_hitter, n * 4, "scrap")
 
 
+## Stacks of a cart buy this night.
+func buff(id: String) -> int:
+	return int(buffs.get(id, 0))
+
+
+## Every thug that goes down (the run's first one opens the STARTING DRAW).
+var kills: int = 0
+
+
+## Kills that open the level-up cards. Counted in thugs, not XP: the
+## pinball multipliers made XP climb so fast the cards came every third
+## kill. After the table it keeps going, each step a little longer.
+const LEVEL_KILLS := [4, 8, 15, 21, 27, 35, 42]
+
+
+static func kills_for_level(n: int) -> int:
+	if n < LEVEL_KILLS.size():
+		return int(LEVEL_KILLS[n])
+	var extra := n - LEVEL_KILLS.size() + 1
+	return int(LEVEL_KILLS[-1]) + extra * 8 + (extra * (extra - 1)) / 2
+
+
+func note_kill() -> void:
+	kills += 1
+	enemy_killed.emit()
+	if FamilyProfile.rewards_open() and kills >= kills_for_level(level_ups):
+		level_ups += 1
+		need_cards.emit()
+
+
 func add_xp(n: int) -> void:
+	if not FamilyProfile.rewards_open():
+		return
+	n = int(ceil(float(n) * (1.0 + VaultCards.stat("xp"))))
+	if buff("insight_lens") > 0:
+		n = int(ceil(float(n) * (1.0 + 0.25 * buff("insight_lens"))))
 	xp += n
 	xp_changed.emit()
-	if level_ups == 0 and xp >= 70:
-		level_ups = 1
-		need_cards.emit()
-	elif level_ups == 1 and xp >= 160:
-		level_ups = 2
-		need_cards.emit()
-	elif level_ups == 2 and xp >= 260:
-		level_ups = 3
-		need_cards.emit()
-	elif level_ups == 3 and xp >= 380:
-		level_ups = 4
-		need_cards.emit()
 
 
 func add_wanted(n: int) -> void:
@@ -133,8 +171,20 @@ func take_card(id: String) -> void:
 		Juice.shout("SKIPPED")
 		Juice.toast("reward", Copy.SKIP, "No rule. Same street. Cowardice is also a build.")
 		return
+	if VaultCards.is_vault(id):
+		VaultCards.on_pick(id, get_tree())
+		Juice.shout(str(VaultCards.card(id).get("name", "VAULT CARD")))
+		Juice.toast("reward", "VAULT CARD", str(VaultCards.card(id).get("name", "")), "cur_card_token")
+		add_points(Juice.last_hitter, 60, "card")
+		return
 	if not cards.has(id):
 		cards.append(id)
+		card_lv[id] = 1
+	else:
+		card_lv[id] = int(card_lv.get(id, 1)) + 1
+	var rack := get_tree().get_first_node_in_group("item_rack")
+	if rack and rack.has_method("on_card"):
+		rack.call("on_card", id, int(card_lv[id]))
 	var rarity := "common"
 	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/cards.json"))
 	if typeof(parsed) == TYPE_ARRAY:
@@ -146,13 +196,26 @@ func take_card(id: String) -> void:
 	if Rarity.normalize(rarity) == "legendary":
 		FamilyProfile.mark_legendary()
 	Juice.shout(id.replace("_", " ").to_upper())
-	Juice.toast("reward", "RULE INSTALLED", "%s  ·  %s" % [id.replace("_", " ").to_upper(), Rarity.label(rarity)])
+	var lvl := int(card_lv.get(id, 1))
+	Juice.toast("reward", "ITEM LV %d" % lvl if lvl > 1 else "RULE INSTALLED", "%s  ·  %s" % [id.replace("_", " ").to_upper(), Rarity.label(rarity)])
 	add_points(Juice.last_hitter, 40 + Rarity.rank(rarity) * 25, "card")
 	SurviveMods.apply(id)
 
 
 func has_card(id: String) -> bool:
 	return cards.has(id)
+
+
+func card_level(id: String) -> int:
+	return int(card_lv.get(id, 0)) if cards.has(id) else 0
+
+
+## Can this card still be offered (not owned, or an item below its cap)?
+static func offerable(c: Dictionary, owned: Array, lv: Dictionary) -> bool:
+	var id := str(c.get("id", ""))
+	if not owned.has(id):
+		return true
+	return int(lv.get(id, 1)) < int(c.get("max_lv", 1))
 
 
 func note_shop() -> void:
@@ -183,6 +246,7 @@ func pack() -> Dictionary:
 		"xp": xp,
 		"wanted": wanted,
 		"cards": cards.duplicate(),
+		"card_lv": card_lv.duplicate(),
 		"level_ups": level_ups,
 		"shops_used": shops_used,
 		"rerolls": rerolls,
@@ -190,7 +254,8 @@ func pack() -> Dictionary:
 		"score_dad": score_dad,
 		"score_total": score_total,
 		"heat": heat,
-		"lunch": lunch
+		"lunch": lunch,
+		"buffs": buffs.duplicate()
 	}
 
 
@@ -200,6 +265,7 @@ func unpack(d: Dictionary) -> void:
 	xp = int(d.get("xp", xp))
 	wanted = int(d.get("wanted", wanted))
 	cards = (d.get("cards", []) as Array).duplicate()
+	card_lv = (d.get("card_lv", {}) as Dictionary).duplicate()
 	level_ups = int(d.get("level_ups", level_ups))
 	shops_used = int(d.get("shops_used", shops_used))
 	rerolls = int(d.get("rerolls", rerolls))
@@ -208,6 +274,7 @@ func unpack(d: Dictionary) -> void:
 	score_total = int(d.get("score_total", score_total))
 	heat = int(d.get("heat", heat))
 	lunch = int(d.get("lunch", lunch))
+	buffs = (d.get("buffs", {}) as Dictionary).duplicate()
 	gated = false
 	cleared = false
 	failed = false

@@ -8,6 +8,8 @@ MAKENSIS="${MAKENSIS:-$HOME/.local/nsis/usr/bin/makensis}"
 OUT="$ROOT/build/windows"
 mkdir -p "$OUT"
 python3 "$ROOT/tools/windows/make_icon.py"
+# Build stamp shown on the title screen (not committed).
+printf '{"id": "%s %s"}\n' "$(git -C "$ROOT" rev-parse --short HEAD)" "$(date -u +%m%d-%H%M)" > "$ROOT/data/build.json"
 "$GODOT" --headless --path "$ROOT" --import --quit
 "$GODOT" --headless --path "$ROOT" --export-release "Windows Desktop" "$OUT/FatherAndSon.exe"
 if [[ ! -f "$OUT/FatherAndSon.exe" ]]; then

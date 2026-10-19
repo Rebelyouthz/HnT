@@ -28,6 +28,7 @@ func _ready() -> void:
 	card.add_child(sc)
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 10)
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	sc.add_child(col)
 	var h := Label.new()
 	h.text = Copy.BOUNTY
@@ -78,7 +79,7 @@ func _row(info: Dictionary) -> Control:
 	v.add_child(b)
 	row.add_child(v)
 	var claimed := FamilyProfile.bounty_claimed(id)
-	var go := UiKit.button("FILED" if claimed else "CLAIM", Vector2(120, 40))
+	var go := UiKit.button("CLAIMED" if claimed else "CLAIM", Vector2(120, 40))
 	go.disabled = claimed or not FamilyProfile.bounty_ready(id)
 	if not go.disabled:
 		UiKit.pulse_ready(go)

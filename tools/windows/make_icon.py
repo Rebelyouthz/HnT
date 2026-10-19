@@ -1,107 +1,62 @@
 #!/usr/bin/env python3
-"""Write FnS ICO + PNG: two blocks (brick Father, lemon Son), readable at 32px."""
+"""Write the FnS icon (ICO + PNGs): the father's and the son's heads and
+shoulders side by side, turned toward each other, cut from their own idle
+sprites, under a warm lamp glow in a gold frame."""
 from __future__ import annotations
 
-import struct
-import zlib
+import json
 from pathlib import Path
 
+from PIL import Image, ImageDraw, ImageFilter
+
 ROOT = Path(__file__).resolve().parents[2]
+SPRITES = ROOT / "assets" / "sprites"
 OUT_DIR = ROOT / "assets" / "icon"
-
-BG = (12, 13, 18, 255)
 GOLD = (201, 162, 39, 255)
-BRICK = (181, 74, 58, 255)
-LEMON = (230, 216, 74, 255)
-CREAM = (242, 234, 216, 255)
 
 
-def _chunk(tag: bytes, data: bytes) -> bytes:
-    crc = zlib.crc32(tag + data) & 0xFFFFFFFF
-    return struct.pack(">I", len(data)) + tag + data + struct.pack(">I", crc)
+def frame(who: str, clip: str, i: int) -> Image.Image:
+    meta = json.loads((SPRITES / who / f"{clip}.json").read_text())
+    sheet = Image.open(SPRITES / who / f"{clip}.png").convert("RGBA")
+    f = meta["frames"][i]
+    cell = Image.new("RGBA", tuple(meta["cell"]))
+    cell.alpha_composite(sheet.crop((f["x"], f["y"], f["x"] + f["w"], f["y"] + f["h"])), (f["ox"], f["oy"]))
+    return cell.crop(cell.getbbox())
 
 
-def png_rgba(w: int, h: int, pixels: bytes) -> bytes:
-    ihdr = struct.pack(">IIBBBBB", w, h, 8, 6, 0, 0, 0)
-    raw = b""
-    stride = w * 4
-    for y in range(h):
-        raw += b"\x00" + pixels[y * stride : (y + 1) * stride]
-    return (
-        b"\x89PNG\r\n\x1a\n"
-        + _chunk(b"IHDR", ihdr)
-        + _chunk(b"IDAT", zlib.compress(raw, 9))
-        + _chunk(b"IEND", b"")
-    )
+def bust(img: Image.Image, frac: float = 0.36) -> Image.Image:
+    return img.crop((0, 0, img.width, int(img.height * frac)))
 
 
-def _fill(buf: bytearray, w: int, x0: int, y0: int, x1: int, y1: int, c: tuple[int, int, int, int]) -> None:
-    x0, x1 = max(0, x0), min(w, x1)
-    y0, y1 = max(0, y0), min(w, y1)
-    r, g, b, a = c
-    for y in range(y0, y1):
-        row = y * w * 4
-        for x in range(x0, x1):
-            i = row + x * 4
-            buf[i : i + 4] = bytes((r, g, b, a))
-
-
-def draw(size: int) -> bytes:
-    buf = bytearray(size * size * 4)
-    _fill(buf, size, 0, 0, size, size, BG)
-    border = max(1, size // 16)
-    inset = max(1, size // 32)
-    # Gold frame
-    _fill(buf, size, inset, inset, size - inset, size - inset, GOLD)
-    inner = inset + border
-    _fill(buf, size, inner, inner, size - inner, size - inner, BG)
-    pad = inner + max(1, size // 16)
-    box = size - pad * 2
-    gap = max(1, size // 16)
-    # Father: taller brick left. Son: shorter lemon right. Bottom-aligned.
-    left_w = (box - gap) * 5 // 9
-    right_w = box - gap - left_w
-    left_h = box * 7 // 8
-    right_h = box * 5 // 8
-    lx0, ly1 = pad, pad + box
-    lx1, ly0 = lx0 + left_w, ly1 - left_h
-    rx0, ry1 = lx1 + gap, pad + box
-    rx1, ry0 = rx0 + right_w, ry1 - right_h
-    _fill(buf, size, lx0, ly0, lx1, ly1, BRICK)
-    _fill(buf, size, rx0, ry0, rx1, ry1, LEMON)
-    # Tiny cream ticks so 32px still reads as two people, not a flag.
-    tick = max(1, size // 32)
-    _fill(buf, size, lx0 + tick * 2, ly0 + tick * 2, lx0 + tick * 5, ly0 + tick * 3, CREAM)
-    _fill(buf, size, rx0 + tick * 2, ry0 + tick * 2, rx0 + tick * 4, ry0 + tick * 3, CREAM)
-    return bytes(buf)
-
-
-def ico(pngs: list[tuple[int, bytes]]) -> bytes:
-    count = len(pngs)
-    offset = 6 + 16 * count
-    entries = b""
-    blobs = b""
-    for size, blob in pngs:
-        w = 0 if size >= 256 else size
-        entries += struct.pack("<BBBBHHII", w, w, 0, 0, 1, 32, len(blob), offset)
-        blobs += blob
-        offset += len(blob)
-    return struct.pack("<HHH", 0, 1, count) + entries + blobs
+def draw(size: int = 512) -> Image.Image:
+    dad = bust(frame("father", "idle_casual", 0))
+    kid = bust(frame("son", "idle_casual", 0)).transpose(Image.FLIP_LEFT_RIGHT)
+    bg = Image.new("RGBA", (size, size), (14, 14, 22, 255))
+    glow = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    ImageDraw.Draw(glow).ellipse((60, 40, 452, 420), fill=(201, 140, 60, 120))
+    bg.alpha_composite(glow.filter(ImageFilter.GaussianBlur(70)))
+    h = int(size * 0.86)
+    k = h / dad.height
+    d2 = dad.resize((int(dad.width * k), int(dad.height * k)), Image.NEAREST)
+    k2 = k * 0.93
+    s2 = kid.resize((int(kid.width * k2), int(kid.height * k2)), Image.NEAREST)
+    bg.alpha_composite(d2, (size // 2 - d2.width + 40, size - d2.height))
+    bg.alpha_composite(s2, (size // 2 - 40, size - s2.height))
+    ImageDraw.Draw(bg).rounded_rectangle((6, 6, size - 7, size - 7), radius=48, outline=GOLD, width=14)
+    mask = Image.new("L", (size, size), 0)
+    ImageDraw.Draw(mask).rounded_rectangle((0, 0, size - 1, size - 1), radius=54, fill=255)
+    out = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    out.paste(bg, (0, 0), mask)
+    return out
 
 
 def main() -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    sizes = (16, 32, 48, 64, 128, 256)
-    pngs: list[tuple[int, bytes]] = []
-    for s in sizes:
-        blob = png_rgba(s, s, draw(s))
-        pngs.append((s, blob))
-        if s == 256:
-            (OUT_DIR / "fns.png").write_bytes(blob)
-        if s == 32:
-            (OUT_DIR / "fns-32.png").write_bytes(blob)
-    (OUT_DIR / "fns.ico").write_bytes(ico(pngs))
-    print("wrote", OUT_DIR / "fns.ico")
+    big = draw(512)
+    big.resize((256, 256), Image.LANCZOS).save(OUT_DIR / "fns.png")
+    big.resize((32, 32), Image.LANCZOS).save(OUT_DIR / "fns-32.png")
+    big.save(OUT_DIR / "fns.ico", sizes=[(16, 16), (24, 24), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)])
+    print("icon:", OUT_DIR / "fns.ico")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,527 @@
+{
+	"maps": [
+		{
+			"id": "grimhollow",
+			"title": "GRIMHOLLOW",
+			"theme": "grimhollow",
+			"light": "dock_street",
+			"w": 6020,
+			"walk": true,
+			"needs": [
+				"intake_lot"
+			],
+			"opens": "Opens after the first SURVIVOR night (the Intake Lot).",
+			"blurb": "From the cave under the old mansion, out through the waterfall, past the cathedral, the police tower, the old theatre, the el train and the bridge, to Ashgate Asylum. The Warden waits in the great hall.",
+			"tint": [
+				0.84,
+				0.88,
+				1.0
+			],
+			"challenges": [
+				{
+					"id": "brutal2",
+					"kind": "brutal",
+					"n": 2,
+					"text": "FINISH 2 THUGS WITH BONE YARD MOVES"
+				},
+				{
+					"id": "fast",
+					"kind": "time",
+					"n": 420,
+					"text": "REACH THE WARDEN IN UNDER 7:00"
+				}
+			],
+			"waves": [
+				[
+					{
+						"title": "Bag Snatch",
+						"hp": 44,
+						"side": "R"
+					},
+					{
+						"title": "Bag Snatch",
+						"hp": 44,
+						"side": "R"
+					},
+					{
+						"title": "Clipboard Punk",
+						"hp": 44,
+						"side": "R"
+					}
+				],
+				[
+					{
+						"title": "Roof Runner",
+						"hp": 50,
+						"side": "R"
+					},
+					{
+						"title": "Bag Snatch",
+						"hp": 44,
+						"side": "L"
+					}
+				],
+				[
+					{
+						"title": "Repo Goon",
+						"hp": 60,
+						"side": "R"
+					},
+					{
+						"title": "Mohawk Bo",
+						"hp": 78,
+						"side": "R"
+					},
+					{
+						"title": "Bag Snatch",
+						"hp": 44,
+						"side": "L"
+					}
+				],
+				[
+					{
+						"title": "Beat Cop",
+						"hp": 64,
+						"side": "R",
+						"cop": true
+					},
+					{
+						"title": "Beat Cop",
+						"hp": 64,
+						"side": "L",
+						"cop": true
+					}
+				],
+				[
+					{
+						"title": "Mohawk Bo",
+						"hp": 78,
+						"side": "R"
+					},
+					{
+						"title": "Roof Runner",
+						"hp": 50,
+						"side": "R"
+					},
+					{
+						"title": "Repo Goon",
+						"hp": 60,
+						"side": "L"
+					},
+					{
+						"title": "Clipboard Punk",
+						"hp": 44,
+						"side": "L"
+					}
+				],
+				[
+					{
+						"title": "Beat Cop",
+						"hp": 64,
+						"side": "R",
+						"cop": true
+					},
+					{
+						"title": "Roof Runner",
+						"hp": 50,
+						"side": "L"
+					},
+					{
+						"title": "Bag Snatch",
+						"hp": 44,
+						"side": "R"
+					}
+				],
+				[
+					{
+						"title": "Repo Goon",
+						"hp": 60,
+						"side": "R"
+					},
+					{
+						"title": "Repo Goon",
+						"hp": 60,
+						"side": "L"
+					},
+					{
+						"title": "Mohawk Bo",
+						"hp": 78,
+						"side": "R"
+					}
+				],
+				[
+					{
+						"title": "Bailiff",
+						"hp": 90,
+						"side": "R",
+						"armored": true
+					},
+					{
+						"title": "Beat Cop",
+						"hp": 64,
+						"side": "L",
+						"cop": true
+					},
+					{
+						"title": "Roof Runner",
+						"hp": 50,
+						"side": "R"
+					}
+				],
+				[
+					{
+						"title": "Bailiff",
+						"hp": 220,
+						"side": "R",
+						"armored": true,
+						"name": "THE WARDEN"
+					},
+					{
+						"title": "Mohawk Bo",
+						"hp": 78,
+						"side": "L"
+					},
+					{
+						"title": "Bag Snatch",
+						"hp": 44,
+						"side": "R"
+					}
+				]
+			],
+			"props": [
+				[
+					0.06,
+					"yard_gas_lamp_crate",
+					10
+				],
+				[
+					0.16,
+					"yard_barricade",
+					16
+				],
+				[
+					0.27,
+					"yard_gargoyle",
+					6
+				],
+				[
+					0.38,
+					"yard_police_cone_set",
+					14
+				],
+				[
+					0.5,
+					"yard_newsstand",
+					8
+				],
+				[
+					0.62,
+					"yard_barricade",
+					18
+				],
+				[
+					0.74,
+					"yard_police_cone_set",
+					10
+				],
+				[
+					0.86,
+					"yard_gurney",
+					12
+				],
+				[
+					0.95,
+					"yard_gurney",
+					4
+				]
+			]
+		},
+		{
+			"id": "butcher_row",
+			"title": "BUTCHER ROW",
+			"theme": "butcher_row",
+			"light": "neon_exchange",
+			"needs": [
+				"fire_escapes",
+				"group_circle"
+			],
+			"opens": "Opens after the PARKOUR roofs and the next SURVIVOR night.",
+			"blurb": "The meat market, the loading dock, the alley and the cold hall at the back. The men who hang the debts work here. Walk it in one life.",
+			"tint": [
+				1.0,
+				0.82,
+				0.8
+			],
+			"challenges": [
+				{
+					"id": "brutal3",
+					"kind": "brutal",
+					"n": 3,
+					"text": "FINISH 3 THUGS WITH BONE YARD MOVES"
+				},
+				{
+					"id": "hp50",
+					"kind": "hp_left",
+					"n": 50,
+					"text": "END THE YARD WITH OVER HALF YOUR HEALTH"
+				}
+			],
+			"waves": [
+				[
+					{
+						"title": "Bag Snatch",
+						"hp": 46,
+						"side": "R"
+					},
+					{
+						"title": "Repo Goon",
+						"hp": 62,
+						"side": "L"
+					},
+					{
+						"title": "Clipboard Punk",
+						"hp": 46,
+						"side": "R"
+					}
+				],
+				[
+					{
+						"title": "Repo Goon",
+						"hp": 62,
+						"side": "R"
+					},
+					{
+						"title": "Bag Snatch",
+						"hp": 46,
+						"side": "L"
+					},
+					{
+						"title": "Mohawk Bo",
+						"hp": 80,
+						"side": "R"
+					}
+				],
+				[
+					{
+						"title": "Mohawk Bo",
+						"hp": 80,
+						"side": "R"
+					},
+					{
+						"title": "Bag Snatch",
+						"hp": 46,
+						"side": "R"
+					},
+					{
+						"title": "Repo Goon",
+						"hp": 62,
+						"side": "L"
+					}
+				],
+				[
+					{
+						"title": "Bailiff",
+						"hp": 190,
+						"side": "R",
+						"armored": true,
+						"name": "THE BUTCHER"
+					},
+					{
+						"title": "Mohawk Bo",
+						"hp": 80,
+						"side": "L"
+					}
+				]
+			],
+			"w": 1420,
+			"walk": true,
+			"props": [
+				[
+					0.18,
+					"yard_meat_crate",
+					14
+				],
+				[
+					0.4,
+					"yard_hook_cart",
+					4
+				],
+				[
+					0.66,
+					"yard_butcher_block",
+					16
+				],
+				[
+					0.88,
+					"yard_meat_crate",
+					8
+				]
+			]
+		},
+		{
+			"id": "neon_maze",
+			"title": "NEON MAZE",
+			"theme": "neon_maze",
+			"light": "neon_exchange",
+			"w": 3890,
+			"walk": true,
+			"needs": [
+				"waiting_room"
+			],
+			"opens": "Opens after the third SURVIVOR night (the Waiting Room).",
+			"blurb": "Hologram streets, the maglev platform, the night market, the koi alley and the skybridge, up to the tower lobby. The Chrome Broker waits on his platform.",
+			"tint": [
+				0.95,
+				0.85,
+				1.0
+			],
+			"challenges": [
+				{
+					"id": "juggle3",
+					"kind": "juggle",
+					"n": 3,
+					"text": "KEEP ONE THUG IN THE AIR FOR 3 HITS"
+				},
+				{
+					"id": "parry2",
+					"kind": "parry",
+					"n": 2,
+					"text": "PARRY 2 BLOWS"
+				}
+			],
+			"waves": [
+				[
+					{
+						"title": "Agent Lin",
+						"hp": 70,
+						"side": "R"
+					},
+					{
+						"title": "Beat Cop",
+						"hp": 64,
+						"side": "R",
+						"cop": true
+					}
+				],
+				[
+					{
+						"title": "Roof Runner",
+						"hp": 50,
+						"side": "R"
+					},
+					{
+						"title": "Agent Lin",
+						"hp": 70,
+						"side": "L"
+					}
+				],
+				[
+					{
+						"title": "Agent Lin",
+						"hp": 70,
+						"side": "R"
+					},
+					{
+						"title": "Roof Runner",
+						"hp": 50,
+						"side": "L"
+					},
+					{
+						"title": "Beat Cop",
+						"hp": 64,
+						"side": "R",
+						"cop": true
+					}
+				],
+				[
+					{
+						"title": "Repo Goon",
+						"hp": 90,
+						"side": "R",
+						"armored": true
+					},
+					{
+						"title": "Agent Lin",
+						"hp": 70,
+						"side": "L"
+					}
+				],
+				[
+					{
+						"title": "Repo Goon",
+						"hp": 90,
+						"side": "R",
+						"armored": true
+					},
+					{
+						"title": "Roof Runner",
+						"hp": 50,
+						"side": "L"
+					},
+					{
+						"title": "Agent Lin",
+						"hp": 70,
+						"side": "R"
+					}
+				],
+				[
+					{
+						"title": "Shift Lead",
+						"hp": 260,
+						"side": "R",
+						"armored": true,
+						"name": "THE CHROME BROKER"
+					},
+					{
+						"title": "Agent Lin",
+						"hp": 70,
+						"side": "L"
+					},
+					{
+						"title": "Roof Runner",
+						"hp": 50,
+						"side": "R"
+					}
+				]
+			],
+			"props": [
+				[
+					0.08,
+					"yard_neon_barrier",
+					14
+				],
+				[
+					0.2,
+					"yard_noodle_cart",
+					6
+				],
+				[
+					0.34,
+					"yard_holo_bin",
+					16
+				],
+				[
+					0.47,
+					"yard_drone_crate",
+					10
+				],
+				[
+					0.6,
+					"yard_neon_vending",
+					2
+				],
+				[
+					0.74,
+					"yard_server_rack",
+					8
+				],
+				[
+					0.88,
+					"yard_neon_barrier",
+					16
+				]
+			]
+		}
+	],
+	"full_bonus": 2
+}

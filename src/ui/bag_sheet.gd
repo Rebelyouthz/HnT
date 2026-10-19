@@ -61,6 +61,7 @@ func _ready() -> void:
 	card.pivot_offset = Vector2(300, 250)
 	UiKit.pop_in(card)
 	_paint()
+	UiKit.focus_first(self)
 
 
 func _process(delta: float) -> void:

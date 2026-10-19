@@ -22,6 +22,7 @@ func _ready() -> void:
 	UiKit.apply_label(_hint, 13, Palette.EDGE)
 	_hint.text = "ROOF VENDOR"
 	add_child(_hint)
+	ProxFade.attach(_hint)
 	var stall := Polygon2D.new()
 	stall.color = Color(0.18, 0.14, 0.12, 0.9)
 	stall.polygon = PackedVector2Array([
@@ -78,5 +79,5 @@ func _buy(rs: Node, f: Fighter, item: String) -> void:
 			rs.request_reroll()
 	Juice.shout(str(info["line"]))
 	Juice.play("res://assets/audio/shop.wav")
-	Juice.claim_burst(Vector2(640, 180), str(info["line"]), 0, 0)
+	Juice.claim_burst(Vector2(320, 90), str(info["line"]), 0, 0)
 	Rarity.buy("ROOF TIP", info)

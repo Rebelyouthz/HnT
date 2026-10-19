@@ -11,5 +11,7 @@ const TEXT := Color(0.949, 0.918, 0.847)
 const MUTED := Color(0.604, 0.569, 0.486)
 const READY := Color(0.435, 0.749, 0.451)
 const BADGE := Color(0.831, 0.165, 0.196)
-const NIGHT := Color(0.22, 0.25, 0.38)
+## Night grade for CanvasModulate: moody but readable (SoR4 night stages);
+## lamps and neon add on top.
+const NIGHT := Color(0.5, 0.53, 0.68)
 const LOCK := Color(0.353, 0.333, 0.408)

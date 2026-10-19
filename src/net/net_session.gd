@@ -1,6 +1,9 @@
 extends Node
 
-## The Son Hosts. The Father Joins. LAN, then UPnP/direct (~3s), then TCP relay.
+## The Son Hosts. The Father Joins. Two cities: both games dial the online
+## relay (a WebSocket on a Hugging Face Space) with the Son's six-digit code
+## and it passes their messages across - no router ports, no IP numbers.
+## Same wifi: FIND MY SON / an IP goes direct (ENet) instead.
 
 signal status_changed
 signal hosted
@@ -10,8 +13,17 @@ signal cancelled
 
 const GAME_PORT := 24567
 const RELAY_PORT := 8789
+## The Son's game shouts "I'm here" on the home network every second, so
+## the Father's FIND MY SON needs no numbers on the same wifi.
+const BEACON_PORT := 24569
 const ROOM_FILE := "user://open_room.json"
-const ALPHA := "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"
+## Digits only: easy to read out over the phone.
+const ALPHA := "0123456789"
+## The relay in the cloud (tools/relay, deployed as a Hugging Face Space).
+## Options can point it elsewhere: FamilyProfile.data["relay_ws"].
+const RELAY_WS := "wss://timmietooth-fns-relay.hf.space/ws"
+## A sleeping Space takes a while to wake on the first call of the day.
+const RELAY_WAIT := 75.0
 const ACTIONS := [
 	"jump", "light", "heavy", "special", "shoot", "block", "throw", "dash", "snap", "pause", "duck"
 ]
@@ -40,6 +52,17 @@ var _busy := false
 var _rooms_booted := false
 var _handshake_done := false
 var _relay_started := false
+var _beacon: PacketPeerUDP
+var _beacon_t := 0.0
+var _ip_http: HTTPRequest
+## The address the internet sees (for Dad in another house), found by
+## asking a public echo service; empty until it answers.
+var public_ip := ""
+var _ws: WebSocketPeer
+var _ws_paired := false
+var _ws_role := ""
+var _ws_left := 0.0
+var _ws_retry := 0.0
 
 
 func _ready() -> void:
@@ -47,6 +70,10 @@ func _ready() -> void:
 	_http = HTTPRequest.new()
 	_http.timeout = 2.5
 	add_child(_http)
+	_ip_http = HTTPRequest.new()
+	_ip_http.timeout = 5.0
+	add_child(_ip_http)
+	_ip_http.request_completed.connect(_on_public_ip)
 	multiplayer.peer_connected.connect(_on_peer_in)
 	multiplayer.peer_disconnected.connect(_on_peer_out)
 	multiplayer.connected_to_server.connect(_on_enet_ok)
@@ -106,6 +133,14 @@ func shutdown() -> void:
 		_tcp.disconnect_from_host()
 		_tcp = null
 	_tcp_buf.clear()
+	if _beacon:
+		_beacon.close()
+		_beacon = null
+	if _ws:
+		_ws.close()
+		_ws = null
+	_ws_paired = false
+	_ws_role = ""
 	if FileAccess.file_exists(ROOM_FILE):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(ROOM_FILE))
 
@@ -147,6 +182,9 @@ func host() -> void:
 		_fail("Could not bind UDP %d" % GAME_PORT)
 		return
 	multiplayer.multiplayer_peer = _peer
+	_start_beacon()
+	_fetch_public_ip()
+	_ws_open("host")
 	_write_room_file()
 	_busy = true
 	ensure_rooms()
@@ -168,7 +206,8 @@ func _upnp_task() -> void:
 
 
 func _upnp_done(wan: String, ok: bool) -> void:
-	wan_ip = wan
+	# No router answer keeps the number the echo service gave.
+	wan_ip = wan if wan != "" else public_ip
 	upnp_ok = ok
 	if wan != "":
 		backup_ip = "%s:%d" % [wan if wan != "" else lan_ip, GAME_PORT]
@@ -230,7 +269,7 @@ func _join_flow(ip_backup: String) -> void:
 		connected.emit()
 		status_changed.emit()
 		return
-	_fail("Could not reach the host. Check the code, or paste the IP backup.")
+	_fail("Could not reach your son. Check the numbers with him. In another house, his router may need port 24567 (UDP) opened.")
 
 
 func _try_enet(ip: String, wait_s: float) -> bool:
@@ -283,24 +322,25 @@ func _on_peer_in(id: int) -> void:
 	App.density_coop = true
 	_busy = false
 	connected.emit()
-	_set_status("FATHER CONNECTED")
-	broadcast_begin("dock_street")
+	_set_status("DAD CONNECTED")
+	App.start_run()
 
 
 func _on_peer_out(_id: int) -> void:
 	if is_host() and active():
-		Juice.toast("challenge", "FATHER DROPPED", "The other chair went dark.")
+		Juice.toast("challenge", "DAD DROPPED", "The other chair went dark.")
 
 
 func broadcast_begin(map_id: String, extra: Dictionary = {}) -> void:
 	if extra.is_empty():
 		extra = App.begin_extra()
-	if is_host() and _peer:
+	if is_host() and _direct_live():
 		net_begin.rpc(map_id, extra)
-	if is_host() and _tcp:
+	if is_host() and (_tcp or _ws_paired):
 		_pipe_send({"t": "begin", "map": map_id, "extra": extra})
 	if is_host():
 		App.apply_begin_extra(extra)
+		App.net_follow = true
 		App.enter_map(map_id)
 
 
@@ -309,6 +349,7 @@ func net_begin(map_id: String, extra: Dictionary = {}) -> void:
 	App.remote_coop = true
 	App.density_coop = true
 	App.apply_begin_extra(extra)
+	App.net_follow = true
 	App.enter_map(map_id)
 
 
@@ -353,6 +394,11 @@ func _process(_delta: float) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if _beacon and is_host() and not App.remote_coop:
+		_beacon_t -= delta
+		if _beacon_t <= 0.0:
+			_beacon_t = 1.0
+			_beacon.put_packet(("HNT1|%s|%s" % [room_code, lan_ip]).to_utf8_buffer())
 	if is_client() and _dad and is_instance_valid(_dad) and _dad.net_report:
 		_input_acc += delta
 		if _input_acc >= 1.0 / 60.0:
@@ -365,6 +411,7 @@ func _physics_process(delta: float) -> void:
 			_send_snap()
 	if _tcp:
 		_poll_tcp()
+	_poll_ws(delta)
 
 
 func _send_local_input() -> void:
@@ -373,9 +420,9 @@ func _send_local_input() -> void:
 		if Input.is_action_pressed(StringName("p1_" + ACTIONS[i])):
 			b |= 1 << i
 	var ax := PadRouter.stick(&"p1_")
-	if _peer:
+	if _peer and not _ws_paired:
 		net_input.rpc_id(1, b, ax.x, ax.y)
-	elif _tcp:
+	else:
 		_pipe_send({"t": "in", "b": b, "x": ax.x, "y": ax.y})
 
 
@@ -396,10 +443,15 @@ func _send_snap() -> void:
 			"downed": f.downed,
 			"ammo": f.ammo
 		})
-	if _peer:
+	if _direct_live():
 		net_snap.rpc(payload)
-	elif _tcp:
+	else:
 		_pipe_send(payload)
+
+
+## True when Dad is on the direct (ENet) line rather than the relay.
+func _direct_live() -> bool:
+	return _peer != null and not _ws_paired and multiplayer.has_multiplayer_peer() and not multiplayer.get_peers().is_empty()
 
 
 func _apply_snap(payload: Dictionary) -> void:
@@ -547,6 +599,10 @@ func host_open_relay() -> void:
 
 
 func _pipe_send(d: Dictionary) -> void:
+	if _ws_paired and _ws:
+		if _ws.get_ready_state() == WebSocketPeer.STATE_OPEN:
+			_ws.send_text(JSON.stringify(d))
+		return
 	if _tcp == null:
 		return
 	_tcp.poll()
@@ -590,19 +646,23 @@ func _poll_tcp() -> void:
 		var parsed: Variant = JSON.parse_string(body.get_string_from_utf8())
 		if typeof(parsed) != TYPE_DICTIONARY:
 			continue
-		var d: Dictionary = parsed
-		match str(d.get("t", "")):
-			"hello":
-				_on_relay_peer()
-			"in":
-				net_input(int(d.get("b", 0)), float(d.get("x", 0.0)), float(d.get("y", 0.0)))
-			"snap":
-				_apply_snap(d)
-			"begin":
-				var extra: Variant = d.get("extra", {})
-				if typeof(extra) != TYPE_DICTIONARY:
-					extra = {}
-				net_begin(str(d.get("map", "dock_street")), extra)
+		_on_pipe_msg(parsed)
+
+
+## One message from the other game over a relay (cloud WebSocket or LAN TCP).
+func _on_pipe_msg(d: Dictionary) -> void:
+	match str(d.get("t", "")):
+		"hello":
+			_on_relay_peer()
+		"in":
+			net_input(int(d.get("b", 0)), float(d.get("x", 0.0)), float(d.get("y", 0.0)))
+		"snap":
+			_apply_snap(d)
+		"begin":
+			var extra: Variant = d.get("extra", {})
+			if typeof(extra) != TYPE_DICTIONARY:
+				extra = {}
+			net_begin(str(d.get("map", "dock_street")), extra)
 
 
 func _on_relay_peer() -> void:
@@ -614,8 +674,178 @@ func _on_relay_peer() -> void:
 	App.density_coop = true
 	_busy = false
 	connected.emit()
-	_set_status("FATHER CONNECTED")
-	broadcast_begin("dock_street")
+	_set_status("DAD CONNECTED")
+	App.start_run()
+
+
+func _start_beacon() -> void:
+	_beacon = PacketPeerUDP.new()
+	_beacon.set_broadcast_enabled(true)
+	if _beacon.set_dest_address("255.255.255.255", BEACON_PORT) != OK:
+		_beacon = null
+	_beacon_t = 0.0
+
+
+func _fetch_public_ip() -> void:
+	if public_ip != "":
+		if wan_ip == "":
+			wan_ip = public_ip
+		return
+	_ip_http.cancel_request()
+	_ip_http.request("https://api.ipify.org")
+
+
+func _on_public_ip(result: int, code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
+	if result != HTTPRequest.RESULT_SUCCESS or code != 200:
+		return
+	var ip := body.get_string_from_utf8().strip_edges()
+	if ip.count(".") != 3 or ip.length() > 15:
+		return
+	public_ip = ip
+	if wan_ip == "":
+		wan_ip = ip
+	status_changed.emit()
+
+
+func relay_url() -> String:
+	return str(FamilyProfile.data.get("relay_ws", RELAY_WS))
+
+
+## Dial the cloud relay with the room code (host = the Son, join = Dad).
+func _ws_open(as_role: String) -> void:
+	_ws_role = as_role
+	_ws_paired = false
+	_ws_left = RELAY_WAIT
+	_ws_retry = 0.0
+	_ws_dial()
+
+
+func _ws_dial() -> void:
+	if _ws:
+		_ws.close()
+	_ws = WebSocketPeer.new()
+	_ws.inbound_buffer_size = 1 << 20
+	_ws.outbound_buffer_size = 1 << 20
+	var url := "%s?room=%s&role=%s" % [relay_url(), room_code, _ws_role]
+	if _ws.connect_to_url(url) != OK:
+		_ws_retry = 3.0
+
+
+func _poll_ws(delta: float) -> void:
+	if _ws_role == "":
+		return
+	if not _ws_paired:
+		_ws_left -= delta
+		if _ws_left <= 0.0:
+			if is_client():
+				_fail("Could not reach your son's game. Check the code with him, and that his screen still says WAITING FOR DAD.")
+				return
+			# The Son keeps waiting; the relay just keeps being re-dialled.
+			_ws_left = RELAY_WAIT
+	if _ws_retry > 0.0:
+		_ws_retry -= delta
+		if _ws_retry <= 0.0:
+			_ws_dial()
+		return
+	if _ws == null:
+		return
+	_ws.poll()
+	var st := _ws.get_ready_state()
+	if st == WebSocketPeer.STATE_CLOSED:
+		if _ws_paired:
+			_ws_paired = false
+			if is_client():
+				_fail("Lost the line to your son's game.")
+			else:
+				Juice.toast("challenge", "DAD DROPPED", "The other chair went dark.")
+				_ws_dial()
+			return
+		# Not up yet (the Space may be waking): try again shortly.
+		if is_client():
+			_set_status("Waking the online server… (the first time can take a minute)")
+		_ws_retry = 3.0
+		return
+	if st != WebSocketPeer.STATE_OPEN:
+		return
+	while _ws.get_available_packet_count() > 0:
+		var pkt := _ws.get_packet()
+		var text := pkt.get_string_from_utf8()
+		if _ws.was_string_packet():
+			match text:
+				"WAITING":
+					if is_client():
+						_set_status("Connected to the server. Waiting for your son's game…")
+					continue
+				"PAIRED":
+					_ws_paired = true
+					if is_host():
+						_on_relay_peer()
+					else:
+						path_name = Copy.PATH_RELAY
+						_busy = false
+						App.remote_coop = true
+						App.density_coop = true
+						connected.emit()
+						status_changed.emit()
+					continue
+				"PEER_LEFT":
+					if is_client():
+						_fail("Your son's game closed.")
+						return
+					_ws_paired = false
+					# Dad can call back in with the same code.
+					_relay_started = false
+					Juice.toast("challenge", "DAD DROPPED", "The other chair went dark.")
+					continue
+				"FULL", "BAD_REQUEST":
+					_fail("The online server said no (%s). Try again in a minute." % text)
+					return
+		var parsed: Variant = JSON.parse_string(text)
+		if typeof(parsed) == TYPE_DICTIONARY:
+			_on_pipe_msg(parsed)
+
+
+## Dad, two cities: dial the relay with the Son's code.
+func join_relay(code: String) -> void:
+	if _busy:
+		return
+	shutdown()
+	role = "client"
+	room_code = code
+	_busy = true
+	_set_status("Calling your son's game…")
+	_ws_open("join")
+
+
+## FIND MY SON: listen for the Son's beacon on the home network. Returns
+## his address, or "" after `seconds` with nothing heard.
+func find_host(seconds := 5.0) -> String:
+	var u := PacketPeerUDP.new()
+	if u.bind(BEACON_PORT) != OK:
+		return ""
+	var left := seconds
+	while left > 0.0:
+		while u.get_available_packet_count() > 0:
+			var pkt := u.get_packet().get_string_from_utf8()
+			var ip := u.get_packet_ip()
+			if pkt.begins_with("HNT1|"):
+				var said := pkt.get_slice("|", 2)
+				u.close()
+				return said if said.count(".") == 3 and said != "127.0.0.1" else ip
+		await get_tree().create_timer(0.1).timeout
+		left -= 0.1
+	u.close()
+	return ""
+
+
+## Dad types whatever the Son read out: an address (85.228.10.4, with or
+## without :24567) or the six-letter code.
+func join_text(text: String) -> void:
+	var t := text.strip_edges().replace(",", ".").replace(" ", "").replace("-", "")
+	if t.count(".") >= 3:
+		join("", t)
+	else:
+		join_relay(t.to_upper())
 
 
 func _fail(reason: String) -> void:

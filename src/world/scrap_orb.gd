@@ -42,6 +42,6 @@ func _eat(b: Node) -> void:
 		if rs and rs.has_method("add_scrap"):
 			rs.add_scrap(amount)
 		Juice.keep_combo()
-		Juice.popup_number(global_position, "+%d SCRAP" % amount, Palette.EDGE)
+		Juice.pickup_icon(global_position, SpriteBook.tex("res://assets/sprites/icons/scrap.png") if ResourceLoader.exists("res://assets/sprites/icons/scrap.png") else SpriteBook.icon("cur_scoin_s"), "+%d" % amount, Palette.EDGE)
 		Juice.play("res://assets/audio/ui_click.wav")
 		queue_free()

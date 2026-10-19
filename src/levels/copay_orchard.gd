@@ -22,17 +22,18 @@ func _configure() -> void:
 
 
 func build_world() -> void:
-	var sky := Blockout.poly(self, Rect2(0, 0, map_w, 720), Color(0.08, 0.12, 0.1), -8)
-	sky.z_index = -8
 	NightStreet.parallax(self, map_w, "farm")
 	Blockout.poly(self, Rect2(0, 430, map_w, 290), Color(0.16, 0.2, 0.1), 0)
 	Blockout.poly(self, Rect2(0, 500, 900, 70), Color(0.12, 0.22, 0.18, 0.55), 1)
 	NightStreet.water_band(self, 920.0, 548.0)
 	NightStreet.barn(self, Rect2(1180, 140, 280, 360))
 	NightStreet.silo(self, Vector2(1680, 80))
-	NightStreet.tenement(self, Rect2(40, 80, 200, 240), Color(0.22, 0.16, 0.1))
-	NightStreet.tenement(self, Rect2(2200, 60, 260, 220), Color(0.14, 0.2, 0.12))
-	NightStreet.tenement(self, Rect2(3100, 50, 280, 230), Color(0.18, 0.14, 0.1))
+	# Painted farm sections (backdrops/farm_strip) are the scenery;
+	# the flat blockout buildings only without them.
+	if not NightStreet.has_backdrop("farm"):
+		NightStreet.tenement(self, Rect2(40, 80, 200, 240), Color(0.22, 0.16, 0.1))
+		NightStreet.tenement(self, Rect2(2200, 60, 260, 220), Color(0.14, 0.2, 0.12))
+		NightStreet.tenement(self, Rect2(3100, 50, 280, 230), Color(0.18, 0.14, 0.1))
 	Blockout.solid(self, Rect2(420, 248, 420, 18), true)
 	Blockout.poly(self, Rect2(420, 248, 420, 18), Color(0.28, 0.22, 0.12), 2)
 	Blockout.solid(self, Rect2(1680, 200, 240, 18), true)

@@ -24,9 +24,10 @@ static func color(raw: String) -> Color:
 		"epic":
 			return Color(0.72, 0.38, 0.92)
 		"legendary":
-			return Palette.EDGE
+			# Grey -> green -> blue -> purple -> orange.
+			return Color(1.0, 0.56, 0.12)
 		_:
-			return Palette.MUTED
+			return Color(0.62, 0.64, 0.68)
 
 
 static func fill(raw: String) -> Color:

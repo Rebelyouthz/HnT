@@ -8,20 +8,48 @@ var pending_tab: String = "clinic"
 ## Couch 2P is opt-in. Hub GO / Clinic PLAY start immediately with one body.
 var couch: bool = false
 var solo_role: String = "son"
+
+
+## The hero picked last time (character select / RUN tab) comes back on launch.
+func _ready() -> void:
+	(func() -> void:
+		var fp := get_node_or_null("/root/FamilyProfile")
+		if fp != null and fp.get("data") is Dictionary:
+			var r := str((fp.get("data") as Dictionary).get("solo_role", solo_role))
+			if r in ["son", "father"]:
+				solo_role = r
+	).call_deferred()
 ## Locked when the run starts. Drop-in does not thicken the spawn.
 var density_coop: bool = false
 var remote_coop: bool = false
 var versus: bool = false
+## WEEKLY GAUNTLET run in progress (WeeklyBook).
+var weekly: bool = false
 var force_intro: bool = false
 var run_bag: Dictionary = {}
+## Survivor lobby: one hour on its own (no story after it), at an AGONY level.
+var surv_solo := false
+var agony := 0
 var map_index: int = 0
 var current_map: String = "dock_street"
 var film_from: String = ""
 var film_next: String = ""
 var film_kind: String = ""
+## Hideout between maps: the map the portal leads on to ("" = new run), and a
+## hub tab the hideout should open on arrival (results -> awards, ...).
+var camp_next: String = ""
+var camp_open_tab: String = ""
+## The bridge film already played on the way into the hideout.
+var film_to_camp := false
+## CONTINUE from the title: the map and checkpoint the last session saved.
+var resume_map := ""
+var resume_pos := Vector2.ZERO
+var _film_seen := ""
 
 const SCENES := {
 	"intro_flow": "res://scenes/levels/intro_flow.tscn",
+	"camp": "res://scenes/levels/camp.tscn",
+	"prologue": "res://scenes/levels/prologue.tscn",
 	"tutorial_alley": "res://scenes/levels/tutorial_alley.tscn",
 	"act_film": "res://scenes/levels/act_film.tscn",
 	"dock_street": "res://scenes/levels/dock_street.tscn",
@@ -40,7 +68,11 @@ const SCENES := {
 	"processing_floor": "res://scenes/levels/processing_floor.tscn",
 	"versus": "res://scenes/levels/versus.tscn",
 	"parachute_fall": "res://scenes/levels/parachute_fall.tscn",
-	"skinwalker_film": "res://scenes/levels/skinwalker_film.tscn"
+	"skinwalker_film": "res://scenes/levels/skinwalker_film.tscn",
+	"dojo_practice": "res://scenes/levels/dojo_practice.tscn",
+	"grimhollow": "res://scenes/levels/grimhollow.tscn",
+	"neon_maze": "res://scenes/levels/neon_maze.tscn",
+	"butcher_row": "res://scenes/levels/butcher_row.tscn"
 }
 
 const ORDER := [
@@ -52,7 +84,9 @@ const ORDER := [
 
 
 func start_run() -> void:
+	surv_solo = false
 	versus = false
+	weekly = false
 	difficulty = str(FamilyProfile.data.get("difficulty", difficulty))
 	density_coop = couch or remote_coop
 	run_bag = {}
@@ -61,14 +95,23 @@ func start_run() -> void:
 	film_next = ""
 	film_kind = ""
 	last_run_ok = false
-	if remote_coop:
-		current_map = "dock_street"
-		enter_map("dock_street")
-		return
+	# The prologue and the alley lesson play once: never again after a night
+	# out (WATCH INTRO / the RUN tab button still replay them on purpose).
+	if not force_intro and int(FamilyProfile.data.get("runs", 0)) > 0 and not bool(FamilyProfile.data.get("intro_done", false)):
+		FamilyProfile.data["intro_done"] = true
+		FamilyProfile.save()
+	# The first night online plays the story from the top for both chairs
+	# (prologue -> alley training -> Dock Street), even when this machine
+	# already watched it solo: the other player never has.
+	if remote_coop and not bool(FamilyProfile.data.get("online_intro_done", false)):
+		FamilyProfile.data["online_intro_done"] = true
+		FamilyProfile.save()
+		force_intro = true
 	if force_intro or not bool(FamilyProfile.data.get("intro_done", false)):
 		force_intro = false
 		current_map = "dock_street"
-		enter_map("intro_flow")
+		# Story order: prologue (the brothers taken) -> alley film -> tutorial.
+		enter_map("prologue")
 		return
 	var hop := FamilyProfile.next_run_map()
 	var enter_lock := PowerBook.lock(hop, "enter")
@@ -78,6 +121,32 @@ func start_run() -> void:
 		return
 	current_map = hop
 	enter_map(hop)
+
+
+## SURVIVOR lobby: straight into one coping hour on that map.
+func start_survivor(map_id: String, level: int) -> void:
+	versus = false
+	weekly = false
+	surv_solo = true
+	agony = level
+	run_bag = {}
+	film_from = ""
+	film_next = ""
+	film_kind = ""
+	last_run_ok = false
+	current_map = map_id
+	enter_map(map_id)
+
+
+func start_weekly() -> void:
+	versus = false
+	weekly = true
+	run_bag = {}
+	film_from = ""
+	film_next = ""
+	film_kind = ""
+	current_map = WeeklyBook.MAP
+	enter_map(WeeklyBook.MAP)
 
 
 func start_versus() -> void:
@@ -94,7 +163,27 @@ func play_intro() -> void:
 	start_run()
 
 
+## Online co-op: the host's game drives every scene change and the other
+## machine follows its "begin" message (NetSession.net_begin). Films and
+## levels that call enter_map on their own (prologue, alley, act films) go
+## through here, so both sit in the same scene; the guest never hops alone.
+var net_follow := false
+## Test harness only: walk the story with every power gate open.
+var gates_off := false
+
+
 func enter_map(map_id: String) -> void:
+	var online := has_node("/root/NetSession") and NetSession.active() and remote_coop
+	if online and not net_follow:
+		if NetSession.is_host():
+			NetSession.broadcast_begin(map_id, begin_extra())
+		return
+	net_follow = false
+	# The weekly hour is one map: going on from it goes home.
+	if weekly and map_id != WeeklyBook.MAP:
+		weekly = false
+		back_to_hub("run")
+		return
 	current_map = map_id
 	var i := ORDER.find(map_id)
 	map_index = i if i >= 0 else map_index
@@ -128,6 +217,71 @@ func advance(next_id: String, state: RunState) -> void:
 		return
 	run_bag = state.pack()
 	get_tree().paused = false
+	# Between maps the family steps through a portal into the hideout; its
+	# portal carries on to next_id (with the bridge film) from there. Online
+	# co-op skips it so both machines stay on the same scene.
+	var online := has_node("/root/NetSession") and NetSession.active()
+	if not online and next_id != "ending" and current_map != "camp":
+		camp_next = next_id
+		film_from = current_map
+		# Outro film of this map first (if the story has one), then the
+		# hideout; the portal there leads on to next_id.
+		var skip := bool(FamilyProfile.data.get("skip_films", false))
+		if not skip and StoryBook.has_bridge(film_from, next_id):
+			film_kind = "bridge"
+			film_next = next_id
+			film_to_camp = true
+			enter_map("act_film")
+			return
+		get_tree().change_scene_to_file(str(SCENES["camp"]))
+		return
+	_advance_core(next_id)
+
+
+## Hideout portal: continue the run where advance() paused it.
+func leave_camp() -> void:
+	var next_id := camp_next
+	camp_next = ""
+	if next_id == "":
+		start_run()
+		return
+	current_map = film_from
+	if _film_seen == film_from + "->" + next_id:
+		_film_seen = ""
+		film_kind = ""
+		# The chapter card already played before the hideout; a set piece
+		# film (skinwalker, parachute) still runs on the way out.
+		if not _set_piece(next_id):
+			_hop(next_id)
+		return
+	_advance_core(next_id)
+
+
+## The two story beats that are their own scene, not a chapter card.
+func _set_piece(next_id: String) -> bool:
+	film_from = current_map
+	film_next = next_id
+	if current_map == "copay_orchard" and next_id == "sleet_hour":
+		film_kind = "parachute"
+		_hop("parachute_fall")
+		return true
+	if current_map == "neon_exchange" and next_id == "waiting_room":
+		film_kind = "skinwalker"
+		_hop("skinwalker_film")
+		return true
+	return false
+
+
+## act_film calls this when a bridge film that leads into the hideout ends.
+func film_done_to_camp() -> void:
+	film_to_camp = false
+	_film_seen = film_from + "->" + film_next
+	film_kind = ""
+	get_tree().change_scene_to_file(str(SCENES["camp"]))
+
+
+func _advance_core(next_id: String) -> void:
+	get_tree().paused = false
 	film_from = current_map
 	film_next = next_id
 	if next_id == "ending":
@@ -135,13 +289,7 @@ func advance(next_id: String, state: RunState) -> void:
 		film_next = "hub"
 		_hop("act_film")
 		return
-	if current_map == "copay_orchard" and next_id == "sleet_hour":
-		film_kind = "parachute"
-		_hop("parachute_fall")
-		return
-	if current_map == "neon_exchange" and next_id == "waiting_room":
-		film_kind = "skinwalker"
-		_hop("skinwalker_film")
+	if _set_piece(next_id):
 		return
 	film_kind = "bridge"
 	var hop := next_id
@@ -154,9 +302,6 @@ func advance(next_id: String, state: RunState) -> void:
 
 
 func _hop(map_id: String) -> void:
-	if has_node("/root/NetSession") and NetSession.active() and NetSession.is_host():
-		NetSession.broadcast_begin(map_id, begin_extra())
-		return
 	enter_map(map_id)
 
 
@@ -164,15 +309,20 @@ func carry_to_fire_escapes(state: RunState) -> void:
 	advance("fire_escapes", state)
 
 
+## "Home" is the walkable hideout now; its COMMAND BOARD is the old hub with
+## every menu. The requested tab opens over the hideout on arrival.
 func back_to_hub(tab: String = "clinic") -> void:
 	pending_tab = tab
+	camp_open_tab = tab
+	camp_next = ""
 	run_bag = {}
 	remote_coop = false
 	versus = false
+	weekly = false
 	film_from = ""
 	film_next = ""
 	film_kind = ""
-	get_tree().change_scene_to_file("res://scenes/ui/hub.tscn")
+	get_tree().change_scene_to_file(str(SCENES["camp"]))
 
 
 func is_solo_density() -> bool:

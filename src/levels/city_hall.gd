@@ -18,12 +18,15 @@ func _configure() -> void:
 
 
 func build_world() -> void:
-	var sky := Blockout.poly(self, Rect2(0, 0, map_w, 720), Color(0.07, 0.07, 0.11), -8)
-	sky.z_index = -8
 	NightStreet.parallax(self, map_w, "hall")
-	NightStreet.wet_floor(self, map_w)
-	NightStreet.tenement(self, Rect2(40, 40, 360, 280), Color(0.16, 0.14, 0.12))
-	NightStreet.tenement(self, Rect2(1780, 40, 360, 280), Color(0.14, 0.12, 0.14))
+	# Painted hall sections (backdrops/hall_strip) replace the blockout
+	# tenements; the painted wet street is the floor.
+	if NightStreet.has_backdrop("hall") and WetStreet.available():
+		WetStreet.lay(self, map_w)
+	else:
+		NightStreet.wet_floor(self, map_w)
+		NightStreet.tenement(self, Rect2(40, 40, 360, 280), Color(0.16, 0.14, 0.12))
+		NightStreet.tenement(self, Rect2(1780, 40, 360, 280), Color(0.14, 0.12, 0.14))
 	NightStreet.statue(self, Vector2(620, 248), 248.0)
 	NightStreet.statue(self, Vector2(1180, 208), 208.0)
 	NightStreet.statue(self, Vector2(1680, 248), 248.0)
@@ -44,6 +47,10 @@ func build_world() -> void:
 	NightStreet.section(self, Vector2(1100, 140), "gun")
 	NightStreet.plaque(self, Vector2(980, 160), "STATUES CLIMB. RAVEN DOES NOT SHARE.", Palette.MUTED, 13)
 	NightStreet.rain(self, 1100.0)
+	# The clerks upstairs throw filing cabinets: watch the shadows, lure
+	# the guards under them.
+	CabinetDrop.place(self, map_w)
+	NightStreet.plaque(self, Vector2(300, 214), "CLERKS THROW CABINETS  ·  WATCH THE SHADOWS", Palette.MUTED, 13)
 	var raven := MayorRaven.new()
 	raven.global_position = Vector2(1500, 500)
 	raven.died.connect(func() -> void:

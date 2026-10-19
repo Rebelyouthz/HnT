@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://hnt_fire"]
 
-[ext_resource type="Script" path="res://src/levels/fire_escapes.gd" id="1_fire"]
+[ext_resource type="Script" path="res://src/parkour/rooftop_run.gd" id="1_fire"]
 
 [node name="FireEscapes" type="Node2D"]
 script = ExtResource("1_fire")

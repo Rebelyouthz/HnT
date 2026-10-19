@@ -1,410 +1,1537 @@
 {
-  "reason": "The Basement Clinic billed them for family therapy they never attended. Mayor Raven holds the eviction AND the invoice. They collect coping evidence — violence as homework — so the clinic does not seize the apartment or the Son's tutoring license.",
-  "intro": {
-    "film1": [
-      {"who": "", "text": "RAVEN WHARF. NIGHT. THE BASEMENT CLINIC STILL HAS THE LIGHTS ON."},
-      {"who": "son", "text": "They billed us for a session we skipped. That's not a metaphor."},
-      {"who": "father", "text": "I was networking. In the alley. With my feelings."},
-      {"who": "", "text": "MAYOR RAVEN HOLDS THE EVICTION. AND THE INVOICE. SAME CLIPBOARD."}
-    ],
-    "comics": [
-      {"title": "PAST DUE", "text": "FAMILY THERAPY × 12. NOBODY SAT DOWN. THE COUCH STILL CHARGED RENT."},
-      {"title": "THE FATHER", "text": "I DIDN'T EVEN TAKE OFF MY SHOES."},
-      {"title": "THE SON", "text": "YOU NEVER DO. THAT'S THE INVOICE."}
-    ],
-    "film2": [
-      {"who": "", "text": "HOMEWORK: COLLECT COPING EVIDENCE. FILE IT IN BLOOD."},
-      {"who": "son", "text": "If we file this, I keep the tutoring license. You keep the fridge."},
-      {"who": "father", "text": "That's called a parenting win. Come on."},
-      {"who": "", "text": "DOCK STREET IS STILL HIRING. THEY LIE ABOUT THAT."}
-    ]
-  },
-  "bridges": {
-    "dock_street->intake_lot": {
-      "chapter": "CHAPTER 2",
-      "title": "THE INTAKE LOT",
-      "sub": "Coping hour. The magnet is the love language.",
-      "lines": [
-        {"who": "son", "text": "We filed Dock Street. The lot is the waiting list with teeth."},
-        {"who": "father", "text": "I validate parking. Then I park on the feeling."},
-        {"who": "", "text": "EIGHTY-EIGHT SECONDS. ELITES AT THIRTY-TWO. NOBODY GETS A TICKET OUT."}
-      ]
+ "reason": "The Basement Clinic billed them for family therapy they never attended. Mayor Raven holds the eviction AND the invoice. They collect coping evidence — violence as homework — so the clinic does not seize the apartment or the Son's tutoring license.",
+ "intro": {
+  "film1": [
+   {
+    "who": "",
+    "text": "RAVEN WHARF. NIGHT. THE BASEMENT CLINIC STILL HAS THE LIGHTS ON."
+   },
+   {
+    "who": "son",
+    "text": "They billed us for a session we skipped. That's not a metaphor."
+   },
+   {
+    "who": "father",
+    "text": "I was networking. In the alley. With my feelings."
+   },
+   {
+    "who": "",
+    "text": "MAYOR RAVEN HOLDS THE EVICTION. AND THE INVOICE. SAME CLIPBOARD."
+   }
+  ],
+  "comics": [
+   {
+    "title": "PAST DUE",
+    "text": "FAMILY THERAPY × 12. NOBODY SAT DOWN. THE COUCH STILL CHARGED RENT."
+   },
+   {
+    "title": "THE FATHER",
+    "text": "I DIDN'T EVEN TAKE OFF MY SHOES."
+   },
+   {
+    "title": "THE SON",
+    "text": "YOU NEVER DO. THAT'S THE INVOICE."
+   }
+  ],
+  "film2": [
+   {
+    "who": "son",
+    "text": "Okay. I can punch. Kind of."
+   },
+   {
+    "who": "father",
+    "text": "You punched a sandbag and two lookouts. That's a résumé."
+   },
+   {
+    "who": "",
+    "text": "DOCK STREET. GANT'S CREW KEEPS BENNY IN A CONTAINER AT THE END OF THE PIER."
+   },
+   {
+    "who": "son",
+    "text": "We bring Benny home, he finishes the hideout."
+   },
+   {
+    "who": "father",
+    "text": "And then we talk about the hug. Later. Much later."
+   }
+  ]
+ },
+ "bridges": {
+  "dock_street->intake_lot": {
+   "chapter": "CHAPTER 2",
+   "title": "THE INTAKE LOT",
+   "sub": "Coping hour. The magnet is the love language.",
+   "lines": [
+    {
+     "who": "",
+     "text": "DOCK STREET. GANT'S INVOICES BLOW DOWN THE GUTTER LIKE CONFETTI."
     },
-    "intake_lot->fire_escapes": {
-      "chapter": "CHAPTER 3",
-      "title": "THE FIRE ESCAPES",
-      "sub": "Roofs after the lot. Gaps with opinions.",
-      "lines": [
-        {"who": "father", "text": "My knees filed a complaint. The roofs did not stamp it."},
-        {"who": "son", "text": "Glide. Don't speech. The vendor already priced your name."},
-        {"who": "", "text": "VERTICAL ALIBI. THE STREET STILL BITES UNDER THE POETRY."}
-      ]
+    {
+     "who": "benny",
+     "text": "You two actually came for me. Nobody comes for the co-signer."
     },
-    "fire_escapes->group_circle": {
-      "chapter": "CHAPTER 4",
-      "title": "GROUP CIRCLE",
-      "sub": "Share. Bite. Bill.",
-      "lines": [
-        {"who": "son", "text": "They're going to pass a stick. Don't take it."},
-        {"who": "father", "text": "I pass. That's growth. That's also a kidney stone."},
-        {"who": "", "text": "THE FACILITATOR HEARS YOU. THEN HE BILLS YOU."}
-      ]
+    {
+     "who": "father",
+     "text": "You built us a home. That makes you family. Family shows up. Eventually."
     },
-    "group_circle->neon_exchange": {
-      "chapter": "CHAPTER 5",
-      "title": "NEON EXCHANGE",
-      "sub": "Agents tax the smile. Pawn keeps the plate.",
-      "lines": [
-        {"who": "father", "text": "I smiled in 2009. I'm still paying interest."},
-        {"who": "son", "text": "Cash the feelings before they pawn your pulse."},
-        {"who": "", "text": "WARRANT LIGHT. BOARD OR PISTOL. SHARING IS A WEAPON."}
-      ]
+    {
+     "who": "son",
+     "text": "Where's Rico?"
     },
-    "neon_exchange->waiting_room": {
-      "chapter": "CHAPTER 6",
-      "title": "THE WAITING ROOM",
-      "sub": "Fluorescent forever. Don't sit. The dog was already here.",
-      "lines": [
-        {"who": "son", "text": "Is that a skinwalker?"},
-        {"who": "father", "text": "THAT is a skinwalker."},
-        {"who": "son", "text": "I asked a hundred times. Those photos were trash. This one isn't."},
-        {"who": "", "text": "THEY WERE NOT ALWAYS THIS VISIBLE. THE SKIPPED SESSION TORE THE WAITING LIST. FILE IT."}
-      ]
+    {
+     "who": "benny",
+     "text": "Intake Lot impound. They put him in a car boot. With a boot on the car."
     },
-    "waiting_room->rail_bridge": {
-      "chapter": "CHAPTER 7",
-      "title": "RAIL BRIDGE",
-      "sub": "Pay the toll in personality.",
-      "lines": [
-        {"who": "father", "text": "Bots don't blink. I respect the work ethic."},
-        {"who": "son", "text": "You blinked in 2011 and called it a sabbatical."},
-        {"who": "", "text": "BOXCARS ARE ROOFS. THE RECEIPT IS A GRENADE."}
-      ]
+    {
+     "who": "father",
+     "text": "Then that's next. Benny, go home. Fix the hideout. Make it a home again."
     },
-    "rail_bridge->city_hall": {
-      "chapter": "CHAPTER 8",
-      "title": "CITY HALL",
-      "sub": "The landlord has throwing stars.",
-      "lines": [
-        {"who": "son", "text": "Deputy first. Mayor later. That's called pacing."},
-        {"who": "father", "text": "I don't pace. I loom. If I lose, we get a note on the door."},
-        {"who": "", "text": "STATUES CLIMB. RAVEN DOES NOT SHARE THE MORTGAGE."}
-      ]
+    {
+     "who": "benny",
+     "text": "Bring me gold and I'll build you a palace with a fridge in every room."
     },
-    "city_hall->copay_orchard": {
-      "chapter": "CHAPTER 9",
-      "title": "COPAY ORCHARD",
-      "sub": "The wellness weekend they never booked.",
-      "lines": [
-        {"who": "son", "text": "They billed a retreat. We never sat on the hay."},
-        {"who": "father", "text": "I networked. With a scarecrow. It had better posture."},
-        {"who": "", "text": "LAKE. FOREST. FIELDS. A SILO WITH A ROPE. THE COPAY HAS TREES."}
-      ]
+    {
+     "who": "son",
+     "text": "We filed Dock Street. The lot is the waiting list with teeth."
     },
-    "copay_orchard->sleet_hour": {
-      "chapter": "CHAPTER 10",
-      "title": "SLEET HOUR",
-      "sub": "The orchard froze. Hold the lake.",
-      "lines": [
-        {"who": "father", "text": "I packed a polo. The weather packed a personality."},
-        {"who": "son", "text": "Don't sit on the ice. Sitting is how they win. Again."},
-        {"who": "", "text": "SNOWMOBILES. ICE WIRES. EIGHTY-EIGHT SECONDS OF COPAY SLEET."}
-      ]
-    },
-    "sleet_hour->raven_grid": {
-      "chapter": "CHAPTER 11",
-      "title": "RAVEN GRID",
-      "sub": "Cyberpunk downtown. Steal the lemon courier.",
-      "lines": [
-        {"who": "son", "text": "You drive. I shoot three-sixty. Do not hit a scooter and call it growth."},
-        {"who": "father", "text": "I am on the rail. If I network with a lamppost, bill me."},
-        {"who": "", "text": "NOT A MIL TRUCK. A CLINIC COURIER. RAMP. CANAL. THE CRASH IS THE BOSS INTRO."}
-      ]
-    },
-    "raven_grid->ledger_dive": {
-      "chapter": "CHAPTER 12",
-      "title": "LEDGER DIVE",
-      "sub": "The drop. A spa they billed as therapy.",
-      "lines": [
-        {"who": "son", "text": "We fell into the vault. The ads are drowning. That's the surprise."},
-        {"who": "father", "text": "I hate spas. I hate brine. I can still punch an eel."},
-        {"who": "", "text": "FLOODED LEDGER. BILLBOARD CENOTE. HOLD THE HOUR. THEN THE PIER."}
-      ]
-    },
-    "ledger_dive->invoice_pier": {
-      "chapter": "CHAPTER 13",
-      "title": "INVOICE PIER",
-      "sub": "The annex. Not Dock Street with a cold.",
-      "lines": [
-        {"who": "son", "text": "The vault spat us at the water. Splint still has the original invoice."},
-        {"who": "father", "text": "I hate chapels. I hate being right. I can web a crane."},
-        {"who": "", "text": "DR. SPLINT HAS THE CLIPBOARD. THE COPAY IS A NAVE."}
-      ]
-    },
-    "invoice_pier->processing_floor": {
-      "chapter": "CHAPTER 14",
-      "title": "THE PROCESSING FLOOR",
-      "sub": "Late act. Strip the suit. Then the body.",
-      "lines": [
-        {"who": "son", "text": "Splint was middle management. The Director wears the bill."},
-        {"who": "father", "text": "If it's huge, I web the knee. If it has plates, I eat the plates."},
-        {"who": "son", "text": "Bandage first. That's enabling. Do it anyway."},
-        {"who": "father", "text": "FILE ALIVE if it stuns. Extra gold. Huntdown called it a bounty. We call it parenting."},
-        {"who": "", "text": "THE FAMILY PLAN IS NOT THE MAYOR. THE FAMILY PLAN IS THE NIGHT."}
-      ]
+    {
+     "who": "",
+     "text": "THE HIDEOUT FIRST. THEN THE LOT. EIGHTY-EIGHT SECONDS. NOBODY GETS A TICKET OUT."
     }
-  },
-  "ending": {
-    "chapter": "EPILOGUE",
-    "title": "THE FRIDGE STAYS",
-    "sub": "The invoice is a corpse. Homework is over.",
-    "lines": [
-      {"who": "", "text": "THE PROCESSING FLOOR GOES DARK. THE CLIPBOARD STOPS TICKING."},
-      {"who": "son", "text": "Tutoring license: still mine. Apartment: still a crime scene with a lease."},
-      {"who": "father", "text": "I networked. In the basement. With a billing mech. LinkedIn can wait."},
-      {"who": "son", "text": "We skipped twelve sessions. We filed the Director. That's not growth. That's a refund."},
-      {"who": "father", "text": "Come on. The fridge stays. I believe in us. Briefly."},
-      {"who": "", "text": "RAVEN WHARF KEEPS THE LIGHTS ON. THE BASEMENT CLINIC DOES NOT. END OF NIGHT."}
+   ],
+   "stage": {
+    "theme": "dock",
+    "cast": [
+     "father",
+     "son",
+     "benny"
     ]
+   }
   },
-  "acts": {
-    "tutorial_alley": {
-      "title": "TUTORIAL ALLEY",
-      "main": "Learn the three languages: jump, gun, punch. Then lie about growth.",
-      "side": "Hit the dummy like it billed you.",
-      "talk": [
-        {"at": 0, "lines": [
-          {"who": "son", "text": "Jump. Punch. Don't make it a personality."},
-          {"who": "father", "text": "I have a personality. It's unemployed."}
-        ]}
-      ]
+  "intake_lot->fire_escapes": {
+   "chapter": "CHAPTER 3",
+   "title": "THE FIRE ESCAPES",
+   "sub": "Roofs after the lot. Gaps with opinions.",
+   "lines": [
+    {
+     "who": "father",
+     "text": "My knees filed a complaint. The roofs did not stamp it."
     },
-    "dock_street": {
-      "title": "DOCK STREET",
-      "main": "Pull the first stack of coping evidence off Dock Street before the clinic posts it on the door.",
-      "side": "Smash a crate. That's a feeling with a lid.",
-      "talk": [
-        {"at": 0, "lines": [
-          {"who": "father", "text": "If anyone asks, this is homework."},
-          {"who": "son", "text": "If anyone asks, you're the assignment."}
-        ]},
-        {"at": 1100, "lines": [
-          {"who": "son", "text": "Roofs. Gaps. Try not to make a speech."},
-          {"who": "father", "text": "I was going to say I believe in us."}
-        ]},
-        {"at": 2100, "lines": [
-          {"who": "father", "text": "Gun stretch. I brought a personality and three bullets."},
-          {"who": "son", "text": "Two of those are imaginary."}
-        ]}
-      ],
-      "miniboss": {"title": "Shift Lead", "x": 1380, "y": 500, "home": "street", "hp": 96, "pmin": 1200, "pmax": 1560, "sub": "CLOCKED IN FOREVER"},
-      "boss": {"title": "Collector Gant", "x": 2780, "y": 500, "home": "street", "hp": 160, "pmin": 2600, "pmax": 3000, "sub": "INVOICES WITH KNUCKLES"}
+    {
+     "who": "son",
+     "text": "Glide. Don't speech. The vendor already priced your name."
     },
-    "intake_lot": {
-      "title": "THE INTAKE LOT",
-      "survive": true,
-      "main": "Hold the flooded car park for a coping hour. Elites come in packs. The magnet is the love language.",
-      "side": "Vacuum eight experience chips. The clinic calls them insights.",
-      "talk": [
-        {"at": 0, "lines": [
-          {"who": "son", "text": "This is the waiting list. It bites."},
-          {"who": "father", "text": "I validate the horde. Then I park on it."}
-        ]}
-      ],
-      "miniboss": {"title": "Clamp King", "x": 1100, "y": 500, "home": "street", "hp": 110, "sub": "VALET OF THE DAMNED"},
-      "boss": {"title": "Lot Hydra", "x": 1800, "y": 500, "home": "street", "hp": 180, "sub": "THREE BOOTS, ONE TICKET"}
-    },
-    "fire_escapes": {
-      "title": "THE FIRE ESCAPES",
-      "main": "Cross the roofs and file a vertical alibi before the vendor sells your name.",
-      "side": "Buy a second opinion. Or steal the silence.",
-      "talk": [
-        {"at": 0, "lines": [
-          {"who": "son", "text": "Gaps. Glide. If you fall, make it a joke."},
-          {"who": "father", "text": "My joints already filed a complaint."}
-        ]},
-        {"at": 1600, "lines": [
-          {"who": "father", "text": "Street still bites under the poetry."},
-          {"who": "son", "text": "That's the brawl section. Try punching it."}
-        ]}
-      ],
-      "miniboss": {"title": "Pipe Widow", "x": 1180, "y": 248, "home": "roof", "hp": 88, "pmin": 1000, "pmax": 1400, "sub": "RENT WITH TEETH"},
-      "boss": {"title": "Lease Hawk", "x": 2480, "y": 208, "home": "roof", "hp": 150, "pmin": 2320, "pmax": 2680, "sub": "SIGNATURES IN THE WIND"}
-    },
-    "group_circle": {
-      "title": "GROUP CIRCLE",
-      "survive": true,
-      "main": "Survive the courtyard share. Nobody passes the talking stick. Everybody brings a chair.",
-      "side": "Let the magnet do the processing.",
-      "talk": [
-        {"at": 0, "lines": [
-          {"who": "father", "text": "I pass. That's growth."},
-          {"who": "son", "text": "You pass like a kidney stone."}
-        ]}
-      ],
-      "miniboss": {"title": "Share Chair", "x": 1000, "y": 500, "home": "street", "hp": 108, "sub": "SITS ON THE FEELING"},
-      "boss": {"title": "The Facilitator", "x": 1700, "y": 500, "home": "street", "hp": 175, "sub": "WE HEAR YOU. WE BILL YOU."}
-    },
-    "neon_exchange": {
-      "title": "NEON EXCHANGE",
-      "main": "Cash the feelings before the agents pawn your pulse.",
-      "side": "Pick up a board or a pistol. Sharing is a weapon.",
-      "talk": [
-        {"at": 0, "lines": [
-          {"who": "son", "text": "Smile. Agents tax that."},
-          {"who": "father", "text": "I smiled in 2009. I'm still paying interest."}
-        ]},
-        {"at": 1700, "lines": [
-          {"who": "father", "text": "Pawn & Plate. Sell the pipe, keep the wound."},
-          {"who": "son", "text": "That's the mission statement."}
-        ]}
-      ],
-      "miniboss": {"title": "Badge Broker", "x": 1240, "y": 500, "home": "street", "hp": 100, "pmin": 1080, "pmax": 1420, "sub": "LICENSED TO BILL"},
-      "boss": {"title": "Agent Prime", "x": 2580, "y": 500, "home": "street", "hp": 165, "pmin": 2420, "pmax": 2760, "sub": "SMILE FOR THE WARRANT"}
-    },
-    "waiting_room": {
-      "title": "THE WAITING ROOM",
-      "survive": true,
-      "main": "Hold the fluorescent forever-room. Number 87 is already sitting. Unmask it. FILE it. Numbers skip you on purpose.",
-      "side": "Don't sit. The dog was already here. That's how they win.",
-      "talk": [
-        {"at": 0, "lines": [
-          {"who": "son", "text": "We're number 88. There is no 87."},
-          {"who": "father", "text": "Then why is that dog already on the chair."}
-        ]}
-      ],
-      "miniboss": {"kind": "skinwalker", "title": "Skinwalker", "x": 980, "y": 500, "home": "street", "hp": 128, "pmin": 820, "pmax": 1180, "sub": "ALREADY SITTING"},
-      "boss": {"title": "Number 88", "x": 1680, "y": 500, "home": "street", "hp": 188, "sub": "YOUR NUMBER NEVER COMES"}
-    },
-    "rail_bridge": {
-      "title": "RAIL BRIDGE",
-      "main": "Pay the toll in personality. Keep a grenade as a receipt.",
-      "side": "Ride a boxcar roof. The street still bites.",
-      "talk": [
-        {"at": 0, "lines": [
-          {"who": "father", "text": "Bots don't blink. I respect the work ethic."},
-          {"who": "son", "text": "You blinked in 2011 and called it a sabbatical."}
-        ]}
-      ],
-      "miniboss": {"title": "Boxcar Brute", "x": 1320, "y": 500, "home": "street", "hp": 120, "pmin": 1160, "pmax": 1520, "sub": "FREIGHT WITH FISTS"},
-      "boss": {"title": "Conductor 9", "x": 2520, "y": 500, "home": "street", "hp": 170, "pmin": 2360, "pmax": 2720, "sub": "ALL ABOARD THE CONSEQUENCES"}
-    },
-    "city_hall": {
-      "title": "CITY HALL",
-      "main": "Climb the statues. The landlord has throwing stars and a mortgage on your name.",
-      "side": "Put the Deputy on the floor. Then the Mayor.",
-      "talk": [
-        {"at": 0, "lines": [
-          {"who": "son", "text": "Deputy first. Mayor later. That's called pacing."},
-          {"who": "father", "text": "I don't pace. I loom."}
-        ]},
-        {"at": 900, "lines": [
-          {"who": "father", "text": "If I lose, we get a nice note on the door."},
-          {"who": "son", "text": "If you win, we still get the invoice."}
-        ]}
-      ],
-      "miniboss": {"title": "Deputy Raven", "x": 880, "y": 500, "home": "street", "hp": 110, "pmin": 720, "pmax": 1080, "sub": "STARRED AND STAMPED"},
-      "boss": {"kind": "mayor_raven", "title": "Mayor Raven", "sub": "LANDLORD · NINJA · INVOICE"}
-    },
-    "copay_orchard": {
-      "title": "COPAY ORCHARD",
-      "main": "File the wellness weekend they never booked. Lake, forest, fields, a silo with a rope.",
-      "side": "Slide the hill. Rope-swing the silo. Don't tip the scarecrow.",
-      "talk": [
-        {"at": 0, "lines": [
-          {"who": "son", "text": "They billed a retreat. Hay is not a couch."},
-          {"who": "father", "text": "I networked. With corn. It had better eye contact."}
-        ]},
-        {"at": 1500, "lines": [
-          {"who": "father", "text": "Rope. I can still swing. Unemployment taught me that."},
-          {"who": "son", "text": "Land it. The lake still wants a copay."}
-        ]}
-      ],
-      "miniboss": {"title": "Scarecrow Ken", "x": 1680, "y": 500, "home": "street", "hp": 118, "pmin": 1500, "pmax": 1860, "sub": "STRAW WITH A RANK"},
-      "boss": {"title": "Combine Brute", "x": 3180, "y": 500, "home": "street", "hp": 200, "pmin": 2980, "pmax": 3400, "sub": "HARVEST THE INVOICE"}
-    },
-    "sleet_hour": {
-      "title": "SLEET HOUR",
-      "survive": true,
-      "main": "Hold the frozen lake. Snowmobiles at the elite pack. Don't sit.",
-      "side": "Magnet the chips off the ice. The retreat froze on purpose.",
-      "talk": [
-        {"at": 0, "lines": [
-          {"who": "son", "text": "Don't sit. The ice is a waiting room with weather."},
-          {"who": "father", "text": "I packed a polo. That's on me."}
-        ]}
-      ],
-      "miniboss": {"title": "Plow Cop", "x": 1100, "y": 500, "home": "street", "hp": 120, "sub": "SALT AND A WARRANT"},
-      "boss": {"title": "Snowmobile", "x": 1700, "y": 500, "home": "street", "hp": 190, "sub": "THE SKI IS THE PERSONALITY"}
-    },
-    "raven_grid": {
-      "title": "RAVEN GRID",
-      "main": "Steal the lemon clinic courier. One drives. One rails 360°. Forced ramp. Crash the canal. The crash is the boss intro.",
-      "side": "Vault a scooter. Don't hug the grid car. Don't brake on the ramp.",
-      "talk": [
-        {"at": 0, "lines": [
-          {"who": "son", "text": "Cyberpunk. Not Dock Street with extra pink."},
-          {"who": "father", "text": "I can still drive. LinkedIn called it a transferable skill."}
-        ]},
-        {"at": 1300, "lines": [
-          {"who": "son", "text": "You drive. I shoot. Do not network with a lamppost."},
-          {"who": "father", "text": "I am on the rail. That's called coparenting."}
-        ]}
-      ],
-      "miniboss": {"title": "Grid Kid", "x": 1180, "y": 500, "home": "street", "hp": 110, "pmin": 1000, "pmax": 1400, "sub": "SKATE THE WARRANT"},
-      "boss": {"title": "Invoice Chopper", "x": 3720, "y": 180, "home": "air", "hp": 210, "pmin": 3480, "pmax": 3920, "sub": "HELI WITH A CLIPBOARD"}
-    },
-    "ledger_dive": {
-      "title": "LEDGER DIVE",
-      "survive": true,
-      "main": "Hold the flooded vault. A spa they billed as therapy. Billboards drown. Then the pier.",
-      "side": "Rope the brine. Don't sit in the cenote.",
-      "talk": [
-        {"at": 0, "lines": [
-          {"who": "son", "text": "We dropped into the ledger. The ads are drowning. That's the surprise."},
-          {"who": "father", "text": "I hate spas. I can still punch an eel."}
-        ]}
-      ],
-      "miniboss": {"title": "Vault Guard", "x": 1100, "y": 500, "home": "street", "hp": 124, "sub": "PIPE IN THE AISLE"},
-      "boss": {"title": "Cenote Elite", "x": 1800, "y": 500, "home": "street", "hp": 205, "sub": "THE SPA BILLS LAST"}
-    },
-    "invoice_pier": {
-      "title": "INVOICE PIER",
-      "main": "Walk the flooded annex. File the original invoice on Dr. Splint's desk. Or his ribs.",
-      "side": "Crack a chapel crate. That's the copay.",
-      "talk": [
-        {"at": 0, "lines": [
-          {"who": "son", "text": "This is not Dock Street with a cold. This is the annex."},
-          {"who": "father", "text": "I hate water. I hate chapels. I hate being right."}
-        ]},
-        {"at": 1500, "lines": [
-          {"who": "father", "text": "Cranes. I can web that. I can also drown with style."},
-          {"who": "son", "text": "Parkour first. Therapy never."}
-        ]},
-        {"at": 2400, "lines": [
-          {"who": "son", "text": "Chapel doors. Ushers. Don't tip."},
-          {"who": "father", "text": "I was going to tithe a punch."}
-        ]}
-      ],
-      "miniboss": {"title": "Usher Prime", "x": 1680, "y": 500, "home": "street", "hp": 120, "pmin": 1500, "pmax": 1860, "sub": "SILENCE IN THE NAVE"},
-      "boss": {"title": "Dr. Splint", "x": 2920, "y": 500, "home": "street", "hp": 220, "pmin": 2720, "pmax": 3180, "sub": "THE BILL WALKS"}
-    },
-    "processing_floor": {
-      "title": "THE PROCESSING FLOOR",
-      "main": "Strip Director Binder's armor. Survive the patterns. File The Family Plan. Then go home.",
-      "side": "Buy the bandage. SNAP him ALIVE when he stuns for extra gold.",
-      "talk": [
-        {"at": 0, "lines": [
-          {"who": "son", "text": "This is the late act. Not the Mayor again. The suit comes off first."},
-          {"who": "father", "text": "I brought a personality and a web. He brought four plates."}
-        ]},
-        {"at": 900, "lines": [
-          {"who": "father", "text": "Lights bounce. Heavies strip. I have been waiting my whole unemployment for this sentence."},
-          {"who": "son", "text": "If you SNAP too early I will bill you myself."}
-        ]}
-      ],
-      "miniboss": {"title": "Adjuster Prime", "x": 1480, "y": 500, "home": "street", "hp": 140, "pmin": 1280, "pmax": 1680, "sub": "CLAIMS DENIED IN PERSON"},
-      "boss": {"kind": "family_plan", "title": "The Family Plan", "sub": "DIRECTOR BINDER · BILLING MECH"}
+    {
+     "who": "",
+     "text": "VERTICAL ALIBI. THE STREET STILL BITES UNDER THE POETRY."
     }
+   ]
+  },
+  "fire_escapes->group_circle": {
+   "chapter": "CHAPTER 4",
+   "title": "GROUP CIRCLE",
+   "sub": "Share. Bite. Bill.",
+   "lines": [
+    {
+     "who": "son",
+     "text": "They're going to pass a stick. Don't take it."
+    },
+    {
+     "who": "father",
+     "text": "I pass. That's growth. That's also a kidney stone."
+    },
+    {
+     "who": "",
+     "text": "THE FACILITATOR HEARS YOU. THEN HE BILLS YOU."
+    }
+   ]
+  },
+  "group_circle->neon_exchange": {
+   "chapter": "CHAPTER 5",
+   "title": "NEON EXCHANGE",
+   "sub": "Agents tax the smile. Pawn keeps the plate.",
+   "lines": [
+    {
+     "who": "father",
+     "text": "I smiled in 2009. I'm still paying interest."
+    },
+    {
+     "who": "son",
+     "text": "Cash the feelings before they pawn your pulse."
+    },
+    {
+     "who": "",
+     "text": "WARRANT LIGHT. BOARD OR PISTOL. SHARING IS A WEAPON."
+    }
+   ]
+  },
+  "neon_exchange->waiting_room": {
+   "chapter": "CHAPTER 6",
+   "title": "THE WAITING ROOM",
+   "sub": "Fluorescent forever. Don't sit. The dog was already here.",
+   "lines": [
+    {
+     "who": "son",
+     "text": "Is that a skinwalker?"
+    },
+    {
+     "who": "father",
+     "text": "THAT is a skinwalker."
+    },
+    {
+     "who": "son",
+     "text": "I asked a hundred times. Those photos were trash. This one isn't."
+    },
+    {
+     "who": "",
+     "text": "THEY WERE NOT ALWAYS THIS VISIBLE. THE SKIPPED SESSION TORE THE WAITING LIST. FILE IT."
+    }
+   ]
+  },
+  "waiting_room->rail_bridge": {
+   "chapter": "CHAPTER 7",
+   "title": "RAIL BRIDGE",
+   "sub": "Pay the toll in personality.",
+   "lines": [
+    {
+     "who": "father",
+     "text": "Bots don't blink. I respect the work ethic."
+    },
+    {
+     "who": "son",
+     "text": "You blinked in 2011 and called it a sabbatical."
+    },
+    {
+     "who": "",
+     "text": "BOXCARS ARE ROOFS. THE RECEIPT IS A GRENADE."
+    }
+   ]
+  },
+  "rail_bridge->city_hall": {
+   "chapter": "CHAPTER 8",
+   "title": "CITY HALL",
+   "sub": "The landlord has throwing stars.",
+   "lines": [
+    {
+     "who": "son",
+     "text": "Deputy first. Mayor later. That's called pacing."
+    },
+    {
+     "who": "father",
+     "text": "I don't pace. I loom. If I lose, we get a note on the door."
+    },
+    {
+     "who": "",
+     "text": "STATUES CLIMB. RAVEN DOES NOT SHARE THE MORTGAGE."
+    }
+   ]
+  },
+  "city_hall->copay_orchard": {
+   "chapter": "CHAPTER 9",
+   "title": "COPAY ORCHARD",
+   "sub": "The wellness weekend they never booked.",
+   "lines": [
+    {
+     "who": "son",
+     "text": "They billed a retreat. We never sat on the hay."
+    },
+    {
+     "who": "father",
+     "text": "I networked. With a scarecrow. It had better posture."
+    },
+    {
+     "who": "",
+     "text": "LAKE. FOREST. FIELDS. A SILO WITH A ROPE. THE COPAY HAS TREES."
+    }
+   ]
+  },
+  "copay_orchard->sleet_hour": {
+   "chapter": "CHAPTER 10",
+   "title": "SLEET HOUR",
+   "sub": "The orchard froze. Hold the lake.",
+   "lines": [
+    {
+     "who": "father",
+     "text": "I packed a polo. The weather packed a personality."
+    },
+    {
+     "who": "son",
+     "text": "Don't sit on the ice. Sitting is how they win. Again."
+    },
+    {
+     "who": "",
+     "text": "SNOWMOBILES. ICE WIRES. EIGHTY-EIGHT SECONDS OF COPAY SLEET."
+    }
+   ]
+  },
+  "sleet_hour->raven_grid": {
+   "chapter": "CHAPTER 11",
+   "title": "RAVEN GRID",
+   "sub": "Cyberpunk downtown. Steal the lemon courier.",
+   "lines": [
+    {
+     "who": "son",
+     "text": "You drive. I shoot three-sixty. Do not hit a scooter and call it growth."
+    },
+    {
+     "who": "father",
+     "text": "I am on the rail. If I network with a lamppost, bill me."
+    },
+    {
+     "who": "",
+     "text": "NOT A MIL TRUCK. A CLINIC COURIER. RAMP. CANAL. THE CRASH IS THE BOSS INTRO."
+    }
+   ]
+  },
+  "raven_grid->ledger_dive": {
+   "chapter": "CHAPTER 12",
+   "title": "LEDGER DIVE",
+   "sub": "The drop. A spa they billed as therapy.",
+   "lines": [
+    {
+     "who": "son",
+     "text": "We fell into the vault. The ads are drowning. That's the surprise."
+    },
+    {
+     "who": "father",
+     "text": "I hate spas. I hate brine. I can still punch an eel."
+    },
+    {
+     "who": "",
+     "text": "FLOODED LEDGER. BILLBOARD CENOTE. HOLD THE HOUR. THEN THE PIER."
+    }
+   ]
+  },
+  "ledger_dive->invoice_pier": {
+   "chapter": "CHAPTER 13",
+   "title": "INVOICE PIER",
+   "sub": "The annex. Not Dock Street with a cold.",
+   "lines": [
+    {
+     "who": "son",
+     "text": "The vault spat us at the water. Splint still has the original invoice."
+    },
+    {
+     "who": "father",
+     "text": "I hate chapels. I hate being right. I can web a crane."
+    },
+    {
+     "who": "",
+     "text": "DR. SPLINT HAS THE CLIPBOARD. THE COPAY IS A NAVE."
+    }
+   ]
+  },
+  "invoice_pier->processing_floor": {
+   "chapter": "CHAPTER 14",
+   "title": "THE PROCESSING FLOOR",
+   "sub": "Late act. Strip the suit. Then the body.",
+   "lines": [
+    {
+     "who": "son",
+     "text": "Splint was middle management. The Director wears the bill."
+    },
+    {
+     "who": "father",
+     "text": "If it's huge, I web the knee. If it has plates, I eat the plates."
+    },
+    {
+     "who": "son",
+     "text": "Bandage first. That's enabling. Do it anyway."
+    },
+    {
+     "who": "father",
+     "text": "FILE ALIVE if it stuns. Extra gold. Huntdown called it a bounty. We call it parenting."
+    },
+    {
+     "who": "",
+     "text": "THE FAMILY PLAN IS NOT THE MAYOR. THE FAMILY PLAN IS THE NIGHT."
+    }
+   ]
   }
+ },
+ "ending": {
+  "chapter": "EPILOGUE",
+  "title": "THE FRIDGE STAYS",
+  "sub": "The invoice is a corpse. Homework is over.",
+  "lines": [
+   {
+    "who": "",
+    "text": "THE PROCESSING FLOOR GOES DARK. THE CLIPBOARD STOPS TICKING."
+   },
+   {
+    "who": "son",
+    "text": "Tutoring license: still mine. Apartment: still a crime scene with a lease."
+   },
+   {
+    "who": "father",
+    "text": "I networked. In the basement. With a billing mech. LinkedIn can wait."
+   },
+   {
+    "who": "son",
+    "text": "We skipped twelve sessions. We filed the Director. That's not growth. That's a refund."
+   },
+   {
+    "who": "father",
+    "text": "Come on. The fridge stays. I believe in us. Briefly."
+   },
+   {
+    "who": "",
+    "text": "RAVEN WHARF KEEPS THE LIGHTS ON. THE BASEMENT CLINIC DOES NOT. END OF NIGHT."
+   }
+  ]
+ },
+ "acts": {
+  "tutorial_alley": {
+   "title": "BACK ALLEY · TRAINING",
+   "main": "Learn to fight before the docks: punch, guard, pick up, throw. Then beat two lookouts.",
+   "side": "Finish every lesson.",
+   "talk": []
+  },
+  "dock_street": {
+   "title": "DOCK STREET",
+   "main": "Pull the first stack of coping evidence off Dock Street before the clinic posts it on the door.",
+   "side": "Smash a crate. That's a feeling with a lid.",
+   "talk": [
+    {
+     "at": 0,
+     "lines": [
+      {
+       "who": "father",
+       "text": "If anyone asks, this is homework."
+      },
+      {
+       "who": "son",
+       "text": "If anyone asks, you're the assignment."
+      }
+     ]
+    },
+    {
+     "at": 1100,
+     "lines": [
+      {
+       "who": "son",
+       "text": "Roofs. Gaps. Try not to make a speech."
+      },
+      {
+       "who": "father",
+       "text": "I was going to say I believe in us."
+      }
+     ]
+    },
+    {
+     "at": 2100,
+     "lines": [
+      {
+       "who": "father",
+       "text": "Gun stretch. I brought a personality and three bullets."
+      },
+      {
+       "who": "son",
+       "text": "Two of those are imaginary."
+      }
+     ]
+    }
+   ],
+   "miniboss": {
+    "title": "Shift Lead",
+    "x": 1380,
+    "y": 500,
+    "home": "street",
+    "hp": 96,
+    "pmin": 1200,
+    "pmax": 1560,
+    "sub": "CLOCKED IN FOREVER"
+   },
+   "boss": {
+    "title": "Collector Gant",
+    "x": 2780,
+    "y": 500,
+    "home": "street",
+    "hp": 160,
+    "pmin": 2600,
+    "pmax": 3000,
+    "sub": "INVOICES WITH KNUCKLES"
+   },
+   "rescue": {
+    "who": "benny",
+    "x": 2900,
+    "lines": [
+     {
+      "who": "benny",
+      "text": "You came! I was building a raft out of their invoices."
+     },
+     {
+      "who": "father",
+      "text": "The hideout needs you. The fridge is lonely."
+     },
+     {
+      "who": "benny",
+      "text": "Get me home and I'll build you anything. You bring gold, I bring the hammer."
+     }
+    ]
+   }
+  },
+  "intake_lot": {
+   "title": "THE INTAKE LOT",
+   "survive": true,
+   "main": "Hold the flooded car park for a coping hour. Elites come in packs. The magnet is the love language.",
+   "side": "Vacuum eight experience chips. The clinic calls them insights.",
+   "talk": [
+    {
+     "at": 0,
+     "lines": [
+      {
+       "who": "son",
+       "text": "This is the waiting list. It bites."
+      },
+      {
+       "who": "father",
+       "text": "I validate the horde. Then I park on it."
+      }
+     ]
+    }
+   ],
+   "miniboss": {
+    "title": "Clamp King",
+    "x": 1100,
+    "y": 500,
+    "home": "street",
+    "hp": 110,
+    "sub": "VALET OF THE DAMNED"
+   },
+   "boss": {
+    "title": "Lot Hydra",
+    "x": 1800,
+    "y": 500,
+    "home": "street",
+    "hp": 180,
+    "sub": "THREE BOOTS, ONE TICKET"
+   },
+   "rescue": {
+    "who": "rico",
+    "x": 1840,
+    "lines": [
+     {
+      "who": "rico",
+      "text": "Took you long enough. They put a boot on me. An actual boot."
+     },
+     {
+      "who": "son",
+      "text": "We brought a crowbar and a grudge."
+     },
+     {
+      "who": "rico",
+      "text": "I'll run the shop downstairs. Dopamine at cost. Mostly at cost."
+     }
+    ]
+   },
+   "rescue2": {
+    "who": "ember",
+    "x": 1300,
+    "lines": [
+     {
+      "who": "ember",
+      "text": "Two years welding wheel boots for Clamp King. Then he chained me to the rig."
+     },
+     {
+      "who": "father",
+      "text": "We just broke his last boot. Want a job that doesn't involve chains?"
+     },
+     {
+      "who": "ember",
+      "text": "You have a forge? ...You will. Give me a corner and your junk. I'll make you armor."
+     },
+     {
+      "who": "son",
+      "text": "She called our stuff junk. I like her."
+     }
+    ]
+   }
+  },
+  "fire_escapes": {
+   "title": "THE FIRE ESCAPES",
+   "main": "Cross the roofs and file a vertical alibi before the vendor sells your name.",
+   "side": "Buy a second opinion. Or steal the silence.",
+   "talk": [
+    {
+     "at": 0,
+     "lines": [
+      {
+       "who": "son",
+       "text": "Gaps. Glide. If you fall, make it a joke."
+      },
+      {
+       "who": "father",
+       "text": "My joints already filed a complaint."
+      }
+     ]
+    },
+    {
+     "at": 1600,
+     "lines": [
+      {
+       "who": "father",
+       "text": "Street still bites under the poetry."
+      },
+      {
+       "who": "son",
+       "text": "That's the brawl section. Try punching it."
+      }
+     ]
+    }
+   ],
+   "miniboss": {
+    "title": "Pipe Widow",
+    "x": 1180,
+    "y": 248,
+    "home": "roof",
+    "hp": 88,
+    "pmin": 1000,
+    "pmax": 1400,
+    "sub": "RENT WITH TEETH"
+   },
+   "boss": {
+    "title": "Lease Hawk",
+    "x": 2480,
+    "y": 208,
+    "home": "roof",
+    "hp": 150,
+    "pmin": 2320,
+    "pmax": 2680,
+    "sub": "SIGNATURES IN THE WIND"
+   }
+  },
+  "group_circle": {
+   "title": "GROUP CIRCLE",
+   "survive": true,
+   "main": "Survive the courtyard share. Nobody passes the talking stick. Everybody brings a chair.",
+   "side": "Let the magnet do the processing.",
+   "talk": [
+    {
+     "at": 0,
+     "lines": [
+      {
+       "who": "father",
+       "text": "I pass. That's growth."
+      },
+      {
+       "who": "son",
+       "text": "You pass like a kidney stone."
+      }
+     ]
+    }
+   ],
+   "miniboss": {
+    "title": "Share Chair",
+    "x": 1000,
+    "y": 500,
+    "home": "street",
+    "hp": 108,
+    "sub": "SITS ON THE FEELING"
+   },
+   "boss": {
+    "title": "The Facilitator",
+    "x": 1700,
+    "y": 500,
+    "home": "street",
+    "hp": 175,
+    "sub": "WE HEAR YOU. WE BILL YOU."
+   }
+  },
+  "neon_exchange": {
+   "title": "NEON EXCHANGE",
+   "main": "Break Dot Vale out of the pawn cage. Stamp Agent Prime.",
+   "side": "Pick up a board or a pistol. Sharing is a weapon.",
+   "talk": [
+    {
+     "at": 0,
+     "lines": [
+      {
+       "who": "son",
+       "text": "Smile. Agents tax that."
+      },
+      {
+       "who": "father",
+       "text": "I smiled in 2009. I'm still paying interest."
+      }
+     ]
+    },
+    {
+     "at": 640,
+     "lines": [
+      {
+       "who": "son",
+       "text": "Every sign here is a camera. Every camera is a bill."
+      },
+      {
+       "who": "father",
+       "text": "Then we break the expensive ones first."
+      }
+     ]
+    },
+    {
+     "at": 1100,
+     "lines": [
+      {
+       "who": "father",
+       "text": "Roof route. The agents don't climb. Union rules."
+      },
+      {
+       "who": "son",
+       "text": "Neither do you, usually."
+      }
+     ]
+    },
+    {
+     "at": 1700,
+     "lines": [
+      {
+       "who": "father",
+       "text": "Pawn & Plate. Sell the pipe, keep the wound."
+      },
+      {
+       "who": "son",
+       "text": "That's the mission statement."
+      }
+     ]
+    },
+    {
+     "at": 2240,
+     "lines": [
+      {
+       "who": "son",
+       "text": "Dot's cage is past the warrant light. Prime's guarding it."
+      },
+      {
+       "who": "father",
+       "text": "Good. I wanted to meet the man who invoices hugs."
+      }
+     ]
+    }
+   ],
+   "miniboss": {
+    "title": "Badge Broker",
+    "x": 1240,
+    "y": 500,
+    "home": "street",
+    "hp": 100,
+    "pmin": 1080,
+    "pmax": 1420,
+    "sub": "LICENSED TO BILL"
+   },
+   "boss": {
+    "title": "Agent Prime",
+    "x": 2580,
+    "y": 500,
+    "home": "street",
+    "hp": 165,
+    "pmin": 2420,
+    "pmax": 2760,
+    "sub": "SMILE FOR THE WARRANT"
+   },
+   "rescue": {
+    "who": "dot",
+    "x": 2660,
+    "lines": [
+     {
+      "who": "dot",
+      "text": "Took you long enough. They tried to pawn me as 'vintage'."
+     },
+     {
+      "who": "son",
+      "text": "Dot! Benny and Rico are home. The hideout's back."
+     },
+     {
+      "who": "dot",
+      "text": "Then I'm fencing everything you two break. Cash comes out heavier with me around."
+     },
+     {
+      "who": "father",
+      "text": "Is that legal?"
+     },
+     {
+      "who": "dot",
+      "text": "It's family."
+     }
+    ]
+   }
+  },
+  "waiting_room": {
+   "title": "THE WAITING ROOM",
+   "survive": true,
+   "main": "Hold the fluorescent forever-room. Number 87 is already sitting. Unmask it. FILE it. Numbers skip you on purpose.",
+   "side": "Don't sit. The dog was already here. That's how they win.",
+   "talk": [
+    {
+     "at": 0,
+     "lines": [
+      {
+       "who": "son",
+       "text": "We're number 88. There is no 87."
+      },
+      {
+       "who": "father",
+       "text": "Then why is that dog already on the chair."
+      }
+     ]
+    }
+   ],
+   "miniboss": {
+    "kind": "skinwalker",
+    "title": "Skinwalker",
+    "x": 980,
+    "y": 500,
+    "home": "street",
+    "hp": 128,
+    "pmin": 820,
+    "pmax": 1180,
+    "sub": "ALREADY SITTING"
+   },
+   "boss": {
+    "title": "Number 88",
+    "x": 1680,
+    "y": 500,
+    "home": "street",
+    "hp": 188,
+    "sub": "YOUR NUMBER NEVER COMES"
+   }
+  },
+  "rail_bridge": {
+   "title": "RAIL BRIDGE",
+   "main": "Cross the bridge. Drop the Boxcar Brute. Derail Conductor 9.",
+   "side": "Push a thug onto the back rails when the bell rings.",
+   "talk": [
+    {
+     "at": 0,
+     "lines": [
+      {
+       "who": "father",
+       "text": "Bots don't blink. I respect the work ethic."
+      },
+      {
+       "who": "son",
+       "text": "You blinked in 2011 and called it a sabbatical."
+      }
+     ]
+    },
+    {
+     "at": 560,
+     "lines": [
+      {
+       "who": "son",
+       "text": "Bell means train. Train means move."
+      },
+      {
+       "who": "father",
+       "text": "Or it means bring the thugs to the rails. Teamwork."
+      }
+     ]
+    },
+    {
+     "at": 1180,
+     "lines": [
+      {
+       "who": "father",
+       "text": "Boxcar Brute. He's freight with opinions."
+      },
+      {
+       "who": "son",
+       "text": "Hit the opinions first."
+      }
+     ]
+    },
+    {
+     "at": 1880,
+     "lines": [
+      {
+       "who": "son",
+       "text": "Drones overhead. They film everything."
+      },
+      {
+       "who": "father",
+       "text": "Then give them a good angle. My left side."
+      }
+     ]
+    },
+    {
+     "at": 2300,
+     "lines": [
+      {
+       "who": "father",
+       "text": "Conductor 9. Punches tickets. And people."
+      },
+      {
+       "who": "son",
+       "text": "Last stop is him. Not us."
+      }
+     ]
+    }
+   ],
+   "miniboss": {
+    "title": "Boxcar Brute",
+    "x": 1320,
+    "y": 500,
+    "home": "street",
+    "hp": 120,
+    "pmin": 1160,
+    "pmax": 1520,
+    "sub": "FREIGHT WITH FISTS"
+   },
+   "boss": {
+    "title": "Conductor 9",
+    "x": 2520,
+    "y": 500,
+    "home": "street",
+    "hp": 170,
+    "pmin": 2360,
+    "pmax": 2720,
+    "sub": "ALL ABOARD THE CONSEQUENCES"
+   }
+  },
+  "city_hall": {
+   "title": "CITY HALL",
+   "main": "Floor the Deputy. Climb the statues. Evict Mayor Raven.",
+   "side": "Get a guard FILED: lure him under a falling cabinet.",
+   "talk": [
+    {
+     "at": 0,
+     "lines": [
+      {
+       "who": "son",
+       "text": "Deputy first. Mayor later. That's called pacing."
+      },
+      {
+       "who": "father",
+       "text": "I don't pace. I loom."
+      }
+     ]
+    },
+    {
+     "at": 420,
+     "lines": [
+      {
+       "who": "son",
+       "text": "Shadow on the ground. Something's coming out of that window."
+      },
+      {
+       "who": "father",
+       "text": "Paperwork. It always comes down on the little guy."
+      }
+     ]
+    },
+    {
+     "at": 900,
+     "lines": [
+      {
+       "who": "father",
+       "text": "If I lose, we get a nice note on the door."
+      },
+      {
+       "who": "son",
+       "text": "If you win, we still get the invoice."
+      }
+     ]
+    },
+    {
+     "at": 1300,
+     "lines": [
+      {
+       "who": "son",
+       "text": "Statues climb. Raven's up top."
+      },
+      {
+       "who": "father",
+       "text": "Then we bring the statue's opinion down with us."
+      }
+     ]
+    },
+    {
+     "at": 1450,
+     "lines": [
+      {
+       "who": "father",
+       "text": "Mayor. You billed my son for a couch he never sat on."
+      },
+      {
+       "who": "son",
+       "text": "Dad. Less speech. More eviction."
+      }
+     ]
+    }
+   ],
+   "miniboss": {
+    "title": "Deputy Raven",
+    "x": 880,
+    "y": 500,
+    "home": "street",
+    "hp": 110,
+    "pmin": 720,
+    "pmax": 1080,
+    "sub": "STARRED AND STAMPED"
+   },
+   "boss": {
+    "kind": "mayor_raven",
+    "title": "Mayor Raven",
+    "sub": "LANDLORD · NINJA · INVOICE"
+   }
+  },
+  "copay_orchard": {
+   "title": "COPAY ORCHARD",
+   "main": "Cross the orchard, topple Scarecrow Ken, stop the Combine Brute.",
+   "side": "Slide the hill. Rope-swing the silo. Don't tip the scarecrow.",
+   "talk": [
+    {
+     "at": 0,
+     "lines": [
+      {
+       "who": "son",
+       "text": "They billed a retreat. Hay is not a couch."
+      },
+      {
+       "who": "father",
+       "text": "I networked. With corn. It had better eye contact."
+      }
+     ]
+    },
+    {
+     "at": 700,
+     "lines": [
+      {
+       "who": "son",
+       "text": "Slide hill. Sit, push, scream. That's the whole tutorial."
+      },
+      {
+       "who": "father",
+       "text": "I've been doing that at work for years."
+      }
+     ]
+    },
+    {
+     "at": 1500,
+     "lines": [
+      {
+       "who": "father",
+       "text": "Rope. I can still swing. Unemployment taught me that."
+      },
+      {
+       "who": "son",
+       "text": "Land it. The lake still wants a copay."
+      }
+     ]
+    },
+    {
+     "at": 2300,
+     "lines": [
+      {
+       "who": "father",
+       "text": "Barn cops. Even the hay has a badge out here."
+      },
+      {
+       "who": "son",
+       "text": "Then the hay can file a complaint."
+      }
+     ]
+    },
+    {
+     "at": 2950,
+     "lines": [
+      {
+       "who": "son",
+       "text": "That's the Combine Brute. He harvests invoices."
+      },
+      {
+       "who": "father",
+       "text": "Then we're the bad weather."
+      }
+     ]
+    }
+   ],
+   "miniboss": {
+    "title": "Scarecrow Ken",
+    "x": 1680,
+    "y": 500,
+    "home": "street",
+    "hp": 118,
+    "pmin": 1500,
+    "pmax": 1860,
+    "sub": "STRAW WITH A RANK"
+   },
+   "boss": {
+    "title": "Combine Brute",
+    "x": 3180,
+    "y": 500,
+    "home": "street",
+    "hp": 200,
+    "pmin": 2980,
+    "pmax": 3400,
+    "sub": "HARVEST THE INVOICE"
+   }
+  },
+  "sleet_hour": {
+   "title": "SLEET HOUR",
+   "survive": true,
+   "main": "Hold the frozen lake. Snowmobiles at the elite pack. Don't sit.",
+   "side": "Magnet the chips off the ice. The retreat froze on purpose.",
+   "talk": [
+    {
+     "at": 0,
+     "lines": [
+      {
+       "who": "son",
+       "text": "Don't sit. The ice is a waiting room with weather."
+      },
+      {
+       "who": "father",
+       "text": "I packed a polo. That's on me."
+      }
+     ]
+    }
+   ],
+   "miniboss": {
+    "title": "Plow Cop",
+    "x": 1100,
+    "y": 500,
+    "home": "street",
+    "hp": 120,
+    "sub": "SALT AND A WARRANT"
+   },
+   "boss": {
+    "title": "Snowmobile",
+    "x": 1700,
+    "y": 500,
+    "home": "street",
+    "hp": 190,
+    "sub": "THE SKI IS THE PERSONALITY"
+   }
+  },
+  "raven_grid": {
+   "title": "RAVEN GRID",
+   "main": "Steal the lemon clinic courier. One drives. One rails 360°. Forced ramp. Crash the canal. The crash is the boss intro.",
+   "side": "Vault a scooter. Don't hug the grid car. Don't brake on the ramp.",
+   "talk": [
+    {
+     "at": 0,
+     "lines": [
+      {
+       "who": "son",
+       "text": "Cyberpunk. Not Dock Street with extra pink."
+      },
+      {
+       "who": "father",
+       "text": "I can still drive. LinkedIn called it a transferable skill."
+      }
+     ]
+    },
+    {
+     "at": 1300,
+     "lines": [
+      {
+       "who": "son",
+       "text": "You drive. I shoot. Do not network with a lamppost."
+      },
+      {
+       "who": "father",
+       "text": "I am on the rail. That's called coparenting."
+      }
+     ]
+    },
+    {
+     "at": 1500,
+     "lines": [
+      {
+       "who": "son",
+       "text": "Wire across the gap. I'm taking it."
+      },
+      {
+       "who": "father",
+       "text": "I'm taking the long way. It has a floor."
+      }
+     ]
+    },
+    {
+     "at": 2600,
+     "lines": [
+      {
+       "who": "father",
+       "text": "That chopper is following the courier."
+      },
+      {
+       "who": "son",
+       "text": "Then we give it something to chase."
+      }
+     ]
+    }
+   ],
+   "miniboss": {
+    "title": "Grid Kid",
+    "x": 1180,
+    "y": 500,
+    "home": "street",
+    "hp": 110,
+    "pmin": 1000,
+    "pmax": 1400,
+    "sub": "SKATE THE WARRANT"
+   },
+   "boss": {
+    "title": "Invoice Chopper",
+    "x": 3720,
+    "y": 180,
+    "home": "air",
+    "hp": 210,
+    "pmin": 3480,
+    "pmax": 3920,
+    "sub": "HELI WITH A CLIPBOARD"
+   }
+  },
+  "ledger_dive": {
+   "title": "LEDGER DIVE",
+   "survive": true,
+   "main": "Hold the flooded vault. A spa they billed as therapy. Billboards drown. Then the pier.",
+   "side": "Rope the brine. Don't sit in the cenote.",
+   "talk": [
+    {
+     "at": 0,
+     "lines": [
+      {
+       "who": "son",
+       "text": "We dropped into the ledger. The ads are drowning. That's the surprise."
+      },
+      {
+       "who": "father",
+       "text": "I hate spas. I can still punch an eel."
+      }
+     ]
+    }
+   ],
+   "miniboss": {
+    "title": "Vault Guard",
+    "x": 1100,
+    "y": 500,
+    "home": "street",
+    "hp": 124,
+    "sub": "PIPE IN THE AISLE"
+   },
+   "boss": {
+    "title": "Cenote Elite",
+    "x": 1800,
+    "y": 500,
+    "home": "street",
+    "hp": 205,
+    "sub": "THE SPA BILLS LAST"
+   }
+  },
+  "invoice_pier": {
+   "title": "INVOICE PIER",
+   "main": "Walk the flooded annex. File the original invoice on Dr. Splint's desk. Or his ribs.",
+   "side": "Crack a chapel crate. That's the copay.",
+   "talk": [
+    {
+     "at": 0,
+     "lines": [
+      {
+       "who": "son",
+       "text": "This is not Dock Street with a cold. This is the annex."
+      },
+      {
+       "who": "father",
+       "text": "I hate water. I hate chapels. I hate being right."
+      }
+     ]
+    },
+    {
+     "at": 1300,
+     "lines": [
+      {
+       "who": "son",
+       "text": "Cranes are moving. Nobody's driving them."
+      },
+      {
+       "who": "father",
+       "text": "Automation. They took the crane operator's job and his aim."
+      }
+     ]
+    },
+    {
+     "at": 1500,
+     "lines": [
+      {
+       "who": "father",
+       "text": "Cranes. I can web that. I can also drown with style."
+      },
+      {
+       "who": "son",
+       "text": "Parkour first. Therapy never."
+      }
+     ]
+    },
+    {
+     "at": 2400,
+     "lines": [
+      {
+       "who": "son",
+       "text": "Chapel doors. Ushers. Don't tip."
+      },
+      {
+       "who": "father",
+       "text": "I was going to tithe a punch."
+      }
+     ]
+    }
+   ],
+   "miniboss": {
+    "title": "Usher Prime",
+    "x": 1680,
+    "y": 500,
+    "home": "street",
+    "hp": 120,
+    "pmin": 1500,
+    "pmax": 1860,
+    "sub": "SILENCE IN THE NAVE"
+   },
+   "boss": {
+    "title": "Dr. Splint",
+    "x": 2920,
+    "y": 500,
+    "home": "street",
+    "hp": 220,
+    "pmin": 2720,
+    "pmax": 3180,
+    "sub": "THE BILL WALKS"
+   }
+  },
+  "processing_floor": {
+   "title": "THE PROCESSING FLOOR",
+   "main": "Strip Director Binder's armor. Survive the patterns. File The Family Plan. Then go home.",
+   "side": "Buy the bandage. SNAP him ALIVE when he stuns for extra gold.",
+   "talk": [
+    {
+     "at": 0,
+     "lines": [
+      {
+       "who": "son",
+       "text": "This is the late act. Not the Mayor again. The suit comes off first."
+      },
+      {
+       "who": "father",
+       "text": "I brought a personality and a web. He brought four plates."
+      }
+     ]
+    },
+    {
+     "at": 900,
+     "lines": [
+      {
+       "who": "father",
+       "text": "Lights bounce. Heavies strip. I have been waiting my whole unemployment for this sentence."
+      },
+      {
+       "who": "son",
+       "text": "If you SNAP too early I will bill you myself."
+      }
+     ]
+    },
+    {
+     "at": 900,
+     "lines": [
+      {
+       "who": "son",
+       "text": "This is it. Where they process families."
+      },
+      {
+       "who": "father",
+       "text": "Then let's be the paperwork they can't file."
+      }
+     ]
+    },
+    {
+     "at": 1900,
+     "lines": [
+      {
+       "who": "father",
+       "text": "Whatever happens in there, I'm proud of you."
+      },
+      {
+       "who": "son",
+       "text": "Save it for the car, Dad. We're winning first."
+      }
+     ]
+    }
+   ],
+   "miniboss": {
+    "title": "Adjuster Prime",
+    "x": 1480,
+    "y": 500,
+    "home": "street",
+    "hp": 140,
+    "pmin": 1280,
+    "pmax": 1680,
+    "sub": "CLAIMS DENIED IN PERSON"
+   },
+   "boss": {
+    "kind": "family_plan",
+    "title": "The Family Plan",
+    "sub": "DIRECTOR BINDER · BILLING MECH"
+   }
+  }
+ },
+ "crew": {
+  "benny": {
+   "name": "BENNY",
+   "full": "Benny Vale",
+   "job": "BUILDS THE HIDEOUT",
+   "rescue_map": "dock_street"
+  },
+  "rico": {
+   "name": "RICO",
+   "full": "Rico Vale",
+   "job": "RUNS THE SHOP",
+   "rescue_map": "intake_lot"
+  },
+  "dot": {
+   "name": "DOT",
+   "full": "Dot Vale",
+   "job": "FENCES THE LOOT  ·  CASH DROPS +20%",
+   "rescue_map": "neon_exchange"
+  },
+  "ember": {
+   "name": "EMBER",
+   "full": "Ember Reyes",
+   "job": "RUNS THE FORGE  ·  SMELT & SMITH",
+   "rescue_map": "intake_lot"
+  }
+ },
+ "prologue": [
+  {
+   "who": "",
+   "text": "RAVEN WHARF. MAYOR RAVEN OWNS THE RENT, THE COPS AND THE CLINIC UPSTAIRS."
+  },
+  {
+   "who": "",
+   "text": "THREE NIGHTS AGO. A BASEMENT UNDER THAT CLINIC. A FATHER AND HIS SON."
+  },
+  {
+   "who": "son",
+   "text": "Another court letter. Twelve family therapy sessions. Mandatory. We skipped all twelve."
+  },
+  {
+   "who": "father",
+   "text": "We don't need a therapist. We need a lock that works."
+  },
+  {
+   "who": "son",
+   "text": "If we don't go, the city takes me into care. It says so. In red."
+  },
+  {
+   "who": "father",
+   "text": "Then I'll talk more. Look. We're talking right now. Growth."
+  },
+  {
+   "who": "son",
+   "text": "You haven't hugged me since Mom left. That's not growth. That's a cold case."
+  },
+  {
+   "who": "father",
+   "text": "Hugs are for people who aren't on an eviction list."
+  },
+  {
+   "who": "",
+   "text": "BENNY AND RICO VALE. THE BROTHERS NEXT DOOR. DAD'S OLD BOXING CREW. THEY BUILD THINGS."
+  },
+  {
+   "who": "benny",
+   "text": "Hideout's done! Couch, fridge, punching bag. Raven never looks under her own clinic."
+  },
+  {
+   "who": "rico",
+   "text": "We built it for free. Rent is one hug a month. Between you two."
+  },
+  {
+   "who": "benny",
+   "text": "The kid told us. Years without one. We're builders. We fix broken things."
+  },
+  {
+   "who": "son",
+   "text": "I told you that in confidence, Benny."
+  },
+  {
+   "who": "father",
+   "text": "I'll pay in cash. Like a normal person."
+  },
+  {
+   "who": "",
+   "text": "A KNOCK. NOT A FRIENDLY KNOCK."
+  },
+  {
+   "who": "collector",
+   "text": "Collector Gant. Mayor Raven's office. Twelve therapy sessions. Skipped. Billed anyway."
+  },
+  {
+   "who": "father",
+   "text": "You can't bill a session nobody went to."
+  },
+  {
+   "who": "collector",
+   "text": "Watch me. The Vale brothers co-signed your file. Co-signers are collateral."
+  },
+  {
+   "who": "rico",
+   "text": "We signed as character witnesses!"
+  },
+  {
+   "who": "collector",
+   "text": "Small print. Pay the invoice or the brothers pay it. In parts."
+  },
+  {
+   "who": "benny",
+   "text": "Don't sign anything! And finish the hug!"
+  },
+  {
+   "who": "",
+   "text": "THEY TOOK BENNY TO THE DOCKS. RICO TO THE INTAKE LOT IMPOUND. THE LIGHTS WENT OUT."
+  },
+  {
+   "who": "son",
+   "text": "They took them because of us. Because of our file."
+  },
+  {
+   "who": "father",
+   "text": "Then we get them back. Every goon Raven has stands between here and the docks."
+  },
+  {
+   "who": "son",
+   "text": "I can't fight, Dad."
+  },
+  {
+   "who": "father",
+   "text": "You can by tonight. Out back. Ten minutes. Everything I know."
+  },
+  {
+   "who": "son",
+   "text": "So, eleven minutes. Tops."
+  }
+ ],
+ "crew_talk": {
+  "benny": [
+   "Point me at a tarp and some gold. I'll make it a room.",
+   "Measure twice, punch once.",
+   "Every board down here has a story. Most of them are invoices."
+  ],
+  "rico": [
+   "Shop's open. Prices are emotional.",
+   "Benny builds it, I sell it, you two break it. Family business.",
+   "I kept the clipboard. Collectors hate it when you take their clipboard."
+  ],
+  "dot": [
+   "Everything's worth something. Mostly to someone dumber.",
+   "Benny builds, Rico sells, I make sure nobody asks where it came from.",
+   "Bring me broken stuff. I'll bring you money and no questions.",
+   "The agents pawned my toolbox. I bought it back with their wallets."
+  ],
+  "ember": [
+   "Bring me spare gear. I melt it, I hammer it, you look scary. Simple.",
+   "The salvage bench gets fresh scrap every night. Grab it before Benny builds a chair out of it.",
+   "Hit when the metal glows. Three good strikes and it comes out rarer.",
+   "Your dad swings like a sledgehammer. I could make him one. Just saying."
+  ]
+ }
 }

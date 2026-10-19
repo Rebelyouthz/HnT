@@ -72,7 +72,8 @@ func _candidate(f: Fighter) -> Node:
 		if not (n is Punk):
 			continue
 		var e: Punk = n
-		if not is_instance_valid(e) or e.hp <= 0:
+		# The heavy bag is not a thug to snap.
+		if not is_instance_valid(e) or e.hp <= 0 or e is TrainingDummy:
 			continue
 		var dx := e.global_position.x - f.global_position.x
 		var dy := e.global_position.y - f.global_position.y

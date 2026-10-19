@@ -1,0 +1,299 @@
+extends Node2D
+
+## Prologue: what happened before you play. Three nights ago, in a basement
+## under Mayor Raven's clinic, Father and Son argue about the court letter
+## (twelve skipped family therapy sessions) and the hug they never give each
+## other. The Vale brothers, Dad's old boxing crew from next door, walk in
+## to hand over the hideout they built (rent: one hug a month, between the
+## two of them). Collector Gant knocks, calls the brothers collateral for the
+## unpaid file and his goon drags them off; the lights die. Then training.
+## Staged on cue from data/story.json "prologue" via Talk.line.
+## JUMP / ENTER next line, PAUSE skips to the alley.
+
+class FilmActor extends Node2D:
+	var role := ""
+	var hop := 0.0
+	var anim: AnimatedSprite2D
+
+const WALK_Y := 500.0
+const ZOOM := 2.5
+## How far in from the painted floor's front edge the cast stands (world u).
+const FLOOR_IN := 10.0
+## People against the painted room: at the plain sprite scale the father
+## stood a head under the fridge. A grown man is about fridge height.
+const PEOPLE_K := 1.24
+
+var _talk: Talk
+var _ui: Control
+var _cam: Camera2D
+var _mod: CanvasModulate
+var _w := 900.0
+var _room_h := 130.0
+var _cx := 0.0
+var _benny: CrewNPC
+var _rico: CrewNPC
+var _gant: FilmActor
+var _goons: Array[FilmActor] = []
+var _done := false
+
+
+func _ready() -> void:
+	FamilyProfile.data["intro_plays"] = int(FamilyProfile.data.get("intro_plays", 0)) + 1
+	_build_set()
+	_build_ui()
+	Mixer.play_music("res://assets/audio/music/music_menu.ogg")
+	_talk = Talk.new()
+	add_child(_talk)
+	_talk.line.connect(_on_line)
+	_talk.closed.connect(_finish)
+	await get_tree().create_timer(1.4).timeout
+	if not _done:
+		var v: Variant = StoryBook.all().get("prologue", [])
+		_talk.play(v if v is Array else [])
+
+
+func _build_set() -> void:
+	var bg := Polygon2D.new()
+	bg.color = Color(0.02, 0.02, 0.035)
+	bg.polygon = PackedVector2Array([Vector2(-400, 0), Vector2(4000, 0), Vector2(4000, 900), Vector2(-400, 900)])
+	bg.z_index = -10
+	add_child(bg)
+	var path := "res://assets/backdrops/camp.png"
+	if ResourceLoader.exists(path):
+		var tex := load(path) as Texture2D
+		var meta: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://assets/backdrops/camp.json"))
+		var ground := float(tex.get_height()) * 0.93
+		var texel := 2.0 / 3.0
+		var linear := false
+		if meta is Dictionary:
+			ground = float((meta as Dictionary).get("ground", ground))
+			texel = float((meta as Dictionary).get("texel", texel))
+			linear = str((meta as Dictionary).get("filter", "")) == "linear"
+		var s := Sprite2D.new()
+		s.texture = tex
+		s.centered = false
+		s.scale = Vector2(texel, texel)
+		# Everyone stands a step back from the painted floor's front edge, so
+		# feet and shadows sit on the boards above the subtitle bar instead of
+		# on the cut-off edge (they read as floating there).
+		s.position = Vector2(0, WALK_Y - ground * texel + FLOOR_IN)
+		s.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR if linear else CanvasItem.TEXTURE_FILTER_NEAREST
+		s.z_index = -5
+		add_child(s)
+		_w = float(tex.get_width()) * texel
+		_room_h = ground * texel
+	# The lounge: couch at ~0.62 of the hideout.
+	_cx = _w * 0.62
+	_mod = CanvasModulate.new()
+	_mod.color = Color(1, 0.97, 0.92)
+	add_child(_mod)
+	# The two of them alone first, facing each other. The brothers are
+	# painted stills with no walk clip, so they never slide across the
+	# room: they stand on their marks, unseen until they are introduced.
+	_actor("father", Vector2(_cx - 36.0, WALK_Y), 1)
+	_actor("son", Vector2(_cx + 4.0, WALK_Y + 1.0), -1)
+	_benny = _crew("benny", Vector2(_cx + 34.0, WALK_Y))
+	_rico = _crew("rico", Vector2(_cx + 62.0, WALK_Y + 1.0))
+	_benny.face(-1)
+	_rico.face(-1)
+	_benny.modulate.a = 0.0
+	_rico.modulate.a = 0.0
+	_cam = Camera2D.new()
+	_cam.zoom = Vector2(ZOOM, ZOOM)
+	_cam.position = Vector2(_cx - 14.0, WALK_Y - _room_h * 0.5 + 6.0 + FLOOR_IN)
+	add_child(_cam)
+	_cam.make_current()
+
+
+func _actor(who: String, at: Vector2, face: int) -> FilmActor:
+	var a := FilmActor.new()
+	a.role = who
+	a.position = at
+	a.add_to_group("players")
+	add_child(a)
+	var sh := Polygon2D.new()
+	var pts := PackedVector2Array()
+	for i in 16:
+		var ang := TAU * float(i) / 16.0
+		pts.append(Vector2(cos(ang) * 14.0, sin(ang) * 3.2))
+	sh.polygon = pts
+	sh.color = Color(0, 0, 0, 0.42)
+	sh.position = Vector2(0, 2)
+	a.add_child(sh)
+	if SpriteBook.has_who(who):
+		a.anim = SpriteBook.make_anim(who)
+		a.anim.flip_h = face < 0
+		a.anim.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+		SpriteBook.grow(a.anim, PEOPLE_K)
+		a.add_child(a.anim)
+		# At home nobody stands in a fight stance.
+		if who in ["father", "son"] and a.anim.sprite_frames.has_animation("idle_casual"):
+			a.anim.play("idle_casual")
+	return a
+
+
+func _crew(who: String, at: Vector2) -> CrewNPC:
+	var c := CrewNPC.new()
+	c.setup(who)
+	c.position = at
+	c.scale = Vector2(PEOPLE_K, PEOPLE_K)
+	c.face(-1)
+	add_child(c)
+	return c
+
+
+func _build_ui() -> void:
+	var layer := CanvasLayer.new()
+	layer.layer = 50
+	layer.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(layer)
+	_ui = PixelStage.attach_canvas(layer)
+	_ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for y in [0.0, 650.0]:
+		var bar := ColorRect.new()
+		bar.color = Color.BLACK
+		bar.position = Vector2(0, y)
+		bar.size = Vector2(1280, 70)
+		_ui.add_child(bar)
+	var skip := Label.new()
+	skip.position = Vector2(40, 22)
+	skip.text = "JUMP  ·  NEXT LINE        PAUSE  ·  SKIP"
+	UiKit.apply_label(skip, 13, Palette.MUTED)
+	_ui.add_child(skip)
+	var title := UiKit.title("THREE NIGHTS AGO", 26, Palette.EDGE)
+	title.position = Vector2(900, 16)
+	_ui.add_child(title)
+	var fade := ColorRect.new()
+	fade.color = Color.BLACK
+	fade.size = Vector2(1280, 720)
+	fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui.add_child(fade)
+	fade.create_tween().tween_property(fade, "color:a", 0.0, 1.2)
+
+
+func _on_line(_i: int, row: Dictionary) -> void:
+	var text := str(row.get("text", ""))
+	if text.begins_with("BENNY AND RICO"):
+		_enter_brothers()
+	elif text.begins_with("A KNOCK"):
+		# Three hard knocks; everyone turns to the door on the right.
+		for k in 3:
+			get_tree().create_timer(0.25 * float(k)).timeout.connect(func() -> void:
+				Juice.play("res://assets/audio/smash.wav")
+				Juice.pulse_shake(3.0)
+			)
+		_benny.face(1)
+		_rico.face(1)
+	elif str(row.get("who", "")) == "collector" and _gant == null:
+		_enter_collectors()
+	elif text.begins_with("THEY TOOK"):
+		_drag_off()
+
+
+## Benny and Rico walk in from their side with the keys to the hideout and
+## stop on the far side of the family; the camera opens up to fit all four.
+func _enter_brothers() -> void:
+	# A friendly knock (their own rhythm), then they let themselves in.
+	for k in 3:
+		get_tree().create_timer(0.16 * float(k) + (0.12 if k == 2 else 0.0)).timeout.connect(func() -> void:
+			Mixer.play_sfx("res://assets/audio/smash.wav", 1.7, -9.0)
+		)
+	# They step in out of the dark on their marks and stand still.
+	for k in 2:
+		var bro: CrewNPC = [_benny, _rico][k]
+		var ft := create_tween()
+		ft.tween_interval(0.35 + 0.2 * float(k))
+		ft.tween_property(bro, "modulate:a", 1.0, 0.45)
+	var tw := create_tween()
+	tw.tween_property(_cam, "position:x", _cx + 4.0, 1.4).set_trans(Tween.TRANS_SINE)
+
+
+func _enter_collectors() -> void:
+	Juice.play("res://assets/audio/sting_intro.wav")
+	var door_x := _cx + 150.0
+	_gant = _actor("gant", Vector2(door_x, WALK_Y), -1)
+	# Lines are written for "collector": that is who Talk looks for.
+	_gant.role = "collector"
+	# One goon with him: a pair of identical twins read as a copy-paste.
+	var g := _actor("punk", Vector2(door_x + 28.0, WALK_Y + 1.0), -1)
+	g.remove_from_group("players")
+	_goons.append(g)
+	# They walk in from the door on the right (a real walk, feet matching
+	# the floor), stop on their marks and stand there, idle, while Gant talks.
+	for a: FilmActor in [_gant, _goons[0]]:
+		var mark := (_cx + 74.0) if a == _gant else (_cx + 100.0)
+		a.position.x = mark + 120.0
+		_walk_actor(a, mark, 0.15 if a == _gant else 0.45)
+	var tw := create_tween()
+	tw.tween_property(_cam, "position:x", _cx + 30.0, 1.4).set_trans(Tween.TRANS_SINE)
+
+
+## Walk a film actor to x on its walk clip at stride speed, then idle there.
+func _walk_actor(a: FilmActor, to_x: float, delay := 0.0, then_hide := false) -> void:
+	const SPEED := 46.0
+	if a.anim:
+		a.anim.flip_h = to_x < a.position.x
+	var tw := create_tween()
+	tw.tween_interval(delay)
+	tw.tween_callback(func() -> void:
+		if a.anim and a.anim.sprite_frames.has_animation("walk"):
+			a.anim.play("walk")
+			a.anim.speed_scale = SpriteBook.stride_rate(a.anim, "walk", SPEED)
+	)
+	tw.tween_property(a, "position:x", to_x, absf(to_x - a.position.x) / SPEED)
+	tw.tween_callback(func() -> void:
+		if then_hide:
+			a.visible = false
+		elif a.anim and a.anim.sprite_frames.has_animation("idle"):
+			SpriteBook.crossfade(a.anim, 0.12)
+			a.anim.speed_scale = 1.0
+			a.anim.play("idle")
+	)
+
+
+func _drag_off() -> void:
+	# The goon takes Benny, Gant takes Rico. Nobody slides out of frame:
+	# the lights die and when they come back the four of them are gone.
+	_benny.remove_from_group("players")
+	_rico.remove_from_group("players")
+	# The brothers go in the blackout; Gant and his goon walk out through
+	# the door they came in by, in the flicker.
+	for who: Node2D in [_benny, _rico]:
+		var gone := create_tween()
+		gone.tween_interval(2.05)
+		gone.tween_property(who, "modulate:a", 0.0, 0.12)
+		gone.tween_callback(func() -> void: who.visible = false)
+	_walk_actor(_goons[0], _cx + 260.0, 0.3, true)
+	_walk_actor(_gant, _cx + 250.0, 0.6, true)
+	# The bulbs flicker, then die completely: pitch black (the painted bulbs
+	# go out with the room), a beat of nothing, and the light crawls back
+	# to an emptier basement.
+	var dim := create_tween()
+	dim.tween_interval(1.25)
+	for k in 3:
+		dim.tween_property(_mod, "color", Color(0.18, 0.19, 0.27), 0.07)
+		dim.tween_property(_mod, "color", Color(0.85, 0.82, 0.78), 0.09)
+	dim.tween_callback(func() -> void: Juice.play("res://assets/audio/sfx/metal_bang.ogg"))
+	dim.tween_property(_mod, "color", Color(0.012, 0.012, 0.02), 0.12)
+	dim.tween_interval(1.5)
+	dim.tween_property(_mod, "color", Color(0.62, 0.6, 0.66), 1.1).set_trans(Tween.TRANS_SINE)
+	var back := create_tween()
+	back.tween_property(_cam, "position:x", _cx - 20.0, 2.0).set_delay(1.6).set_trans(Tween.TRANS_SINE)
+
+
+func _process(_delta: float) -> void:
+	if not _done and (Input.is_action_just_pressed("p1_pause") or Input.is_action_just_pressed("p2_pause")):
+		_finish()
+
+
+func _finish() -> void:
+	if _done:
+		return
+	_done = true
+	var fade := ColorRect.new()
+	fade.color = Color(0, 0, 0, 0)
+	fade.size = Vector2(1280, 720)
+	_ui.add_child(fade)
+	var tw := fade.create_tween()
+	tw.tween_property(fade, "color:a", 1.0, 0.6)
+	tw.tween_callback(func() -> void: App.enter_map("tutorial_alley"))

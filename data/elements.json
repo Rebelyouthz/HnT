@@ -1,0 +1,41 @@
+{
+  "arts": [
+    {"id": "fireball", "who": "son", "dir": "N", "elem": "fire", "title": "FIREBALL", "evo": "PHOENIX", "cost": 35, "dmg": 26, "gold": 0,
+     "desc": "Gather a fireball at the belly and throw it. Sets the target alight and knocks him flat.",
+     "evo_desc": "A burning bird: pierces the whole line and leaves fire on the street."},
+    {"id": "lightning_dash", "who": "son", "dir": "F", "elem": "storm", "title": "LIGHTNING DASH", "evo": "THUNDER GOD", "cost": 40, "dmg": 20, "gold": 600,
+     "desc": "Blink forward as a bolt, through everyone in the way. Stuns what you pass.",
+     "evo_desc": "The bolt jumps on to three more thugs after the dash."},
+    {"id": "wind_kick", "who": "son", "dir": "U", "elem": "wind", "title": "WIND KICK", "evo": "TYPHOON", "cost": 40, "dmg": 18, "gold": 700,
+     "desc": "A spinning kick that throws a whirlwind. Launches everyone close.",
+     "evo_desc": "The whirlwind stays, drags them in and juggles them."},
+    {"id": "ice_slide", "who": "son", "dir": "D", "elem": "ice", "title": "ICE SLIDE", "evo": "GLACIER", "cost": 35, "dmg": 16, "gold": 650,
+     "desc": "A low slide on a sheet of ice. Freezes legs solid for a few seconds.",
+     "evo_desc": "Frozen thugs shatter in an ice burst that freezes the next ones."},
+    {"id": "fire_palm", "who": "father", "dir": "N", "elem": "fire", "title": "FIRE PALM", "evo": "DRAGON PALM", "cost": 40, "dmg": 30, "gold": 0,
+     "desc": "Charge both hands at the gut, then a palm strike that blows out a cone of fire.",
+     "evo_desc": "A dragon's head of flame that sends the whole crowd flying."},
+    {"id": "thunder_clap", "who": "father", "dir": "F", "elem": "storm", "title": "THUNDER CLAP", "evo": "STORM CLAP", "cost": 40, "dmg": 22, "gold": 650,
+     "desc": "One clap, one shockwave down the street. Stuns everything it rolls over.",
+     "evo_desc": "Three waves, each one bigger. Lightning finishes the stunned."},
+    {"id": "magma_uppercut", "who": "father", "dir": "U", "elem": "fire", "title": "MAGMA UPPERCUT", "evo": "VOLCANO", "cost": 45, "dmg": 34, "gold": 750,
+     "desc": "An uppercut out of a pillar of lava. Launches and burns.",
+     "evo_desc": "The street erupts in three pillars around you."},
+    {"id": "quake_stomp", "who": "father", "dir": "D", "elem": "earth", "title": "EARTHQUAKE STOMP", "evo": "TECTONIC", "cost": 45, "dmg": 24, "gold": 700,
+     "desc": "Stomp the asphalt. A ring of cracking stone knocks everyone down.",
+     "evo_desc": "Stone spikes come up under every thug on the ground."}
+  ],
+  "grabs": [
+    {"id": "monkey_flip", "who": "son", "dir": "N", "title": "MONKEY FLIP", "dmg": 30, "desc": "Feet on his chest, roll back, throw him over you."},
+    {"id": "ddt", "who": "son", "dir": "F", "title": "TORNADO DDT", "dmg": 34, "desc": "Run up the thug, spin around his neck, plant his head in the street."},
+    {"id": "frankensteiner", "who": "son", "dir": "B", "title": "FRANKENSTEINER", "dmg": 32, "desc": "Thighs on his head, backflip, he goes head first behind you."},
+    {"id": "giant_swing", "who": "father", "dir": "N", "title": "GIANT SWING", "dmg": 34, "desc": "Grab the ankles, spin three times, let go into the crowd."},
+    {"id": "suplex", "who": "father", "dir": "F", "title": "GERMAN SUPLEX", "dmg": 38, "desc": "Arms round the waist, bridge, back of the head into the asphalt."},
+    {"id": "headlock_knees", "who": "father", "dir": "B", "title": "HEADLOCK KNEES", "dmg": 32, "desc": "Headlock, three knees to the face, shove him away."}
+  ],
+  "team": [
+    {"id": "daddy_launch", "title": "DADDY LAUNCH", "dmg": 44, "desc": "Dad cups his hands, the kid flies off them feet first through the crowd."},
+    {"id": "tag_slam", "title": "TAG TEAM SLAM", "dmg": 52, "desc": "The kid sweeps him up, Dad catches and powerbombs him."},
+    {"id": "family_double", "title": "FAMILY DOUBLE", "dmg": 40, "desc": "Both heroes, both fireballs at once: one huge blast."}
+  ]
+}

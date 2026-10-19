@@ -1,0 +1,141 @@
+{
+ "note": "FORGE (Ember, the hideout yard). smelt: what one spare copy of a gear piece melts into, by slot, times (1 + tier). recipes: what Ember can make. kind gear = a gear piece (GearInv) at its base rarity, a strong hammering raises it a tier; kind weapon = the weapon is found in the armory and gets +1 level (cap Arsenal.MAX_LV).",
+ "smelt": {
+  "clothes": {
+   "cloth_roll": 2,
+   "iron_scrap": 1
+  },
+  "hat": {
+   "cloth_roll": 1,
+   "iron_scrap": 1
+  },
+  "shoes": {
+   "leather_strip": 2
+  },
+  "rare_bonus": {
+   "ember_core": 1
+  }
+ },
+ "recipes": [
+  {
+   "id": "steel_cap",
+   "kind": "gear",
+   "gold": 40,
+   "mats": {
+    "iron_scrap": 3,
+    "cloth_roll": 1
+   }
+  },
+  {
+   "id": "iron_toe_boots",
+   "kind": "gear",
+   "gold": 45,
+   "mats": {
+    "iron_scrap": 2,
+    "leather_strip": 3
+   }
+  },
+  {
+   "id": "riveted_jacket",
+   "kind": "gear",
+   "gold": 60,
+   "mats": {
+    "leather_strip": 3,
+    "iron_scrap": 2,
+    "cloth_roll": 2
+   }
+  },
+  {
+   "id": "forged_plate",
+   "kind": "gear",
+   "gold": 70,
+   "mats": {
+    "iron_scrap": 5,
+    "leather_strip": 2
+   }
+  },
+  {
+   "id": "ember_goggles",
+   "kind": "gear",
+   "gold": 90,
+   "mats": {
+    "iron_scrap": 2,
+    "leather_strip": 2,
+    "ember_core": 1
+   }
+  },
+  {
+   "id": "spark_runners",
+   "kind": "gear",
+   "gold": 90,
+   "mats": {
+    "leather_strip": 3,
+    "cloth_roll": 2,
+    "ember_core": 1
+   }
+  },
+  {
+   "id": "machete",
+   "kind": "weapon",
+   "gold": 50,
+   "mats": {
+    "iron_scrap": 4,
+    "leather_strip": 1
+   },
+   "title": "FORGED MACHETE"
+  },
+  {
+   "id": "crowbar",
+   "kind": "weapon",
+   "gold": 40,
+   "mats": {
+    "iron_scrap": 4
+   },
+   "title": "FORGED CROWBAR"
+  },
+  {
+   "id": "sledgehammer",
+   "kind": "weapon",
+   "gold": 70,
+   "mats": {
+    "iron_scrap": 6,
+    "leather_strip": 1
+   },
+   "title": "FORGED SLEDGE"
+  },
+  {
+   "id": "chain",
+   "kind": "weapon",
+   "gold": 45,
+   "mats": {
+    "iron_scrap": 5
+   },
+   "title": "FORGED CHAIN"
+  },
+  {
+   "id": "knife",
+   "kind": "weapon",
+   "gold": 35,
+   "mats": {
+    "iron_scrap": 2,
+    "leather_strip": 1
+   },
+   "title": "FORGED KNIFE"
+  }
+ ],
+ "salvage": {
+  "iron_scrap": [
+   1,
+   3
+  ],
+  "leather_strip": [
+   0,
+   2
+  ],
+  "cloth_roll": [
+   0,
+   2
+  ],
+  "core_chance": 0.12
+ }
+}

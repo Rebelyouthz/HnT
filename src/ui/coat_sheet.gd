@@ -44,7 +44,8 @@ func _ready() -> void:
 	if not FamilyProfile.coat_ready():
 		pack.disabled = true
 	else:
-		pack.add_theme_stylebox_override("normal", UiKit.panel(Palette.READY, Palette.LEMON))
+		UiKit.ready_style(pack)
+		UiKit.dark_text(pack)
 		UiKit.pulse_ready(pack)
 	pack.pressed.connect(func() -> void:
 		if FamilyProfile.claim_coat():

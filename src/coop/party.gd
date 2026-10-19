@@ -112,6 +112,7 @@ static func spawn_row(host: Node, row: Dictionary, hp_mul: float) -> Punk:
 	p.title = str(row.get("title", "Bag Snatch"))
 	p.home = str(row.get("home", "street"))
 	p.hp = int(round(float(row.get("hp", 40)) * hp_mul))
+	p.set_meta("hp_mul", hp_mul)
 	p.patrol_min = float(row.get("pmin", 0.0))
 	p.patrol_max = float(row.get("pmax", 0.0))
 	p.cop = bool(row.get("cop", false))
@@ -119,6 +120,11 @@ static func spawn_row(host: Node, row: Dictionary, hp_mul: float) -> Punk:
 	match p.title:
 		"Mohawk Bo":
 			p.speed = 28.0
+		"Repo Goon":
+			p.speed = 36.0
+		"Bailiff":
+			p.speed = 30.0
+			p.armored = true
 		"Roof Runner":
 			p.speed = 56.0
 		"Vest Ollie":
@@ -156,5 +162,9 @@ static func spawn_row(host: Node, row: Dictionary, hp_mul: float) -> Punk:
 		_:
 			p.speed = 48.0
 	p.global_position = Vector2(float(row.get("x", 800.0)), float(row.get("y", 500.0)))
-	host.add_child(p)
+	# Spawned from a physics callback (a trigger area): wait for the flush.
+	if Engine.is_in_physics_frame():
+		host.add_child.call_deferred(p)
+	else:
+		host.add_child(p)
 	return p
