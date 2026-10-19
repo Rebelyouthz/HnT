@@ -47,6 +47,7 @@ func _ready() -> void:
 	UiKit.apply_label(_hint, 12, Palette.EDGE)
 	_hint.text = _idle()
 	add_child(_hint)
+	ProxFade.attach(_hint)
 
 
 func _idle() -> String:

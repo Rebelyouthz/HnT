@@ -69,6 +69,7 @@ func _ready() -> void:
 	_hint.add_theme_color_override("font_outline_color", Color(0, 0, 0))
 	_hint.add_theme_constant_override("outline_size", 3)
 	add_child(_hint)
+	ProxFade.attach(_hint)
 	NearFade.on(_hint, 90, 200)
 	var got: Array = FamilyProfile.data.get("secret_ledges", [])
 	if got.has(map_id):

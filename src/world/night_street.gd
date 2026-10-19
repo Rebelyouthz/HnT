@@ -765,18 +765,23 @@ static func bounds(host: Node, map_w: float) -> void:
 const WORLD_TEXT := 0.5
 
 
-static func plaque(host: Node, at: Vector2, text: String, color: Color, size: int = 16) -> Label:
+static func plaque(host: Node, at: Vector2, text: String, color: Color, size: int = 16, always := false) -> Label:
 	var lab := Label.new()
 	lab.text = text
 	lab.position = at
 	lab.scale = Vector2(WORLD_TEXT, WORLD_TEXT)
 	UiKit.apply_label(lab, size, color)
 	host.add_child(lab)
+	# Hint text in the world comes up only when someone walks near it: the
+	# street stays readable instead of a page of floating captions.
+	if not always:
+		ProxFade.attach(lab)
 	return lab
 
 
 static func neon(host: Node, at: Vector2, text: String, color: Color = Palette.BRICK) -> Label:
-	var lab := plaque(host, at, text, color, 18)
+	# Neon signs are part of the street: always lit.
+	var lab := plaque(host, at, text, color, 18, true)
 	var mat := ShaderMaterial.new()
 	mat.shader = preload("res://src/shaders/neon_flicker.gdshader")
 	mat.set_shader_parameter("neon", color)

@@ -48,6 +48,7 @@ func _ready() -> void:
 	UiKit.apply_label(_hint, 13, Palette.EDGE)
 	_hint.text = idle
 	add_child(_hint)
+	ProxFade.attach(_hint)
 	var table: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/shop.json"))
 	var cats: Dictionary = table.get("catalogs", {})
 	_items = cats.get(catalog, [])

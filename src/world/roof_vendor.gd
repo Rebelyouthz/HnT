@@ -22,6 +22,7 @@ func _ready() -> void:
 	UiKit.apply_label(_hint, 13, Palette.EDGE)
 	_hint.text = "ROOF VENDOR"
 	add_child(_hint)
+	ProxFade.attach(_hint)
 	var stall := Polygon2D.new()
 	stall.color = Color(0.18, 0.14, 0.12, 0.9)
 	stall.polygon = PackedVector2Array([
