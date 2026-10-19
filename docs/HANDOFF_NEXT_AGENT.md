@@ -103,6 +103,9 @@ READY" for its first ~400 frames and the hero is not drawn yet.
   falls over again.
 - **Street declutter**: world hint plaques fade in only near a player
   (`src/world/prox_fade.gd`, `ProxFade.attach(node)`).
+- **Tower film**: Father and Son 1.3x (`TOWER_PEOPLE_K` in
+  `src/world/giant_tower_film.gd`); the climb and the filmed sit loop grow
+  with the sprite.
 - **Skinwalker GIF** of all four clips (walk, crawl, dog, gape) was sent to
   the owner.
 - **Installer clean-up and uninstaller** (`tools/windows/Cleanup.ps1`,
@@ -113,10 +116,21 @@ READY" for its first ~400 frames and the hero is not drawn yet.
   Uninstall removes everything and asks before deleting the save. The Start
   menu has "Avinstallera Father & Son".
   Build: `GODOT=$G MAKENSIS=/usr/bin/makensis NSISDIR=/usr/share/nsis bash tools/windows/pack_windows.sh`.
+  The rebuilt Setup.exe is ~345 MB because full-quality (lossless)
+  textures were restored on purpose earlier (commit 4c09abb4 "Full quality
+  back"); ask the owner before making anything lossy again.
   **Not yet tested on a real Windows machine.** Ask the owner to try it, or
   test the PowerShell in a Windows VM if you have one.
 
 ## Todo (priority order; check each one in the running game, not just in code)
+
+0. **A thin empty gold frame** shows over the tower film (around 1280x720
+   UI coords x 190-477, y 560-617, seen at capture frame ~900 of
+   `tower:dock_street`). Most likely the focus glide frame
+   (`src/ui/focus_glide.gd`): the tree is paused during the film, so
+   `_menu_up()` is true, and some focused control is under it. Find which
+   control has focus at that moment and either give it `no_glide` meta or
+   release focus. Check the other films for the same frame.
 
 1. **Map 1 end to end with hand-like input.** Play the alley and Dock Street
    with simulated pad input, not teleports. Check that every lesson
