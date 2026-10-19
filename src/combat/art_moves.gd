@@ -12,8 +12,14 @@ extends Node2D
 ## clips (charge pose, release strike) plus drawn effects; the camera zooms
 ## in on the release and on the killing blow.
 
-const GRAB_REACH := 48.0
-const GRAB_DEPTH := 22.0
+## Reach in front and depth up/down the street, tuned at ACTOR_K 1.25 and
+## grown with the bodies so a throw reaches what a punch reaches.
+const GRAB_REACH := 48.0 * SpriteBook.ACTOR_K / 1.25
+const GRAB_DEPTH := 22.0 * SpriteBook.ACTOR_K / 1.25
+## The training bag is big and doesn't step in: hands find it from where
+## the punch lessons left him, a little off its line too.
+const BAG_REACH := 104.0
+const BAG_DEPTH := 40.0
 const ZOOM_ART := 0.08
 const ZOOM_TEAM := 0.16
 
@@ -198,6 +204,18 @@ func _nearest(reach: float, depth: float, ahead_only := false) -> Punk:
 	return best
 
 
+## A training bag in throwing reach (any stick direction: walking into it
+## with the stick up a bit must still grab it).
+func _bag_near() -> Punk:
+	for n in get_tree().get_nodes_in_group("enemies"):
+		if n is TrainingDummy and is_instance_valid(n):
+			var b := n as TrainingDummy
+			var dx := b.global_position.x - f.global_position.x
+			if absf(dx) <= BAG_REACH and absf(b.global_position.y - f.global_position.y) <= BAG_DEPTH:
+				return b
+	return null
+
+
 func _begin(seq: String, length: float) -> void:
 	f._cancel_strike()
 	f.charge_frames = 0
@@ -319,6 +337,12 @@ func _start_lh() -> void:
 	# Stick up / down is the element art, never a grab (a thug in reach
 	# must not swallow a bought art).
 	var near := _nearest(THROW_REACH, GRAB_DEPTH) if d != "U" and d != "D" else null
+	if near == null:
+		near = _bag_near()
+	if near == null and App.current_map == "tutorial_alley":
+		# The alley teaches throws: an empty X + Y says why, not "dojo".
+		Juice.popup_number(f.global_position + Vector2(0, -100), "STEP IN CLOSER · X + Y", Palette.LEMON)
+		return
 	if near != null and not (near is ActBoss) and near.vehicle == "":
 		if BrutalBook.broken(near):
 			var bid := BrutalBook.for_grab(f.role, d, f.pickup)
@@ -328,8 +352,11 @@ func _start_lh() -> void:
 		if near is TrainingDummy:
 			# The heavy bag: hug it, haul it round and heave - it rocks
 			# hard on its spring and the throw counts like any other.
-			_start_throw(null)
 			var bag := near as TrainingDummy
+			var bdx := bag.global_position.x - f.global_position.x
+			if absf(bdx) > 6.0 and signf(bdx) != float(f.facing):
+				f._face(signf(bdx))
+			_start_throw(null)
 			get_tree().create_timer(maxf(0.12, float(_row.get("reach", 0.25)) * 0.8)).timeout.connect(func() -> void:
 				if is_instance_valid(bag) and is_instance_valid(f):
 					bag.thrown_by(f))
@@ -597,7 +624,7 @@ const GRAB_SHAPES := {
 ## and slams him down in front (his hammer blow), the Kid hooks his legs out
 ## with a sweep. Always the real thug's own body, never a stand-in. A thug
 ## who is guarding (or gets lucky) twists free on contact and shoves him off.
-const THROW_REACH := 62.0
+const THROW_REACH := 62.0 * SpriteBook.ACTOR_K / 1.25
 ## Throw clip per hero: the body clip after the reach, and where in it the
 ## thug hits the ground (share of the clip).
 const THROW_FINISH := {"father": ["hammer", 0.55], "son": ["sweep", 0.5]}

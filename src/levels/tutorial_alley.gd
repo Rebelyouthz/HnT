@@ -388,7 +388,9 @@ func _on_struck(_kind: String, bag: TrainingDummy) -> void:
 		if _kind == "throw" and _clock_t() - _throw_t > 0.5:
 			_throw_t = _clock_t()
 			_tick()
-		elif _kind != "throw":
+		elif _kind != "throw" and str(f.last_btn) != "X+Y":
+			# (The first hand of a chord can land before the grab starts:
+			# that is the throw being pressed, not a wrong button.)
 			_wrong(str(f.last_btn))
 		return
 	# One count per blow, whatever it hit along the way.
